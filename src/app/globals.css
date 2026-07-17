@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens as CSS variables, consumed by tailwind.config.ts.
+ * Placeholder values — replace once real brand colors are provided.
+ * HSL components only (no `hsl()` wrapper) so Tailwind's
+ * `hsl(var(--x) / <alpha-value>)` opacity syntax works.
+ */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

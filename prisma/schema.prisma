@@ -1,0 +1,1249 @@
+// ============================================================================
+// MaestroYa — Marketplace Domain Model
+// ============================================================================
+//
+// Scope note (Phase 1): this file defines the complete data model only.
+// No API, UI, pages, or business logic live here or were added elsewhere.
+// See docs/DOMAIN_MODEL.md for a full explanation of every model and the
+// reasoning behind each cascading/indexing decision.
+//
+// Two reference tables — Language and Role — were added beyond the
+// requested 26 models. They aren't marketplace entities in their own
+// right, but the task explicitly asks to seed "Languages" and "Roles",
+// and seeding requires a table to seed into. Flagged here for visibility.
+//
+// A handful of CHECK constraints (e.g. "exactly one of professionalProfileId
+// / companyProfileId must be set") can't be expressed in Prisma's schema
+// language and are instead added via raw SQL in the migration — see
+// prisma/migrations/20260717000000_init_domain_model/migration.sql.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// Auth.js (next-auth) required models
+// https://authjs.dev/getting-started/adapters/prisma
+//
+// Field names/shapes are fixed by the adapter and must not change. The one
+// modification made here is switching User/Account/Session ids from cuid()
+// to uuid() so every primary key in the schema is a UUID, per Phase 1's
+// requirements — Auth.js does not care which id-generation strategy is used.
+// ============================================================================
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+
+  // --- Marketplace fields (added in Phase 1) ---
+  phone            String?    @unique
+  phoneVerifiedAt  DateTime?
+  status           UserStatus @default(PENDING_VERIFICATION)
+  preferredLanguageId String? @db.Uuid
+  lastLoginAt      DateTime?
+  deletedAt        DateTime? // soft delete — see docs/DOMAIN_MODEL.md "Why soft-delete users"
+
+  accounts Account[]
+  sessions Session[]
+
+  preferredLanguage Language? @relation(fields: [preferredLanguageId], references: [id], onDelete: SetNull)
+  roles             UserRole[]
+  customerProfile     CustomerProfile?
+  professionalProfile ProfessionalProfile?
+  companyMemberships  CompanyMember[]
+  addresses           Address[]
+
+  ownedCompanies         CompanyProfile[]      @relation("CompanyOwner")
+  submittedQuotes        Quote[]               @relation("QuoteSubmittedBy")
+  conversationMembers    ConversationMember[]
+  sentMessages           Message[]             @relation("MessageSender")
+  writtenReviews         Review[]              @relation("ReviewAuthor")
+  payments               Payment[]             @relation("PaymentPayer")
+  requestedRefunds       Refund[]              @relation("RefundRequestedBy")
+  notifications          Notification[]
+  reviewedDocuments      VerificationDocument[] @relation("DocumentReviewer")
+  raisedDisputes         Dispute[]              @relation("DisputeRaisedBy")
+  resolvedDisputes       Dispute[]              @relation("DisputeResolvedBy")
+  submittedDisputeEvidence DisputeEvidence[]    @relation("EvidenceSubmittedBy")
+  auditLogEntries        AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([deletedAt])
+  @@index([preferredLanguageId])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================================================
+// Reference / lookup data (seeded — not marketplace entities per se)
+// ============================================================================
+
+/// Spoken/interface languages. Seeded at deploy time; referenced by User
+/// (preferred language) and ProfessionalProfile (languages spoken, for
+/// customer-professional matching).
+model Language {
+  id         String  @id @default(uuid()) @db.Uuid
+  code       String  @unique /// ISO 639-1, e.g. "es", "en", "ca"
+  name       String  /// English name, e.g. "Spanish"
+  nativeName String  /// Native name, e.g. "Español"
+  isActive   Boolean @default(true)
+
+  users                User[]
+  professionalProfiles ProfessionalProfile[] @relation("ProfessionalLanguages")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("languages")
+}
+
+/// Platform roles for RBAC. Kept as seeded data (not a hardcoded enum) so
+/// new roles (e.g. "SUPPORT") can be added without a schema migration.
+/// A user can hold multiple roles at once — e.g. someone can be both a
+/// CUSTOMER and a PROFESSIONAL on the same account.
+model Role {
+  id          String  @id @default(uuid()) @db.Uuid
+  key         String  @unique /// e.g. "CUSTOMER", "PROFESSIONAL", "ADMIN"
+  name        String
+  description String?
+
+  users UserRole[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("roles")
+}
+
+/// Join table: which roles a user holds.
+model UserRole {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  roleId String @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// ============================================================================
+// Enums
+// ============================================================================
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  BANNED
+  DEACTIVATED
+}
+
+enum CompanyMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum AddressType {
+  HOME
+  WORK
+  BILLING
+  SERVICE_LOCATION
+  OTHER
+}
+
+enum ServiceCategoryStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum RequestUrgency {
+  LOW
+  MEDIUM
+  HIGH
+  EMERGENCY
+}
+
+enum ServiceRequestStatus {
+  DRAFT
+  PUBLISHED
+  QUOTED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  EXPIRED
+  DISPUTED
+}
+
+enum QuoteStatus {
+  PENDING
+  SENT
+  VIEWED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  RESCHEDULED
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+  CLOSED
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+  DELETED
+}
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  FLAGGED
+  REMOVED
+}
+
+enum PaymentMethodType {
+  CARD
+  SEPA_DEBIT
+  BANK_TRANSFER
+  WALLET
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum TransactionType {
+  CHARGE
+  REFUND
+  PAYOUT
+  COMMISSION
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum CommissionStatus {
+  PENDING
+  INVOICED
+  SETTLED
+  WAIVED
+}
+
+enum PayoutStatus {
+  PENDING
+  IN_TRANSIT
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum RefundReason {
+  DUPLICATE
+  FRAUDULENT
+  REQUESTED_BY_CUSTOMER
+  SERVICE_NOT_RENDERED
+  QUALITY_ISSUE
+  OTHER
+}
+
+enum RefundStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PROCESSED
+  FAILED
+}
+
+enum NotificationType {
+  SERVICE_REQUEST_UPDATE
+  QUOTE_RECEIVED
+  QUOTE_ACCEPTED
+  APPOINTMENT_REMINDER
+  MESSAGE_RECEIVED
+  PAYMENT_RECEIVED
+  PAYOUT_PROCESSED
+  REVIEW_RECEIVED
+  DISPUTE_UPDATE
+  SYSTEM
+  MARKETING
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  PUSH
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  READ
+}
+
+enum VerificationDocumentType {
+  NATIONAL_ID
+  PASSPORT
+  DRIVER_LICENSE
+  BUSINESS_LICENSE
+  TAX_CERTIFICATE
+  INSURANCE_CERTIFICATE
+  PROFESSIONAL_CERTIFICATION
+  PROOF_OF_ADDRESS
+  OTHER
+}
+
+enum VerificationDocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum DisputeReason {
+  SERVICE_NOT_COMPLETED
+  QUALITY_ISSUE
+  BILLING_ISSUE
+  DAMAGE_CLAIM
+  BEHAVIOR_ISSUE
+  OTHER
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  AWAITING_RESPONSE
+  RESOLVED
+  ESCALATED
+  CLOSED
+}
+
+enum DisputeResolution {
+  REFUND_CUSTOMER
+  PAY_PROFESSIONAL
+  PARTIAL_REFUND
+  NO_ACTION
+  ESCALATED_EXTERNALLY
+}
+
+enum AuditLogAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  STATUS_CHANGE
+  PAYMENT
+  PAYOUT
+  VERIFICATION
+  OTHER
+}
+
+// ============================================================================
+// Identity & Profiles
+// ============================================================================
+
+/// A saved address, owned by a user. Reused as billing addresses, service
+/// locations, etc. Soft-deleted (not hard-deleted) because ServiceRequest
+/// and Appointment keep a Restrict-protected FK to specific addresses for
+/// historical accuracy — removing an address from an active address book
+/// should not corrupt past job records.
+model Address {
+  id      String      @id @default(uuid()) @db.Uuid
+  userId  String      @db.Uuid
+  type    AddressType
+  label   String?
+  line1   String
+  line2   String?
+  city    String
+  province String?
+  postalCode String
+  country String  @default("ES")
+  latitude  Float?
+  longitude Float?
+  isDefault Boolean @default(false)
+  deletedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  customerProfilesDefaultingHere CustomerProfile[]
+  serviceRequests                ServiceRequest[]
+  appointments                   Appointment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([deletedAt])
+  @@map("addresses")
+}
+
+/// Customer-specific extension of User. Deliberately thin — most identity
+/// data lives on User itself; this only holds fields meaningful to the
+/// "requests services" side of the marketplace.
+model CustomerProfile {
+  id               String  @id @default(uuid()) @db.Uuid
+  userId           String  @unique @db.Uuid
+  defaultAddressId String? @db.Uuid
+  marketingOptIn   Boolean @default(false)
+  notes            String? @db.Text
+  deletedAt        DateTime?
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  defaultAddress Address? @relation(fields: [defaultAddressId], references: [id], onDelete: SetNull)
+
+  serviceRequests ServiceRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([defaultAddressId])
+  @@index([deletedAt])
+  @@map("customer_profiles")
+}
+
+/// An individual freelance professional (not affiliated with a company).
+/// Holds everything specific to "offers services solo": rate, radius,
+/// verification/trust signals, and the Stripe Connect account payouts go to.
+model ProfessionalProfile {
+  id                   String   @id @default(uuid()) @db.Uuid
+  userId               String   @unique @db.Uuid
+  bio                  String?  @db.Text
+  headline             String?
+  yearsExperience      Int?
+  hourlyRate           Decimal? @db.Decimal(10, 2)
+  serviceRadiusKm      Int?
+  isVerified           Boolean  @default(false)
+  verifiedAt           DateTime?
+  stripeConnectAccountId String? @unique
+  averageRating        Decimal? @db.Decimal(3, 2)
+  reviewCount          Int      @default(0)
+  isAcceptingRequests  Boolean  @default(true)
+  deletedAt            DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categories ServiceCategory[] @relation("ProfessionalCategories")
+  languages  Language[]        @relation("ProfessionalLanguages")
+
+  quotes                Quote[]
+  reviewsReceived        Review[]                @relation("ReviewOfProfessional")
+  payouts                Payout[]                @relation("PayoutToProfessional")
+  commissions             Commission[]            @relation("CommissionOnProfessional")
+  verificationDocuments   VerificationDocument[]  @relation("DocumentOfProfessional")
+  respondentInDisputes    Dispute[]               @relation("DisputeRespondentProfessional")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isVerified])
+  @@index([isAcceptingRequests])
+  @@index([deletedAt])
+  @@map("professional_profiles")
+}
+
+/// A company/business account. Companies act on requests through their
+/// CompanyMember employees, but the business entity itself (legal name,
+/// tax id, verification, Stripe Connect account) lives here.
+model CompanyProfile {
+  id                     String   @id @default(uuid()) @db.Uuid
+  ownerUserId            String   @db.Uuid
+  legalName              String
+  tradeName              String?
+  taxId                  String   @unique /// CIF/NIF
+  description            String?  @db.Text
+  logoUrl                String?
+  websiteUrl             String?
+  stripeConnectAccountId String?  @unique
+  isVerified             Boolean  @default(false)
+  verifiedAt             DateTime?
+  averageRating          Decimal? @db.Decimal(3, 2)
+  reviewCount            Int      @default(0)
+  isAcceptingRequests    Boolean  @default(true)
+  deletedAt              DateTime?
+
+  owner   User             @relation("CompanyOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  members CompanyMember[]
+
+  categories ServiceCategory[] @relation("CompanyCategories")
+
+  quotes                 Quote[]
+  reviewsReceived         Review[]                @relation("ReviewOfCompany")
+  payouts                 Payout[]                @relation("PayoutToCompany")
+  commissions              Commission[]            @relation("CommissionOnCompany")
+  verificationDocuments    VerificationDocument[]  @relation("DocumentOfCompany")
+  respondentInDisputes     Dispute[]               @relation("DisputeRespondentCompany")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUserId])
+  @@index([isVerified])
+  @@index([deletedAt])
+  @@map("company_profiles")
+}
+
+/// Join table: which users work for which company, and in what capacity.
+/// `removedAt` is a purpose-named soft-delete — it marks when someone's
+/// membership ended without deleting the row, preserving "who worked here
+/// and when" for dispute/audit purposes.
+model CompanyMember {
+  id               String            @id @default(uuid()) @db.Uuid
+  companyProfileId String            @db.Uuid
+  userId           String            @db.Uuid
+  role             CompanyMemberRole @default(MEMBER)
+  invitedAt        DateTime          @default(now())
+  joinedAt         DateTime?
+  removedAt        DateTime?
+
+  companyProfile CompanyProfile @relation(fields: [companyProfileId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyProfileId, userId])
+  @@index([userId])
+  @@index([companyProfileId, removedAt])
+  @@map("company_members")
+}
+
+// ============================================================================
+// Service Catalog
+// ============================================================================
+
+/// Hierarchical service categories (e.g. "Fontanería" → "Reparación de
+/// fugas"). Self-referencing for subcategories. Soft-deleted rather than
+/// hard-deleted so historical ServiceRequests keep a valid category
+/// reference even after a category is deprecated.
+model ServiceCategory {
+  id          String                 @id @default(uuid()) @db.Uuid
+  parentId    String?                @db.Uuid
+  name        String
+  slug        String                 @unique
+  description String?
+  iconUrl     String?
+  status      ServiceCategoryStatus  @default(ACTIVE)
+  sortOrder   Int                    @default(0)
+  deletedAt   DateTime?
+
+  parent   ServiceCategory?  @relation("CategoryToSubcategory", fields: [parentId], references: [id], onDelete: SetNull)
+  children ServiceCategory[] @relation("CategoryToSubcategory")
+
+  professionals ProfessionalProfile[] @relation("ProfessionalCategories")
+  companies     CompanyProfile[]      @relation("CompanyCategories")
+  serviceRequests ServiceRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("service_categories")
+}
+
+// ============================================================================
+// Requests, Quotes & Scheduling
+// ============================================================================
+
+/// A customer's request for a service — the core "job posting" of the
+/// marketplace. FKs to CustomerProfile/ServiceCategory/Address are Restrict
+/// (not Cascade): a request is a historical/financial record and must not
+/// silently disappear if, say, an address is later removed from a user's
+/// address book — removal there is itself soft-deleted for this reason.
+model ServiceRequest {
+  id               String                @id @default(uuid()) @db.Uuid
+  customerId       String                @db.Uuid
+  categoryId       String                @db.Uuid
+  addressId        String                @db.Uuid
+  title            String
+  description      String                @db.Text
+  status           ServiceRequestStatus  @default(DRAFT)
+  urgency          RequestUrgency        @default(MEDIUM)
+  budgetMin        Decimal?              @db.Decimal(10, 2)
+  budgetMax        Decimal?              @db.Decimal(10, 2)
+  scheduledFor     DateTime?
+  publishedAt      DateTime?
+  expiresAt        DateTime?
+  deletedAt        DateTime?
+
+  customer CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  address  Address         @relation(fields: [addressId], references: [id], onDelete: Restrict)
+
+  photos        RequestPhoto[]
+  quotes        Quote[]
+  appointments  Appointment[]
+  conversations Conversation[]
+  reviews       Review[]
+  payments      Payment[]
+  disputes      Dispute[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([categoryId])
+  @@index([addressId])
+  @@index([status, categoryId])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("service_requests")
+}
+
+/// Photos the customer attaches to a request (e.g. a photo of the leak).
+/// Cascades with its parent request — a photo has no meaning on its own.
+model RequestPhoto {
+  id               String   @id @default(uuid()) @db.Uuid
+  serviceRequestId String   @db.Uuid
+  url              String
+  caption          String?
+  sortOrder        Int      @default(0)
+
+  serviceRequest ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceRequestId])
+  @@map("request_photos")
+}
+
+/// A professional's or company's bid on a ServiceRequest. Exactly one of
+/// professionalProfileId / companyProfileId is set — enforced by a CHECK
+/// constraint added in the migration (Prisma's schema language can't
+/// express multi-column CHECK constraints natively). `submittedByUserId`
+/// records which specific person submitted it (the solo pro themself, or
+/// a specific CompanyMember acting on the company's behalf).
+model Quote {
+  id                    String      @id @default(uuid()) @db.Uuid
+  serviceRequestId      String      @db.Uuid
+  professionalProfileId String?     @db.Uuid
+  companyProfileId      String?     @db.Uuid
+  submittedByUserId     String      @db.Uuid
+  status                QuoteStatus @default(PENDING)
+  totalAmount           Decimal     @db.Decimal(10, 2)
+  currency              String      @default("EUR")
+  validUntil            DateTime?
+  notes                 String?     @db.Text
+  respondedAt           DateTime?
+
+  serviceRequest      ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
+  professionalProfile ProfessionalProfile? @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
+  companyProfile      CompanyProfile?      @relation(fields: [companyProfileId], references: [id], onDelete: Restrict)
+  submittedBy         User                 @relation("QuoteSubmittedBy", fields: [submittedByUserId], references: [id], onDelete: Restrict)
+
+  items        QuoteItem[]
+  appointments Appointment[]
+  payments     Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceRequestId, status])
+  @@index([professionalProfileId])
+  @@index([companyProfileId])
+  @@index([submittedByUserId])
+  @@map("quotes")
+}
+
+/// Line items making up a Quote's total (labor, materials, call-out fee,
+/// etc.). `amount` is stored (not computed) so historical quotes remain
+/// accurate even if pricing logic changes later.
+model QuoteItem {
+  id          String  @id @default(uuid()) @db.Uuid
+  quoteId     String  @db.Uuid
+  description String
+  quantity    Decimal @db.Decimal(10, 2)
+  unitPrice   Decimal @db.Decimal(10, 2)
+  amount      Decimal @db.Decimal(10, 2)
+  sortOrder   Int     @default(0)
+
+  quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([quoteId])
+  @@map("quote_items")
+}
+
+/// A scheduled (or completed) visit stemming from an accepted Quote. One
+/// Quote can produce multiple Appointments (e.g. a multi-day renovation
+/// job), which is why this isn't just a field on Quote.
+model Appointment {
+  id               String            @id @default(uuid()) @db.Uuid
+  quoteId          String            @db.Uuid
+  serviceRequestId String            @db.Uuid
+  addressId        String            @db.Uuid
+  scheduledStart   DateTime
+  scheduledEnd     DateTime?
+  actualStart      DateTime?
+  actualEnd        DateTime?
+  status           AppointmentStatus @default(SCHEDULED)
+  notes            String?           @db.Text
+  cancelledAt      DateTime?
+  cancellationReason String?
+
+  quote          Quote          @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  serviceRequest ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
+  address        Address        @relation(fields: [addressId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([quoteId])
+  @@index([serviceRequestId])
+  @@index([addressId])
+  @@index([scheduledStart])
+  @@index([status])
+  @@map("appointments")
+}
+
+// ============================================================================
+// Messaging
+// ============================================================================
+
+/// A chat thread. Usually tied to a ServiceRequest (customer ↔
+/// professional/company discussing a job); `serviceRequestId` is nullable
+/// to also allow platform/support conversations not tied to a request.
+model Conversation {
+  id               String              @id @default(uuid()) @db.Uuid
+  serviceRequestId String?             @db.Uuid
+  status           ConversationStatus  @default(ACTIVE)
+  lastMessageAt    DateTime?
+
+  serviceRequest ServiceRequest? @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
+
+  members  ConversationMember[]
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceRequestId])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+/// Join table: who's in a conversation. `leftAt` lets someone leave
+/// without losing the historical fact they were part of it; `lastReadAt`
+/// backs unread-message counts.
+model ConversationMember {
+  id             String    @id @default(uuid()) @db.Uuid
+  conversationId String    @db.Uuid
+  userId         String    @db.Uuid
+  joinedAt       DateTime  @default(now())
+  leftAt         DateTime?
+  lastReadAt     DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_members")
+}
+
+/// A single chat message. `senderId` is Restrict (not Cascade) so message
+/// history survives even if the app is ever configured to hard-delete a
+/// user — in practice, User uses soft delete (`deletedAt`) for exactly
+/// this reason, so this constraint should rarely if ever actually block
+/// anything. `deletedAt` supports a user "unsending" their own message.
+model Message {
+  id             String        @id @default(uuid()) @db.Uuid
+  conversationId String        @db.Uuid
+  senderId       String        @db.Uuid
+  body           String        @db.Text
+  status         MessageStatus @default(SENT)
+  deletedAt      DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
+
+  attachments MessageAttachment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("messages")
+}
+
+/// Files attached to a message (photos, PDFs, etc.). Cascades with its
+/// parent message.
+model MessageAttachment {
+  id            String  @id @default(uuid()) @db.Uuid
+  messageId     String  @db.Uuid
+  url           String
+  fileName      String
+  fileType      String
+  fileSizeBytes Int?
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([messageId])
+  @@map("message_attachments")
+}
+
+// ============================================================================
+// Reviews
+// ============================================================================
+
+/// A customer's review of a completed ServiceRequest. Exactly one of
+/// revieweeProfessionalProfileId / revieweeCompanyProfileId is set
+/// (CHECK constraint added in migration), matching the same solo-pro-vs-
+/// company duality used on Quote/Payout/etc. `response` lets the
+/// professional/company reply publicly, a standard marketplace pattern.
+model Review {
+  id                             String       @id @default(uuid()) @db.Uuid
+  serviceRequestId               String       @db.Uuid
+  reviewerId                     String       @db.Uuid
+  revieweeProfessionalProfileId  String?      @db.Uuid
+  revieweeCompanyProfileId       String?      @db.Uuid
+  rating                         Int /// 1–5, enforced by CHECK constraint in migration
+  comment                        String?      @db.Text
+  response                       String?      @db.Text
+  respondedAt                    DateTime?
+  status                         ReviewStatus @default(PENDING)
+  deletedAt                      DateTime?
+
+  serviceRequest      ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
+  reviewer            User                 @relation("ReviewAuthor", fields: [reviewerId], references: [id], onDelete: Restrict)
+  revieweeProfessional ProfessionalProfile? @relation("ReviewOfProfessional", fields: [revieweeProfessionalProfileId], references: [id], onDelete: Restrict)
+  revieweeCompany      CompanyProfile?      @relation("ReviewOfCompany", fields: [revieweeCompanyProfileId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceRequestId])
+  @@index([reviewerId])
+  @@index([revieweeProfessionalProfileId])
+  @@index([revieweeCompanyProfileId])
+  @@index([status])
+  @@map("reviews")
+}
+
+// ============================================================================
+// Payments & Finance
+// ============================================================================
+
+/// A customer's payment for a ServiceRequest/Quote. All money fields use
+/// Decimal(10,2) — never Float — to avoid floating-point rounding errors
+/// in financial data.
+model Payment {
+  id                    String            @id @default(uuid()) @db.Uuid
+  serviceRequestId      String            @db.Uuid
+  quoteId               String?           @db.Uuid
+  payerId               String            @db.Uuid
+  amount                Decimal           @db.Decimal(10, 2)
+  currency              String            @default("EUR")
+  method                PaymentMethodType
+  status                PaymentStatus     @default(PENDING)
+  stripePaymentIntentId String?           @unique
+  capturedAt            DateTime?
+  failureReason         String?
+
+  serviceRequest ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
+  quote          Quote?         @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  payer          User           @relation("PaymentPayer", fields: [payerId], references: [id], onDelete: Restrict)
+
+  refunds      Refund[]
+  commission   Commission?
+  transactions Transaction[] @relation("TransactionPayment")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceRequestId])
+  @@index([quoteId])
+  @@index([payerId])
+  @@index([status])
+  @@map("payments")
+}
+
+/// The platform's fee taken from a Payment. One-to-one with Payment —
+/// every captured payment produces exactly one commission record, even if
+/// its rate is later found to be 0 (waived). `rateBps` (basis points,
+/// e.g. 1000 = 10.00%) avoids the float-precision issues a percentage
+/// stored as a fraction would introduce.
+///
+/// Unlike Quote/Review/Payout/VerificationDocument/Dispute, the
+/// professionalProfileId/companyProfileId pair here is constrained to
+/// "at most one" (not "exactly one") in the migration — a manual platform
+/// adjustment with neither set is a legitimate edge case for this model.
+model Commission {
+  id                    String           @id @default(uuid()) @db.Uuid
+  paymentId             String           @unique @db.Uuid
+  professionalProfileId String?          @db.Uuid
+  companyProfileId      String?          @db.Uuid
+  rateBps               Int
+  amount                Decimal          @db.Decimal(10, 2)
+  status                CommissionStatus @default(PENDING)
+  settledAt             DateTime?
+
+  payment             Payment              @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  professionalProfile ProfessionalProfile? @relation("CommissionOnProfessional", fields: [professionalProfileId], references: [id], onDelete: Restrict)
+  companyProfile      CompanyProfile?      @relation("CommissionOnCompany", fields: [companyProfileId], references: [id], onDelete: Restrict)
+
+  transactions Transaction[] @relation("TransactionCommission")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalProfileId])
+  @@index([companyProfileId])
+  @@index([status])
+  @@map("commissions")
+}
+
+/// A payout of earnings to a professional or company via Stripe Connect.
+/// Same solo-pro-vs-company duality pattern as Quote/Review (CHECK
+/// constraint in migration).
+model Payout {
+  id                     String       @id @default(uuid()) @db.Uuid
+  professionalProfileId  String?      @db.Uuid
+  companyProfileId       String?      @db.Uuid
+  amount                 Decimal      @db.Decimal(10, 2)
+  currency               String       @default("EUR")
+  status                 PayoutStatus @default(PENDING)
+  stripeTransferId       String?      @unique
+  periodStart            DateTime?
+  periodEnd              DateTime?
+  processedAt            DateTime?
+  failureReason          String?
+
+  professionalProfile ProfessionalProfile? @relation("PayoutToProfessional", fields: [professionalProfileId], references: [id], onDelete: Restrict)
+  companyProfile      CompanyProfile?      @relation("PayoutToCompany", fields: [companyProfileId], references: [id], onDelete: Restrict)
+
+  transactions Transaction[] @relation("TransactionPayout")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalProfileId])
+  @@index([companyProfileId])
+  @@index([status])
+  @@map("payouts")
+}
+
+/// A refund against a Payment. `requestedByUserId` may be the customer or
+/// an admin acting on a dispute resolution.
+model Refund {
+  id                String       @id @default(uuid()) @db.Uuid
+  paymentId         String       @db.Uuid
+  requestedByUserId String       @db.Uuid
+  amount            Decimal      @db.Decimal(10, 2)
+  reason            RefundReason
+  status            RefundStatus @default(REQUESTED)
+  stripeRefundId    String?      @unique
+  processedAt       DateTime?
+  notes             String?      @db.Text
+
+  payment         Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  requestedByUser User    @relation("RefundRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+
+  transactions Transaction[] @relation("TransactionRefund")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentId])
+  @@index([requestedByUserId])
+  @@index([status])
+  @@map("refunds")
+}
+
+/// Append-only general ledger. Every money movement (charge, refund,
+/// payout, commission, manual adjustment) gets one Transaction row, giving
+/// a single queryable audit trail independent of which specific table
+/// (Payment/Refund/Payout/Commission) generated it. At most one of the
+/// four source FKs is set, matching which `type` the row is.
+model Transaction {
+  id            String             @id @default(uuid()) @db.Uuid
+  paymentId     String?            @db.Uuid
+  payoutId      String?            @db.Uuid
+  refundId      String?            @db.Uuid
+  commissionId  String?            @db.Uuid
+  type          TransactionType
+  status        TransactionStatus  @default(PENDING)
+  amount        Decimal            @db.Decimal(10, 2) /// signed: positive = inflow to the platform, negative = outflow
+  currency      String             @default("EUR")
+  description   String?
+
+  payment    Payment?    @relation("TransactionPayment", fields: [paymentId], references: [id], onDelete: Restrict)
+  payout     Payout?     @relation("TransactionPayout", fields: [payoutId], references: [id], onDelete: Restrict)
+  refund     Refund?     @relation("TransactionRefund", fields: [refundId], references: [id], onDelete: Restrict)
+  commission Commission? @relation("TransactionCommission", fields: [commissionId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentId])
+  @@index([payoutId])
+  @@index([refundId])
+  @@index([commissionId])
+  @@index([type, status])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+// ============================================================================
+// Notifications
+// ============================================================================
+
+/// A single notification instance for a user across any channel. Unlike
+/// most tables here, this Cascades with User — notifications are
+/// disposable, not part of the financial/legal record, so there's no
+/// reason to block a (hypothetical, rare) hard user deletion on their
+/// notification history.
+model Notification {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @db.Uuid
+  type      NotificationType
+  channel   NotificationChannel
+  status    NotificationStatus  @default(PENDING)
+  title     String
+  body      String              @db.Text
+  data      Json?               @db.JsonB
+  readAt    DateTime?
+  sentAt    DateTime?
+  deletedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@index([deletedAt])
+  @@map("notifications")
+}
+
+// ============================================================================
+// Trust & Safety
+// ============================================================================
+
+/// A KYC/verification document uploaded by a professional or company.
+/// Same solo-pro-vs-company duality pattern (CHECK constraint in
+/// migration). `reviewedByUserId` uses SetNull (not Restrict) — losing
+/// the "who reviewed this" pointer if that admin account is later removed
+/// is an acceptable trade-off; the document and its outcome remain intact.
+model VerificationDocument {
+  id                     String                      @id @default(uuid()) @db.Uuid
+  professionalProfileId  String?                     @db.Uuid
+  companyProfileId       String?                     @db.Uuid
+  type                   VerificationDocumentType
+  status                 VerificationDocumentStatus  @default(PENDING)
+  fileUrl                String
+  expiresAt              DateTime?
+  reviewedByUserId       String?                     @db.Uuid
+  reviewedAt             DateTime?
+  rejectionReason        String?
+  deletedAt              DateTime?
+
+  professionalProfile ProfessionalProfile? @relation("DocumentOfProfessional", fields: [professionalProfileId], references: [id], onDelete: Restrict)
+  companyProfile      CompanyProfile?      @relation("DocumentOfCompany", fields: [companyProfileId], references: [id], onDelete: Restrict)
+  reviewedBy          User?                @relation("DocumentReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalProfileId])
+  @@index([companyProfileId])
+  @@index([reviewedByUserId])
+  @@index([status])
+  @@map("verification_documents")
+}
+
+/// A dispute raised over a ServiceRequest (e.g. by the customer, over
+/// quality or billing). Same solo-pro-vs-company duality on the
+/// respondent side (CHECK constraint in migration). `resolvedByUserId`
+/// uses SetNull for the same reason as VerificationDocument.reviewedBy.
+model Dispute {
+  id                                String             @id @default(uuid()) @db.Uuid
+  serviceRequestId                 String             @db.Uuid
+  raisedByUserId                   String             @db.Uuid
+  respondentProfessionalProfileId  String?            @db.Uuid
+  respondentCompanyProfileId       String?            @db.Uuid
+  reason                            DisputeReason
+  status                            DisputeStatus      @default(OPEN)
+  resolution                        DisputeResolution?
+  description                       String             @db.Text
+  resolvedAt                        DateTime?
+  resolvedByUserId                  String?            @db.Uuid
+
+  serviceRequest         ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
+  raisedBy                User                 @relation("DisputeRaisedBy", fields: [raisedByUserId], references: [id], onDelete: Restrict)
+  respondentProfessional  ProfessionalProfile? @relation("DisputeRespondentProfessional", fields: [respondentProfessionalProfileId], references: [id], onDelete: Restrict)
+  respondentCompany       CompanyProfile?      @relation("DisputeRespondentCompany", fields: [respondentCompanyProfileId], references: [id], onDelete: Restrict)
+  resolvedBy               User?               @relation("DisputeResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+
+  evidence DisputeEvidence[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceRequestId])
+  @@index([raisedByUserId])
+  @@index([resolvedByUserId])
+  @@index([status])
+  @@index([respondentProfessionalProfileId])
+  @@index([respondentCompanyProfileId])
+  @@map("disputes")
+}
+
+/// Supporting evidence (photos, documents) submitted for a Dispute by
+/// either party. Cascades with its parent dispute.
+model DisputeEvidence {
+  id                 String  @id @default(uuid()) @db.Uuid
+  disputeId          String  @db.Uuid
+  submittedByUserId  String  @db.Uuid
+  fileUrl            String
+  description        String?
+
+  dispute         Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  submittedByUser User    @relation("EvidenceSubmittedBy", fields: [submittedByUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([disputeId])
+  @@index([submittedByUserId])
+  @@map("dispute_evidence")
+}
+
+// ============================================================================
+// Platform / Audit
+// ============================================================================
+
+/// Append-only audit trail of significant actions across the platform.
+/// Deliberately has NO `updatedAt` and NO soft delete — an audit log
+/// entry that could be edited or hidden after the fact would defeat its
+/// entire purpose. `actorUserId` is nullable + SetNull for
+/// system-initiated actions (e.g. an expired-request cron job) that have
+/// no human actor. `entityType`/`entityId` form a lightweight polymorphic
+/// reference (e.g. entityType="ServiceRequest") rather than one FK column
+/// per possible entity, since virtually every table in this schema could
+/// need to be audited.
+model AuditLog {
+  id         String         @id @default(uuid()) @db.Uuid
+  actorUserId String?       @db.Uuid
+  action     AuditLogAction
+  entityType String
+  entityId   String?        @db.Uuid
+  metadata   Json?          @db.JsonB
+  ipAddress  String?
+  userAgent  String?
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
