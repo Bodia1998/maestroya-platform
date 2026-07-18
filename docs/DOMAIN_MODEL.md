@@ -3,6 +3,24 @@
 Every model in `prisma/schema.prisma`, explained, plus the validation
 results from the Phase 1 review pass.
 
+## Update (seed phase)
+
+Four more reference tables were added after the initial review below:
+`Country`, `Province`, `City`, `PlatformSetting` — needed to seed
+Spain/Valencia/Gandia and platform settings, which had no representable
+target in the original 26+2 model set. See their entries under
+"Reference data" below. `prisma/seed.ts` also now creates Admin and
+Support bootstrap accounts (User + UserRole, no password — see the
+"Known open design question" note at the bottom).
+
+One thing this update could **not** independently verify: the compound
+unique key names used in `seed.ts` (`countryId_name`, `provinceId_name`,
+`userId_roleId`) rely on Prisma's default naming convention for
+`@@unique([a, b])` — no `@prisma/client` was ever generated in this
+environment to check property access against, so this is a well-founded
+assumption, not a confirmed one. `npx prisma generate` will catch it
+immediately (a TypeScript error on the `where` clause) if wrong.
+
 ## Validation status
 
 **No network access was available in the environment this schema was
@@ -67,6 +85,18 @@ CUSTOMER and a PROFESSIONAL on the same account.
 
 ### UserRole
 Join table: which roles a user holds.
+
+### Country / Province / City
+Normalized geographic reference data, independent of `Address` (which
+keeps storing city/province/country as free-text — see the header note
+in schema.prisma for why these weren't merged). Seeded with exactly
+Spain → Valencia → Gandia per this phase's request; designed to extend
+to more locations without a schema change.
+
+### PlatformSetting
+Key/value platform configuration (commission rate, default currency,
+support email, maintenance-mode flag) so ops can change these without a
+deploy. `value` is `Json` so one table covers settings of any shape.
 
 ## Identity & Profiles
 

@@ -12,6 +12,13 @@
 // right, but the task explicitly asks to seed "Languages" and "Roles",
 // and seeding requires a table to seed into. Flagged here for visibility.
 //
+// Four more reference tables — Country, Province, City, PlatformSetting —
+// were added in a later pass for the same reason: a task explicitly asked
+// to seed Spain/Valencia/Gandia and platform settings, and Address stores
+// geography as free-text with nothing to seed a lookup table into. See
+// docs/DOMAIN_MODEL.md for details on why these stay independent of
+// Address rather than replacing its free-text fields.
+//
 // A handful of CHECK constraints (e.g. "exactly one of professionalProfileId
 // / companyProfileId must be set") can't be expressed in Prisma's schema
 // language and are instead added via raw SQL in the migration — see
@@ -187,6 +194,72 @@ model UserRole {
   @@index([userId])
   @@index([roleId])
   @@map("user_roles")
+}
+
+/// Normalized geographic reference data (country → province → city), used
+/// for structured location pickers/filtering. Deliberately independent of
+/// Address, which keeps storing free-text city/province/country — linking
+/// Address to this hierarchy (e.g. replacing Address.city with a FK) is a
+/// bigger structural change than "add a seed script" and is left for a
+/// deliberate future decision rather than made silently here.
+model Country {
+  id   String @id @default(uuid()) @db.Uuid
+  code String @unique /// ISO 3166-1 alpha-2, e.g. "ES"
+  name String
+
+  provinces Province[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("countries")
+}
+
+model Province {
+  id        String @id @default(uuid()) @db.Uuid
+  countryId String @db.Uuid
+  name      String
+
+  country Country @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  cities  City[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([countryId, name])
+  @@index([countryId])
+  @@map("provinces")
+}
+
+model City {
+  id         String @id @default(uuid()) @db.Uuid
+  provinceId String @db.Uuid
+  name       String
+
+  province Province @relation(fields: [provinceId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provinceId, name])
+  @@index([provinceId])
+  @@map("cities")
+}
+
+/// Platform-wide configuration as key/value rows (commission rate,
+/// support email, feature flags, etc.) rather than hardcoded constants —
+/// lets ops change these without a deploy. `value` is Json so a single
+/// table can hold settings of any shape (a number, a string, an object).
+model PlatformSetting {
+  id          String  @id @default(uuid()) @db.Uuid
+  key         String  @unique
+  value       Json    @db.JsonB
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_settings")
 }
 
 // ============================================================================
