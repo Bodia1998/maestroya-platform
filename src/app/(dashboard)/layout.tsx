@@ -15,7 +15,7 @@ export default async function DashboardLayout({
   const session = await auth();
 
   if (!session) {
-    redirect("/sign-in");
+    redirect("/auth/login");
   }
 
   return <div className="flex min-h-screen">{children}</div>;

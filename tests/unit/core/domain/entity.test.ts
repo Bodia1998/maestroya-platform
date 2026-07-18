@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { Entity } from "@/domain/entities/entity";
+import { Entity } from "@/core/domain/entities/entity";
 
 // Minimal concrete subclass purely for testing the abstract base class.
 class TestEntity extends Entity<{ name: string }> {

@@ -6,8 +6,12 @@
  */
 export const ROUTES = {
   home: "/",
-  signIn: "/sign-in",
-  signUp: "/sign-up",
+  signIn: "/auth/login",
+  signUp: "/auth/register",
+  forgotPassword: "/auth/forgot-password",
+  resetPassword: "/auth/reset-password",
+  verifyEmail: "/auth/verify-email",
+  logout: "/auth/logout",
   dashboard: "/dashboard",
 } as const;
 

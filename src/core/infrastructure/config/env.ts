@@ -20,6 +20,17 @@ const envSchema = z.object({
   AUTH_SECRET: z.string().min(1, "AUTH_SECRET is required"),
   AUTH_URL: z.string().url(),
 
+  // Optional: OAuth providers can be configured selectively. A provider
+  // with an empty clientId/clientSecret simply won't work at sign-in time
+  // rather than crashing the app at startup — useful for local dev with
+  // only email/password configured.
+  AUTH_GOOGLE_ID: z.string().optional(),
+  AUTH_GOOGLE_SECRET: z.string().optional(),
+  AUTH_APPLE_ID: z.string().optional(),
+  AUTH_APPLE_SECRET: z.string().optional(),
+  AUTH_FACEBOOK_ID: z.string().optional(),
+  AUTH_FACEBOOK_SECRET: z.string().optional(),
+
   STRIPE_SECRET_KEY: z.string().min(1, "STRIPE_SECRET_KEY is required"),
   STRIPE_PUBLISHABLE_KEY: z.string().min(1, "STRIPE_PUBLISHABLE_KEY is required"),
   STRIPE_WEBHOOK_SECRET: z.string().min(1, "STRIPE_WEBHOOK_SECRET is required"),

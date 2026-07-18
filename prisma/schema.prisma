@@ -59,8 +59,18 @@ model User {
   lastLoginAt      DateTime?
   deletedAt        DateTime? // soft delete — see docs/DOMAIN_MODEL.md "Why soft-delete users"
 
+  // --- Authentication fields (added in Authentication module) ---
+  // Nullable: users who only ever sign in via OAuth (Google/Apple/Facebook)
+  // never get one. Never store or return this field outside the auth
+  // module's own password-verification code path.
+  passwordHash String?
+
   accounts Account[]
   sessions Session[]
+
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  refreshTokens           RefreshToken[]
 
   preferredLanguage Language? @relation(fields: [preferredLanguageId], references: [id], onDelete: SetNull)
   roles             UserRole[]
@@ -136,6 +146,79 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// ============================================================================
+// Authentication module — Credentials auth support
+//
+// VerificationToken above is Auth.js-managed (reserved for its own
+// Email/magic-link provider if one is ever added). The three models below
+// are deliberately separate and owned entirely by this module's own code,
+// to avoid two different systems writing to the same table for different
+// purposes.
+// ============================================================================
+
+/// Single-use token proving control of an email address at registration
+/// time (Credentials/email-password signup, distinct from Auth.js's own
+/// magic-link VerificationToken). Consumed (deleted) on successful
+/// verification; expired rows are safe to garbage-collect periodically.
+model EmailVerificationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique /// SHA-256 of the token — the raw token is never stored
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
+}
+
+/// Single-use token for the forgot-password → reset-password flow. Same
+/// hash-at-rest treatment as EmailVerificationToken.
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+/// Long-lived, revocable refresh token backing the "Remember me" /
+/// refresh-token requirement. Auth.js's own session JWT (short-lived,
+/// stateless) stays the primary web-session mechanism — this table exists
+/// so that mechanism can be *revoked* server-side (sign out everywhere,
+/// ban a user mid-session) despite JWTs otherwise being stateless, and so
+/// non-browser clients (a future mobile app) have a real refresh flow.
+/// Rotated on every use (old row deleted, new row issued) so a stolen,
+/// already-used refresh token is detectably invalid.
+model RefreshToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  userAgent  String?
+  ipAddress  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
 }
 
 // ============================================================================

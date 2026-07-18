@@ -38,13 +38,26 @@ const LANGUAGES = [
   { code: "zh", name: "Chinese", nativeName: "中文" },
 ] as const;
 
+/**
+ * This list was reconciled with the Authentication module's explicit
+ * role-based-authorization spec, which is now the authoritative source
+ * for platform-wide roles:
+ *  - CUSTOMER, ADMIN, SUPPORT kept as-is.
+ *  - PROFESSIONAL renamed to PROVIDER (Authentication's exact wording).
+ *  - SUPER_ADMIN and MODERATOR added — new in Authentication's spec.
+ *  - COMPANY_ADMIN / COMPANY_MEMBER removed — company-level roles are a
+ *    separate axis, already modeled by CompanyMember.role
+ *    (CompanyMemberRole: OWNER/ADMIN/MEMBER) rather than this
+ *    platform-wide Role table. Keeping both would have meant two
+ *    different, overlapping "admin"/"member" concepts.
+ */
 const ROLES = [
   { key: "CUSTOMER", name: "Customer", description: "Requests services on the platform." },
-  { key: "PROFESSIONAL", name: "Professional", description: "Solo freelance provider offering services." },
-  { key: "COMPANY_ADMIN", name: "Company Admin", description: "Owner/admin of a company account, manages members and quotes." },
-  { key: "COMPANY_MEMBER", name: "Company Member", description: "Employee of a company account, can act on its behalf." },
+  { key: "PROVIDER", name: "Provider", description: "Solo freelance provider offering services." },
   { key: "ADMIN", name: "Admin", description: "Platform administrator with full access." },
+  { key: "SUPER_ADMIN", name: "Super Admin", description: "Highest-privilege platform administrator." },
   { key: "SUPPORT", name: "Support", description: "Platform support/trust & safety staff." },
+  { key: "MODERATOR", name: "Moderator", description: "Reviews and moderates content, disputes, and reports." },
 ] as const;
 
 /**
