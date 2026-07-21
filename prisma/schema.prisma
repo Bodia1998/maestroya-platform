@@ -56,6 +56,8 @@ model User {
   phoneVerifiedAt  DateTime?
   status           UserStatus @default(PENDING_VERIFICATION)
   preferredLanguageId String? @db.Uuid
+  timezone         String?
+  notificationPreferences Json? @db.JsonB
   lastLoginAt      DateTime?
   deletedAt        DateTime? // soft delete — see docs/DOMAIN_MODEL.md "Why soft-delete users"
 
