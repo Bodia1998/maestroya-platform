@@ -1,5 +1,10 @@
 import { prisma } from "@/infrastructure/database/prisma/client";
-import type { AuthUserRecord, UserRepository } from "@/domain/repositories/user-repository";
+import type {
+  AuthUserRecord,
+  UpdateProfileData,
+  UserProfileRecord,
+  UserRepository,
+} from "@/domain/repositories/user-repository";
 
 export class PrismaUserRepository implements UserRepository {
   async findByEmail(email: string): Promise<AuthUserRecord | null> {
@@ -82,6 +87,65 @@ export class PrismaUserRepository implements UserRepository {
       where: { userId_roleId: { userId, roleId: role.id } },
       update: {},
       create: { userId, roleId: role.id },
+    });
+  }
+
+  // --- Profile module additions ---
+
+  async findProfileById(userId: string): Promise<UserProfileRecord | null> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        image: true,
+        timezone: true,
+        notificationPreferences: true,
+        preferredLanguageId: true,
+        status: true,
+        passwordHash: true,
+      },
+    });
+    if (!user) return null;
+
+    const { passwordHash, ...rest } = user;
+    return {
+      ...rest,
+      notificationPreferences:
+        rest.notificationPreferences &&
+        typeof rest.notificationPreferences === "object" &&
+        !Array.isArray(rest.notificationPreferences)
+          ? (rest.notificationPreferences as Record<string, unknown>)
+          : null,
+      hasPassword: passwordHash !== null,
+    };
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileData): Promise<void> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: data.name,
+        phone: data.phone,
+        timezone: data.timezone,
+        preferredLanguageId: data.preferredLanguageId,
+        notificationPreferences: data.notificationPreferences
+          ? JSON.parse(JSON.stringify(data.notificationPreferences))
+          : undefined,
+      },
+    });
+  }
+
+  async updateAvatar(userId: string, imageUrl: string): Promise<void> {
+    await prisma.user.update({ where: { id: userId }, data: { image: imageUrl } });
+  }
+
+  async softDeleteAccount(userId: string): Promise<void> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { deletedAt: new Date(), status: "DEACTIVATED" },
     });
   }
 }

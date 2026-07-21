@@ -7,6 +7,28 @@ export interface AuthUserRecord {
   status: string;
 }
 
+export interface UserProfileRecord {
+  id: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  image: string | null;
+  timezone: string | null;
+  notificationPreferences: Record<string, unknown> | null;
+  preferredLanguageId: string | null;
+  status: string;
+  /** True if this account can sign in with a password (vs. OAuth-only). Never exposes the hash itself. */
+  hasPassword: boolean;
+}
+
+export interface UpdateProfileData {
+  name?: string;
+  phone?: string | null;
+  timezone?: string | null;
+  preferredLanguageId?: string | null;
+  notificationPreferences?: Record<string, unknown>;
+}
+
 /**
  * Repository interface for the subset of User operations the
  * Authentication module needs. Not a general-purpose UserRepository —
@@ -27,4 +49,10 @@ export interface UserRepository {
   updateLastLoginAt(userId: string): Promise<void>;
   getRoleKeys(userId: string): Promise<string[]>;
   assignDefaultRole(userId: string, roleKey: string): Promise<void>;
+
+  // --- Profile module additions ---
+  findProfileById(userId: string): Promise<UserProfileRecord | null>;
+  updateProfile(userId: string, data: UpdateProfileData): Promise<void>;
+  updateAvatar(userId: string, imageUrl: string): Promise<void>;
+  softDeleteAccount(userId: string): Promise<void>;
 }

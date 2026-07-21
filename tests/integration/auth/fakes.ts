@@ -1,5 +1,10 @@
 import type { AuthTokenRepository } from "@/domain/repositories/auth-token-repository";
-import type { AuthUserRecord, UserRepository } from "@/domain/repositories/user-repository";
+import type {
+  AuthUserRecord,
+  UpdateProfileData,
+  UserProfileRecord,
+  UserRepository,
+} from "@/domain/repositories/user-repository";
 import type { EmailMessage, EmailSender } from "@/application/interfaces/email-sender";
 
 /**
@@ -67,6 +72,37 @@ export class FakeUserRepository implements UserRepository {
     const roles = this.rolesByUserId.get(userId) ?? new Set<string>();
     roles.add(roleKey);
     this.rolesByUserId.set(userId, roles);
+  }
+
+  async findProfileById(userId: string): Promise<UserProfileRecord | null> {
+    const user = this.users.get(userId);
+    if (!user) return null;
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: null,
+      image: null,
+      timezone: null,
+      notificationPreferences: null,
+      preferredLanguageId: null,
+      status: user.status,
+      hasPassword: user.passwordHash !== null,
+    };
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileData) {
+    const user = this.users.get(userId);
+    if (user && data.name !== undefined) user.name = data.name;
+  }
+
+  async updateAvatar() {
+    // not needed for these tests
+  }
+
+  async softDeleteAccount(userId: string) {
+    const user = this.users.get(userId);
+    if (user) user.status = "DEACTIVATED";
   }
 }
 
