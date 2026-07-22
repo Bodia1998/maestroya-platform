@@ -379,6 +379,24 @@ enum ServiceCategoryStatus {
   ARCHIVED
 }
 
+/// Professional Module: lifecycle status of an individual professional's
+/// profile, distinct from `verificationStatus` (trust/identity checks).
+enum ProfessionalStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+/// Professional Module: identity/trust verification state. Admin-only
+/// future workflow moves a profile through PENDING -> VERIFIED/REJECTED;
+/// professionals themselves can never set this field.
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
 enum RequestUrgency {
   LOW
   MEDIUM
@@ -656,6 +674,14 @@ model CustomerProfile {
 /// An individual freelance professional (not affiliated with a company).
 /// Holds everything specific to "offers services solo": rate, radius,
 /// verification/trust signals, and the Stripe Connect account payouts go to.
+///
+/// Verification note (Professional Module): `verificationStatus` is the
+/// single source of truth for trust/verification state — there is
+/// deliberately no separate `isVerified` boolean, to avoid two fields that
+/// could disagree. `verifiedAt` is only ever set when `verificationStatus`
+/// transitions to VERIFIED. Verification itself remains an admin-only
+/// future workflow; the Professional Module never sets this to VERIFIED
+/// on its own.
 model ProfessionalProfile {
   id                   String   @id @default(uuid()) @db.Uuid
   userId               String   @unique @db.Uuid
@@ -664,13 +690,21 @@ model ProfessionalProfile {
   yearsExperience      Int?
   hourlyRate           Decimal? @db.Decimal(10, 2)
   serviceRadiusKm      Int?
-  isVerified           Boolean  @default(false)
   verifiedAt           DateTime?
   stripeConnectAccountId String? @unique
   averageRating        Decimal? @db.Decimal(3, 2)
   reviewCount          Int      @default(0)
   isAcceptingRequests  Boolean  @default(true)
   deletedAt            DateTime?
+
+  // --- Professional Module fields (added in Professional Module) ---
+  businessName       String?
+  contactEmail       String?
+  contactPhone       String?
+  websiteUrl         String?
+  taxId              String?              @unique
+  status             ProfessionalStatus   @default(ACTIVE)
+  verificationStatus VerificationStatus   @default(UNVERIFIED)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -687,7 +721,8 @@ model ProfessionalProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([isVerified])
+  @@index([verificationStatus])
+  @@index([status])
   @@index([isAcceptingRequests])
   @@index([deletedAt])
   @@map("professional_profiles")
