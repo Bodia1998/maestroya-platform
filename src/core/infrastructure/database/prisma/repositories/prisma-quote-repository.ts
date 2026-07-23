@@ -148,6 +148,18 @@ export class PrismaQuoteRepository implements QuoteRepository {
     return row ? toRecord(row) : null;
   }
 
+  async findByServiceRequestAndProfessional(
+    serviceRequestId: string,
+    professionalProfileId: string,
+  ): Promise<QuoteRecord | null> {
+    const row = await prisma.quote.findFirst({
+      where: { serviceRequestId, professionalProfileId },
+      select: SELECT,
+      orderBy: { createdAt: "desc" },
+    });
+    return row ? toRecord(row) : null;
+  }
+
   async create(data: CreateQuoteData): Promise<QuoteRecord> {
     const row = await prisma.quote.create({
       data: {

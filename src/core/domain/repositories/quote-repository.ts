@@ -101,6 +101,18 @@ export interface QuoteRepository {
     serviceRequestId: string,
     professionalProfileId: string,
   ): Promise<QuoteRecord | null>;
+  /**
+   * Chat module: unlike `findActiveByServiceRequestAndProfessional` (open
+   * statuses only), this finds a quote regardless of status — used by
+   * OpenConversationUseCase to check "has this professional ever quoted this
+   * request," which stays true even after the quote is withdrawn/rejected/
+   * accepted (see conversation-state.ts's doc comment on why chat access
+   * outlives quote status).
+   */
+  findByServiceRequestAndProfessional(
+    serviceRequestId: string,
+    professionalProfileId: string,
+  ): Promise<QuoteRecord | null>;
   create(data: CreateQuoteData): Promise<QuoteRecord>;
   update(id: string, data: UpdateQuoteFields): Promise<QuoteRecord>;
   updateStatus(id: string, status: QuoteStatusValue): Promise<void>;

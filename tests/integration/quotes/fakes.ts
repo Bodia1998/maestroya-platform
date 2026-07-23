@@ -236,6 +236,14 @@ export class FakeQuoteRepository implements QuoteRepository {
     );
   }
 
+  async findByServiceRequestAndProfessional(serviceRequestId: string, professionalProfileId: string) {
+    return (
+      [...this.quotes.values()]
+        .filter((q) => q.serviceRequestId === serviceRequestId && q.professionalProfileId === professionalProfileId)
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null
+    );
+  }
+
   async create(data: CreateQuoteData): Promise<QuoteRecord> {
     const now = new Date();
     const record: QuoteRecord = {
@@ -283,6 +291,10 @@ export class FakeCustomerProfileRepository implements CustomerProfileRepository 
 
   async findByUserId(userId: string) {
     return [...this.profiles.values()].find((p) => p.userId === userId) ?? null;
+  }
+
+  async findById(id: string) {
+    return this.profiles.get(id) ?? null;
   }
 
   async findOrCreateByUserId(userId: string) {

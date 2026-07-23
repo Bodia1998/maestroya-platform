@@ -9,6 +9,13 @@ export class PrismaCustomerProfileRepository implements CustomerProfileRepositor
     });
   }
 
+  async findById(id: string): Promise<CustomerProfileRecord | null> {
+    return prisma.customerProfile.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true, userId: true },
+    });
+  }
+
   async findOrCreateByUserId(userId: string): Promise<CustomerProfileRecord> {
     const existing = await this.findByUserId(userId);
     if (existing) return existing;
