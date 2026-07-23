@@ -10,12 +10,19 @@
 
 export type MessageStatusValue = "SENT" | "DELIVERED" | "READ" | "DELETED";
 
+/** Booking & Scheduling module (Module 10) addition — see schema.prisma's
+ *  MessageType doc comment. USER is every message sent through
+ *  SendMessageUseCase; SYSTEM is an informational notice posted by
+ *  ChatAppointmentNotifier on the Booking module's behalf. */
+export type MessageTypeValue = "USER" | "SYSTEM";
+
 export interface MessageRecord {
   id: string;
   conversationId: string;
   senderId: string;
   body: string;
   status: MessageStatusValue;
+  type: MessageTypeValue;
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -25,6 +32,8 @@ export interface CreateMessageData {
   conversationId: string;
   senderId: string;
   body: string;
+  /** Defaults to USER — only ChatAppointmentNotifier ever passes SYSTEM. */
+  type?: MessageTypeValue;
 }
 
 export interface ListMessagesOptions {

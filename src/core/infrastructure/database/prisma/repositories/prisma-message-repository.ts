@@ -5,6 +5,7 @@ import type {
   MessageRecord,
   MessageRepository,
   MessageStatusValue,
+  MessageTypeValue,
 } from "@/domain/repositories/message-repository";
 
 const SELECT = {
@@ -13,6 +14,7 @@ const SELECT = {
   senderId: true,
   body: true,
   status: true,
+  type: true,
   deletedAt: true,
   createdAt: true,
   updatedAt: true,
@@ -24,6 +26,7 @@ type PrismaMessageRow = {
   senderId: string;
   body: string;
   status: string;
+  type: string;
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -36,6 +39,7 @@ function toRecord(row: PrismaMessageRow): MessageRecord {
     senderId: row.senderId,
     body: row.body,
     status: row.status as MessageStatusValue,
+    type: row.type as MessageTypeValue,
     deletedAt: row.deletedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -59,6 +63,7 @@ export class PrismaMessageRepository implements MessageRepository {
           senderId: data.senderId,
           body: data.body,
           status: "SENT",
+          type: data.type ?? "USER",
         },
         select: SELECT,
       }),

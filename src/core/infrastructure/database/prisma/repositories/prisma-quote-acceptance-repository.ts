@@ -13,6 +13,8 @@ const APPOINTMENT_SELECT = {
   quoteId: true,
   serviceRequestId: true,
   addressId: true,
+  professionalProfileId: true,
+  companyProfileId: true,
   status: true,
   scheduledStart: true,
   scheduledEnd: true,
@@ -25,6 +27,8 @@ type PrismaAppointmentRow = {
   quoteId: string;
   serviceRequestId: string;
   addressId: string;
+  professionalProfileId: string | null;
+  companyProfileId: string | null;
   status: string;
   scheduledStart: Date | null;
   scheduledEnd: Date | null;
@@ -38,6 +42,8 @@ function toAppointmentRecord(row: PrismaAppointmentRow): AppointmentRecord {
     quoteId: row.quoteId,
     serviceRequestId: row.serviceRequestId,
     addressId: row.addressId,
+    professionalProfileId: row.professionalProfileId,
+    companyProfileId: row.companyProfileId,
     status: row.status as AppointmentStatusValue,
     scheduledStart: row.scheduledStart,
     scheduledEnd: row.scheduledEnd,
@@ -86,6 +92,16 @@ export class PrismaQuoteAcceptanceRepository implements QuoteAcceptanceRepositor
         throw new ConflictError("This quote can no longer be accepted.");
       }
 
+      // Booking & Scheduling module (Module 10): the Appointment created
+      // below denormalizes the accepted Quote's own provider — read inside
+      // the same transaction (not via QuoteRepository) so this stays one
+      // round-trip and can never observe a different quote than the one
+      // just accepted above.
+      const acceptedQuote = await tx.quote.findUniqueOrThrow({
+        where: { id: quoteId },
+        select: { professionalProfileId: true, companyProfileId: true },
+      });
+
       // Every other still-open quote on the same request is rejected.
       // WITHDRAWN/EXPIRED/already-terminal quotes are excluded by the same
       // status filter and are left untouched.
@@ -115,6 +131,14 @@ export class PrismaQuoteAcceptanceRepository implements QuoteAcceptanceRepositor
           quoteId,
           serviceRequestId,
           addressId: request.addressId,
+          // Booking & Scheduling module (Module 10): denormalized 1:1 from
+          // the accepted Quote's own ownership — never independently
+          // chosen here. Exactly one of these is non-null because exactly
+          // one is non-null on the Quote itself (enforced by
+          // quotes_provider_xor_check), so appointments_provider_xor_check
+          // is satisfied by construction.
+          professionalProfileId: acceptedQuote.professionalProfileId,
+          companyProfileId: acceptedQuote.companyProfileId,
           status: "PENDING_SCHEDULE",
           scheduledStart: null,
         },
