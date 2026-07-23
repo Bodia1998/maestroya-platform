@@ -75,3 +75,9 @@ export const listAppointmentsSchema = z.object({
   filter: z.enum(["upcoming", "past", "cancelled"]).optional(),
 });
 export type ListAppointmentsInput = z.infer<typeof listAppointmentsSchema>;
+
+/** Order / Job Lifecycle module (Module 11). */
+export const completeAppointmentSchema = z.object({
+  appointmentId: z.string().uuid("Invalid appointment."),
+});
+export type CompleteAppointmentInput = z.infer<typeof completeAppointmentSchema>;

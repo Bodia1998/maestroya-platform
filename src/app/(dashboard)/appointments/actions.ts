@@ -4,12 +4,14 @@ import { revalidatePath } from "next/cache";
 
 import {
   cancelAppointmentSchema,
+  completeAppointmentSchema,
   confirmAppointmentSchema,
   proposeAppointmentTimeSchema,
   rescheduleAppointmentSchema,
 } from "@/application/dto/booking.dto";
 import {
   makeCancelAppointmentUseCase,
+  makeCompleteAppointmentUseCase,
   makeConfirmAppointmentUseCase,
   makeProposeAppointmentTimeUseCase,
   makeRescheduleAppointmentUseCase,
@@ -108,6 +110,25 @@ export async function cancelAppointmentAction(
     return { success: true };
   } catch (error) {
     return fromDomainError(error, "Something went wrong cancelling this appointment.");
+  }
+}
+
+export async function completeAppointmentAction(appointmentId: string): Promise<ActionResult> {
+  const user = await requireAuth();
+  const parsed = completeAppointmentSchema.safeParse({ appointmentId });
+  if (!parsed.success) {
+    return { success: false, error: "Invalid appointment." };
+  }
+
+  try {
+    await makeCompleteAppointmentUseCase().execute(user.id, parsed.data.appointmentId);
+    revalidatePath(`/appointments/${appointmentId}`);
+    revalidatePath("/appointments");
+    revalidatePath("/dashboard/professional/appointments");
+    revalidatePath(`/dashboard/professional/appointments/${appointmentId}`);
+    return { success: true };
+  } catch (error) {
+    return fromDomainError(error, "Something went wrong completing this appointment.");
   }
 }
 

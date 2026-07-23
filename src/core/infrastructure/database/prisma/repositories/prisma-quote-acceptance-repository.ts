@@ -2,6 +2,7 @@ import { prisma } from "@/infrastructure/database/prisma/client";
 import { ConflictError, NotFoundError } from "@/domain/errors/domain-error";
 import { OPEN_QUOTE_STATUSES } from "@/domain/services/quote-state";
 import type {
+  AcceptQuoteJobRecord,
   AcceptQuoteResult,
   AppointmentRecord,
   AppointmentStatusValue,
@@ -10,6 +11,7 @@ import type {
 
 const APPOINTMENT_SELECT = {
   id: true,
+  jobId: true,
   quoteId: true,
   serviceRequestId: true,
   addressId: true,
@@ -24,6 +26,7 @@ const APPOINTMENT_SELECT = {
 
 type PrismaAppointmentRow = {
   id: string;
+  jobId: string;
   quoteId: string;
   serviceRequestId: string;
   addressId: string;
@@ -39,6 +42,7 @@ type PrismaAppointmentRow = {
 function toAppointmentRecord(row: PrismaAppointmentRow): AppointmentRecord {
   return {
     id: row.id,
+    jobId: row.jobId,
     quoteId: row.quoteId,
     serviceRequestId: row.serviceRequestId,
     addressId: row.addressId,
@@ -47,6 +51,44 @@ function toAppointmentRecord(row: PrismaAppointmentRow): AppointmentRecord {
     status: row.status as AppointmentStatusValue,
     scheduledStart: row.scheduledStart,
     scheduledEnd: row.scheduledEnd,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+const JOB_SELECT = {
+  id: true,
+  serviceRequestId: true,
+  quoteId: true,
+  customerId: true,
+  professionalProfileId: true,
+  companyProfileId: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+type PrismaJobRow = {
+  id: string;
+  serviceRequestId: string;
+  quoteId: string;
+  customerId: string;
+  professionalProfileId: string | null;
+  companyProfileId: string | null;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function toAcceptQuoteJobRecord(row: PrismaJobRow): AcceptQuoteJobRecord {
+  return {
+    id: row.id,
+    serviceRequestId: row.serviceRequestId,
+    quoteId: row.quoteId,
+    customerId: row.customerId,
+    professionalProfileId: row.professionalProfileId,
+    companyProfileId: row.companyProfileId,
+    status: "CREATED",
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -67,7 +109,7 @@ export class PrismaQuoteAcceptanceRepository implements QuoteAcceptanceRepositor
       // acceptance attempt, not just a read.
       const request = await tx.serviceRequest.findFirst({
         where: { id: serviceRequestId, deletedAt: null },
-        select: { id: true, addressId: true, status: true },
+        select: { id: true, addressId: true, status: true, customerId: true },
       });
       if (!request) {
         throw new NotFoundError("ServiceRequest", serviceRequestId);
@@ -122,12 +164,33 @@ export class PrismaQuoteAcceptanceRepository implements QuoteAcceptanceRepositor
         throw new ConflictError("This request can no longer accept a quote.");
       }
 
+      // Order / Job Lifecycle module (Module 11): exactly one Job per
+      // accepted Quote — status CREATED, denormalizing
+      // serviceRequestId/customerId/professionalProfileId/companyProfileId
+      // the same way the Appointment created below denormalizes its own
+      // ownership. `Job.quoteId` is unique, so a second Job for this same
+      // Quote is impossible at the database level; the conditional
+      // updateMany above already ensures no concurrent transaction can
+      // reach this point twice for the same Quote.
+      const job = await tx.job.create({
+        data: {
+          serviceRequestId,
+          quoteId,
+          customerId: request.customerId,
+          professionalProfileId: acceptedQuote.professionalProfileId,
+          companyProfileId: acceptedQuote.companyProfileId,
+          status: "CREATED",
+        },
+        select: JOB_SELECT,
+      });
+
       // Exactly one Appointment per accepted Quote/ServiceRequest — status
       // PENDING_SCHEDULE, scheduledStart left null. No scheduling,
       // availability, or conflict-detection logic here; see this module's
       // scope note and schema.prisma's Appointment doc comment.
       const appointment = await tx.appointment.create({
         data: {
+          jobId: job.id,
           quoteId,
           serviceRequestId,
           addressId: request.addressId,
@@ -148,6 +211,7 @@ export class PrismaQuoteAcceptanceRepository implements QuoteAcceptanceRepositor
       return {
         serviceRequestId,
         acceptedQuoteId: quoteId,
+        job: toAcceptQuoteJobRecord(job),
         appointment: toAppointmentRecord(appointment),
       };
     });

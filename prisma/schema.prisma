@@ -96,6 +96,10 @@ model User {
   auditLogEntries        AuditLog[]
   proposedAppointments   Appointment[]          @relation("AppointmentProposedBy")
   cancelledAppointments  Appointment[]          @relation("AppointmentCancelledBy")
+  /// Order / Job Lifecycle module (Module 11).
+  startedJobs            Job[]                  @relation("JobStartedBy")
+  completedJobs          Job[]                  @relation("JobCompletedBy")
+  cancelledJobs          Job[]                  @relation("JobCancelledBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -406,6 +410,12 @@ enum RequestUrgency {
   EMERGENCY
 }
 
+/// Order / Job Lifecycle module (Module 11) note: IN_PROGRESS/COMPLETED
+/// remain reserved-but-unused here by deliberate decision — Module 11
+/// introduces Job.status as the authoritative execution-lifecycle field
+/// instead (see JobStatus and domain/services/job-state.ts). This module
+/// never writes ServiceRequest to IN_PROGRESS or COMPLETED as a side effect
+/// of any Job/Appointment transition.
 enum ServiceRequestStatus {
   DRAFT
   PUBLISHED
@@ -464,6 +474,34 @@ enum AppointmentCancellationReason {
   CUSTOMER_REQUEST
   PROFESSIONAL_UNAVAILABLE
   SCHEDULING_CONFLICT
+  OTHER
+}
+
+/// Order / Job Lifecycle module (Module 11): the execution-lifecycle status
+/// of a Job. Deliberately smaller than the full hypothetical lifecycle
+/// (no separate SCHEDULED — that remains Appointment's job, see Module 10)
+/// and deliberately does not reuse ServiceRequestStatus.IN_PROGRESS/
+/// COMPLETED (see ServiceRequestStatus's own doc note) — Job.status is the
+/// single authoritative execution-lifecycle field. COMPLETED and CANCELLED
+/// are terminal; see domain/services/job-state.ts for the full transition
+/// rules.
+enum JobStatus {
+  CREATED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+/// Order / Job Lifecycle module (Module 11): typed reason recorded when a
+/// Job is cancelled — same "closed enum, not free text" pattern as
+/// AppointmentCancellationReason, so a future Payment/Stripe Connect module
+/// can automate refund-eligibility decisions from it without parsing
+/// prose. `cancellationNote` on Job still carries optional free-text detail
+/// alongside this.
+enum JobCancellationReason {
+  CUSTOMER_REQUEST
+  PROFESSIONAL_UNABLE_TO_COMPLETE
+  SERVICE_REQUEST_ISSUE
   OTHER
 }
 
@@ -711,6 +749,8 @@ model CustomerProfile {
   defaultAddress Address? @relation(fields: [defaultAddressId], references: [id], onDelete: SetNull)
 
   serviceRequests ServiceRequest[]
+  /// Order / Job Lifecycle module (Module 11).
+  jobs            Job[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -762,6 +802,8 @@ model ProfessionalProfile {
 
   quotes                Quote[]
   appointments            Appointment[]
+  /// Order / Job Lifecycle module (Module 11).
+  jobs                    Job[]
   reviewsReceived        Review[]                @relation("ReviewOfProfessional")
   payouts                Payout[]                @relation("PayoutToProfessional")
   commissions             Commission[]            @relation("CommissionOnProfessional")
@@ -805,6 +847,8 @@ model CompanyProfile {
 
   quotes                 Quote[]
   appointments             Appointment[]
+  /// Order / Job Lifecycle module (Module 11).
+  jobs                     Job[]
   reviewsReceived         Review[]                @relation("ReviewOfCompany")
   payouts                 Payout[]                @relation("PayoutToCompany")
   commissions              Commission[]            @relation("CommissionOnCompany")
@@ -912,6 +956,12 @@ model ServiceRequest {
   photos        RequestPhoto[]
   quotes        Quote[]
   appointments  Appointment[]
+  /// Order / Job Lifecycle module (Module 11). In practice at most one Job
+  /// per ServiceRequest exists (a request has at most one accepted Quote —
+  /// see AcceptQuoteUseCase's "one active job per request" guard), but this
+  /// stays a list (like `quotes`/`appointments`) rather than an optional
+  /// 1:1 back-relation for consistency with those siblings.
+  jobs          Job[]
   conversations Conversation[]
   reviews       Review[]
   payments      Payment[]
@@ -974,6 +1024,10 @@ model Quote {
   items        QuoteItem[]
   appointments Appointment[]
   payments     Payment[]
+  /// Order / Job Lifecycle module (Module 11): 1:1 with the Job created
+  /// when this Quote is accepted (see Job.quoteId's `@unique`) — null for
+  /// every Quote that was never accepted.
+  job          Job?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1006,11 +1060,83 @@ model QuoteItem {
   @@map("quote_items")
 }
 
+/// Order / Job Lifecycle module (Module 11): the execution-lifecycle
+/// entity — created automatically (never by a customer/professional
+/// directly) the moment a Quote is accepted, inside the same transaction
+/// that already creates the initial Appointment (see
+/// PrismaQuoteAcceptanceRepository.acceptQuote). 1:1 with the accepted
+/// Quote (`quoteId` is unique); a Job can own multiple Appointments (e.g.
+/// a multi-day renovation is one Job with several visit-level
+/// Appointments — see Appointment's own doc comment).
+///
+/// Deliberately separate from ServiceRequest: ServiceRequest remains the
+/// customer-facing marketplace posting/request lifecycle (DRAFT ->
+/// PUBLISHED -> ACCEPTED, see ServiceRequestStatus), while Job.status is
+/// the authoritative record of whether the *accepted work itself* has
+/// started/finished — see JobStatus and domain/services/job-state.ts. No
+/// Module 11 code ever writes ServiceRequest to IN_PROGRESS or COMPLETED
+/// as a side effect of a Job/Appointment transition.
+///
+/// `customerId`/`professionalProfileId`/`companyProfileId` are
+/// denormalized at creation time from the ServiceRequest/accepted Quote —
+/// same "denormalize the frequently-joined FK" pattern Appointment already
+/// uses for its own professionalProfileId/companyProfileId — so "find my
+/// active jobs" never requires a join through ServiceRequest/Quote.
+/// Exactly one of professionalProfileId/companyProfileId is set, enforced
+/// by a CHECK constraint (same pattern as Quote/Appointment).
+model Job {
+  id                    String                  @id @default(uuid()) @db.Uuid
+  serviceRequestId      String                  @db.Uuid
+  quoteId               String                  @unique @db.Uuid
+  customerId            String                  @db.Uuid
+  professionalProfileId String?                 @db.Uuid
+  companyProfileId      String?                 @db.Uuid
+  status                JobStatus               @default(CREATED)
+  startedAt             DateTime?
+  startedByUserId       String?                 @db.Uuid
+  completedAt           DateTime?
+  completedByUserId     String?                 @db.Uuid
+  cancelledAt           DateTime?
+  cancelledByUserId     String?                 @db.Uuid
+  cancellationReason    JobCancellationReason?
+  cancellationNote      String?                 @db.Text
+
+  serviceRequest      ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
+  quote               Quote                @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  customer            CustomerProfile      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  professionalProfile ProfessionalProfile? @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
+  companyProfile      CompanyProfile?      @relation(fields: [companyProfileId], references: [id], onDelete: Restrict)
+  startedBy           User?                @relation("JobStartedBy", fields: [startedByUserId], references: [id], onDelete: Restrict)
+  completedBy         User?                @relation("JobCompletedBy", fields: [completedByUserId], references: [id], onDelete: Restrict)
+  cancelledBy          User?               @relation("JobCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: Restrict)
+
+  appointments Appointment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceRequestId])
+  @@index([customerId])
+  @@index([professionalProfileId, status])
+  @@index([companyProfileId, status])
+  @@index([status])
+  @@map("jobs")
+}
+
 /// A scheduled (or completed) visit stemming from an accepted Quote. One
 /// Quote can produce multiple Appointments (e.g. a multi-day renovation
 /// job), which is why this isn't just a field on Quote.
+///
+/// Order / Job Lifecycle module (Module 11): every Appointment now also
+/// belongs to exactly one Job (`jobId`, non-nullable) — the Job created
+/// alongside it at quote-acceptance time, or, for a rescheduled
+/// appointment, the same Job its superseded row belonged to (see
+/// RescheduleAppointmentUseCase / PrismaAppointmentRepository.reschedule).
+/// This is additive: quoteId/serviceRequestId are unchanged and continue
+/// to be set exactly as before.
 model Appointment {
   id               String            @id @default(uuid()) @db.Uuid
+  jobId            String            @db.Uuid
   quoteId          String            @db.Uuid
   serviceRequestId String            @db.Uuid
   addressId        String            @db.Uuid
@@ -1088,6 +1214,7 @@ model Appointment {
   /// appointment can be rescheduled into at most one successor.
   rescheduledFromId String? @unique @db.Uuid
 
+  job                 Job                  @relation(fields: [jobId], references: [id], onDelete: Restrict)
   quote               Quote                @relation(fields: [quoteId], references: [id], onDelete: Restrict)
   serviceRequest      ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
   address             Address              @relation(fields: [addressId], references: [id], onDelete: Restrict)
@@ -1101,6 +1228,7 @@ model Appointment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([jobId])
   @@index([quoteId])
   @@index([serviceRequestId])
   @@index([addressId])

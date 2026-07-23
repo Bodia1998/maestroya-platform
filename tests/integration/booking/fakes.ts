@@ -5,16 +5,28 @@ import type {
   AppointmentRepository,
   AppointmentSummary,
   CancelAppointmentData,
+  CompleteAppointmentData,
   ListAppointmentsOptions,
   ProposeAppointmentTimeData,
   RescheduleAppointmentData,
   RescheduleAppointmentResult,
 } from "@/domain/repositories/appointment-repository";
 import type {
+  CancelJobData,
+  CompleteJobData,
+  JobRecord,
+  JobRepository,
+  JobStatusValue,
+  JobSummary,
+  ListJobsOptions,
+  StartJobData,
+} from "@/domain/repositories/job-repository";
+import type {
   AcceptQuoteResult,
   AppointmentStatusValue,
   QuoteAcceptanceRepository,
 } from "@/domain/repositories/quote-acceptance-repository";
+import { NON_TERMINAL_STATUSES as APPOINTMENT_NON_TERMINAL_STATUSES } from "@/domain/services/appointment-state";
 import { OPEN_QUOTE_STATUSES } from "@/domain/services/quote-state";
 import { FakeCustomerProfileRepository, FakeQuoteRepository, FakeServiceRequestRepository } from "../quotes/fakes";
 
@@ -33,6 +45,7 @@ import { FakeCustomerProfileRepository, FakeQuoteRepository, FakeServiceRequestR
 export { FakeCustomerProfileRepository, FakeQuoteRepository, FakeServiceRequestRepository };
 
 let appointmentIdCounter = 0;
+let jobIdCounter = 0;
 
 /** Shared in-memory "table" both fakes below operate on — mirrors how
  *  PrismaQuoteAcceptanceRepository and PrismaAppointmentRepository are two
@@ -44,7 +57,20 @@ export function createAppointmentStore(): AppointmentStore {
   return new Map();
 }
 
+/** Order / Job Lifecycle module (Module 11): mirrors AppointmentStore's own
+ *  rationale — FakeQuoteAcceptanceRepository (creates the Job) and
+ *  FakeJobRepository (starts/completes/cancels it) both operate on the same
+ *  underlying in-memory "jobs" table, the same way
+ *  PrismaQuoteAcceptanceRepository and PrismaJobRepository both read/write
+ *  the same real `jobs` table. */
+export type JobStore = Map<string, JobRecord>;
+
+export function createJobStore(): JobStore {
+  return new Map();
+}
+
 const NON_TERMINAL: AppointmentStatusValue[] = ["PENDING_SCHEDULE", "PROPOSED", "CONFIRMED"];
+const JOB_NON_TERMINAL: JobStatusValue[] = ["CREATED", "IN_PROGRESS"];
 
 /**
  * Mirrors PrismaQuoteAcceptanceRepository's contract on top of the same
@@ -63,6 +89,7 @@ export class FakeQuoteAcceptanceRepository implements QuoteAcceptanceRepository 
     private readonly quotes: FakeQuoteRepository,
     private readonly serviceRequests: FakeServiceRequestRepository,
     readonly appointments: AppointmentStore = createAppointmentStore(),
+    readonly jobs: JobStore = createJobStore(),
   ) {}
 
   async acceptQuote({
@@ -110,9 +137,36 @@ export class FakeQuoteAcceptanceRepository implements QuoteAcceptanceRepository 
       updatedAt: new Date(),
     });
 
+    // Order / Job Lifecycle module (Module 11): exactly one Job per
+    // accepted Quote, created before the Appointment so the Appointment
+    // can carry its jobId — mirrors PrismaQuoteAcceptanceRepository's own
+    // ordering.
+    jobIdCounter += 1;
+    const job: JobRecord = {
+      id: `fake-job-${jobIdCounter}`,
+      serviceRequestId,
+      quoteId,
+      customerId: request.customerId,
+      professionalProfileId: quote.professionalProfileId,
+      companyProfileId: null,
+      status: "CREATED",
+      startedAt: null,
+      startedByUserId: null,
+      completedAt: null,
+      completedByUserId: null,
+      cancelledAt: null,
+      cancelledByUserId: null,
+      cancellationReason: null,
+      cancellationNote: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.jobs.set(job.id, job);
+
     appointmentIdCounter += 1;
     const appointment: AppointmentDetailRecord = {
       id: `fake-appointment-${appointmentIdCounter}`,
+      jobId: job.id,
       quoteId,
       serviceRequestId,
       addressId: `fake-address-for-${serviceRequestId}`,
@@ -138,7 +192,119 @@ export class FakeQuoteAcceptanceRepository implements QuoteAcceptanceRepository 
     };
     this.appointments.set(appointment.id, appointment);
 
-    return { serviceRequestId, acceptedQuoteId: quoteId, appointment };
+    return { serviceRequestId, acceptedQuoteId: quoteId, job: { ...job, status: "CREATED" as const }, appointment };
+  }
+}
+
+/**
+ * Order / Job Lifecycle module (Module 11): mirrors PrismaJobRepository's
+ * contract, including its transactional "no non-terminal Appointment
+ * remains" check on `complete` — so tests exercising that guard get real
+ * behavior, not a stub that always succeeds. Operates on the same JobStore
+ * a FakeQuoteAcceptanceRepository was constructed with, and the same
+ * AppointmentStore a FakeAppointmentRepository operates on, so a test can
+ * accept a quote, drive its Appointment(s) through their lifecycle, and
+ * then start/complete/cancel the resulting Job against one shared pair of
+ * in-memory tables.
+ */
+export class FakeJobRepository implements JobRepository {
+  constructor(
+    private readonly jobs: JobStore,
+    private readonly appointments: AppointmentStore,
+  ) {}
+
+  async findById(id: string): Promise<JobRecord | null> {
+    return this.jobs.get(id) ?? null;
+  }
+
+  async listForCustomer(customerId: string, options: ListJobsOptions): Promise<JobSummary[]> {
+    return this.filterToSummaries((j) => j.customerId === customerId, options);
+  }
+
+  async listForProfessional(professionalProfileId: string, options: ListJobsOptions): Promise<JobSummary[]> {
+    return this.filterToSummaries((j) => j.professionalProfileId === professionalProfileId, options);
+  }
+
+  private filterToSummaries(predicate: (j: JobRecord) => boolean, options: ListJobsOptions): JobSummary[] {
+    const matches = [...this.jobs.values()].filter(predicate).filter((j) => {
+      if (options.filter === "active") return JOB_NON_TERMINAL.includes(j.status);
+      if (options.filter === "completed") return j.status === "COMPLETED";
+      if (options.filter === "cancelled") return j.status === "CANCELLED";
+      return true;
+    });
+    return matches
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(options.offset, options.offset + options.limit)
+      .map((j) => ({
+        id: j.id,
+        serviceRequestId: j.serviceRequestId,
+        serviceRequestTitle: "Service request",
+        status: j.status,
+        startedAt: j.startedAt,
+        completedAt: j.completedAt,
+        counterpartyName: null,
+        createdAt: j.createdAt,
+      }));
+  }
+
+  async startWork(data: StartJobData): Promise<JobRecord> {
+    const job = this.jobs.get(data.jobId);
+    if (!job || !data.expectedStatuses.includes(job.status)) {
+      throw new ConflictError("This job can no longer be started.");
+    }
+    const updated: JobRecord = {
+      ...job,
+      status: "IN_PROGRESS",
+      startedAt: new Date(),
+      startedByUserId: data.startedByUserId,
+      updatedAt: new Date(),
+    };
+    this.jobs.set(job.id, updated);
+    return updated;
+  }
+
+  async complete(data: CompleteJobData): Promise<JobRecord> {
+    const job = this.jobs.get(data.jobId);
+    if (!job || !data.expectedStatuses.includes(job.status)) {
+      throw new ConflictError("This job can no longer be completed.");
+    }
+
+    const outstanding = [...this.appointments.values()].some(
+      (a) => a.jobId === data.jobId && APPOINTMENT_NON_TERMINAL_STATUSES.includes(a.status),
+    );
+    if (outstanding) {
+      throw new ConflictError(
+        "This job still has an unresolved appointment — resolve or cancel every appointment before completing the job.",
+      );
+    }
+
+    const updated: JobRecord = {
+      ...job,
+      status: "COMPLETED",
+      completedAt: new Date(),
+      completedByUserId: data.completedByUserId,
+      updatedAt: new Date(),
+    };
+    this.jobs.set(job.id, updated);
+    return updated;
+  }
+
+  async cancel(data: CancelJobData): Promise<JobRecord> {
+    const job = this.jobs.get(data.jobId);
+    if (!job || !data.expectedStatuses.includes(job.status)) {
+      throw new ConflictError("This job can no longer be cancelled.");
+    }
+    const updated: JobRecord = {
+      ...job,
+      status: "CANCELLED",
+      cancelledAt: new Date(),
+      cancelledByUserId: data.cancelledByUserId,
+      cancellationReason: data.reason,
+      cancellationNote: data.note,
+      updatedAt: new Date(),
+    };
+    this.jobs.set(job.id, updated);
+    return updated;
   }
 }
 
@@ -281,6 +447,16 @@ export class FakeAppointmentRepository implements AppointmentRepository {
     return updated;
   }
 
+  async complete(data: CompleteAppointmentData): Promise<AppointmentDetailRecord> {
+    const appointment = this.appointments.get(data.appointmentId);
+    if (!appointment || !data.expectedStatuses.includes(appointment.status)) {
+      throw new ConflictError("This appointment can no longer be completed.");
+    }
+    const updated: AppointmentDetailRecord = { ...appointment, status: "COMPLETED", updatedAt: new Date() };
+    this.appointments.set(appointment.id, updated);
+    return updated;
+  }
+
   async reschedule(data: RescheduleAppointmentData): Promise<RescheduleAppointmentResult> {
     const previous = this.appointments.get(data.appointmentId);
     if (!previous || !data.expectedStatuses.includes(previous.status)) {
@@ -296,6 +472,10 @@ export class FakeAppointmentRepository implements AppointmentRepository {
     appointmentIdCounter += 1;
     const next: AppointmentDetailRecord = {
       id: `fake-appointment-${appointmentIdCounter}`,
+      // Order / Job Lifecycle module (Module 11): the rescheduled row stays
+      // on the same Job as the one it supersedes — mirrors
+      // PrismaAppointmentRepository.reschedule.
+      jobId: previous.jobId,
       quoteId: previous.quoteId,
       serviceRequestId: previous.serviceRequestId,
       addressId: previous.addressId,

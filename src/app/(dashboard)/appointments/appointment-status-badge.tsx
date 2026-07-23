@@ -19,10 +19,11 @@ const STATUS_LABELS: Record<string, string> = {
 /**
  * Booking & Scheduling module (Module 10). Same pattern as
  * QuoteStatusBadge/RequestStatusBadge — this module implements
- * PENDING_SCHEDULE/PROPOSED/CONFIRMED/CANCELLED/COMPLETED/RESCHEDULED (see
+ * PENDING_SCHEDULE/PROPOSED/CONFIRMED/CANCELLED/RESCHEDULED (see
  * domain/services/appointment-state.ts); SCHEDULED, IN_PROGRESS, and
  * NO_SHOW are never written by any code path but fall back to the raw
- * status string if ever encountered.
+ * status string if ever encountered. COMPLETED is written by the Order /
+ * Job Lifecycle module's CompleteAppointmentUseCase (Module 11).
  */
 export function AppointmentStatusBadge({ status }: { status: string }) {
   return (
