@@ -98,6 +98,14 @@ export class PrismaProfessionalDiscoveryRepository implements ProfessionalDiscov
     return rows.map(toCandidate);
   }
 
+  async findCandidateById(professionalId: string): Promise<ProfessionalDiscoveryCandidate | null> {
+    const row = await prisma.professionalProfile.findFirst({
+      where: { id: professionalId, status: "ACTIVE", deletedAt: null },
+      select: CANDIDATE_SELECT,
+    });
+    return row ? toCandidate(row) : null;
+  }
+
   async findPublicProfileById(professionalId: string): Promise<ProfessionalPublicProfileRecord | null> {
     const row = await prisma.professionalProfile.findFirst({
       where: { id: professionalId, status: "ACTIVE", deletedAt: null },

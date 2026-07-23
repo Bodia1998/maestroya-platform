@@ -69,6 +69,20 @@ export interface ProfessionalDiscoveryRepository {
   findActiveCandidatesByCategory(categoryId: string): Promise<ProfessionalDiscoveryCandidate[]>;
 
   /**
+   * A single professional as a discovery candidate — the same shape
+   * `findActiveCandidatesByCategory` returns, looked up by their own
+   * ProfessionalProfile id rather than by category. Added for the
+   * Offers/Quotes module (GetAvailableServiceRequestsForProfessionalUseCase /
+   * CreateQuoteUseCase), which needs one professional's own base
+   * coordinates + serviceRadiusKm + categoryIds to evaluate the "is this
+   * request within my radius/category" rule — the exact same fields and
+   * ACTIVE-only eligibility this repository already resolves for search, so
+   * this reuses that logic rather than duplicating it. Returns null if the
+   * professional doesn't exist, is soft-deleted, or is not ACTIVE.
+   */
+  findCandidateById(professionalId: string): Promise<ProfessionalDiscoveryCandidate | null>;
+
+  /**
    * A single professional's public profile, or null if it doesn't exist,
    * is soft-deleted, or is not ACTIVE. There is deliberately no
    * "findPublicProfileByIdIncludingInactive" — an inactive professional's

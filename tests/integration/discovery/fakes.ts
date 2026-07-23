@@ -37,6 +37,13 @@ export class FakeProfessionalDiscoveryRepository implements ProfessionalDiscover
       .map(({ status: _status, bio: _bio, city: _city, province: _province, ...candidate }) => candidate);
   }
 
+  async findCandidateById(professionalId: string): Promise<ProfessionalDiscoveryCandidate | null> {
+    const professional = this.professionals.get(professionalId);
+    if (!professional || professional.status !== "ACTIVE") return null;
+    const { status: _status, bio: _bio, city: _city, province: _province, ...candidate } = professional;
+    return candidate;
+  }
+
   async findPublicProfileById(professionalId: string): Promise<ProfessionalPublicProfileRecord | null> {
     const professional = this.professionals.get(professionalId);
     if (!professional || professional.status !== "ACTIVE") return null;
