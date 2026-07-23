@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalQuoteUseCase } from "@/application/use-cases/quotes/compose";
+import { OpenConversationButton } from "../../../../messages/open-conversation-button";
 import { QuoteStatusBadge } from "../quote-status-badge";
 import { WithdrawQuoteDialog } from "../withdraw-quote-dialog";
 
@@ -99,17 +100,20 @@ export default async function ProfessionalQuoteDetailPage({
         </div>
       </section>
 
-      {isEditable && (
-        <section className="flex flex-wrap gap-3 border-t border-border pt-6">
-          <Link
-            href={`/dashboard/professional/quotes/${quote.id}/edit`}
-            className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-transparent px-4 text-sm font-medium hover:bg-black/5"
-          >
-            Edit quote
-          </Link>
-          <WithdrawQuoteDialog quoteId={quote.id} />
-        </section>
-      )}
+      <section className="flex flex-wrap items-center gap-3 border-t border-border pt-6">
+        {isEditable && (
+          <>
+            <Link
+              href={`/dashboard/professional/quotes/${quote.id}/edit`}
+              className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-transparent px-4 text-sm font-medium hover:bg-black/5"
+            >
+              Edit quote
+            </Link>
+            <WithdrawQuoteDialog quoteId={quote.id} />
+          </>
+        )}
+        <OpenConversationButton serviceRequestId={quote.serviceRequestId} label="Message customer" />
+      </section>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetServiceRequestUseCase } from "@/application/use-cases/service-request/compose";
 import { makeGetServiceRequestQuotesUseCase } from "@/application/use-cases/quotes/compose";
+import { OpenConversationButton } from "../../../messages/open-conversation-button";
 import { QuoteStatusBadge } from "../../../dashboard/professional/quotes/quote-status-badge";
 import { AcceptQuoteDialog } from "./accept-quote-dialog";
 
@@ -118,12 +119,16 @@ export default async function ServiceRequestQuotesPage({
                 {quote.updatedAt.toLocaleDateString()}
               </p>
 
-              {request.status === "PUBLISHED" &&
-                (quote.status === "SENT" || quote.status === "VIEWED") && (
-                  <div className="border-t border-border/50 pt-3">
-                    <AcceptQuoteDialog requestId={id} quoteId={quote.id} />
-                  </div>
+              <div className="flex flex-wrap items-center gap-3 border-t border-border/50 pt-3">
+                {request.status === "PUBLISHED" && (quote.status === "SENT" || quote.status === "VIEWED") && (
+                  <AcceptQuoteDialog requestId={id} quoteId={quote.id} />
                 )}
+                <OpenConversationButton
+                  serviceRequestId={id}
+                  professionalProfileId={quote.professional.id}
+                  label={`Message ${quote.professional.displayName}`}
+                />
+              </div>
             </li>
           ))}
         </ul>

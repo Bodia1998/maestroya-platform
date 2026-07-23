@@ -30,6 +30,10 @@ export class FakeCustomerProfileRepository implements CustomerProfileRepository 
     return [...this.profiles.values()].find((p) => p.userId === userId) ?? null;
   }
 
+  async findById(id: string) {
+    return this.profiles.get(id) ?? null;
+  }
+
   async findOrCreateByUserId(userId: string) {
     const existing = await this.findByUserId(userId);
     if (existing) return existing;
