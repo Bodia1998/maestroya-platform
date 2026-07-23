@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { NullAppointmentNotifier } from "@/application/ports/appointment-notifier";
 import { CancelAppointmentUseCase } from "@/application/use-cases/booking/cancel-appointment.use-case";
+import { CompleteAppointmentUseCase } from "@/application/use-cases/booking/complete-appointment.use-case";
 import { ConfirmAppointmentUseCase } from "@/application/use-cases/booking/confirm-appointment.use-case";
 import { GetAppointmentUseCase } from "@/application/use-cases/booking/get-appointment.use-case";
 import { ProposeAppointmentTimeUseCase } from "@/application/use-cases/booking/propose-appointment-time.use-case";
@@ -119,6 +120,7 @@ function makeUseCases(repos: Repos) {
     propose: new ProposeAppointmentTimeUseCase(...deps, notifier),
     confirm: new ConfirmAppointmentUseCase(...deps, notifier),
     cancel: new CancelAppointmentUseCase(...deps, notifier),
+    complete: new CompleteAppointmentUseCase(...deps, notifier),
     reschedule: new RescheduleAppointmentUseCase(...deps, notifier),
     get: new GetAppointmentUseCase(repos.appointments, repos.customerProfiles, repos.professionals, repos.serviceRequests),
   };
@@ -641,5 +643,121 @@ describe("Quote/Appointment consistency", () => {
     const repos = makeRepos();
     const { appointment, request } = await seedAcceptedAppointment(repos, CUSTOMER, PROFESSIONAL);
     expect(appointment.serviceRequestId).toBe(request.id);
+  });
+});
+
+// Order / Job Lifecycle module (Module 11).
+describe("Appointment completion (CONFIRMED -> COMPLETED)", () => {
+  async function seedConfirmedAppointment(repos: Repos) {
+    const { appointment } = await seedAcceptedAppointment(repos, CUSTOMER, PROFESSIONAL);
+    const { propose, confirm } = makeUseCases(repos);
+    const { start, end } = future(24);
+    await propose.execute(CUSTOMER, appointment.id, start, end);
+    await confirm.execute(PROFESSIONAL, appointment.id);
+    return appointment;
+  }
+
+  it("allows the professional to mark a CONFIRMED appointment completed", async () => {
+    const repos = makeRepos();
+    const appointment = await seedConfirmedAppointment(repos);
+    const { complete } = makeUseCases(repos);
+
+    const completed = await complete.execute(PROFESSIONAL, appointment.id);
+    expect(completed.status).toBe("COMPLETED");
+  });
+
+  it("allows the customer to mark a CONFIRMED appointment completed", async () => {
+    const repos = makeRepos();
+    const appointment = await seedConfirmedAppointment(repos);
+    const { complete } = makeUseCases(repos);
+
+    const completed = await complete.execute(CUSTOMER, appointment.id);
+    expect(completed.status).toBe("COMPLETED");
+  });
+
+  it.each(["PENDING_SCHEDULE", "PROPOSED", "CANCELLED", "COMPLETED"] as const)(
+    "rejects completing from %s",
+    async (statusToReach) => {
+      const repos = makeRepos();
+      const { appointment } = await seedAcceptedAppointment(repos, CUSTOMER, PROFESSIONAL);
+      const { propose, confirm, cancel, complete } = makeUseCases(repos);
+
+      if (statusToReach === "PROPOSED") {
+        const { start, end } = future(24);
+        await propose.execute(CUSTOMER, appointment.id, start, end);
+      } else if (statusToReach === "CANCELLED") {
+        await cancel.execute(CUSTOMER, appointment.id, "CUSTOMER_REQUEST", null);
+      } else if (statusToReach === "COMPLETED") {
+        const { start, end } = future(24);
+        await propose.execute(CUSTOMER, appointment.id, start, end);
+        await confirm.execute(PROFESSIONAL, appointment.id);
+        await complete.execute(PROFESSIONAL, appointment.id);
+      }
+
+      await expect(complete.execute(PROFESSIONAL, appointment.id)).rejects.toThrow();
+    },
+  );
+
+  it("rejects completion from an unrelated user", async () => {
+    const repos = makeRepos();
+    const appointment = await seedConfirmedAppointment(repos);
+    const { complete } = makeUseCases(repos);
+    await repos.customerProfiles.findOrCreateByUserId(OTHER_CUSTOMER);
+
+    await expect(complete.execute(OTHER_CUSTOMER, appointment.id)).rejects.toThrow();
+  });
+
+  it("only one of two concurrent completion attempts can win", async () => {
+    const repos = makeRepos();
+    const appointment = await seedConfirmedAppointment(repos);
+    const { complete } = makeUseCases(repos);
+
+    const [a, b] = await Promise.allSettled([
+      complete.execute(PROFESSIONAL, appointment.id),
+      complete.execute(CUSTOMER, appointment.id),
+    ]);
+
+    const fulfilled = [a, b].filter((r) => r.status === "fulfilled");
+    expect(fulfilled).toHaveLength(1);
+  });
+
+  it("a chat notification failure never blocks appointment completion", async () => {
+    const repos = makeRepos();
+    const appointment = await seedConfirmedAppointment(repos);
+    const throwingNotifier = { notify: async () => { throw new Error("chat is down"); } };
+    const completeWithThrowingNotifier = new CompleteAppointmentUseCase(
+      repos.appointments,
+      repos.customerProfiles,
+      repos.professionals,
+      repos.serviceRequests,
+      throwingNotifier,
+    );
+
+    const completed = await completeWithThrowingNotifier.execute(PROFESSIONAL, appointment.id);
+    expect(completed.status).toBe("COMPLETED");
+  });
+});
+
+describe("Job/Appointment consistency", () => {
+  it("the initial Appointment created by quote acceptance is linked to the Job created in the same transaction", async () => {
+    const repos = makeRepos();
+    const { appointment } = await seedAcceptedAppointment(repos, CUSTOMER, PROFESSIONAL);
+    expect(appointment.jobId).toBeTruthy();
+    expect(repos.quoteAcceptance.jobs.get(appointment.jobId)).toBeTruthy();
+  });
+
+  it("a rescheduled appointment's new row carries the same jobId as the row it supersedes", async () => {
+    const repos = makeRepos();
+    const { appointment } = await seedAcceptedAppointment(repos, CUSTOMER, PROFESSIONAL);
+    const { propose, confirm, reschedule } = makeUseCases(repos);
+    const original = future(24);
+    await propose.execute(CUSTOMER, appointment.id, original.start, original.end);
+    await confirm.execute(PROFESSIONAL, appointment.id);
+
+    const newWindow = future(48);
+    const result = await reschedule.execute(CUSTOMER, appointment.id, newWindow.start, newWindow.end);
+
+    expect(result.previous.jobId).toBe(appointment.jobId);
+    expect(result.next.jobId).toBe(appointment.jobId);
   });
 });

@@ -6,6 +6,7 @@ import type {
   AppointmentRepository,
   AppointmentSummary,
   CancelAppointmentData,
+  CompleteAppointmentData,
   ListAppointmentsOptions,
   ProposeAppointmentTimeData,
   RescheduleAppointmentData,
@@ -15,6 +16,7 @@ import type { AppointmentStatusValue } from "@/domain/repositories/quote-accepta
 
 const DETAIL_SELECT = {
   id: true,
+  jobId: true,
   quoteId: true,
   serviceRequestId: true,
   addressId: true,
@@ -38,6 +40,7 @@ const DETAIL_SELECT = {
 
 type PrismaAppointmentDetailRow = {
   id: string;
+  jobId: string;
   quoteId: string;
   serviceRequestId: string;
   addressId: string;
@@ -63,6 +66,7 @@ type PrismaAppointmentDetailRow = {
 function toDetailRecord(row: PrismaAppointmentDetailRow): AppointmentDetailRecord {
   return {
     id: row.id,
+    jobId: row.jobId,
     quoteId: row.quoteId,
     serviceRequestId: row.serviceRequestId,
     addressId: row.addressId,
@@ -413,6 +417,23 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     return toDetailRecord(row);
   }
 
+  /** Order / Job Lifecycle module (Module 11): CONFIRMED -> COMPLETED. Same
+   *  conditional-updateMany optimistic-concurrency pattern as cancel(). */
+  async complete(data: CompleteAppointmentData): Promise<AppointmentDetailRecord> {
+    const updated = await prisma.appointment.updateMany({
+      where: { id: data.appointmentId, status: { in: [...data.expectedStatuses] } },
+      data: { status: "COMPLETED" },
+    });
+    if (updated.count === 0) {
+      throw new ConflictError("This appointment can no longer be completed.");
+    }
+    const row = await prisma.appointment.findUniqueOrThrow({
+      where: { id: data.appointmentId },
+      select: { ...DETAIL_SELECT, rescheduledTo: { select: { id: true } } },
+    });
+    return toDetailRecord(row);
+  }
+
   async reschedule(data: RescheduleAppointmentData): Promise<RescheduleAppointmentResult> {
     return prisma.$transaction(async (tx) => {
       const previousUpdate = await tx.appointment.updateMany({
@@ -427,6 +448,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
         where: { id: data.appointmentId },
         select: {
           id: true,
+          jobId: true,
           quoteId: true,
           serviceRequestId: true,
           addressId: true,
@@ -437,6 +459,11 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
 
       const next = await tx.appointment.create({
         data: {
+          // Order / Job Lifecycle module (Module 11): the new Appointment
+          // row created by a reschedule stays on the exact same Job as the
+          // row it supersedes — rescheduling is Module 10's own concern and
+          // never creates or changes which Job an Appointment belongs to.
+          jobId: previous.jobId,
           quoteId: previous.quoteId,
           serviceRequestId: previous.serviceRequestId,
           addressId: previous.addressId,

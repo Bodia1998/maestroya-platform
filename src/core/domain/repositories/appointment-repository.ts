@@ -94,6 +94,12 @@ export interface RescheduleAppointmentData {
   expectedStatuses: readonly AppointmentStatusValue[];
 }
 
+/** Order / Job Lifecycle module (Module 11). */
+export interface CompleteAppointmentData {
+  appointmentId: string;
+  expectedStatuses: readonly AppointmentStatusValue[];
+}
+
 export interface RescheduleAppointmentResult {
   previous: AppointmentDetailRecord;
   next: AppointmentDetailRecord;
@@ -146,6 +152,16 @@ export interface AppointmentRepository {
   confirm(appointmentId: string, expectedStatuses: readonly AppointmentStatusValue[]): Promise<AppointmentDetailRecord>;
 
   cancel(data: CancelAppointmentData): Promise<AppointmentDetailRecord>;
+
+  /**
+   * Order / Job Lifecycle module (Module 11): CONFIRMED -> COMPLETED — one
+   * visit/work session is done. Conditioned on `expectedStatuses`, same
+   * optimistic-concurrency pattern as every other mutating method here.
+   * Deliberately does not touch Job.status — Appointment completion and Job
+   * completion are separate concepts (see domain/services/job-state.ts's
+   * doc comment); CompleteJobUseCase is a distinct, explicit action.
+   */
+  complete(data: CompleteAppointmentData): Promise<AppointmentDetailRecord>;
 
   /**
    * Non-destructive reschedule: the existing appointment transitions to

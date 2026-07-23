@@ -247,6 +247,26 @@ describe("AcceptQuoteUseCase — acceptance transaction", () => {
     expect(result.appointment.scheduledStart).toBeNull();
     expect(repos.quoteAcceptance.appointments.size).toBe(1);
   });
+
+  // Order / Job Lifecycle module (Module 11).
+  it("creates exactly one Job, linked to the accepted Quote/ServiceRequest/customer/professional, with status CREATED", async () => {
+    const repos = makeRepos();
+    const request = await seedPublishedRequest(repos, "cust-1");
+    const selected = await seedQuote(repos, request.id, "pro-1", "SENT");
+
+    const result = await makeUseCase(repos).execute("cust-1", request.id, selected.id);
+
+    expect(repos.quoteAcceptance.jobs.size).toBe(1);
+    expect(result.job.status).toBe("CREATED");
+    expect(result.job.quoteId).toBe(selected.id);
+    expect(result.job.serviceRequestId).toBe(request.id);
+    expect(result.job.customerId).toBe(request.customerId);
+    expect(result.job.professionalProfileId).toBe("pro-1");
+
+    // The initial Appointment created in the same transaction is linked to
+    // this same Job.
+    expect(result.appointment.jobId).toBe(result.job.id);
+  });
 });
 
 describe("AcceptQuoteUseCase — invariants", () => {
@@ -267,6 +287,9 @@ describe("AcceptQuoteUseCase — invariants", () => {
     const allQuotes = [await repos.quotes.findById(first.id), await repos.quotes.findById(second.id)];
     expect(allQuotes.filter((q) => q?.status === "ACCEPTED")).toHaveLength(1);
     expect(repos.quoteAcceptance.appointments.size).toBe(1);
+    // Order / Job Lifecycle module (Module 11): a second acceptance attempt
+    // must not create a second Job either — one accepted Quote, one Job.
+    expect(repos.quoteAcceptance.jobs.size).toBe(1);
   });
 
   it("rejects re-accepting the same quote a second time", async () => {
@@ -277,6 +300,28 @@ describe("AcceptQuoteUseCase — invariants", () => {
     await makeUseCase(repos).execute("cust-1", request.id, quote.id);
 
     await expect(makeUseCase(repos).execute("cust-1", request.id, quote.id)).rejects.toThrow();
+    expect(repos.quoteAcceptance.appointments.size).toBe(1);
+    expect(repos.quoteAcceptance.jobs.size).toBe(1);
+  });
+
+  it("concurrent acceptance attempts on the same request cannot create more than one Job", async () => {
+    const repos = makeRepos();
+    const request = await seedPublishedRequest(repos, "cust-1");
+    const first = await seedQuote(repos, request.id, "pro-1", "SENT");
+    const second = await seedQuote(repos, request.id, "pro-2", "SENT");
+
+    // Fire both acceptance attempts "concurrently" — the fake's own
+    // synchronous validate-then-mutate ordering (see FakeQuoteAcceptanceRepository's
+    // doc comment) gives the same "only one can win" guarantee the real
+    // Prisma transaction's conditional updateMany does.
+    const results = await Promise.allSettled([
+      makeUseCase(repos).execute("cust-1", request.id, first.id),
+      makeUseCase(repos).execute("cust-1", request.id, second.id),
+    ]);
+
+    const fulfilled = results.filter((r) => r.status === "fulfilled");
+    expect(fulfilled).toHaveLength(1);
+    expect(repos.quoteAcceptance.jobs.size).toBe(1);
     expect(repos.quoteAcceptance.appointments.size).toBe(1);
   });
 });
@@ -300,6 +345,7 @@ describe("AcceptQuoteUseCase — atomicity", () => {
 
     expect((await repos.quotes.findById(quote.id))?.status).toBe("SENT");
     expect(repos.quoteAcceptance.appointments.size).toBe(0);
+    expect(repos.quoteAcceptance.jobs.size).toBe(0);
   });
 
   it("the fake repository itself rejects rather than partially applying when the request state changes underneath it", async () => {
@@ -319,5 +365,6 @@ describe("AcceptQuoteUseCase — atomicity", () => {
 
     expect((await repos.quotes.findById(quote.id))?.status).toBe("SENT");
     expect(repos.quoteAcceptance.appointments.size).toBe(0);
+    expect(repos.quoteAcceptance.jobs.size).toBe(0);
   });
 });

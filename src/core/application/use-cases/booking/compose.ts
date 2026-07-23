@@ -6,6 +6,7 @@ import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/r
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { ChatAppointmentNotifier } from "@/infrastructure/chat/chat-appointment-notifier";
 import { CancelAppointmentUseCase } from "@/application/use-cases/booking/cancel-appointment.use-case";
+import { CompleteAppointmentUseCase } from "@/application/use-cases/booking/complete-appointment.use-case";
 import { ConfirmAppointmentUseCase } from "@/application/use-cases/booking/confirm-appointment.use-case";
 import { GetAppointmentUseCase } from "@/application/use-cases/booking/get-appointment.use-case";
 import { ListAppointmentsForCustomerUseCase } from "@/application/use-cases/booking/list-appointments-for-customer.use-case";
@@ -32,6 +33,10 @@ export function makeConfirmAppointmentUseCase() {
 
 export function makeCancelAppointmentUseCase() {
   return new CancelAppointmentUseCase(appointments, customerProfiles, professionals, serviceRequests, notifier);
+}
+
+export function makeCompleteAppointmentUseCase() {
+  return new CompleteAppointmentUseCase(appointments, customerProfiles, professionals, serviceRequests, notifier);
 }
 
 export function makeRescheduleAppointmentUseCase() {

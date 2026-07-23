@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   cancelAppointmentAction,
+  completeAppointmentAction,
   confirmAppointmentAction,
   proposeAppointmentTimeAction,
   rescheduleAppointmentAction,
@@ -129,6 +130,37 @@ function ConfirmButton({ appointmentId }: { appointmentId: string }) {
   );
 }
 
+function CompleteButton({ appointmentId }: { appointmentId: string }) {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleComplete() {
+    setIsSubmitting(true);
+    setError(null);
+    const result = await completeAppointmentAction(appointmentId);
+    setIsSubmitting(false);
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Button type="button" disabled={isSubmitting} onClick={handleComplete}>
+        {isSubmitting ? "Marking completed…" : "Mark this visit completed"}
+      </Button>
+      {error && (
+        <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function CancelDialog({ appointmentId }: { appointmentId: string }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -242,6 +274,7 @@ export function AppointmentActions({
       {RESCHEDULABLE.includes(status) && status === "CONFIRMED" && (
         <TimeWindowForm appointmentId={appointmentId} submitLabel="Reschedule" onSubmit={rescheduleAppointmentAction} />
       )}
+      {status === "CONFIRMED" && <CompleteButton appointmentId={appointmentId} />}
       {CANCELLABLE.includes(status) && <CancelDialog appointmentId={appointmentId} />}
     </div>
   );

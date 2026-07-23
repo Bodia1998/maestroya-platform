@@ -15,7 +15,11 @@
  * inform the existing chat thread when something happens.
  */
 
-export type AppointmentEventType = "PROPOSED" | "CONFIRMED" | "CANCELLED" | "RESCHEDULED";
+/** Order / Job Lifecycle module (Module 11) note: COMPLETED added for
+ *  CompleteAppointmentUseCase — same one-directional, best-effort
+ *  Booking/Job-lifecycle -> Chat notification pattern as every other event
+ *  here, see that use case's own doc comment. */
+export type AppointmentEventType = "PROPOSED" | "CONFIRMED" | "CANCELLED" | "RESCHEDULED" | "COMPLETED";
 
 export interface AppointmentEvent {
   serviceRequestId: string;

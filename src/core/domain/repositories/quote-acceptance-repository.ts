@@ -38,6 +38,11 @@ export type AppointmentStatusValue =
 
 export interface AppointmentRecord {
   id: string;
+  /** Order / Job Lifecycle module (Module 11): the Job this Appointment
+   *  belongs to — created in the same transaction as this Appointment
+   *  (see PrismaQuoteAcceptanceRepository.acceptQuote). Every Appointment
+   *  has exactly one Job. */
+  jobId: string;
   quoteId: string;
   serviceRequestId: string;
   addressId: string;
@@ -57,9 +62,30 @@ export interface AppointmentRecord {
   updatedAt: Date;
 }
 
+/**
+ * Order / Job Lifecycle module (Module 11): minimal shape of the Job
+ * created alongside the Appointment below — just enough for callers (and
+ * tests) to assert the Job/Appointment/Quote/ServiceRequest relationships
+ * without this repository depending on the full JobRecord type from
+ * job-repository.ts (kept narrow, same "this interface only exposes what
+ * this one atomic operation needs" convention as the rest of this file).
+ */
+export interface AcceptQuoteJobRecord {
+  id: string;
+  serviceRequestId: string;
+  quoteId: string;
+  customerId: string;
+  professionalProfileId: string | null;
+  companyProfileId: string | null;
+  status: "CREATED";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface AcceptQuoteResult {
   serviceRequestId: string;
   acceptedQuoteId: string;
+  job: AcceptQuoteJobRecord;
   appointment: AppointmentRecord;
 }
 
@@ -67,7 +93,7 @@ export interface QuoteAcceptanceRepository {
   /**
    * Atomically, in a single database transaction:
    *  1. Re-verifies the ServiceRequest is still PUBLISHED (fetches its
-   *     addressId for the Appointment at the same time).
+   *     addressId/customerId for the Job/Appointment at the same time).
    *  2. Transitions the selected Quote (must still be SENT/VIEWED) to
    *     ACCEPTED — conditioned on both id/serviceRequestId/status matching,
    *     so a concurrent acceptance attempt can never win twice.
@@ -76,10 +102,18 @@ export interface QuoteAcceptanceRepository {
    *     quotes are left untouched.
    *  4. Transitions the ServiceRequest to ACCEPTED — again conditioned on
    *     it still being PUBLISHED, closing the same race window.
-   *  5. Creates exactly one Appointment referencing the accepted Quote, the
-   *     ServiceRequest, and the ServiceRequest's own Address — status
-   *     PENDING_SCHEDULE, scheduledStart left null (no scheduling in this
-   *     MVP).
+   *  5. Order / Job Lifecycle module (Module 11): creates exactly one Job
+   *     (status CREATED), 1:1 with the accepted Quote — see
+   *     prisma/schema.prisma's Job model doc comment. `Job.quoteId`'s
+   *     unique constraint provides database-level protection against a
+   *     second Job for the same Quote; the same conditional-updateMany
+   *     race guard on step 2 above ensures a concurrent acceptance attempt
+   *     can never reach this step twice for the same Quote in the first
+   *     place.
+   *  6. Creates exactly one Appointment referencing the accepted Quote, the
+   *     ServiceRequest, the ServiceRequest's own Address, and the Job just
+   *     created (Appointment.jobId) — status PENDING_SCHEDULE,
+   *     scheduledStart left null (no scheduling in this MVP).
    *
    * Throws a domain error (see domain/errors/domain-error.ts) and performs
    * no writes at all if the ServiceRequest/Quote can no longer be accepted

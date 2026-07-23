@@ -111,7 +111,11 @@ export default async function ServiceRequestDetailPage({
             <Link href="/appointments" className="font-medium underline">
               My appointments
             </Link>{" "}
-            to propose or confirm a time.
+            to propose or confirm a time, or check{" "}
+            <Link href="/jobs" className="font-medium underline">
+              My jobs
+            </Link>{" "}
+            for the work&apos;s overall progress.
           </p>
         </section>
       )}
