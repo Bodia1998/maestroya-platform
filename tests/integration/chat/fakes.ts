@@ -167,6 +167,7 @@ export class FakeMessageRepository implements MessageRepository {
       senderId: data.senderId,
       body: data.body,
       status: "SENT",
+      type: data.type ?? "USER",
       deletedAt: null,
       createdAt: now,
       updatedAt: now,

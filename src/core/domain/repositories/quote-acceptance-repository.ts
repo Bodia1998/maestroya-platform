@@ -15,9 +15,20 @@
  * avoid.
  */
 
+/**
+ * Booking & Scheduling module (Module 10) note: PROPOSED was added to the
+ * underlying Prisma `AppointmentStatus` enum by
+ * prisma/migrations/*_add_appointment_scheduling_lifecycle to represent "a
+ * time has been put forward but not yet confirmed" — see
+ * domain/services/appointment-state.ts for the full transition rules.
+ * SCHEDULED remains declared on the Prisma enum for backward compatibility
+ * but is never written by any code — superseded by the PROPOSED/CONFIRMED
+ * distinction.
+ */
 export type AppointmentStatusValue =
   | "PENDING_SCHEDULE"
   | "SCHEDULED"
+  | "PROPOSED"
   | "CONFIRMED"
   | "IN_PROGRESS"
   | "COMPLETED"
@@ -30,9 +41,16 @@ export interface AppointmentRecord {
   quoteId: string;
   serviceRequestId: string;
   addressId: string;
+  /** Denormalized from the accepted Quote at creation time (Booking &
+   *  Scheduling module) — exactly one of professionalProfileId/
+   *  companyProfileId is set, mirroring Quote's own ownership pattern. See
+   *  prisma/schema.prisma's Appointment model doc comment. */
+  professionalProfileId: string | null;
+  companyProfileId: string | null;
   status: AppointmentStatusValue;
-  /** Always null on creation in this MVP — no scheduling implemented yet.
-   *  See schema.prisma's Appointment.scheduledStart doc comment. */
+  /** Always null on creation — no scheduling happens as part of Quote
+   *  acceptance itself. See schema.prisma's Appointment.scheduledStart doc
+   *  comment and the Booking & Scheduling module's propose/confirm flow. */
   scheduledStart: Date | null;
   scheduledEnd: Date | null;
   createdAt: Date;

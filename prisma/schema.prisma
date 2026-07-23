@@ -94,6 +94,8 @@ model User {
   resolvedDisputes       Dispute[]              @relation("DisputeResolvedBy")
   submittedDisputeEvidence DisputeEvidence[]    @relation("EvidenceSubmittedBy")
   auditLogEntries        AuditLog[]
+  proposedAppointments   Appointment[]          @relation("AppointmentProposedBy")
+  cancelledAppointments  Appointment[]          @relation("AppointmentCancelledBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -434,13 +436,35 @@ enum AppointmentStatus {
   /// for why this was unavoidable. A future scheduling module transitions
   /// this to SCHEDULED once `scheduledStart` is actually set.
   PENDING_SCHEDULE
+  /// Deprecated/unused: superseded by the PROPOSED/CONFIRMED distinction
+  /// added by the Booking & Scheduling module (Module 10) — see
+  /// domain/services/appointment-state.ts. Kept on the enum only for
+  /// backward compatibility with the value already shipped in the initial
+  /// migration; no code writes it.
   SCHEDULED
+  /// Booking & Scheduling module (Module 10): one party (customer or
+  /// professional) has put forward a `[proposedStart, proposedEnd)` window
+  /// that the other party has not yet confirmed. See
+  /// domain/services/appointment-state.ts for the full transition rules.
+  PROPOSED
   CONFIRMED
   IN_PROGRESS
   COMPLETED
   CANCELLED
   NO_SHOW
   RESCHEDULED
+}
+
+/// Booking & Scheduling module (Module 10): typed reason recorded when an
+/// Appointment is cancelled — kept as a closed enum (rather than free text)
+/// so a future Payment/Stripe Connect module can automate refund-eligibility
+/// decisions from it without parsing prose. `cancellationNote` on
+/// Appointment still carries optional free-text detail alongside this.
+enum AppointmentCancellationReason {
+  CUSTOMER_REQUEST
+  PROFESSIONAL_UNAVAILABLE
+  SCHEDULING_CONFLICT
+  OTHER
 }
 
 enum ConversationStatus {
@@ -454,6 +478,24 @@ enum MessageStatus {
   DELIVERED
   READ
   DELETED
+}
+
+/// Booking & Scheduling module (Module 10): distinguishes a normal
+/// user-authored chat message from an automated, informational one the
+/// Booking module posts into an existing Conversation (appointment
+/// proposed/confirmed/cancelled/rescheduled — see
+/// application/ports/appointment-notifier.ts and
+/// ChatAppointmentNotifier). SYSTEM messages are still attributed to the
+/// user whose action triggered them (`Message.senderId`) — there is no
+/// separate platform/system User account — `type` is what lets the UI
+/// render them differently (e.g. centered, non-bubble) and lets other code
+/// distinguish them without parsing message bodies. Booking never mutates
+/// Conversation/Message state directly beyond calling
+/// MessageRepository.create with this type — Chat owns its own schema and
+/// persistence.
+enum MessageType {
+  USER
+  SYSTEM
 }
 
 enum ReviewStatus {
@@ -719,6 +761,7 @@ model ProfessionalProfile {
   languages  Language[]        @relation("ProfessionalLanguages")
 
   quotes                Quote[]
+  appointments            Appointment[]
   reviewsReceived        Review[]                @relation("ReviewOfProfessional")
   payouts                Payout[]                @relation("PayoutToProfessional")
   commissions             Commission[]            @relation("CommissionOnProfessional")
@@ -761,6 +804,7 @@ model CompanyProfile {
   categories ServiceCategory[] @relation("CompanyCategories")
 
   quotes                 Quote[]
+  appointments             Appointment[]
   reviewsReceived         Review[]                @relation("ReviewOfCompany")
   payouts                 Payout[]                @relation("PayoutToCompany")
   commissions              Commission[]            @relation("CommissionOnCompany")
@@ -970,24 +1014,89 @@ model Appointment {
   quoteId          String            @db.Uuid
   serviceRequestId String            @db.Uuid
   addressId        String            @db.Uuid
+
+  /// Booking & Scheduling module (Module 10): denormalized from the
+  /// accepted Quote at creation time (see PrismaQuoteAcceptanceRepository).
+  /// Exactly one of professionalProfileId / companyProfileId is set —
+  /// enforced by a CHECK constraint (same "exactly one" pattern as
+  /// Quote.professionalProfileId/companyProfileId), added in
+  /// prisma/migrations/*_add_appointment_scheduling_lifecycle. This is what
+  /// makes "does this professional have a conflicting appointment"
+  /// queryable directly on Appointment instead of requiring a join through
+  /// Quote — see the composite indexes below and
+  /// ConfirmAppointmentUseCase's conflict check.
+  professionalProfileId String? @db.Uuid
+  companyProfileId      String? @db.Uuid
+
   /// Booking/Appointments module (MVP): nullable because an Appointment is
   /// now created immediately on Quote acceptance, before any actual
   /// scheduling — see the PENDING_SCHEDULE status above and
   /// prisma/migrations/20260723000000_add_appointment_pending_schedule.
-  /// A future scheduling module is expected to fill this in and move the
-  /// status to SCHEDULED; this module never invents a placeholder date.
-  scheduledStart   DateTime?
-  scheduledEnd     DateTime?
-  actualStart      DateTime?
-  actualEnd        DateTime?
-  status           AppointmentStatus @default(SCHEDULED)
-  notes            String?           @db.Text
-  cancelledAt      DateTime?
-  cancellationReason String?
+  /// Booking & Scheduling module (Module 10): filled in by
+  /// ConfirmAppointmentUseCase once the other party confirms a proposed
+  /// time — this is always the authoritative, conflict-checked schedule,
+  /// never a placeholder.
+  ///
+  /// Timezone decision (Module 10): unlike the rest of this schema (which
+  /// uses Prisma's default `TIMESTAMP(3)`, i.e. timezone-naive, per the
+  /// audit report's "Database gaps" finding), every DateTime field on this
+  /// model is explicitly `@db.Timestamptz(3)` — stored as a true UTC
+  /// instant. Scheduling is exactly the place a naive timestamp becomes
+  /// ambiguous once the platform has customers/professionals in different
+  /// IANA zones (EU expansion) or across a DST boundary (Spain observes
+  /// DST). A platform-wide migration of every DateTime column is explicitly
+  /// out of scope for this module (see the audit's "CAN BE DEFERRED"
+  /// section) — this is a narrow, self-contained exception scoped to the
+  /// one model where the ambiguity is actually user-visible today. The
+  /// application layer always converts a proposed local time to its UTC
+  /// instant at the DTO boundary using the proposer's own `User.timezone`
+  /// (see booking.dto.ts) before it ever reaches this column.
+  scheduledStart   DateTime? @db.Timestamptz(3)
+  scheduledEnd     DateTime? @db.Timestamptz(3)
 
-  quote          Quote          @relation(fields: [quoteId], references: [id], onDelete: Restrict)
-  serviceRequest ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
-  address        Address        @relation(fields: [addressId], references: [id], onDelete: Restrict)
+  /// Booking & Scheduling module (Module 10): an unconfirmed time put
+  /// forward by either party (see AppointmentStatus.PROPOSED and
+  /// domain/services/appointment-state.ts). Left in place after
+  /// confirmation as a record of what was last proposed; superseded values
+  /// from earlier counter-proposals are not separately retained (only the
+  /// most recent proposal matters operationally — full history lives at
+  /// the Appointment-row level via rescheduling, not per-proposal).
+  proposedStart    DateTime? @db.Timestamptz(3)
+  proposedEnd      DateTime? @db.Timestamptz(3)
+  proposedByUserId String?   @db.Uuid
+
+  actualStart      DateTime? @db.Timestamptz(3)
+  actualEnd        DateTime? @db.Timestamptz(3)
+  status           AppointmentStatus @default(PENDING_SCHEDULE)
+  notes            String?           @db.Text
+
+  cancelledAt        DateTime? @db.Timestamptz(3)
+  cancelledByUserId  String?                         @db.Uuid
+  cancellationReason AppointmentCancellationReason?
+  /// Booking & Scheduling module (Module 10): optional free-text detail
+  /// alongside the typed `cancellationReason` — kept separate so a future
+  /// Payment/Stripe Connect refund-eligibility workflow can key off the
+  /// typed enum without parsing prose.
+  cancellationNote   String?                         @db.Text
+
+  /// Booking & Scheduling module (Module 10): non-destructive rescheduling.
+  /// Set only on the *new* Appointment row created by
+  /// RescheduleAppointmentUseCase, pointing back at the row it supersedes.
+  /// The old row is transitioned to RESCHEDULED and never mutated further —
+  /// its proposal/confirmation/cancellation history is preserved forever
+  /// instead of being overwritten in place. `@unique` because a superseded
+  /// appointment can be rescheduled into at most one successor.
+  rescheduledFromId String? @unique @db.Uuid
+
+  quote               Quote                @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  serviceRequest      ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
+  address             Address              @relation(fields: [addressId], references: [id], onDelete: Restrict)
+  professionalProfile ProfessionalProfile? @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
+  companyProfile      CompanyProfile?      @relation(fields: [companyProfileId], references: [id], onDelete: Restrict)
+  proposedBy          User?                @relation("AppointmentProposedBy", fields: [proposedByUserId], references: [id], onDelete: Restrict)
+  cancelledBy         User?                @relation("AppointmentCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: Restrict)
+  rescheduledFrom     Appointment?         @relation("AppointmentReschedule", fields: [rescheduledFromId], references: [id], onDelete: Restrict)
+  rescheduledTo       Appointment?         @relation("AppointmentReschedule")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -997,6 +1106,8 @@ model Appointment {
   @@index([addressId])
   @@index([scheduledStart])
   @@index([status])
+  @@index([professionalProfileId, status, scheduledStart, scheduledEnd])
+  @@index([companyProfileId, status, scheduledStart, scheduledEnd])
   @@map("appointments")
 }
 
@@ -1059,6 +1170,9 @@ model Message {
   senderId       String        @db.Uuid
   body           String        @db.Text
   status         MessageStatus @default(SENT)
+  /// Booking & Scheduling module (Module 10) addition — see MessageType's
+  /// doc comment.
+  type           MessageType   @default(USER)
   deletedAt      DateTime?
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)

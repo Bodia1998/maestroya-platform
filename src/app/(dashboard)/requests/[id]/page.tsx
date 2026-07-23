@@ -104,6 +104,18 @@ export default async function ServiceRequestDetailPage({
         />
       </section>
 
+      {request.status === "ACCEPTED" && (
+        <section className="rounded-md border border-border bg-black/5 p-4">
+          <p className="text-sm">
+            You&apos;ve accepted a quote for this request. Head to{" "}
+            <Link href="/appointments" className="font-medium underline">
+              My appointments
+            </Link>{" "}
+            to propose or confirm a time.
+          </p>
+        </section>
+      )}
+
       {isEditable && (
         <section className="flex flex-wrap gap-3 border-t border-border pt-6">
           <Link
