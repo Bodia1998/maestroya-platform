@@ -1,9 +1,11 @@
 import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prisma/repositories/prisma-customer-profile-repository";
 import { PrismaProfessionalDiscoveryRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-discovery-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
+import { PrismaQuoteAcceptanceRepository } from "@/infrastructure/database/prisma/repositories/prisma-quote-acceptance-repository";
 import { PrismaQuoteRepository } from "@/infrastructure/database/prisma/repositories/prisma-quote-repository";
 import { PrismaServiceRequestDiscoveryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-discovery-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
+import { AcceptQuoteUseCase } from "@/application/use-cases/quotes/accept-quote.use-case";
 import { CreateQuoteUseCase } from "@/application/use-cases/quotes/create-quote.use-case";
 import { GetAvailableServiceRequestsForProfessionalUseCase } from "@/application/use-cases/quotes/get-available-service-requests-for-professional.use-case";
 import { GetProfessionalQuoteUseCase } from "@/application/use-cases/quotes/get-professional-quote.use-case";
@@ -19,6 +21,7 @@ const requestDiscovery = new PrismaServiceRequestDiscoveryRepository();
 const quotes = new PrismaQuoteRepository();
 const serviceRequests = new PrismaServiceRequestRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
+const quoteAcceptance = new PrismaQuoteAcceptanceRepository();
 
 export function makeGetAvailableServiceRequestsForProfessionalUseCase() {
   return new GetAvailableServiceRequestsForProfessionalUseCase(
@@ -54,4 +57,8 @@ export function makeGetProfessionalQuotesUseCase() {
 
 export function makeGetServiceRequestQuotesUseCase() {
   return new GetServiceRequestQuotesUseCase(customerProfiles, serviceRequests, quotes, professionalDiscovery);
+}
+
+export function makeAcceptQuoteUseCase() {
+  return new AcceptQuoteUseCase(customerProfiles, serviceRequests, quotes, quoteAcceptance);
 }

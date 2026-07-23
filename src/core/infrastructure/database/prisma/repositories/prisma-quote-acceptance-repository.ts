@@ -1,0 +1,131 @@
+import { prisma } from "@/infrastructure/database/prisma/client";
+import { ConflictError, NotFoundError } from "@/domain/errors/domain-error";
+import { OPEN_QUOTE_STATUSES } from "@/domain/services/quote-state";
+import type {
+  AcceptQuoteResult,
+  AppointmentRecord,
+  AppointmentStatusValue,
+  QuoteAcceptanceRepository,
+} from "@/domain/repositories/quote-acceptance-repository";
+
+const APPOINTMENT_SELECT = {
+  id: true,
+  quoteId: true,
+  serviceRequestId: true,
+  addressId: true,
+  status: true,
+  scheduledStart: true,
+  scheduledEnd: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+type PrismaAppointmentRow = {
+  id: string;
+  quoteId: string;
+  serviceRequestId: string;
+  addressId: string;
+  status: string;
+  scheduledStart: Date | null;
+  scheduledEnd: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function toAppointmentRecord(row: PrismaAppointmentRow): AppointmentRecord {
+  return {
+    id: row.id,
+    quoteId: row.quoteId,
+    serviceRequestId: row.serviceRequestId,
+    addressId: row.addressId,
+    status: row.status as AppointmentStatusValue,
+    scheduledStart: row.scheduledStart,
+    scheduledEnd: row.scheduledEnd,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+export class PrismaQuoteAcceptanceRepository implements QuoteAcceptanceRepository {
+  async acceptQuote({
+    quoteId,
+    serviceRequestId,
+  }: {
+    quoteId: string;
+    serviceRequestId: string;
+  }): Promise<AcceptQuoteResult> {
+    return prisma.$transaction(async (tx) => {
+      // Fetched inside the transaction (not via ServiceRequestRepository)
+      // so this stays a single round-trip that also re-verifies status —
+      // this call is the last line of defense against a race with another
+      // acceptance attempt, not just a read.
+      const request = await tx.serviceRequest.findFirst({
+        where: { id: serviceRequestId, deletedAt: null },
+        select: { id: true, addressId: true, status: true },
+      });
+      if (!request) {
+        throw new NotFoundError("ServiceRequest", serviceRequestId);
+      }
+      if (request.status !== "PUBLISHED") {
+        throw new ConflictError("This request can no longer accept a quote.");
+      }
+
+      // Conditioned on id + serviceRequestId + still-open status in one
+      // atomic updateMany — if a concurrent transaction already accepted
+      // (or otherwise changed) this quote, `count` comes back 0 and this
+      // whole transaction rolls back rather than proceeding.
+      const acceptedUpdate = await tx.quote.updateMany({
+        where: {
+          id: quoteId,
+          serviceRequestId,
+          status: { in: [...OPEN_QUOTE_STATUSES] },
+        },
+        data: { status: "ACCEPTED", respondedAt: new Date() },
+      });
+      if (acceptedUpdate.count === 0) {
+        throw new ConflictError("This quote can no longer be accepted.");
+      }
+
+      // Every other still-open quote on the same request is rejected.
+      // WITHDRAWN/EXPIRED/already-terminal quotes are excluded by the same
+      // status filter and are left untouched.
+      await tx.quote.updateMany({
+        where: {
+          serviceRequestId,
+          status: { in: [...OPEN_QUOTE_STATUSES] },
+          NOT: { id: quoteId },
+        },
+        data: { status: "REJECTED", respondedAt: new Date() },
+      });
+
+      const requestUpdate = await tx.serviceRequest.updateMany({
+        where: { id: serviceRequestId, status: "PUBLISHED" },
+        data: { status: "ACCEPTED" },
+      });
+      if (requestUpdate.count === 0) {
+        throw new ConflictError("This request can no longer accept a quote.");
+      }
+
+      // Exactly one Appointment per accepted Quote/ServiceRequest — status
+      // PENDING_SCHEDULE, scheduledStart left null. No scheduling,
+      // availability, or conflict-detection logic here; see this module's
+      // scope note and schema.prisma's Appointment doc comment.
+      const appointment = await tx.appointment.create({
+        data: {
+          quoteId,
+          serviceRequestId,
+          addressId: request.addressId,
+          status: "PENDING_SCHEDULE",
+          scheduledStart: null,
+        },
+        select: APPOINTMENT_SELECT,
+      });
+
+      return {
+        serviceRequestId,
+        acceptedQuoteId: quoteId,
+        appointment: toAppointmentRecord(appointment),
+      };
+    });
+  }
+}

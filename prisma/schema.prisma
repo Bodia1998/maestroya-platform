@@ -427,6 +427,13 @@ enum QuoteStatus {
 }
 
 enum AppointmentStatus {
+  /// Booking/Appointments module (MVP): the Appointment row created the
+  /// moment a Quote is accepted, before any actual scheduling has happened.
+  /// Added because the original enum had no state representing "exists but
+  /// unscheduled" — see prisma/migrations/20260723000000_add_appointment_pending_schedule
+  /// for why this was unavoidable. A future scheduling module transitions
+  /// this to SCHEDULED once `scheduledStart` is actually set.
+  PENDING_SCHEDULE
   SCHEDULED
   CONFIRMED
   IN_PROGRESS
@@ -963,7 +970,13 @@ model Appointment {
   quoteId          String            @db.Uuid
   serviceRequestId String            @db.Uuid
   addressId        String            @db.Uuid
-  scheduledStart   DateTime
+  /// Booking/Appointments module (MVP): nullable because an Appointment is
+  /// now created immediately on Quote acceptance, before any actual
+  /// scheduling — see the PENDING_SCHEDULE status above and
+  /// prisma/migrations/20260723000000_add_appointment_pending_schedule.
+  /// A future scheduling module is expected to fill this in and move the
+  /// status to SCHEDULED; this module never invents a placeholder date.
+  scheduledStart   DateTime?
   scheduledEnd     DateTime?
   actualStart      DateTime?
   actualEnd        DateTime?
