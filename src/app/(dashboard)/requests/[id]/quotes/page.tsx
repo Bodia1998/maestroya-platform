@@ -7,6 +7,7 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetServiceRequestUseCase } from "@/application/use-cases/service-request/compose";
 import { makeGetServiceRequestQuotesUseCase } from "@/application/use-cases/quotes/compose";
 import { QuoteStatusBadge } from "../../../dashboard/professional/quotes/quote-status-badge";
+import { AcceptQuoteDialog } from "./accept-quote-dialog";
 
 export const metadata = { title: "Received quotes" };
 
@@ -21,8 +22,10 @@ const VERIFICATION_LABELS: Record<string, string> = {
  * Customer-facing view of the Quotes received for *their own* Service
  * Request only — GetServiceRequestQuotesUseCase never trusts the `id` route
  * param as proof of ownership, it re-checks against the signed-in session's
- * own CustomerProfile, exactly like the request detail page. Quote
- * acceptance is intentionally not implemented here — see project scope.
+ * own CustomerProfile, exactly like the request detail page. Accepting a
+ * quote (see AcceptQuoteDialog) is only offered while the request is still
+ * PUBLISHED and the individual quote is still SENT/VIEWED — AcceptQuoteUseCase
+ * re-validates both independently regardless of what this page renders.
  */
 export default async function ServiceRequestQuotesPage({
   params,
@@ -114,6 +117,13 @@ export default async function ServiceRequestQuotesPage({
                 Submitted {quote.createdAt.toLocaleDateString()} — updated{" "}
                 {quote.updatedAt.toLocaleDateString()}
               </p>
+
+              {request.status === "PUBLISHED" &&
+                (quote.status === "SENT" || quote.status === "VIEWED") && (
+                  <div className="border-t border-border/50 pt-3">
+                    <AcceptQuoteDialog requestId={id} quoteId={quote.id} />
+                  </div>
+                )}
             </li>
           ))}
         </ul>

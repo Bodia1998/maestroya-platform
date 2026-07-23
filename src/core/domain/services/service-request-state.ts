@@ -20,14 +20,27 @@ import type { ServiceRequestStatusValue } from "@/domain/repositories/service-re
  * edited/cancelled" becomes "only PUBLISHED requests can be
  * edited/cancelled". The other enum values are left untouched for future
  * modules (Offers/Quotes, scheduling, disputes, expiry).
+ *
+ * Booking/Appointments module addition: a request can only transition to
+ * ACCEPTED (via AcceptQuoteUseCase, when the customer accepts one of its
+ * Quotes) while it is still in this same OPEN-equivalent (PUBLISHED) state —
+ * so "acceptable" reuses the exact same predicate as editable/cancellable,
+ * not a new rule.
  */
 export const OPEN_EQUIVALENT_STATUS: ServiceRequestStatusValue = "PUBLISHED";
 export const CANCELLED_STATUS: ServiceRequestStatusValue = "CANCELLED";
+export const ACCEPTED_STATUS: ServiceRequestStatusValue = "ACCEPTED";
 
 export function isEditableStatus(status: ServiceRequestStatusValue): boolean {
   return status === OPEN_EQUIVALENT_STATUS;
 }
 
 export function isCancellableStatus(status: ServiceRequestStatusValue): boolean {
+  return status === OPEN_EQUIVALENT_STATUS;
+}
+
+/** Whether a ServiceRequest can transition to ACCEPTED right now — i.e.
+ *  whether one of its Quotes can still be accepted. See module doc above. */
+export function isAcceptableStatus(status: ServiceRequestStatusValue): boolean {
   return status === OPEN_EQUIVALENT_STATUS;
 }

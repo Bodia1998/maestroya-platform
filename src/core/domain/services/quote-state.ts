@@ -27,14 +27,23 @@ import type { QuoteStatusValue } from "@/domain/repositories/quote-repository";
  * possible, enforced here in the domain layer so no use case or UI path can
  * bypass it.
  *
- * Decision — supported transitions: the only state transition this module
- * implements is (SENT | VIEWED) -> WITHDRAWN, driven by
- * WithdrawQuoteUseCase. Transitions into ACCEPTED/REJECTED/EXPIRED belong to
- * a future acceptance/expiry module and are deliberately not implemented or
- * validated here.
+ * Decision — supported transitions: this module implements
+ * (SENT | VIEWED) -> WITHDRAWN, driven by WithdrawQuoteUseCase.
+ *
+ * Quote acceptance is intentionally not represented as a generic quote state
+ * transition. AcceptQuoteUseCase performs acceptance as a dedicated atomic
+ * workflow: the selected quote becomes ACCEPTED, competing open quotes become
+ * REJECTED, the ServiceRequest becomes ACCEPTED, and an Appointment is created.
+ * This keeps the multi-entity acceptance invariant inside the dedicated
+ * acceptance workflow rather than allowing individual quote state transitions
+ * to bypass it.
+ *
+ * EXPIRED remains unimplemented — no use case in this codebase sets it yet.
  */
 export const INITIAL_QUOTE_STATUS: QuoteStatusValue = "SENT";
 export const WITHDRAWN_QUOTE_STATUS: QuoteStatusValue = "WITHDRAWN";
+export const ACCEPTED_QUOTE_STATUS: QuoteStatusValue = "ACCEPTED";
+export const REJECTED_QUOTE_STATUS: QuoteStatusValue = "REJECTED";
 
 /** The two "awaiting customer decision" statuses — see module doc above. */
 export const OPEN_QUOTE_STATUSES: readonly QuoteStatusValue[] = ["SENT", "VIEWED"];
@@ -47,6 +56,13 @@ export function isWithdrawableQuoteStatus(status: QuoteStatusValue): boolean {
   return OPEN_QUOTE_STATUSES.includes(status);
 }
 
+/** Whether a customer may accept this quote — same "awaiting decision" set
+ *  as editable/withdrawable (SENT/VIEWED). A WITHDRAWN, REJECTED, EXPIRED,
+ *  or already-ACCEPTED quote can never be (re-)accepted. */
+export function isAcceptableQuoteStatus(status: QuoteStatusValue): boolean {
+  return OPEN_QUOTE_STATUSES.includes(status);
+}
+
 /** "Active" = counts toward the "one active quote per request" rule
  *  enforced by CreateQuoteUseCase (see QuoteRepository.findActiveByServiceRequestAndProfessional). */
 export function isActiveQuoteStatus(status: QuoteStatusValue): boolean {
@@ -55,9 +71,13 @@ export function isActiveQuoteStatus(status: QuoteStatusValue): boolean {
 
 /** Whether transitioning a quote from `from` to `to` is a transition this
  *  module is allowed to perform. See "Decision — supported transitions" above. */
-export function canTransitionQuoteStatus(from: QuoteStatusValue, to: QuoteStatusValue): boolean {
+export function canTransitionQuoteStatus(
+  from: QuoteStatusValue,
+  to: QuoteStatusValue,
+): boolean {
   if (to === WITHDRAWN_QUOTE_STATUS) {
     return OPEN_QUOTE_STATUSES.includes(from);
   }
+
   return false;
 }
