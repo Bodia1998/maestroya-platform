@@ -1112,6 +1112,11 @@ model Job {
 
   appointments Appointment[]
 
+  /// Reviews & Ratings module (Module 13): at most one customer review per
+  /// Job — see Review.jobId's `@unique`. Optional because most Jobs will
+  /// never be reviewed.
+  review Review?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1339,13 +1344,35 @@ model MessageAttachment {
 // Reviews
 // ============================================================================
 
-/// A customer's review of a completed ServiceRequest. Exactly one of
-/// revieweeProfessionalProfileId / revieweeCompanyProfileId is set
-/// (CHECK constraint added in migration), matching the same solo-pro-vs-
-/// company duality used on Quote/Payout/etc. `response` lets the
-/// professional/company reply publicly, a standard marketplace pattern.
+/// A customer's review of a completed Job (Reviews & Ratings module,
+/// Module 13). Originally anchored to ServiceRequest only; Module 13
+/// re-anchors it to `Job` (`jobId`, unique — one review per Job) because
+/// Job, not ServiceRequest, is the authoritative record of "was the work
+/// actually completed" (see job-state.ts and the Module 11 audit report,
+/// "Finding 1"). `serviceRequestId` is kept as an additional denormalized
+/// FK for convenient querying — same "keep the frequently-joined FK
+/// alongside the newer authoritative one" pattern Appointment already uses
+/// for quoteId/serviceRequestId next to jobId — but Job is always the
+/// source of truth for eligibility/authorization, never ServiceRequest or
+/// Quote directly.
+///
+/// Exactly one of revieweeProfessionalProfileId / revieweeCompanyProfileId
+/// is set (CHECK constraint added in migration), matching the same
+/// solo-pro-vs-company duality used on Quote/Payout/etc — this keeps the
+/// model ready for a future company-side review without redesign. `response`
+/// lets the professional/company reply publicly, a standard marketplace
+/// pattern; unused by Module 13 (no reply use case yet) but left in place
+/// for a future module to fill in.
+///
+/// `status` defaults to PUBLISHED, not PENDING: Module 13 does not
+/// implement a moderation/approval workflow (that's Module 16 — Admin
+/// Panel's job), so a review is visible as soon as it's created. The enum
+/// itself (PENDING/PUBLISHED/FLAGGED/REMOVED) is left untouched so Module
+/// 16 can later flag/remove a review, or reintroduce a pending-approval
+/// step, without a schema change.
 model Review {
   id                             String       @id @default(uuid()) @db.Uuid
+  jobId                          String       @unique @db.Uuid
   serviceRequestId               String       @db.Uuid
   reviewerId                     String       @db.Uuid
   revieweeProfessionalProfileId  String?      @db.Uuid
@@ -1354,11 +1381,12 @@ model Review {
   comment                        String?      @db.Text
   response                       String?      @db.Text
   respondedAt                    DateTime?
-  status                         ReviewStatus @default(PENDING)
+  status                         ReviewStatus @default(PUBLISHED)
   deletedAt                      DateTime?
 
-  serviceRequest      ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
-  reviewer            User                 @relation("ReviewAuthor", fields: [reviewerId], references: [id], onDelete: Restrict)
+  job                  Job                  @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  serviceRequest       ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
+  reviewer             User                 @relation("ReviewAuthor", fields: [reviewerId], references: [id], onDelete: Restrict)
   revieweeProfessional ProfessionalProfile? @relation("ReviewOfProfessional", fields: [revieweeProfessionalProfileId], references: [id], onDelete: Restrict)
   revieweeCompany      CompanyProfile?      @relation("ReviewOfCompany", fields: [revieweeCompanyProfileId], references: [id], onDelete: Restrict)
 
