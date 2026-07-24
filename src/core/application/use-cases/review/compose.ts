@@ -2,6 +2,7 @@ import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prism
 import { PrismaJobRepository } from "@/infrastructure/database/prisma/repositories/prisma-job-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaReviewRepository } from "@/infrastructure/database/prisma/repositories/prisma-review-repository";
+import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
 import { CreateReviewUseCase } from "@/application/use-cases/review/create-review.use-case";
 import { GetProfessionalRatingSummaryUseCase } from "@/application/use-cases/review/get-professional-rating-summary.use-case";
 import { GetReviewByJobUseCase } from "@/application/use-cases/review/get-review-by-job.use-case";
@@ -11,9 +12,10 @@ const reviews = new PrismaReviewRepository();
 const jobs = new PrismaJobRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
 const professionals = new PrismaProfessionalRepository();
+const notifications = new NotificationServiceCreator();
 
 export function makeCreateReviewUseCase() {
-  return new CreateReviewUseCase(reviews, jobs, customerProfiles, professionals);
+  return new CreateReviewUseCase(reviews, jobs, customerProfiles, professionals, notifications);
 }
 
 export function makeGetReviewByJobUseCase() {

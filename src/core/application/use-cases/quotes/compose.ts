@@ -5,6 +5,7 @@ import { PrismaQuoteAcceptanceRepository } from "@/infrastructure/database/prism
 import { PrismaQuoteRepository } from "@/infrastructure/database/prisma/repositories/prisma-quote-repository";
 import { PrismaServiceRequestDiscoveryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-discovery-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
+import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
 import { AcceptQuoteUseCase } from "@/application/use-cases/quotes/accept-quote.use-case";
 import { CreateQuoteUseCase } from "@/application/use-cases/quotes/create-quote.use-case";
 import { GetAvailableServiceRequestsForProfessionalUseCase } from "@/application/use-cases/quotes/get-available-service-requests-for-professional.use-case";
@@ -22,6 +23,7 @@ const quotes = new PrismaQuoteRepository();
 const serviceRequests = new PrismaServiceRequestRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
 const quoteAcceptance = new PrismaQuoteAcceptanceRepository();
+const notifications = new NotificationServiceCreator();
 
 export function makeGetAvailableServiceRequestsForProfessionalUseCase() {
   return new GetAvailableServiceRequestsForProfessionalUseCase(
@@ -36,7 +38,7 @@ export function makeGetServiceRequestForProfessionalUseCase() {
 }
 
 export function makeCreateQuoteUseCase() {
-  return new CreateQuoteUseCase(professionals, professionalDiscovery, requestDiscovery, quotes);
+  return new CreateQuoteUseCase(professionals, professionalDiscovery, requestDiscovery, quotes, notifications);
 }
 
 export function makeUpdateQuoteUseCase() {
@@ -60,5 +62,5 @@ export function makeGetServiceRequestQuotesUseCase() {
 }
 
 export function makeAcceptQuoteUseCase() {
-  return new AcceptQuoteUseCase(customerProfiles, serviceRequests, quotes, quoteAcceptance);
+  return new AcceptQuoteUseCase(customerProfiles, serviceRequests, quotes, quoteAcceptance, professionals, notifications);
 }

@@ -1,3 +1,5 @@
+import { NullNotificationCreator } from "@/application/ports/notification-creator";
+import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { ConversationRepository } from "@/domain/repositories/conversation-repository";
 import type { MessageRecord, MessageRepository } from "@/domain/repositories/message-repository";
@@ -29,6 +31,9 @@ export class SendMessageUseCase {
   constructor(
     private readonly conversations: ConversationRepository,
     private readonly messages: MessageRepository,
+    // Notifications module (Module 15): optional, defaults to a no-op —
+    // see NullNotificationCreator's own doc comment.
+    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
   ) {}
 
   async execute(userId: string, conversationId: string, body: string): Promise<MessageRecord> {
@@ -47,6 +52,29 @@ export class SendMessageUseCase {
       throw new ValidationError("This conversation is no longer open for new messages.");
     }
 
-    return this.messages.create({ conversationId, senderId: userId, body: trimmed });
+    const message = await this.messages.create({ conversationId, senderId: userId, body: trimmed });
+
+    // Best-effort — mirrors ChatAppointmentNotifier/ChatJobNotifier's own
+    // doc comment: a notification-creation failure must never undo or
+    // fail message delivery itself. Every other *active* member besides
+    // the sender is notified — never the sender themselves.
+    try {
+      const recipients = conversation.members.filter((m) => m.userId !== userId && !m.leftAt);
+      for (const recipient of recipients) {
+        await this.notifications.notify({
+          userId: recipient.userId,
+          type: "NEW_MESSAGE",
+          title: "New message",
+          message: trimmed.length > 140 ? `${trimmed.slice(0, 140)}…` : trimmed,
+          resourceType: "CONVERSATION",
+          resourceId: conversationId,
+          actionUrl: `/messages/${conversationId}`,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to create new-message notification", error);
+    }
+
+    return message;
   }
 }

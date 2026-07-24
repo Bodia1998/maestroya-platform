@@ -608,33 +608,29 @@ enum RefundStatus {
   FAILED
 }
 
+/// Notifications module (Module 15): one value per real, currently
+/// implemented trigger point — see docs/MODULE_15_NOTIFICATIONS.md
+/// "Notification Types" for exactly which use case creates each one.
+/// This replaces the Phase-1 placeholder enum (SERVICE_REQUEST_UPDATE,
+/// QUOTE_RECEIVED, APPOINTMENT_REMINDER, MESSAGE_RECEIVED,
+/// PAYMENT_RECEIVED, PAYOUT_PROCESSED, DISPUTE_UPDATE, SYSTEM, MARKETING),
+/// none of which had a real trigger anywhere in the codebase yet — see the
+/// module doc's "Deferred Functionality" section for why each was dropped
+/// rather than kept unused (no professional-matching mechanism for a new
+/// ServiceRequest, Payments/Disputes/Admin are out of Module 15's scope
+/// per the module boundary, and there is no sender for MARKETING).
 enum NotificationType {
-  SERVICE_REQUEST_UPDATE
-  QUOTE_RECEIVED
+  NEW_QUOTE
   QUOTE_ACCEPTED
-  APPOINTMENT_REMINDER
-  MESSAGE_RECEIVED
-  PAYMENT_RECEIVED
-  PAYOUT_PROCESSED
+  QUOTE_REJECTED
+  NEW_MESSAGE
+  APPOINTMENT_PROPOSED
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_CANCELLED
+  JOB_STARTED
+  JOB_COMPLETED
+  JOB_CANCELLED
   REVIEW_RECEIVED
-  DISPUTE_UPDATE
-  SYSTEM
-  MARKETING
-}
-
-enum NotificationChannel {
-  IN_APP
-  EMAIL
-  SMS
-  PUSH
-}
-
-enum NotificationStatus {
-  PENDING
-  SENT
-  DELIVERED
-  FAILED
-  READ
 }
 
 enum VerificationDocumentType {
@@ -1626,27 +1622,47 @@ model Transaction {
 /// disposable, not part of the financial/legal record, so there's no
 /// reason to block a (hypothetical, rare) hard user deletion on their
 /// notification history.
+/// Notifications module (Module 15): a single in-app notification instance
+/// for a user. Reshaped from the Phase-1 placeholder version (see git
+/// history) — that shape anticipated multi-channel (email/SMS/push)
+/// delivery (`channel`/`status`/`sentAt`) that no module has implemented;
+/// Module 15 is in-app only, so those fields were replaced with the
+/// concrete shape it actually needs: `resourceType`/`resourceId` +
+/// `actionUrl` for deep-linking back to the resource the notification is
+/// about, `metadata` for small structured extras, and `dismissedAt` as the
+/// soft-delete marker (distinct from `readAt` — see the module doc's
+/// "Read/Unread vs. Dismissal" section). Multi-channel delivery remains a
+/// valid future extension that would reintroduce a channel/status pair
+/// without disturbing this shape.
 model Notification {
-  id        String              @id @default(uuid()) @db.Uuid
-  userId    String              @db.Uuid
-  type      NotificationType
-  channel   NotificationChannel
-  status    NotificationStatus  @default(PENDING)
-  title     String
-  body      String              @db.Text
-  data      Json?               @db.JsonB
-  readAt    DateTime?
-  sentAt    DateTime?
-  deletedAt DateTime?
+  id           String           @id @default(uuid()) @db.Uuid
+  userId       String           @db.Uuid
+  type         NotificationType
+  title        String
+  message      String           @db.Text
+  /// e.g. "SERVICE_REQUEST" | "QUOTE" | "CONVERSATION" | "APPOINTMENT" |
+  /// "JOB" | "REVIEW" — free-text tag, not a DB enum, since new resource
+  /// kinds may be added by future modules without a migration here.
+  resourceType String?
+  resourceId   String?
+  /// Safe, internal-only path (see notification-rules.ts's isSafeActionUrl)
+  /// — never an absolute/external URL, never javascript:/data:/vbscript:.
+  actionUrl    String?
+  metadata     Json?            @db.JsonB
+  /// null = unread. Distinct from dismissedAt — a read notification still
+  /// appears in the list until dismissed.
+  readAt       DateTime?
+  /// null = active. Non-null = soft-deleted; excluded from listings, unread
+  /// counts, and mark-all-as-read. Never hard-deleted.
+  dismissedAt  DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId, readAt])
-  @@index([userId, createdAt])
-  @@index([deletedAt])
+  @@index([userId, dismissedAt, createdAt])
+  @@index([userId, readAt, dismissedAt])
   @@map("notifications")
 }
 

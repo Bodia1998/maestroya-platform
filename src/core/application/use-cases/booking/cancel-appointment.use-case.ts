@@ -1,4 +1,6 @@
 import type { AppointmentNotifier } from "@/application/ports/appointment-notifier";
+import { NullNotificationCreator } from "@/application/ports/notification-creator";
+import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type {
   AppointmentCancellationReasonValue,
@@ -9,6 +11,7 @@ import type { CustomerProfileRepository } from "@/domain/repositories/customer-p
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
 import { NON_TERMINAL_STATUSES, isCancellableStatus } from "@/domain/services/appointment-state";
+import { notifyOtherAppointmentParty } from "./notify-appointment-party";
 import { resolveAppointmentActor } from "./resolve-appointment-actor";
 
 /**
@@ -33,6 +36,7 @@ export class CancelAppointmentUseCase {
     private readonly professionals: ProfessionalRepository,
     private readonly serviceRequests: ServiceRequestRepository,
     private readonly notifier: AppointmentNotifier,
+    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
   ) {}
 
   async execute(
@@ -79,6 +83,21 @@ export class CancelAppointmentUseCase {
     } catch (error) {
       console.error("Failed to post appointment-cancelled chat notice", error);
     }
+
+    await notifyOtherAppointmentParty({
+      appointment: cancelled,
+      actor,
+      type: "APPOINTMENT_CANCELLED",
+      title: "Appointment cancelled",
+      message:
+        actor.role === "customer"
+          ? "The customer cancelled this appointment."
+          : "The professional cancelled this appointment.",
+      customerProfiles: this.customerProfiles,
+      professionals: this.professionals,
+      serviceRequests: this.serviceRequests,
+      notifications: this.notifications,
+    });
 
     return cancelled;
   }

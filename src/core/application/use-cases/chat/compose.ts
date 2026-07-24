@@ -4,6 +4,7 @@ import { PrismaMessageRepository } from "@/infrastructure/database/prisma/reposi
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaQuoteRepository } from "@/infrastructure/database/prisma/repositories/prisma-quote-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
+import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
 import { DeleteMessageUseCase } from "@/application/use-cases/chat/delete-message.use-case";
 import { GetUnreadCountUseCase } from "@/application/use-cases/chat/get-unread-count.use-case";
 import { ListConversationsUseCase } from "@/application/use-cases/chat/list-conversations.use-case";
@@ -18,13 +19,14 @@ const serviceRequests = new PrismaServiceRequestRepository();
 const quotes = new PrismaQuoteRepository();
 const conversations = new PrismaConversationRepository();
 const messages = new PrismaMessageRepository();
+const notifications = new NotificationServiceCreator();
 
 export function makeOpenConversationUseCase() {
   return new OpenConversationUseCase(customerProfiles, professionals, serviceRequests, quotes, conversations);
 }
 
 export function makeSendMessageUseCase() {
-  return new SendMessageUseCase(conversations, messages);
+  return new SendMessageUseCase(conversations, messages, notifications);
 }
 
 export function makeListMessagesUseCase() {
