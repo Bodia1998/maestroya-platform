@@ -44,7 +44,32 @@ export type AdminAuditAction =
   | "VERIFICATION_REVIEW_STARTED"
   | "VERIFICATION_APPROVED"
   | "VERIFICATION_REJECTED"
-  | "VERIFICATION_RESUBMISSION_REQUESTED";
+  | "VERIFICATION_RESUBMISSION_REQUESTED"
+  // Module 18 — Company Professional. COMPANY_CREATED/UPDATED and the
+  // membership/invitation actions are performed by a company owner/admin
+  // (not a platform admin) but reuse this same append-only trail, same
+  // reasoning as VERIFICATION_SUBMITTED above. COMPANY_SUSPENDED/
+  // COMPANY_REACTIVATED and the two company-verification review actions are
+  // the only ones performed by a platform ADMIN/SUPER_ADMIN.
+  | "COMPANY_CREATED"
+  | "COMPANY_UPDATED"
+  | "COMPANY_MEMBER_INVITED"
+  | "COMPANY_INVITATION_CANCELLED"
+  | "COMPANY_INVITATION_ACCEPTED"
+  | "COMPANY_INVITATION_DECLINED"
+  | "COMPANY_MEMBER_ROLE_CHANGED"
+  | "COMPANY_MEMBER_REMOVED"
+  | "COMPANY_OWNERSHIP_TRANSFERRED"
+  | "COMPANY_VERIFICATION_SUBMITTED"
+  | "COMPANY_VERIFICATION_RESUBMITTED"
+  | "COMPANY_VERIFICATION_DOCUMENT_UPLOADED"
+  | "COMPANY_VERIFICATION_DOCUMENT_REMOVED"
+  | "COMPANY_VERIFICATION_REVIEW_STARTED"
+  | "COMPANY_VERIFICATION_APPROVED"
+  | "COMPANY_VERIFICATION_REJECTED"
+  | "COMPANY_VERIFICATION_RESUBMISSION_REQUESTED"
+  | "COMPANY_SUSPENDED"
+  | "COMPANY_REACTIVATED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved

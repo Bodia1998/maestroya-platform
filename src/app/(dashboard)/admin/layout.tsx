@@ -21,6 +21,8 @@ const NAV_ITEMS = [
   { href: "/admin/users", label: "Users" },
   { href: "/admin/professionals", label: "Professionals" },
   { href: "/admin/verifications", label: "Verifications" },
+  { href: "/admin/companies", label: "Companies" },
+  { href: "/admin/company-verifications", label: "Company verifications" },
   { href: "/admin/service-requests", label: "Service requests" },
   { href: "/admin/quotes", label: "Quotes" },
   { href: "/admin/jobs", label: "Appointments & jobs" },

@@ -1,6 +1,11 @@
 import { PrismaAdminAuditLogRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-audit-log-repository";
 import { PrismaAdminRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-repository";
+import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
 import { ChangeUserRoleUseCase } from "@/application/use-cases/admin/change-user-role.use-case";
+import { ListAdminCompaniesUseCase } from "@/application/use-cases/admin/list-admin-companies.use-case";
+import { GetAdminCompanyUseCase } from "@/application/use-cases/admin/get-admin-company.use-case";
+import { SuspendCompanyUseCase } from "@/application/use-cases/admin/suspend-company.use-case";
+import { ReactivateCompanyUseCase } from "@/application/use-cases/admin/reactivate-company.use-case";
 import { GetAdminDashboardOverviewUseCase } from "@/application/use-cases/admin/get-admin-dashboard-overview.use-case";
 import { GetAdminJobUseCase } from "@/application/use-cases/admin/get-admin-job.use-case";
 import { GetAdminProfessionalUseCase } from "@/application/use-cases/admin/get-admin-professional.use-case";
@@ -32,6 +37,7 @@ import { SuspendAdminUserUseCase } from "@/application/use-cases/admin/suspend-a
 
 const admins = new PrismaAdminRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
+const notifications = new NotificationServiceCreator();
 
 export function makeGetAdminDashboardOverviewUseCase() {
   return new GetAdminDashboardOverviewUseCase(admins);
@@ -115,4 +121,22 @@ export function makeRestorePortfolioItemUseCase() {
 
 export function makeListAdminAuditLogsUseCase() {
   return new ListAdminAuditLogsUseCase(auditLog);
+}
+
+// --- Companies (Module 18 — Company Professional) ---
+
+export function makeListAdminCompaniesUseCase() {
+  return new ListAdminCompaniesUseCase(admins);
+}
+
+export function makeGetAdminCompanyUseCase() {
+  return new GetAdminCompanyUseCase(admins);
+}
+
+export function makeSuspendCompanyUseCase() {
+  return new SuspendCompanyUseCase(admins, auditLog, notifications);
+}
+
+export function makeReactivateCompanyUseCase() {
+  return new ReactivateCompanyUseCase(admins, auditLog, notifications);
 }

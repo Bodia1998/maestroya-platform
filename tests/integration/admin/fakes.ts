@@ -6,6 +6,8 @@ import type {
   RecordAdminAuditLogData,
 } from "@/domain/repositories/admin-audit-log-repository";
 import type {
+  AdminCompanyRecord,
+  AdminCompanyStatusValue,
   AdminDashboardOverview,
   AdminJobRecord,
   AdminJobStatusValue,
@@ -20,6 +22,7 @@ import type {
   AdminServiceRequestStatusValue,
   AdminUserRecord,
   AdminUserStatusValue,
+  ListAdminCompaniesOptions,
   ListAdminJobsOptions,
   ListAdminPortfolioItemsOptions,
   ListAdminProfessionalsOptions,
@@ -52,7 +55,29 @@ export class FakeAdminRepository implements AdminRepository {
   jobs = new Map<string, AdminJobRecord>();
   reviews = new Map<string, AdminReviewRecord>();
   portfolioItems = new Map<string, AdminPortfolioItemRecord>();
+  companies = new Map<string, AdminCompanyRecord>();
   roleKeys: string[] = [...DEFAULT_ROLE_KEYS];
+
+  seedCompany(overrides: Partial<AdminCompanyRecord> & { ownerUserId: string }): AdminCompanyRecord {
+    const now = new Date();
+    const record: AdminCompanyRecord = {
+      id: nextId("fake-company"),
+      ownerName: "Owner",
+      ownerEmail: "owner@example.com",
+      legalName: "Acme S.L.",
+      tradeName: null,
+      taxId: nextId("fake-taxid"),
+      status: "ACTIVE",
+      isVerified: false,
+      memberCount: 1,
+      averageRating: null,
+      reviewCount: 0,
+      createdAt: now,
+      ...overrides,
+    };
+    this.companies.set(record.id, record);
+    return record;
+  }
 
   seedUser(overrides: Partial<AdminUserRecord> = {}): AdminUserRecord {
     const now = new Date();
@@ -166,6 +191,7 @@ export class FakeAdminRepository implements AdminRepository {
     const record: AdminPortfolioItemRecord = {
       id: nextId("fake-portfolio-item"),
       professionalProfileId: nextId("fake-professional"),
+      companyProfileId: null,
       title: "Bathroom remodel",
       mediaUrl: "https://cdn.example.com/img.jpg",
       moderatedAt: null,
@@ -189,6 +215,7 @@ export class FakeAdminRepository implements AdminRepository {
       totalPortfolioItems: this.portfolioItems.size,
       totalNotifications: 0,
       unreadNotifications: 0,
+      totalCompanies: this.companies.size,
     };
   }
 
@@ -315,6 +342,39 @@ export class FakeAdminRepository implements AdminRepository {
     if (!existing) return null;
     const updated = { ...existing, moderatedAt };
     this.portfolioItems.set(id, updated);
+    return updated;
+  }
+
+  async listCompanies(options: ListAdminCompaniesOptions): Promise<AdminCompanyRecord[]> {
+    const search = options.search?.toLowerCase();
+    return [...this.companies.values()]
+      .filter((c) => !options.status || c.status === options.status)
+      .filter((c) => {
+        if (!search) return true;
+        return (
+          c.legalName.toLowerCase().includes(search) ||
+          (c.tradeName ?? "").toLowerCase().includes(search) ||
+          (c.ownerName ?? "").toLowerCase().includes(search)
+        );
+      })
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(options.offset, options.offset + options.limit);
+  }
+
+  async getCompanyById(id: string): Promise<AdminCompanyRecord | null> {
+    return this.companies.get(id) ?? null;
+  }
+
+  async setCompanyStatus(
+    id: string,
+    status: AdminCompanyStatusValue,
+    suspendedAt: Date | null,
+  ): Promise<AdminCompanyRecord | null> {
+    const existing = this.companies.get(id);
+    if (!existing) return null;
+    const updated = { ...existing, status };
+    this.companies.set(id, updated);
+    void suspendedAt;
     return updated;
   }
 }

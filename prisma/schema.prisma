@@ -82,6 +82,10 @@ model User {
   addresses           Address[]
 
   ownedCompanies         CompanyProfile[]      @relation("CompanyOwner")
+  /// Module 18 — Company Professional.
+  reviewedCompanyVerifications CompanyVerification[] @relation("CompanyVerificationReviewer")
+  companyInvitationsReceived   CompanyInvitation[]   @relation("CompanyInvitationInvitedUser")
+  companyInvitationsSent       CompanyInvitation[]   @relation("CompanyInvitationInvitedBy")
   submittedQuotes        Quote[]               @relation("QuoteSubmittedBy")
   conversationMembers    ConversationMember[]
   sentMessages           Message[]             @relation("MessageSender")
@@ -369,10 +373,55 @@ enum UserStatus {
   DEACTIVATED
 }
 
+/// Module 18 — Company Professional: MANAGER added between ADMIN and MEMBER
+/// (additive enum value — safe, non-breaking for existing OWNER/ADMIN/MEMBER
+/// rows). See docs/MODULE_18_COMPANY_PROFESSIONAL.md for the full permission
+/// matrix.
 enum CompanyMemberRole {
   OWNER
   ADMIN
+  MANAGER
   MEMBER
+}
+
+/// Module 18 — Company Professional: lifecycle status of a CompanyProfile,
+/// mirroring ProfessionalStatus's role for individual professionals but with
+/// an explicit PENDING state (a company profile can exist — created by its
+/// owner — before it is accepting public work, e.g. while verification is
+/// still in progress).
+enum CompanyStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+/// Module 18 — Company Professional: lifecycle of a single company
+/// membership invitation. Deliberately its own enum, not reusing
+/// CompanyMemberRole or CompanyStatus — an invitation has its own state
+/// machine (see company-invitation-rules.ts).
+enum CompanyInvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CANCELLED
+}
+
+/// Module 18 — Company Professional: state machine for a CompanyVerification
+/// case. Intentionally a separate enum from ProfessionalVerificationStatus
+/// (Module 17) even though the values are identical — avoids coupling a
+/// company-verification schema change to renaming/touching Module 17's enum,
+/// which stays untouched. See company-verification-rules.ts (mirrors
+/// professional-verification-rules.ts's transition map).
+enum VerificationCaseStatus {
+  DRAFT
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  RESUBMISSION_REQUIRED
+  EXPIRED
 }
 
 enum AddressType {
@@ -643,6 +692,23 @@ enum NotificationType {
   VERIFICATION_APPROVED
   VERIFICATION_REJECTED
   VERIFICATION_RESUBMISSION_REQUIRED
+  /// Module 18 — Company Professional: one value per real trigger point —
+  /// see docs/MODULE_18_COMPANY_PROFESSIONAL.md. Recipients: the invited
+  /// user (COMPANY_INVITATION_RECEIVED), the company owner/admins
+  /// (COMPANY_INVITATION_ACCEPTED/DECLINED, COMPANY_MEMBER_REMOVED), the
+  /// owning company's owner (COMPANY_VERIFICATION_*, COMPANY_SUSPENDED,
+  /// COMPANY_REACTIVATED).
+  COMPANY_INVITATION_RECEIVED
+  COMPANY_INVITATION_ACCEPTED
+  COMPANY_INVITATION_DECLINED
+  COMPANY_MEMBER_REMOVED
+  COMPANY_MEMBER_ROLE_CHANGED
+  COMPANY_VERIFICATION_SUBMITTED
+  COMPANY_VERIFICATION_APPROVED
+  COMPANY_VERIFICATION_REJECTED
+  COMPANY_VERIFICATION_RESUBMISSION_REQUIRED
+  COMPANY_SUSPENDED
+  COMPANY_REACTIVATED
 }
 
 enum VerificationDocumentType {
@@ -877,6 +943,28 @@ model CompanyProfile {
   isAcceptingRequests    Boolean  @default(true)
   deletedAt              DateTime?
 
+  // --- Module 18 — Company Professional additions (additive, nullable) ---
+  /// URL-safe public identifier for the company's public profile page
+  /// (`/companies/[slug]`), same role `ServiceCategory.slug` plays. Nullable
+  /// because no company existed before this module — backfilled lazily by
+  /// CreateCompanyUseCase, never required to be set for a company to
+  /// function internally.
+  slug                String?       @unique
+  contactEmail        String?
+  contactPhone        String?
+  addressLine         String?
+  city                String?
+  province            String?
+  postalCode          String?
+  country             String?       @default("ES")
+  latitude            Float?
+  longitude           Float?
+  /// Explicit, domain-controlled lifecycle status — distinct from
+  /// `isVerified` (trust signal) and `deletedAt` (hard removal). See
+  /// company-rules.ts for the transition map.
+  status              CompanyStatus @default(PENDING)
+  suspendedAt         DateTime?
+
   owner   User             @relation("CompanyOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
   members CompanyMember[]
 
@@ -891,14 +979,126 @@ model CompanyProfile {
   commissions              Commission[]            @relation("CommissionOnCompany")
   verificationDocuments    VerificationDocument[]  @relation("DocumentOfCompany")
   respondentInDisputes     Dispute[]               @relation("DisputeRespondentCompany")
+  /// Module 18 — Company Professional.
+  invitations              CompanyInvitation[]
+  verifications            CompanyVerification[]
+  /// Module 14 (extended by Module 18): a company-level portfolio, kept
+  /// alongside the existing professional-anchored PortfolioItem rather than
+  /// merging the two — see PortfolioItem.companyProfileId's own doc comment.
+  portfolioItems           PortfolioItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([ownerUserId])
   @@index([isVerified])
+  @@index([status])
   @@index([deletedAt])
   @@map("company_profiles")
+}
+
+/// Module 18 — Company Professional: a secure invitation for an existing
+/// MaestroYa user to join a company. Scope: existing users only (matches
+/// the module's minimum requirement — email invitations to non-existing
+/// users are deferred, see docs/MODULE_18_COMPANY_PROFESSIONAL.md). The
+/// token is never stored in plaintext (`tokenHash`, SHA-256 — same
+/// convention as EmailVerificationToken/PasswordResetToken/RefreshToken).
+/// `invitedUserId` is resolved server-side from `email` at creation time —
+/// never client-supplied. At most one PENDING invitation may exist per
+/// (companyId, email) — enforced by a partial unique index added in the
+/// migration (Prisma cannot express partial unique indexes natively; same
+/// pattern as ProfessionalVerification's active-case index).
+model CompanyInvitation {
+  id              String                  @id @default(uuid()) @db.Uuid
+  companyId       String                  @db.Uuid
+  email           String
+  invitedUserId   String?                 @db.Uuid
+  invitedByUserId String                  @db.Uuid
+  /// The role the invitee will hold once accepted. Can never be OWNER —
+  /// ownership only changes via TransferCompanyOwnershipUseCase, enforced
+  /// in company-invitation-rules.ts, never at the DB layer alone.
+  role            CompanyMemberRole       @default(MEMBER)
+  status          CompanyInvitationStatus @default(PENDING)
+  tokenHash       String                  @unique
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  declinedAt      DateTime?
+  cancelledAt     DateTime?
+
+  company     CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invitedUser User?          @relation("CompanyInvitationInvitedUser", fields: [invitedUserId], references: [id], onDelete: SetNull)
+  invitedBy   User           @relation("CompanyInvitationInvitedBy", fields: [invitedByUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId, status])
+  @@index([invitedUserId])
+  @@index([email])
+  @@index([expiresAt])
+  @@map("company_invitations")
+}
+
+/// Module 18 — Company Professional: a single verification *case* for a
+/// CompanyProfile — the company-side mirror of Module 17's
+/// ProfessionalVerification aggregate (same DRAFT→PENDING→UNDER_REVIEW→
+/// APPROVED/REJECTED/RESUBMISSION_REQUIRED→EXPIRED lifecycle, see
+/// company-verification-rules.ts), kept as its own model rather than adding
+/// a nullable `companyProfileId` onto ProfessionalVerification — that model
+/// is `professionalProfileId`-required and reused as-is by Module 17's own
+/// tests/queries, so extending it would risk destabilizing a working
+/// module for a field it never needed. A company holds at most one
+/// non-EXPIRED case at a time — enforced by a partial unique index
+/// (`company_verifications_active_unique`, hand-written in the migration).
+model CompanyVerification {
+  id               String                  @id @default(uuid()) @db.Uuid
+  companyProfileId String                  @db.Uuid
+  status           VerificationCaseStatus  @default(DRAFT)
+  submittedAt      DateTime?
+  reviewedAt       DateTime?
+  reviewedByUserId String?                 @db.Uuid
+  rejectionReason  String?                 @db.Text
+  resubmissionReason String?               @db.Text
+  expiresAt        DateTime?
+
+  companyProfile CompanyProfile @relation(fields: [companyProfileId], references: [id], onDelete: Restrict)
+  reviewedBy     User?          @relation("CompanyVerificationReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  documents CompanyVerificationDocument[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyProfileId])
+  @@index([status])
+  @@index([reviewedByUserId])
+  @@index([status, submittedAt])
+  @@map("company_verifications")
+}
+
+/// Module 18 — Company Professional: a document uploaded as part of a
+/// CompanyVerification case — mirrors ProfessionalVerificationDocument
+/// exactly, reusing the same VerificationDocumentType/VerificationDocumentStatus
+/// enums (no parallel enums introduced). Cascades with its parent case.
+model CompanyVerificationDocument {
+  id               String                     @id @default(uuid()) @db.Uuid
+  verificationId   String                     @db.Uuid
+  type             VerificationDocumentType
+  status           VerificationDocumentStatus @default(PENDING)
+  fileUrl          String
+  originalFilename String
+  mimeType         String
+  fileSizeBytes    Int
+  rejectionReason  String?                    @db.Text
+
+  verification CompanyVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([verificationId])
+  @@index([type])
+  @@map("company_verification_documents")
 }
 
 /// Join table: which users work for which company, and in what capacity.
@@ -993,7 +1193,15 @@ model ServiceCategory {
 /// Address/Message/ProfessionalProfile elsewhere in this schema.
 model PortfolioItem {
   id                    String    @id @default(uuid()) @db.Uuid
-  professionalProfileId String    @db.Uuid
+  /// Module 18 — Company Professional: made optional (was required) so a
+  /// portfolio item can instead belong to a CompanyProfile. Exactly one of
+  /// professionalProfileId/companyProfileId is set — enforced by a CHECK
+  /// constraint added in the migration, same "exactly one" pattern as
+  /// Quote/Job/Review. Every pre-existing row keeps its
+  /// professionalProfileId unchanged; this is a nullability relaxation, not
+  /// a data migration.
+  professionalProfileId String?   @db.Uuid
+  companyProfileId      String?   @db.Uuid
   serviceCategoryId     String?   @db.Uuid
   title                 String
   description           String?   @db.Text
@@ -1012,13 +1220,15 @@ model PortfolioItem {
   /// existed pre-Module-16 and needed no schema change at all).
   moderatedAt DateTime?
 
-  professionalProfile ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Cascade)
-  serviceCategory     ServiceCategory?    @relation(fields: [serviceCategoryId], references: [id], onDelete: SetNull)
+  professionalProfile ProfessionalProfile? @relation(fields: [professionalProfileId], references: [id], onDelete: Cascade)
+  companyProfile      CompanyProfile?      @relation(fields: [companyProfileId], references: [id], onDelete: Cascade)
+  serviceCategory     ServiceCategory?     @relation(fields: [serviceCategoryId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([professionalProfileId, deletedAt, createdAt])
+  @@index([companyProfileId, deletedAt, createdAt])
   @@index([serviceCategoryId])
   @@index([moderatedAt])
   @@map("portfolio_items")

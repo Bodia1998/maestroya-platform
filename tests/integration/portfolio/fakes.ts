@@ -140,11 +140,21 @@ export class FakePortfolioRepository implements PortfolioRepository {
       .map(({ deletedAt: _deletedAt, ...record }) => record);
   }
 
+  /** Module 18 — Company Professional: same contract, scoped to a company. */
+  async listByCompanyId(companyId: string, options: ListPortfolioItemsOptions): Promise<PortfolioItemRecord[]> {
+    return [...this.items.values()]
+      .filter((r) => r.companyProfileId === companyId && !r.deletedAt)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(options.offset, options.offset + options.limit)
+      .map(({ deletedAt: _deletedAt, ...record }) => record);
+  }
+
   async create(data: CreatePortfolioItemData): Promise<PortfolioItemRecord> {
     const now = new Date();
     const record: PortfolioItemRecord & { deletedAt: Date | null } = {
       id: nextId("fake-portfolio-item"),
-      professionalProfileId: data.professionalProfileId,
+      professionalProfileId: data.professionalProfileId ?? null,
+      companyProfileId: data.companyProfileId ?? null,
       serviceCategoryId: data.serviceCategoryId,
       title: data.title,
       description: data.description,

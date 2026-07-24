@@ -5,15 +5,18 @@
  * subclass, pure business rules live in domain/services/portfolio-rules.ts,
  * this file only defines the shape data is read/written in.
  *
- * A PortfolioItem always belongs to exactly one ProfessionalProfile (see
- * schema.prisma's PortfolioItem model doc comment) — this codebase only
- * supports solo professionals end-to-end today, same scope note as
- * Review's revieweeProfessionalProfileId.
+ * Module 18 — Company Professional: a PortfolioItem now belongs to exactly
+ * one of ProfessionalProfile OR CompanyProfile (see schema.prisma's
+ * PortfolioItem model doc comment) — `professionalProfileId` is nullable
+ * exactly for this reason. Every pre-existing item keeps
+ * `professionalProfileId` set and `companyProfileId` null; this module never
+ * touches an existing row.
  */
 
 export interface PortfolioItemRecord {
   id: string;
-  professionalProfileId: string;
+  professionalProfileId: string | null;
+  companyProfileId: string | null;
   serviceCategoryId: string | null;
   title: string;
   description: string | null;
@@ -22,8 +25,11 @@ export interface PortfolioItemRecord {
   updatedAt: Date;
 }
 
+/** Exactly one of professionalProfileId/companyProfileId must be set — the
+ *  same "exactly one" rule the DB CHECK constraint enforces. */
 export interface CreatePortfolioItemData {
-  professionalProfileId: string;
+  professionalProfileId?: string | null;
+  companyProfileId?: string | null;
   serviceCategoryId: string | null;
   title: string;
   description: string | null;
@@ -62,6 +68,10 @@ export interface PortfolioRepository {
     professionalProfileId: string,
     options: ListPortfolioItemsOptions,
   ): Promise<PortfolioItemRecord[]>;
+
+  /** Module 18 — Company Professional: same contract as
+   *  listByProfessionalId, scoped to a company's own portfolio. */
+  listByCompanyId(companyId: string, options: ListPortfolioItemsOptions): Promise<PortfolioItemRecord[]>;
 
   create(data: CreatePortfolioItemData): Promise<PortfolioItemRecord>;
 

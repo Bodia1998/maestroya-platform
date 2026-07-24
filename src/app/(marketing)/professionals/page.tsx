@@ -1,7 +1,11 @@
+import Link from "next/link";
+
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { searchProfessionalsSchema } from "@/application/dto/discovery.dto";
-import { makeSearchProfessionalsUseCase } from "@/application/use-cases/discovery/compose";
+import { searchCompaniesSchema } from "@/application/dto/company.dto";
+import { makeSearchProfessionalsUseCase, makeSearchCompaniesUseCase } from "@/application/use-cases/discovery/compose";
 import type { SearchProfessionalsResult } from "@/application/use-cases/discovery/search-professionals.use-case";
+import type { SearchCompaniesResult } from "@/application/use-cases/discovery/search-companies.use-case";
 import { DomainError } from "@/domain/errors/domain-error";
 import { ProfessionalSearchForm } from "./search-form";
 import { SearchResultsList } from "./search-results-list";
@@ -43,6 +47,13 @@ export default async function ProfessionalsSearchPage({
 
   let results: SearchProfessionalsResult | null = null;
   let searchError: string | null = null;
+  // Module 18 — Company Professional: companies are integrated into
+  // discovery as a distinct result section alongside individual
+  // professionals (see SearchCompaniesUseCase's own doc comment on why this
+  // stays a separate query/shape rather than a merged, polymorphic result).
+  // Companies have no geo-radius matching yet, so this only depends on
+  // categoryId, not lat/lng.
+  let companyResults: SearchCompaniesResult | null = null;
 
   if (hasSearch) {
     const parsed = searchProfessionalsSchema.safeParse({
@@ -59,6 +70,15 @@ export default async function ProfessionalsSearchPage({
       } catch (error) {
         searchError =
           error instanceof DomainError ? error.message : "Something went wrong running that search.";
+      }
+    }
+
+    const companyParsed = searchCompaniesSchema.safeParse({ categoryId: rawCategoryId });
+    if (companyParsed.success) {
+      try {
+        companyResults = await makeSearchCompaniesUseCase().execute(companyParsed.data);
+      } catch {
+        companyResults = null;
       }
     }
   }
@@ -93,6 +113,31 @@ export default async function ProfessionalsSearchPage({
             {results.total} professional{results.total === 1 ? "" : "s"} found
           </h2>
           <SearchResultsList results={results.results} categoryNamesById={categoryNamesById} />
+        </section>
+      )}
+
+      {hasSearch && companyResults && companyResults.total > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-medium">
+            {companyResults.total} compan{companyResults.total === 1 ? "y" : "ies"} found
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {companyResults.results.map((company) => (
+              <li key={company.id} className="flex items-center justify-between rounded-md border border-border p-3 text-sm">
+                <div>
+                  <p className="font-medium">
+                    {company.displayName} {company.isVerified && <span className="text-xs text-green-700">✓ Verified</span>}
+                  </p>
+                  <p className="text-foreground/60">
+                    {[company.city, company.province].filter(Boolean).join(", ") || "—"} · Team of {company.teamSize}
+                  </p>
+                </div>
+                <Link href={`/companies/${company.id}`} className="underline">
+                  View profile
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
     </div>
