@@ -1,4 +1,6 @@
 import type { JobNotifier } from "@/application/ports/job-notifier";
+import { NullNotificationCreator } from "@/application/ports/notification-creator";
+import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type {
   JobCancellationReasonValue,
@@ -27,6 +29,7 @@ export class CancelJobUseCase {
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly professionals: ProfessionalRepository,
     private readonly notifier: JobNotifier,
+    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
   ) {}
 
   async execute(
@@ -83,6 +86,39 @@ export class CancelJobUseCase {
       });
     } catch (error) {
       console.error("Failed to post job-cancelled chat notice", error);
+    }
+
+    try {
+      // Notify the party who did NOT perform the cancellation.
+      if (actor.role === "customer" && job.professionalProfileId) {
+        const professional = await this.professionals.findById(job.professionalProfileId);
+        if (professional) {
+          await this.notifications.notify({
+            userId: professional.userId,
+            type: "JOB_CANCELLED",
+            title: "Job cancelled",
+            message: "The customer cancelled this job.",
+            resourceType: "JOB",
+            resourceId: job.id,
+            actionUrl: `/dashboard/professional/jobs/${job.id}`,
+          });
+        }
+      } else if (actor.role === "professional") {
+        const customer = await this.customerProfiles.findById(job.customerId);
+        if (customer) {
+          await this.notifications.notify({
+            userId: customer.userId,
+            type: "JOB_CANCELLED",
+            title: "Job cancelled",
+            message: "The professional cancelled this job.",
+            resourceType: "JOB",
+            resourceId: job.id,
+            actionUrl: `/jobs/${job.id}`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to create job-cancelled notification", error);
     }
 
     return cancelled;

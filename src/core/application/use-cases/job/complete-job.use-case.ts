@@ -1,4 +1,6 @@
 import type { JobNotifier } from "@/application/ports/job-notifier";
+import { NullNotificationCreator } from "@/application/ports/notification-creator";
+import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { JobRecord, JobRepository } from "@/domain/repositories/job-repository";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
@@ -32,6 +34,7 @@ export class CompleteJobUseCase {
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly professionals: ProfessionalRepository,
     private readonly notifier: JobNotifier,
+    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
   ) {}
 
   async execute(userId: string, jobId: string): Promise<JobRecord> {
@@ -75,6 +78,23 @@ export class CompleteJobUseCase {
       });
     } catch (error) {
       console.error("Failed to post job-completed chat notice", error);
+    }
+
+    try {
+      const customer = await this.customerProfiles.findById(job.customerId);
+      if (customer) {
+        await this.notifications.notify({
+          userId: customer.userId,
+          type: "JOB_COMPLETED",
+          title: "Job completed",
+          message: "The professional marked your job as completed.",
+          resourceType: "JOB",
+          resourceId: job.id,
+          actionUrl: `/jobs/${job.id}`,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to create job-completed notification", error);
     }
 
     return completed;

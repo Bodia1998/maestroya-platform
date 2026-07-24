@@ -1,4 +1,6 @@
 import type { AppointmentNotifier } from "@/application/ports/appointment-notifier";
+import { NullNotificationCreator } from "@/application/ports/notification-creator";
+import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { AppointmentDetailRecord, AppointmentRepository } from "@/domain/repositories/appointment-repository";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
@@ -6,6 +8,7 @@ import type { ProfessionalRepository } from "@/domain/repositories/professional-
 import type { ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
 import { PROPOSABLE_STATUSES, isProposableStatus } from "@/domain/services/appointment-state";
 import { hasMinimumNotice, isValidWindow } from "@/domain/services/scheduling-rules";
+import { notifyOtherAppointmentParty } from "./notify-appointment-party";
 import { resolveAppointmentActor } from "./resolve-appointment-actor";
 
 /**
@@ -29,6 +32,11 @@ export class ProposeAppointmentTimeUseCase {
     private readonly professionals: ProfessionalRepository,
     private readonly serviceRequests: ServiceRequestRepository,
     private readonly notifier: AppointmentNotifier,
+    // Notifications module (Module 15): optional, defaults to a no-op so
+    // every pre-existing direct construction of this use case (this
+    // codebase's own tests) keeps compiling and behaving exactly as
+    // before — see NullNotificationCreator's own doc comment.
+    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
   ) {}
 
   async execute(
@@ -84,6 +92,21 @@ export class ProposeAppointmentTimeUseCase {
       // itself.
       console.error("Failed to post appointment-proposed chat notice", error);
     }
+
+    await notifyOtherAppointmentParty({
+      appointment: updated,
+      actor,
+      type: "APPOINTMENT_PROPOSED",
+      title: "New appointment time proposed",
+      message:
+        actor.role === "customer"
+          ? "The customer proposed a new appointment time."
+          : "The professional proposed a new appointment time.",
+      customerProfiles: this.customerProfiles,
+      professionals: this.professionals,
+      serviceRequests: this.serviceRequests,
+      notifications: this.notifications,
+    });
 
     return updated;
   }

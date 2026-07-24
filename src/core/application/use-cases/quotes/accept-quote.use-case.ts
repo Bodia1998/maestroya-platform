@@ -1,5 +1,8 @@
+import { NullNotificationCreator } from "@/application/ports/notification-creator";
+import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
+import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { AcceptQuoteResult, QuoteAcceptanceRepository } from "@/domain/repositories/quote-acceptance-repository";
 import type { QuoteRepository } from "@/domain/repositories/quote-repository";
 import type { ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
@@ -41,6 +44,12 @@ export class AcceptQuoteUseCase {
     private readonly serviceRequests: ServiceRequestRepository,
     private readonly quotes: QuoteRepository,
     private readonly quoteAcceptance: QuoteAcceptanceRepository,
+    // Notifications module (Module 15): both optional, defaulting to
+    // undefined/a no-op so every pre-existing direct construction of this
+    // use case (this codebase's own tests) keeps compiling and behaving
+    // exactly as before — see NullNotificationCreator's own doc comment.
+    private readonly professionals?: ProfessionalRepository,
+    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
   ) {}
 
   async execute(userId: string, serviceRequestId: string, quoteId: string): Promise<AcceptQuoteResult> {
@@ -67,6 +76,58 @@ export class AcceptQuoteUseCase {
       throw new ValidationError("This request can no longer accept a quote.");
     }
 
-    return this.quoteAcceptance.acceptQuote({ quoteId: quote.id, serviceRequestId: request.id });
+    const result = await this.quoteAcceptance.acceptQuote({ quoteId: quote.id, serviceRequestId: request.id });
+
+    // Best-effort — mirrors ChatAppointmentNotifier/ChatJobNotifier's own
+    // doc comment: a notification-creation failure must never undo or
+    // fail the quote acceptance itself. `professionals` is optional (see
+    // this class's own doc comment) — skipped entirely if not supplied.
+    if (this.professionals) {
+      try {
+        const acceptedProfessional = await this.professionals.findById(quote.professionalProfileId);
+        if (acceptedProfessional) {
+          await this.notifications.notify({
+            userId: acceptedProfessional.userId,
+            type: "QUOTE_ACCEPTED",
+            title: "Your quote was accepted",
+            message: "The customer accepted your quote.",
+            resourceType: "QUOTE",
+            resourceId: quote.id,
+            actionUrl: `/jobs/${result.job.id}`,
+          });
+        }
+
+        // The atomic acceptQuote transaction also rejects every other
+        // still-open quote on this ServiceRequest (see
+        // QuoteAcceptanceRepository.acceptQuote's own doc comment, step 3)
+        // — read the now-updated statuses back to notify each of those
+        // professionals too, without needing the repository's write path
+        // to return that list itself.
+        const allQuotes = await this.quotes.findManyByServiceRequestId(request.id);
+        const rejected = allQuotes.filter((q) => q.id !== quote.id && q.status === "REJECTED");
+        for (const rejectedQuote of rejected) {
+          try {
+            const rejectedProfessional = await this.professionals.findById(rejectedQuote.professionalProfileId);
+            if (rejectedProfessional) {
+              await this.notifications.notify({
+                userId: rejectedProfessional.userId,
+                type: "QUOTE_REJECTED",
+                title: "Your quote was not selected",
+                message: "The customer accepted a different quote for this service request.",
+                resourceType: "QUOTE",
+                resourceId: rejectedQuote.id,
+                actionUrl: `/requests/${request.id}`,
+              });
+            }
+          } catch (error) {
+            console.error("Failed to create quote-rejected notification", error);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to create quote-accepted notification", error);
+      }
+    }
+
+    return result;
   }
 }

@@ -1,10 +1,13 @@
 import type { AppointmentNotifier } from "@/application/ports/appointment-notifier";
+import { NullNotificationCreator } from "@/application/ports/notification-creator";
+import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { AppointmentDetailRecord, AppointmentRepository } from "@/domain/repositories/appointment-repository";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
 import { isConfirmableStatus } from "@/domain/services/appointment-state";
+import { notifyOtherAppointmentParty } from "./notify-appointment-party";
 import { resolveAppointmentActor } from "./resolve-appointment-actor";
 
 /**
@@ -32,6 +35,7 @@ export class ConfirmAppointmentUseCase {
     private readonly professionals: ProfessionalRepository,
     private readonly serviceRequests: ServiceRequestRepository,
     private readonly notifier: AppointmentNotifier,
+    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
   ) {}
 
   async execute(userId: string, appointmentId: string): Promise<AppointmentDetailRecord> {
@@ -72,6 +76,21 @@ export class ConfirmAppointmentUseCase {
     } catch (error) {
       console.error("Failed to post appointment-confirmed chat notice", error);
     }
+
+    await notifyOtherAppointmentParty({
+      appointment: confirmed,
+      actor,
+      type: "APPOINTMENT_CONFIRMED",
+      title: "Appointment time confirmed",
+      message:
+        actor.role === "customer"
+          ? "The customer confirmed the appointment time."
+          : "The professional confirmed the appointment time.",
+      customerProfiles: this.customerProfiles,
+      professionals: this.professionals,
+      serviceRequests: this.serviceRequests,
+      notifications: this.notifications,
+    });
 
     return confirmed;
   }

@@ -1,4 +1,6 @@
 import type { JobNotifier } from "@/application/ports/job-notifier";
+import { NullNotificationCreator } from "@/application/ports/notification-creator";
+import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { JobRecord, JobRepository } from "@/domain/repositories/job-repository";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
@@ -28,6 +30,7 @@ export class StartJobUseCase {
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly professionals: ProfessionalRepository,
     private readonly notifier: JobNotifier,
+    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
   ) {}
 
   async execute(userId: string, jobId: string): Promise<JobRecord> {
@@ -65,6 +68,23 @@ export class StartJobUseCase {
       });
     } catch (error) {
       console.error("Failed to post job-started chat notice", error);
+    }
+
+    try {
+      const customer = await this.customerProfiles.findById(job.customerId);
+      if (customer) {
+        await this.notifications.notify({
+          userId: customer.userId,
+          type: "JOB_STARTED",
+          title: "Work has started",
+          message: "The professional started work on your job.",
+          resourceType: "JOB",
+          resourceId: job.id,
+          actionUrl: `/jobs/${job.id}`,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to create job-started notification", error);
     }
 
     return started;

@@ -1,3 +1,5 @@
+import { NullNotificationCreator } from "@/application/ports/notification-creator";
+import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { ConflictError, NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { ProfessionalDiscoveryRepository } from "@/domain/repositories/professional-discovery-repository";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
@@ -28,6 +30,9 @@ export class CreateQuoteUseCase {
     private readonly professionalDiscovery: ProfessionalDiscoveryRepository,
     private readonly requestDiscovery: ServiceRequestDiscoveryRepository,
     private readonly quotes: QuoteRepository,
+    // Notifications module (Module 15): optional, defaults to a no-op —
+    // see NullNotificationCreator's own doc comment.
+    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
   ) {}
 
   async execute(userId: string, input: CreateQuoteInput): Promise<QuoteRecord> {
@@ -64,7 +69,7 @@ export class CreateQuoteUseCase {
 
     const totalAmount = calculateQuoteTotal(input.items);
 
-    return this.quotes.create({
+    const quote = await this.quotes.create({
       serviceRequestId: request.id,
       professionalProfileId: professional.id,
       submittedByUserId: userId,
@@ -78,5 +83,24 @@ export class CreateQuoteUseCase {
         unitPrice: item.unitPrice,
       })),
     });
+
+    // Best-effort — mirrors ChatAppointmentNotifier/ChatJobNotifier's own
+    // doc comment: a notification-creation failure must never undo or fail
+    // the quote submission itself.
+    try {
+      await this.notifications.notify({
+        userId: request.customerUserId,
+        type: "NEW_QUOTE",
+        title: "New quote received",
+        message: "A professional submitted a quote for your service request.",
+        resourceType: "QUOTE",
+        resourceId: quote.id,
+        actionUrl: `/requests/${request.id}`,
+      });
+    } catch (error) {
+      console.error("Failed to create new-quote notification", error);
+    }
+
+    return quote;
   }
 }

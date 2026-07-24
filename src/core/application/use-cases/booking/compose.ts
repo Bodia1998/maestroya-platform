@@ -5,6 +5,7 @@ import { PrismaMessageRepository } from "@/infrastructure/database/prisma/reposi
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { ChatAppointmentNotifier } from "@/infrastructure/chat/chat-appointment-notifier";
+import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
 import { CancelAppointmentUseCase } from "@/application/use-cases/booking/cancel-appointment.use-case";
 import { CompleteAppointmentUseCase } from "@/application/use-cases/booking/complete-appointment.use-case";
 import { ConfirmAppointmentUseCase } from "@/application/use-cases/booking/confirm-appointment.use-case";
@@ -22,17 +23,39 @@ const conversations = new PrismaConversationRepository();
 const messages = new PrismaMessageRepository();
 
 const notifier = new ChatAppointmentNotifier(serviceRequests, customerProfiles, professionals, conversations, messages);
+const notifications = new NotificationServiceCreator();
 
 export function makeProposeAppointmentTimeUseCase() {
-  return new ProposeAppointmentTimeUseCase(appointments, customerProfiles, professionals, serviceRequests, notifier);
+  return new ProposeAppointmentTimeUseCase(
+    appointments,
+    customerProfiles,
+    professionals,
+    serviceRequests,
+    notifier,
+    notifications,
+  );
 }
 
 export function makeConfirmAppointmentUseCase() {
-  return new ConfirmAppointmentUseCase(appointments, customerProfiles, professionals, serviceRequests, notifier);
+  return new ConfirmAppointmentUseCase(
+    appointments,
+    customerProfiles,
+    professionals,
+    serviceRequests,
+    notifier,
+    notifications,
+  );
 }
 
 export function makeCancelAppointmentUseCase() {
-  return new CancelAppointmentUseCase(appointments, customerProfiles, professionals, serviceRequests, notifier);
+  return new CancelAppointmentUseCase(
+    appointments,
+    customerProfiles,
+    professionals,
+    serviceRequests,
+    notifier,
+    notifications,
+  );
 }
 
 export function makeCompleteAppointmentUseCase() {

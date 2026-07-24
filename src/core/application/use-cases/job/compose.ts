@@ -5,6 +5,7 @@ import { PrismaMessageRepository } from "@/infrastructure/database/prisma/reposi
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { ChatJobNotifier } from "@/infrastructure/chat/chat-job-notifier";
+import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
 import { CancelJobUseCase } from "@/application/use-cases/job/cancel-job.use-case";
 import { CompleteJobUseCase } from "@/application/use-cases/job/complete-job.use-case";
 import { GetJobUseCase } from "@/application/use-cases/job/get-job.use-case";
@@ -20,17 +21,18 @@ const conversations = new PrismaConversationRepository();
 const messages = new PrismaMessageRepository();
 
 const notifier = new ChatJobNotifier(serviceRequests, customerProfiles, professionals, conversations, messages);
+const notifications = new NotificationServiceCreator();
 
 export function makeStartJobUseCase() {
-  return new StartJobUseCase(jobs, customerProfiles, professionals, notifier);
+  return new StartJobUseCase(jobs, customerProfiles, professionals, notifier, notifications);
 }
 
 export function makeCompleteJobUseCase() {
-  return new CompleteJobUseCase(jobs, customerProfiles, professionals, notifier);
+  return new CompleteJobUseCase(jobs, customerProfiles, professionals, notifier, notifications);
 }
 
 export function makeCancelJobUseCase() {
-  return new CancelJobUseCase(jobs, customerProfiles, professionals, notifier);
+  return new CancelJobUseCase(jobs, customerProfiles, professionals, notifier, notifications);
 }
 
 export function makeGetJobUseCase() {
