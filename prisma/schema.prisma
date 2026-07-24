@@ -809,6 +809,8 @@ model ProfessionalProfile {
   commissions             Commission[]            @relation("CommissionOnProfessional")
   verificationDocuments   VerificationDocument[]  @relation("DocumentOfProfessional")
   respondentInDisputes    Dispute[]               @relation("DisputeRespondentProfessional")
+  /// Portfolio module (Module 14).
+  portfolioItems          PortfolioItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -914,6 +916,9 @@ model ServiceCategory {
   professionals ProfessionalProfile[] @relation("ProfessionalCategories")
   companies     CompanyProfile[]      @relation("CompanyCategories")
   serviceRequests ServiceRequest[]
+  /// Portfolio module (Module 14). Optional — a portfolio item may tag
+  /// itself with the category of work it showcases.
+  portfolioItems PortfolioItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -922,6 +927,53 @@ model ServiceCategory {
   @@index([status])
   @@index([deletedAt])
   @@map("service_categories")
+}
+
+// ============================================================================
+// Portfolio (Module 14)
+// ============================================================================
+
+/// Portfolio module (Module 14): a showcase item ("previous work") a
+/// professional attaches to their own profile. Always anchored to exactly
+/// one ProfessionalProfile — never to a CompanyProfile (this codebase only
+/// supports solo professionals end-to-end today, same scope note as
+/// Review.revieweeProfessionalProfileId; see review-repository.ts) and
+/// never editable/deletable by anyone but its owner.
+///
+/// `mediaUrl` is a plain URL string, not a stored file — Module 14 does not
+/// introduce a new media/storage abstraction (an upload UI/flow is
+/// explicitly deferred; see docs/MODULE_14_PORTFOLIO.md). When an upload
+/// flow is eventually built, it can reuse the existing Cloudinary adapter
+/// (see src/core/infrastructure/storage/cloudinary) and hand this field the
+/// resulting `secure_url`, exactly like Address/ServiceRequest photos do
+/// today — no schema change required.
+///
+/// `serviceCategoryId` is optional and `onDelete: SetNull` — unlike
+/// ServiceRequest.categoryId (Restrict, since a request's category is
+/// load-bearing for matching/history), a portfolio item's category tag is
+/// purely descriptive, so a deprecated category should never block a
+/// professional from managing their own portfolio.
+///
+/// Soft-deleted via `deletedAt` (never a hard delete) — same convention as
+/// Address/Message/ProfessionalProfile elsewhere in this schema.
+model PortfolioItem {
+  id                    String    @id @default(uuid()) @db.Uuid
+  professionalProfileId String    @db.Uuid
+  serviceCategoryId     String?   @db.Uuid
+  title                 String
+  description           String?   @db.Text
+  mediaUrl              String
+  deletedAt             DateTime?
+
+  professionalProfile ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Cascade)
+  serviceCategory     ServiceCategory?    @relation(fields: [serviceCategoryId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalProfileId, deletedAt, createdAt])
+  @@index([serviceCategoryId])
+  @@map("portfolio_items")
 }
 
 // ============================================================================
