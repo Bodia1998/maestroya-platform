@@ -55,6 +55,8 @@ export interface AdminDashboardOverview {
   /** Aggregate only — never per-user content. See AdminNotificationOverview's own doc comment. */
   totalNotifications: number;
   unreadNotifications: number;
+  /** Module 18 — Company Professional. */
+  totalCompanies: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -210,7 +212,8 @@ export interface ListAdminReviewsOptions extends AdminListOptions {
 
 export interface AdminPortfolioItemRecord {
   id: string;
-  professionalProfileId: string;
+  professionalProfileId: string | null;
+  companyProfileId: string | null;
   title: string;
   mediaUrl: string;
   moderatedAt: Date | null;
@@ -219,6 +222,33 @@ export interface AdminPortfolioItemRecord {
 }
 
 export type ListAdminPortfolioItemsOptions = AdminListOptions;
+
+// ---------------------------------------------------------------------------
+// Companies (Module 18 — Company Professional)
+// ---------------------------------------------------------------------------
+
+export type AdminCompanyStatusValue = "PENDING" | "ACTIVE" | "SUSPENDED" | "DEACTIVATED";
+
+export interface AdminCompanyRecord {
+  id: string;
+  ownerUserId: string;
+  ownerName: string | null;
+  ownerEmail: string | null;
+  legalName: string;
+  tradeName: string | null;
+  taxId: string;
+  status: AdminCompanyStatusValue;
+  isVerified: boolean;
+  memberCount: number;
+  averageRating: number | null;
+  reviewCount: number;
+  createdAt: Date;
+}
+
+export interface ListAdminCompaniesOptions extends AdminListOptions {
+  search?: string;
+  status?: AdminCompanyStatusValue;
+}
 
 // ---------------------------------------------------------------------------
 // Repository
@@ -273,4 +303,13 @@ export interface AdminRepository {
   listPortfolioItems(options: ListAdminPortfolioItemsOptions): Promise<AdminPortfolioItemRecord[]>;
   getPortfolioItemById(id: string): Promise<AdminPortfolioItemRecord | null>;
   setPortfolioItemModeratedAt(id: string, moderatedAt: Date | null): Promise<AdminPortfolioItemRecord | null>;
+
+  // Companies (Module 18)
+  listCompanies(options: ListAdminCompaniesOptions): Promise<AdminCompanyRecord[]>;
+  getCompanyById(id: string): Promise<AdminCompanyRecord | null>;
+  /** Sets CompanyProfile.status. Only ACTIVE <-> SUSPENDED transitions are
+   *  driven through this admin path (see company-rules.ts); PENDING/
+   *  DEACTIVATED are owner/system-driven and not touched by admin suspend/
+   *  reactivate actions. */
+  setCompanyStatus(id: string, status: AdminCompanyStatusValue, suspendedAt: Date | null): Promise<AdminCompanyRecord | null>;
 }

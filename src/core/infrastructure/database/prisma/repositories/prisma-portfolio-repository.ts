@@ -10,6 +10,7 @@ import type {
 const DETAIL_SELECT = {
   id: true,
   professionalProfileId: true,
+  companyProfileId: true,
   serviceCategoryId: true,
   title: true,
   description: true,
@@ -20,7 +21,8 @@ const DETAIL_SELECT = {
 
 type PrismaPortfolioItemRow = {
   id: string;
-  professionalProfileId: string;
+  professionalProfileId: string | null;
+  companyProfileId: string | null;
   serviceCategoryId: string | null;
   title: string;
   description: string | null;
@@ -33,6 +35,7 @@ function toRecord(row: PrismaPortfolioItemRow): PortfolioItemRecord {
   return {
     id: row.id,
     professionalProfileId: row.professionalProfileId,
+    companyProfileId: row.companyProfileId,
     serviceCategoryId: row.serviceCategoryId,
     title: row.title,
     description: row.description,
@@ -43,8 +46,8 @@ function toRecord(row: PrismaPortfolioItemRow): PortfolioItemRecord {
 }
 
 /**
- * Portfolio module (Module 14): Prisma implementation of
- * PortfolioRepository. Follows the same shape as PrismaReviewRepository —
+ * Portfolio module (Module 14, extended by Module 18): Prisma implementation
+ * of PortfolioRepository. Follows the same shape as PrismaReviewRepository —
  * narrow SELECTs, plain-object mapping, no Prisma types leaking past this
  * file. Every read filters `deletedAt: null`, same convention as
  * PrismaAddressRepository/PrismaServiceRequestRepository.
@@ -79,10 +82,24 @@ export class PrismaPortfolioRepository implements PortfolioRepository {
     return rows.map(toRecord);
   }
 
+  /** Module 18 — Company Professional: same contract, scoped to a
+   *  CompanyProfile's own portfolio instead. */
+  async listByCompanyId(companyId: string, options: ListPortfolioItemsOptions): Promise<PortfolioItemRecord[]> {
+    const rows = await prisma.portfolioItem.findMany({
+      where: { companyProfileId: companyId, deletedAt: null, moderatedAt: null },
+      select: DETAIL_SELECT,
+      orderBy: [{ createdAt: "desc" }],
+      take: options.limit,
+      skip: options.offset,
+    });
+    return rows.map(toRecord);
+  }
+
   async create(data: CreatePortfolioItemData): Promise<PortfolioItemRecord> {
     const row = await prisma.portfolioItem.create({
       data: {
-        professionalProfileId: data.professionalProfileId,
+        professionalProfileId: data.professionalProfileId ?? null,
+        companyProfileId: data.companyProfileId ?? null,
         serviceCategoryId: data.serviceCategoryId,
         title: data.title,
         description: data.description,

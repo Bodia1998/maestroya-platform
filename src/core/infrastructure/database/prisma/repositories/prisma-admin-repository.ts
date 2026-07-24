@@ -1,5 +1,7 @@
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
+  AdminCompanyRecord,
+  AdminCompanyStatusValue,
   AdminDashboardOverview,
   AdminJobRecord,
   AdminJobStatusValue,
@@ -16,6 +18,7 @@ import type {
   AdminUserRecord,
   AdminUserStatusValue,
   AdminVerificationStatusValue,
+  ListAdminCompaniesOptions,
   ListAdminJobsOptions,
   ListAdminPortfolioItemsOptions,
   ListAdminProfessionalsOptions,
@@ -51,6 +54,7 @@ export class PrismaAdminRepository implements AdminRepository {
       totalPortfolioItems,
       totalNotifications,
       unreadNotifications,
+      totalCompanies,
     ] = await Promise.all([
       prisma.user.count({ where: { deletedAt: null } }),
       prisma.professionalProfile.count({ where: { deletedAt: null } }),
@@ -62,6 +66,7 @@ export class PrismaAdminRepository implements AdminRepository {
       prisma.portfolioItem.count({ where: { deletedAt: null } }),
       prisma.notification.count({ where: { dismissedAt: null } }),
       prisma.notification.count({ where: { readAt: null, dismissedAt: null } }),
+      prisma.companyProfile.count({ where: { deletedAt: null } }),
     ]);
 
     return {
@@ -75,6 +80,7 @@ export class PrismaAdminRepository implements AdminRepository {
       totalPortfolioItems,
       totalNotifications,
       unreadNotifications,
+      totalCompanies,
     };
   }
 
@@ -296,6 +302,55 @@ export class PrismaAdminRepository implements AdminRepository {
     const row = await prisma.portfolioItem.update({ where: { id }, data: { moderatedAt }, select: portfolioSelect });
     return toPortfolioRecord(row);
   }
+
+  // -------------------------------------------------------------------
+  // Companies (Module 18 — Company Professional)
+  // -------------------------------------------------------------------
+
+  async listCompanies(options: ListAdminCompaniesOptions): Promise<AdminCompanyRecord[]> {
+    const search = options.search?.trim();
+    const rows = await prisma.companyProfile.findMany({
+      where: {
+        deletedAt: null,
+        ...(options.status ? { status: options.status } : {}),
+        ...(search
+          ? {
+              OR: [
+                { legalName: { contains: search, mode: "insensitive" as const } },
+                { tradeName: { contains: search, mode: "insensitive" as const } },
+                { owner: { name: { contains: search, mode: "insensitive" as const } } },
+                { owner: { email: { contains: search, mode: "insensitive" as const } } },
+              ],
+            }
+          : {}),
+      },
+      select: companySelect,
+      orderBy: [{ createdAt: "desc" }],
+      take: options.limit,
+      skip: options.offset,
+    });
+    return rows.map(toCompanyRecord);
+  }
+
+  async getCompanyById(id: string): Promise<AdminCompanyRecord | null> {
+    const row = await prisma.companyProfile.findFirst({ where: { id, deletedAt: null }, select: companySelect });
+    return row ? toCompanyRecord(row) : null;
+  }
+
+  async setCompanyStatus(
+    id: string,
+    status: AdminCompanyStatusValue,
+    suspendedAt: Date | null,
+  ): Promise<AdminCompanyRecord | null> {
+    const existing = await prisma.companyProfile.findUnique({ where: { id } });
+    if (!existing) return null;
+    const row = await prisma.companyProfile.update({
+      where: { id },
+      data: { status, suspendedAt },
+      select: companySelect,
+    });
+    return toCompanyRecord(row);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -378,6 +433,54 @@ function toProfessionalRecord(row: ProfessionalRow): AdminProfessionalRecord {
     averageRating: row.averageRating === null ? null : Number(row.averageRating),
     reviewCount: row.reviewCount,
     portfolioItemCount: row._count.portfolioItems,
+    createdAt: row.createdAt,
+  };
+}
+
+const companySelect = {
+  id: true,
+  ownerUserId: true,
+  legalName: true,
+  tradeName: true,
+  taxId: true,
+  status: true,
+  isVerified: true,
+  averageRating: true,
+  reviewCount: true,
+  createdAt: true,
+  owner: { select: { name: true, email: true } },
+  _count: { select: { members: { where: { joinedAt: { not: null }, removedAt: null } } } },
+} as const;
+
+type CompanyRow = {
+  id: string;
+  ownerUserId: string;
+  legalName: string;
+  tradeName: string | null;
+  taxId: string;
+  status: string;
+  isVerified: boolean;
+  averageRating: unknown;
+  reviewCount: number;
+  createdAt: Date;
+  owner: { name: string | null; email: string | null };
+  _count: { members: number };
+};
+
+function toCompanyRecord(row: CompanyRow): AdminCompanyRecord {
+  return {
+    id: row.id,
+    ownerUserId: row.ownerUserId,
+    ownerName: row.owner.name,
+    ownerEmail: row.owner.email,
+    legalName: row.legalName,
+    tradeName: row.tradeName,
+    taxId: row.taxId,
+    status: row.status as AdminCompanyStatusValue,
+    isVerified: row.isVerified,
+    memberCount: row._count.members,
+    averageRating: row.averageRating === null ? null : Number(row.averageRating),
+    reviewCount: row.reviewCount,
     createdAt: row.createdAt,
   };
 }
@@ -525,6 +628,7 @@ function toReviewRecord(row: ReviewRow): AdminReviewRecord {
 const portfolioSelect = {
   id: true,
   professionalProfileId: true,
+  companyProfileId: true,
   title: true,
   mediaUrl: true,
   moderatedAt: true,
@@ -534,7 +638,8 @@ const portfolioSelect = {
 
 type PortfolioRow = {
   id: string;
-  professionalProfileId: string;
+  professionalProfileId: string | null;
+  companyProfileId: string | null;
   title: string;
   mediaUrl: string;
   moderatedAt: Date | null;
@@ -546,6 +651,7 @@ function toPortfolioRecord(row: PortfolioRow): AdminPortfolioItemRecord {
   return {
     id: row.id,
     professionalProfileId: row.professionalProfileId,
+    companyProfileId: row.companyProfileId,
     title: row.title,
     mediaUrl: row.mediaUrl,
     moderatedAt: row.moderatedAt,
