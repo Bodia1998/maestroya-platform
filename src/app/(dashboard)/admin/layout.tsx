@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/professionals", label: "Professionals" },
+  { href: "/admin/verifications", label: "Verifications" },
   { href: "/admin/service-requests", label: "Service requests" },
   { href: "/admin/quotes", label: "Quotes" },
   { href: "/admin/jobs", label: "Appointments & jobs" },

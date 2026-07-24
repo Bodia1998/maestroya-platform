@@ -29,7 +29,22 @@ export type AdminAuditAction =
   | "REVIEW_MODERATED"
   | "REVIEW_RESTORED"
   | "PORTFOLIO_ITEM_MODERATED"
-  | "PORTFOLIO_ITEM_RESTORED";
+  | "PORTFOLIO_ITEM_RESTORED"
+  // Professional Verification module (Module 17). These reuse the same
+  // append-only AuditLog trail as every action above (see this interface's
+  // doc comment). A handful of them (SUBMITTED, RESUBMITTED, DOCUMENT_*) are
+  // performed by the *professional*, not an admin — `actorUserId` on the
+  // underlying AuditLog is a generic actor, so recording them here keeps a
+  // single unified trail rather than introducing a second audit system. See
+  // VERIFICATION_ACTION_LOG_LABEL below.
+  | "VERIFICATION_SUBMITTED"
+  | "VERIFICATION_RESUBMITTED"
+  | "VERIFICATION_DOCUMENT_UPLOADED"
+  | "VERIFICATION_DOCUMENT_REMOVED"
+  | "VERIFICATION_REVIEW_STARTED"
+  | "VERIFICATION_APPROVED"
+  | "VERIFICATION_REJECTED"
+  | "VERIFICATION_RESUBMISSION_REQUESTED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved

@@ -90,6 +90,10 @@ model User {
   requestedRefunds       Refund[]              @relation("RefundRequestedBy")
   notifications          Notification[]
   reviewedDocuments      VerificationDocument[] @relation("DocumentReviewer")
+  /// Professional Verification module (Module 17): verification cases this
+  /// admin has reviewed. SetNull on delete — losing the reviewer pointer is
+  /// acceptable; the case and its outcome remain intact.
+  reviewedVerifications  ProfessionalVerification[] @relation("VerificationReviewer")
   raisedDisputes         Dispute[]              @relation("DisputeRaisedBy")
   resolvedDisputes       Dispute[]              @relation("DisputeResolvedBy")
   submittedDisputeEvidence DisputeEvidence[]    @relation("EvidenceSubmittedBy")
@@ -631,6 +635,14 @@ enum NotificationType {
   JOB_COMPLETED
   JOB_CANCELLED
   REVIEW_RECEIVED
+  /// Professional Verification module (Module 17): one value per real
+  /// trigger point — see docs/MODULE_17_PROFESSIONAL_VERIFICATION.md. The
+  /// recipient is always the owning professional's User (never an admin or
+  /// arbitrary user).
+  VERIFICATION_SUBMITTED
+  VERIFICATION_APPROVED
+  VERIFICATION_REJECTED
+  VERIFICATION_RESUBMISSION_REQUIRED
 }
 
 enum VerificationDocumentType {
@@ -649,6 +661,30 @@ enum VerificationDocumentStatus {
   PENDING
   APPROVED
   REJECTED
+  EXPIRED
+}
+
+/// Professional Verification module (Module 17): the lifecycle of a single
+/// professional's identity/trust verification *case* — a deliberately
+/// explicit state machine rather than the coarse UNVERIFIED/PENDING/
+/// VERIFIED/REJECTED VerificationStatus that lives on ProfessionalProfile
+/// (that enum stays the *public* trust signal the discovery/profile badge
+/// reads; this one drives the internal review workflow). DRAFT is the
+/// pre-submission state a professional assembles documents in before ever
+/// entering the admin queue — it isn't in the original spec's six statuses,
+/// but the spec's own Create → Upload → Submit use-case split requires a
+/// state that exists before submission, so it's added here (see
+/// professional-verification-rules.ts for the full transition map and
+/// docs/MODULE_17_PROFESSIONAL_VERIFICATION.md for the rationale). A
+/// professional has at most one non-EXPIRED case at a time (partial unique
+/// index, added in the migration).
+enum ProfessionalVerificationStatus {
+  DRAFT
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  RESUBMISSION_REQUIRED
   EXPIRED
 }
 
@@ -807,6 +843,9 @@ model ProfessionalProfile {
   respondentInDisputes    Dispute[]               @relation("DisputeRespondentProfessional")
   /// Portfolio module (Module 14).
   portfolioItems          PortfolioItem[]
+  /// Professional Verification module (Module 17): the professional's
+  /// verification case history (at most one non-EXPIRED at a time).
+  verifications           ProfessionalVerification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1713,6 +1752,86 @@ model VerificationDocument {
   @@index([reviewedByUserId])
   @@index([status])
   @@map("verification_documents")
+}
+
+/// Professional Verification module (Module 17): a single verification
+/// *case* for an individual professional — the aggregate root of the review
+/// workflow. Deliberately separate from the pre-existing, unused
+/// `VerificationDocument` model (which is profile-anchored, company-capable,
+/// and has no case/lifecycle concept): this module needs a case that moves
+/// through an explicit state machine and owns its own set of documents, so
+/// it introduces its own aggregate rather than overloading that placeholder.
+///
+/// A professional accumulates a *history* of cases over time (one row per
+/// case), but only ever has one that is not EXPIRED at any moment — enforced
+/// by a partial unique index (`professional_verifications_active_unique`,
+/// added in the migration, since Prisma can't express a partial index) as
+/// well as by application logic in CreateProfessionalVerificationUseCase.
+///
+/// `professionalProfileId` is Restrict (a case is a trust/compliance record
+/// and must not silently vanish if the profile row is ever hard-deleted —
+/// the profile itself is soft-deleted, same rationale as elsewhere in this
+/// schema). `reviewedByUserId` is SetNull, matching VerificationDocument.
+model ProfessionalVerification {
+  id                    String                          @id @default(uuid()) @db.Uuid
+  professionalProfileId String                          @db.Uuid
+  status                ProfessionalVerificationStatus  @default(DRAFT)
+  submittedAt           DateTime?
+  reviewedAt            DateTime?
+  reviewedByUserId      String?                         @db.Uuid
+  /// Set only when status = REJECTED. Never exposed on any public API.
+  rejectionReason       String?                         @db.Text
+  /// Set only when status = RESUBMISSION_REQUIRED — instructions the
+  /// professional sees so they know what to fix. Never exposed publicly.
+  resubmissionReason    String?                         @db.Text
+  /// Set when APPROVED — the point past which an APPROVED case is treated as
+  /// EXPIRED and a fresh case may be opened.
+  expiresAt             DateTime?
+
+  professionalProfile ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
+  reviewedBy          User?               @relation("VerificationReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  documents ProfessionalVerificationDocument[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalProfileId])
+  @@index([status])
+  @@index([reviewedByUserId])
+  @@index([status, submittedAt])
+  @@map("professional_verifications")
+}
+
+/// Professional Verification module (Module 17): a document uploaded as part
+/// of a verification case. Cascades with its parent case (a document has no
+/// meaning outside the case it was uploaded for). `fileUrl` is a sensitive
+/// Cloudinary reference — never returned on any public/professional-profile
+/// API response; only the owning professional and ADMIN/SUPER_ADMIN can read
+/// it (see the module's use cases and docs). Reuses the existing
+/// `VerificationDocumentType`/`VerificationDocumentStatus` enums rather than
+/// introducing parallel ones.
+model ProfessionalVerificationDocument {
+  id               String                     @id @default(uuid()) @db.Uuid
+  verificationId   String                     @db.Uuid
+  type             VerificationDocumentType
+  status           VerificationDocumentStatus @default(PENDING)
+  fileUrl          String
+  originalFilename String
+  mimeType         String
+  fileSizeBytes    Int
+  /// Optional per-document rejection note (a reviewer may reject one
+  /// document without rejecting the whole case). Never exposed publicly.
+  rejectionReason  String?                    @db.Text
+
+  verification ProfessionalVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([verificationId])
+  @@index([type])
+  @@map("professional_verification_documents")
 }
 
 /// A dispute raised over a ServiceRequest (e.g. by the customer, over
