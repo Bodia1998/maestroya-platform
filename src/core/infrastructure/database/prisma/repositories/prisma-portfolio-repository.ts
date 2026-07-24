@@ -62,8 +62,15 @@ export class PrismaPortfolioRepository implements PortfolioRepository {
     professionalProfileId: string,
     options: ListPortfolioItemsOptions,
   ): Promise<PortfolioItemRecord[]> {
+    // Admin Panel module (Module 16): also excludes admin-moderated items
+    // (`moderatedAt` set) — this method serves both the public
+    // professional-profile listing and the owner's own dashboard listing
+    // (see this class's own doc comment), so a moderated item disappears
+    // from both until an admin restores it. `moderatedAt` is otherwise
+    // never null-checked anywhere else in Module 14's own code — this is
+    // the one integration point Module 16 adds here.
     const rows = await prisma.portfolioItem.findMany({
-      where: { professionalProfileId, deletedAt: null },
+      where: { professionalProfileId, deletedAt: null, moderatedAt: null },
       select: DETAIL_SELECT,
       orderBy: [{ createdAt: "desc" }],
       take: options.limit,

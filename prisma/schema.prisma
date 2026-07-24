@@ -961,6 +961,18 @@ model PortfolioItem {
   mediaUrl              String
   deletedAt             DateTime?
 
+  /// Admin Panel (Module 16): admin content moderation, deliberately
+  /// separate from `deletedAt` (owner-driven soft delete, Module 14).
+  /// Non-null = an admin has hidden this item from public/professional
+  /// listings; null = visible (default, unmoderated). Never set by the
+  /// professional themselves — only ModeratePortfolioItemUseCase/
+  /// RestorePortfolioItemUseCase (Admin Panel) write this field. Who
+  /// moderated it and why is recorded on the append-only AuditLog, not
+  /// denormalized here — same "narrow field, audit trail carries the
+  /// detail" choice made for Review moderation (Review.status already
+  /// existed pre-Module-16 and needed no schema change at all).
+  moderatedAt DateTime?
+
   professionalProfile ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Cascade)
   serviceCategory     ServiceCategory?    @relation(fields: [serviceCategoryId], references: [id], onDelete: SetNull)
 
@@ -969,6 +981,7 @@ model PortfolioItem {
 
   @@index([professionalProfileId, deletedAt, createdAt])
   @@index([serviceCategoryId])
+  @@index([moderatedAt])
   @@map("portfolio_items")
 }
 
