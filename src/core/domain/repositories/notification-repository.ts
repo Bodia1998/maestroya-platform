@@ -25,7 +25,13 @@ export type NotificationTypeValue =
   | "JOB_STARTED"
   | "JOB_COMPLETED"
   | "JOB_CANCELLED"
-  | "REVIEW_RECEIVED";
+  | "REVIEW_RECEIVED"
+  // Professional Verification module (Module 17): recipient is always the
+  // owning professional's User.
+  | "VERIFICATION_SUBMITTED"
+  | "VERIFICATION_APPROVED"
+  | "VERIFICATION_REJECTED"
+  | "VERIFICATION_RESUBMISSION_REQUIRED";
 
 export interface NotificationRecord {
   id: string;

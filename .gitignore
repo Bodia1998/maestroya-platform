@@ -40,6 +40,14 @@ next-env.d.ts
 
 # prisma
 /prisma/generated
+# Temporary Prisma client generated for offline typecheck in a sandbox where
+# the platform-native engine could not be regenerated in place (see
+# docs/MODULE_17_PROFESSIONAL_VERIFICATION.md "Validation"). Safe to delete.
+/prisma/.generated-client
+
+# Temporary tsconfig used to typecheck against the above generated client in
+# the same sandbox. Safe to delete.
+/tsconfig.typecheck.json
 
 # IDE
 .vscode/*

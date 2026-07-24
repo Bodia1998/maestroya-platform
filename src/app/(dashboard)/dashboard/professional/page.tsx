@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalByUserIdUseCase } from "@/application/use-cases/professional/compose";
@@ -46,6 +48,9 @@ export default async function ProfessionalDashboardPage() {
               status={professional.status}
               verificationStatus={professional.verificationStatus}
             />
+            <Link href="/dashboard/professional/verification" className="w-fit text-sm underline">
+              Manage identity verification →
+            </Link>
           </section>
 
           <section className="flex flex-col gap-4">

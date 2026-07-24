@@ -20,6 +20,18 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   REVIEW_RESTORED: "UPDATE",
   PORTFOLIO_ITEM_MODERATED: "UPDATE",
   PORTFOLIO_ITEM_RESTORED: "UPDATE",
+  // Professional Verification module (Module 17): the existing AuditLogAction
+  // enum already has a dedicated `VERIFICATION` value — every verification
+  // action maps to it (the concrete action name is preserved in
+  // metadata.adminAction, same as every other admin action).
+  VERIFICATION_SUBMITTED: "VERIFICATION",
+  VERIFICATION_RESUBMITTED: "VERIFICATION",
+  VERIFICATION_DOCUMENT_UPLOADED: "VERIFICATION",
+  VERIFICATION_DOCUMENT_REMOVED: "VERIFICATION",
+  VERIFICATION_REVIEW_STARTED: "VERIFICATION",
+  VERIFICATION_APPROVED: "VERIFICATION",
+  VERIFICATION_REJECTED: "VERIFICATION",
+  VERIFICATION_RESUBMISSION_REQUESTED: "VERIFICATION",
 };
 
 const SELECT = {
