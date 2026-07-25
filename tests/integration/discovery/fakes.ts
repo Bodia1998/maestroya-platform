@@ -2,6 +2,7 @@ import type {
   ProfessionalDiscoveryCandidate,
   ProfessionalDiscoveryRepository,
   ProfessionalPublicProfileRecord,
+  ProfessionalSearchFilter,
 } from "@/domain/repositories/professional-discovery-repository";
 import type {
   ServiceCategoryRecord,
@@ -19,8 +20,6 @@ export interface FakeDiscoverableProfessional extends ProfessionalDiscoveryCandi
   categoryIds: string[];
   status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
   bio: string | null;
-  city: string | null;
-  province: string | null;
 }
 
 export class FakeProfessionalDiscoveryRepository implements ProfessionalDiscoveryRepository {
@@ -34,13 +33,13 @@ export class FakeProfessionalDiscoveryRepository implements ProfessionalDiscover
   async findActiveCandidatesByCategory(categoryId: string): Promise<ProfessionalDiscoveryCandidate[]> {
     return [...this.professionals.values()]
       .filter((p) => p.status === "ACTIVE" && p.categoryIds.includes(categoryId))
-      .map(({ status: _status, bio: _bio, city: _city, province: _province, ...candidate }) => candidate);
+      .map(({ status: _status, bio: _bio, ...candidate }) => candidate);
   }
 
   async findCandidateById(professionalId: string): Promise<ProfessionalDiscoveryCandidate | null> {
     const professional = this.professionals.get(professionalId);
     if (!professional || professional.status !== "ACTIVE") return null;
-    const { status: _status, bio: _bio, city: _city, province: _province, ...candidate } = professional;
+    const { status: _status, bio: _bio, ...candidate } = professional;
     return candidate;
   }
 
@@ -63,6 +62,23 @@ export class FakeProfessionalDiscoveryRepository implements ProfessionalDiscover
       city: professional.city,
       province: professional.province,
     };
+  }
+
+  async searchCandidates(filter: ProfessionalSearchFilter): Promise<ProfessionalDiscoveryCandidate[]> {
+    return [...this.professionals.values()]
+      .filter((p) => p.status === "ACTIVE")
+      .filter((p) => !filter.categoryId || p.categoryIds.includes(filter.categoryId))
+      .filter((p) => !filter.verifiedOnly || p.verificationStatus === "VERIFIED")
+      .filter((p) => filter.minRating === undefined || (p.averageRating ?? 0) >= filter.minRating)
+      .filter((p) => filter.minReviewCount === undefined || p.reviewCount >= filter.minReviewCount)
+      .filter((p) => !filter.city || (p.city ?? "").toLowerCase() === filter.city.toLowerCase())
+      .filter((p) => !filter.province || (p.province ?? "").toLowerCase() === filter.province.toLowerCase())
+      .filter((p) => {
+        if (!filter.query) return true;
+        const haystack = `${p.displayName} ${p.businessName ?? ""} ${p.headline ?? ""}`.toLowerCase();
+        return haystack.includes(filter.query.toLowerCase());
+      })
+      .map(({ status: _status, bio: _bio, ...candidate }) => candidate);
   }
 }
 

@@ -31,6 +31,25 @@ export interface CompanyDiscoveryCandidate {
   /** Count of currently active (joined, not removed) members — shown on the
    *  public profile as "team size", never the members' identities. */
   teamSize: number;
+  /** Search & Ranking module (Module 19): count of the company's own
+   *  visible portfolio items — a ranking signal, never a discovery gate. */
+  portfolioItemCount: number;
+  /** Search & Ranking module (Module 19): used to derive the small
+   *  recency ranking signal (@/domain/services/ranking-engine). */
+  createdAt: Date;
+}
+
+/** Search & Ranking module (Module 19): see
+ *  ProfessionalSearchFilter's own doc comment — same shape and semantics,
+ *  the company-side mirror. */
+export interface CompanySearchFilter {
+  categoryId?: string;
+  query?: string;
+  city?: string;
+  province?: string;
+  verifiedOnly?: boolean;
+  minRating?: number;
+  minReviewCount?: number;
 }
 
 /** Safe, public-facing view of a single company's profile. Never includes
@@ -61,4 +80,9 @@ export interface CompanyDiscoveryRepository {
   findCandidateById(companyId: string): Promise<CompanyDiscoveryCandidate | null>;
   findPublicProfileById(companyId: string): Promise<CompanyPublicProfileRecord | null>;
   findPublicProfileBySlug(slug: string): Promise<CompanyPublicProfileRecord | null>;
+
+  /** Search & Ranking module (Module 19): see
+   *  ProfessionalDiscoveryRepository.searchCandidates's own doc comment —
+   *  same ACTIVE-only eligibility rule, the company-side mirror. */
+  searchCandidates(filter: CompanySearchFilter): Promise<CompanyDiscoveryCandidate[]>;
 }

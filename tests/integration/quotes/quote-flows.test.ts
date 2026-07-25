@@ -60,6 +60,12 @@ function seedActiveProfessional(
     categoryIds: overrides.categoryIds ?? [PLUMBING_ID],
     latitude: location?.latitude ?? null,
     longitude: location?.longitude ?? null,
+    city: null,
+    province: null,
+    averageRating: null,
+    reviewCount: 0,
+    portfolioItemCount: 0,
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
     status: "ACTIVE",
   });
   return professional;

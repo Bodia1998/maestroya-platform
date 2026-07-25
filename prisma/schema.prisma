@@ -829,6 +829,10 @@ model Address {
 
   @@index([userId])
   @@index([deletedAt])
+  /// Search & Ranking module (Module 19): supports city-based location
+  /// matching in ProfessionalDiscoveryRepository.searchCandidates without a
+  /// full table scan.
+  @@index([city])
   @@map("addresses")
 }
 
@@ -920,6 +924,9 @@ model ProfessionalProfile {
   @@index([status])
   @@index([isAcceptingRequests])
   @@index([deletedAt])
+  /// Search & Ranking module (Module 19): supports `minRating` filtering in
+  /// ProfessionalDiscoveryRepository.searchCandidates.
+  @@index([averageRating])
   @@map("professional_profiles")
 }
 
@@ -994,6 +1001,12 @@ model CompanyProfile {
   @@index([isVerified])
   @@index([status])
   @@index([deletedAt])
+  /// Search & Ranking module (Module 19): supports city/province location
+  /// matching and `minRating` filtering in
+  /// CompanyDiscoveryRepository.searchCandidates.
+  @@index([city])
+  @@index([province])
+  @@index([averageRating])
   @@map("company_profiles")
 }
 

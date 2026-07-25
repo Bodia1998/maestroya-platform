@@ -73,6 +73,12 @@ describe("Notification failures never break the primary business operation", () 
       categoryIds: [CATEGORY_ID],
       latitude: 38.9226,
       longitude: -0.1197,
+      city: null,
+      province: null,
+      averageRating: null,
+      reviewCount: 0,
+      portfolioItemCount: 0,
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
       status: "ACTIVE",
     });
     requestDiscovery.seed({
