@@ -27,6 +27,27 @@ export interface PlatformRevenueAggregate {
   paymentCount: number;
 }
 
+/**
+ * Module 23 — Analytics: a second narrow seam on this same interface,
+ * added for the customer-facing "total spending" analytics metric. Same
+ * justification as `getPlatformRevenueAggregate` above (a purpose-built
+ * reporting method on Module 22's own boundary, not a duplicate
+ * calculation living in Module 23) — this sums `Payment.amount`/
+ * `Refund.amount` verbatim, the same stored figures Module 22 already
+ * treats as authoritative, and never recomputes a commission, platform
+ * fee, or net-earnings figure (those remain professional-earnings-only
+ * concerns, out of scope for a customer's own spend summary — see
+ * CustomerFinancialSummaryDTO's doc comment on what a customer is allowed
+ * to see). Keyed by `payerId` (User.id, matching Payment.payerId) rather
+ * than a CustomerProfile id, since Payment itself is keyed that way.
+ */
+export interface CustomerSpendAggregate {
+  totalPaid: number;
+  refundsTotal: number;
+  paymentCount: number;
+}
+
 export interface FinancialReportingRepository {
   getPlatformRevenueAggregate(range: PlatformRevenueDateRange): Promise<PlatformRevenueAggregate>;
+  getCustomerSpendAggregate(payerId: string, range: PlatformRevenueDateRange): Promise<CustomerSpendAggregate>;
 }

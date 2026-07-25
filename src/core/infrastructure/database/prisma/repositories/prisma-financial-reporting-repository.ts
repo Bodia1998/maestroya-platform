@@ -1,5 +1,6 @@
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
+  CustomerSpendAggregate,
   FinancialReportingRepository,
   PlatformRevenueAggregate,
   PlatformRevenueDateRange,
@@ -75,6 +76,38 @@ export class PrismaFinancialReportingRepository implements FinancialReportingRep
       disputeAdjustmentsTotal: Number(adjustments._sum.amount ?? 0),
       payoutsTotal: Number(payouts._sum.amount ?? 0),
       paymentCount,
+    };
+  }
+
+  /** Module 23 — Analytics: see CustomerSpendAggregate's doc comment on
+   *  `FinancialReportingRepository` for why this lives here rather than in
+   *  an analytics-owned repository — it is a straight SUM of Payment/Refund
+   *  columns Module 22 already owns, gated on `capturedAt` (a payment only
+   *  counts toward "spending" once actually captured, matching
+   *  `getPlatformRevenueAggregate`'s own `paymentCount` gating above). */
+  async getCustomerSpendAggregate(payerId: string, range: PlatformRevenueDateRange): Promise<CustomerSpendAggregate> {
+    const capturedAt = dateFilter(range);
+
+    const [paid, refunds] = await Promise.all([
+      prisma.payment.aggregate({
+        where: { payerId, status: "CAPTURED", ...(capturedAt ? { capturedAt } : {}) },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.refund.aggregate({
+        where: {
+          status: "PROCESSED",
+          payment: { payerId },
+          ...(capturedAt ? { processedAt: capturedAt } : {}),
+        },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    return {
+      totalPaid: Number(paid._sum.amount ?? 0),
+      refundsTotal: Number(refunds._sum.amount ?? 0),
+      paymentCount: paid._count,
     };
   }
 }
