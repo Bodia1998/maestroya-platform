@@ -69,7 +69,28 @@ export type AdminAuditAction =
   | "COMPANY_VERIFICATION_REJECTED"
   | "COMPANY_VERIFICATION_RESUBMISSION_REQUESTED"
   | "COMPANY_SUSPENDED"
-  | "COMPANY_REACTIVATED";
+  | "COMPANY_REACTIVATED"
+  // Module 21 — Disputes & Support: DISPUTE_CREATED/DISPUTE_MESSAGE_ADDED/
+  // DISPUTE_EVIDENCE_ADDED are performed by the customer/professional
+  // opening or participating in the case (not an admin) but reuse this same
+  // append-only trail, same reasoning as VERIFICATION_SUBMITTED above.
+  // DISPUTE_ASSIGNED/DISPUTE_STATUS_CHANGED/DISPUTE_INTERNAL_NOTE_ADDED/
+  // DISPUTE_RESOLVED/DISPUTE_REJECTED/DISPUTE_CLOSED are admin-only actions.
+  | "DISPUTE_CREATED"
+  | "DISPUTE_ASSIGNED"
+  | "DISPUTE_STATUS_CHANGED"
+  | "DISPUTE_MESSAGE_ADDED"
+  | "DISPUTE_EVIDENCE_ADDED"
+  | "DISPUTE_INTERNAL_NOTE_ADDED"
+  | "DISPUTE_RESOLVED"
+  | "DISPUTE_REJECTED"
+  | "DISPUTE_CLOSED"
+  // Module 21 — Disputes & Support: SupportTicket equivalents.
+  | "SUPPORT_TICKET_CREATED"
+  | "SUPPORT_TICKET_ASSIGNED"
+  | "SUPPORT_TICKET_STATUS_CHANGED"
+  | "SUPPORT_TICKET_RESOLVED"
+  | "SUPPORT_TICKET_CLOSED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved

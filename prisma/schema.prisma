@@ -100,7 +100,15 @@ model User {
   reviewedVerifications  ProfessionalVerification[] @relation("VerificationReviewer")
   raisedDisputes         Dispute[]              @relation("DisputeRaisedBy")
   resolvedDisputes       Dispute[]              @relation("DisputeResolvedBy")
+  closedDisputes         Dispute[]              @relation("DisputeClosedBy")
+  assignedDisputes       Dispute[]              @relation("DisputeAssignedAdmin")
   submittedDisputeEvidence DisputeEvidence[]    @relation("EvidenceSubmittedBy")
+  disputeMessages        DisputeMessage[]       @relation("DisputeMessageAuthor")
+  /// Module 21 — Disputes & Support: general (non-order-tied) support tickets.
+  openedSupportTickets    SupportTicket[]        @relation("SupportTicketOpenedBy")
+  assignedSupportTickets  SupportTicket[]        @relation("SupportTicketAssignedAdmin")
+  resolvedSupportTickets  SupportTicket[]        @relation("SupportTicketResolvedBy")
+  closedSupportTickets    SupportTicket[]        @relation("SupportTicketClosedBy")
   auditLogEntries        AuditLog[]
   proposedAppointments   Appointment[]          @relation("AppointmentProposedBy")
   cancelledAppointments  Appointment[]          @relation("AppointmentCancelledBy")
@@ -709,6 +717,28 @@ enum NotificationType {
   COMPANY_VERIFICATION_RESUBMISSION_REQUIRED
   COMPANY_SUSPENDED
   COMPANY_REACTIVATED
+  /// Module 21 — Disputes & Support: one value per real trigger point —
+  /// see docs/MODULE_21_DISPUTES_SUPPORT.md, "Notifications". Recipients:
+  /// the dispute's respondent (DISPUTE_CREATED), the assigned admin
+  /// (DISPUTE_ASSIGNED — sent to the admin, not the parties), both parties
+  /// (DISPUTE_STATUS_CHANGED, DISPUTE_RESOLVED, DISPUTE_REJECTED,
+  /// DISPUTE_CLOSED), and specifically whichever party is being asked to
+  /// respond (DISPUTE_RESPONSE_REQUESTED).
+  DISPUTE_CREATED
+  DISPUTE_ASSIGNED
+  DISPUTE_STATUS_CHANGED
+  DISPUTE_RESPONSE_REQUESTED
+  DISPUTE_RESOLVED
+  DISPUTE_REJECTED
+  DISPUTE_CLOSED
+  /// Module 21 — Disputes & Support: SupportTicket events. Recipients: the
+  /// assigned admin (SUPPORT_TICKET_ASSIGNED) and the ticket's opener
+  /// (every other value).
+  SUPPORT_TICKET_CREATED
+  SUPPORT_TICKET_ASSIGNED
+  SUPPORT_TICKET_STATUS_CHANGED
+  SUPPORT_TICKET_RESOLVED
+  SUPPORT_TICKET_CLOSED
 }
 
 enum VerificationDocumentType {
@@ -754,30 +784,97 @@ enum ProfessionalVerificationStatus {
   EXPIRED
 }
 
+/// Module 21 — Disputes & Support: controlled reason list for a Dispute,
+/// reconciled from the Module 01 scaffold toward home-services-marketplace
+/// vocabulary (see docs/MODULE_21_DISPUTES_SUPPORT.md, "Categories" for the
+/// full mapping). Since this enum was never referenced by application code
+/// before this module, values are renamed in place rather than kept
+/// side-by-side with new ones: QUALITY_ISSUE -> SERVICE_QUALITY,
+/// DAMAGE_CLAIM -> PROPERTY_DAMAGE, BILLING_ISSUE -> PRICE_DISAGREEMENT,
+/// BEHAVIOR_ISSUE -> COMMUNICATION_ISSUE. PROFESSIONAL_NO_SHOW,
+/// CUSTOMER_NO_SHOW and SCOPE_OF_WORK are new. SERVICE_NOT_COMPLETED and
+/// OTHER are unchanged.
 enum DisputeReason {
   SERVICE_NOT_COMPLETED
-  QUALITY_ISSUE
-  BILLING_ISSUE
-  DAMAGE_CLAIM
-  BEHAVIOR_ISSUE
+  SERVICE_QUALITY
+  PROPERTY_DAMAGE
+  PROFESSIONAL_NO_SHOW
+  CUSTOMER_NO_SHOW
+  PRICE_DISAGREEMENT
+  SCOPE_OF_WORK
+  COMMUNICATION_ISSUE
   OTHER
 }
 
+/// Module 21 — Disputes & Support: lifecycle status. AWAITING_RESPONSE
+/// (Module 01 scaffold) is split into WAITING_FOR_CUSTOMER /
+/// WAITING_FOR_PROFESSIONAL so a case's queue position always shows whose
+/// turn it is to act; REJECTED is added (an admin can decline to uphold a
+/// dispute without it having been "resolved" in anyone's favor); ESCALATED
+/// is removed as a status — "escalated outside the platform" is now
+/// expressed via DisputeResolution.ESCALATED_EXTERNALLY on a
+/// RESOLVED/CLOSED case instead of a separate status, since it is an
+/// outcome, not an in-progress state. See dispute-state.ts for the full
+/// transition whitelist.
 enum DisputeStatus {
   OPEN
   UNDER_REVIEW
-  AWAITING_RESPONSE
+  WAITING_FOR_CUSTOMER
+  WAITING_FOR_PROFESSIONAL
   RESOLVED
-  ESCALATED
+  REJECTED
   CLOSED
 }
 
+/// Module 21 — Disputes & Support: the *business-level* outcome of a
+/// Dispute — never a Stripe/payment action. Renamed from the Module 01
+/// scaffold's payment-action vocabulary (REFUND_CUSTOMER/PAY_PROFESSIONAL/
+/// PARTIAL_REFUND) to outcome vocabulary a future Module 22 (financial
+/// settlement) can consume without Module 21 ever executing money movement
+/// itself: REFUND_CUSTOMER -> CUSTOMER_FAVOR, PAY_PROFESSIONAL ->
+/// PROFESSIONAL_FAVOR, PARTIAL_REFUND -> PARTIAL_RESOLUTION.
+/// FINANCIAL_ADJUSTMENT_REQUIRED is new — a generic "Module 22 must act"
+/// flag distinct from the customer/professional-favor outcomes. NO_ACTION
+/// and ESCALATED_EXTERNALLY are unchanged.
 enum DisputeResolution {
-  REFUND_CUSTOMER
-  PAY_PROFESSIONAL
-  PARTIAL_REFUND
   NO_ACTION
+  CUSTOMER_FAVOR
+  PROFESSIONAL_FAVOR
+  PARTIAL_RESOLUTION
+  FINANCIAL_ADJUSTMENT_REQUIRED
   ESCALATED_EXTERNALLY
+}
+
+enum DisputePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+/// Module 21 — Disputes & Support: general (non-order-tied) support issues
+/// — account problems, verification issues, bugs, login problems, general
+/// questions. Kept as a separate model from Dispute (see
+/// docs/MODULE_21_DISPUTES_SUPPORT.md, "Support Tickets vs Disputes") since
+/// it has no order/job anchor and a different field set, while sharing the
+/// same lifecycle *shape* (open -> in progress -> waiting -> resolved ->
+/// closed), the same admin workflow, notification and audit-log
+/// conventions as Dispute.
+enum SupportTicketCategory {
+  ACCOUNT
+  VERIFICATION
+  BUG
+  LOGIN
+  GENERAL
+  OTHER
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_USER
+  RESOLVED
+  CLOSED
 }
 
 enum AuditLogAction {
@@ -1448,6 +1545,12 @@ model Job {
   /// never be reviewed.
   review Review?
 
+  /// Module 21 — Disputes & Support: a Job may have more than one Dispute
+  /// over its lifetime (e.g. the customer and the professional each open
+  /// their own — see dispute-rules.ts's doc comment on why both are
+  /// allowed independently).
+  disputes Dispute[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2065,50 +2168,95 @@ model ProfessionalVerificationDocument {
   @@map("professional_verification_documents")
 }
 
-/// A dispute raised over a ServiceRequest (e.g. by the customer, over
-/// quality or billing). Same solo-pro-vs-company duality on the
-/// respondent side (CHECK constraint in migration). `resolvedByUserId`
-/// uses SetNull for the same reason as VerificationDocument.reviewedBy.
+/// A dispute raised over an Order/Job (Module 21 — Disputes & Support).
+/// Anchored primarily to `jobId` (added by Module 21's migration) rather
+/// than only ServiceRequest: the task a customer/professional actually
+/// disputes is the concrete Job engagement, and Job is also where
+/// Module 22 (future financial settlement) will need to look up amounts.
+/// `serviceRequestId` is kept alongside `jobId` (always set to
+/// `job.serviceRequestId` at creation) purely as a query-convenience
+/// denormalization for admin filtering/search — it is never independently
+/// writable and never diverges from the Job it was copied from; see
+/// docs/MODULE_21_DISPUTES_SUPPORT.md, "Job vs ServiceRequest anchoring"
+/// for the tradeoff. `quoteId`/`appointmentId` are deliberately NOT
+/// duplicated here — both are reachable via `job.quoteId`/
+/// `job.appointments`, and the module spec explicitly asks not to
+/// duplicate order data into the dispute record.
+///
+/// Same solo-pro-vs-company duality on the respondent side as before
+/// (CHECK constraint in migration). `resolvedByUserId`/`assignedAdminUserId`
+/// use SetNull for the same reason as VerificationDocument.reviewedBy.
 model Dispute {
-  id                                String             @id @default(uuid()) @db.Uuid
-  serviceRequestId                 String             @db.Uuid
-  raisedByUserId                   String             @db.Uuid
-  respondentProfessionalProfileId  String?            @db.Uuid
-  respondentCompanyProfileId       String?            @db.Uuid
+  id                                String              @id @default(uuid()) @db.Uuid
+  /// Human-readable case number, e.g. "DSP-2026-000123" — see
+  /// dispute-rules.ts's `formatCaseNumber`. Unique, immutable once created.
+  caseNumber                        String              @unique
+  title                             String
+  jobId                             String              @db.Uuid
+  serviceRequestId                  String              @db.Uuid
+  raisedByUserId                    String              @db.Uuid
+  respondentProfessionalProfileId   String?             @db.Uuid
+  respondentCompanyProfileId        String?             @db.Uuid
   reason                            DisputeReason
-  status                            DisputeStatus      @default(OPEN)
+  status                            DisputeStatus       @default(OPEN)
+  priority                          DisputePriority     @default(MEDIUM)
+  description                       String              @db.Text
+  assignedAdminUserId               String?             @db.Uuid
   resolution                        DisputeResolution?
-  description                       String             @db.Text
+  resolutionNote                    String?             @db.Text
   resolvedAt                        DateTime?
-  resolvedByUserId                  String?            @db.Uuid
+  resolvedByUserId                  String?             @db.Uuid
+  closedAt                          DateTime?
+  closedByUserId                    String?             @db.Uuid
 
-  serviceRequest         ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
+  job                     Job                  @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  serviceRequest          ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
   raisedBy                User                 @relation("DisputeRaisedBy", fields: [raisedByUserId], references: [id], onDelete: Restrict)
   respondentProfessional  ProfessionalProfile? @relation("DisputeRespondentProfessional", fields: [respondentProfessionalProfileId], references: [id], onDelete: Restrict)
   respondentCompany       CompanyProfile?      @relation("DisputeRespondentCompany", fields: [respondentCompanyProfileId], references: [id], onDelete: Restrict)
-  resolvedBy               User?               @relation("DisputeResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+  assignedAdmin           User?                @relation("DisputeAssignedAdmin", fields: [assignedAdminUserId], references: [id], onDelete: SetNull)
+  resolvedBy              User?                @relation("DisputeResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+  closedBy                User?                @relation("DisputeClosedBy", fields: [closedByUserId], references: [id], onDelete: SetNull)
 
   evidence DisputeEvidence[]
+  messages DisputeMessage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // One OPEN dispute per (job, opener): prevents the same user from
+  // opening a second concurrently-open case on the same Job (see
+  // dispute-rules.ts's doc comment) while still allowing a new dispute
+  // once the previous one from that same opener has left status=OPEN.
+  // This is a partial index (Postgres), added by the module's migration
+  // SQL rather than expressible directly here (Prisma has no partial
+  // unique index syntax pre-`@@unique(..., where:)`); documented as a
+  // best-effort DB-level guard behind the use case's own application-level
+  // check.
+  @@index([jobId])
   @@index([serviceRequestId])
   @@index([raisedByUserId])
+  @@index([assignedAdminUserId])
   @@index([resolvedByUserId])
   @@index([status])
+  @@index([priority])
   @@index([respondentProfessionalProfileId])
   @@index([respondentCompanyProfileId])
   @@map("disputes")
 }
 
 /// Supporting evidence (photos, documents) submitted for a Dispute by
-/// either party. Cascades with its parent dispute.
+/// either party. Cascades with its parent dispute. `fileType`/`fileName`/
+/// `fileSize` mirror MessageAttachment's metadata fields for consistency
+/// with the platform's other "URL + metadata" attachment pattern.
 model DisputeEvidence {
   id                 String  @id @default(uuid()) @db.Uuid
   disputeId          String  @db.Uuid
   submittedByUserId  String  @db.Uuid
   fileUrl            String
+  fileName           String?
+  fileType           String?
+  fileSizeBytes      Int?
   description        String?
 
   dispute         Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
@@ -2120,6 +2268,71 @@ model DisputeEvidence {
   @@index([disputeId])
   @@index([submittedByUserId])
   @@map("dispute_evidence")
+}
+
+/// Module 21 — Disputes & Support: the dispute's communication thread.
+/// Deliberately a small dedicated model rather than reusing Conversation/
+/// Message (Chat, Module ~14) — see docs/MODULE_21_DISPUTES_SUPPORT.md,
+/// "Relationship with Chat" for the full reasoning: a dispute thread needs
+/// 3-way visibility (customer, professional/company, admin) plus an
+/// admin-only "internal note" channel that must NEVER be reachable by a
+/// non-admin code path, which is a materially different invariant set than
+/// Chat's 1:1/booking conversations, and bolting it onto Conversation/
+/// Message would risk weakening Chat's existing guarantees. `isInternalNote`
+/// distinguishes the two: `false` rows are visible to every case
+/// participant (raiser + respondent + assigned/any admin); `true` rows are
+/// admin-authored and only ever read by an admin-authorized use case (see
+/// ListDisputeInternalNotesUseCase / AddDisputeInternalNoteUseCase) — no
+/// customer/professional-facing repository method ever selects them.
+model DisputeMessage {
+  id              String  @id @default(uuid()) @db.Uuid
+  disputeId       String  @db.Uuid
+  authorUserId    String  @db.Uuid
+  body            String  @db.Text
+  isInternalNote  Boolean @default(false)
+
+  dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  author  User    @relation("DisputeMessageAuthor", fields: [authorUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([disputeId, isInternalNote, createdAt])
+  @@index([authorUserId])
+  @@map("dispute_messages")
+}
+
+/// Module 21 — Disputes & Support: general (non-order-tied) support ticket
+/// — see the SupportTicketCategory/SupportTicketStatus enum doc comments
+/// for why this is a separate model from Dispute.
+model SupportTicket {
+  id                   String                @id @default(uuid()) @db.Uuid
+  ticketNumber         String                @unique
+  category             SupportTicketCategory
+  subject              String
+  description          String                @db.Text
+  status               SupportTicketStatus   @default(OPEN)
+  priority             DisputePriority       @default(MEDIUM)
+  openedByUserId       String                @db.Uuid
+  assignedAdminUserId  String?               @db.Uuid
+  resolutionNote       String?               @db.Text
+  resolvedAt           DateTime?
+  resolvedByUserId     String?               @db.Uuid
+  closedAt             DateTime?
+  closedByUserId       String?               @db.Uuid
+
+  openedBy      User  @relation("SupportTicketOpenedBy", fields: [openedByUserId], references: [id], onDelete: Restrict)
+  assignedAdmin User? @relation("SupportTicketAssignedAdmin", fields: [assignedAdminUserId], references: [id], onDelete: SetNull)
+  resolvedBy    User? @relation("SupportTicketResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+  closedBy      User? @relation("SupportTicketClosedBy", fields: [closedByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([openedByUserId])
+  @@index([assignedAdminUserId])
+  @@index([status])
+  @@index([priority])
+  @@map("support_tickets")
 }
 
 // ============================================================================
