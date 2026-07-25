@@ -289,4 +289,124 @@ describe("SearchDirectoryUseCase", () => {
 
     expect(seededThisWay.items.map((i) => i.id)).toEqual(seededOtherWay.items.map((i) => i.id));
   });
+
+  // ---------------------------------------------------------------------
+  // Maps & Geolocation module (Module 20)
+  // ---------------------------------------------------------------------
+
+  const GANDIA_POINT = { latitude: 38.9665, longitude: -0.1817 };
+  // ~7km from GANDIA_POINT — inside a 10km radius, outside a 5km one.
+  const NEARBY_POINT = { latitude: 39.02, longitude: -0.18 };
+  // Madrid — far beyond any realistic search radius from Gandia.
+  const FAR_POINT = { latitude: 40.4168, longitude: -3.7038 };
+
+  it("filters by radius when latitude/longitude/radiusKm are supplied", async () => {
+    professionals.seed(professional({ id: "in-range", latitude: GANDIA_POINT.latitude, longitude: GANDIA_POINT.longitude }));
+    professionals.seed(professional({ id: "far-away", latitude: FAR_POINT.latitude, longitude: FAR_POINT.longitude }));
+    professionals.seed(professional({ id: "no-coords", latitude: null, longitude: null }));
+
+    const result = await useCase.execute(
+      input({ latitude: GANDIA_POINT.latitude, longitude: GANDIA_POINT.longitude, radiusKm: 20 }),
+    );
+
+    expect(result.items.map((i) => i.id)).toEqual(["in-range"]);
+  });
+
+  it("excludes a candidate outside the radius even if it's within the bounding box", async () => {
+    professionals.seed(
+      professional({ id: "nearby", latitude: NEARBY_POINT.latitude, longitude: NEARBY_POINT.longitude }),
+    );
+
+    const withinFive = await useCase.execute(
+      input({ latitude: GANDIA_POINT.latitude, longitude: GANDIA_POINT.longitude, radiusKm: 5 }),
+    );
+    const withinFifteen = await useCase.execute(
+      input({ latitude: GANDIA_POINT.latitude, longitude: GANDIA_POINT.longitude, radiusKm: 15 }),
+    );
+
+    expect(withinFive.items).toHaveLength(0);
+    expect(withinFifteen.items.map((i) => i.id)).toEqual(["nearby"]);
+  });
+
+  it("prefers coordinate-based location matching over the city string when both search point and candidate have coordinates", async () => {
+    // Candidate's city string does not match the query's city string, but
+    // its coordinates are within the EXACT_CITY coordinate band (15km).
+    professionals.seed(
+      professional({
+        id: "coord-match",
+        city: "Some Other Town",
+        latitude: GANDIA_POINT.latitude,
+        longitude: GANDIA_POINT.longitude,
+      }),
+    );
+    professionals.seed(professional({ id: "no-location-signal", city: null, province: null }));
+
+    const result = await useCase.execute(
+      input({ city: "Gandia", latitude: GANDIA_POINT.latitude, longitude: GANDIA_POINT.longitude }),
+    );
+
+    expect(result.items[0]?.id).toBe("coord-match");
+    expect(result.items[0]?.rankingReasons).toContain("Located in the requested city");
+  });
+
+  it("resolves a search point from a city name via an injected GeocodingProvider", async () => {
+    const fakeGeocoding = {
+      geocode: async ({ city }: { city: string }) =>
+        city.toLowerCase() === "gandia" ? GANDIA_POINT : null,
+    };
+    const useCaseWithGeocoding = new SearchDirectoryUseCase(
+      professionals,
+      companies,
+      categories,
+      () => FIXED_NOW,
+      fakeGeocoding,
+    );
+    professionals.seed(
+      professional({
+        id: "coord-match",
+        city: "Some Other Town",
+        latitude: GANDIA_POINT.latitude,
+        longitude: GANDIA_POINT.longitude,
+      }),
+    );
+
+    const result = await useCaseWithGeocoding.execute(input({ city: "Gandia" }));
+
+    expect(result.items[0]?.rankingReasons).toContain("Located in the requested city");
+  });
+
+  it("attaches a fuzzed mapPoint for candidates with coordinates, and null for candidates without", async () => {
+    professionals.seed(
+      professional({ id: "with-coords", latitude: GANDIA_POINT.latitude, longitude: GANDIA_POINT.longitude }),
+    );
+    professionals.seed(professional({ id: "without-coords", latitude: null, longitude: null }));
+
+    const result = await useCase.execute(input());
+
+    const withCoords = result.items.find((i) => i.id === "with-coords");
+    const withoutCoords = result.items.find((i) => i.id === "without-coords");
+
+    expect(withCoords?.mapPoint).not.toBeNull();
+    // Fuzzed point must never equal the precise coordinate exactly unless
+    // the precise coordinate already happens to sit on the fuzz grid — the
+    // real assertion is that it's a plain, rounded {latitude, longitude}.
+    expect(withCoords?.mapPoint).toEqual({
+      latitude: expect.any(Number),
+      longitude: expect.any(Number),
+    });
+    expect(withoutCoords?.mapPoint).toBeNull();
+  });
+
+  it("rejects an unknown/inactive category id even when a radius filter is also supplied", async () => {
+    await expect(
+      useCase.execute(
+        input({
+          categoryId: "99999999-9999-9999-9999-999999999999",
+          latitude: GANDIA_POINT.latitude,
+          longitude: GANDIA_POINT.longitude,
+          radiusKm: 10,
+        }),
+      ),
+    ).rejects.toThrow();
+  });
 });

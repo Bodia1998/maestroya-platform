@@ -76,6 +76,24 @@ export interface ProfessionalSearchFilter {
   verifiedOnly?: boolean;
   minRating?: number;
   minReviewCount?: number;
+  /**
+   * Maps & Geolocation module (Module 20): the effective search point (either
+   * client-supplied coordinates or resolved from `city`/`province` by a
+   * `GeocodingProvider`) and a search radius, additive alongside every
+   * Module 19 field above. When present, the Prisma implementation pushes a
+   * cheap bounding-box pre-filter down to SQL (`computeBoundingBox`);
+   * `SearchDirectoryUseCase` still re-applies the precise
+   * `haversineDistanceKm` cutoff afterwards, since a bounding box is only a
+   * superset of the true radius — the exact "cheap DB filter, precise
+   * app-layer rule" split `findActiveCandidatesByCategory`'s own radius
+   * search already established. Candidates without coordinates are simply
+   * excluded from radius filtering (never included, never erroring) — the
+   * same fallback behavior `computeCoordinateLocationMatch` already defines
+   * for missing coordinates.
+   */
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
 }
 
 /** Safe, public-facing view of a single professional's profile. Never

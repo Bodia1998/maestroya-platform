@@ -1,8 +1,11 @@
 import { ValidationError } from "@/domain/errors/domain-error";
-import { computeLocationMatch } from "@/domain/services/location-match";
+import { computeLocationMatch, computeCoordinateLocationMatch } from "@/domain/services/location-match";
 import { computeProfileCompleteness } from "@/domain/services/profile-completeness";
 import { computeTextRelevance } from "@/domain/services/text-relevance";
 import { scoreCandidate, type RankingScore } from "@/domain/services/ranking-engine";
+import { haversineDistanceKm, type GeoPoint } from "@/domain/services/geo-distance";
+import { fuzzCoordinate } from "@/domain/services/coordinate-fuzzing";
+import type { GeocodingProvider } from "@/domain/repositories/geocoding-provider";
 import type {
   ProfessionalDiscoveryCandidate,
   ProfessionalDiscoveryRepository,
@@ -70,6 +73,17 @@ export class SearchDirectoryUseCase {
     /** Injected for deterministic, testable recency scoring — defaults to
      *  the real clock in production via the composition root. */
     private readonly now: () => Date = () => new Date(),
+    /**
+     * Maps & Geolocation module (Module 20): optional — when the client
+     * search didn't supply explicit `latitude`/`longitude` but did supply a
+     * `city`, this resolves an approximate search point so
+     * `computeCoordinateLocationMatch` (Module 19, unused by any caller
+     * until now) and radius filtering can both work from a plain city name.
+     * Defaults to `undefined` so every existing caller/test that doesn't
+     * pass one keeps working identically to before this module — geocoding
+     * is a pure enhancement, never a requirement.
+     */
+    private readonly geocoding?: GeocodingProvider,
   ) {}
 
   async execute(input: SearchDirectoryInput): Promise<SearchDirectoryResult> {
@@ -80,6 +94,8 @@ export class SearchDirectoryUseCase {
       }
     }
 
+    const searchPoint = await this.resolveSearchPoint(input);
+
     const filter = {
       categoryId: input.categoryId,
       query: input.query,
@@ -88,19 +104,37 @@ export class SearchDirectoryUseCase {
       verifiedOnly: input.verifiedOnly,
       minRating: input.minRating,
       minReviewCount: input.minReviewCount,
+      latitude: searchPoint?.latitude,
+      longitude: searchPoint?.longitude,
+      radiusKm: input.radiusKm,
     };
 
-    const [professionals, companies] = await Promise.all([
+    const [professionalCandidates, companyCandidates] = await Promise.all([
       this.professionalDiscovery.searchCandidates(filter),
       this.companyDiscovery.searchCandidates(filter),
     ]);
 
+    // Maps & Geolocation module (Module 20): the repository's bounding-box
+    // pre-filter is only a superset of the true circle (see
+    // `computeBoundingBox`'s own doc comment) — re-apply the precise
+    // Haversine cutoff here so a corner-of-the-box false positive never
+    // reaches the customer. Candidates without coordinates are excluded
+    // from a radius search entirely (never included, never an error).
+    const professionals =
+      searchPoint && input.radiusKm !== undefined
+        ? professionalCandidates.filter((c) => withinRadius(searchPoint, c, input.radiusKm!))
+        : professionalCandidates;
+    const companies =
+      searchPoint && input.radiusKm !== undefined
+        ? companyCandidates.filter((c) => withinRadius(searchPoint, c, input.radiusKm!))
+        : companyCandidates;
+
     const now = this.now();
 
     const professionalResults = professionals.map((candidate) =>
-      this.rankProfessional(candidate, input, now),
+      this.rankProfessional(candidate, input, now, searchPoint),
     );
-    const companyResults = companies.map((candidate) => this.rankCompany(candidate, input, now));
+    const companyResults = companies.map((candidate) => this.rankCompany(candidate, input, now, searchPoint));
 
     const scored: { result: SearchResult; score: RankingScore; createdAt: Date }[] = [
       ...professionalResults,
@@ -117,10 +151,63 @@ export class SearchDirectoryUseCase {
     return { items: paged, page, pageSize, total: sorted.length };
   }
 
+  /**
+   * Maps & Geolocation module (Module 20): resolves the effective search
+   * point for this request. Client-supplied `latitude`/`longitude` always
+   * wins (it's the most precise signal available); otherwise, when a `city`
+   * was given and a `GeocodingProvider` is configured, attempts to resolve
+   * one from the city name. Returns `undefined` when neither is available —
+   * every downstream coordinate-based feature (bounding-box filtering,
+   * radius cutoff, `computeCoordinateLocationMatch`) simply falls back to
+   * its pre-Module-20 behavior in that case.
+   */
+  private async resolveSearchPoint(input: SearchDirectoryInput): Promise<GeoPoint | undefined> {
+    if (input.latitude !== undefined && input.longitude !== undefined) {
+      return { latitude: input.latitude, longitude: input.longitude };
+    }
+    if (input.city && this.geocoding) {
+      const resolved = await this.geocoding.geocode({ city: input.city, province: input.province });
+      return resolved ?? undefined;
+    }
+    return undefined;
+  }
+
+  private locationMatchFor(
+    input: SearchDirectoryInput,
+    candidate: { city: string | null; province: string | null; latitude: number | null; longitude: number | null },
+    searchPoint: GeoPoint | undefined,
+  ) {
+    const candidatePoint =
+      candidate.latitude !== null && candidate.longitude !== null
+        ? { latitude: candidate.latitude, longitude: candidate.longitude }
+        : null;
+    const coordinateMatch = computeCoordinateLocationMatch(searchPoint ?? null, candidatePoint);
+
+    // When both the search point and candidate coordinates are available,
+    // coordinate proximity is the authoritative location signal.
+    // If coordinates are unavailable, fall back to the existing city/province match.
+    if (coordinateMatch) return coordinateMatch;
+
+    if (searchPoint && candidatePoint) {
+      return "NONE";
+    }
+
+    return computeLocationMatch(
+      { city: input.city, province: input.province },
+      { city: candidate.city, province: candidate.province },
+    );
+  }
+
+  private mapPointFor(candidate: { latitude: number | null; longitude: number | null }) {
+    if (candidate.latitude === null || candidate.longitude === null) return null;
+    return fuzzCoordinate({ latitude: candidate.latitude, longitude: candidate.longitude });
+  }
+
   private rankProfessional(
     candidate: ProfessionalDiscoveryCandidate,
     input: SearchDirectoryInput,
     now: Date,
+    searchPoint: GeoPoint | undefined,
   ): { result: SearchResult; score: RankingScore; createdAt: Date } {
     const isVerified = candidate.verificationStatus === "VERIFIED";
     const textRelevance = computeTextRelevance(input.query, [
@@ -128,10 +215,7 @@ export class SearchDirectoryUseCase {
       candidate.businessName,
       candidate.headline,
     ]);
-    const locationMatch = computeLocationMatch(
-      { city: input.city, province: input.province },
-      { city: candidate.city, province: candidate.province },
-    );
+    const locationMatch = this.locationMatchFor(input, candidate, searchPoint);
     const profileCompleteness = computeProfileCompleteness({
       hasHeadlineOrDescription: Boolean(candidate.headline),
       hasBioOrDescription: Boolean(candidate.headline),
@@ -172,6 +256,7 @@ export class SearchDirectoryUseCase {
       reviewCount: candidate.reviewCount,
       portfolioItemCount: candidate.portfolioItemCount,
       rankingReasons: score.reasons,
+      mapPoint: this.mapPointFor(candidate),
     };
 
     return { result, score, createdAt: candidate.createdAt };
@@ -181,16 +266,14 @@ export class SearchDirectoryUseCase {
     candidate: CompanyDiscoveryCandidate,
     input: SearchDirectoryInput,
     now: Date,
+    searchPoint: GeoPoint | undefined,
   ): { result: SearchResult; score: RankingScore; createdAt: Date } {
     const textRelevance = computeTextRelevance(input.query, [
       candidate.displayName,
       candidate.legalName,
       candidate.description,
     ]);
-    const locationMatch = computeLocationMatch(
-      { city: input.city, province: input.province },
-      { city: candidate.city, province: candidate.province },
-    );
+    const locationMatch = this.locationMatchFor(input, candidate, searchPoint);
     const profileCompleteness = computeProfileCompleteness({
       hasHeadlineOrDescription: Boolean(candidate.description),
       hasBioOrDescription: Boolean(candidate.description),
@@ -230,6 +313,7 @@ export class SearchDirectoryUseCase {
       reviewCount: candidate.reviewCount,
       portfolioItemCount: candidate.portfolioItemCount,
       rankingReasons: score.reasons,
+      mapPoint: this.mapPointFor(candidate),
     };
 
     return { result, score, createdAt: candidate.createdAt };
@@ -277,6 +361,22 @@ function comparePrimary(
     default:
       return b.score.total - a.score.total;
   }
+}
+
+/**
+ * Maps & Geolocation module (Module 20): precise radius cutoff applied
+ * after the repository's approximate bounding-box pre-filter. A candidate
+ * with no coordinates never matches a radius search — there's nothing to
+ * measure a distance to, so it's excluded rather than assumed to be either
+ * in or out of range.
+ */
+function withinRadius(
+  searchPoint: GeoPoint,
+  candidate: { latitude: number | null; longitude: number | null },
+  radiusKm: number,
+): boolean {
+  if (candidate.latitude === null || candidate.longitude === null) return false;
+  return haversineDistanceKm(searchPoint, { latitude: candidate.latitude, longitude: candidate.longitude }) <= radiusKm;
 }
 
 function tieBreak(

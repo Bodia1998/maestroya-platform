@@ -72,4 +72,49 @@ describe("searchDirectorySchema", () => {
   it("rejects a pathological page number", () => {
     expect(searchDirectorySchema.safeParse({ page: 999999 }).success).toBe(false);
   });
+
+  // -------------------------------------------------------------------
+  // Maps & Geolocation module (Module 20)
+  // -------------------------------------------------------------------
+
+  it("accepts latitude/longitude/radiusKm together", () => {
+    const result = searchDirectorySchema.safeParse({ latitude: 38.9665, longitude: -0.1817, radiusKm: 25 });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts latitude/longitude without a radius (coordinate-based ranking boost only)", () => {
+    const result = searchDirectorySchema.safeParse({ latitude: 38.9665, longitude: -0.1817 });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects latitude without longitude", () => {
+    expect(searchDirectorySchema.safeParse({ latitude: 38.9665 }).success).toBe(false);
+  });
+
+  it("rejects longitude without latitude", () => {
+    expect(searchDirectorySchema.safeParse({ longitude: -0.1817 }).success).toBe(false);
+  });
+
+  it("rejects a radius without latitude/longitude — a radius needs a center point", () => {
+    expect(searchDirectorySchema.safeParse({ radiusKm: 10 }).success).toBe(false);
+  });
+
+  it("rejects an out-of-range latitude", () => {
+    expect(searchDirectorySchema.safeParse({ latitude: 91, longitude: 0 }).success).toBe(false);
+    expect(searchDirectorySchema.safeParse({ latitude: -91, longitude: 0 }).success).toBe(false);
+  });
+
+  it("rejects an out-of-range longitude", () => {
+    expect(searchDirectorySchema.safeParse({ latitude: 0, longitude: 181 }).success).toBe(false);
+    expect(searchDirectorySchema.safeParse({ latitude: 0, longitude: -181 }).success).toBe(false);
+  });
+
+  it("rejects a non-positive radius", () => {
+    expect(searchDirectorySchema.safeParse({ latitude: 0, longitude: 0, radiusKm: 0 }).success).toBe(false);
+    expect(searchDirectorySchema.safeParse({ latitude: 0, longitude: 0, radiusKm: -5 }).success).toBe(false);
+  });
+
+  it("rejects a pathologically large radius (abuse prevention)", () => {
+    expect(searchDirectorySchema.safeParse({ latitude: 0, longitude: 0, radiusKm: 5000 }).success).toBe(false);
+  });
 });

@@ -50,6 +50,14 @@ export interface CompanySearchFilter {
   verifiedOnly?: boolean;
   minRating?: number;
   minReviewCount?: number;
+  /** Maps & Geolocation module (Module 20): see
+   *  ProfessionalSearchFilter's own doc comment — same semantics, the
+   *  company-side mirror. This is the "per-company service radius" field
+   *  this file's own top-of-file comment forward-referenced as "the
+   *  natural home" for Module 20. */
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
 }
 
 /** Safe, public-facing view of a single company's profile. Never includes

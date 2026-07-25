@@ -1,5 +1,6 @@
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type { Prisma } from "@prisma/client";
+import { computeBoundingBox } from "@/domain/services/geo-distance";
 import type {
   ProfessionalDiscoveryCandidate,
   ProfessionalDiscoveryRepository,
@@ -196,13 +197,29 @@ export class PrismaProfessionalDiscoveryRepository implements ProfessionalDiscov
     if (typeof filter.minReviewCount === "number") {
       where.reviewCount = { gte: filter.minReviewCount };
     }
-    if (filter.city || filter.province) {
+    // Maps & Geolocation module (Module 20): when a search point + radius
+    // are given, push a cheap bounding-box pre-filter down to SQL
+    // (computeBoundingBox) — SearchDirectoryUseCase re-applies the precise
+    // Haversine cutoff afterwards, since a box is only an approximate
+    // superset of the true circle (see that function's own doc comment).
+    const boundingBox =
+      typeof filter.latitude === "number" && typeof filter.longitude === "number" && typeof filter.radiusKm === "number"
+        ? computeBoundingBox({ latitude: filter.latitude, longitude: filter.longitude }, filter.radiusKm)
+        : null;
+
+    if (filter.city || filter.province || boundingBox) {
       where.user = {
         addresses: {
           some: {
             deletedAt: null,
             ...(filter.city ? { city: { equals: filter.city, mode: "insensitive" } } : {}),
             ...(filter.province ? { province: { equals: filter.province, mode: "insensitive" } } : {}),
+            ...(boundingBox
+              ? {
+                  latitude: { gte: boundingBox.minLatitude, lte: boundingBox.maxLatitude },
+                  longitude: { gte: boundingBox.minLongitude, lte: boundingBox.maxLongitude },
+                }
+              : {}),
           },
         },
       };
