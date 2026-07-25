@@ -212,6 +212,7 @@ export class FakeQuoteRepository implements QuoteRepository {
         unitPrice: item.unitPrice,
         amount: Math.round(item.quantity * item.unitPrice * 100) / 100,
         sortOrder: index,
+        category: item.category ?? "LABOR",
       };
     });
   }

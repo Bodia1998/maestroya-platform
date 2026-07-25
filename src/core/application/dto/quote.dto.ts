@@ -21,6 +21,22 @@ export const MAX_QUOTE_NOTES_LENGTH = 3000;
 export const MAX_QUOTE_ITEM_QUANTITY = 100000;
 export const MAX_QUOTE_ITEM_UNIT_PRICE = 1000000;
 
+/**
+ * Module 22 — Commission & Financial addition: `category` distinguishes
+ * labor from materials so commission (7.5% of labor only — see
+ * domain/services/commission-policy.ts) is never calculated against
+ * materials. Optional (rather than defaulted at the schema level) so the
+ * *inferred TypeScript type* stays optional too — this keeps every
+ * existing call site that builds a CreateQuoteInput/UpdateQuoteInput
+ * object literal without a category (tests, and any client that hasn't
+ * been updated to send one yet) compiling and behaving exactly as before.
+ * CreateQuoteUseCase/UpdateQuoteUseCase coalesce a missing category to
+ * "LABOR" when mapping to the repository layer — see those use cases'
+ * own comments and QuoteItem.category's doc comment in schema.prisma for
+ * why LABOR is the conservative default.
+ */
+export const quoteItemCategorySchema = z.enum(["LABOR", "MATERIALS"]).optional();
+
 export const quoteItemSchema = z.object({
   description: z
     .string()
@@ -38,6 +54,7 @@ export const quoteItemSchema = z.object({
     .number()
     .min(0, "Unit price cannot be negative.")
     .max(MAX_QUOTE_ITEM_UNIT_PRICE, "Enter a realistic unit price."),
+  category: quoteItemCategorySchema,
 });
 export type QuoteItemInput = z.infer<typeof quoteItemSchema>;
 
