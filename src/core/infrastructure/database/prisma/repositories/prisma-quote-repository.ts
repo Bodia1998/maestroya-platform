@@ -31,6 +31,7 @@ const SELECT = {
       unitPrice: true,
       amount: true,
       sortOrder: true,
+      category: true,
     },
     orderBy: { sortOrder: "asc" as const },
   },
@@ -55,6 +56,7 @@ type PrismaQuoteRow = {
     unitPrice: unknown;
     amount: unknown;
     sortOrder: number;
+    category: string;
   }[];
 };
 
@@ -66,6 +68,7 @@ function toItemRecord(row: PrismaQuoteRow["items"][number]): QuoteItemRecord {
     unitPrice: Number(row.unitPrice),
     amount: Number(row.amount),
     sortOrder: row.sortOrder,
+    category: row.category as QuoteItemRecord["category"],
   };
 }
 
@@ -103,6 +106,7 @@ function toItemCreateData(items: QuoteItemInput[]) {
     unitPrice: item.unitPrice,
     amount: calculateQuoteItemAmount(item.quantity, item.unitPrice),
     sortOrder: index,
+    category: item.category ?? "LABOR",
   }));
 }
 

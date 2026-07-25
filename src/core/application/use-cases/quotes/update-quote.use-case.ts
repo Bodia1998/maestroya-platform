@@ -51,6 +51,9 @@ export class UpdateQuoteUseCase {
         description: item.description,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
+        // Module 22 — Commission & Financial: defaults to LABOR when the
+        // caller doesn't specify — see quote.dto.ts's own comment.
+        category: item.category ?? "LABOR",
       })),
     });
   }

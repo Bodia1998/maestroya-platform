@@ -107,6 +107,12 @@ model User {
   /// Module 21 — Disputes & Support: general (non-order-tied) support tickets.
   openedSupportTickets    SupportTicket[]        @relation("SupportTicketOpenedBy")
   assignedSupportTickets  SupportTicket[]        @relation("SupportTicketAssignedAdmin")
+  /// Module 22 — Commission & Financial: financial adjustments (refunds,
+  /// commission reversals, etc.) requested by this user — almost always an
+  /// admin/support agent acting on a resolved Dispute, occasionally a
+  /// customer-initiated refund request. See FinancialAdjustment's doc
+  /// comment.
+  requestedFinancialAdjustments FinancialAdjustment[] @relation("FinancialAdjustmentRequestedBy")
   resolvedSupportTickets  SupportTicket[]        @relation("SupportTicketResolvedBy")
   closedSupportTickets    SupportTicket[]        @relation("SupportTicketClosedBy")
   auditLogEntries        AuditLog[]
@@ -499,6 +505,16 @@ enum QuoteStatus {
   WITHDRAWN
 }
 
+/// Module 22 — Commission & Financial: see QuoteItem.category's doc
+/// comment. Deliberately just these two values — the business model only
+/// ever needs "is this commissionable labor or excluded materials," not a
+/// richer taxonomy (call-out fees, etc. are treated as LABOR unless a
+/// future product decision says otherwise).
+enum QuoteItemCategory {
+  LABOR
+  MATERIALS
+}
+
 enum AppointmentStatus {
   /// Booking/Appointments module (MVP): the Appointment row created the
   /// moment a Quote is accepted, before any actual scheduling has happened.
@@ -622,12 +638,39 @@ enum PaymentStatus {
   PARTIALLY_REFUNDED
 }
 
+/// Module 22 — Commission & Financial extends this enum with more granular
+/// ledger entry types (see docs/MODULE_22_COMMISSION_FINANCIAL.md's ledger
+/// section) so `Transaction.type` alone is enough to reconstruct a
+/// commission breakdown without re-deriving it from Quote/Payment every
+/// time. CHARGE/REFUND/PAYOUT/COMMISSION/ADJUSTMENT were already defined
+/// (unused, schema-only) before this module — kept for backward
+/// compatibility; new code should prefer the more specific values below.
 enum TransactionType {
   CHARGE
   REFUND
   PAYOUT
   COMMISSION
   ADJUSTMENT
+  /// The labor portion of a captured Payment — the commission base.
+  LABOR_CHARGE
+  /// The materials portion of a captured Payment — never commissionable.
+  MATERIALS_CHARGE
+  /// The 7.5%-of-labor fee charged to the customer (see commission-policy.ts).
+  CUSTOMER_PLATFORM_FEE
+  /// The professional's/company's earnings after their own 7.5% commission
+  /// is deducted from the labor amount.
+  PROFESSIONAL_NET_EARNING
+  /// MaestroYa's own gross revenue recognized from a Payment (customer
+  /// platform fee + professional commission).
+  PLATFORM_REVENUE
+  /// A previously recognized Commission being reversed (e.g. a dispute
+  /// resolved in the customer's favor after the commission was recorded).
+  COMMISSION_REVERSAL
+  /// A financial consequence of a resolved Dispute — see
+  /// FinancialAdjustment.
+  DISPUTE_ADJUSTMENT
+  /// A previously recorded Payout being reversed/clawed back.
+  PAYOUT_REVERSAL
 }
 
 enum TransactionStatus {
@@ -650,6 +693,26 @@ enum PayoutStatus {
   PAID
   FAILED
   CANCELLED
+}
+
+/// Module 22 — Commission & Financial: the fixed vocabulary of financial
+/// consequences a resolved Dispute (Module 21) can trigger. See
+/// FinancialAdjustment's own doc comment.
+enum FinancialAdjustmentType {
+  FULL_REFUND
+  PARTIAL_REFUND
+  PROFESSIONAL_PAYOUT_REDUCTION
+  PROFESSIONAL_PAYOUT_RELEASE
+  CUSTOMER_COMPENSATION
+  PLATFORM_FEE_REFUND
+  COMMISSION_REVERSAL
+}
+
+enum FinancialAdjustmentStatus {
+  PENDING
+  APPLIED
+  REJECTED
+  FAILED
 }
 
 enum RefundReason {
@@ -1471,13 +1534,26 @@ model Quote {
 /// etc.). `amount` is stored (not computed) so historical quotes remain
 /// accurate even if pricing logic changes later.
 model QuoteItem {
-  id          String  @id @default(uuid()) @db.Uuid
-  quoteId     String  @db.Uuid
+  id          String            @id @default(uuid()) @db.Uuid
+  quoteId     String            @db.Uuid
   description String
-  quantity    Decimal @db.Decimal(10, 2)
-  unitPrice   Decimal @db.Decimal(10, 2)
-  amount      Decimal @db.Decimal(10, 2)
-  sortOrder   Int     @default(0)
+  quantity    Decimal           @db.Decimal(10, 2)
+  unitPrice   Decimal           @db.Decimal(10, 2)
+  amount      Decimal           @db.Decimal(10, 2)
+  sortOrder   Int               @default(0)
+  /// Module 22 — Commission & Financial: distinguishes labor from
+  /// materials so commission (7.5% customer platform fee, 7.5%
+  /// professional commission — see domain/services/commission-policy.ts)
+  /// is calculated on labor only, never on materials. Defaults to LABOR so
+  /// every quote item created before this module existed (and any created
+  /// by a client that hasn't been updated to send a category yet) is
+  /// treated as commissionable labor — the conservative default from the
+  /// platform's own revenue perspective, and never silently zero-rates a
+  /// line item's commission. The quote-submission UI is expected to let a
+  /// professional mark specific items as MATERIALS going forward; this
+  /// column only adds the capability, it does not retroactively
+  /// reclassify anything.
+  category    QuoteItemCategory @default(LABOR)
 
   quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
 
@@ -1550,6 +1626,12 @@ model Job {
   /// their own — see dispute-rules.ts's doc comment on why both are
   /// allowed independently).
   disputes Dispute[]
+
+  /// Module 22 — Commission & Financial: financial adjustments (refunds,
+  /// commission reversals, payout holds/releases, etc.) recorded against
+  /// this Job's financial settlement. See FinancialAdjustment's doc
+  /// comment.
+  financialAdjustments FinancialAdjustment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1862,6 +1944,11 @@ model Payment {
   refunds      Refund[]
   commission   Commission?
   transactions Transaction[] @relation("TransactionPayment")
+  /// Module 22 — Commission & Financial: adjustments recorded against this
+  /// specific Payment (a dispute-driven partial refund, a platform-fee
+  /// refund, etc.) — most FinancialAdjustments are only anchored to a Job,
+  /// this is set only once a Payment actually exists to adjust.
+  financialAdjustments FinancialAdjustment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1981,11 +2068,25 @@ model Transaction {
   amount        Decimal            @db.Decimal(10, 2) /// signed: positive = inflow to the platform, negative = outflow
   currency      String             @default("EUR")
   description   String?
+  /// Module 22 — Commission & Financial: caller-supplied idempotency key
+  /// (e.g. "commission:<paymentId>", "dispute-adjustment:<disputeId>:<type>")
+  /// so a retried financial operation (webhook redelivery, a double-submit
+  /// admin action) can never create a second ledger entry for the same
+  /// logical event — see FinancialLedgerRepository.findByIdempotencyKey.
+  /// Nullable because the two pre-existing writers implied by this model
+  /// (none yet in code) may not always have a natural key; every Module 22
+  /// write path always supplies one.
+  idempotencyKey String? @unique
 
   payment    Payment?    @relation("TransactionPayment", fields: [paymentId], references: [id], onDelete: Restrict)
   payout     Payout?     @relation("TransactionPayout", fields: [payoutId], references: [id], onDelete: Restrict)
   refund     Refund?     @relation("TransactionRefund", fields: [refundId], references: [id], onDelete: Restrict)
   commission Commission? @relation("TransactionCommission", fields: [commissionId], references: [id], onDelete: Restrict)
+
+  /// Module 22 — Commission & Financial: the FinancialAdjustment this
+  /// ledger entry was created to record, if any (1:1 — see
+  /// FinancialAdjustment.transactionId's `@unique`).
+  financialAdjustment FinancialAdjustment?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1997,6 +2098,52 @@ model Transaction {
   @@index([type, status])
   @@index([createdAt])
   @@map("transactions")
+}
+
+/// Module 22 — Commission & Financial: the boundary Module 21 (Disputes &
+/// Support) uses to request a financial consequence of a resolved dispute
+/// without executing money movement itself (see
+/// ResolveDisputeUseCase's own doc comment and Dispute.resolution's —
+/// `FINANCIAL_ADJUSTMENT_REQUIRED` is the generic "Module 22 must act"
+/// flag they describe). Always anchored to a Job (every dispute is); a
+/// Payment reference is added once one exists to adjust. Recording an
+/// adjustment here is a two-step, auditable process: `create()` writes a
+/// PENDING row (idempotent on `idempotencyKey`), and a separate `apply()`
+/// call links the resulting ledger Transaction and marks it APPLIED —
+/// this module never silently marks money as moved without a
+/// corresponding Transaction row existing first.
+model FinancialAdjustment {
+  id                String                    @id @default(uuid()) @db.Uuid
+  jobId             String                    @db.Uuid
+  disputeId         String?                   @db.Uuid
+  paymentId         String?                   @db.Uuid
+  type              FinancialAdjustmentType
+  status            FinancialAdjustmentStatus @default(PENDING)
+  amount            Decimal                   @db.Decimal(10, 2)
+  currency          String                    @default("EUR")
+  reason            String?                   @db.Text
+  requestedByUserId String                    @db.Uuid
+  /// e.g. "dispute-adjustment:<disputeId>:<type>" — guards against the
+  /// same dispute resolution being processed twice (a double-submit admin
+  /// action, a retried background job, etc.).
+  idempotencyKey    String                    @unique
+  transactionId     String?                   @unique @db.Uuid
+  appliedAt         DateTime?
+
+  job             Job          @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  dispute         Dispute?     @relation(fields: [disputeId], references: [id], onDelete: Restrict)
+  payment         Payment?     @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  requestedByUser User         @relation("FinancialAdjustmentRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  transaction     Transaction? @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([jobId])
+  @@index([disputeId])
+  @@index([paymentId])
+  @@index([status])
+  @@map("financial_adjustments")
 }
 
 // ============================================================================
@@ -2220,6 +2367,15 @@ model Dispute {
 
   evidence DisputeEvidence[]
   messages DisputeMessage[]
+
+  /// Module 22 — Commission & Financial: financial adjustments executed as
+  /// a consequence of this dispute's resolution (see
+  /// FinancialAdjustment's doc comment). A Dispute never moves money
+  /// itself — see ResolveDisputeUseCase's own doc comment — this relation
+  /// only lets an admin/Module 22 trace which adjustments originated from
+  /// which dispute. Zero or more: NO_ACTION resolutions produce none, a
+  /// PARTIAL_RESOLUTION could in principle produce several.
+  financialAdjustments FinancialAdjustment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

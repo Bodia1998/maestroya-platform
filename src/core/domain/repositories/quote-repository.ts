@@ -19,20 +19,34 @@ export type QuoteStatusValue =
   | "EXPIRED"
   | "WITHDRAWN";
 
+export type QuoteItemCategoryValue = "LABOR" | "MATERIALS";
+
 export interface QuoteItemInput {
   description: string;
   /** Decimal(10,2) in the schema — see domain/services/money.ts for how
    *  this is rounded/validated at the application boundary. */
   quantity: number;
   unitPrice: number;
+  /** Module 22 — Commission & Financial: LABOR is commissionable (7.5%
+   *  customer platform fee + 7.5% professional commission), MATERIALS
+   *  never is — see commission-policy.ts. Optional (defaults to LABOR at
+   *  the repository implementation layer, matching QuoteItem.category's
+   *  own DB default) so every pre-existing caller of
+   *  QuoteRepository.create/update that doesn't supply one — including
+   *  every other module's integration tests that seed a Quote directly —
+   *  keeps compiling and behaving exactly as before. */
+  category?: QuoteItemCategoryValue;
 }
 
-export interface QuoteItemRecord extends QuoteItemInput {
+export interface QuoteItemRecord extends Omit<QuoteItemInput, "category"> {
   id: string;
   /** Always `quantity * unitPrice`, computed server-side — see money.ts.
    *  Never trusted from client input even if supplied. */
   amount: number;
   sortOrder: number;
+  /** Unlike QuoteItemInput, always a concrete value once persisted — the
+   *  DB column has a NOT NULL DEFAULT 'LABOR'. */
+  category: QuoteItemCategoryValue;
 }
 
 export interface QuoteRecord {
