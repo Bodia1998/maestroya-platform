@@ -33,6 +33,15 @@ interface BaseSearchResult {
    *  see ranking-engine.ts's `RankingScore.reasons`. Safe to show to
    *  customers; never includes the underlying numeric score. */
   rankingReasons: string[];
+  /**
+   * Maps & Geolocation module (Module 20): a coarse, privacy-fuzzed point
+   * (see `@/domain/services/coordinate-fuzzing`) for a future map UI to
+   * place a marker at — `null` when the candidate has no coordinates at
+   * all. Deliberately never the candidate's precise base coordinate (see
+   * `coordinate-fuzzing.ts`'s own doc comment on why even a "rounded"
+   * coordinate can leak a home-based professional's address).
+   */
+  mapPoint: { latitude: number; longitude: number } | null;
 }
 
 export interface ProfessionalSearchResult extends BaseSearchResult {

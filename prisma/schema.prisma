@@ -833,6 +833,10 @@ model Address {
   /// matching in ProfessionalDiscoveryRepository.searchCandidates without a
   /// full table scan.
   @@index([city])
+  /// Maps & Geolocation module (Module 20): supports the bounding-box radius
+  /// pre-filter (computeBoundingBox) in
+  /// ProfessionalDiscoveryRepository.searchCandidates.
+  @@index([latitude, longitude])
   @@map("addresses")
 }
 
@@ -1007,6 +1011,10 @@ model CompanyProfile {
   @@index([city])
   @@index([province])
   @@index([averageRating])
+  /// Maps & Geolocation module (Module 20): supports the bounding-box radius
+  /// pre-filter (computeBoundingBox) in
+  /// CompanyDiscoveryRepository.searchCandidates.
+  @@index([latitude, longitude])
   @@map("company_profiles")
 }
 

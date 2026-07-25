@@ -1,5 +1,6 @@
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type { Prisma } from "@prisma/client";
+import { computeBoundingBox } from "@/domain/services/geo-distance";
 import type {
   CompanyDiscoveryCandidate,
   CompanyDiscoveryRepository,
@@ -133,6 +134,15 @@ export class PrismaCompanyDiscoveryRepository implements CompanyDiscoveryReposit
     }
     if (filter.province) {
       where.province = { equals: filter.province, mode: "insensitive" };
+    }
+    // Maps & Geolocation module (Module 20): see
+    // PrismaProfessionalDiscoveryRepository.searchCandidates's own comment —
+    // same cheap bounding-box pre-filter, precise cutoff applied afterwards
+    // in SearchDirectoryUseCase.
+    if (typeof filter.latitude === "number" && typeof filter.longitude === "number" && typeof filter.radiusKm === "number") {
+      const box = computeBoundingBox({ latitude: filter.latitude, longitude: filter.longitude }, filter.radiusKm);
+      where.latitude = { gte: box.minLatitude, lte: box.maxLatitude };
+      where.longitude = { gte: box.minLongitude, lte: box.maxLongitude };
     }
     if (filter.query) {
       where.OR = [

@@ -57,7 +57,17 @@ export class FakeSearchableProfessionalDiscoveryRepository implements Profession
       .filter((p) => !filter.verifiedOnly || p.verificationStatus === "VERIFIED")
       .filter((p) => filter.minRating === undefined || (p.averageRating ?? 0) >= filter.minRating)
       .filter((p) => filter.minReviewCount === undefined || p.reviewCount >= filter.minReviewCount)
-      .filter((p) => !filter.city || (p.city ?? "").toLowerCase() === filter.city.toLowerCase())
+      // Module 20: when geographic coordinates are supplied, do not apply
+      // the city-string filter here. SearchDirectoryUseCase must receive
+      // coordinate candidates so coordinate-based matching can take
+      // precedence over the coarse city string.
+      .filter(
+        (p) =>
+          !filter.city ||
+          filter.latitude !== undefined ||
+          filter.longitude !== undefined ||
+          (p.city ?? "").toLowerCase() === filter.city.toLowerCase(),
+      )
       .filter((p) => !filter.province || (p.province ?? "").toLowerCase() === filter.province.toLowerCase())
       .filter((p) => {
         if (!filter.query) return true;
@@ -106,7 +116,17 @@ export class FakeSearchableCompanyDiscoveryRepository implements CompanyDiscover
       .filter((c) => !filter.verifiedOnly || c.isVerified)
       .filter((c) => filter.minRating === undefined || (c.averageRating ?? 0) >= filter.minRating)
       .filter((c) => filter.minReviewCount === undefined || c.reviewCount >= filter.minReviewCount)
-      .filter((c) => !filter.city || (c.city ?? "").toLowerCase() === filter.city.toLowerCase())
+      // Module 20: when geographic coordinates are supplied, do not apply
+      // the city-string filter here. SearchDirectoryUseCase must receive
+      // coordinate candidates so coordinate-based matching can take
+      // precedence over the coarse city string.
+      .filter(
+        (c) =>
+          !filter.city ||
+          filter.latitude !== undefined ||
+          filter.longitude !== undefined ||
+          (c.city ?? "").toLowerCase() === filter.city.toLowerCase(),
+      )
       .filter((c) => !filter.province || (c.province ?? "").toLowerCase() === filter.province.toLowerCase())
       .filter((c) => {
         if (!filter.query) return true;

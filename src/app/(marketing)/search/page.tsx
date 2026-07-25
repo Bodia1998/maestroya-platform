@@ -49,6 +49,13 @@ export default async function DirectorySearchPage({
     sortBy: raw("sortBy"),
     page: raw("page"),
     pageSize: raw("pageSize"),
+    // Maps & Geolocation module (Module 20): optional — a future map-based
+    // UI (e.g. browser geolocation, a map picker) can navigate here with
+    // `lat`/`lng`/`radiusKm` query params without any change to this page;
+    // absent, search behaves exactly as it did before this module.
+    latitude: raw("lat"),
+    longitude: raw("lng"),
+    radiusKm: raw("radiusKm"),
   });
 
   const hasAnyFilter = Boolean(

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { haversineDistanceKm, isWithinServiceRadius } from "@/domain/services/geo-distance";
+import { computeBoundingBox, haversineDistanceKm, isWithinServiceRadius } from "@/domain/services/geo-distance";
 
 // Gandia, Spain
 const GANDIA = { latitude: 38.9665, longitude: -0.1817 };
@@ -53,5 +53,46 @@ describe("isWithinServiceRadius", () => {
   it("includes a professional exactly at the radius boundary", () => {
     const distance = haversineDistanceKm(GANDIA, OLIVA);
     expect(isWithinServiceRadius(GANDIA, OLIVA, distance)).toBe(true);
+  });
+});
+
+// Maps & Geolocation module (Module 20).
+describe("computeBoundingBox", () => {
+  it("contains the center point itself", () => {
+    const box = computeBoundingBox(GANDIA, 10);
+    expect(GANDIA.latitude).toBeGreaterThanOrEqual(box.minLatitude);
+    expect(GANDIA.latitude).toBeLessThanOrEqual(box.maxLatitude);
+    expect(GANDIA.longitude).toBeGreaterThanOrEqual(box.minLongitude);
+    expect(GANDIA.longitude).toBeLessThanOrEqual(box.maxLongitude);
+  });
+
+  it("is a superset of the true circle — every point within the radius falls inside the box", () => {
+    const radiusKm = 20;
+    const box = computeBoundingBox(GANDIA, radiusKm);
+    expect(haversineDistanceKm(GANDIA, OLIVA)).toBeLessThan(radiusKm);
+    expect(OLIVA.latitude).toBeGreaterThanOrEqual(box.minLatitude);
+    expect(OLIVA.latitude).toBeLessThanOrEqual(box.maxLatitude);
+    expect(OLIVA.longitude).toBeGreaterThanOrEqual(box.minLongitude);
+    expect(OLIVA.longitude).toBeLessThanOrEqual(box.maxLongitude);
+  });
+
+  it("grows with radius", () => {
+    const small = computeBoundingBox(GANDIA, 5);
+    const large = computeBoundingBox(GANDIA, 50);
+    expect(large.maxLatitude - large.minLatitude).toBeGreaterThan(small.maxLatitude - small.minLatitude);
+    expect(large.maxLongitude - large.minLongitude).toBeGreaterThan(small.maxLongitude - small.minLongitude);
+  });
+
+  it("clamps to valid coordinate ranges near the poles/antimeridian", () => {
+    const nearPole = computeBoundingBox({ latitude: 89.99, longitude: 179.99 }, 500);
+    expect(nearPole.maxLatitude).toBeLessThanOrEqual(90);
+    expect(nearPole.maxLongitude).toBeLessThanOrEqual(180);
+    expect(nearPole.minLongitude).toBeGreaterThanOrEqual(-180);
+  });
+
+  it("treats a negative radius the same as zero (a degenerate, point-sized box)", () => {
+    const box = computeBoundingBox(GANDIA, -10);
+    expect(box.minLatitude).toBeCloseTo(GANDIA.latitude, 5);
+    expect(box.maxLatitude).toBeCloseTo(GANDIA.latitude, 5);
   });
 });

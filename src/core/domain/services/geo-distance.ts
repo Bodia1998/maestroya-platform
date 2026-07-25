@@ -52,3 +52,42 @@ export function isWithinServiceRadius(
 ): boolean {
   return haversineDistanceKm(searchPoint, professionalPoint) <= serviceRadiusKm;
 }
+
+/** A cheap, SQL-pushable rectangular approximation of a circle of radius
+ *  `radiusKm` around `center` — degrees-of-latitude are a near-constant
+ *  111.32km, so the latitude band is exact; degrees-of-longitude shrink
+ *  with `cos(latitude)`, so the longitude band widens as you go poleward.
+ *  Deliberately a superset of the true circle (never a subset) — some
+ *  false positives are expected and must be trimmed afterwards with the
+ *  precise `haversineDistanceKm` cutoff (see
+ *  `isWithinServiceRadius`/Module 20's repository `searchCandidates`
+ *  implementations), the same "cheap DB filter, precise app-layer rule"
+ *  split this module already uses for `serviceRadiusKm` matching. */
+export interface BoundingBox {
+  minLatitude: number;
+  maxLatitude: number;
+  minLongitude: number;
+  maxLongitude: number;
+}
+
+const KM_PER_DEGREE_LATITUDE = 111.32;
+
+export function computeBoundingBox(center: GeoPoint, radiusKm: number): BoundingBox {
+  const safeRadiusKm = Math.max(0, radiusKm);
+  const latDelta = safeRadiusKm / KM_PER_DEGREE_LATITUDE;
+
+  // Guard against the pole singularity (cos(90deg) === 0) — clamp to a
+  // latitude just short of the pole so longitude delta stays finite. Not a
+  // realistic case for a Spain-focused marketplace, but the function must
+  // still return a well-formed box for any valid latitude input.
+  const clampedLatitudeForCos = Math.min(89.9, Math.abs(center.latitude));
+  const kmPerDegreeLongitude = KM_PER_DEGREE_LATITUDE * Math.cos(toRadians(clampedLatitudeForCos));
+  const lonDelta = kmPerDegreeLongitude > 0 ? safeRadiusKm / kmPerDegreeLongitude : 180;
+
+  return {
+    minLatitude: Math.max(-90, center.latitude - latDelta),
+    maxLatitude: Math.min(90, center.latitude + latDelta),
+    minLongitude: Math.max(-180, center.longitude - lonDelta),
+    maxLongitude: Math.min(180, center.longitude + lonDelta),
+  };
+}

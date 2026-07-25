@@ -54,6 +54,42 @@ export const searchDirectorySchema = z.object({
   sortBy: z.enum(SEARCH_SORT_OPTIONS).optional().default("RELEVANCE"),
   page: z.coerce.number().int().min(1).max(1000).optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(50).optional().default(20),
-});
+  /**
+   * Maps & Geolocation module (Module 20): optional client-supplied search
+   * point (e.g. from browser geolocation or a future map picker) and radius
+   * — additive alongside every Module 19 field above, following exactly the
+   * "ProfessionalSearchFilter/CompanySearchFilter can grow latitude/
+   * longitude/radiusKm fields additively" extension point Module 19's own
+   * documentation forward-referenced. Bounded to valid coordinate ranges and
+   * a sane maximum radius (200km — larger than Spain's largest province) to
+   * prevent pathological/abusive queries, the same reasoning
+   * `searchDirectorySchema`'s query-length/page/rating bounds already give.
+   * `radiusKm` without `latitude`/`longitude` (or vice versa) is rejected —
+   * a radius is meaningless without a center point.
+   */
+  latitude: z.coerce
+    .number({ invalid_type_error: "Enter a valid latitude." })
+    .min(-90, "Latitude must be between -90 and 90.")
+    .max(90, "Latitude must be between -90 and 90.")
+    .optional(),
+  longitude: z.coerce
+    .number({ invalid_type_error: "Enter a valid longitude." })
+    .min(-180, "Longitude must be between -180 and 180.")
+    .max(180, "Longitude must be between -180 and 180.")
+    .optional(),
+  radiusKm: z.coerce
+    .number({ invalid_type_error: "Enter a valid search radius." })
+    .positive("Search radius must be greater than zero.")
+    .max(200, "Search radius must be 200km or fewer.")
+    .optional(),
+})
+  .refine((value) => (value.latitude === undefined) === (value.longitude === undefined), {
+    message: "Both latitude and longitude must be provided together.",
+    path: ["longitude"],
+  })
+  .refine((value) => value.radiusKm === undefined || value.latitude !== undefined, {
+    message: "A search radius requires latitude/longitude to be set.",
+    path: ["radiusKm"],
+  });
 
 export type SearchDirectoryInput = z.infer<typeof searchDirectorySchema>;
