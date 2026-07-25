@@ -10,6 +10,7 @@ import type {
   ProfessionalDiscoveryCandidate,
   ProfessionalDiscoveryRepository,
   ProfessionalPublicProfileRecord,
+  ProfessionalSearchFilter,
 } from "@/domain/repositories/professional-discovery-repository";
 import type {
   CreateQuoteData,
@@ -162,6 +163,12 @@ export class FakeProfessionalDiscoveryRepository implements ProfessionalDiscover
       city: null,
       province: null,
     };
+  }
+
+  async searchCandidates(_filter: ProfessionalSearchFilter): Promise<ProfessionalDiscoveryCandidate[]> {
+    // Not exercised by the Offers/Quotes tests — Module 19's search is a
+    // distinct read path from CreateQuoteUseCase's own use of this fake.
+    throw new Error("not used in quotes tests");
   }
 }
 

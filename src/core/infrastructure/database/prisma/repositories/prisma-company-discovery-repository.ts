@@ -1,8 +1,10 @@
 import { prisma } from "@/infrastructure/database/prisma/client";
+import type { Prisma } from "@prisma/client";
 import type {
   CompanyDiscoveryCandidate,
   CompanyDiscoveryRepository,
   CompanyPublicProfileRecord,
+  CompanySearchFilter,
 } from "@/domain/repositories/company-discovery-repository";
 
 /** Module 18 — Company Professional: Prisma implementation of
@@ -10,7 +12,11 @@ import type {
  *  PrismaProfessionalDiscoveryRepository. Only ACTIVE (CompanyStatus)
  *  companies are ever returned — never PENDING/SUSPENDED/DEACTIVATED,
  *  matching isCompanyDiscoverable's own rule. `teamSize` counts active
- *  (joined, not removed) members only — never exposes who they are. */
+ *  (joined, not removed) members only — never exposes who they are.
+ *
+ *  Search & Ranking module (Module 19): `searchCandidates` adds the same
+ *  database-level filtering `PrismaProfessionalDiscoveryRepository.searchCandidates`
+ *  provides for professionals — see that method's own doc comment. */
 
 const CANDIDATE_SELECT = {
   id: true,
@@ -25,8 +31,14 @@ const CANDIDATE_SELECT = {
   province: true,
   latitude: true,
   longitude: true,
+  createdAt: true,
   categories: { select: { id: true } },
   members: { where: { joinedAt: { not: null }, removedAt: null }, select: { id: true } },
+  _count: {
+    select: {
+      portfolioItems: { where: { deletedAt: null, moderatedAt: null } },
+    },
+  },
 } as const;
 
 type CandidateRow = {
@@ -42,8 +54,10 @@ type CandidateRow = {
   province: string | null;
   latitude: number | null;
   longitude: number | null;
+  createdAt: Date;
   categories: { id: string }[];
   members: { id: string }[];
+  _count: { portfolioItems: number };
 };
 
 function toCandidate(row: CandidateRow): CompanyDiscoveryCandidate {
@@ -62,6 +76,8 @@ function toCandidate(row: CandidateRow): CompanyDiscoveryCandidate {
     latitude: row.latitude,
     longitude: row.longitude,
     teamSize: row.members.length,
+    portfolioItemCount: row._count.portfolioItems,
+    createdAt: row.createdAt,
   };
 }
 
@@ -92,6 +108,42 @@ export class PrismaCompanyDiscoveryRepository implements CompanyDiscoveryReposit
 
   async findPublicProfileBySlug(slug: string): Promise<CompanyPublicProfileRecord | null> {
     return this.findPublicProfile({ slug, status: "ACTIVE", deletedAt: null });
+  }
+
+  async searchCandidates(filter: CompanySearchFilter): Promise<CompanyDiscoveryCandidate[]> {
+    const where: Prisma.CompanyProfileWhereInput = {
+      status: "ACTIVE",
+      deletedAt: null,
+    };
+
+    if (filter.categoryId) {
+      where.categories = { some: { id: filter.categoryId, status: "ACTIVE", deletedAt: null } };
+    }
+    if (filter.verifiedOnly) {
+      where.isVerified = true;
+    }
+    if (typeof filter.minRating === "number") {
+      where.averageRating = { gte: filter.minRating };
+    }
+    if (typeof filter.minReviewCount === "number") {
+      where.reviewCount = { gte: filter.minReviewCount };
+    }
+    if (filter.city) {
+      where.city = { equals: filter.city, mode: "insensitive" };
+    }
+    if (filter.province) {
+      where.province = { equals: filter.province, mode: "insensitive" };
+    }
+    if (filter.query) {
+      where.OR = [
+        { legalName: { contains: filter.query, mode: "insensitive" } },
+        { tradeName: { contains: filter.query, mode: "insensitive" } },
+        { description: { contains: filter.query, mode: "insensitive" } },
+      ];
+    }
+
+    const rows = await prisma.companyProfile.findMany({ where, select: CANDIDATE_SELECT });
+    return rows.map(toCandidate);
   }
 
   private async findPublicProfile(
