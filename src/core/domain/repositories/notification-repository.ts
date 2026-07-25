@@ -44,7 +44,21 @@ export type NotificationTypeValue =
   | "COMPANY_VERIFICATION_REJECTED"
   | "COMPANY_VERIFICATION_RESUBMISSION_REQUIRED"
   | "COMPANY_SUSPENDED"
-  | "COMPANY_REACTIVATED";
+  | "COMPANY_REACTIVATED"
+  // Module 21 — Disputes & Support: see schema.prisma's NotificationType
+  // doc comment for the recipient of each.
+  | "DISPUTE_CREATED"
+  | "DISPUTE_ASSIGNED"
+  | "DISPUTE_STATUS_CHANGED"
+  | "DISPUTE_RESPONSE_REQUESTED"
+  | "DISPUTE_RESOLVED"
+  | "DISPUTE_REJECTED"
+  | "DISPUTE_CLOSED"
+  | "SUPPORT_TICKET_CREATED"
+  | "SUPPORT_TICKET_ASSIGNED"
+  | "SUPPORT_TICKET_STATUS_CHANGED"
+  | "SUPPORT_TICKET_RESOLVED"
+  | "SUPPORT_TICKET_CLOSED";
 
 export interface NotificationRecord {
   id: string;
