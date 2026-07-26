@@ -2,6 +2,8 @@ import { makeGetAdminDashboardOverviewUseCase } from "@/application/use-cases/ad
 
 export const metadata = { title: "Admin overview" };
 
+export const dynamic = "force-dynamic";
+
 const CARDS: Array<{ key: string; label: string }> = [
   { key: "totalUsers", label: "Total users" },
   { key: "totalProfessionals", label: "Professional profiles" },

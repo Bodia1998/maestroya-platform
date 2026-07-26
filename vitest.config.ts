@@ -29,6 +29,15 @@ export default defineConfig({
   },
   resolve: {
   alias: {
+    // The real `server-only` package throws unless a bundler-specific
+    // `react-server` resolve condition is active (see env.ts's own doc
+    // comment) — a condition Next.js's webpack build sets, but Vite/
+    // Vitest's plain module resolution never does. Aliased to a no-op
+    // stub so server-only modules (env.ts, auth-config.ts, the
+    // observability modules, etc.) can be imported from server-side
+    // tests — the normal, correct way to test them — without tripping
+    // the same guard meant to catch an actual client-bundle import.
+    "server-only": path.resolve(__dirname, "./tests/test-utils/server-only-stub.ts"),
     "@/application": path.resolve(__dirname, "./src/core/application"),
     "@/domain": path.resolve(__dirname, "./src/core/domain"),
     "@/infrastructure": path.resolve(__dirname, "./src/core/infrastructure"),

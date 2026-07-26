@@ -1,3 +1,5 @@
+import "server-only";
+
 import { headers } from "next/headers";
 
 import { hashIp, truncateUserAgent } from "@/domain/services/security-key";
