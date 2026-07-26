@@ -54,8 +54,14 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Prisma validate
+        run: npx prisma validate
+
       - name: Prisma migrate (test DB)
         run: npm run prisma:migrate:deploy
+
+      - name: Prisma migrate status
+        run: npx prisma migrate status
 
       - name: Unit tests
         run: npm run test

@@ -45,7 +45,8 @@
     "tailwind-merge": "^2.6.0",
     "class-variance-authority": "^0.7.1",
     "lucide-react": "^0.469.0",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

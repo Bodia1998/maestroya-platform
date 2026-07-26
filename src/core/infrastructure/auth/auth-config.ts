@@ -1,3 +1,5 @@
+import "server-only";
+
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { NextAuthConfig } from "next-auth";
 import Apple from "next-auth/providers/apple";
@@ -100,6 +102,16 @@ const REMEMBER_ME_SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
  */
 export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
+  // Auth.js v5 refuses requests whose Host header doesn't match a trusted
+  // value unless `trustHost` is set — Vercel's own platform integration
+  // sets this automatically, but any other production host (Docker/a VM
+  // behind nginx or another reverse proxy — see the production Dockerfile
+  // and docs/MODULE_25_PRODUCTION_INFRASTRUCTURE.md) needs it set
+  // explicitly, or every sign-in would fail with an UntrustedHost error.
+  // Controlled by `AUTH_TRUST_HOST` (defaults to enabled) rather than
+  // hardcoded so a deployment that fronts this app with its own strict
+  // Host-validating proxy can opt out.
+  trustHost: env.AUTH_TRUST_HOST,
   session: {
     strategy: "jwt",
     maxAge: DEFAULT_SESSION_MAX_AGE_SECONDS,

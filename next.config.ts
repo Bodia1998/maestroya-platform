@@ -9,6 +9,42 @@ import type { NextConfig } from "next";
  *   apply to static assets too, not just middleware-matched routes.
  * - Image remote patterns are scoped to Cloudinary — tighten/extend as needed.
  */
+const isProductionBuild = process.env.NODE_ENV === "production";
+
+/**
+ * Content-Security-Policy (Module 25 — Production Infrastructure).
+ *
+ * Scoped to this app's actual external dependencies as of this audit:
+ * Cloudinary-hosted images (`next.config.ts`'s own `images.remotePatterns`),
+ * and Stripe's API for the Stripe client already present in
+ * `infrastructure/payments/stripe/client.ts` (server-side only today — no
+ * client-side Stripe.js/Elements usage found in `src/`, so `js.stripe.com`
+ * is deliberately not yet in `script-src`; add it there if/when Module 12
+ * introduces Stripe Elements).
+ *
+ * `script-src`/`style-src` include `'unsafe-inline'` rather than a
+ * nonce-based policy: Next.js's App Router streams inline hydration
+ * scripts and several UI dependencies (Tailwind's arbitrary-value inline
+ * styles, component libraries) rely on inline `style` attributes. A
+ * nonce-based CSP is the stronger option but requires threading a
+ * per-request nonce through the root layout and every inline
+ * script/style — a real change to `src/app/layout.tsx` and beyond, out of
+ * scope for this module. Documented as a "Future improvement" rather than
+ * silently skipped; see docs/MODULE_25_PRODUCTION_INFRASTRUCTURE.md.
+ */
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https://res.cloudinary.com",
+  "font-src 'self' data:",
+  "connect-src 'self' https://res.cloudinary.com https://api.stripe.com",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join("; ");
+
 const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
@@ -18,11 +54,33 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(self)",
   },
+  { key: "Content-Security-Policy", value: CONTENT_SECURITY_POLICY },
+  // HSTS only makes sense — and is only safe — once the app is actually
+  // served over HTTPS in production. Sending it in local dev (plain HTTP)
+  // would have browsers remember a bogus upgrade instruction for
+  // localhost. `env.ts`'s production `superRefine` already requires
+  // NEXT_PUBLIC_APP_URL/AUTH_URL to be https:// in production, so this
+  // condition and that validation agree with each other.
+  ...(isProductionBuild
+    ? [
+        {
+          key: "Strict-Transport-Security",
+          value: "max-age=63072000; includeSubDomains; preload",
+        },
+      ]
+    : []),
 ];
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+
+  // Standalone output produces a minimal, self-contained `.next/standalone`
+  // server bundle (only the production `node_modules` subset actually
+  // required at runtime) — this is what the production Dockerfile (see
+  // `Dockerfile`) copies into its final image, keeping the container
+  // small rather than shipping the full source tree + devDependencies.
+  output: "standalone",
 
   images: {
     remotePatterns: [
