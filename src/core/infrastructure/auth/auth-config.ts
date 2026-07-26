@@ -8,10 +8,73 @@ import Google from "next-auth/providers/google";
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { env } from "@/infrastructure/config/env";
 import { verifyPassword } from "@/infrastructure/auth/password";
+import { getClientIpHash } from "@/infrastructure/auth/request-context";
 import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
 import { loginSchema } from "@/application/dto/auth.dto";
+import { RateLimitedError, AccountRestrictedError } from "@/domain/errors/domain-error";
+import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 
 const users = new PrismaUserRepository();
+
+/**
+ * Auth abuse (Module 24, threat A) — brute-force/credential-stuffing
+ * protection lives here, inside the Credentials provider's own
+ * `authorize()`, rather than a separate loginAction wrapper: this
+ * `authorize` callback (invoked by Auth.js's own `/api/auth/callback/
+ * credentials` route) *is* the only code path a login attempt ever goes
+ * through in this codebase — there is no separate Server Action to wrap.
+ *
+ * Enforced *before* any password comparison, keyed by email and by IP,
+ * both enforced (see rate-limit-policies.ts). A breach of the email-keyed
+ * policy also auto-escalates to a short TEMPORARILY_BLOCKED
+ * AccountRestriction for that user (see AntiAbuseService.enforceRateLimit's
+ * `autoRestrict` — auto-expiring, never permanent) so even a slow,
+ * distributed attacker who spreads attempts to just barely avoid the
+ * IP-based window still gets locked out on the account itself.
+ *
+ * `authorize()` must return `null` (not throw) for every *credential*
+ * failure — that's Auth.js's own contract, and this file already relied
+ * on it for "unknown email"/"wrong password"/"suspended". Rate-limit and
+ * restriction rejections deliberately still return `null` too (not a
+ * distinguishable error) — a different response shape for "rate limited"
+ * vs "wrong password" would itself leak information to an attacker probing
+ * the boundary.
+ */
+async function isLoginBlocked(email: string): Promise<boolean> {
+  const antiAbuse = makeAntiAbuseService();
+  const ipHash = await getClientIpHash();
+
+  try {
+    await antiAbuse.enforceRateLimit("LOGIN_BY_EMAIL", { resource: email }, "RATE_LIMIT_TRIGGERED");
+    if (ipHash) {
+      await antiAbuse.enforceRateLimit("LOGIN_BY_IP", { ipHash }, "RATE_LIMIT_TRIGGERED");
+    }
+  } catch (error) {
+    if (error instanceof RateLimitedError) {
+      const existing = await users.findByEmail(email);
+      if (existing) {
+        await antiAbuse.escalateToTemporaryBlock(existing.id, {
+          reason: "FAILED_LOGIN_BURST",
+          durationMs: 30 * 60 * 1000,
+        });
+      }
+      return true;
+    }
+    throw error;
+  }
+
+  const existing = await users.findByEmail(email);
+  if (existing) {
+    try {
+      await antiAbuse.assertNotBlocked(existing.id);
+    } catch (error) {
+      if (error instanceof AccountRestrictedError) return true;
+      throw error;
+    }
+  }
+
+  return false;
+}
 
 const DEFAULT_SESSION_MAX_AGE_SECONDS = 24 * 60 * 60; // 1 day
 const REMEMBER_ME_SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
@@ -73,15 +136,37 @@ export const authConfig: NextAuthConfig = {
         });
         if (!parsed.success) return null;
 
+        const antiAbuse = makeAntiAbuseService();
+        const ipHash = await getClientIpHash();
+
+        // Rate-limit/temporary-block check runs before any password
+        // comparison — see isLoginBlocked's own doc comment.
+        if (await isLoginBlocked(parsed.data.email)) {
+          return null;
+        }
+
+        const recordFailure = () =>
+          antiAbuse.recordEvent({ type: "LOGIN_FAILED", ipHash, metadata: null });
+
         const user = await users.findByEmail(parsed.data.email);
-        if (!user || !user.passwordHash) return null;
+        if (!user || !user.passwordHash) {
+          await recordFailure();
+          return null;
+        }
 
         const passwordMatches = await verifyPassword(parsed.data.password, user.passwordHash);
-        if (!passwordMatches) return null;
+        if (!passwordMatches) {
+          await recordFailure();
+          return null;
+        }
 
-        if (user.status === "SUSPENDED" || user.status === "BANNED") return null;
+        if (user.status === "SUSPENDED" || user.status === "BANNED") {
+          await recordFailure();
+          return null;
+        }
 
         await users.updateLastLoginAt(user.id);
+        await antiAbuse.recordEvent({ type: "LOGIN_SUCCEEDED", userId: user.id, ipHash });
 
         // Auth.js's User type only guarantees id/name/email/image, so
         // rememberMe is smuggled through as a non-standard extra property

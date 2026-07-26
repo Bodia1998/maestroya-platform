@@ -11,6 +11,7 @@ import {
   makeUpdateQuoteUseCase,
   makeWithdrawQuoteUseCase,
 } from "@/application/use-cases/quotes/compose";
+import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 
 export type ActionResult =
   | { success: true }
@@ -31,6 +32,13 @@ function fromDomainError(error: unknown, fallback: string): ActionResult {
   return { success: false, error: fallback };
 }
 
+/**
+ * Marketplace abuse (Module 24, threat C) — quote spam across many
+ * service requests. CreateQuoteUseCase already rejects a *second* quote
+ * on the *same* request (ConflictError, see its own doc comment); this
+ * adds the complementary per-professional frequency guard across
+ * *different* requests (see rate-limit-policies.ts's QUOTE_CREATE_BY_USER).
+ */
 export async function createQuoteAction(
   requestId: string,
   formData: unknown,
@@ -44,6 +52,17 @@ export async function createQuoteAction(
       error: "Please fix the errors below.",
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
+  }
+
+  const antiAbuse = makeAntiAbuseService();
+  try {
+    await antiAbuse.assertNotBlocked(user.id);
+    await antiAbuse.enforceRateLimit("QUOTE_CREATE_BY_USER", { userId: user.id }, "QUOTE_RATE_LIMITED");
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return { success: false, error: error.message } as CreateQuoteActionResult;
+    }
+    throw error;
   }
 
   try {

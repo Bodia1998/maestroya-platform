@@ -17,6 +17,7 @@ import {
   makeRemoveServiceRequestPhotoUseCase,
   makeUpdateServiceRequestUseCase,
 } from "@/application/use-cases/service-request/compose";
+import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 
 export type ActionResult =
   | { success: true }
@@ -37,6 +38,13 @@ function fromDomainError(error: unknown, fallback: string): ActionResult {
   return { success: false, error: fallback };
 }
 
+/**
+ * Marketplace abuse (Module 24, threat C) — spam/duplicate service-request
+ * creation. Rate-limited per authenticated user (see rate-limit-
+ * policies.ts's SERVICE_REQUEST_CREATE_BY_USER) and blocked outright for
+ * an account under an active TEMPORARILY_BLOCKED restriction, both checked
+ * before the use case runs.
+ */
 export async function createServiceRequestAction(formData: unknown): Promise<CreateActionResult> {
   const user = await requireAuth();
 
@@ -47,6 +55,21 @@ export async function createServiceRequestAction(formData: unknown): Promise<Cre
       error: "Please fix the errors below.",
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
+  }
+
+  const antiAbuse = makeAntiAbuseService();
+  try {
+    await antiAbuse.assertNotBlocked(user.id);
+    await antiAbuse.enforceRateLimit(
+      "SERVICE_REQUEST_CREATE_BY_USER",
+      { userId: user.id },
+      "SERVICE_REQUEST_RATE_LIMITED",
+    );
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return { success: false, error: error.message } as CreateActionResult;
+    }
+    throw error;
   }
 
   try {
