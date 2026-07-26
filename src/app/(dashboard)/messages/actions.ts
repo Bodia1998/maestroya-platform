@@ -12,6 +12,7 @@ import {
   makeOpenConversationUseCase,
   makeSendMessageUseCase,
 } from "@/application/use-cases/chat/compose";
+import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 
 export type ActionResult =
   | { success: true }
@@ -61,6 +62,12 @@ export async function openConversationAction(
   redirect(`/messages/${conversationId}`);
 }
 
+/**
+ * Communication abuse (Module 24, threat D) — message-spam/flood
+ * protection, the "future policy layer" SendMessageUseCase's own doc
+ * comment anticipates, applied here at the Server Action boundary rather
+ * than inside the use case itself (no persistence-layer change needed).
+ */
 export async function sendMessageAction(formData: FormData): Promise<ActionResult> {
   const user = await requireAuth();
 
@@ -70,6 +77,17 @@ export async function sendMessageAction(formData: FormData): Promise<ActionResul
   });
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid message." };
+  }
+
+  const antiAbuse = makeAntiAbuseService();
+  try {
+    await antiAbuse.assertNotBlocked(user.id);
+    await antiAbuse.enforceRateLimit("MESSAGE_SEND_BY_USER", { userId: user.id }, "MESSAGE_RATE_LIMITED");
+  } catch (error) {
+    if (error instanceof DomainError) {
+      return { success: false, error: error.message };
+    }
+    throw error;
   }
 
   try {

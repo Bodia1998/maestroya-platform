@@ -116,6 +116,10 @@ model User {
   resolvedSupportTickets  SupportTicket[]        @relation("SupportTicketResolvedBy")
   closedSupportTickets    SupportTicket[]        @relation("SupportTicketClosedBy")
   auditLogEntries        AuditLog[]
+  /// Module 24 — Security & Anti-Abuse.
+  securityEvents             SecurityEvent[]
+  accountRestrictions        AccountRestriction[]   @relation("AccountRestrictionSubject")
+  accountRestrictionsCreated AccountRestriction[]   @relation("AccountRestrictionCreatedBy")
   proposedAppointments   Appointment[]          @relation("AppointmentProposedBy")
   cancelledAppointments  Appointment[]          @relation("AppointmentCancelledBy")
   /// Order / Job Lifecycle module (Module 11).
@@ -2522,4 +2526,133 @@ model AuditLog {
   @@index([actorUserId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ============================================================================
+// Security & Anti-Abuse (Module 24)
+// ============================================================================
+//
+// Two new models, deliberately kept separate from the existing AuditLog
+// above rather than reusing it:
+//   - AuditLog's own doc comment describes it as a trail of "significant
+//     actions" performed by a resolved actor on a resolved entity. Most
+//     SecurityEvents below (LOGIN_FAILED, RATE_LIMIT_TRIGGERED, an
+//     anonymous registration flood from one IP) have *no* authenticated
+//     actor and *no* single target entity — exactly the cases AuditLog's
+//     shape doesn't fit.
+//   - AuditLogAction is a shared enum already reused by five other modules
+//     (see its doc comment / AdminAuditAction) for their own action
+//     vocabularies via `metadata.adminAction`. Widening it with 10+
+//     security-specific values not applicable to any of those modules
+//     would be a broader, riskier change than adding one small, purpose-
+//     built enum here.
+// Both stay additive: no existing table, column, or enum is modified.
+
+/// What kind of security-relevant thing happened. Deliberately narrower
+/// than "log everything" — only events an anti-abuse policy or an admin
+/// investigating abuse actually needs. See docs/MODULE_24_SECURITY_ANTI_ABUSE.md.
+enum SecurityEventType {
+  LOGIN_FAILED
+  LOGIN_SUCCEEDED
+  ACCOUNT_CREATED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  EMAIL_VERIFICATION_REQUESTED
+  RATE_LIMIT_TRIGGERED
+  ACCOUNT_TEMPORARILY_BLOCKED
+  SUSPICIOUS_ACTIVITY_DETECTED
+  SERVICE_REQUEST_RATE_LIMITED
+  QUOTE_RATE_LIMITED
+  MESSAGE_RATE_LIMITED
+  REVIEW_RATE_LIMITED
+  ADMIN_ACTION
+  SECURITY_POLICY_BLOCKED
+}
+
+/// Append-only security event log. Never exposed to the subject user
+/// (see SecurityEventRepository's doc comment) — read access is
+/// SUPER_ADMIN-only, same requireRole() gate as every other admin-only
+/// repository/use case in this codebase.
+///
+/// Privacy: raw IP addresses are never stored here. `ipHash` is a
+/// keyed SHA-256 hash (see infrastructure/auth/security-key.ts) of the
+/// caller's IP — enough to recognise "the same source acted repeatedly"
+/// for rate-limiting/investigation without persisting an address that
+/// identifies a person or location. `userAgent` is stored verbatim
+/// (browser/client strings are not personally identifying on their own)
+/// but truncated at the application boundary. `metadata` must never hold
+/// passwords, tokens, or other secrets — see the doc comment on
+/// SecurityEventRepository.record().
+model SecurityEvent {
+  id        String            @id @default(uuid()) @db.Uuid
+  type      SecurityEventType
+  userId    String?           @db.Uuid
+  ipHash    String?
+  userAgent String?
+  metadata  Json?             @db.JsonB
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("security_events")
+}
+
+/// Current abuse-related state, internal reason category, and (auto-)
+/// expiry for one active restriction on a User. Deliberately its own
+/// table rather than a status column bolted onto User — User.status
+/// (see UserStatus) already models the *account lifecycle*
+/// (pending/active/suspended/banned, an explicit admin/moderation
+/// decision); this models a *temporary, often automated* anti-abuse
+/// state layered on top of it (e.g. "still ACTIVE, but throttled for the
+/// next 15 minutes because of a burst of failed logins"). Multiple rows
+/// per user are allowed (history of past restrictions); "is this user
+/// currently restricted" is "is there a row for this userId with
+/// liftedAt IS NULL AND (expiresAt IS NULL OR expiresAt > now())".
+///
+/// No permanent auto-bans: automated restrictions (createdByUserId null)
+/// always carry an expiresAt. Only an explicit admin action
+/// (createdByUserId set) may create one with expiresAt = null — a
+/// deliberate, reviewable decision, never something the rate-limit/abuse
+/// policy layer does on its own. `reason` is an internal category never
+/// shown to the restricted user (see AccountRestrictionRepository).
+model AccountRestriction {
+  id              String                   @id @default(uuid()) @db.Uuid
+  userId          String                   @db.Uuid
+  state           AccountRestrictionState
+  reason          AccountRestrictionReason
+  notes           String?                  @db.Text /// internal only, never exposed to the restricted user
+  createdByUserId String?                  @db.Uuid /// null = system/automated; set = explicit admin action
+  expiresAt       DateTime?                /// null only allowed when createdByUserId is set (admin decision)
+  liftedAt        DateTime?
+
+  user      User  @relation("AccountRestrictionSubject", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("AccountRestrictionCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, state])
+  @@index([expiresAt])
+  @@map("account_restrictions")
+}
+
+enum AccountRestrictionState {
+  THROTTLED
+  TEMPORARILY_BLOCKED
+  FLAGGED
+}
+
+enum AccountRestrictionReason {
+  FAILED_LOGIN_BURST
+  REGISTRATION_ABUSE
+  SERVICE_REQUEST_SPAM
+  QUOTE_SPAM
+  MESSAGE_SPAM
+  REVIEW_ABUSE
+  ADMIN_DECISION
+  OTHER
 }

@@ -46,3 +46,37 @@ export class ConflictError extends DomainError {
     super(message);
   }
 }
+
+/**
+ * Security & Anti-Abuse module (Module 24): thrown when a caller has
+ * exceeded a configured rate-limit policy (see
+ * application/ports/rate-limit-policies.ts). `retryAfterMs` is safe to
+ * surface to the client (how long to wait) — never expose the underlying
+ * limit/window/current-count, which would help an attacker tune their
+ * request rate to just under the threshold.
+ */
+export class RateLimitedError extends DomainError {
+  readonly code = "RATE_LIMITED";
+  readonly retryAfterMs: number;
+
+  constructor(message = "Too many requests. Please try again later.", retryAfterMs: number) {
+    super(message);
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
+/**
+ * Security & Anti-Abuse module (Module 24): thrown when an authenticated
+ * user is temporarily blocked by an active AccountRestriction (see
+ * domain/repositories/account-restriction-repository.ts). The message is
+ * deliberately generic — the internal reason category and expiry are
+ * never surfaced to the restricted user, only ever to an admin via the
+ * dedicated admin-only read path.
+ */
+export class AccountRestrictedError extends DomainError {
+  readonly code = "ACCOUNT_RESTRICTED";
+
+  constructor(message = "This action is temporarily unavailable for your account.") {
+    super(message);
+  }
+}
