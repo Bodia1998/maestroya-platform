@@ -2,6 +2,7 @@ import { ConflictError } from "@/domain/errors/domain-error";
 import type { AuthTokenRepository } from "@/domain/repositories/auth-token-repository";
 import type { UserRepository } from "@/domain/repositories/user-repository";
 import { hashPassword } from "@/infrastructure/auth/password";
+import { env } from "@/infrastructure/config/env";
 import {
   EMAIL_VERIFICATION_TOKEN_TTL_MS,
   generateRawToken,
@@ -40,7 +41,7 @@ export class RegisterUserUseCase {
       new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS),
     );
 
-    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${rawToken}`;
+    const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${rawToken}`;
     await this.emailSender.send({
       to: input.email,
       subject: "Verify your MaestroYa email",

@@ -1,6 +1,7 @@
 import { PrismaAuthTokenRepository } from "@/infrastructure/database/prisma/repositories/prisma-auth-token-repository";
 import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
-import { ConsoleEmailSender } from "@/infrastructure/email/console-email-sender";
+import { ResendEmailSender } from "@/infrastructure/email/resend-email-sender";
+import { env } from "@/infrastructure/config/env";
 import { RegisterUserUseCase } from "@/application/use-cases/auth/register-user.use-case";
 import { RequestPasswordResetUseCase } from "@/application/use-cases/auth/request-password-reset.use-case";
 import { ResetPasswordUseCase } from "@/application/use-cases/auth/reset-password.use-case";
@@ -9,12 +10,19 @@ import { VerifyEmailUseCase } from "@/application/use-cases/auth/verify-email.us
 /**
  * Manual composition root — no DI container in this project, so Server
  * Actions/Route Handlers import these factories instead of constructing
- * repositories inline. Swap ConsoleEmailSender for a real EmailSender
- * implementation here (and nowhere else) once an email provider is chosen.
+ * repositories inline.
+ *
+ * Resend is wired here as the concrete EmailSender implementation.
+ * Use cases depend only on the EmailSender interface, keeping the
+ * application layer independent from the email provider.
  */
+ 
 const users = new PrismaUserRepository();
 const tokens = new PrismaAuthTokenRepository();
-const emailSender = new ConsoleEmailSender();
+const emailSender = new ResendEmailSender(
+  env.RESEND_API_KEY,
+  env.EMAIL_FROM,
+);
 
 export function makeRegisterUserUseCase() {
   return new RegisterUserUseCase(users, tokens, emailSender);

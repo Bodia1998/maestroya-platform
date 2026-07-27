@@ -9,6 +9,38 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     include: ["tests/unit/**/*.test.{ts,tsx}", "tests/integration/**/*.test.{ts,tsx}"],
+    /**
+     * Baseline `process.env` for every test file, applied before any test
+     * runs. `env.ts` validates `process.env` as a module-load side effect
+     * (`export const env = parseEnv()`), so *any* test that imports it —
+     * even transitively, e.g. an auth use case or `rbac.ts` importing
+     * `@/lib/auth` — needs a fully valid environment at import time, not
+     * just the handful of tests that exercise `env.ts` directly via
+     * `tests/unit/core/infrastructure/config/env-fixture.ts`.
+     *
+     * These are non-secret, dev-safe placeholder values — the same shape
+     * `.env.example`/CI's `env:` block use — never production values.
+     * `tests/.../env-fixture.ts`'s `loadEnvWith()` still fully controls
+     * `process.env` for its own isolated test cases (it deletes and
+     * resets every relevant key per call), so this baseline doesn't
+     * interfere with those tests; it only fills the gap for tests that
+     * never touch env.ts's fixture at all.
+     */
+    env: {
+      NODE_ENV: "test",
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/maestroya_test?schema=public",
+      RESEND_API_KEY: "re_test_placeholder",
+      EMAIL_FROM: "MaestroYa <noreply@maestroya.test>",
+      AUTH_SECRET: "vitest-baseline-secret-not-for-production-use",
+      AUTH_URL: "http://localhost:3000",
+      STRIPE_SECRET_KEY: "sk_test_placeholder",
+      STRIPE_PUBLISHABLE_KEY: "pk_test_placeholder",
+      STRIPE_WEBHOOK_SECRET: "whsec_placeholder",
+      CLOUDINARY_CLOUD_NAME: "demo",
+      CLOUDINARY_API_KEY: "123456",
+      CLOUDINARY_API_SECRET: "abcdef",
+    },
     server: {
       deps: {
         // next-auth ships native ESM and is normally left external so

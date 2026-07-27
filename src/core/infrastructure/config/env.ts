@@ -71,6 +71,9 @@ const envSchema = z
 
     // --- Database (PostgreSQL via Prisma) ---
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+    // --- Email (Resend) ---
+    RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
+    EMAIL_FROM: z.string().min(1, "EMAIL_FROM is required"),
 
     // --- Auth.js ---
     AUTH_SECRET: z.string().min(1, "AUTH_SECRET is required"),
