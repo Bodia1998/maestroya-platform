@@ -1,3 +1,4 @@
+import { env } from "@/infrastructure/config/env";
 import type { AuthTokenRepository } from "@/domain/repositories/auth-token-repository";
 import type { UserRepository } from "@/domain/repositories/user-repository";
 import {
@@ -34,7 +35,7 @@ export class RequestPasswordResetUseCase {
       new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS),
     );
 
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${rawToken}`;
+    const resetUrl = `${env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${rawToken}`;
     await this.emailSender.send({
       to: email,
       subject: "Reset your MaestroYa password",
