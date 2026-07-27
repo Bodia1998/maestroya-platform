@@ -14,6 +14,12 @@ export const VALID_BASE_ENV: Record<string, string> = {
   NODE_ENV: "development",
   NEXT_PUBLIC_APP_URL: "http://localhost:3000",
   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/maestroya?schema=public",
+  // Email (Resend) — required since env.ts started validating these
+  // (commit 82fb6d1, "fix(auth): improve email verification and password
+  // reset"); RegisterUserUseCase/RequestPasswordResetUseCase now import
+  // `env` directly to send real verification/reset emails via Resend.
+  RESEND_API_KEY: "re_test_placeholder",
+  EMAIL_FROM: "MaestroYa <noreply@maestroya.test>",
   AUTH_SECRET: "dev-secret-does-not-need-32-chars",
   AUTH_URL: "http://localhost:3000",
   STRIPE_SECRET_KEY: "sk_test_placeholder",

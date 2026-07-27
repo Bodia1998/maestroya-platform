@@ -3,32 +3,119 @@
 @tailwind utilities;
 
 /*
- * Design tokens as CSS variables, consumed by tailwind.config.ts.
- * Placeholder values — replace once real brand colors are provided.
+ * MaestroYa design tokens.
+ *
+ * CSS custom properties, consumed by tailwind.config.ts's theme.extend.
  * HSL components only (no `hsl()` wrapper) so Tailwind's
- * `hsl(var(--x) / <alpha-value>)` opacity syntax works.
+ * `hsl(var(--x) / <alpha-value>)` opacity syntax works everywhere.
+ *
+ * Palette: a trustworthy, professional blue as the primary brand color
+ * (verification, security, "trusted trade professional") paired with a
+ * warm amber accent for conversion CTAs — avoids the generic "AI SaaS
+ * purple gradient" look while staying premium and legible. Neutral scale
+ * is a slightly warm gray (better for a "home services" feel than a cold
+ * blue-gray).
  */
 @layer base {
   :root {
+    /* Surfaces */
     --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --primary: 217 91% 60%;
+    --foreground: 222 27% 12%;
+    --muted: 220 20% 97%;
+    --muted-foreground: 220 9% 42%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 27% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 27% 12%;
+
+    /* Brand */
+    --primary: 217 76% 40%;
     --primary-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --radius: 0.5rem;
+    --primary-hover: 217 76% 34%;
+
+    --accent: 30 96% 52%;
+    --accent-foreground: 24 40% 12%;
+    --accent-hover: 30 96% 46%;
+
+    /* Semantic */
+    --success: 152 60% 32%;
+    --success-foreground: 0 0% 100%;
+    --success-muted: 152 55% 94%;
+    --warning: 38 92% 42%;
+    --warning-foreground: 0 0% 100%;
+    --warning-muted: 45 93% 94%;
+    --danger: 0 72% 45%;
+    --danger-foreground: 0 0% 100%;
+    --danger-muted: 0 86% 96%;
+    --info: 217 76% 40%;
+    --info-foreground: 0 0% 100%;
+    --info-muted: 214 90% 95%;
+
+    /* Structure */
+    --border: 220 16% 88%;
+    --input: 220 16% 85%;
+    --ring: 217 76% 40%;
+    --radius: 0.75rem;
+
+    /* Shadows (rgb triplets, used via rgb(var(--shadow-color) / alpha)) */
+    --shadow-color: 222 27% 12%;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --border: 217 33% 17%;
+    --background: 222 32% 8%;
+    --foreground: 210 30% 96%;
+    --muted: 222 24% 14%;
+    --muted-foreground: 216 12% 65%;
+    --card: 222 28% 11%;
+    --card-foreground: 210 30% 96%;
+    --popover: 222 28% 11%;
+    --popover-foreground: 210 30% 96%;
+
+    --primary: 213 82% 62%;
+    --primary-foreground: 222 32% 10%;
+    --primary-hover: 213 82% 68%;
+
+    --accent: 30 96% 58%;
+    --accent-foreground: 24 40% 10%;
+    --accent-hover: 30 96% 64%;
+
+    --success: 152 50% 48%;
+    --success-foreground: 152 60% 8%;
+    --success-muted: 152 35% 16%;
+    --warning: 38 85% 55%;
+    --warning-foreground: 38 60% 10%;
+    --warning-muted: 40 45% 16%;
+    --danger: 0 70% 62%;
+    --danger-foreground: 0 40% 10%;
+    --danger-muted: 0 45% 18%;
+    --info: 213 82% 62%;
+    --info-foreground: 222 32% 10%;
+    --info-muted: 213 40% 18%;
+
+    --border: 217 20% 22%;
+    --input: 217 20% 24%;
+    --ring: 213 82% 62%;
+
+    --shadow-color: 0 0% 0%;
   }
 
   * {
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  /* Consistent, visible focus ring across every interactive element,
+     restricted to keyboard navigation via :focus-visible so mouse users
+     don't see a ring on click. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }

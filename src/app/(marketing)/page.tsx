@@ -1,14 +1,52 @@
+import { prisma } from "@/infrastructure/database/prisma/client";
+import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
+import { CategoryGrid } from "./_sections/category-grid";
+import { Hero } from "./_sections/hero";
+import { HowItWorks } from "./_sections/how-it-works";
+import { ProfessionalCta } from "./_sections/professional-cta";
+import { TrustSection } from "./_sections/trust-section";
+
+export const metadata = {
+  title: "MaestroYa — Encuentra profesionales de confianza para tu hogar",
+  description:
+    "Describe lo que necesitas y conecta con profesionales verificados cerca de ti: fontanería, electricidad, reformas, limpieza y mucho más.",
+};
+
 /**
- * Homepage placeholder — Server Component, renders on the server with no
- * client-side data fetching. Replace with real marketing content; see
- * docs/ARCHITECTURE.md for where page-level data fetching should live
- * (directly in the Server Component via a use case, not via TanStack
- * Query — that's for client-side interactive data only).
+ * Homepage — Server Component, no client-side data fetching for the
+ * page-level reads (per docs/ARCHITECTURE.md's convention: TanStack
+ * Query is for client-interactive data only).
+ *
+ * Two category reads, both "plain reference data" reads rather than use
+ * cases (matching the existing convention already used by
+ * `requests/new`, `dashboard/professional`, and `/professionals`):
+ *  - `PrismaServiceCategoryRepository().listActive()` — the exact same
+ *    repository call `requests/new` already uses — powers the hero
+ *    search widget's category picker with the full flat category list
+ *    (parents + sub-professions), matching how every other
+ *    category-select in the app is populated.
+ *  - a direct top-level-only Prisma read (`parentId: null`) powers the
+ *    homepage's visual category grid, which should show broad service
+ *    categories (Fontanería, Electricidad, …), not every nested
+ *    profession.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  const [searchCategories, topLevelCategories] = await Promise.all([
+    new PrismaServiceCategoryRepository().listActive(),
+    prisma.serviceCategory.findMany({
+      where: { status: "ACTIVE", deletedAt: null, parentId: null },
+      select: { id: true, name: true, slug: true, iconUrl: true },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    }),
+  ]);
+
   return (
-    <main className="flex min-h-screen items-center justify-center p-24">
-      <h1 className="text-4xl font-bold">MaestroYa</h1>
-    </main>
+    <>
+      <Hero categories={searchCategories} />
+      <CategoryGrid categories={topLevelCategories} />
+      <TrustSection />
+      <HowItWorks />
+      <ProfessionalCta />
+    </>
   );
 }

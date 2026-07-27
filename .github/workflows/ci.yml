@@ -28,6 +28,8 @@ jobs:
     env:
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/maestroya_test?schema=public"
       NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      RESEND_API_KEY: "re_ci_placeholder"
+      EMAIL_FROM: "MaestroYa <noreply@maestroya.test>"
       AUTH_SECRET: "ci-only-placeholder-secret"
       AUTH_URL: "http://localhost:3000"
       STRIPE_SECRET_KEY: "sk_test_placeholder"
