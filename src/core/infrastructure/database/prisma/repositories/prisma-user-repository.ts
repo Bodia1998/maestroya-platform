@@ -81,9 +81,21 @@ export class PrismaUserRepository implements UserRepository {
     return userRoles.map((ur) => ur.role.key);
   }
 
-  async assignDefaultRole(userId: string, roleKey: string): Promise<void> {
-    const role = await prisma.role.findUniqueOrThrow({ where: { key: roleKey } });
-    await prisma.userRole.upsert({
+  // `client` defaults to the module-level `prisma` singleton — every
+  // existing caller (RegisterUserUseCase, auth-config.ts's events.createUser)
+  // is typed against the `UserRepository` interface, which still only
+  // declares the 2-argument signature, so none of them are affected by this
+  // optional third parameter. It exists solely so this exact method — not a
+  // re-implementation of it — can also be run inside another repository's
+  // `prisma.$transaction` (see PrismaProfessionalRepository.create), by
+  // passing that transaction's `tx` client through instead of the singleton.
+  async assignDefaultRole(
+    userId: string,
+    roleKey: string,
+    client: Pick<typeof prisma, "role" | "userRole"> = prisma,
+  ): Promise<void> {
+    const role = await client.role.findUniqueOrThrow({ where: { key: roleKey } });
+    await client.userRole.upsert({
       where: { userId_roleId: { userId, roleId: role.id } },
       update: {},
       create: { userId, roleId: role.id },

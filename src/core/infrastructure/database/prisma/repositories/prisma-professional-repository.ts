@@ -1,4 +1,5 @@
 import { prisma } from "@/infrastructure/database/prisma/client";
+import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
 import type {
   CreateProfessionalData,
   ProfessionalRecord,
@@ -96,27 +97,44 @@ export class PrismaProfessionalRepository implements ProfessionalRepository {
     return row ? toRecord(row) : null;
   }
 
+  // Professional Onboarding: creating a ProfessionalProfile is the moment a
+  // user becomes a professional in this app (see the architecture review —
+  // every professional-facing use case already authorizes off the existence
+  // of this profile, never off a role), so granting the PROVIDER role is
+  // done here, atomically, in the same transaction as the profile insert —
+  // never one without the other. CUSTOMER is never touched: assignDefaultRole
+  // upserts the PROVIDER row additively, exactly like RegisterUserUseCase's
+  // own CUSTOMER assignment. Reuses PrismaUserRepository.assignDefaultRole
+  // (passing this transaction's `tx` client through) rather than
+  // re-implementing the role-assignment write, same "the authoritative
+  // atomic write lives inside one repository method" convention as
+  // PrismaQuoteAcceptanceRepository.acceptQuote.
   async create(userId: string, data: CreateProfessionalData): Promise<ProfessionalRecord> {
-    const row = await prisma.professionalProfile.create({
-      data: {
-        userId,
-        businessName: data.businessName ?? null,
-        bio: data.bio ?? null,
-        headline: data.headline ?? null,
-        yearsExperience: data.yearsExperience ?? null,
-        hourlyRate: data.hourlyRate ?? null,
-        serviceRadiusKm: data.serviceRadiusKm ?? null,
-        contactEmail: data.contactEmail ?? null,
-        contactPhone: data.contactPhone ?? null,
-        websiteUrl: data.websiteUrl ?? null,
-        taxId: data.taxId ?? null,
-        categories: data.categoryIds?.length
-          ? { connect: data.categoryIds.map((id) => ({ id })) }
-          : undefined,
-      },
-      select: SELECT,
+    return prisma.$transaction(async (tx) => {
+      const row = await tx.professionalProfile.create({
+        data: {
+          userId,
+          businessName: data.businessName ?? null,
+          bio: data.bio ?? null,
+          headline: data.headline ?? null,
+          yearsExperience: data.yearsExperience ?? null,
+          hourlyRate: data.hourlyRate ?? null,
+          serviceRadiusKm: data.serviceRadiusKm ?? null,
+          contactEmail: data.contactEmail ?? null,
+          contactPhone: data.contactPhone ?? null,
+          websiteUrl: data.websiteUrl ?? null,
+          taxId: data.taxId ?? null,
+          categories: data.categoryIds?.length
+            ? { connect: data.categoryIds.map((id) => ({ id })) }
+            : undefined,
+        },
+        select: SELECT,
+      });
+
+      await new PrismaUserRepository().assignDefaultRole(row.userId, "PROVIDER", tx);
+
+      return toRecord(row);
     });
-    return toRecord(row);
   }
 
   async update(id: string, data: UpdateProfessionalData): Promise<ProfessionalRecord> {
