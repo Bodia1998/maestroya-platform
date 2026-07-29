@@ -1,6 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -36,6 +38,8 @@ interface ProfessionalLike {
  */
 export function ProfessionalProfileForm({ professional }: { professional: ProfessionalLike | null }) {
   const isEditing = professional !== null;
+  const { update } = useSession();
+  const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -83,6 +87,24 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
         }
       }
       return;
+    }
+
+    // First-time creation is the activation event (see
+    // PrismaProfessionalRepository.create) — the PROVIDER role was just
+    // assigned server-side, but this browser's existing session/JWT was
+    // minted before that happened. `update()` is Auth.js's own documented
+    // mechanism for this: it re-invokes the `jwt` callback with
+    // `trigger === "update"`, which already re-reads `token.roles` from the
+    // database (see auth-config.ts) — no new session-refresh mechanism
+    // needed. Not called on the edit path: editing an existing profile
+    // never changes roles.
+    if (!isEditing) {
+      await update();
+      // Standard Next.js router refresh (not a custom session mechanism) —
+      // re-fetches the current route's Server Components (the (dashboard)
+      // layout's sidebar and this page) so they reflect the just-updated
+      // session on this same render, without a logout/login round-trip.
+      router.refresh();
     }
 
     setSuccessMessage(isEditing ? "Professional profile updated." : "Professional profile created.");
