@@ -11,6 +11,8 @@ declare module "next-auth" {
     user: {
       id: string;
       roles: string[];
+      /** Professional Onboarding routing flag — see SignupIntent's doc comment in schema.prisma. Null once onboarding completes (or if never set). */
+      signupIntent: string | null;
     } & DefaultSession["user"];
   }
 }
@@ -19,5 +21,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
     roles?: string[];
+    signupIntent?: string | null;
   }
 }

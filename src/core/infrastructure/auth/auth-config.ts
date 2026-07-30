@@ -197,6 +197,10 @@ export const authConfig: NextAuthConfig = {
       if (user?.id) {
         token.id = user.id;
         token.roles = await users.getRoleKeys(user.id);
+        // Professional Onboarding: same "read once at sign-in, refetch on
+        // trigger 'update'" treatment as roles above — see
+        // middleware.ts for how this drives the onboarding redirect.
+        token.signupIntent = await users.getSignupIntent(user.id);
 
         const rememberMe = (user as { rememberMe?: boolean }).rememberMe;
         if (rememberMe) {
@@ -207,9 +211,14 @@ export const authConfig: NextAuthConfig = {
       // Role changes made by an admin mid-session won't apply until the
       // user's token is refreshed by re-authenticating — an accepted
       // trade-off for not hitting the DB on every single request. Trigger
-      // "update" (session update) forces a refetch on demand.
+      // "update" (session update) forces a refetch on demand. This is the
+      // exact mechanism ProfessionalOnboardingForm calls via useSession's
+      // `update()` right after onboarding completes, so the just-granted
+      // PROVIDER role and just-cleared signupIntent are both reflected
+      // without a logout/login round-trip.
       if (trigger === "update" && token.id) {
         token.roles = await users.getRoleKeys(token.id as string);
+        token.signupIntent = await users.getSignupIntent(token.id as string);
       }
 
       return token;
@@ -218,6 +227,7 @@ export const authConfig: NextAuthConfig = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.roles = (token.roles as string[]) ?? [];
+        session.user.signupIntent = (token.signupIntent as string | null) ?? null;
       }
       return session;
     },

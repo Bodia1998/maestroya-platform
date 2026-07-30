@@ -31,6 +31,11 @@ export class RegisterUserUseCase {
       email: input.email,
       name: input.name,
       passwordHash,
+      // Professional Onboarding: recorded as a routing hint only —
+      // registration itself is unchanged, every new account still gets
+      // CUSTOMER below regardless of intent (see product decision in
+      // docs — no separate account system, no different role at signup).
+      signupIntent: input.intent === "PROFESSIONAL" ? "PROFESSIONAL" : undefined,
     });
     await this.users.assignDefaultRole(user.id, "CUSTOMER");
 

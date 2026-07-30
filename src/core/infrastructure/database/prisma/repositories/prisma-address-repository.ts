@@ -18,6 +18,8 @@ export class PrismaAddressRepository implements AddressRepository {
         province: true,
         postalCode: true,
         country: true,
+        latitude: true,
+        longitude: true,
       },
     });
   }
@@ -35,6 +37,14 @@ export class PrismaAddressRepository implements AddressRepository {
       province: data.province ?? null,
       postalCode: data.postalCode,
       country: data.country,
+      // Deliberately `data.latitude`/`data.longitude` as-is (not `?? null`):
+      // leaving them `undefined` when a caller doesn't supply them (e.g.
+      // the Profile module's own address-edit form, which never resolves
+      // coordinates) means Prisma omits the field entirely from `update`,
+      // preserving whatever coordinates Professional Onboarding's geocoding
+      // step may have already set — not silently wiping them out.
+      latitude: data.latitude,
+      longitude: data.longitude,
     };
 
     if (existing) {
@@ -49,6 +59,8 @@ export class PrismaAddressRepository implements AddressRepository {
           province: true,
           postalCode: true,
           country: true,
+          latitude: true,
+          longitude: true,
         },
       });
     }
@@ -68,6 +80,8 @@ export class PrismaAddressRepository implements AddressRepository {
         province: true,
         postalCode: true,
         country: true,
+        latitude: true,
+        longitude: true,
       },
     });
   }

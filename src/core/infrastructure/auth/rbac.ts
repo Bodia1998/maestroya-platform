@@ -21,7 +21,12 @@ export type RoleKey = (typeof ROLES)[keyof typeof ROLES];
 export async function getCurrentUser() {
   const session = await auth();
   if (!session?.user) return null;
-  return { id: session.user.id, email: session.user.email, roles: session.user.roles };
+  return {
+    id: session.user.id,
+    email: session.user.email,
+    roles: session.user.roles,
+    signupIntent: session.user.signupIntent,
+  };
 }
 
 /** Throws UnauthorizedError if nobody is signed in. */

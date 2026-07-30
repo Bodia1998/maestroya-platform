@@ -17,6 +17,16 @@ const ROLE_GATED_PREFIXES: Array<{ prefix: string; roles: string[] }> = [
 ];
 
 /**
+ * Professional Onboarding: the one route a PROFESSIONAL-intent user
+ * without the PROVIDER role yet is always allowed to reach under
+ * `/dashboard` — every other `/dashboard` route bounces here instead (see
+ * the check below). Kept as a plain constant, not a prefix array entry,
+ * since this isn't a role gate — no auth/role requirement is being
+ * enforced here, only a redirect target.
+ */
+const PROFESSIONAL_ONBOARDING_PATH = "/dashboard/professional/onboarding";
+
+/**
  * Request correlation ID (Module 25 — Production Infrastructure).
  *
  * Reuses (validated) an incoming `x-request-id` from a trusted upstream
@@ -71,6 +81,37 @@ export default auth((req) => {
     const loginUrl = new URL("/auth/login", req.nextUrl.origin);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return withRequestId(req, NextResponse.redirect(loginUrl));
+  }
+
+  /**
+   * Professional Onboarding.
+   *
+   * A user who registered through the "Soy profesional" CTA carries
+   * `signupIntent === "PROFESSIONAL"` (see auth-config.ts's jwt callback)
+   * until onboarding completes and clears it (see
+   * CompleteProfessionalOnboardingUseCase). Until then, they must never
+   * see the Customer Dashboard — every `/dashboard` route except the
+   * onboarding page itself redirects here instead.
+   *
+   * This check re-runs on *every* request against the DB-backed
+   * `signupIntent` (refreshed into the session/JWT at sign-in — see
+   * auth-config.ts), not a one-time post-registration redirect — so it
+   * equally covers "interrupted onboarding": closing the browser before
+   * finishing and logging back in later still resumes here.
+   */
+  const isProfessionalIntent = (req.auth?.user?.signupIntent ?? null) === "PROFESSIONAL";
+  const hasProviderRole = roles.includes("PROVIDER");
+  if (
+    isSignedIn &&
+    isProfessionalIntent &&
+    !hasProviderRole &&
+    pathname.startsWith("/dashboard") &&
+    pathname !== PROFESSIONAL_ONBOARDING_PATH
+  ) {
+    return withRequestId(
+      req,
+      NextResponse.redirect(new URL(PROFESSIONAL_ONBOARDING_PATH, req.nextUrl.origin)),
+    );
   }
 
   return withRequestId(req, NextResponse.next());

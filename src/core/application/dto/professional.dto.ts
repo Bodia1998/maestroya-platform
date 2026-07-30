@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { addressSchema } from "./profile.dto";
+
 /**
  * Same convention as profile.dto.ts: one schema shared by the client form
  * (via @hookform/resolvers/zod) and the Server Action that receives it.
@@ -66,6 +68,38 @@ export const updateProfessionalServicesSchema = z.object({
     .max(20, "Select up to 20 categories."),
 });
 export type UpdateProfessionalServicesInput = z.infer<typeof updateProfessionalServicesSchema>;
+
+/**
+ * Professional Onboarding — a dedicated, *stricter* schema, not a variant
+ * of `createProfessionalSchema` (create leaves everything but
+ * `categoryIds` optional, since an existing professional's dashboard form
+ * has to also handle "leave this blank"). Onboarding is a one-time,
+ * required-fields flow: primary profession/category, phone, base
+ * location, service radius, and a short description are all mandatory —
+ * see docs for the product requirement. `categoryIds` reuses
+ * `updateProfessionalServicesSchema`'s exact field (same min/max rules,
+ * one definition) and `address` reuses the Profile module's own
+ * `addressSchema` (same rules a "base location" already needs elsewhere)
+ * rather than introducing a second, free-text "service area" field — see
+ * docs/MODULE_20_MAPS_GEOLOCATION.md: the matching system uses
+ * coordinates (resolved from this address) plus `serviceRadiusKm`, never
+ * a free-text area description.
+ */
+export const professionalOnboardingSchema = z.object({
+  categoryIds: updateProfessionalServicesSchema.shape.categoryIds,
+  contactPhone: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9\s-]{7,20}$/, "Enter a valid phone number."),
+  bio: z.string().trim().min(1, "Add a short description.").max(2000),
+  serviceRadiusKm: z
+    .coerce.number()
+    .int("Enter a whole number.")
+    .min(0, "Service radius cannot be negative.")
+    .max(1000, "Enter a realistic service radius."),
+  address: addressSchema,
+});
+export type ProfessionalOnboardingInput = z.infer<typeof professionalOnboardingSchema>;
 
 export const deactivateProfessionalSchema = z.object({
   confirmationText: z.literal("DEACTIVATE", {

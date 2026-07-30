@@ -55,6 +55,12 @@ model User {
   phone            String?    @unique
   phoneVerifiedAt  DateTime?
   status           UserStatus @default(PENDING_VERIFICATION)
+  /// Professional Onboarding: see SignupIntent's own doc comment. Null for
+  /// every user who never went through the "Soy profesional" CTA (i.e.
+  /// every user before this feature existed, and every ordinary customer
+  /// signup) — absence carries no meaning beyond "not currently mid-way
+  /// through professional onboarding."
+  signupIntent     SignupIntent?
   preferredLanguageId String? @db.Uuid
   timezone         String?
   notificationPreferences Json? @db.JsonB
@@ -389,6 +395,20 @@ enum UserStatus {
   SUSPENDED
   BANNED
   DEACTIVATED
+}
+
+/// Professional Onboarding: a *temporary routing flag* only, set when a
+/// user registers via the "Soy profesional" CTA. It never replaces or
+/// duplicates the role system (see UserRole/Role) — it exists purely so
+/// middleware.ts can resume an interrupted onboarding (redirect back to
+/// /dashboard/professional/onboarding on next login) for a user who
+/// intended to become a professional but hasn't been granted the
+/// PROVIDER role yet. Cleared (set back to null) the moment onboarding
+/// completes; from then on PROVIDER role membership alone is the single
+/// source of truth for "is this user a professional."
+enum SignupIntent {
+  CUSTOMER
+  PROFESSIONAL
 }
 
 /// Module 18 — Company Professional: MANAGER added between ADMIN and MEMBER

@@ -53,6 +53,35 @@ describe("registerSchema", () => {
   it("rejects an invalid email", () => {
     expect(registerSchema.safeParse({ ...valid, email: "not-an-email" }).success).toBe(false);
   });
+
+  /**
+   * Professional Onboarding: `intent` is a pure routing hint (see
+   * SignupIntent's own doc comment in schema.prisma), not a role — these
+   * cases guard that registering without it (every pre-existing caller)
+   * keeps behaving exactly as before, defaulting to CUSTOMER.
+   */
+  describe("intent (Professional Onboarding routing hint)", () => {
+    it("defaults to CUSTOMER when omitted, so ordinary registration is unaffected", () => {
+      const result = registerSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.intent).toBe("CUSTOMER");
+      }
+    });
+
+    it("accepts an explicit PROFESSIONAL intent", () => {
+      const result = registerSchema.safeParse({ ...valid, intent: "PROFESSIONAL" });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.intent).toBe("PROFESSIONAL");
+      }
+    });
+
+    it("rejects an intent value outside the two allowed enum members", () => {
+      const result = registerSchema.safeParse({ ...valid, intent: "ADMIN" });
+      expect(result.success).toBe(false);
+    });
+  });
 });
 
 describe("loginSchema", () => {
