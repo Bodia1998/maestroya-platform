@@ -1,13 +1,21 @@
-import { signOut } from "@/lib/auth";
+import { LogoutRedirect } from "./logout-redirect";
 
 export const metadata = { title: "Log out" };
 
 /**
- * No client JS needed: Auth.js v5's server-side `signOut()` clears the
- * session cookie and redirects in one step when called directly from a
- * Server Component/Action.
+ * This route's Server Component body never touches `signOut()` or any
+ * cookie — it only renders a small client island (`LogoutRedirect`) that
+ * submits a real POST to the `logoutAction` Server Action on mount (see
+ * actions.ts). That's what fixes the regression: this page used to call
+ * `signOut()` directly during render, which Next.js only permits inside a
+ * Server Action/Route Handler, and which also meant a mere GET to this
+ * route (e.g. a background `next/link` prefetch of a visible "Sign out"
+ * link) could silently tear down the session. Existing entry points that
+ * simply navigate here (marketing header, mobile nav, the
+ * post-account-deletion redirect) keep working unchanged, since visiting
+ * this page still results in the user being signed out — just via a real
+ * client-triggered POST instead of a render-time side effect.
  */
-export default async function LogoutPage() {
-  await signOut({ redirectTo: "/" });
-  return null;
+export default function LogoutPage() {
+  return <LogoutRedirect />;
 }

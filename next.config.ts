@@ -31,10 +31,26 @@ const isProductionBuild = process.env.NODE_ENV === "production";
  * script/style — a real change to `src/app/layout.tsx` and beyond, out of
  * scope for this module. Documented as a "Future improvement" rather than
  * silently skipped; see docs/MODULE_25_PRODUCTION_INFRASTRUCTURE.md.
+ *
+ * `'unsafe-eval'` is added to `script-src` in development only. `next dev`'s
+ * webpack dev server bundles and Fast Refresh runtime use `eval()`
+ * (`eval-source-map`-style devtool) to load/update modules — without
+ * `'unsafe-eval'`, the browser silently blocks that eval call via CSP,
+ * which means the client JS bundle never finishes executing and React
+ * never hydrates *anywhere* in the app. The page still renders (from SSR
+ * HTML), so it looks fine until you interact with it: every "use client"
+ * component — including this app's login/register forms — sits there
+ * with no event listeners attached, so a real `<form>` submit falls back
+ * to the browser's native, unprevented submission (method defaults to
+ * GET, action defaults to the current URL), which is exactly how
+ * `POST`-via-`signIn()` turned into `GET /auth/login?email=...&password=...`
+ * in the logs — not an authentication bug, a CSP-vs-dev-tooling one.
+ * Production's `next build` output doesn't use `eval()`, so this stays
+ * exactly as strict as before for real deployments.
  */
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isProductionBuild ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https://res.cloudinary.com",
   "font-src 'self' data:",

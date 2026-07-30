@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ALLOWED_AVATAR_MIME_TYPES } from "@/application/dto/profile.dto";
@@ -13,6 +13,23 @@ export function AvatarUpload({ currentImageUrl }: { currentImageUrl: string | nu
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // `useState(currentImageUrl)` above only ever consults its argument on
+  // this component's *first* mount — an already-mounted instance ignores
+  // later prop changes entirely. `currentImageUrl` only changes when the
+  // parent Server Component re-renders with a fresh `profile.image`,
+  // which in practice happens right after `uploadAvatarAction`'s
+  // `revalidatePath("/profile")` following a successful upload. Without
+  // this effect, the component kept showing whichever preview it
+  // started with (or the optimistic local blob set below) forever, even
+  // once the server confirmed the real, persisted image URL. Depending
+  // only on `currentImageUrl` means this runs exactly once per genuine
+  // server-confirmed change — never on every render, and never in a
+  // loop, since nothing in this effect feeds back into its own
+  // dependency.
+  useEffect(() => {
+    setPreviewUrl(currentImageUrl);
+  }, [currentImageUrl]);
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
