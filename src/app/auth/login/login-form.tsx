@@ -1,17 +1,19 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { loginSchema, type LoginInput } from "@/application/dto/auth.dto";
+import { resolvePostLoginDestination } from "@/shared/utils/resolve-post-login-destination";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
+  const explicitCallbackUrl = searchParams.get("callbackUrl");
+  const callbackUrl = explicitCallbackUrl ?? "/dashboard";
   const [serverError, setServerError] = useState<string | null>(null);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
 
@@ -39,7 +41,23 @@ export function LoginForm() {
       return;
     }
 
-    window.location.href = result.url ?? callbackUrl;
+    // Professional Onboarding (and, for an already-activated
+    // professional, landing straight on their own dashboard): read the
+    // just-established session directly rather than defaulting to
+    // `callbackUrl` and relying solely on middleware.ts to correct course
+    // on a second request — see resolvePostLoginDestination's own doc
+    // comment for why. An explicit `callbackUrl` (bounced here from a
+    // specific protected route) still always wins, unchanged from before.
+    const session = await getSession();
+    const destination = resolvePostLoginDestination(
+      {
+        roles: session?.user?.roles ?? [],
+        signupIntent: session?.user?.signupIntent ?? null,
+      },
+      { explicitCallbackUrl, defaultDestination: result.url ?? callbackUrl },
+    );
+
+    window.location.href = destination;
   }
 
   async function handleOAuth(provider: "google" | "apple" | "facebook") {
