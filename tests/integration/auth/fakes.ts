@@ -1,6 +1,7 @@
 import type { AuthTokenRepository } from "@/domain/repositories/auth-token-repository";
 import type {
   AuthUserRecord,
+  SignupIntentValue,
   UpdateProfileData,
   UserProfileRecord,
   UserRepository,
@@ -25,6 +26,7 @@ function nextId() {
 export class FakeUserRepository implements UserRepository {
   users = new Map<string, AuthUserRecord>();
   rolesByUserId = new Map<string, Set<string>>();
+  signupIntentByUserId = new Map<string, SignupIntentValue>();
 
   async findByEmail(email: string) {
     return [...this.users.values()].find((u) => u.email === email) ?? null;
@@ -34,7 +36,12 @@ export class FakeUserRepository implements UserRepository {
     return this.users.get(id) ?? null;
   }
 
-  async createWithPassword(input: { email: string; name: string; passwordHash: string }) {
+  async createWithPassword(input: {
+    email: string;
+    name: string;
+    passwordHash: string;
+    signupIntent?: SignupIntentValue;
+  }) {
     const user: AuthUserRecord = {
       id: nextId(),
       email: input.email,
@@ -44,6 +51,7 @@ export class FakeUserRepository implements UserRepository {
       status: "PENDING_VERIFICATION",
     };
     this.users.set(user.id, user);
+    if (input.signupIntent) this.signupIntentByUserId.set(user.id, input.signupIntent);
     return user;
   }
 
@@ -103,6 +111,14 @@ export class FakeUserRepository implements UserRepository {
   async softDeleteAccount(userId: string) {
     const user = this.users.get(userId);
     if (user) user.status = "DEACTIVATED";
+  }
+
+  async getSignupIntent(userId: string) {
+    return this.signupIntentByUserId.get(userId) ?? null;
+  }
+
+  async clearSignupIntent(userId: string) {
+    this.signupIntentByUserId.delete(userId);
   }
 }
 

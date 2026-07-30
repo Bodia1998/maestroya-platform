@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createProfessionalSchema,
   deactivateProfessionalSchema,
+  professionalOnboardingSchema,
   updateProfessionalSchema,
   updateProfessionalServicesSchema,
 } from "@/application/dto/professional.dto";
@@ -99,6 +100,85 @@ describe("updateProfessionalServicesSchema", () => {
   it("rejects a non-UUID category id", () => {
     const result = updateProfessionalServicesSchema.safeParse({ categoryIds: ["nope"] });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("professionalOnboardingSchema", () => {
+  const validAddress = {
+    line1: "Carrer Major 12",
+    city: "Gandia",
+    province: "Valencia",
+    postalCode: "46700",
+    country: "ES",
+  };
+  const valid = {
+    categoryIds: ["123e4567-e89b-12d3-a456-426614174000"],
+    contactPhone: "+34600000000",
+    bio: "10 years fixing pipes across the Valencia region.",
+    serviceRadiusKm: 20,
+    address: validAddress,
+  };
+
+  it("accepts a complete, valid onboarding submission", () => {
+    expect(professionalOnboardingSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("requires at least one category — unlike createProfessionalSchema, categories are not optional here", () => {
+    const result = professionalOnboardingSchema.safeParse({ ...valid, categoryIds: [] });
+    expect(result.success).toBe(false);
+  });
+
+  it("requires a phone number — unlike createProfessionalSchema's optional contactPhone", () => {
+    const { contactPhone: _contactPhone, ...withoutPhone } = valid;
+    const result = professionalOnboardingSchema.safeParse(withoutPhone);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an invalid phone number", () => {
+    const result = professionalOnboardingSchema.safeParse({ ...valid, contactPhone: "abc" });
+    expect(result.success).toBe(false);
+  });
+
+  it("requires a non-empty description — unlike createProfessionalSchema's optional bio", () => {
+    const result = professionalOnboardingSchema.safeParse({ ...valid, bio: "" });
+    expect(result.success).toBe(false);
+  });
+
+  it("requires a service radius — unlike createProfessionalSchema's optional one", () => {
+    const { serviceRadiusKm: _serviceRadiusKm, ...withoutRadius } = valid;
+    const result = professionalOnboardingSchema.safeParse(withoutRadius);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an unrealistic service radius", () => {
+    const result = professionalOnboardingSchema.safeParse({ ...valid, serviceRadiusKm: 5000 });
+    expect(result.success).toBe(false);
+  });
+
+  it("requires a base location — reuses the Profile module's own addressSchema, not a free-text service-area field", () => {
+    const { address: _address, ...withoutAddress } = valid;
+    const result = professionalOnboardingSchema.safeParse(withoutAddress);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an incomplete address (missing city)", () => {
+    const { city: _city, ...addressWithoutCity } = validAddress;
+    const result = professionalOnboardingSchema.safeParse({
+      ...valid,
+      address: addressWithoutCity,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("does not expose a separate free-text service-area field", () => {
+    const result = professionalOnboardingSchema.safeParse({
+      ...valid,
+      serviceArea: "Downtown and surrounding neighborhoods",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).not.toHaveProperty("serviceArea");
+    }
   });
 });
 

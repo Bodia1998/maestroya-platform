@@ -13,7 +13,10 @@ import { z } from "zod";
 export const ALLOWED_AVATAR_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 export const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5MB
 
-const addressSchema = z.object({
+// Exported (not just a local const) so Professional Onboarding's own DTO
+// can reuse the exact same address validation rules instead of a second,
+// possibly-drifting copy — see professional.dto.ts's professionalOnboardingSchema.
+export const addressSchema = z.object({
   line1: z.string().trim().min(1, "Enter a street address.").max(200),
   line2: z.string().trim().max(200).optional().or(z.literal("")),
   city: z.string().trim().min(1, "Enter a city.").max(100),

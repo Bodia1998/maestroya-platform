@@ -40,6 +40,7 @@ describe("Authentication integration: register -> verify email", () => {
       email: "ana@example.com",
       password: "GoodPass123",
       confirmPassword: "GoodPass123",
+      intent: "CUSTOMER",
     });
 
     const user = await users.findById(userId);
@@ -60,6 +61,7 @@ describe("Authentication integration: register -> verify email", () => {
       email: "dupe@example.com",
       password: "GoodPass123",
       confirmPassword: "GoodPass123",
+      intent: "CUSTOMER" as const,
     };
 
     await register.execute(input);
@@ -75,6 +77,7 @@ describe("Authentication integration: register -> verify email", () => {
       email: "ana2@example.com",
       password: "GoodPass123",
       confirmPassword: "GoodPass123",
+      intent: "CUSTOMER",
     });
 
     const rawToken = extractToken(lastSentEmail(emails).html);
@@ -107,6 +110,7 @@ describe("Authentication integration: forgot password -> reset password", () => 
       email: "ana@example.com",
       password: "OldPassword1",
       confirmPassword: "OldPassword1",
+      intent: "CUSTOMER",
     });
     emails.sent = []; // clear the registration email so the reset test only sees its own
   });

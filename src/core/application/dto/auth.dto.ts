@@ -25,6 +25,13 @@ export const registerSchema = z
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: z.string(),
+    // Professional Onboarding: set only when the "Soy profesional" CTA
+    // carried `?intent=professional` through to this form (see
+    // register-form.tsx/page.tsx) — a pure routing hint (see
+    // SignupIntent's own doc comment in schema.prisma), never a role and
+    // never validated against anything else in this schema. Defaults to
+    // "CUSTOMER" so every other registration path is completely unchanged.
+    intent: z.enum(["CUSTOMER", "PROFESSIONAL"]).optional().default("CUSTOMER"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match.",

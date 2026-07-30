@@ -23,6 +23,8 @@ export class FakeAddressRepository implements AddressRepository {
       province: data.province ?? null,
       postalCode: data.postalCode,
       country: data.country,
+      latitude: data.latitude ?? null,
+      longitude: data.longitude ?? null,
     };
     this.addressesByUserId.set(userId, record);
     return record;

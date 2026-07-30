@@ -7,6 +7,16 @@ export interface AuthUserRecord {
   status: string;
 }
 
+/**
+ * Professional Onboarding: a *temporary routing flag*, not a role — see
+ * the `SignupIntent` enum's own doc comment in schema.prisma. A plain
+ * string union (not the Prisma enum type) to stay consistent with this
+ * repository's existing convention of not leaking generated Prisma types
+ * across the domain boundary (see `ProfessionalStatusValue` in
+ * professional-repository.ts for the same pattern).
+ */
+export type SignupIntentValue = "CUSTOMER" | "PROFESSIONAL";
+
 export interface UserProfileRecord {
   id: string;
   name: string | null;
@@ -43,12 +53,20 @@ export interface UserRepository {
     email: string;
     name: string;
     passwordHash: string;
+    /** Set only when registering through the "Soy profesional" CTA — see SignupIntentValue. */
+    signupIntent?: SignupIntentValue;
   }): Promise<AuthUserRecord>;
   updatePasswordHash(userId: string, passwordHash: string): Promise<void>;
   markEmailVerified(userId: string): Promise<void>;
   updateLastLoginAt(userId: string): Promise<void>;
   getRoleKeys(userId: string): Promise<string[]>;
   assignDefaultRole(userId: string, roleKey: string): Promise<void>;
+
+  // --- Professional Onboarding additions ---
+  /** Null for any user not currently mid-way through professional onboarding. */
+  getSignupIntent(userId: string): Promise<SignupIntentValue | null>;
+  /** Called the moment onboarding completes — see CompleteProfessionalOnboardingUseCase. */
+  clearSignupIntent(userId: string): Promise<void>;
 
   // --- Profile module additions ---
   findProfileById(userId: string): Promise<UserProfileRecord | null>;

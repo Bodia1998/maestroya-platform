@@ -8,7 +8,12 @@ import { Button } from "@/components/ui/button";
 import { registerSchema, type RegisterInput } from "@/application/dto/auth.dto";
 import { registerAction } from "../actions";
 
-export function RegisterForm() {
+export function RegisterForm({
+  intendedRole = "CUSTOMER",
+}: {
+  /** Professional Onboarding: carried from the register page's own `?intent=` read — see page.tsx. */
+  intendedRole?: "CUSTOMER" | "PROFESSIONAL";
+}) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [succeeded, setSucceeded] = useState(false);
 
@@ -19,12 +24,18 @@ export function RegisterForm() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      intent: intendedRole,
+    },
   });
 
   async function onSubmit(data: RegisterInput) {
     setServerError(null);
-    const result = await registerAction(data);
+    const result = await registerAction({ ...data, intent: intendedRole });
 
     if (!result.success) {
       setServerError(result.error);

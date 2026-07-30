@@ -32,7 +32,7 @@ export function ProfessionalCta() {
         </div>
 
         <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
-          <ButtonLink href="/auth/register" variant="accent" size="lg">
+          <ButtonLink href="/auth/register?intent=professional" variant="accent" size="lg">
             Unirme como profesional
           </ButtonLink>
           <ButtonLink

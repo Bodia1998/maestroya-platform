@@ -23,10 +23,34 @@ describe("rbac helpers", () => {
 
   it("getCurrentUser returns id/email/roles when signed in", async () => {
     mockedAuth.mockResolvedValue({
-      user: { id: "u1", email: "a@b.com", roles: ["CUSTOMER"] },
+      user: { id: "u1", email: "a@b.com", roles: ["CUSTOMER"], signupIntent: null },
     } as never);
 
-    expect(await getCurrentUser()).toEqual({ id: "u1", email: "a@b.com", roles: ["CUSTOMER"] });
+    expect(await getCurrentUser()).toEqual({
+      id: "u1",
+      email: "a@b.com",
+      roles: ["CUSTOMER"],
+      signupIntent: null,
+    });
+  });
+
+  /**
+   * Professional Onboarding: `signupIntent` is read straight through from
+   * the session (see auth-config.ts's own jwt/session callbacks for how it
+   * gets there) — this is the one seam middleware.ts and the rest of the
+   * app read it from, so it must survive this pass-through unchanged.
+   */
+  it("getCurrentUser passes through a PROFESSIONAL signupIntent from the session", async () => {
+    mockedAuth.mockResolvedValue({
+      user: { id: "u1", email: "a@b.com", roles: ["CUSTOMER"], signupIntent: "PROFESSIONAL" },
+    } as never);
+
+    expect(await getCurrentUser()).toEqual({
+      id: "u1",
+      email: "a@b.com",
+      roles: ["CUSTOMER"],
+      signupIntent: "PROFESSIONAL",
+    });
   });
 
   it("requireAuth throws when signed out", async () => {

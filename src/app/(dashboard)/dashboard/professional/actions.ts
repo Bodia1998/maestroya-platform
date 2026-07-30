@@ -7,10 +7,12 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import {
   createProfessionalSchema,
   deactivateProfessionalSchema,
+  professionalOnboardingSchema,
   updateProfessionalSchema,
   updateProfessionalServicesSchema,
 } from "@/application/dto/professional.dto";
 import {
+  makeCompleteProfessionalOnboardingUseCase,
   makeCreateProfessionalUseCase,
   makeDeactivateProfessionalUseCase,
   makeUpdateProfessionalServicesUseCase,
@@ -51,6 +53,38 @@ export async function createProfessionalAction(formData: unknown): Promise<Actio
     return { success: true };
   } catch (error) {
     return fromDomainError(error, "Something went wrong creating your professional profile.");
+  }
+}
+
+/**
+ * Professional Onboarding — the one action the onboarding form submits
+ * to. Delegates entirely to `CompleteProfessionalOnboardingUseCase`,
+ * which itself delegates profile creation (and the PROVIDER role grant
+ * that comes with it) to the same `CreateProfessionalUseCase` the regular
+ * professional dashboard's "create profile" form already uses — no
+ * business logic is duplicated here or in that use case.
+ */
+export async function completeProfessionalOnboardingAction(
+  formData: unknown,
+): Promise<ActionResult> {
+  const user = await requireAuth();
+
+  const parsed = professionalOnboardingSchema.safeParse(formData);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: "Please fix the errors below.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  try {
+    await makeCompleteProfessionalOnboardingUseCase().execute(user.id, parsed.data);
+    revalidatePath("/dashboard/professional");
+    revalidatePath("/dashboard/professional/onboarding");
+    return { success: true };
+  } catch (error) {
+    return fromDomainError(error, "Something went wrong setting up your professional profile.");
   }
 }
 

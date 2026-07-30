@@ -1,6 +1,7 @@
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
   AuthUserRecord,
+  SignupIntentValue,
   UpdateProfileData,
   UserProfileRecord,
   UserRepository,
@@ -39,6 +40,7 @@ export class PrismaUserRepository implements UserRepository {
     email: string;
     name: string;
     passwordHash: string;
+    signupIntent?: SignupIntentValue;
   }): Promise<AuthUserRecord> {
     return prisma.user.create({
       data: {
@@ -46,6 +48,7 @@ export class PrismaUserRepository implements UserRepository {
         name: input.name,
         passwordHash: input.passwordHash,
         status: "PENDING_VERIFICATION",
+        signupIntent: input.signupIntent,
       },
       select: {
         id: true,
@@ -100,6 +103,20 @@ export class PrismaUserRepository implements UserRepository {
       update: {},
       create: { userId, roleId: role.id },
     });
+  }
+
+  // --- Professional Onboarding additions ---
+
+  async getSignupIntent(userId: string): Promise<SignupIntentValue | null> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { signupIntent: true },
+    });
+    return (user?.signupIntent as SignupIntentValue | null) ?? null;
+  }
+
+  async clearSignupIntent(userId: string): Promise<void> {
+    await prisma.user.update({ where: { id: userId }, data: { signupIntent: null } });
   }
 
   // --- Profile module additions ---

@@ -284,6 +284,10 @@ export class FakeUserRepository implements UserRepository {
   async updateProfile() {}
   async updateAvatar() {}
   async softDeleteAccount() {}
+  async getSignupIntent() {
+    return null;
+  }
+  async clearSignupIntent() {}
 }
 
 export class FakeServiceCategoryRepository implements ServiceCategoryRepository {
