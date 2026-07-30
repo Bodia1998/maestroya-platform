@@ -6,7 +6,7 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetServiceRequestForProfessionalUseCase } from "@/application/use-cases/quotes/compose";
 import { QuoteForm } from "../../../quotes/quote-form";
 
-export const metadata = { title: "Submit a quote" };
+export const metadata = { title: "Create quote" };
 
 /**
  * Renders the quote form only for a ServiceRequest the *authenticated*
@@ -42,8 +42,12 @@ export default async function SubmitQuotePage({
       </Link>
 
       <div>
-        <h1 className="text-2xl font-semibold">Submit a quote</h1>
+        <h1 className="text-2xl font-semibold">Create quote</h1>
         <p className="mt-1 text-sm text-foreground/70">{request.title}</p>
+        <p className="mt-3 rounded-md bg-black/5 px-4 py-3 text-sm text-foreground/70">
+          This is a customer&apos;s service request. Create a quote describing the work and materials you propose,
+          and the price you&apos;re offering to complete it.
+        </p>
       </div>
 
       <QuoteForm mode="create" requestId={request.id} quote={null} />

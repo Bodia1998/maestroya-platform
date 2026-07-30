@@ -21,7 +21,8 @@ export default async function AvailableServiceRequestsPage() {
       <div>
         <h1 className="text-2xl font-semibold">Available requests</h1>
         <p className="mt-1 text-sm text-foreground/70">
-          Service requests matching your categories and service radius.
+          Service requests from customers that match your categories and service radius. Review one and create a
+          quote to respond.
         </p>
       </div>
 

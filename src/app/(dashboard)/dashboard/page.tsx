@@ -3,11 +3,14 @@ import { Award, Briefcase, CalendarDays, FileText, MessageSquare } from "lucide-
 
 import { requireAuth, ROLES } from "@/infrastructure/auth/rbac";
 import { makeGetCustomerServiceRequestsUseCase } from "@/application/use-cases/service-request/compose";
-import { makeListAppointmentsForCustomerUseCase } from "@/application/use-cases/booking/compose";
-import { makeListJobsForCustomerUseCase } from "@/application/use-cases/job/compose";
+import { makeListAppointmentsForCustomerUseCase, makeListAppointmentsForProfessionalUseCase } from "@/application/use-cases/booking/compose";
+import { makeListJobsForCustomerUseCase, makeListJobsForProfessionalUseCase } from "@/application/use-cases/job/compose";
 import { makeListConversationsUseCase } from "@/application/use-cases/chat/compose";
 import { makeGetProfessionalByUserIdUseCase } from "@/application/use-cases/professional/compose";
-import { makeGetProfessionalQuotesUseCase } from "@/application/use-cases/quotes/compose";
+import {
+  makeGetAvailableServiceRequestsForProfessionalUseCase,
+  makeGetProfessionalQuotesUseCase,
+} from "@/application/use-cases/quotes/compose";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -15,6 +18,9 @@ import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointme
 import { QuoteStatusBadge } from "@/app/(dashboard)/dashboard/professional/quotes/quote-status-badge";
 import { RequestStatusBadge } from "@/app/(dashboard)/requests/request-status-badge";
 import { DashboardStatCard } from "./dashboard-stat-card";
+
+/** Quote statuses that mean "sent to the customer, no answer yet". */
+const QUOTE_AWAITING_RESPONSE_STATUSES = new Set(["SENT", "VIEWED"]);
 
 export const metadata = { title: "Dashboard" };
 
@@ -43,16 +49,27 @@ export default async function DashboardPage() {
   ]);
 
   // Professional-side data only fetched for PROVIDER accounts — a
-  // customer-only account has no ProfessionalProfile, and
-  // GetProfessionalByUserIdUseCase/GetProfessionalQuotesUseCase both
-  // already treat "no profile" as an empty/absent result rather than an
-  // error, same convention as GetCustomerServiceRequestsUseCase above.
-  const [professional, quotes] = isProfessional
-    ? await Promise.all([
-        makeGetProfessionalByUserIdUseCase().execute(user.id),
-        makeGetProfessionalQuotesUseCase().execute(user.id),
-      ])
-    : [null, []];
+  // customer-only account has no ProfessionalProfile, and every use case
+  // below already treats "no profile" as an empty/absent result rather
+  // than an error, same convention as GetCustomerServiceRequestsUseCase
+  // above. Reuses the exact same use cases the dedicated professional
+  // pages (Available requests, My quotes, My appointments, My jobs) each
+  // already call — no new business logic, this page only aggregates their
+  // results into an overview.
+  const [professional, quotes, availableRequests, professionalAppointments, activeJobs, completedJobs] =
+    isProfessional
+      ? await Promise.all([
+          makeGetProfessionalByUserIdUseCase().execute(user.id),
+          makeGetProfessionalQuotesUseCase().execute(user.id),
+          makeGetAvailableServiceRequestsForProfessionalUseCase().execute(user.id),
+          makeListAppointmentsForProfessionalUseCase().execute(user.id, "upcoming"),
+          makeListJobsForProfessionalUseCase().execute(user.id, "active"),
+          makeListJobsForProfessionalUseCase().execute(user.id, "completed"),
+        ])
+      : [null, [], [], [], [], []];
+
+  const quotesAwaitingResponse = quotes.filter((q) => QUOTE_AWAITING_RESPONSE_STATUSES.has(q.status)).length;
+  const acceptedQuotes = quotes.filter((q) => q.status === "ACCEPTED").length;
 
   const unreadMessages = conversations.reduce((sum, conversation) => sum + conversation.unreadCount, 0);
   const activeRequestCount = requests.filter((r) => !INACTIVE_REQUEST_STATUSES.has(r.status)).length;
@@ -66,16 +83,66 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <DashboardStatCard icon={FileText} label="Active requests" value={activeRequestCount} href="/requests" />
-        <DashboardStatCard
-          icon={CalendarDays}
-          label="Upcoming appointments"
-          value={appointments.length}
-          href="/appointments"
-        />
-        <DashboardStatCard icon={Briefcase} label="Active jobs" value={jobs.length} href="/jobs" />
-        <DashboardStatCard icon={MessageSquare} label="Unread messages" value={unreadMessages} href="/messages" />
+      {isProfessional && (
+        <div>
+          <h2 className="text-lg font-medium">Professional overview</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Customer requests you can respond to, and the quotes, appointments, and jobs that follow.
+          </p>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <DashboardStatCard
+              icon={FileText}
+              label="Available requests"
+              value={availableRequests.length}
+              href="/dashboard/professional/requests"
+            />
+            <DashboardStatCard
+              icon={Award}
+              label="Quotes awaiting response"
+              value={quotesAwaitingResponse}
+              href="/dashboard/professional/quotes"
+            />
+            <DashboardStatCard
+              icon={Award}
+              label="Accepted quotes"
+              value={acceptedQuotes}
+              href="/dashboard/professional/quotes"
+            />
+            <DashboardStatCard
+              icon={CalendarDays}
+              label="Upcoming appointments"
+              value={professionalAppointments.length}
+              href="/dashboard/professional/appointments"
+            />
+            <DashboardStatCard
+              icon={Briefcase}
+              label="Active jobs"
+              value={activeJobs.length}
+              href="/dashboard/professional/jobs"
+            />
+            <DashboardStatCard
+              icon={Briefcase}
+              label="Completed jobs"
+              value={completedJobs.length}
+              href="/dashboard/professional/jobs"
+            />
+          </div>
+        </div>
+      )}
+
+      <div>
+        {isProfessional && <h2 className="mb-4 text-lg font-medium">Your customer account</h2>}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <DashboardStatCard icon={FileText} label="Active requests" value={activeRequestCount} href="/requests" />
+          <DashboardStatCard
+            icon={CalendarDays}
+            label="Upcoming appointments"
+            value={appointments.length}
+            href="/appointments"
+          />
+          <DashboardStatCard icon={Briefcase} label="Active jobs" value={jobs.length} href="/jobs" />
+          <DashboardStatCard icon={MessageSquare} label="Unread messages" value={unreadMessages} href="/messages" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

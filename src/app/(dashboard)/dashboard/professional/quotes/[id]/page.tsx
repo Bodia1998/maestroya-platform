@@ -61,6 +61,7 @@ export default async function ProfessionalQuoteDetailPage({
           <thead>
             <tr className="border-b border-border text-left text-foreground/60">
               <th className="py-2">Description</th>
+              <th className="py-2">Type</th>
               <th className="py-2">Qty</th>
               <th className="py-2">Unit price</th>
               <th className="py-2 text-right">Amount</th>
@@ -70,6 +71,11 @@ export default async function ProfessionalQuoteDetailPage({
             {quote.items.map((item) => (
               <tr key={item.id} className="border-b border-border/50">
                 <td className="py-2">{item.description}</td>
+                <td className="py-2">
+                  <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-foreground/70">
+                    {item.category === "MATERIALS" ? "Materials" : "Labor"}
+                  </span>
+                </td>
                 <td className="py-2">{item.quantity}</td>
                 <td className="py-2">
                   {quote.currency} {item.unitPrice.toFixed(2)}

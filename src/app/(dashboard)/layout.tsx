@@ -1,5 +1,14 @@
 import { getCurrentUser, ROLES } from "@/infrastructure/auth/rbac";
-import { DashboardShell, type DashboardNavGroup } from "@/components/dashboard/dashboard-shell";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { ProfessionalProfileBanner } from "@/components/dashboard/professional-profile-banner";
+import { buildDashboardNavGroups } from "@/shared/utils/build-dashboard-nav-groups";
+import {
+  buildNoProfessionalProfileBanner,
+  buildProfessionalProfileBanner,
+} from "@/shared/utils/professional-profile-banner";
+import { makeGetProfessionalByUserIdUseCase } from "@/application/use-cases/professional/compose";
+import { makeGetProfileUseCase } from "@/application/use-cases/profile/compose";
+import { makeListPortfolioItemsUseCase } from "@/application/use-cases/portfolio/compose";
 
 /**
  * Layout for authenticated routes.
@@ -35,7 +44,23 @@ import { DashboardShell, type DashboardNavGroup } from "@/components/dashboard/d
  * shown/hidden based on the same `roles` array `middleware.ts` and
  * `rbac.ts` already use; each linked route still enforces its own
  * authorization independently (e.g. `admin/layout.tsx`), so hiding a link
- * here is a UX nicety, not a security boundary.
+ * here is a UX nicety, not a security boundary. Nav shape itself is built
+ * by the pure `buildDashboardNavGroups` (see that file for why it's
+ * extracted) — this layout only decides the `isProfessional`/`isAdmin`
+ * inputs to it.
+ *
+ * Professional profile completion banner: computed here (once, for every
+ * page under this layout) rather than by individual pages, so it stays
+ * visible across navigation instead of vanishing the moment a professional
+ * leaves whichever single page used to own the "set up your profile"
+ * prompt — see professional-profile-banner.ts's own doc comment for the
+ * full root-cause writeup. Only ever computed for signed-in PROVIDER
+ * accounts; customers see no banner and their dashboard is completely
+ * unaffected. The three reads below (professional profile, general user
+ * profile, portfolio existence) reuse existing use cases already called
+ * elsewhere in this codebase for the same data (dashboard/professional/page.tsx,
+ * profile/page.tsx, and the portfolio pages respectively) — no new domain
+ * logic, no new queries beyond what those pages already issue per visit.
  */
 export default async function DashboardLayout({
   children,
@@ -47,44 +72,36 @@ export default async function DashboardLayout({
   const isProfessional = roles.includes(ROLES.PROVIDER);
   const isAdmin = roles.includes(ROLES.ADMIN) || roles.includes(ROLES.SUPER_ADMIN);
 
-  const navGroups: DashboardNavGroup[] = [
-    {
-      items: [
-        { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
-        { href: "/requests", label: "Service requests", icon: "requests" },
-        { href: "/appointments", label: "Appointments", icon: "appointments" },
-        { href: "/jobs", label: "Jobs", icon: "jobs" },
-        { href: "/messages", label: "Messages", icon: "messages" },
-        { href: "/disputes", label: "Disputes", icon: "disputes" },
-        { href: "/support-tickets", label: "Support", icon: "support" },
-      ],
-    },
-  ];
+  const navGroups = buildDashboardNavGroups({ isProfessional, isAdmin });
 
-  if (isProfessional) {
-    navGroups.push({
-      title: "Professional",
-      items: [
-        { href: "/dashboard/professional", label: "Professional profile", icon: "professional" },
-        { href: "/dashboard/professional/quotes", label: "My quotes", icon: "quotes" },
-        { href: "/dashboard/company", label: "Companies", icon: "companies" },
-      ],
-    });
+  let banner: React.ReactNode = null;
+  if (isProfessional && user) {
+    const professional = await makeGetProfessionalByUserIdUseCase().execute(user.id);
+
+    if (!professional) {
+      banner = <ProfessionalProfileBanner info={buildNoProfessionalProfileBanner()} />;
+    } else {
+      const [{ profile, address }, portfolioItems] = await Promise.all([
+        makeGetProfileUseCase().execute(user.id),
+        makeListPortfolioItemsUseCase().execute(professional.id, { limit: 1, offset: 0 }),
+      ]);
+
+      const info = buildProfessionalProfileBanner({
+        hasHeadlineOrDescription: Boolean(professional.headline),
+        hasBioOrDescription: Boolean(professional.bio),
+        hasCategories: professional.categoryIds.length > 0,
+        hasLocation: Boolean(address?.city),
+        hasAvatarOrLogo: Boolean(profile.image),
+        hasContactInfo: Boolean(professional.contactEmail || professional.contactPhone),
+        hasPortfolio: portfolioItems.length > 0,
+      });
+
+      banner = <ProfessionalProfileBanner info={info} />;
+    }
   }
-
-  if (isAdmin) {
-    navGroups.push({
-      title: "Admin",
-      items: [{ href: "/admin", label: "Admin panel", icon: "admin" }],
-    });
-  }
-
-  navGroups.push({
-    items: [{ href: "/profile", label: "Profile", icon: "profile" }],
-  });
 
   return (
-    <DashboardShell navGroups={navGroups} userEmail={user?.email ?? null}>
+    <DashboardShell navGroups={navGroups} userEmail={user?.email ?? null} banner={banner}>
       {children}
     </DashboardShell>
   );

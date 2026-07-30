@@ -55,6 +55,17 @@ export interface DashboardNavGroup {
 export interface DashboardShellProps {
   navGroups: DashboardNavGroup[];
   userEmail: string | null;
+  /**
+   * Optional persistent notice rendered above every page's content, inside
+   * the scrollable content column — e.g. the "complete your professional
+   * profile" banner (see professional-profile-banner.ts). Rendered here,
+   * at the shell level, rather than by individual pages, so it stays
+   * visible across every navigation instead of disappearing when the user
+   * leaves whichever single page used to own it. Optional and defaults to
+   * nothing rendered, so every existing caller of DashboardShell keeps
+   * working unchanged.
+   */
+  banner?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -106,7 +117,7 @@ function NavLinks({ navGroups, pathname, onNavigate }: { navGroups: DashboardNav
  * and middleware.ts remains the sole authority that decides whether a
  * request reaches this component in the first place.
  */
-export function DashboardShell({ navGroups, userEmail, children }: DashboardShellProps) {
+export function DashboardShell({ navGroups, userEmail, banner, children }: DashboardShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -200,6 +211,8 @@ export function DashboardShell({ navGroups, userEmail, children }: DashboardShel
             </span>
           </div>
         </header>
+
+        {banner && <div className="px-4 pt-4 sm:px-6 lg:px-8">{banner}</div>}
 
         <main className="flex-1">{children}</main>
       </div>
