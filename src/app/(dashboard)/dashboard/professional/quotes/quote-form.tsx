@@ -18,6 +18,7 @@ interface QuoteItemLike {
   description: string;
   quantity: number;
   unitPrice: number;
+  category?: "LABOR" | "MATERIALS";
 }
 
 interface QuoteLike {
@@ -75,8 +76,9 @@ export function QuoteForm({
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
+            category: item.category ?? "LABOR",
           }))
-        : [{ description: "", quantity: 1, unitPrice: 0 }],
+        : [{ description: "", quantity: 1, unitPrice: 0, category: "LABOR" }],
     } as FormValues,
   });
 
@@ -137,14 +139,14 @@ export function QuoteForm({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => append({ description: "", quantity: 1, unitPrice: 0 })}
+            onClick={() => append({ description: "", quantity: 1, unitPrice: 0, category: "LABOR" })}
           >
             Add item
           </Button>
         </div>
 
         {fields.map((field, index) => (
-          <div key={field.id} className="grid grid-cols-[1fr_5rem_6rem_2rem] items-start gap-2">
+          <div key={field.id} className="grid grid-cols-[1fr_5rem_6rem_7rem_2rem] items-start gap-2">
             <div className="flex flex-col gap-1">
               <input
                 className="h-10 rounded-md border border-border px-3 text-sm"
@@ -179,6 +181,19 @@ export function QuoteForm({
               />
               {errors.items?.[index]?.unitPrice && (
                 <p className="text-xs text-red-600">{errors.items[index]?.unitPrice?.message}</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-1">
+              <select
+                className="h-10 rounded-md border border-border px-2 text-sm"
+                aria-label="Item type"
+                {...register(`items.${index}.category` as const)}
+              >
+                <option value="LABOR">Labor</option>
+                <option value="MATERIALS">Materials</option>
+              </select>
+              {errors.items?.[index]?.category && (
+                <p className="text-xs text-red-600">{errors.items[index]?.category?.message}</p>
               )}
             </div>
             <button
@@ -228,7 +243,7 @@ export function QuoteForm({
       </div>
 
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Submit quote"}
+        {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create quote"}
       </Button>
     </form>
   );

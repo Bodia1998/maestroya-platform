@@ -47,6 +47,11 @@ export default async function ProfessionalServiceRequestDetailPage({
         </span>
       </div>
 
+      <p className="rounded-md bg-black/5 px-4 py-3 text-sm text-foreground/70">
+        This is a service request from a customer. Review the details below, then create a quote if you&apos;d
+        like to propose a price for the work.
+      </p>
+
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-medium">Description</h2>
         <p className="whitespace-pre-line text-sm text-foreground/80">{request.description}</p>
@@ -78,7 +83,7 @@ export default async function ProfessionalServiceRequestDetailPage({
           href={`/dashboard/professional/requests/${request.id}/quote`}
           className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
         >
-          Submit a quote
+          Create quote
         </Link>
       </section>
     </div>
