@@ -14,6 +14,12 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const explicitCallbackUrl = searchParams.get("callbackUrl");
   const callbackUrl = explicitCallbackUrl ?? "/dashboard";
+  // "Soy profesional" (site-header.tsx) links here with `?intent=professional`
+  // — a *login-time* hint, distinct from the DB-backed `signupIntent` set at
+  // registration. Never used to grant PROVIDER or mutate the account; it
+  // only affects where a successful login navigates to next — see
+  // resolvePostLoginDestination's `loginIntent` doc comment.
+  const loginIntent = searchParams.get("intent") === "professional" ? "professional" : null;
   const [serverError, setServerError] = useState<string | null>(null);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
 
@@ -54,7 +60,7 @@ export function LoginForm() {
         roles: session?.user?.roles ?? [],
         signupIntent: session?.user?.signupIntent ?? null,
       },
-      { explicitCallbackUrl, defaultDestination: result.url ?? callbackUrl },
+      { explicitCallbackUrl, defaultDestination: result.url ?? callbackUrl, loginIntent },
     );
 
     window.location.href = destination;

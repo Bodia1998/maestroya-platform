@@ -36,7 +36,20 @@
  *      Professional Dashboard) — requirement #3.
  *   3. `signupIntent === "PROFESSIONAL"` but no PROVIDER role yet →
  *      `/dashboard/professional/onboarding` — requirement #2.
- *   4. Otherwise, the ordinary customer default.
+ *   4. The *login page's own* `?intent=professional` query param (see
+ *      `loginIntent` below) — distinct from `signupIntent` above, which
+ *      only exists once someone has actually registered through the
+ *      professional signup CTA. This covers "Soy profesional" on the
+ *      marketing header: an existing customer-only account (no PROVIDER
+ *      role, no lingering `signupIntent`) clicking a professional *login*
+ *      entry point. Per the underlying request, such an account must
+ *      never be silently granted PROVIDER here — this only changes where
+ *      they land after an ordinary login, sending them to the same
+ *      onboarding page requirement #2 uses (which itself requires no
+ *      more than `requireAuth()` — see its own doc comment) rather than
+ *      the plain Customer Dashboard, so they can opt in to becoming a
+ *      professional instead of being routed past that option entirely.
+ *   5. Otherwise, the ordinary customer default.
  *
  * The `"PROVIDER"` literal (not `ROLES.PROVIDER` from rbac.ts) is
  * deliberate — rbac.ts transitively imports `@/lib/auth`, which is
@@ -54,11 +67,21 @@ export interface ResolvePostLoginDestinationOptions {
   explicitCallbackUrl: string | null;
   /** Where an ordinary customer with no explicit callbackUrl lands. */
   defaultDestination: string;
+  /**
+   * `searchParams.get("intent") === "professional"` on the *login* page —
+   * i.e. how the user arrived at `/auth/login`, not anything persisted on
+   * their account. `null`/omitted for an ordinary login link. Named
+   * distinctly from `session.signupIntent` (a persisted, DB-backed value
+   * set only at registration time) so the two are never confused: this
+   * field can never grant PROVIDER or mutate the account by itself, it
+   * only chooses where a successful login navigates to.
+   */
+  loginIntent?: "professional" | null;
 }
 
 export function resolvePostLoginDestination(
   session: PostLoginSession,
-  { explicitCallbackUrl, defaultDestination }: ResolvePostLoginDestinationOptions,
+  { explicitCallbackUrl, defaultDestination, loginIntent = null }: ResolvePostLoginDestinationOptions,
 ): string {
   if (explicitCallbackUrl) {
     return explicitCallbackUrl;
@@ -69,6 +92,10 @@ export function resolvePostLoginDestination(
   }
 
   if (session.signupIntent === "PROFESSIONAL") {
+    return "/dashboard/professional/onboarding";
+  }
+
+  if (loginIntent === "professional") {
     return "/dashboard/professional/onboarding";
   }
 

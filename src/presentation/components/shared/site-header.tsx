@@ -51,7 +51,17 @@ export async function SiteHeader() {
             <UserMenu label={user.email ?? "Mi cuenta"} isProfessional={isProfessional} />
           ) : (
             <>
-              <ButtonLink href="/auth/register" variant="ghost" size="sm">
+              {/* "Soy profesional" ("I'm a professional") is a *login* entry
+                  point for an existing professional, distinct from
+                  professional-cta.tsx's "Unirme como profesional" ("Join as
+                  a professional") *registration* CTA below on the marketing
+                  page — see resolve-post-login-destination.ts's `loginIntent`
+                  for how `?intent=professional` is used once login
+                  succeeds. Previously this pointed at plain `/auth/register`
+                  (identical to "Crear cuenta"), which was the actual bug:
+                  an existing professional clicking it landed in the
+                  ordinary customer registration flow instead of logging in. */}
+              <ButtonLink href="/auth/login?intent=professional" variant="ghost" size="sm">
                 Soy profesional
               </ButtonLink>
               <ButtonLink href="/auth/login" variant="outline" size="sm">

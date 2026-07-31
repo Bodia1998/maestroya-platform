@@ -77,4 +77,69 @@ describe("resolvePostLoginDestination", () => {
 
     expect(destination).toBe("/dashboard");
   });
+
+  /**
+   * "Soy profesional" regression coverage — the marketing header's
+   * professional *login* entry point (site-header.tsx) links to
+   * `/auth/login?intent=professional`, distinct from `signupIntent`
+   * (only ever set by the professional *registration* flow). See this
+   * file's own doc comment for the full `loginIntent` reasoning.
+   */
+  describe("loginIntent (the 'Soy profesional' login entry point)", () => {
+    it("sends an already-PROVIDER account straight to the Professional Dashboard, same as an ordinary login", () => {
+      const destination = resolvePostLoginDestination(
+        { roles: ["CUSTOMER", "PROVIDER"], signupIntent: null },
+        { explicitCallbackUrl: null, defaultDestination: "/dashboard", loginIntent: "professional" },
+      );
+
+      expect(destination).toBe("/dashboard/professional");
+    });
+
+    it("sends a PROFESSIONAL-intent account without PROVIDER to onboarding, same as an ordinary login", () => {
+      const destination = resolvePostLoginDestination(
+        { roles: ["CUSTOMER"], signupIntent: "PROFESSIONAL" },
+        { explicitCallbackUrl: null, defaultDestination: "/dashboard", loginIntent: "professional" },
+      );
+
+      expect(destination).toBe("/dashboard/professional/onboarding");
+    });
+
+    it("sends a plain customer account (no PROVIDER, no signupIntent) to onboarding instead of the customer dashboard, without granting PROVIDER", () => {
+      const session = { roles: ["CUSTOMER"], signupIntent: null };
+      const destination = resolvePostLoginDestination(session, {
+        explicitCallbackUrl: null,
+        defaultDestination: "/dashboard",
+        loginIntent: "professional",
+      });
+
+      expect(destination).toBe("/dashboard/professional/onboarding");
+      // This function only ever returns a destination string — it has no
+      // way to mutate `session`, so asserting the input is untouched is
+      // the closest a pure-function test can get to "PROVIDER was never
+      // silently granted here".
+      expect(session.roles).toEqual(["CUSTOMER"]);
+    });
+
+    it("still honors an explicit callbackUrl over the professional login intent", () => {
+      const destination = resolvePostLoginDestination(
+        { roles: ["CUSTOMER"], signupIntent: null },
+        {
+          explicitCallbackUrl: "/dashboard/messages",
+          defaultDestination: "/dashboard",
+          loginIntent: "professional",
+        },
+      );
+
+      expect(destination).toBe("/dashboard/messages");
+    });
+
+    it("has no effect when omitted — ordinary logins are completely unaffected by this option existing", () => {
+      const destination = resolvePostLoginDestination(
+        { roles: ["CUSTOMER"], signupIntent: null },
+        { explicitCallbackUrl: null, defaultDestination: "/dashboard" },
+      );
+
+      expect(destination).toBe("/dashboard");
+    });
+  });
 });
