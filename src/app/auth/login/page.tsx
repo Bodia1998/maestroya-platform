@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
+import { getCurrentUser } from "@/infrastructure/auth/rbac";
+import { resolvePostLoginDestination } from "@/shared/utils/resolve-post-login-destination";
 import { LoginForm } from "./login-form";
 
 export const metadata = { title: "Log in" };
@@ -12,14 +15,37 @@ export const metadata = { title: "Log in" };
  * own. The "Sign up" link below deliberately forwards the same intent so
  * someone who followed "Soy profesional" without yet having an account
  * lands on the professional registration flow instead of the plain one.
+ *
+ * Already-authenticated visitor: previously this page rendered the login
+ * form unconditionally, regardless of session state — an already signed-in
+ * user landing here (stale bookmark, browser back button, clicking a
+ * "Soy profesional" link while already logged in) just saw the login form
+ * again with no way forward except submitting credentials a second time.
+ * Reuses the same authoritative `getCurrentUser()`/`resolvePostLoginDestination`
+ * pair `/auth/post-login` uses for the exact same decision, so an
+ * already-signed-in visitor is bounced to the right dashboard instead of
+ * being left on the login page.
  */
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ intent?: string }>;
+  searchParams: Promise<{ intent?: string; callbackUrl?: string }>;
 }) {
-  const { intent } = await searchParams;
+  const { intent, callbackUrl } = await searchParams;
   const isProfessionalIntent = intent === "professional";
+
+  const user = await getCurrentUser();
+  if (user) {
+    const destination = resolvePostLoginDestination(
+      { roles: user.roles, signupIntent: user.signupIntent },
+      {
+        explicitCallbackUrl: callbackUrl ?? null,
+        defaultDestination: "/dashboard",
+        loginIntent: isProfessionalIntent ? "professional" : null,
+      },
+    );
+    redirect(destination);
+  }
 
   return (
     <div className="flex flex-col gap-6">

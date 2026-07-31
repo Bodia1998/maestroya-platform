@@ -26,11 +26,15 @@ export const createProfessionalSchema = z.object({
     .min(0, "Years of experience cannot be negative.")
     .max(80, "Enter a realistic number of years.")
     .optional(),
-  hourlyRate: z
-    .coerce.number()
-    .min(0, "Hourly rate cannot be negative.")
-    .max(100000, "Enter a realistic hourly rate.")
-    .optional(),
+  // Deliberately no `hourlyRate` field — not part of this marketplace's
+  // MVP professional pricing model (pricing happens per-Quote, via the
+  // Quotes module's LABOR/MATERIALS line items, not a flat published
+  // rate). Previously present here and in the public professional profile
+  // display; removed from the professional-facing flow entirely per
+  // product decision — the underlying `ProfessionalProfile.hourlyRate`
+  // Prisma column is left as-is (nullable, already unused going forward)
+  // rather than a schema migration, since no professional-facing code
+  // path can set or display it anymore.
   serviceRadiusKm: z
     .coerce.number()
     .int("Enter a whole number.")

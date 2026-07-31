@@ -35,7 +35,7 @@ describe("buildDashboardNavGroups", () => {
     expect(professionalGroups[0]).toEqual(customerGroups[0]);
   });
 
-  it("adds a 'Professional' group containing every required professional destination", () => {
+  it("adds a 'Professional' group containing every required professional destination, including the shared Messages/Disputes/Support modules", () => {
     const groups = buildDashboardNavGroups({ isProfessional: true, isAdmin: false });
     const professionalGroup = groups.find((group) => group.title === "Professional");
 
@@ -46,9 +46,22 @@ describe("buildDashboardNavGroups", () => {
       "/dashboard/professional/quotes",
       "/dashboard/professional/appointments",
       "/dashboard/professional/jobs",
+      "/messages",
+      "/disputes",
+      "/support-tickets",
       "/dashboard/professional",
       "/dashboard/company",
     ]);
+  });
+
+  it("tags the base group 'customer' and the Professional group 'professional', so DashboardShell can filter by active context", () => {
+    const groups = buildDashboardNavGroups({ isProfessional: true, isAdmin: false });
+
+    expect(groups[0]?.context).toBe("customer");
+    expect(groups.find((g) => g.title === "Professional")?.context).toBe("professional");
+    // Admin/Profile groups are context-less — always shown regardless of
+    // which side of the marketplace the sidebar is currently focused on.
+    expect(groups.at(-1)?.context).toBeUndefined();
   });
 
   it("never shows the 'Professional' group to a non-professional account", () => {

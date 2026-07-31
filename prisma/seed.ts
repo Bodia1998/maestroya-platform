@@ -25,17 +25,48 @@ const prisma = new PrismaClient();
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? "admin@maestroya.es";
 const SUPPORT_EMAIL = process.env.SEED_SUPPORT_EMAIL ?? "support@maestroya.es";
 
+// Ordered by `sortOrder` (10, 20, 30, ...) rather than relying on array
+// position at the call site — same convention as SERVICE_CATEGORIES below.
+// The first block (10-90) is the platform's declared highest-priority
+// language set; the next block is the broader set of European languages
+// already relevant to this Spain-based marketplace (including Spain's own
+// co-official languages); the last block covers major non-European
+// languages the platform also needs to support.
 const LANGUAGES = [
-  { code: "es", name: "Spanish", nativeName: "Español" },
-  { code: "ca", name: "Catalan", nativeName: "Català" },
-  { code: "eu", name: "Basque", nativeName: "Euskara" },
-  { code: "gl", name: "Galician", nativeName: "Galego" },
-  { code: "en", name: "English", nativeName: "English" },
-  { code: "fr", name: "French", nativeName: "Français" },
-  { code: "de", name: "German", nativeName: "Deutsch" },
-  { code: "ar", name: "Arabic", nativeName: "العربية" },
-  { code: "ro", name: "Romanian", nativeName: "Română" },
-  { code: "zh", name: "Chinese", nativeName: "中文" },
+  { code: "en", name: "English", nativeName: "English", sortOrder: 10 },
+  { code: "es", name: "Spanish", nativeName: "Español", sortOrder: 20 },
+  { code: "uk", name: "Ukrainian", nativeName: "Українська", sortOrder: 30 },
+  { code: "ru", name: "Russian", nativeName: "Русский", sortOrder: 40 },
+  { code: "fr", name: "French", nativeName: "Français", sortOrder: 50 },
+  { code: "de", name: "German", nativeName: "Deutsch", sortOrder: 60 },
+  { code: "nl", name: "Dutch", nativeName: "Nederlands", sortOrder: 70 },
+  { code: "it", name: "Italian", nativeName: "Italiano", sortOrder: 80 },
+  { code: "pl", name: "Polish", nativeName: "Polski", sortOrder: 90 },
+
+  { code: "pt", name: "Portuguese", nativeName: "Português", sortOrder: 100 },
+  { code: "ro", name: "Romanian", nativeName: "Română", sortOrder: 110 },
+  { code: "bg", name: "Bulgarian", nativeName: "Български", sortOrder: 120 },
+  { code: "cs", name: "Czech", nativeName: "Čeština", sortOrder: 130 },
+  { code: "sk", name: "Slovak", nativeName: "Slovenčina", sortOrder: 140 },
+  { code: "hu", name: "Hungarian", nativeName: "Magyar", sortOrder: 150 },
+  { code: "el", name: "Greek", nativeName: "Ελληνικά", sortOrder: 160 },
+  { code: "hr", name: "Croatian", nativeName: "Hrvatski", sortOrder: 170 },
+  { code: "sl", name: "Slovenian", nativeName: "Slovenščina", sortOrder: 180 },
+  { code: "sv", name: "Swedish", nativeName: "Svenska", sortOrder: 190 },
+  { code: "da", name: "Danish", nativeName: "Dansk", sortOrder: 200 },
+  { code: "fi", name: "Finnish", nativeName: "Suomi", sortOrder: 210 },
+  { code: "et", name: "Estonian", nativeName: "Eesti", sortOrder: 220 },
+  { code: "lv", name: "Latvian", nativeName: "Latviešu", sortOrder: 230 },
+  { code: "lt", name: "Lithuanian", nativeName: "Lietuvių", sortOrder: 240 },
+  { code: "mt", name: "Maltese", nativeName: "Malti", sortOrder: 250 },
+  { code: "ga", name: "Irish", nativeName: "Gaeilge", sortOrder: 260 },
+  { code: "ca", name: "Catalan", nativeName: "Català", sortOrder: 270 },
+  { code: "eu", name: "Basque", nativeName: "Euskara", sortOrder: 280 },
+  { code: "gl", name: "Galician", nativeName: "Galego", sortOrder: 290 },
+
+  { code: "ar", name: "Arabic", nativeName: "العربية", sortOrder: 300 },
+  { code: "zh", name: "Chinese", nativeName: "中文", sortOrder: 310 },
+  { code: "tr", name: "Turkish", nativeName: "Türkçe", sortOrder: 320 },
 ] as const;
 
 /**
@@ -135,7 +166,7 @@ async function seedLanguages() {
   for (const language of LANGUAGES) {
     await prisma.language.upsert({
       where: { code: language.code },
-      update: { name: language.name, nativeName: language.nativeName },
+      update: { name: language.name, nativeName: language.nativeName, sortOrder: language.sortOrder },
       create: language,
     });
   }

@@ -1,14 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { getSession, signIn } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { loginSchema, type LoginInput } from "@/application/dto/auth.dto";
-import { resolvePostLoginDestination } from "@/shared/utils/resolve-post-login-destination";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -17,8 +16,8 @@ export function LoginForm() {
   // "Soy profesional" (site-header.tsx) links here with `?intent=professional`
   // — a *login-time* hint, distinct from the DB-backed `signupIntent` set at
   // registration. Never used to grant PROVIDER or mutate the account; it
-  // only affects where a successful login navigates to next — see
-  // resolvePostLoginDestination's `loginIntent` doc comment.
+  // only affects where a successful login navigates to next — forwarded
+  // as-is to /auth/post-login, see that page's own doc comment.
   const loginIntent = searchParams.get("intent") === "professional" ? "professional" : null;
   const [serverError, setServerError] = useState<string | null>(null);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
@@ -42,33 +41,43 @@ export function LoginForm() {
       callbackUrl,
     });
 
-    if (!result || result.error) {
+    if (!result || !result.ok || result.error) {
       setServerError("Incorrect email or password.");
       return;
     }
 
-    // Professional Onboarding (and, for an already-activated
-    // professional, landing straight on their own dashboard): read the
-    // just-established session directly rather than defaulting to
-    // `callbackUrl` and relying solely on middleware.ts to correct course
-    // on a second request — see resolvePostLoginDestination's own doc
-    // comment for why. An explicit `callbackUrl` (bounced here from a
-    // specific protected route) still always wins, unchanged from before.
-    const session = await getSession();
-    const destination = resolvePostLoginDestination(
-      {
-        roles: session?.user?.roles ?? [],
-        signupIntent: session?.user?.signupIntent ?? null,
-      },
-      { explicitCallbackUrl, defaultDestination: result.url ?? callbackUrl, loginIntent },
-    );
-
-    window.location.href = destination;
+    // Professional Onboarding (and, for an already-activated professional,
+    // landing straight on their own dashboard): the destination is decided
+    // server-side, from the authoritative session `/auth/post-login`
+    // reads on its own fresh request — never from a client-side
+    // `getSession()` read here, which could occasionally still observe
+    // the pre-login session for one tick (next-auth's own client cache)
+    // and send the user to the wrong place or bounce them back to login.
+    // See post-login/page.tsx's own doc comment for the full root-cause
+    // writeup. `explicitCallbackUrl`/`loginIntent` are forwarded as query
+    // params so that page can run the exact same
+    // `resolvePostLoginDestination` decision this form used to make itself.
+    const params = new URLSearchParams();
+    if (explicitCallbackUrl) params.set("callbackUrl", explicitCallbackUrl);
+    if (loginIntent) params.set("intent", loginIntent);
+    const query = params.toString();
+    window.location.href = `/auth/post-login${query ? `?${query}` : ""}`;
   }
 
   async function handleOAuth(provider: "google" | "apple" | "facebook") {
     setOauthLoading(provider);
-    await signIn(provider, { callbackUrl });
+    // Same server-authoritative destination decision as the credentials
+    // path above (see /auth/post-login's doc comment) — without this, an
+    // existing PROVIDER signing in via OAuth would always land on the
+    // plain customer dashboard (`callbackUrl`'s own default) instead of
+    // `/dashboard/professional`, since OAuth's own `redirect: true` flow
+    // navigates straight to `callbackUrl` with no chance to inspect the
+    // freshly-created session first.
+    const params = new URLSearchParams();
+    if (explicitCallbackUrl) params.set("callbackUrl", explicitCallbackUrl);
+    if (loginIntent) params.set("intent", loginIntent);
+    const query = params.toString();
+    await signIn(provider, { callbackUrl: `/auth/post-login${query ? `?${query}` : ""}` });
   }
 
   return (

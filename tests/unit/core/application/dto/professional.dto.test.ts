@@ -19,7 +19,6 @@ describe("createProfessionalSchema", () => {
       headline: "Licensed plumber",
       bio: "10 years of experience.",
       yearsExperience: 10,
-      hourlyRate: 45.5,
       serviceRadiusKm: 20,
       contactEmail: "ana@example.com",
       contactPhone: "+34600000000",
@@ -59,6 +58,18 @@ describe("createProfessionalSchema", () => {
     if (result.success) {
       expect(result.data).not.toHaveProperty("status");
       expect(result.data).not.toHaveProperty("verificationStatus");
+    }
+  });
+
+  // Regression: hourlyRate is not part of this marketplace's MVP
+  // professional pricing model (pricing happens per-Quote) and was
+  // removed from the professional-facing flow entirely — see this
+  // schema's own doc comment.
+  it("strips a client-supplied hourlyRate rather than accepting it", () => {
+    const result = createProfessionalSchema.safeParse({ hourlyRate: 45.5 });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).not.toHaveProperty("hourlyRate");
     }
   });
 });

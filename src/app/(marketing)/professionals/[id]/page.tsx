@@ -84,12 +84,6 @@ export default async function PublicProfessionalProfilePage({
             <p className="font-medium">{profile.yearsExperience} years</p>
           </div>
         )}
-        {profile.hourlyRate !== null && (
-          <div>
-            <p className="text-foreground/60">Hourly rate</p>
-            <p className="font-medium">€{profile.hourlyRate.toFixed(2)}</p>
-          </div>
-        )}
         {profile.serviceRadiusKm !== null && (
           <div>
             <p className="text-foreground/60">Service area</p>
@@ -121,6 +115,44 @@ export default async function PublicProfessionalProfilePage({
           </div>
         </section>
       )}
+
+      {/*
+        The only legitimate next step from a public profile, per this
+        marketplace's own domain model: there is no "message this
+        professional directly" or "book this exact professional" concept
+        (see OpenConversationUseCase's own doc comment — a conversation can
+        only open once a Quote already exists between the two of them, and
+        quotes only ever exist on a PUBLISHED ServiceRequest). So the
+        correct, already-existing path is Service Request -> discovery ->
+        Quote: this link goes to the same "New service request" form every
+        request already goes through (`/requests/new`), prefilled with
+        this professional's primary category and city (see
+        ServiceRequestForm's own `prefill` doc comment) purely to save
+        re-typing — the resulting request is a normal PUBLISHED request,
+        discoverable by every eligible professional (this one included, if
+        they're actually within category/radius/status — the same rule
+        Available Requests already enforces), not a targeted request only
+        this professional can see.
+      */}
+      <section className="rounded-md border border-border bg-black/5 p-4">
+        <p className="text-sm text-foreground/70">
+          Ready to get started? Post a service request and {profile.businessName ?? profile.displayName}{" "}
+          — along with every other eligible professional nearby — will be able to review it and send you a
+          quote.
+        </p>
+        <Link
+          href={{
+            pathname: "/requests/new",
+            query: {
+              ...(profile.categoryIds[0] ? { categoryId: profile.categoryIds[0] } : {}),
+              ...(profile.city ? { city: profile.city } : {}),
+            },
+          }}
+          className="mt-3 inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
+        >
+          Request this service
+        </Link>
+      </section>
     </div>
   );
 }

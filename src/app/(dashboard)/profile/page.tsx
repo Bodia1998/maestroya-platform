@@ -20,7 +20,7 @@ export default async function ProfilePage() {
   const languages = await prisma.language.findMany({
     where: { isActive: true },
     select: { id: true, name: true, nativeName: true },
-    orderBy: { name: "asc" },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
 
   return (
@@ -35,6 +35,11 @@ export default async function ProfilePage() {
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">Avatar</h2>
         <AvatarUpload currentImageUrl={profile.image} />
+        <p className="text-xs text-foreground/60">
+          This photo is just for your account — it has no effect on professional identity
+          verification. Professionals manage that separately from Professional profile → Manage
+          identity verification.
+        </p>
       </section>
 
       <section className="flex flex-col gap-4">

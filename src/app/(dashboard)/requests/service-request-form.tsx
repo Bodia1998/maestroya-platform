@@ -54,10 +54,26 @@ export function ServiceRequestForm({
   mode,
   categories,
   request,
+  prefill,
 }: {
   mode: "create" | "edit";
   categories: CategoryOption[];
   request: ServiceRequestLike | null;
+  /**
+   * Optional starting values for a brand-new request — used when a
+   * customer arrives here via "Request this service" on a public
+   * professional profile (see (marketing)/professionals/[id]/page.tsx),
+   * so the category/city they were already looking at doesn't have to be
+   * re-entered. Deliberately just a form prefill, nothing more: the
+   * customer still reviews/edits every field and submits through the
+   * exact same `createServiceRequestAction` as any other new request —
+   * this professional has no special claim on the resulting request, it's
+   * discovered like any other PUBLISHED request (see
+   * CreateServiceRequestUseCase's own doc comment on why there is no
+   * "targeted at one professional" concept in this domain model). Ignored
+   * in "edit" mode.
+   */
+  prefill?: { categoryId?: string; city?: string };
 }) {
   const router = useRouter();
   const isEditing = mode === "edit";
@@ -74,7 +90,7 @@ export function ServiceRequestForm({
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      categoryId: request?.categoryId ?? "",
+      categoryId: request?.categoryId ?? prefill?.categoryId ?? "",
       title: request?.title ?? "",
       description: request?.description ?? "",
       urgency: (request?.urgency as FormValues["urgency"]) ?? "MEDIUM",
@@ -91,7 +107,7 @@ export function ServiceRequestForm({
             latitude: request.location.latitude ?? undefined,
             longitude: request.location.longitude ?? undefined,
           }
-        : { line1: "", city: "", postalCode: "", country: "ES" },
+        : { line1: "", city: prefill?.city ?? "", postalCode: "", country: "ES" },
     },
   });
 

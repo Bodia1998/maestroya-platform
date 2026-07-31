@@ -20,7 +20,6 @@ interface ProfessionalLike {
   bio: string | null;
   headline: string | null;
   yearsExperience: number | null;
-  hourlyRate: number | null;
   serviceRadiusKm: number | null;
   contactEmail: string | null;
   contactPhone: string | null;
@@ -57,7 +56,6 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
       headline: professional?.headline ?? "",
       bio: professional?.bio ?? "",
       yearsExperience: professional?.yearsExperience ?? undefined,
-      hourlyRate: professional?.hourlyRate ?? undefined,
       serviceRadiusKm: professional?.serviceRadiusKm ?? undefined,
       contactEmail: professional?.contactEmail ?? "",
       contactPhone: professional?.contactPhone ?? "",
@@ -181,37 +179,20 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="hourlyRate" className="text-sm font-medium">
-            Hourly rate (EUR)
+          <label htmlFor="serviceRadiusKm" className="text-sm font-medium">
+            Service radius (km)
           </label>
           <input
-            id="hourlyRate"
+            id="serviceRadiusKm"
             type="number"
             min={0}
-            step="0.01"
             className="h-10 rounded-md border border-border px-3 text-sm"
-            {...register("hourlyRate")}
+            {...register("serviceRadiusKm")}
           />
-          {errors.hourlyRate && (
-            <p className="text-xs text-red-600">{errors.hourlyRate.message}</p>
+          {errors.serviceRadiusKm && (
+            <p className="text-xs text-red-600">{errors.serviceRadiusKm.message}</p>
           )}
         </div>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="serviceRadiusKm" className="text-sm font-medium">
-          Service radius (km)
-        </label>
-        <input
-          id="serviceRadiusKm"
-          type="number"
-          min={0}
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("serviceRadiusKm")}
-        />
-        {errors.serviceRadiusKm && (
-          <p className="text-xs text-red-600">{errors.serviceRadiusKm.message}</p>
-        )}
       </div>
 
       <fieldset className="flex flex-col gap-3 rounded-md border border-border p-4">
