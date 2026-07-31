@@ -156,6 +156,70 @@ describe("GetAvailableServiceRequestsForProfessionalUseCase", () => {
 
     expect(results).toEqual([]);
   });
+
+  // Regression test — real bug reported during manual MVP testing: a
+  // customer's PUBLISHED request in the same city as an eligible,
+  // ACTIVE professional (matching category, 30km service radius) was not
+  // appearing in /dashboard/professional/requests. Root cause was never
+  // the radius/distance calculation itself (verified below, this exact
+  // scenario passes): CreateServiceRequestUseCase wasn't geocoding the
+  // customer's city, so PUBLISHED requests were persisted with
+  // latitude/longitude both null, and isProfessionalEligibleForRequest
+  // (quote-eligibility.ts) unconditionally excludes any request or
+  // professional missing coordinates — see that use case's own doc
+  // comment for the fix. This test exercises the discovery pipeline
+  // itself (category + coordinates + radius, exactly as it runs in
+  // production), independent of that upstream fix, so a future
+  // regression in *this* pipeline is still caught even if someone
+  // reintroduces a null-coordinate request.
+  it("returns a same-city request within the professional's 30km radius (regression)", async () => {
+    const repos = makeRepos();
+    seedActiveProfessional(repos, "pro-1", { serviceRadiusKm: 30, location: GANDIA });
+    const request = seedPublishedRequest(repos, "cust-1", { location: GANDIA });
+
+    const results = await new GetAvailableServiceRequestsForProfessionalUseCase(
+      repos.professionals,
+      repos.professionalDiscovery,
+      repos.requestDiscovery,
+    ).execute("pro-1");
+
+    expect(results.map((r) => r.id)).toContain(request.id);
+  });
+
+  it("does NOT return a request outside the professional's 30km radius (regression, negative case)", async () => {
+    const repos = makeRepos();
+    seedActiveProfessional(repos, "pro-1", { serviceRadiusKm: 30, location: GANDIA });
+    const request = seedPublishedRequest(repos, "cust-1", { location: FAR_AWAY });
+
+    const results = await new GetAvailableServiceRequestsForProfessionalUseCase(
+      repos.professionals,
+      repos.professionalDiscovery,
+      repos.requestDiscovery,
+    ).execute("pro-1");
+
+    expect(results.map((r) => r.id)).not.toContain(request.id);
+  });
+
+  it("does NOT return a PUBLISHED request that has no coordinates at all (the actual bug)", async () => {
+    // Reproduces the exact production bug directly: same city textually
+    // ("Oliva" for both, via the default fixture location), professional
+    // has a real, valid base location and a 30km radius, but the request
+    // itself was persisted with latitude/longitude === null — exactly
+    // what happened before CreateServiceRequestUseCase started geocoding
+    // the entered city. Proves the *symptom* one more level down, at the
+    // eligibility rule itself, not just at the use case that produces it.
+    const repos = makeRepos();
+    seedActiveProfessional(repos, "pro-1", { serviceRadiusKm: 30, location: GANDIA });
+    const request = seedPublishedRequest(repos, "cust-1", { location: null });
+
+    const results = await new GetAvailableServiceRequestsForProfessionalUseCase(
+      repos.professionals,
+      repos.professionalDiscovery,
+      repos.requestDiscovery,
+    ).execute("pro-1");
+
+    expect(results.map((r) => r.id)).not.toContain(request.id);
+  });
 });
 
 describe("Server Action auth boundary (unauthenticated users)", () => {

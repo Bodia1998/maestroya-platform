@@ -1,5 +1,6 @@
 import { ValidationError } from "@/domain/errors/domain-error";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
+import type { GeocodingProvider } from "@/domain/repositories/geocoding-provider";
 import type { ServiceRequestRecord, ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
 import type { ServiceCategoryRepository } from "@/domain/repositories/service-category-repository";
 import type { CreateServiceRequestInput } from "@/application/dto/service-request.dto";
@@ -18,12 +19,29 @@ import type { CreateServiceRequestInput } from "@/application/dto/service-reques
  * Initial status is always PUBLISHED — this MVP has no separate
  * draft-save workflow (see service-request-state.ts for the full
  * OPEN/PUBLISHED reconciliation note).
+ *
+ * Coordinates: the request form only exposes `latitude`/`longitude` as
+ * optional raw-number fields (see service-request-form.tsx) — in practice
+ * a customer almost never fills those in, so relying on them alone left
+ * nearly every request with null coordinates. `isProfessionalEligibleForRequest`
+ * (see quote-eligibility.ts) requires both sides to have coordinates, so a
+ * PUBLISHED request with no lat/long can never appear in a professional's
+ * Available Requests regardless of city match or service radius — that was
+ * the actual root cause of requests silently going undiscovered. Fixed the
+ * same way `CompleteProfessionalOnboardingUseCase` already resolves a
+ * professional's own base location: an explicit client-supplied coordinate
+ * always wins (never overridden), otherwise fall back to geocoding the
+ * entered city/province via the existing `GeocodingProvider`. A city the
+ * provider doesn't recognize still resolves to `null` — request creation
+ * itself must never fail because of this, it only degrades discoverability
+ * for that one request, exactly like onboarding's own documented fallback.
  */
 export class CreateServiceRequestUseCase {
   constructor(
     private readonly serviceRequests: ServiceRequestRepository,
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly categories: ServiceCategoryRepository,
+    private readonly geocoding: GeocodingProvider,
   ) {}
 
   async execute(userId: string, input: CreateServiceRequestInput): Promise<ServiceRequestRecord> {
@@ -37,6 +55,18 @@ export class CreateServiceRequestUseCase {
     }
 
     const customer = await this.customerProfiles.findOrCreateByUserId(userId);
+
+    let latitude = input.location.latitude ?? null;
+    let longitude = input.location.longitude ?? null;
+    if (latitude === null || longitude === null) {
+      const point = await this.geocoding.geocode({
+        city: input.location.city,
+        province: input.location.province || undefined,
+        country: input.location.country || undefined,
+      });
+      latitude = latitude ?? point?.latitude ?? null;
+      longitude = longitude ?? point?.longitude ?? null;
+    }
 
     return this.serviceRequests.create(customer.id, userId, {
       categoryId: category.id,
@@ -52,8 +82,8 @@ export class CreateServiceRequestUseCase {
         province: input.location.province || null,
         postalCode: input.location.postalCode,
         country: input.location.country,
-        latitude: input.location.latitude ?? null,
-        longitude: input.location.longitude ?? null,
+        latitude,
+        longitude,
       },
     });
   }

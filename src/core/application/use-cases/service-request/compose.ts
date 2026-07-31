@@ -1,6 +1,7 @@
 import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prisma/repositories/prisma-customer-profile-repository";
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
+import { StaticCityGeocodingProvider } from "@/infrastructure/geocoding/static-city-geocoding-provider";
 import { CloudinaryRequestPhotoUploadService } from "@/infrastructure/storage/cloudinary/request-photo-upload-service";
 import { AddServiceRequestPhotoUseCase } from "@/application/use-cases/service-request/add-service-request-photo.use-case";
 import { CancelServiceRequestUseCase } from "@/application/use-cases/service-request/cancel-service-request.use-case";
@@ -14,9 +15,14 @@ const serviceRequests = new PrismaServiceRequestRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
 const categories = new PrismaServiceCategoryRepository();
 const photoUploadService = new CloudinaryRequestPhotoUploadService();
+// Same GeocodingProvider seam/implementation CompleteProfessionalOnboardingUseCase
+// already uses for the professional's own base location — see
+// CreateServiceRequestUseCase's doc comment for why a ServiceRequest needs
+// this too.
+const geocoding = new StaticCityGeocodingProvider();
 
 export function makeCreateServiceRequestUseCase() {
-  return new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories);
+  return new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories, geocoding);
 }
 
 export function makeGetServiceRequestUseCase() {
@@ -28,7 +34,7 @@ export function makeGetCustomerServiceRequestsUseCase() {
 }
 
 export function makeUpdateServiceRequestUseCase() {
-  return new UpdateServiceRequestUseCase(serviceRequests, customerProfiles, categories);
+  return new UpdateServiceRequestUseCase(serviceRequests, customerProfiles, categories, geocoding);
 }
 
 export function makeCancelServiceRequestUseCase() {

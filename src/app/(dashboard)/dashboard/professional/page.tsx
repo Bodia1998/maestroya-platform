@@ -19,7 +19,7 @@ export default async function ProfessionalDashboardPage() {
 
   // Static reference data for the category picker — a plain read, not a
   // use case (no business logic), matching how the Profile page reads
-  // languages directly. See profile/page.tsx for the same convention.
+  // reference data directly. See profile/page.tsx for the same convention.
   const categories = await prisma.serviceCategory.findMany({
     where: { status: "ACTIVE", deletedAt: null },
     select: { id: true, name: true },

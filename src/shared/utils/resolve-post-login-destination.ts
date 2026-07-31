@@ -32,8 +32,19 @@
  *      specific protected route, e.g. `/admin` or `/dashboard/messages`)
  *      always wins — this is existing behavior (role-gated redirects,
  *      "return to where you were") and must not change.
- *   2. PROVIDER role already granted → `/dashboard/professional` (the
- *      Professional Dashboard) — requirement #3.
+ *   2. PROVIDER role already granted → `/dashboard` (the Professional
+ *      Dashboard overview — see build-dashboard-nav-groups.ts's
+ *      "Professional dashboard" nav item, which links here too) —
+ *      requirement #3. Deliberately NOT `/dashboard/professional` (that
+ *      route is the professional's *profile-editing* page — "Professional
+ *      profile" in the nav, a distinct destination) — landing a
+ *      just-logged-in professional straight on a settings form instead of
+ *      the overview that actually shows their available requests/quotes/
+ *      appointments/jobs at a glance was itself part of the "confusing
+ *      dashboard" root cause; see dashboard/page.tsx, which already
+ *      renders a dedicated "Professional overview" section up top for any
+ *      PROVIDER account, cleanly separated from the customer section below
+ *      it.
  *   3. `signupIntent === "PROFESSIONAL"` but no PROVIDER role yet →
  *      `/dashboard/professional/onboarding` — requirement #2.
  *   4. The *login page's own* `?intent=professional` query param (see
@@ -88,7 +99,7 @@ export function resolvePostLoginDestination(
   }
 
   if (session.roles.includes("PROVIDER")) {
-    return "/dashboard/professional";
+    return "/dashboard";
   }
 
   if (session.signupIntent === "PROFESSIONAL") {

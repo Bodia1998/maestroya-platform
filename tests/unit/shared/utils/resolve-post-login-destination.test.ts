@@ -30,13 +30,13 @@ describe("resolvePostLoginDestination", () => {
     expect(destination).toBe("/dashboard/professional/onboarding");
   });
 
-  it("sends an account that already has the PROVIDER role straight to the Professional Dashboard", () => {
+  it("sends an account that already has the PROVIDER role straight to the Professional Dashboard (the /dashboard overview, not the profile-editing page)", () => {
     const destination = resolvePostLoginDestination(
       { roles: ["CUSTOMER", "PROVIDER"], signupIntent: "PROFESSIONAL" },
       { explicitCallbackUrl: null, defaultDestination: "/dashboard" },
     );
 
-    expect(destination).toBe("/dashboard/professional");
+    expect(destination).toBe("/dashboard");
   });
 
   it("prefers the PROVIDER role over a lingering PROFESSIONAL signupIntent (PROVIDER is the source of truth)", () => {
@@ -48,7 +48,7 @@ describe("resolvePostLoginDestination", () => {
       { explicitCallbackUrl: null, defaultDestination: "/dashboard" },
     );
 
-    expect(destination).toBe("/dashboard/professional");
+    expect(destination).toBe("/dashboard");
   });
 
   it("always honors an explicit callbackUrl, regardless of role or signupIntent (existing role-gated-redirect behavior)", () => {
@@ -92,7 +92,7 @@ describe("resolvePostLoginDestination", () => {
         { explicitCallbackUrl: null, defaultDestination: "/dashboard", loginIntent: "professional" },
       );
 
-      expect(destination).toBe("/dashboard/professional");
+      expect(destination).toBe("/dashboard");
     });
 
     it("sends a PROFESSIONAL-intent account without PROVIDER to onboarding, same as an ordinary login", () => {

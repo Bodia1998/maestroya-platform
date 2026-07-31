@@ -137,6 +137,67 @@ describe("middleware.ts", () => {
     });
   });
 
+  describe("protected non-/dashboard routes (root-cause regression: (dashboard) route group pages have URLs outside /dashboard)", () => {
+    // Root cause: /requests, /appointments, /jobs, /messages, /disputes,
+    // /support-tickets, and /profile are each their own top-level page.tsx
+    // under the (dashboard) route group (route groups add no URL segment)
+    // and every one of them already calls requireAuth() itself — but only
+    // "/dashboard" was ever listed in PROTECTED_PREFIXES, so an anonymous
+    // visitor hitting any of these directly (e.g. the "Request this
+    // service" link now on a public professional profile) got an
+    // unhandled thrown error instead of the expected login redirect. See
+    // PROTECTED_PREFIXES's own doc comment for the full writeup.
+    it.each([
+      "/requests",
+      "/requests/new",
+      "/appointments",
+      "/jobs",
+      "/messages",
+      "/disputes",
+      "/support-tickets",
+      "/profile",
+    ])("redirects an unauthenticated user hitting %s to login with a matching callbackUrl", async (path) => {
+      mockSession = null;
+
+      const response = await middleware(makeRequest(path));
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(
+        `http://localhost:3000/auth/login?callbackUrl=${encodeURIComponent(path)}`,
+      );
+    });
+
+    it.each(["/requests", "/appointments", "/jobs", "/messages", "/disputes", "/support-tickets", "/profile"])(
+      "lets a signed-in customer through to %s",
+      async (path) => {
+        mockSession = { user: { id: "u1", roles: ["CUSTOMER"], signupIntent: null } };
+
+        const response = await middleware(makeRequest(path));
+
+        expect(response.status).toBe(200);
+      },
+    );
+
+    it("never touches the public professional search/profile routes regardless of auth state", async () => {
+      mockSession = null;
+
+      const response = await middleware(makeRequest("/professionals/some-id"));
+
+      expect(response.status).toBe(200);
+    });
+
+    it("preserves query params (e.g. the 'Request this service' prefill hints) across the login redirect", async () => {
+      mockSession = null;
+
+      const response = await middleware(makeRequest("/requests/new?categoryId=abc-123&city=Gandia"));
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(
+        `http://localhost:3000/auth/login?callbackUrl=${encodeURIComponent("/requests/new?categoryId=abc-123&city=Gandia")}`,
+      );
+    });
+  });
+
   describe("existing role-gated /admin behavior (regression)", () => {
     it("redirects an unauthenticated user to login with callbackUrl=/admin", async () => {
       mockSession = null;

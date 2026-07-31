@@ -265,18 +265,24 @@ model RefreshToken {
 // Reference / lookup data (seeded — not marketplace entities per se)
 // ============================================================================
 
-/// Spoken/interface languages. Seeded at deploy time; referenced by User
-/// (preferred language) and ProfessionalProfile (languages spoken, for
-/// customer-professional matching).
+/// Platform/interface language reference data — used for the platform
+/// language picker (see User.preferredLanguageId), NOT a professional
+/// "languages I speak with customers" feature. ProfessionalProfile
+/// deliberately has no relation to this model; see migration
+/// 20260807000000_remove_professional_languages, which dropped the
+/// short-lived `_ProfessionalLanguages` join table.
 model Language {
   id         String  @id @default(uuid()) @db.Uuid
   code       String  @unique /// ISO 639-1, e.g. "es", "en", "ca"
   name       String  /// English name, e.g. "Spanish"
   nativeName String  /// Native name, e.g. "Español"
   isActive   Boolean @default(true)
+  /// Platform-language display priority (lower sorts first) — the picker
+  /// orders by this, then by `name`, rather than relying on alphabetical
+  /// order alone. See migration 20260806000000_add_language_sort_order.
+  sortOrder  Int     @default(0)
 
-  users                User[]
-  professionalProfiles ProfessionalProfile[] @relation("ProfessionalLanguages")
+  users User[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1088,7 +1094,6 @@ model ProfessionalProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   categories ServiceCategory[] @relation("ProfessionalCategories")
-  languages  Language[]        @relation("ProfessionalLanguages")
 
   quotes                Quote[]
   appointments            Appointment[]

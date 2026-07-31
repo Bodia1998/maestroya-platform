@@ -1,4 +1,5 @@
 import type { CustomerProfileRecord, CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
+import type { CityGeocodeQuery, GeocodingProvider } from "@/domain/repositories/geocoding-provider";
 import type {
   CreateServiceRequestData,
   RequestPhotoRecord,
@@ -156,6 +157,24 @@ export class FakeServiceRequestRepository implements ServiceRequestRepository {
 
   async countPhotos(serviceRequestId: string): Promise<number> {
     return this.requests.get(serviceRequestId)?.photos.length ?? 0;
+  }
+}
+
+// Mirrors tests/integration/professional/onboarding-flows.test.ts's own
+// FakeGeocodingProvider exactly (same "point" field, same call-tracking
+// convention) — kept here as a shared fake rather than duplicated again,
+// since this module's use cases now depend on the same GeocodingProvider
+// seam. Defaults to Gandia's real centroid so `VALID_LOCATION` below (city:
+// "Gandia") resolves the same coordinate the real StaticCityGeocodingProvider
+// would return, without these tests depending on that lookup table's
+// contents.
+export class FakeGeocodingProvider implements GeocodingProvider {
+  calls: CityGeocodeQuery[] = [];
+  point: { latitude: number; longitude: number } | null = { latitude: 38.9665, longitude: -0.1817 };
+
+  async geocode(query: CityGeocodeQuery) {
+    this.calls.push(query);
+    return this.point;
   }
 }
 

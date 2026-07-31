@@ -9,6 +9,7 @@ import { RemoveServiceRequestPhotoUseCase } from "@/application/use-cases/servic
 import { UpdateServiceRequestUseCase } from "@/application/use-cases/service-request/update-service-request.use-case";
 import {
   FakeCustomerProfileRepository,
+  FakeGeocodingProvider,
   FakeRequestPhotoUploadService,
   FakeServiceCategoryRepository,
   FakeServiceRequestRepository,
@@ -29,6 +30,31 @@ function makeRepos() {
   return { categories, customerProfiles, serviceRequests, photoUploadService };
 }
 
+// Shared across every test below (not per-`makeRepos()` call) purely to
+// keep every existing `new CreateServiceRequestUseCase(serviceRequests,
+// customerProfiles, categories)` call site a one-line change to
+// `createServiceRequestUseCase(...)` with the exact same three positional
+// args — no test here asserts on FakeGeocodingProvider's own call log, so a
+// single shared instance is sufficient. Defaults to Gandia's real centroid,
+// matching `VALID_LOCATION`'s city (see fakes.ts).
+const sharedGeocoding = new FakeGeocodingProvider();
+
+function createServiceRequestUseCase(
+  serviceRequests: FakeServiceRequestRepository,
+  customerProfiles: FakeCustomerProfileRepository,
+  categories: FakeServiceCategoryRepository,
+) {
+  return new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories, sharedGeocoding);
+}
+
+function updateServiceRequestUseCase(
+  serviceRequests: FakeServiceRequestRepository,
+  customerProfiles: FakeCustomerProfileRepository,
+  categories: FakeServiceCategoryRepository,
+) {
+  return new UpdateServiceRequestUseCase(serviceRequests, customerProfiles, categories, sharedGeocoding);
+}
+
 function validInput(overrides: Partial<Parameters<CreateServiceRequestUseCase["execute"]>[1]> = {}) {
   return {
     categoryId: PLUMBING_ID,
@@ -43,7 +69,7 @@ describe("CreateServiceRequestUseCase", () => {
   it("creates a PUBLISHED request for the authenticated customer", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
 
-    const request = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const request = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -61,7 +87,7 @@ describe("CreateServiceRequestUseCase", () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
 
     expect(await customerProfiles.findByUserId("user-1")).toBeNull();
-    await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -72,7 +98,7 @@ describe("CreateServiceRequestUseCase", () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
 
     await expect(
-      new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+      createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
         "user-1",
         validInput({ categoryId: UNKNOWN_CATEGORY_ID }),
       ),
@@ -83,7 +109,7 @@ describe("CreateServiceRequestUseCase", () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
 
     await expect(
-      new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+      createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
         "user-1",
         validInput({ budgetMin: 200, budgetMax: 100 }),
       ),
@@ -93,7 +119,7 @@ describe("CreateServiceRequestUseCase", () => {
   it("never trusts a client-supplied customerId — ownership always comes from the userId argument", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
 
-    const request = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const request = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -103,11 +129,64 @@ describe("CreateServiceRequestUseCase", () => {
     // A second user's request is owned by their own (distinct) customer
     // profile, never user-1's, no matter what — there is no input field
     // through which a caller could redirect ownership elsewhere.
-    const request2 = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const request2 = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-2",
       validInput(),
     );
     expect(request2.customerId).not.toBe(customer1?.id);
+  });
+
+  // Regression test — real bug reported during manual MVP testing: a
+  // customer's request never showed up in a same-city, in-radius
+  // professional's Available Requests. Root cause: this use case only
+  // ever persisted a client-supplied latitude/longitude (which the request
+  // form exposes as unlabeled optional fields customers never fill in),
+  // so nearly every request was saved with null coordinates — and
+  // GetAvailableServiceRequestsForProfessionalUseCase's eligibility rule
+  // requires both sides to have coordinates. Fixed by geocoding the
+  // entered city (same GeocodingProvider seam CompleteProfessionalOnboardingUseCase
+  // already uses for a professional's own base location) whenever the
+  // client doesn't supply explicit coordinates.
+  it("geocodes the entered city into latitude/longitude when none is supplied (the actual bug fix)", async () => {
+    const { serviceRequests, customerProfiles, categories } = makeRepos();
+    sharedGeocoding.calls = [];
+
+    const request = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+      "user-1",
+      validInput(), // VALID_LOCATION has a city but no latitude/longitude
+    );
+
+    expect(sharedGeocoding.calls).toEqual([{ city: "Gandia", province: undefined, country: "ES" }]);
+    expect(request.location.latitude).toBe(sharedGeocoding.point?.latitude);
+    expect(request.location.longitude).toBe(sharedGeocoding.point?.longitude);
+  });
+
+  it("never overrides an explicit client-supplied latitude/longitude with a geocoded value", async () => {
+    const { serviceRequests, customerProfiles, categories } = makeRepos();
+
+    const request = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+      "user-1",
+      validInput({ location: { ...VALID_LOCATION, latitude: 1.23, longitude: 4.56 } }),
+    );
+
+    expect(request.location.latitude).toBe(1.23);
+    expect(request.location.longitude).toBe(4.56);
+  });
+
+  it("leaves coordinates null (never throws) when the city is unknown to the geocoding provider", async () => {
+    const { serviceRequests, customerProfiles, categories } = makeRepos();
+    sharedGeocoding.point = null;
+
+    const request = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+      "user-1",
+      validInput({ location: { ...VALID_LOCATION, city: "Nowhereville" } }),
+    );
+
+    expect(request.status).toBe("PUBLISHED");
+    expect(request.location.latitude).toBeNull();
+    expect(request.location.longitude).toBeNull();
+
+    sharedGeocoding.point = { latitude: 38.9665, longitude: -0.1817 };
   });
 });
 
@@ -135,7 +214,7 @@ describe("Server Action auth boundary (unauthenticated users)", () => {
 describe("GetServiceRequestUseCase", () => {
   it("returns the owning customer's own request", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -156,7 +235,7 @@ describe("GetServiceRequestUseCase", () => {
 
   it("never leaks another customer's request — non-owner gets the same not-found error", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -170,11 +249,11 @@ describe("GetServiceRequestUseCase", () => {
 describe("GetCustomerServiceRequestsUseCase", () => {
   it("lists only the authenticated customer's own requests", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
-    await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput({ title: "User one's request" }),
     );
-    await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-2",
       validInput({ title: "User two's request" }),
     );
@@ -199,12 +278,12 @@ describe("GetCustomerServiceRequestsUseCase", () => {
 describe("UpdateServiceRequestUseCase", () => {
   it("updates the owner's own PUBLISHED (open) request", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
 
-    const updated = await new UpdateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const updated = await updateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       created.id,
       { title: "Updated title", categoryId: ELECTRICAL_ID },
@@ -216,7 +295,7 @@ describe("UpdateServiceRequestUseCase", () => {
 
   it("rejects a non-owner updating another customer's request", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -226,7 +305,7 @@ describe("UpdateServiceRequestUseCase", () => {
     await customerProfiles.findOrCreateByUserId("user-2");
 
     await expect(
-      new UpdateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+      updateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
         "user-2",
         created.id,
         { title: "Hijacked title" },
@@ -239,14 +318,14 @@ describe("UpdateServiceRequestUseCase", () => {
 
   it("rejects editing a CANCELLED request", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
     await new CancelServiceRequestUseCase(serviceRequests, customerProfiles).execute("user-1", created.id);
 
     await expect(
-      new UpdateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+      updateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
         "user-1",
         created.id,
         { title: "Should not apply" },
@@ -256,13 +335,13 @@ describe("UpdateServiceRequestUseCase", () => {
 
   it("rejects an invalid category on update", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
 
     await expect(
-      new UpdateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+      updateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
         "user-1",
         created.id,
         { categoryId: UNKNOWN_CATEGORY_ID },
@@ -274,7 +353,7 @@ describe("UpdateServiceRequestUseCase", () => {
 describe("CancelServiceRequestUseCase", () => {
   it("cancels the owner's own PUBLISHED request", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -287,7 +366,7 @@ describe("CancelServiceRequestUseCase", () => {
 
   it("rejects cancelling an already-CANCELLED request", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -300,7 +379,7 @@ describe("CancelServiceRequestUseCase", () => {
 
   it("rejects a non-owner cancelling another customer's request", async () => {
     const { serviceRequests, customerProfiles, categories } = makeRepos();
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -334,7 +413,7 @@ describe("AddServiceRequestPhotoUseCase / RemoveServiceRequestPhotoUseCase", () 
   });
 
   it("adds a photo to the owner's own open request", async () => {
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -351,7 +430,7 @@ describe("AddServiceRequestPhotoUseCase / RemoveServiceRequestPhotoUseCase", () 
   });
 
   it("enforces the max photos per request limit", async () => {
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -367,7 +446,7 @@ describe("AddServiceRequestPhotoUseCase / RemoveServiceRequestPhotoUseCase", () 
   });
 
   it("rejects adding a photo to another customer's request", async () => {
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -384,7 +463,7 @@ describe("AddServiceRequestPhotoUseCase / RemoveServiceRequestPhotoUseCase", () 
   });
 
   it("rejects adding a photo to a CANCELLED request", async () => {
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -401,7 +480,7 @@ describe("AddServiceRequestPhotoUseCase / RemoveServiceRequestPhotoUseCase", () 
   });
 
   it("removes a photo from the owner's own open request", async () => {
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );
@@ -422,7 +501,7 @@ describe("AddServiceRequestPhotoUseCase / RemoveServiceRequestPhotoUseCase", () 
   });
 
   it("rejects removing a photo from another customer's request", async () => {
-    const created = await new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
+    const created = await createServiceRequestUseCase(serviceRequests, customerProfiles, categories).execute(
       "user-1",
       validInput(),
     );

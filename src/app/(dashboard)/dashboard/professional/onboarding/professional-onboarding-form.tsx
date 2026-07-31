@@ -31,8 +31,12 @@ interface CategoryOption {
  * session/JWT predates that, so — same mechanism
  * `ProfessionalProfileForm` already uses for first-time profile creation
  * — `update()` re-invokes the `jwt` callback to re-read both from the DB,
- * then a hard redirect lands directly on the Professional Dashboard
- * (never back on the Customer Dashboard, and never showing it first).
+ * then a redirect lands on `/dashboard` — same destination
+ * `resolvePostLoginDestination` sends an already-activated PROVIDER to on
+ * login (see that file's own doc comment for why: it's the overview that
+ * actually renders a "Professional overview" section, not the profile-
+ * editing settings page) — never back on the plain Customer Dashboard
+ * view, and never showing it first.
  */
 export function ProfessionalOnboardingForm({ categories }: { categories: CategoryOption[] }) {
   const { update } = useSession();
@@ -71,7 +75,7 @@ export function ProfessionalOnboardingForm({ categories }: { categories: Categor
     }
 
     await update();
-    router.push("/dashboard/professional");
+    router.push("/dashboard");
   }
 
   return (

@@ -30,7 +30,6 @@ export class CreateProfessionalUseCase {
       headline: input.headline || null,
       bio: input.bio || null,
       yearsExperience: input.yearsExperience ?? null,
-      hourlyRate: input.hourlyRate ?? null,
       serviceRadiusKm: input.serviceRadiusKm ?? null,
       contactEmail: input.contactEmail || null,
       contactPhone: input.contactPhone || null,

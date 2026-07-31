@@ -10,8 +10,35 @@ import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observabil
  * role-gated prefixes below (that's other modules' work), but the
  * gating logic itself is Authentication's responsibility and is ready
  * for when those routes exist.
+ *
+ * Root cause this list exists to fix: every page under the `(dashboard)`
+ * route group already calls `requireAuth()` (directly or via a Server
+ * Action) and throws `UnauthorizedError` for a signed-out visitor — but
+ * `(dashboard)` is a route group, so its URL surface is NOT `/dashboard/*`
+ * for most of these pages (Next.js route groups add no URL segment).
+ * `/requests`, `/appointments`, `/jobs`, `/messages`, `/disputes`,
+ * `/support-tickets`, and `/profile` are each their own top-level path.
+ * Previously only `/dashboard` itself was listed here, so an anonymous
+ * visitor hitting any of those other URLs directly (e.g. a "Request this
+ * service" link from a public professional profile — see
+ * (marketing)/professionals/[id]/page.tsx) never got the usual
+ * `/auth/login?callbackUrl=...` redirect; they hit `requireAuth()`'s thrown
+ * error with no route-level redirect boundary to catch it, i.e. a raw
+ * error page instead of a login prompt. Every prefix below corresponds to
+ * a real page.tsx under `(dashboard)` that already requires auth on its
+ * own — this only changes *how* that requirement is enforced (redirect vs.
+ * thrown error), never *whether* auth is required.
  */
-const PROTECTED_PREFIXES = ["/dashboard"];
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/requests",
+  "/appointments",
+  "/jobs",
+  "/messages",
+  "/disputes",
+  "/support-tickets",
+  "/profile",
+];
 const ROLE_GATED_PREFIXES: Array<{ prefix: string; roles: string[] }> = [
   { prefix: "/admin", roles: ["ADMIN", "SUPER_ADMIN"] },
 ];
@@ -59,15 +86,21 @@ function withRequestId(req: NextRequest, response: NextResponse): NextResponse {
 }
 
 export default auth((req) => {
-  const { pathname } = req.nextUrl;
+  const { pathname, search } = req.nextUrl;
   const isSignedIn = !!req.auth?.user;
   const roles = req.auth?.user?.roles ?? [];
+  // Preserves query params (e.g. `/requests/new?categoryId=...&city=...`,
+  // the "Request this service" prefill link from a public professional
+  // profile) across the login round trip — previously only `pathname` was
+  // carried into `callbackUrl`, so any such hint was silently dropped the
+  // moment an anonymous visitor had to log in first.
+  const pathWithQuery = `${pathname}${search}`;
 
   const roleGate = ROLE_GATED_PREFIXES.find((g) => pathname.startsWith(g.prefix));
   if (roleGate) {
     if (!isSignedIn) {
       const loginUrl = new URL("/auth/login", req.nextUrl.origin);
-      loginUrl.searchParams.set("callbackUrl", pathname);
+      loginUrl.searchParams.set("callbackUrl", pathWithQuery);
       return withRequestId(req, NextResponse.redirect(loginUrl));
     }
     if (!roleGate.roles.some((r) => roles.includes(r))) {
@@ -79,7 +112,7 @@ export default auth((req) => {
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
   if (isProtected && !isSignedIn) {
     const loginUrl = new URL("/auth/login", req.nextUrl.origin);
-    loginUrl.searchParams.set("callbackUrl", pathname);
+    loginUrl.searchParams.set("callbackUrl", pathWithQuery);
     return withRequestId(req, NextResponse.redirect(loginUrl));
   }
 

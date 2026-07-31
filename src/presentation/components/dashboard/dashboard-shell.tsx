@@ -49,6 +49,13 @@ export interface DashboardNavItem {
 
 export interface DashboardNavGroup {
   title?: string;
+  /**
+   * Which side of the marketplace this group belongs to. `undefined` means
+   * "always relevant regardless of context" (Admin, Profile). See
+   * `NavLinks`'s own doc comment for how this drives which groups actually
+   * render.
+   */
+  context?: "customer" | "professional";
   items: DashboardNavItem[];
 }
 
@@ -72,6 +79,91 @@ export interface DashboardShellProps {
 function isActive(pathname: string, href: string): boolean {
   if (href === "/dashboard") return pathname === "/dashboard";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+const PROFESSIONAL_CONTEXT_PREFIX = "/dashboard/professional";
+
+/**
+ * Routes that are unambiguously customer-side even for a dual-role
+ * account — mirrors BASE_NAV_GROUP's own hrefs (minus `/dashboard` itself,
+ * which is the shared overview and handled by the "default context" rule
+ * below, not this list). Visiting one of these while also a professional
+ * still shows the customer group (that page's content *is* customer
+ * content — e.g. "my own service requests"), plus a link back to the
+ * Professional side.
+ */
+const CUSTOMER_CONTEXT_PREFIXES = ["/requests", "/appointments", "/jobs", "/messages", "/disputes", "/support-tickets"];
+
+/**
+ * Root cause this fixes: the sidebar previously rendered *every* nav group
+ * a user was entitled to at once — for a dual-role account (the common
+ * case; see build-dashboard-nav-groups.ts's own doc comment on why every
+ * professional also has the customer group) that meant the full customer
+ * group (Service requests, Appointments, Jobs, Messages, Disputes,
+ * Support) and the full "Professional" group both rendered simultaneously,
+ * regardless of which one the current page actually belonged to — reported
+ * as "a confusing dual dashboard".
+ *
+ * Fix: derive which single context is "active" from the current pathname
+ * (already available here via `usePathname()` — no new plumbing needed)
+ * and show only that context's group, plus any context-less groups (Admin,
+ * Profile) which are always relevant. A single, explicitly-labeled link is
+ * added to cross into the other context when the account actually has
+ * access to it — never the other group's full link list — so the
+ * underlying dual-role capability is never hidden, only decluttered. This
+ * is presentation-only: every route this sidebar links to (or doesn't)
+ * still enforces its own authorization independently, exactly as
+ * documented on `DashboardShell` below — nothing about *what a user can
+ * reach by URL* changes here.
+ *
+ * Context precedence:
+ *   1. Anywhere under `/dashboard/professional` → always "professional".
+ *   2. An unambiguously customer-side route (`CUSTOMER_CONTEXT_PREFIXES`)
+ *      → always "customer".
+ *   3. Otherwise (the shared `/dashboard` overview, `/profile`, etc.) —
+ *      defaults to "professional" for a professional account, never
+ *      silently falling back to the customer group as the default view
+ *      (a PROVIDER account must never see the customer dashboard as its
+ *      *default* dashboard — see resolve-post-login-destination.ts, which
+ *      lands a professional on `/dashboard` after login specifically
+ *      because it already renders a "Professional overview" section for
+ *      PROVIDER accounts). Plain customer accounts are unaffected — with
+ *      no Professional group to default into, they still just get the
+ *      customer group everywhere.
+ */
+export function resolveVisibleNavGroups(navGroups: DashboardNavGroup[], pathname: string): DashboardNavGroup[] {
+  const hasCustomerGroup = navGroups.some((group) => group.context === "customer");
+  const hasProfessionalGroup = navGroups.some((group) => group.context === "professional");
+
+  const isExplicitCustomerRoute = CUSTOMER_CONTEXT_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+
+  const activeContext: "customer" | "professional" = pathname.startsWith(PROFESSIONAL_CONTEXT_PREFIX)
+    ? "professional"
+    : isExplicitCustomerRoute
+      ? "customer"
+      : hasProfessionalGroup
+        ? "professional"
+        : "customer";
+
+  const contextualGroups = navGroups.filter((group) => group.context === activeContext);
+  const sharedGroups = navGroups.filter((group) => !group.context);
+
+  // Targets are deliberately unambiguous routes on the *other* side (never
+  // `/dashboard` itself in either direction) — `/dashboard` is the shared
+  // overview page and, per the context precedence above, always resolves
+  // back to "professional" for a professional account, so a switch link
+  // that pointed there would silently fail to actually switch anything for
+  // that case.
+  const switchGroup: DashboardNavGroup | null =
+    activeContext === "customer" && hasProfessionalGroup
+      ? { items: [{ href: "/dashboard/professional", label: "Switch to Professional dashboard", icon: "professional" }] }
+      : activeContext === "professional" && hasCustomerGroup
+        ? { items: [{ href: "/requests", label: "Switch to Customer view", icon: "dashboard" }] }
+        : null;
+
+  return [...contextualGroups, ...(switchGroup ? [switchGroup] : []), ...sharedGroups];
 }
 
 function NavLinks({ navGroups, pathname, onNavigate }: { navGroups: DashboardNavGroup[]; pathname: string; onNavigate?: () => void }) {
@@ -120,6 +212,7 @@ function NavLinks({ navGroups, pathname, onNavigate }: { navGroups: DashboardNav
 export function DashboardShell({ navGroups, userEmail, banner, children }: DashboardShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const visibleNavGroups = resolveVisibleNavGroups(navGroups, pathname);
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -132,7 +225,7 @@ export function DashboardShell({ navGroups, userEmail, banner, children }: Dashb
           MaestroYa
         </Link>
         <div className="flex-1 overflow-y-auto">
-          <NavLinks navGroups={navGroups} pathname={pathname} />
+          <NavLinks navGroups={visibleNavGroups} pathname={pathname} />
         </div>
         <div className="border-t border-border pt-3">
           <form action={logoutAction}>
@@ -173,7 +266,7 @@ export function DashboardShell({ navGroups, userEmail, banner, children }: Dashb
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <NavLinks navGroups={navGroups} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+              <NavLinks navGroups={visibleNavGroups} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
             </div>
             <div className="border-t border-border pt-3">
               <form action={logoutAction}>

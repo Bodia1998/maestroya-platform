@@ -1,5 +1,6 @@
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
+import type { GeocodingProvider } from "@/domain/repositories/geocoding-provider";
 import type { ServiceRequestRecord, ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
 import type { ServiceCategoryRepository } from "@/domain/repositories/service-category-repository";
 import { isEditableStatus } from "@/domain/services/service-request-state";
@@ -18,12 +19,18 @@ import type { UpdateServiceRequestInput } from "@/application/dto/service-reques
  * (AddServiceRequestPhotoUseCase/RemoveServiceRequestPhotoUseCase) rather
  * than fields on this input — same separation as the Profile module keeping
  * avatar upload separate from UpdateProfileUseCase.
+ *
+ * Coordinates: same fix/rationale as CreateServiceRequestUseCase — an
+ * edited location re-geocodes the city when the client didn't supply
+ * explicit coordinates, so editing a request's city can't silently strand
+ * it with stale or missing coordinates either.
  */
 export class UpdateServiceRequestUseCase {
   constructor(
     private readonly serviceRequests: ServiceRequestRepository,
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly categories: ServiceCategoryRepository,
+    private readonly geocoding: GeocodingProvider,
   ) {}
 
   async execute(
@@ -60,6 +67,32 @@ export class UpdateServiceRequestUseCase {
       throw new ValidationError("Minimum budget must not exceed maximum budget.");
     }
 
+    let location = existing.location;
+    if (input.location) {
+      let latitude = input.location.latitude ?? null;
+      let longitude = input.location.longitude ?? null;
+      if (latitude === null || longitude === null) {
+        const point = await this.geocoding.geocode({
+          city: input.location.city,
+          province: input.location.province || undefined,
+          country: input.location.country || undefined,
+        });
+        latitude = latitude ?? point?.latitude ?? null;
+        longitude = longitude ?? point?.longitude ?? null;
+      }
+
+      location = {
+        line1: input.location.line1,
+        line2: input.location.line2 || null,
+        city: input.location.city,
+        province: input.location.province || null,
+        postalCode: input.location.postalCode,
+        country: input.location.country,
+        latitude,
+        longitude,
+      };
+    }
+
     return this.serviceRequests.update(existing.id, {
       categoryId,
       title: input.title ?? existing.title,
@@ -67,18 +100,7 @@ export class UpdateServiceRequestUseCase {
       urgency: input.urgency ?? existing.urgency,
       budgetMin,
       budgetMax,
-      location: input.location
-        ? {
-            line1: input.location.line1,
-            line2: input.location.line2 || null,
-            city: input.location.city,
-            province: input.location.province || null,
-            postalCode: input.location.postalCode,
-            country: input.location.country,
-            latitude: input.location.latitude ?? null,
-            longitude: input.location.longitude ?? null,
-          }
-        : existing.location,
+      location,
     });
   }
 }
