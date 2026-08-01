@@ -61,14 +61,15 @@ const BASE_NAV_GROUP: DashboardNavGroup = {
  * never reads as "create a request" — see the requests page itself for the
  * full wording rationale.
  *
- * Messages/Disputes/Support are *shared* modules (every use case behind
- * them scopes strictly to the authenticated session's own userId — see
- * messages/disputes/support-tickets pages' own doc comments — never by
- * role), so they're deliberately linked from both groups rather than
- * moved: a professional working in their own context still needs to reach
- * the exact same conversations/tickets a customer-context link would open,
- * just without leaving the professional-labeled part of the sidebar to do
- * it.
+ * "Professional profile" is deliberately NOT an item in this list — it
+ * lives solely in the context-less `PROFILE_NAV_GROUP` below, which
+ * `resolveVisibleNavGroups` (dashboard-shell.tsx) already relabels to
+ * "Professional Profile" -> `/dashboard/professional` while the
+ * Professional context is active. Having it in both places rendered two
+ * "Professional Profile" links in the sidebar simultaneously — see that
+ * file's own doc comment for the fix. Companies stays here, directly after
+ * "My jobs", as part of the main professional workspace group (not a
+ * bottom-of-sidebar afterthought).
  */
 const PROFESSIONAL_NAV_GROUP: DashboardNavGroup = {
   title: "Professional",
@@ -79,11 +80,35 @@ const PROFESSIONAL_NAV_GROUP: DashboardNavGroup = {
     { href: "/dashboard/professional/quotes", label: "My quotes", icon: "quotes" },
     { href: "/dashboard/professional/appointments", label: "My appointments", icon: "appointments" },
     { href: "/dashboard/professional/jobs", label: "My jobs", icon: "jobs" },
+    { href: "/dashboard/company", label: "Companies", icon: "companies" },
+  ],
+};
+
+/**
+ * Messages/Disputes/Support — a *shared* communication group (every use
+ * case behind them scopes strictly to the authenticated session's own
+ * userId, never by role — see messages/disputes/support-tickets pages'
+ * own doc comments), deliberately linked from both the customer and
+ * Professional contexts rather than moved: a professional working in
+ * their own context still needs to reach the exact same
+ * conversations/tickets a customer-context link would open, just without
+ * leaving the professional-labeled part of the sidebar to do it.
+ *
+ * Kept as its own untitled group (rather than folded into
+ * `PROFESSIONAL_NAV_GROUP` above) purely for sidebar layout: `NavLinks`
+ * (dashboard-shell.tsx) renders every group in its own block with visual
+ * spacing between blocks, so a separate group here is what gives this
+ * communication cluster a small gap above it, setting it apart from the
+ * main "Professional dashboard / Available requests / ... / Companies"
+ * workspace items — same `context: "professional"` as that group, so it
+ * still only ever renders while the Professional context is active.
+ */
+const PROFESSIONAL_COMMUNICATION_NAV_GROUP: DashboardNavGroup = {
+  context: "professional",
+  items: [
     { href: "/messages", label: "Messages", icon: "messages" },
     { href: "/disputes", label: "Disputes", icon: "disputes" },
     { href: "/support-tickets", label: "Support", icon: "support" },
-    { href: "/dashboard/professional", label: "Professional profile", icon: "professional" },
-    { href: "/dashboard/company", label: "Companies", icon: "companies" },
   ],
 };
 
@@ -108,7 +133,7 @@ export function buildDashboardNavGroups({
   const groups: DashboardNavGroup[] = [BASE_NAV_GROUP];
 
   if (isProfessional) {
-    groups.push(PROFESSIONAL_NAV_GROUP);
+    groups.push(PROFESSIONAL_NAV_GROUP, PROFESSIONAL_COMMUNICATION_NAV_GROUP);
   }
 
   if (isAdmin) {

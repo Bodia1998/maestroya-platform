@@ -91,8 +91,22 @@ const PROFESSIONAL_CONTEXT_PREFIX = "/dashboard/professional";
  * still shows the customer group (that page's content *is* customer
  * content — e.g. "my own service requests"), plus a link back to the
  * Professional side.
+ *
+ * Deliberately excludes `/messages`, `/disputes`, and `/support-tickets` —
+ * those three are *shared* modules with no customer-only content of their
+ * own (every use case behind them scopes strictly to the session's own
+ * userId, never by role — see build-dashboard-nav-groups.ts's own doc
+ * comment). Root cause this exclusion fixes: with those three routes in
+ * this list, a professional who opened Messages/Disputes/Support from the
+ * Professional group had their *entire sidebar* silently flip back to the
+ * customer group on that page — reported as "Messages/Support/Disputes
+ * switch the nav back to the customer dashboard". Falling through to the
+ * "otherwise" rule below instead means those three routes now resolve to
+ * whichever context is the account's actual default (professional for any
+ * PROVIDER account, exactly like the shared `/dashboard` overview) — never
+ * a silent switch away from Professional.
  */
-const CUSTOMER_CONTEXT_PREFIXES = ["/requests", "/appointments", "/jobs", "/messages", "/disputes", "/support-tickets"];
+const CUSTOMER_CONTEXT_PREFIXES = ["/requests", "/appointments", "/jobs"];
 
 /**
  * Root cause this fixes: the sidebar previously rendered *every* nav group
@@ -120,19 +134,25 @@ const CUSTOMER_CONTEXT_PREFIXES = ["/requests", "/appointments", "/jobs", "/mess
  *   1. Anywhere under `/dashboard/professional` → always "professional".
  *   2. An unambiguously customer-side route (`CUSTOMER_CONTEXT_PREFIXES`)
  *      → always "customer".
- *   3. Otherwise (the shared `/dashboard` overview, `/profile`, etc.) —
- *      defaults to "professional" for a professional account, never
- *      silently falling back to the customer group as the default view
- *      (a PROVIDER account must never see the customer dashboard as its
- *      *default* dashboard — see resolve-post-login-destination.ts, which
- *      lands a professional on `/dashboard` after login specifically
- *      because it already renders a "Professional overview" section for
- *      PROVIDER accounts). Plain customer accounts are unaffected — with
- *      no Professional group to default into, they still just get the
- *      customer group everywhere.
+ *   3. Otherwise (the shared `/dashboard` overview, `/profile`, the shared
+ *      Messages/Disputes/Support modules, etc.) — defaults to
+ *      "professional" for a professional account, never silently falling
+ *      back to the customer group as the default view (a PROVIDER account
+ *      must never see the customer dashboard as its *default* dashboard —
+ *      see resolve-post-login-destination.ts, which lands a professional
+ *      on `/dashboard` after login specifically because it already renders
+ *      a "Professional overview" section for PROVIDER accounts). Plain
+ *      customer accounts are unaffected — with no Professional group to
+ *      default into, they still just get the customer group everywhere.
+ *
+ * Note this means Messages/Disputes/Support always render inside the
+ * Professional context for a PROVIDER account, on every visit, regardless
+ * of which link was clicked to get there — there is deliberately no
+ * "remember where I came from" state. That is exactly the product
+ * requirement: a professional must never see their navigation flip to the
+ * customer dashboard while working a shared module.
  */
 export function resolveVisibleNavGroups(navGroups: DashboardNavGroup[], pathname: string): DashboardNavGroup[] {
-  const hasCustomerGroup = navGroups.some((group) => group.context === "customer");
   const hasProfessionalGroup = navGroups.some((group) => group.context === "professional");
 
   const isExplicitCustomerRoute = CUSTOMER_CONTEXT_PREFIXES.some(
@@ -148,20 +168,37 @@ export function resolveVisibleNavGroups(navGroups: DashboardNavGroup[], pathname
         : "customer";
 
   const contextualGroups = navGroups.filter((group) => group.context === activeContext);
-  const sharedGroups = navGroups.filter((group) => !group.context);
 
-  // Targets are deliberately unambiguous routes on the *other* side (never
-  // `/dashboard` itself in either direction) — `/dashboard` is the shared
-  // overview page and, per the context precedence above, always resolves
-  // back to "professional" for a professional account, so a switch link
-  // that pointed there would silently fail to actually switch anything for
-  // that case.
+  // The context-less "Profile" item (bottom of the sidebar, always visible
+  // regardless of context) must never open the *customer* profile page
+  // while the Professional workspace is active — that was reported as "the
+  // Profile button opens the CUSTOMER profile". Swapped for the same
+  // "Professional profile" destination the Professional group itself
+  // already links to (see PROFESSIONAL_NAV_GROUP in
+  // build-dashboard-nav-groups.ts) whenever `activeContext` is
+  // "professional"; left completely unchanged for the customer context.
+  const sharedGroups = navGroups
+    .filter((group) => !group.context)
+    .map((group) => ({
+      ...group,
+      items: group.items.map((item) =>
+        activeContext === "professional" && item.href === "/profile"
+          ? { href: "/dashboard/professional", label: "Professional Profile", icon: "professional" as const }
+          : item,
+      ),
+    }));
+
+  // Only ever offers a way *into* the Professional side from the customer
+  // context — never the reverse. The professional dashboard must contain
+  // only professional functionality (no "Switch to Customer view" or any
+  // other customer-only navigation), so no link back to the customer
+  // context is ever added here, regardless of whether the account also
+  // has a customer group. `hasCustomerGroup` is intentionally unused for
+  // that direction.
   const switchGroup: DashboardNavGroup | null =
     activeContext === "customer" && hasProfessionalGroup
       ? { items: [{ href: "/dashboard/professional", label: "Switch to Professional dashboard", icon: "professional" }] }
-      : activeContext === "professional" && hasCustomerGroup
-        ? { items: [{ href: "/requests", label: "Switch to Customer view", icon: "dashboard" }] }
-        : null;
+      : null;
 
   return [...contextualGroups, ...(switchGroup ? [switchGroup] : []), ...sharedGroups];
 }
