@@ -36,17 +36,34 @@ const INACTIVE_REQUEST_STATUSES = new Set(["COMPLETED", "CANCELLED", "EXPIRED"])
  * every other page under (dashboard) already does. Anything a module
  * hasn't implemented yet (e.g. a "reviews I've written" list) is simply
  * left off this page rather than faked.
+ *
+ * Role isolation: for a PROVIDER account, `/dashboard` is the *Professional*
+ * workspace's own overview (see resolve-post-login-destination.ts and
+ * dashboard-shell.tsx's `resolveVisibleNavGroups`, which already resolve
+ * this exact route to the Professional sidebar context for such accounts).
+ * The customer-side stat row and "Your requests"/"Upcoming appointments"
+ * cards below are therefore only ever rendered for a non-professional
+ * account — a dual-role account still has full customer functionality, but
+ * reaches it through the customer-context pages (`/requests`,
+ * `/appointments`, ...), never through the Professional workspace's own
+ * overview. Customer-only reads (requests/appointments/jobs) are skipped
+ * entirely for a professional account rather than fetched and discarded —
+ * `conversations` is the one exception, since Messages is a shared module
+ * relevant to both contexts (see build-dashboard-nav-groups.ts).
  */
 export default async function DashboardPage() {
   const user = await requireAuth();
   const isProfessional = user.roles.includes(ROLES.PROVIDER);
 
-  const [requests, appointments, jobs, conversations] = await Promise.all([
-    makeGetCustomerServiceRequestsUseCase().execute(user.id),
-    makeListAppointmentsForCustomerUseCase().execute(user.id, "upcoming"),
-    makeListJobsForCustomerUseCase().execute(user.id, "active"),
-    makeListConversationsUseCase().execute(user.id),
-  ]);
+  const conversations = await makeListConversationsUseCase().execute(user.id);
+
+  const [requests, appointments, jobs] = isProfessional
+    ? [[], [], []]
+    : await Promise.all([
+        makeGetCustomerServiceRequestsUseCase().execute(user.id),
+        makeListAppointmentsForCustomerUseCase().execute(user.id, "upcoming"),
+        makeListJobsForCustomerUseCase().execute(user.id, "active"),
+      ]);
 
   // Professional-side data only fetched for PROVIDER accounts — a
   // customer-only account has no ProfessionalProfile, and every use case
@@ -130,91 +147,107 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div>
-        {isProfessional && <h2 className="mb-4 text-lg font-medium">Your customer account</h2>}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <DashboardStatCard icon={FileText} label="Active requests" value={activeRequestCount} href="/requests" />
-          <DashboardStatCard
-            icon={CalendarDays}
-            label="Upcoming appointments"
-            value={appointments.length}
-            href="/appointments"
-          />
-          <DashboardStatCard icon={Briefcase} label="Active jobs" value={jobs.length} href="/jobs" />
-          <DashboardStatCard icon={MessageSquare} label="Unread messages" value={unreadMessages} href="/messages" />
-        </div>
-      </div>
+      {/* Customer-side overview — never rendered for a professional account.
+          The Professional workspace (this same /dashboard route for a
+          PROVIDER account) must show only Professional UI; a dual-role
+          account still reaches its full customer functionality through the
+          customer-context pages (/requests, /appointments, ...), just not
+          from this overview. See the doc comment on DashboardPage above. */}
+      {!isProfessional && (
+        <>
+          <div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <DashboardStatCard icon={FileText} label="Active requests" value={activeRequestCount} href="/requests" />
+              <DashboardStatCard
+                icon={CalendarDays}
+                label="Upcoming appointments"
+                value={appointments.length}
+                href="/appointments"
+              />
+              <DashboardStatCard icon={Briefcase} label="Active jobs" value={jobs.length} href="/jobs" />
+              <DashboardStatCard
+                icon={MessageSquare}
+                label="Unread messages"
+                value={unreadMessages}
+                href="/messages"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <CardTitle>Your requests</CardTitle>
+                <Link href="/requests" className="text-sm font-medium text-primary hover:underline">
+                  View all
+                </Link>
+              </CardHeader>
+              <CardContent>
+                {requests.length === 0 ? (
+                  <EmptyState
+                    icon={FileText}
+                    title="No service requests yet."
+                    description="Post a request to start getting quotes from professionals near you."
+                    action={
+                      <ButtonLink href="/requests/new" size="sm">
+                        New request
+                      </ButtonLink>
+                    }
+                  />
+                ) : (
+                  <ul className="flex flex-col gap-3">
+                    {requests.slice(0, 4).map((request) => (
+                      <li key={request.id}>
+                        <Link
+                          href={`/requests/${request.id}`}
+                          className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm transition-colors hover:bg-muted"
+                        >
+                          <span className="min-w-0 truncate font-medium">{request.title}</span>
+                          <RequestStatusBadge status={request.status} />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <CardTitle>Upcoming appointments</CardTitle>
+                <Link href="/appointments" className="text-sm font-medium text-primary hover:underline">
+                  View all
+                </Link>
+              </CardHeader>
+              <CardContent>
+                {appointments.length === 0 ? (
+                  <EmptyState
+                    icon={CalendarDays}
+                    title="No upcoming appointments."
+                    description="Appointments appear here once you accept a quote from a professional."
+                  />
+                ) : (
+                  <ul className="flex flex-col gap-3">
+                    {appointments.slice(0, 4).map((appointment) => (
+                      <li key={appointment.id}>
+                        <Link
+                          href={`/appointments/${appointment.id}`}
+                          className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm transition-colors hover:bg-muted"
+                        >
+                          <span className="min-w-0 truncate font-medium">{appointment.serviceRequestTitle}</span>
+                          <AppointmentStatusBadge status={appointment.status} />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <CardTitle>Your requests</CardTitle>
-            <Link href="/requests" className="text-sm font-medium text-primary hover:underline">
-              View all
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {requests.length === 0 ? (
-              <EmptyState
-                icon={FileText}
-                title="No service requests yet."
-                description="Post a request to start getting quotes from professionals near you."
-                action={
-                  <ButtonLink href="/requests/new" size="sm">
-                    New request
-                  </ButtonLink>
-                }
-              />
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {requests.slice(0, 4).map((request) => (
-                  <li key={request.id}>
-                    <Link
-                      href={`/requests/${request.id}`}
-                      className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm transition-colors hover:bg-muted"
-                    >
-                      <span className="min-w-0 truncate font-medium">{request.title}</span>
-                      <RequestStatusBadge status={request.status} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <CardTitle>Upcoming appointments</CardTitle>
-            <Link href="/appointments" className="text-sm font-medium text-primary hover:underline">
-              View all
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {appointments.length === 0 ? (
-              <EmptyState
-                icon={CalendarDays}
-                title="No upcoming appointments."
-                description="Appointments appear here once you accept a quote from a professional."
-              />
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {appointments.slice(0, 4).map((appointment) => (
-                  <li key={appointment.id}>
-                    <Link
-                      href={`/appointments/${appointment.id}`}
-                      className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm transition-colors hover:bg-muted"
-                    >
-                      <span className="min-w-0 truncate font-medium">{appointment.serviceRequestTitle}</span>
-                      <AppointmentStatusBadge status={appointment.status} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle>Messages</CardTitle>
