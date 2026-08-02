@@ -1,5 +1,6 @@
 import type { CityGeocodeQuery, GeocodingProvider } from "@/domain/repositories/geocoding-provider";
 import type { GeoPoint } from "@/domain/services/geo-distance";
+import { normalizeLocationText } from "@/infrastructure/geocoding/normalize-location-text";
 
 /**
  * Maps & Geolocation module (Module 20) — default `GeocodingProvider`
@@ -74,22 +75,18 @@ const CITY_TABLE: CityEntry[] = [
   { city: "Lleida", province: "Lleida", point: { latitude: 41.6176, longitude: 0.62 } },
 ];
 
-const COMBINING_DIACRITICS_PATTERN = /[\u0300-\u036f]/g;
-
-function normalize(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(COMBINING_DIACRITICS_PATTERN, ""); // strip combining diacritics (a/e/i/o/u/n, etc.)
-}
+// Module 27 hardening: this table lookup now shares its normalization —
+// trim, collapse whitespace, lowercase, strip diacritics — with
+// normalizeLocationText, the exact same function CachedGeocodingProvider
+// uses for its cache keys, so a city name normalizes identically
+// everywhere it is compared in this codebase, not just here.
 
 export class StaticCityGeocodingProvider implements GeocodingProvider {
   async geocode(query: CityGeocodeQuery): Promise<GeoPoint | null> {
-    const normalizedCity = normalize(query.city);
-    const normalizedProvince = query.province ? normalize(query.province) : undefined;
+    const normalizedCity = normalizeLocationText(query.city);
+    const normalizedProvince = query.province ? normalizeLocationText(query.province) : undefined;
 
-    const cityMatches = CITY_TABLE.filter((entry) => normalize(entry.city) === normalizedCity);
+    const cityMatches = CITY_TABLE.filter((entry) => normalizeLocationText(entry.city) === normalizedCity);
     const first = cityMatches[0];
     if (!first) return null;
     if (cityMatches.length === 1) return first.point;
@@ -99,7 +96,7 @@ export class StaticCityGeocodingProvider implements GeocodingProvider {
     // province when given, otherwise return the first deterministic match
     // rather than throwing.
     const disambiguated = normalizedProvince
-      ? cityMatches.find((entry) => normalize(entry.province) === normalizedProvince)
+      ? cityMatches.find((entry) => normalizeLocationText(entry.province) === normalizedProvince)
       : undefined;
     return (disambiguated ?? first).point;
   }

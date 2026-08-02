@@ -120,6 +120,34 @@ const envSchema = z
     // docs/MODULE_25_PRODUCTION_INFRASTRUCTURE.md, "Distributed rate
     // limiting".
     REDIS_URL: z.string().url().optional(),
+
+    // --- Geocoding provider (Module 27 — Spain Location Services) ---
+    // Selects which `GeocodingProvider` implementation
+    // `createGeocodingProvider()` (infrastructure/geocoding/geocoding-provider-factory.ts)
+    // constructs. Defaults to `STATIC` — the network-free
+    // `StaticCityGeocodingProvider` — via `.catch()`, not just
+    // `.default()`: `.catch()` also swallows an *invalid* value (a typo, a
+    // stray value left over from another environment) and falls back to
+    // `STATIC` instead of throwing and failing the entire app's startup
+    // over a misconfigured, non-critical setting. This is the hard
+    // guarantee behind "the application must never accidentally call a
+    // real external API" — no outbound geocoding HTTP request can ever
+    // happen unless `GEOCODING_PROVIDER` is deliberately, validly set to
+    // `MAPBOX`/`GOOGLE`/`HERE`/`OSM` *and* (for the first three) the
+    // matching API key is non-empty; every other case — unset, empty,
+    // misspelled, or a real provider without its key — resolves to
+    // `STATIC` at either this layer or the factory's own fallback (see
+    // `geocoding-provider-factory.ts`), never a startup crash and never a
+    // silent real network call.
+    GEOCODING_PROVIDER: z.enum(["STATIC", "MAPBOX", "GOOGLE", "HERE", "OSM"]).catch("STATIC"),
+    // API keys for the providers above. Deliberately optional and allowed
+    // to be empty in every environment (including production) — there is
+    // no production key yet, and requiring one here would make the app
+    // fail to start over a provider that isn't even selected. OSM
+    // (Nominatim) needs no key at all.
+    MAPBOX_API_KEY: z.string().optional(),
+    GOOGLE_GEOCODING_API_KEY: z.string().optional(),
+    HERE_API_KEY: z.string().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV !== "production") return;

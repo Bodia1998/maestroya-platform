@@ -42,6 +42,35 @@ describe("infrastructure/config/env", () => {
     expect(env.NODE_ENV).toBe("test");
   });
 
+  describe("GEOCODING_PROVIDER (Module 27 — Spain Location Services)", () => {
+    it("defaults to STATIC when unset — the app must never accidentally call a real geocoding API", async () => {
+      const { env } = await loadEnvWith({ GEOCODING_PROVIDER: undefined });
+      expect(env.GEOCODING_PROVIDER).toBe("STATIC");
+    });
+
+    it("falls back to STATIC (never fails startup) for an invalid/unknown value", async () => {
+      const { env } = await loadEnvWith({ GEOCODING_PROVIDER: "NOT_A_REAL_PROVIDER" });
+      expect(env.GEOCODING_PROVIDER).toBe("STATIC");
+    });
+
+    it("falls back to STATIC for an empty string", async () => {
+      const { env } = await loadEnvWith({ GEOCODING_PROVIDER: "" });
+      expect(env.GEOCODING_PROVIDER).toBe("STATIC");
+    });
+
+    it("accepts every valid provider value unchanged", async () => {
+      for (const value of ["STATIC", "MAPBOX", "GOOGLE", "HERE", "OSM"]) {
+        const { env } = await loadEnvWith({ GEOCODING_PROVIDER: value });
+        expect(env.GEOCODING_PROVIDER).toBe(value);
+      }
+    });
+
+    it("is case-sensitive — a lowercase value is invalid and falls back to STATIC", async () => {
+      const { env } = await loadEnvWith({ GEOCODING_PROVIDER: "mapbox" });
+      expect(env.GEOCODING_PROVIDER).toBe("STATIC");
+    });
+  });
+
   describe("production hardening", () => {
     it("rejects an AUTH_SECRET shorter than 32 characters", async () => {
       await expect(

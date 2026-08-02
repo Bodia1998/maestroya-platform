@@ -1,15 +1,22 @@
-import { StaticCityGeocodingProvider } from "@/infrastructure/geocoding/static-city-geocoding-provider";
+import { createGeocodingProvider } from "@/infrastructure/geocoding/geocoding-provider-factory";
 import { GeocodeCityUseCase } from "@/application/use-cases/geolocation/geocode-city.use-case";
 
 /**
- * Maps & Geolocation module (Module 20) — composition root.
+ * Maps & Geolocation module (Module 20) — composition root, extended by
+ * Module 27 (Spain Location Services).
  *
- * Wires the default, network-free `StaticCityGeocodingProvider` behind the
- * `GeocodingProvider` interface. Swapping in a real provider later (a real
- * maps/geocoding API) means changing this one file — no use case or caller
- * changes.
+ * Wires whichever `GeocodingProvider` `createGeocodingProvider()` resolves
+ * from configuration (`GEOCODING_PROVIDER` + the matching `*_API_KEY`;
+ * defaults to the network-free `StaticCityGeocodingProvider` when unset)
+ * behind the `GeocodingProvider` interface. This is the single shared
+ * instance every composition root in the app uses — see
+ * `professional/compose.ts` and `service-request/compose.ts`, which import
+ * `geocodingProvider` from here rather than constructing their own, so
+ * there is exactly one cache (`CachedGeocodingProvider`) for the whole
+ * process. Swapping in a real provider later means an environment
+ * variable change — no use case, caller, or compose-file change.
  */
-export const geocodingProvider = new StaticCityGeocodingProvider();
+export const geocodingProvider = createGeocodingProvider();
 
 export function makeGeocodeCityUseCase() {
   return new GeocodeCityUseCase(geocodingProvider);
