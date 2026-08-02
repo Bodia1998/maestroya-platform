@@ -1,7 +1,6 @@
 import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prisma/repositories/prisma-customer-profile-repository";
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
-import { StaticCityGeocodingProvider } from "@/infrastructure/geocoding/static-city-geocoding-provider";
 import { CloudinaryRequestPhotoUploadService } from "@/infrastructure/storage/cloudinary/request-photo-upload-service";
 import { AddServiceRequestPhotoUseCase } from "@/application/use-cases/service-request/add-service-request-photo.use-case";
 import { CancelServiceRequestUseCase } from "@/application/use-cases/service-request/cancel-service-request.use-case";
@@ -10,6 +9,7 @@ import { GetCustomerServiceRequestsUseCase } from "@/application/use-cases/servi
 import { GetServiceRequestUseCase } from "@/application/use-cases/service-request/get-service-request.use-case";
 import { RemoveServiceRequestPhotoUseCase } from "@/application/use-cases/service-request/remove-service-request-photo.use-case";
 import { UpdateServiceRequestUseCase } from "@/application/use-cases/service-request/update-service-request.use-case";
+import { geocodingProvider } from "@/application/use-cases/geolocation/compose";
 
 const serviceRequests = new PrismaServiceRequestRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
@@ -18,8 +18,9 @@ const photoUploadService = new CloudinaryRequestPhotoUploadService();
 // Same GeocodingProvider seam/implementation CompleteProfessionalOnboardingUseCase
 // already uses for the professional's own base location — see
 // CreateServiceRequestUseCase's doc comment for why a ServiceRequest needs
-// this too.
-const geocoding = new StaticCityGeocodingProvider();
+// this too. Module 27 — Spain Location Services: shared, factory-resolved
+// instance — see geolocation/compose.ts.
+const geocoding = geocodingProvider;
 
 export function makeCreateServiceRequestUseCase() {
   return new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories, geocoding);
