@@ -288,6 +288,16 @@ export class FakeUserRepository implements UserRepository {
     return null;
   }
   async clearSignupIntent() {}
+  // Module 29 — Internationalization. Unused by the company flows this
+  // fake serves, but part of the interface, so the fake implements it
+  // faithfully rather than throwing.
+  preferredLocaleByUserId = new Map<string, string | null>();
+  async getPreferredLocale(userId: string) {
+    return this.preferredLocaleByUserId.get(userId) ?? null;
+  }
+  async updatePreferredLocale(userId: string, locale: string | null) {
+    this.preferredLocaleByUserId.set(userId, locale);
+  }
 }
 
 export class FakeServiceCategoryRepository implements ServiceCategoryRepository {
