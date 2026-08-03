@@ -89,11 +89,7 @@ describe("resolvePostLoginDestination", () => {
     it("sends an already-PROVIDER account straight to the Professional Dashboard, same as an ordinary login", () => {
       const destination = resolvePostLoginDestination(
         { roles: ["CUSTOMER", "PROVIDER"], signupIntent: null },
-        {
-          explicitCallbackUrl: null,
-          defaultDestination: "/dashboard",
-          loginIntent: "professional",
-        },
+        { explicitCallbackUrl: null, defaultDestination: "/dashboard", loginIntent: "professional" },
       );
 
       expect(destination).toBe("/dashboard");
@@ -102,11 +98,7 @@ describe("resolvePostLoginDestination", () => {
     it("sends a PROFESSIONAL-intent account without PROVIDER to onboarding, same as an ordinary login", () => {
       const destination = resolvePostLoginDestination(
         { roles: ["CUSTOMER"], signupIntent: "PROFESSIONAL" },
-        {
-          explicitCallbackUrl: null,
-          defaultDestination: "/dashboard",
-          loginIntent: "professional",
-        },
+        { explicitCallbackUrl: null, defaultDestination: "/dashboard", loginIntent: "professional" },
       );
 
       expect(destination).toBe("/dashboard/professional/onboarding");
