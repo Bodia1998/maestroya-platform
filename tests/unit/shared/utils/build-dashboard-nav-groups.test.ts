@@ -51,7 +51,9 @@ describe("buildDashboardNavGroups", () => {
     // "Professional profile" must never appear here — it lives solely in
     // the context-less Profile group (see dashboard-shell-context.test.ts),
     // otherwise the sidebar renders two Professional Profile links.
-    expect(professionalGroup?.items.some((item) => item.href === "/dashboard/professional")).toBe(false);
+    expect(professionalGroup?.items.some((item) => item.href === "/dashboard/professional")).toBe(
+      false,
+    );
   });
 
   it("adds a separate, untitled communication group (Messages/Disputes/Support) immediately after the Professional group, for visual spacing", () => {
@@ -61,7 +63,11 @@ describe("buildDashboardNavGroups", () => {
 
     expect(communicationGroup?.title).toBeUndefined();
     expect(communicationGroup?.context).toBe("professional");
-    expect(communicationGroup?.items.map((item) => item.href)).toEqual(["/messages", "/disputes", "/support-tickets"]);
+    expect(communicationGroup?.items.map((item) => item.href)).toEqual([
+      "/messages",
+      "/disputes",
+      "/support-tickets",
+    ]);
   });
 
   it("tags the base group 'customer' and both Professional groups 'professional', so DashboardShell can filter by active context", () => {
@@ -78,7 +84,9 @@ describe("buildDashboardNavGroups", () => {
     const groups = buildDashboardNavGroups({ isProfessional: false, isAdmin: false });
 
     expect(groups.some((group) => group.title === "Professional")).toBe(false);
-    expect(groups.some((group) => group.items.some((item) => item.href === "/dashboard/professional"))).toBe(false);
+    expect(
+      groups.some((group) => group.items.some((item) => item.href === "/dashboard/professional")),
+    ).toBe(false);
   });
 
   it("adds the 'Admin' group only for admins, independent of professional status", () => {

@@ -86,7 +86,7 @@ export function translateValidationMessage(
 }
 
 /** Map a Zod issue onto a `validation` namespace key plus its ICU values. */
-function mapIssue(issue: z.ZodIssueOptionalMessage): {
+export function mapIssue(issue: z.ZodIssueOptionalMessage): {
   key: ValidationKey;
   values: Record<string, string | number>;
 } {
@@ -138,10 +138,16 @@ function mapIssue(issue: z.ZodIssueOptionalMessage): {
  */
 export function createTranslatedErrorMap(t: Translator): z.ZodErrorMap {
   return (issue, ctx) => {
-    if (issue.message) {
-      return { message: translateValidationMessage(t, issue.message) };
-    }
     const { key, values } = mapIssue(issue);
+
+    if (issue.message) {
+      // A schema-authored *key* is rendered with the values derived from
+      // the issue itself, so `minLength` still gets its `{min}` — the
+      // schema said "which message", the issue says "with what numbers".
+      // Schema-authored prose is returned verbatim.
+      return { message: translateValidationMessage(t, issue.message, values) };
+    }
+
     const translated = t(key, values);
     // `t()` returns the qualified key itself when a message is missing;
     // never surface that to a user — fall back to Zod's own default.
@@ -178,7 +184,14 @@ export function toTranslatedFieldErrors(
   const fieldErrors: Record<string, string[]> = {};
   for (const issue of error.issues) {
     const path = issue.path.join(".") || "_form";
-    const message = translateValidationMessage(t, issue.message);
+    // The ICU values are re-derived from the issue rather than taken from
+    // the error map, because Zod short-circuits the error map entirely
+    // when a schema supplied its own message — which is exactly the
+    // pattern-1 case (`z.string().min(2, VALIDATION_KEYS.minLength)`),
+    // where the key arrives here with no values attached. Deriving them
+    // here means both patterns produce "at least 2 characters" and never
+    // a raw "# characters".
+    const message = translateValidationMessage(t, issue.message, mapIssue(issue).values);
     const existing = fieldErrors[path];
     if (existing) existing.push(message);
     else fieldErrors[path] = [message];
