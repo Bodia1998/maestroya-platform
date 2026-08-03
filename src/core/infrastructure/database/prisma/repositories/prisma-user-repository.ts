@@ -177,4 +177,23 @@ export class PrismaUserRepository implements UserRepository {
       data: { deletedAt: new Date(), status: "DEACTIVATED" },
     });
   }
+
+  // --- Internationalization additions (Module 29) ---
+
+  async getPreferredLocale(userId: string): Promise<string | null> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { preferredLocale: true },
+    });
+    // A deleted/unknown user and a user who never chose a language are
+    // both "no stored preference" as far as locale resolution goes — the
+    // caller falls through to Accept-Language either way, so this does
+    // not need to distinguish them (and must not throw: rendering a page
+    // in Spanish is always preferable to failing to render it).
+    return user?.preferredLocale ?? null;
+  }
+
+  async updatePreferredLocale(userId: string, locale: string | null): Promise<void> {
+    await prisma.user.update({ where: { id: userId }, data: { preferredLocale: locale } });
+  }
 }
