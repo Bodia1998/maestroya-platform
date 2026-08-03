@@ -1,0 +1,17 @@
+{
+  "title": "Setări",
+  "subtitle": "Personalizează modul în care funcționează MaestroYa.",
+  "language": {
+    "title": "Limba interfeței",
+    "description": "Alege limba în care vrei să vezi MaestroYa. Nu afectează conținutul scris de alte persoane, precum mesaje sau recenzii.",
+    "label": "Limbă",
+    "saved": "Limba a fost actualizată.",
+    "error": "Nu am putut salva limba.",
+    "saving": "Se salvează limba…",
+    "switchTo": "Comută la {language}",
+    "guestNotice": "Limba ta este salvată doar în acest browser. Autentifică-te pentru a o salva în cont."
+  },
+  "notifications": {
+    "title": "Notificări"
+  }
+}

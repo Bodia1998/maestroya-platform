@@ -1,0 +1,24 @@
+{
+  "hero": {
+    "title": "Znajdź zaufanych specjalistów dla swojego domu",
+    "subtitle": "Opisz, czego potrzebujesz, i otrzymaj wyceny od zweryfikowanych specjalistów w pobliżu.",
+    "ctaPrimary": "Dodaj zapytanie",
+    "ctaSecondary": "Przeglądaj specjalistów"
+  },
+  "howItWorks": {
+    "title": "Jak to działa",
+    "step1": "Opisz, czego potrzebujesz",
+    "step2": "Otrzymaj wyceny",
+    "step3": "Wybierz specjalistę"
+  },
+  "professionals": {
+    "title": "Specjaliści"
+  },
+  "search": {
+    "title": "Znajdź specjalistów",
+    "resultCount": "{count, plural, =0 {Brak wyników} one {# specjalista} few {# specjalistów} many {# specjalistów} other {# specjalisty}}"
+  },
+  "footer": {
+    "rights": "© {year, number} MaestroYa. Wszelkie prawa zastrzeżone."
+  }
+}

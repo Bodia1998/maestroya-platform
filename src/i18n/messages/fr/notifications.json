@@ -1,0 +1,15 @@
+{
+  "title": "Notifications",
+  "empty": "Vous n'avez aucune notification.",
+  "markAllRead": "Tout marquer comme lu",
+  "unreadCount": "{count, plural, =0 {Aucune nouvelle notification} one {# notification non lue} other {# notifications non lues}}",
+  "receivedAt": "Reçue le {date, date, medium} à {date, time, short}",
+  "types": {
+    "jobUpdate": "Mise à jour de mission",
+    "newMessage": "Nouveau message",
+    "quoteReceived": "Devis reçu",
+    "appointmentProposed": "Rendez-vous proposé",
+    "verificationExpired": "Vérification expirée",
+    "systemMessage": "Message système"
+  }
+}

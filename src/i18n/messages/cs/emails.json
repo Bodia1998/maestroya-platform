@@ -1,0 +1,19 @@
+{
+  "common": {
+    "greeting": "Dobrý den, {name},",
+    "signature": "Tým MaestroYa",
+    "footer": "Tento e-mail jste obdrželi, protože máte účet na MaestroYa.",
+    "ignoreNotice": "Pokud jste o to nežádali, můžete tento e-mail ignorovat."
+  },
+  "verifyEmail": {
+    "subject": "Ověřte svou e-mailovou adresu",
+    "body": "Potvrďte svou e-mailovou adresu a aktivujte účet MaestroYa.",
+    "cta": "Ověřit e-mail"
+  },
+  "resetPassword": {
+    "subject": "Obnovení hesla",
+    "body": "Obdrželi jsme žádost o obnovení hesla k vašemu účtu.",
+    "cta": "Nastavit nové heslo",
+    "expiry": "Tento odkaz vyprší {date, date, medium} v {date, time, short}."
+  }
+}

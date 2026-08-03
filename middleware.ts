@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
+import { LOCALE_HEADER_NAME } from "@/shared/i18n/locales";
+import { matchSupportedLocale, parseAcceptLanguage } from "@/shared/i18n/negotiate-locale";
 
 /**
  * Route protection rules. Kept as simple prefix arrays rather than a
@@ -54,6 +56,46 @@ const ROLE_GATED_PREFIXES: Array<{ prefix: string; roles: string[] }> = [
 const PROFESSIONAL_ONBOARDING_PATH = "/dashboard/professional/onboarding";
 
 /**
+ * Interface language negotiation (Module 29 — Internationalization).
+ *
+ * This is deliberately the *smallest possible* i18n step: it parses
+ * `Accept-Language` once per request and forwards the matched locale (if
+ * any) on `x-maestroya-locale`, so that downstream Server Components
+ * don't each re-parse the same header. That is all it does.
+ *
+ * What it explicitly does NOT do, and why:
+ *
+ * - **No locale URL segment, no rewrite/redirect.** The obvious
+ *   next-intl-style setup routes every page under `/[locale]/…`. That
+ *   would move every existing URL in this app, and — far worse here —
+ *   every `callbackUrl` this same middleware builds for the next-auth
+ *   redirect a few lines below, plus `PROTECTED_PREFIXES`,
+ *   `ROLE_GATED_PREFIXES`, `PROFESSIONAL_ONBOARDING_PATH`, every
+ *   `redirect()`/`revalidatePath()` call in the app, and every stored
+ *   deep link. The language a user reads the UI in is a per-user
+ *   preference on an account, not a property of a resource, so there is
+ *   nothing to gain from putting it in the URL and a whole auth flow to
+ *   put at risk. Persistence is cookie + database instead. See
+ *   docs/MODULE_29_INTERNATIONALIZATION.md §3.
+ * - **No database read.** Middleware runs on the Edge runtime, where
+ *   Prisma is unavailable, and the authenticated user's stored
+ *   `preferredLocale` must come from a use case anyway. That resolution
+ *   happens in `server-locale.ts`, which treats this header only as the
+ *   *browser* signal — one rung below the account preference.
+ * - **No cookie write.** A guest's language lives in `localStorage`,
+ *   mirrored to the cookie by the client. Having middleware also write
+ *   the cookie would silently promote "your browser is set to German" to
+ *   "you chose German", which is a different and stickier statement.
+ *
+ * The auth chain below is untouched: this function only *decorates* the
+ * response next-auth's callback already decided on, exactly as the
+ * pre-existing request-ID logic it now sits alongside does.
+ */
+function negotiateLocale(req: NextRequest): string | null {
+  return matchSupportedLocale(parseAcceptLanguage(req.headers.get("accept-language")));
+}
+
+/**
  * Request correlation ID (Module 25 — Production Infrastructure).
  *
  * Reuses (validated) an incoming `x-request-id` from a trusted upstream
@@ -65,12 +107,23 @@ const PROFESSIONAL_ONBOARDING_PATH = "/dashboard/professional/onboarding";
  * server-request-context.ts) and onto the *response* headers (so the
  * caller — browser or upstream proxy — receives it back for its own
  * correlation/support purposes).
+ *
+ * Module 29 extended this one function to carry the negotiated interface
+ * locale alongside the request ID — same mechanism, same two write
+ * targets (forwarded request headers + response headers), so there is one
+ * decorator on the response rather than two competing ones.
  */
-function withRequestId(req: NextRequest, response: NextResponse): NextResponse {
+function withRequestContext(req: NextRequest, response: NextResponse): NextResponse {
   const requestId = resolveRequestId(req.headers.get(REQUEST_ID_HEADER));
+  const locale = negotiateLocale(req);
 
   const forwardedRequestHeaders = new Headers(req.headers);
   forwardedRequestHeaders.set(REQUEST_ID_HEADER, requestId);
+  // Only set when a supported language actually matched. An absent header
+  // means "the browser asked for nothing we speak", which the resolver
+  // treats as "fall through to Spanish" — distinct from a header pinned
+  // to "es", which would claim the browser asked for Spanish.
+  if (locale) forwardedRequestHeaders.set(LOCALE_HEADER_NAME, locale);
 
   // NextResponse.next()/redirect() already exist by the time this runs;
   // re-issuing with the augmented request headers is the documented way
@@ -82,6 +135,7 @@ function withRequestId(req: NextRequest, response: NextResponse): NextResponse {
       : NextResponse.next({ request: { headers: forwardedRequestHeaders } });
 
   augmented.headers.set(REQUEST_ID_HEADER, requestId);
+  if (locale) augmented.headers.set(LOCALE_HEADER_NAME, locale);
   return augmented;
 }
 
@@ -101,19 +155,19 @@ export default auth((req) => {
     if (!isSignedIn) {
       const loginUrl = new URL("/auth/login", req.nextUrl.origin);
       loginUrl.searchParams.set("callbackUrl", pathWithQuery);
-      return withRequestId(req, NextResponse.redirect(loginUrl));
+      return withRequestContext(req, NextResponse.redirect(loginUrl));
     }
     if (!roleGate.roles.some((r) => roles.includes(r))) {
-      return withRequestId(req, NextResponse.redirect(new URL("/", req.nextUrl.origin)));
+      return withRequestContext(req, NextResponse.redirect(new URL("/", req.nextUrl.origin)));
     }
-    return withRequestId(req, NextResponse.next());
+    return withRequestContext(req, NextResponse.next());
   }
 
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
   if (isProtected && !isSignedIn) {
     const loginUrl = new URL("/auth/login", req.nextUrl.origin);
     loginUrl.searchParams.set("callbackUrl", pathWithQuery);
-    return withRequestId(req, NextResponse.redirect(loginUrl));
+    return withRequestContext(req, NextResponse.redirect(loginUrl));
   }
 
   /**
@@ -141,13 +195,13 @@ export default auth((req) => {
     pathname.startsWith("/dashboard") &&
     pathname !== PROFESSIONAL_ONBOARDING_PATH
   ) {
-    return withRequestId(
+    return withRequestContext(
       req,
       NextResponse.redirect(new URL(PROFESSIONAL_ONBOARDING_PATH, req.nextUrl.origin)),
     );
   }
 
-  return withRequestId(req, NextResponse.next());
+  return withRequestContext(req, NextResponse.next());
 });
 
 /**

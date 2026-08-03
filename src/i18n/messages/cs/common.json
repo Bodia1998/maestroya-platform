@@ -1,0 +1,22 @@
+{
+  "appName": "MaestroYa",
+  "actions": {
+    "save": "Uložit",
+    "cancel": "Zrušit",
+    "delete": "Smazat",
+    "edit": "Upravit",
+    "confirm": "Potvrdit",
+    "back": "Zpět",
+    "retry": "Zkusit znovu",
+    "close": "Zavřít"
+  },
+  "states": {
+    "loading": "Načítání…",
+    "saving": "Ukládání…",
+    "empty": "Není co zobrazit."
+  },
+  "errors": {
+    "generic": "Něco se pokazilo. Zkuste to znovu.",
+    "notFound": "Nenašli jsme, co hledáte."
+  }
+}

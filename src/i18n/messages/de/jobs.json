@@ -1,0 +1,20 @@
+{
+  "title": "Aufträge",
+  "status": {
+    "pending": "Ausstehend",
+    "inProgress": "In Bearbeitung",
+    "completed": "Abgeschlossen",
+    "cancelled": "Storniert",
+    "expired": "Abgelaufen"
+  },
+  "empty": "Du hast noch keine Aufträge.",
+  "count": "{count, plural, =0 {Keine Aufträge} one {# Auftrag} other {# Aufträge}}",
+  "viewDetails": "Details ansehen",
+  "scheduledFor": "Geplant für {date, date, long}",
+  "requests": {
+    "title": "Serviceanfragen"
+  },
+  "quotes": {
+    "title": "Angebote"
+  }
+}

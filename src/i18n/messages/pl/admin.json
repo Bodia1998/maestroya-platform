@@ -1,0 +1,13 @@
+{
+  "title": "Panel administratora",
+  "users": "Użytkownicy",
+  "jobs": "Zlecenia",
+  "disputes": "Spory",
+  "supportTickets": "Zgłoszenia do wsparcia",
+  "verifications": "Weryfikacje",
+  "companies": "Firmy",
+  "reviews": "Opinie",
+  "auditLogs": "Dziennik audytu",
+  "analytics": "Analityka",
+  "accessDenied": "Nie masz uprawnień do tej sekcji."
+}

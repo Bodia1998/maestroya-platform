@@ -1,0 +1,24 @@
+{
+  "hero": {
+    "title": "Finde vertrauenswürdige Fachleute für dein Zuhause",
+    "subtitle": "Beschreibe, was du brauchst, und erhalte Angebote von geprüften Fachleuten in deiner Nähe.",
+    "ctaPrimary": "Anfrage stellen",
+    "ctaSecondary": "Fachleute entdecken"
+  },
+  "howItWorks": {
+    "title": "So funktioniert's",
+    "step1": "Beschreibe, was du brauchst",
+    "step2": "Angebote erhalten",
+    "step3": "Wähle deine Fachkraft"
+  },
+  "professionals": {
+    "title": "Fachleute"
+  },
+  "search": {
+    "title": "Fachleute finden",
+    "resultCount": "{count, plural, =0 {Keine Ergebnisse} one {# Fachkraft} other {# Fachkräfte}}"
+  },
+  "footer": {
+    "rights": "© {year, number} MaestroYa. Alle Rechte vorbehalten."
+  }
+}

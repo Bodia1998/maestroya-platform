@@ -1,0 +1,20 @@
+{
+  "title": "Painel",
+  "welcome": "Olá, {name}",
+  "summary": {
+    "requests": "Pedidos",
+    "quotes": "Orçamentos",
+    "jobs": "Trabalhos",
+    "messages": "Mensagens",
+    "appointments": "Marcações"
+  },
+  "professional": {
+    "title": "Painel profissional",
+    "onboarding": "Complete o seu perfil profissional"
+  },
+  "company": {
+    "title": "Painel da empresa",
+    "members": "Membros",
+    "invitations": "Convites"
+  }
+}

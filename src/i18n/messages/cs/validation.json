@@ -1,0 +1,16 @@
+{
+  "required": "Toto pole je povinné.",
+  "email": "Zadejte platnou e-mailovou adresu.",
+  "url": "Zadejte platnou URL adresu.",
+  "minLength": "Musí mít alespoň {min, plural, one {# znak} few {# znaky} many {# znaku} other {# znaků}}.",
+  "maxLength": "Nesmí přesáhnout {max, plural, one {# znak} few {# znaky} many {# znaku} other {# znaků}}.",
+  "tooSmall": "Minimální hodnota je {min, number}.",
+  "tooBig": "Maximální hodnota je {max, number}.",
+  "number": "Zadejte platné číslo.",
+  "date": "Zadejte platné datum.",
+  "phone": "Zadejte platné telefonní číslo.",
+  "passwordTooWeak": "Heslo musí obsahovat velká i malá písmena a číslice.",
+  "mismatch": "Hodnoty se neshodují.",
+  "invalid": "Zadaná hodnota není platná.",
+  "summary": "Opravte prosím chyby ve formuláři."
+}

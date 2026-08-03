@@ -1,0 +1,20 @@
+{
+  "title": "Zakázky",
+  "status": {
+    "pending": "Čeká",
+    "inProgress": "Probíhá",
+    "completed": "Dokončeno",
+    "cancelled": "Zrušeno",
+    "expired": "Vypršelo"
+  },
+  "empty": "Zatím nemáte žádné zakázky.",
+  "count": "{count, plural, =0 {Žádné zakázky} one {# zakázka} few {# zakázky} many {# zakázky} other {# zakázek}}",
+  "viewDetails": "Zobrazit detaily",
+  "scheduledFor": "Naplánováno na {date, date, long}",
+  "requests": {
+    "title": "Poptávky služeb"
+  },
+  "quotes": {
+    "title": "Nabídky"
+  }
+}

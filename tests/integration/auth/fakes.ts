@@ -113,6 +113,18 @@ export class FakeUserRepository implements UserRepository {
     if (user) user.status = "DEACTIVATED";
   }
 
+  // --- Internationalization module additions (Module 29) ---
+
+  preferredLocaleByUserId = new Map<string, string | null>();
+
+  async getPreferredLocale(userId: string) {
+    return this.preferredLocaleByUserId.get(userId) ?? null;
+  }
+
+  async updatePreferredLocale(userId: string, locale: string | null) {
+    this.preferredLocaleByUserId.set(userId, locale);
+  }
+
   async getSignupIntent(userId: string) {
     return this.signupIntentByUserId.get(userId) ?? null;
   }

@@ -1,0 +1,20 @@
+{
+  "title": "Panel",
+  "welcome": "Dobrý den, {name}",
+  "summary": {
+    "requests": "Poptávky",
+    "quotes": "Nabídky",
+    "jobs": "Zakázky",
+    "messages": "Zprávy",
+    "appointments": "Schůzky"
+  },
+  "professional": {
+    "title": "Panel profesionála",
+    "onboarding": "Dokončete svůj profesionální profil"
+  },
+  "company": {
+    "title": "Panel firmy",
+    "members": "Členové",
+    "invitations": "Pozvánky"
+  }
+}

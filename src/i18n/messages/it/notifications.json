@@ -1,0 +1,15 @@
+{
+  "title": "Notifiche",
+  "empty": "Non hai notifiche.",
+  "markAllRead": "Segna tutte come lette",
+  "unreadCount": "{count, plural, =0 {Nessuna nuova notifica} one {# notifica non letta} other {# notifiche non lette}}",
+  "receivedAt": "Ricevuta il {date, date, medium} alle {date, time, short}",
+  "types": {
+    "jobUpdate": "Aggiornamento lavoro",
+    "newMessage": "Nuovo messaggio",
+    "quoteReceived": "Preventivo ricevuto",
+    "appointmentProposed": "Appuntamento proposto",
+    "verificationExpired": "Verifica scaduta",
+    "systemMessage": "Messaggio di sistema"
+  }
+}

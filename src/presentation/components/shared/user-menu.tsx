@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, LayoutDashboard, LogOut, User } from "lucide-react";
 
@@ -13,6 +14,7 @@ export interface UserMenuProps {
 
 /** Small account dropdown — signed-in state in the header. No new auth logic, just links to existing routes. */
 export function UserMenu({ label, isProfessional }: UserMenuProps) {
+  const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -36,7 +38,10 @@ export function UserMenu({ label, isProfessional }: UserMenuProps) {
       >
         <User className="h-4 w-4" aria-hidden />
         <span className="max-w-[10rem] truncate">{label}</span>
-        <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} aria-hidden />
+        <ChevronDown
+          className={cn("h-4 w-4 transition-transform", open && "rotate-180")}
+          aria-hidden
+        />
       </button>
 
       {open && (
@@ -47,7 +52,7 @@ export function UserMenu({ label, isProfessional }: UserMenuProps) {
             onClick={() => setOpen(false)}
           >
             <LayoutDashboard className="h-4 w-4" aria-hidden />
-            Mi panel
+            {t("dashboard")}
           </Link>
           <Link
             href="/auth/logout"
@@ -55,7 +60,7 @@ export function UserMenu({ label, isProfessional }: UserMenuProps) {
             onClick={() => setOpen(false)}
           >
             <LogOut className="h-4 w-4" aria-hidden />
-            Cerrar sesión
+            {t("logout")}
           </Link>
         </div>
       )}

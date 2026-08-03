@@ -1,0 +1,20 @@
+{
+  "title": "Панель",
+  "welcome": "Вітаємо, {name}",
+  "summary": {
+    "requests": "Заявки",
+    "quotes": "Пропозиції",
+    "jobs": "Роботи",
+    "messages": "Повідомлення",
+    "appointments": "Зустрічі"
+  },
+  "professional": {
+    "title": "Кабінет фахівця",
+    "onboarding": "Заповніть профіль фахівця"
+  },
+  "company": {
+    "title": "Кабінет компанії",
+    "members": "Учасники",
+    "invitations": "Запрошення"
+  }
+}

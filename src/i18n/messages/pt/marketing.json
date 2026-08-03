@@ -1,0 +1,24 @@
+{
+  "hero": {
+    "title": "Ligue-se a profissionais de confiança para a sua casa",
+    "subtitle": "Publique o que precisa e receba orçamentos de profissionais verificados perto de si.",
+    "ctaPrimary": "Publicar um pedido",
+    "ctaSecondary": "Explorar profissionais"
+  },
+  "howItWorks": {
+    "title": "Como funciona",
+    "step1": "Descreva o que precisa",
+    "step2": "Receba orçamentos",
+    "step3": "Escolha o seu profissional"
+  },
+  "professionals": {
+    "title": "Profissionais"
+  },
+  "search": {
+    "title": "Encontrar profissionais",
+    "resultCount": "{count, plural, =0 {Sem resultados} one {# profissional} other {# profissionais}}"
+  },
+  "footer": {
+    "rights": "© {year, number} MaestroYa. Todos os direitos reservados."
+  }
+}

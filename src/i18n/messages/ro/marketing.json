@@ -1,0 +1,24 @@
+{
+  "hero": {
+    "title": "Găsește profesioniști de încredere pentru casa ta",
+    "subtitle": "Publică ce ai nevoie și primește oferte de la profesioniști verificați din apropiere.",
+    "ctaPrimary": "Publică o cerere",
+    "ctaSecondary": "Explorează profesioniștii"
+  },
+  "howItWorks": {
+    "title": "Cum funcționează",
+    "step1": "Descrie ce ai nevoie",
+    "step2": "Primește oferte",
+    "step3": "Alege-ți profesionistul"
+  },
+  "professionals": {
+    "title": "Profesioniști"
+  },
+  "search": {
+    "title": "Găsește profesioniști",
+    "resultCount": "{count, plural, =0 {Niciun rezultat} one {# profesionist} few {# profesioniști} other {# de profesioniști}}"
+  },
+  "footer": {
+    "rights": "© {year, number} MaestroYa. Toate drepturile rezervate."
+  }
+}

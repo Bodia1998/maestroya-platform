@@ -1,0 +1,16 @@
+{
+  "required": "Dieses Feld ist erforderlich.",
+  "email": "Gib eine gültige E-Mail-Adresse ein.",
+  "url": "Gib eine gültige URL ein.",
+  "minLength": "Muss mindestens {min, plural, one {# Zeichen} other {# Zeichen}} lang sein.",
+  "maxLength": "Darf höchstens {max, plural, one {# Zeichen} other {# Zeichen}} lang sein.",
+  "tooSmall": "Der Mindestwert ist {min, number}.",
+  "tooBig": "Der Höchstwert ist {max, number}.",
+  "number": "Gib eine gültige Zahl ein.",
+  "date": "Gib ein gültiges Datum ein.",
+  "phone": "Gib eine gültige Telefonnummer ein.",
+  "passwordTooWeak": "Das Passwort muss Groß- und Kleinbuchstaben sowie Zahlen enthalten.",
+  "mismatch": "Die Werte stimmen nicht überein.",
+  "invalid": "Der eingegebene Wert ist ungültig.",
+  "summary": "Bitte korrigiere die Fehler im Formular."
+}

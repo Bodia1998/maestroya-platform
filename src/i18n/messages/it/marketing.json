@@ -1,0 +1,24 @@
+{
+  "hero": {
+    "title": "Trova professionisti affidabili per la tua casa",
+    "subtitle": "Pubblica ciò di cui hai bisogno e ricevi preventivi da professionisti verificati vicino a te.",
+    "ctaPrimary": "Pubblica una richiesta",
+    "ctaSecondary": "Esplora i professionisti"
+  },
+  "howItWorks": {
+    "title": "Come funziona",
+    "step1": "Descrivi ciò di cui hai bisogno",
+    "step2": "Ricevi preventivi",
+    "step3": "Scegli il tuo professionista"
+  },
+  "professionals": {
+    "title": "Professionisti"
+  },
+  "search": {
+    "title": "Trova professionisti",
+    "resultCount": "{count, plural, =0 {Nessun risultato} one {# professionista} other {# professionisti}}"
+  },
+  "footer": {
+    "rights": "© {year, number} MaestroYa. Tutti i diritti riservati."
+  }
+}

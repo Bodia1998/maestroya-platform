@@ -1,0 +1,17 @@
+{
+  "title": "Einstellungen",
+  "subtitle": "Passe an, wie MaestroYa für dich funktioniert.",
+  "language": {
+    "title": "Sprache der Oberfläche",
+    "description": "Wähle die Sprache, in der du MaestroYa sehen möchtest. Inhalte anderer Nutzer wie Nachrichten oder Bewertungen bleiben unverändert.",
+    "label": "Sprache",
+    "saved": "Sprache aktualisiert.",
+    "error": "Die Sprache konnte nicht gespeichert werden.",
+    "saving": "Sprache wird gespeichert…",
+    "switchTo": "Zu {language} wechseln",
+    "guestNotice": "Deine Sprache wird nur in diesem Browser gespeichert. Melde dich an, um sie in deinem Konto zu speichern."
+  },
+  "notifications": {
+    "title": "Benachrichtigungen"
+  }
+}

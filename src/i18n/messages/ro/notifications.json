@@ -1,0 +1,15 @@
+{
+  "title": "Notificări",
+  "empty": "Nu ai notificări.",
+  "markAllRead": "Marchează toate ca citite",
+  "unreadCount": "{count, plural, =0 {Nicio notificare nouă} one {# notificare necitită} few {# notificări necitite} other {# de notificări necitite}}",
+  "receivedAt": "Primită pe {date, date, medium} la {date, time, short}",
+  "types": {
+    "jobUpdate": "Actualizare lucrare",
+    "newMessage": "Mesaj nou",
+    "quoteReceived": "Ofertă primită",
+    "appointmentProposed": "Programare propusă",
+    "verificationExpired": "Verificare expirată",
+    "systemMessage": "Mesaj de sistem"
+  }
+}

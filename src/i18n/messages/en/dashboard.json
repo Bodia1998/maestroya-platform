@@ -1,0 +1,20 @@
+{
+  "title": "Dashboard",
+  "welcome": "Hello, {name}",
+  "summary": {
+    "requests": "Requests",
+    "quotes": "Quotes",
+    "jobs": "Jobs",
+    "messages": "Messages",
+    "appointments": "Appointments"
+  },
+  "professional": {
+    "title": "Professional dashboard",
+    "onboarding": "Complete your professional profile"
+  },
+  "company": {
+    "title": "Company dashboard",
+    "members": "Members",
+    "invitations": "Invitations"
+  }
+}

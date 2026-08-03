@@ -1,0 +1,20 @@
+{
+  "title": "Übersicht",
+  "welcome": "Hallo, {name}",
+  "summary": {
+    "requests": "Anfragen",
+    "quotes": "Angebote",
+    "jobs": "Aufträge",
+    "messages": "Nachrichten",
+    "appointments": "Termine"
+  },
+  "professional": {
+    "title": "Fachkräfte-Bereich",
+    "onboarding": "Vervollständige dein Fachkraft-Profil"
+  },
+  "company": {
+    "title": "Unternehmensbereich",
+    "members": "Mitglieder",
+    "invitations": "Einladungen"
+  }
+}

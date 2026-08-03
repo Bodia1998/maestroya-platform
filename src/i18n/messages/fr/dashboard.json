@@ -1,0 +1,20 @@
+{
+  "title": "Tableau de bord",
+  "welcome": "Bonjour, {name}",
+  "summary": {
+    "requests": "Demandes",
+    "quotes": "Devis",
+    "jobs": "Missions",
+    "messages": "Messages",
+    "appointments": "Rendez-vous"
+  },
+  "professional": {
+    "title": "Espace professionnel",
+    "onboarding": "Complétez votre profil professionnel"
+  },
+  "company": {
+    "title": "Espace entreprise",
+    "members": "Membres",
+    "invitations": "Invitations"
+  }
+}

@@ -73,4 +73,28 @@ export interface UserRepository {
   updateProfile(userId: string, data: UpdateProfileData): Promise<void>;
   updateAvatar(userId: string, imageUrl: string): Promise<void>;
   softDeleteAccount(userId: string): Promise<void>;
+
+  // --- Internationalization additions (Module 29) ---
+
+  /**
+   * The user's stored **interface** language as a raw locale code, or
+   * `null` when they have never explicitly chosen one (see
+   * `User.preferredLocale` in schema.prisma — `null` is meaningful and
+   * must not be collapsed into "Spanish" here; the resolution chain
+   * upstream decides what absence means).
+   *
+   * Typed `string | null`, not `Locale | null`, on purpose: the domain
+   * layer must not depend on the presentation module's list of shipped
+   * languages, and a row written by an older/newer deployment could hold
+   * a code this build no longer ships. Narrowing happens at the
+   * application edge (`toLocale`), where an unknown code degrades to the
+   * next step of the chain instead of throwing.
+   *
+   * Note this is a different concept from `preferredLanguageId` above —
+   * see the schema doc comment for why the two are not merged.
+   */
+  getPreferredLocale(userId: string): Promise<string | null>;
+
+  /** `null` clears the preference (back to "never chosen"). */
+  updatePreferredLocale(userId: string, locale: string | null): Promise<void>;
 }

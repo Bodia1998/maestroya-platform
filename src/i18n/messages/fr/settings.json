@@ -1,0 +1,17 @@
+{
+  "title": "Paramètres",
+  "subtitle": "Personnalisez le fonctionnement de MaestroYa.",
+  "language": {
+    "title": "Langue de l'interface",
+    "description": "Choisissez la langue dans laquelle vous souhaitez voir MaestroYa. Cela n'affecte pas le contenu rédigé par d'autres personnes, comme les messages ou les avis.",
+    "label": "Langue",
+    "saved": "Langue mise à jour.",
+    "error": "Impossible d'enregistrer la langue.",
+    "saving": "Enregistrement de la langue…",
+    "switchTo": "Passer à {language}",
+    "guestNotice": "Votre langue est enregistrée uniquement dans ce navigateur. Connectez-vous pour l'enregistrer dans votre compte."
+  },
+  "notifications": {
+    "title": "Notifications"
+  }
+}

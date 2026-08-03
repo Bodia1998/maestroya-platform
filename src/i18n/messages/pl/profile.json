@@ -1,0 +1,17 @@
+{
+  "title": "Profil",
+  "subtitle": "Zarządzaj danymi i preferencjami swojego konta.",
+  "section": {
+    "avatar": "Zdjęcie profilowe",
+    "details": "Dane profilu",
+    "password": "Zmień hasło",
+    "danger": "Strefa niebezpieczna"
+  },
+  "field": {
+    "name": "Imię",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "timezone": "Strefa czasowa"
+  },
+  "memberSince": "Członek od {date, date, long}"
+}

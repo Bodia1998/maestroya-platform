@@ -1,0 +1,16 @@
+{
+  "required": "To pole jest wymagane.",
+  "email": "Podaj prawidłowy adres e-mail.",
+  "url": "Podaj prawidłowy adres URL.",
+  "minLength": "Musi mieć co najmniej {min, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}.",
+  "maxLength": "Nie może przekraczać {max, plural, one {# znaku} few {# znaków} many {# znaków} other {# znaku}}.",
+  "tooSmall": "Wartość minimalna to {min, number}.",
+  "tooBig": "Wartość maksymalna to {max, number}.",
+  "number": "Podaj prawidłową liczbę.",
+  "date": "Podaj prawidłową datę.",
+  "phone": "Podaj prawidłowy numer telefonu.",
+  "passwordTooWeak": "Hasło musi zawierać wielkie i małe litery oraz cyfry.",
+  "mismatch": "Wartości nie są zgodne.",
+  "invalid": "Wprowadzona wartość jest nieprawidłowa.",
+  "summary": "Popraw błędy w formularzu."
+}

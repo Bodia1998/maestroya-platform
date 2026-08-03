@@ -1,0 +1,15 @@
+{
+  "title": "Notifications",
+  "empty": "You have no notifications.",
+  "markAllRead": "Mark all as read",
+  "unreadCount": "{count, plural, =0 {No new notifications} one {# unread notification} other {# unread notifications}}",
+  "receivedAt": "Received on {date, date, medium} at {date, time, short}",
+  "types": {
+    "jobUpdate": "Job update",
+    "newMessage": "New message",
+    "quoteReceived": "Quote received",
+    "appointmentProposed": "Appointment proposed",
+    "verificationExpired": "Verification expired",
+    "systemMessage": "System message"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Profil",
+  "subtitle": "Verwalte deine Kontodaten und Einstellungen.",
+  "section": {
+    "avatar": "Profilbild",
+    "details": "Profildaten",
+    "password": "Passwort ändern",
+    "danger": "Gefahrenbereich"
+  },
+  "field": {
+    "name": "Name",
+    "phone": "Telefon",
+    "email": "E-Mail",
+    "timezone": "Zeitzone"
+  },
+  "memberSince": "Mitglied seit {date, date, long}"
+}

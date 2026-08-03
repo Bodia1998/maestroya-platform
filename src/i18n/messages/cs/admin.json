@@ -1,0 +1,13 @@
+{
+  "title": "Administrace",
+  "users": "Uživatelé",
+  "jobs": "Zakázky",
+  "disputes": "Spory",
+  "supportTickets": "Tikety podpory",
+  "verifications": "Ověření",
+  "companies": "Firmy",
+  "reviews": "Recenze",
+  "auditLogs": "Auditní log",
+  "analytics": "Analytika",
+  "accessDenied": "Nemáte oprávnění k přístupu do této sekce."
+}

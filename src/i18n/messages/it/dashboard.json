@@ -1,0 +1,20 @@
+{
+  "title": "Pannello",
+  "welcome": "Ciao, {name}",
+  "summary": {
+    "requests": "Richieste",
+    "quotes": "Preventivi",
+    "jobs": "Lavori",
+    "messages": "Messaggi",
+    "appointments": "Appuntamenti"
+  },
+  "professional": {
+    "title": "Area professionista",
+    "onboarding": "Completa il tuo profilo professionale"
+  },
+  "company": {
+    "title": "Area azienda",
+    "members": "Membri",
+    "invitations": "Inviti"
+  }
+}

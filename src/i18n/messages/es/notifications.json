@@ -1,0 +1,15 @@
+{
+  "title": "Notificaciones",
+  "empty": "No tienes notificaciones.",
+  "markAllRead": "Marcar todas como leídas",
+  "unreadCount": "{count, plural, =0 {Sin notificaciones nuevas} one {# notificación sin leer} other {# notificaciones sin leer}}",
+  "receivedAt": "Recibida el {date, date, medium} a las {date, time, short}",
+  "types": {
+    "jobUpdate": "Actualización de trabajo",
+    "newMessage": "Nuevo mensaje",
+    "quoteReceived": "Presupuesto recibido",
+    "appointmentProposed": "Cita propuesta",
+    "verificationExpired": "Verificación caducada",
+    "systemMessage": "Mensaje del sistema"
+  }
+}

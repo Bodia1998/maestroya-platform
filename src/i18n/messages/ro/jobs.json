@@ -1,0 +1,20 @@
+{
+  "title": "Lucrări",
+  "status": {
+    "pending": "În așteptare",
+    "inProgress": "În desfășurare",
+    "completed": "Finalizat",
+    "cancelled": "Anulat",
+    "expired": "Expirat"
+  },
+  "empty": "Nu ai încă lucrări.",
+  "count": "{count, plural, =0 {Nicio lucrare} one {# lucrare} few {# lucrări} other {# de lucrări}}",
+  "viewDetails": "Vezi detalii",
+  "scheduledFor": "Programat pentru {date, date, long}",
+  "requests": {
+    "title": "Cereri de servicii"
+  },
+  "quotes": {
+    "title": "Oferte"
+  }
+}

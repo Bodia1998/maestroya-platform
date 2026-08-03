@@ -1,0 +1,17 @@
+{
+  "title": "Profile",
+  "subtitle": "Manage your account details and preferences.",
+  "section": {
+    "avatar": "Avatar",
+    "details": "Profile details",
+    "password": "Change password",
+    "danger": "Danger zone"
+  },
+  "field": {
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "timezone": "Time zone"
+  },
+  "memberSince": "Member since {date, date, long}"
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Oznámení",
+  "empty": "Nemáte žádná oznámení.",
+  "markAllRead": "Označit vše jako přečtené",
+  "unreadCount": "{count, plural, =0 {Žádná nová oznámení} one {# nepřečtené oznámení} few {# nepřečtená oznámení} many {# nepřečteného oznámení} other {# nepřečtených oznámení}}",
+  "receivedAt": "Přijato {date, date, medium} v {date, time, short}",
+  "types": {
+    "jobUpdate": "Aktualizace zakázky",
+    "newMessage": "Nová zpráva",
+    "quoteReceived": "Přijata nabídka",
+    "appointmentProposed": "Navržená schůzka",
+    "verificationExpired": "Ověření vypršelo",
+    "systemMessage": "Systémová zpráva"
+  }
+}
