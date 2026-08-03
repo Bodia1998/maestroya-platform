@@ -266,4 +266,12 @@ export class PrismaProfessionalVerificationRepository implements ProfessionalVer
       documents: documents.map(toDocumentRecord),
     };
   }
+
+  async findExpirable(now: Date): Promise<ProfessionalVerificationRecord[]> {
+    const rows = await prisma.professionalVerification.findMany({
+      where: { status: "APPROVED", expiresAt: { lte: now } },
+      select: VERIFICATION_SELECT,
+    });
+    return rows.map(toVerificationRecord);
+  }
 }

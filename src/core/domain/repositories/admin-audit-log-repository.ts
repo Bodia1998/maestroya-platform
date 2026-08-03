@@ -90,13 +90,26 @@ export type AdminAuditAction =
   | "SUPPORT_TICKET_ASSIGNED"
   | "SUPPORT_TICKET_STATUS_CHANGED"
   | "SUPPORT_TICKET_RESOLVED"
-  | "SUPPORT_TICKET_CLOSED";
+  | "SUPPORT_TICKET_CLOSED"
+  // Module 28 — Workflow Completion: recorded by the daily expiration
+  // cron itself (no admin user — `adminUserId` is null on these entries,
+  // same as any system-triggered audit entry; see
+  // RunWorkflowExpirationsUseCase). One entry per expired record, plus one
+  // summary entry for the whole cron run.
+  | "SERVICE_REQUEST_EXPIRED"
+  | "QUOTE_EXPIRED"
+  | "VERIFICATION_EXPIRED"
+  | "COMPANY_VERIFICATION_EXPIRED"
+  | "WORKFLOW_EXPIRATION_RUN";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved
    *  server-side from the session (see requireRole()), never accepted as
-   *  client input. */
-  adminUserId: string;
+   *  client input. `null` only for a system-triggered entry with no human
+   *  actor at all — today that is exclusively the Module 28 workflow
+   *  expiration cron (see RunWorkflowExpirationsUseCase); every
+   *  human-initiated action still always supplies a real userId. */
+  adminUserId: string | null;
   action: AdminAuditAction;
   targetType: string;
   targetId: string;

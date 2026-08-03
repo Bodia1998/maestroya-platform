@@ -39,7 +39,11 @@ export default async function ProfessionalJobDetailPage({ params }: { params: Pr
   try {
     const result = await makeGetJobUseCase().execute(user.id, id);
     job = result.job;
-    viewerRole = result.viewerRole;
+    // See the equivalent comment in jobs/[id]/page.tsx — GetJobUseCase's
+    // compose.ts never wires resolveJobActor's optional `companyMembers`
+    // dep, so its "company" role (Module 28 — Workflow Completion) can
+    // never actually be observed here.
+    viewerRole = result.viewerRole as "customer" | "professional";
   } catch (error) {
     if (error instanceof NotFoundError) {
       notFound();

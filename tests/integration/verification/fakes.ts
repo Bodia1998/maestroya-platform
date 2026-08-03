@@ -268,6 +268,12 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
       createdAt: v.createdAt,
     };
   }
+
+  async findExpirable(now: Date): Promise<ProfessionalVerificationRecord[]> {
+    return [...this.verifications.values()].filter(
+      (v) => v.status === "APPROVED" && v.expiresAt != null && v.expiresAt.getTime() <= now.getTime(),
+    );
+  }
 }
 
 export class FakeAdminAuditLogRepository implements AdminAuditLogRepository {

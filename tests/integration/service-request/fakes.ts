@@ -158,6 +158,15 @@ export class FakeServiceRequestRepository implements ServiceRequestRepository {
   async countPhotos(serviceRequestId: string): Promise<number> {
     return this.requests.get(serviceRequestId)?.photos.length ?? 0;
   }
+
+  async findExpirable(now: Date): Promise<ServiceRequestRecord[]> {
+    return [...this.requests.values()].filter(
+      (r) =>
+        (r.status === "PUBLISHED" || r.status === "QUOTED") &&
+        r.expiresAt != null &&
+        r.expiresAt.getTime() <= now.getTime(),
+    );
+  }
 }
 
 // Mirrors tests/integration/professional/onboarding-flows.test.ts's own

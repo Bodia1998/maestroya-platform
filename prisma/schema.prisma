@@ -832,6 +832,18 @@ enum NotificationType {
   SUPPORT_TICKET_STATUS_CHANGED
   SUPPORT_TICKET_RESOLVED
   SUPPORT_TICKET_CLOSED
+  /// Module 28 — Workflow Completion: fired by the daily expiration cron —
+  /// see docs/MODULE_28_WORKFLOW_COMPLETION.md, "Notifications". Recipients:
+  /// the ServiceRequest's customer (SERVICE_REQUEST_EXPIRED), the Quote's
+  /// submitting professional (QUOTE_EXPIRED), the owning professional
+  /// (VERIFICATION_EXPIRED) or the owning company's members
+  /// (COMPANY_VERIFICATION_EXPIRED) — naming mirrors the existing
+  /// VERIFICATION_*/COMPANY_VERIFICATION_* split from Module 17/18 rather
+  /// than a single combined value.
+  SERVICE_REQUEST_EXPIRED
+  QUOTE_EXPIRED
+  VERIFICATION_EXPIRED
+  COMPANY_VERIFICATION_EXPIRED
 }
 
 enum VerificationDocumentType {

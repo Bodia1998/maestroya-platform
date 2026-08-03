@@ -292,6 +292,15 @@ export class FakeQuoteRepository implements QuoteRepository {
     const existing = this.quotes.get(id);
     if (existing) this.quotes.set(id, { ...existing, status, updatedAt: new Date() });
   }
+
+  async findExpirable(now: Date): Promise<QuoteRecord[]> {
+    return [...this.quotes.values()].filter(
+      (q) =>
+        (q.status === "PENDING" || q.status === "SENT" || q.status === "VIEWED") &&
+        q.validUntil !== null &&
+        q.validUntil.getTime() <= now.getTime(),
+    );
+  }
 }
 
 export class FakeCustomerProfileRepository implements CustomerProfileRepository {
@@ -375,5 +384,14 @@ export class FakeServiceRequestRepository implements ServiceRequestRepository {
 
   async countPhotos(): Promise<number> {
     return 0;
+  }
+
+  async findExpirable(now: Date): Promise<ServiceRequestRecord[]> {
+    return [...this.requests.values()].filter(
+      (r) =>
+        (r.status === "PUBLISHED" || r.status === "QUOTED") &&
+        r.expiresAt != null &&
+        r.expiresAt.getTime() <= now.getTime(),
+    );
   }
 }

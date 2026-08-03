@@ -58,6 +58,17 @@ export interface ServiceRequestRecord {
   budgetMax: number | null;
   location: ServiceRequestLocation;
   photos: RequestPhotoRecord[];
+  /**
+   * Module 28 — Workflow Completion: when set, the point past which a
+   * still-PUBLISHED/QUOTED request auto-transitions to EXPIRED (see
+   * service-request-expiration-rules.ts). Optional (rather than a plain
+   * `Date | null`) so every pre-existing object literal implementing this
+   * interface across this codebase's fakes/tests — none of which know
+   * about expiration — keeps compiling unchanged; every real row read
+   * through PrismaServiceRequestRepository always populates it (null when
+   * the underlying column is null).
+   */
+  expiresAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -102,4 +113,12 @@ export interface ServiceRequestRepository {
   addPhoto(serviceRequestId: string, url: string, caption: string | null): Promise<RequestPhotoRecord>;
   removePhoto(serviceRequestId: string, photoId: string): Promise<void>;
   countPhotos(serviceRequestId: string): Promise<number>;
+  /**
+   * Module 28 — Workflow Completion: every non-deleted ServiceRequest whose
+   * `expiresAt` is at or before `now` and whose status is still one
+   * `isServiceRequestExpirable` considers open (PUBLISHED/QUOTED) — feeds
+   * ExpireServiceRequestsUseCase's batch. Same "no pagination yet" scope
+   * note as QuoteRepository.findExpirable.
+   */
+  findExpirable(now: Date): Promise<ServiceRequestRecord[]>;
 }

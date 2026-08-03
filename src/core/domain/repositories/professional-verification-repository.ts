@@ -146,4 +146,11 @@ export interface ProfessionalVerificationRepository {
   // --- Admin read paths ---
   listForAdmin(options: ListAdminVerificationsOptions): Promise<AdminVerificationListItem[]>;
   getDetailForAdmin(id: string): Promise<AdminVerificationDetail | null>;
+
+  /**
+   * Module 28 — Workflow Completion: every APPROVED case whose `expiresAt`
+   * is at or before `now` — feeds ExpireProfessionalVerificationsUseCase's
+   * batch (see verification-expiration-rules.ts).
+   */
+  findExpirable(now: Date): Promise<ProfessionalVerificationRecord[]>;
 }

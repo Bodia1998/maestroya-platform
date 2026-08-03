@@ -18,17 +18,19 @@ export interface CreateDisputeInput {
 }
 
 /**
- * Module 21 — Disputes & Support: opens a new Dispute over a Job.
+ * Module 21 — Disputes & Support (extended by Module 28 — Workflow
+ * Completion, "Company Disputes"): opens a new Dispute over a Job.
  *
- * Authorization: reuses resolveJobActor verbatim (see that function's doc
- * comment) — only the Job's customer or its solo professional may open a
- * dispute this way; a company-owned Job's professional side is not
- * resolvable by resolveJobActor today (same pre-existing limitation
- * documented there), so opening a dispute over a company-owned Job's
- * professional side is not yet supported — see
- * docs/MODULE_21_DISPUTES_SUPPORT.md, "Authorization rules" for the
- * write-up. An unrelated user gets the same NotFoundError a nonexistent Job
- * id would produce.
+ * Authorization: reuses resolveJobActor, now passing `companyMembers` (see
+ * that call site's own comment) — the Job's customer, its solo
+ * professional, OR (as of Module 28) a sufficiently-privileged
+ * (OWNER/ADMIN/MANAGER) member of the company that performed the Job may
+ * open a dispute this way. Before Module 28, a company-owned Job's
+ * professional side could not open a dispute at all — that gap is now
+ * closed; see docs/MODULE_28_WORKFLOW_COMPLETION.md, "Company Disputes"
+ * for the write-up. An unrelated user (or a MEMBER-role company employee,
+ * who is not privileged enough) gets the same NotFoundError a nonexistent
+ * Job id would produce.
  *
  * Domain rules enforced here (see dispute-rules.ts for the full write-up of
  * each decision):
@@ -42,7 +44,8 @@ export interface CreateDisputeInput {
  *
  * The respondent (the *other* party) is always derived from the Job, never
  * from client input — a customer opening a dispute always names the Job's
- * professional/company as respondent and vice versa.
+ * professional/company as respondent and vice versa; a company actor
+ * opening a dispute always names the Job's customer as respondent.
  */
 export class CreateDisputeUseCase {
   constructor(
@@ -64,6 +67,13 @@ export class CreateDisputeUseCase {
     const actor = await resolveJobActor(userId, job, {
       customerProfiles: this.customerProfiles,
       professionals: this.professionals,
+      // Module 28 — Workflow Completion: passing companyMembers here (unlike
+      // every other resolveJobActor caller in this codebase) is what
+      // enables the "company" branch — a CompanyMember with sufficient role
+      // (OWNER/ADMIN/MANAGER, see canActOnBehalfOfCompanyJob) may now open a
+      // dispute for a company-owned Job, closing the gap this class's own
+      // doc comment used to describe as "not yet supported."
+      companyMembers: this.companyMembers,
     });
 
     if (!isDisputableJobStatus(job.status)) {
@@ -146,7 +156,7 @@ export class CreateDisputeUseCase {
    *  concept for a company beyond membership). */
   private async resolveRespondentUserIds(
     job: { customerId: string; professionalProfileId: string | null; companyProfileId: string | null },
-    raiserRole: "customer" | "professional",
+    raiserRole: "customer" | "professional" | "company",
   ): Promise<string[]> {
     if (raiserRole === "customer") {
       if (job.professionalProfileId) {
@@ -159,14 +169,13 @@ export class CreateDisputeUseCase {
       }
       return [];
     }
-    // Professional/company raised it — notify the customer. Resolving the
-    // customer's User.id from CustomerProfileRepository would need a
-    // findById; kept simple by not sending here since CreateDisputeUseCase
-    // only has customerProfiles.findByUserId — see the constructor. This
-    // path is rare today (companies can't yet raise disputes via
-    // resolveJobActor — see this class's own doc comment) so it's left
-    // as a documented no-op rather than widening the repository interface
-    // for an unreachable case.
-    return [];
+    // Professional or company raised it — notify the customer.
+    // CustomerProfileRepository.findById resolves the User behind a
+    // CustomerProfile.id (added for the Chat module — see that interface's
+    // own doc comment), which is exactly what's needed here now that a
+    // company actor (Module 28 — Workflow Completion) can reach this
+    // branch alongside the pre-existing solo-professional case.
+    const customer = await this.customerProfiles.findById(job.customerId);
+    return customer ? [customer.userId] : [];
   }
 }

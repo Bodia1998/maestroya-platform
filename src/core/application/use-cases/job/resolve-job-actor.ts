@@ -2,12 +2,18 @@ import { NotFoundError } from "@/domain/errors/domain-error";
 import type { JobRecord } from "@/domain/repositories/job-repository";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
+import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
+import { canActOnBehalfOfCompanyJob } from "@/domain/services/company-membership-rules";
 
-export type JobActorRole = "customer" | "professional";
+export type JobActorRole = "customer" | "professional" | "company";
 
 export interface JobActor {
   role: JobActorRole;
   userId: string;
+  /** Only set when role === "company" — the caller's CompanyMember.id on
+   *  the Job's owning company, for callers that need to attribute the
+   *  action to a specific member (e.g. audit logging). */
+  companyMemberId?: string;
 }
 
 /**
@@ -25,13 +31,22 @@ export interface JobActor {
  * distinguishable "exists but isn't yours" response an attacker could use
  * to probe for valid Job ids.
  *
- * Company-side ownership (Job.companyProfileId) is intentionally not
- * resolved here — same limitation resolveAppointmentActor already has for
- * Appointment.companyProfileId (this codebase only supports solo
- * professionals end-to-end today); a company-owned Job can only be acted
- * on by the customer side until a CompanyMember-aware resolution is added,
- * consistent with the existing convention rather than inventing new
- * company-membership behavior this module doesn't otherwise support.
+ * Company-side ownership (Job.companyProfileId): resolved only when the
+ * caller supplies `deps.companyMembers` (Module 28 — Workflow Completion,
+ * "Company Disputes" — see CreateDisputeUseCase, the first and so-far-only
+ * caller that does). Every pre-existing caller of this function does not
+ * pass `companyMembers` and is completely unaffected — the company branch
+ * below is simply never reached for them, so their customer/professional
+ * resolution behavior is unchanged byte-for-byte. This mirrors
+ * resolveAppointmentActor's still-unresolved Appointment.companyProfileId
+ * (Appointments remain out of scope for this — see
+ * docs/MODULE_28_WORKFLOW_COMPLETION.md).
+ *
+ * A company member must additionally satisfy
+ * `canActOnBehalfOfCompanyJob` (OWNER/ADMIN/MANAGER, not MEMBER — see that
+ * predicate's own doc comment) to resolve as the "company" actor; a MEMBER
+ * of the right company but the wrong role gets the same NotFoundError as
+ * an unrelated user, not a distinguishable "forbidden" response.
  */
 export async function resolveJobActor(
   userId: string,
@@ -39,6 +54,7 @@ export async function resolveJobActor(
   deps: {
     customerProfiles: CustomerProfileRepository;
     professionals: ProfessionalRepository;
+    companyMembers?: CompanyMembershipRepository;
   },
 ): Promise<JobActor> {
   const [customer, professional] = await Promise.all([
@@ -52,6 +68,13 @@ export async function resolveJobActor(
 
   if (professional && job.professionalProfileId === professional.id) {
     return { role: "professional", userId };
+  }
+
+  if (job.companyProfileId && deps.companyMembers) {
+    const membership = await deps.companyMembers.findByCompanyAndUser(job.companyProfileId, userId);
+    if (membership && membership.removedAt === null && canActOnBehalfOfCompanyJob(membership.role)) {
+      return { role: "company", userId, companyMemberId: membership.id };
+    }
   }
 
   throw new NotFoundError("Job", job.id);

@@ -244,4 +244,12 @@ export class PrismaCompanyVerificationRepository implements CompanyVerificationR
       documents: documents.map(toDocumentRecord),
     };
   }
+
+  async findExpirable(now: Date): Promise<CompanyVerificationRecord[]> {
+    const rows = await prisma.companyVerification.findMany({
+      where: { status: "APPROVED", expiresAt: { lte: now } },
+      select: VERIFICATION_SELECT,
+    });
+    return rows.map(toVerificationRecord);
+  }
 }

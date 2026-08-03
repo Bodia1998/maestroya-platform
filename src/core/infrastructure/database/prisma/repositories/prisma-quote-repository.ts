@@ -207,4 +207,15 @@ export class PrismaQuoteRepository implements QuoteRepository {
   async updateStatus(id: string, status: QuoteStatusValue): Promise<void> {
     await prisma.quote.update({ where: { id }, data: { status } });
   }
+
+  async findExpirable(now: Date): Promise<QuoteRecord[]> {
+    const rows = await prisma.quote.findMany({
+      where: {
+        status: { in: ["PENDING", "SENT", "VIEWED"] },
+        validUntil: { lte: now },
+      },
+      select: SELECT,
+    });
+    return rows.map(toRecord);
+  }
 }

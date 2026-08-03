@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  canActOnBehalfOfCompanyJob,
   canChangeMemberRole,
   canInitiateOwnershipTransfer,
   canInviteMembers,
@@ -85,6 +86,18 @@ describe("company-membership-rules (Module 18)", () => {
     it("MANAGER/MEMBER cannot remove anyone", () => {
       expect(canRemoveMember("MANAGER", "MEMBER")).toBe(false);
       expect(canRemoveMember("MEMBER", "MEMBER")).toBe(false);
+    });
+  });
+
+  describe("canActOnBehalfOfCompanyJob (Module 28 — Workflow Completion: company disputes)", () => {
+    it("OWNER/ADMIN/MANAGER may act on behalf of the company on a job (e.g. open a dispute)", () => {
+      expect(canActOnBehalfOfCompanyJob("OWNER")).toBe(true);
+      expect(canActOnBehalfOfCompanyJob("ADMIN")).toBe(true);
+      expect(canActOnBehalfOfCompanyJob("MANAGER")).toBe(true);
+    });
+
+    it("a plain MEMBER may not", () => {
+      expect(canActOnBehalfOfCompanyJob("MEMBER")).toBe(false);
     });
   });
 

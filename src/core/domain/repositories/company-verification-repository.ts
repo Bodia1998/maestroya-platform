@@ -116,4 +116,11 @@ export interface CompanyVerificationRepository {
 
   listForAdmin(options: ListAdminCompanyVerificationsOptions): Promise<AdminCompanyVerificationListItem[]>;
   getDetailForAdmin(id: string): Promise<AdminCompanyVerificationDetail | null>;
+
+  /**
+   * Module 28 — Workflow Completion: every APPROVED case whose `expiresAt`
+   * is at or before `now` — feeds ExpireCompanyVerificationsUseCase's batch
+   * (see verification-expiration-rules.ts).
+   */
+  findExpirable(now: Date): Promise<CompanyVerificationRecord[]>;
 }
