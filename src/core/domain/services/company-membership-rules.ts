@@ -106,6 +106,23 @@ export function canInitiateOwnershipTransfer(actorRole: CompanyMemberRoleValue):
   return actorRole === "OWNER";
 }
 
+/**
+ * Module 28 — Workflow Completion (company disputes): whether `role` may
+ * act on behalf of the company on an operational, job-level matter — today
+ * exactly one thing: opening a Dispute over a Job the company performed
+ * (see resolveJobActor's "company" branch and CreateDisputeUseCase). OWNER/
+ * ADMIN/MANAGER may (the same tier that already manages company-profile-
+ * level concerns per canManageCompanyProfile, plus MANAGER — a role this
+ * codebase's own Module 18 doc describes as handling day-to-day job/
+ * membership operations, distinct from ADMIN's company-profile-editing
+ * authority); a plain MEMBER may work the job but may not open a dispute
+ * on the company's behalf, mirroring how a solo professional's own
+ * dispute-opening authority isn't delegated to anyone else either.
+ */
+export function canActOnBehalfOfCompanyJob(role: CompanyMemberRoleValue): boolean {
+  return role === "OWNER" || role === "ADMIN" || role === "MANAGER";
+}
+
 /** Ownership can only transfer to an existing, active (non-removed) member
  *  of the same company — never to an outside user id, and never to the
  *  current owner themself (a no-op transfer is rejected as a validation

@@ -130,4 +130,14 @@ export interface QuoteRepository {
   create(data: CreateQuoteData): Promise<QuoteRecord>;
   update(id: string, data: UpdateQuoteFields): Promise<QuoteRecord>;
   updateStatus(id: string, status: QuoteStatusValue): Promise<void>;
+  /**
+   * Module 28 — Workflow Completion: every Quote whose `validUntil` is at
+   * or before `now` and whose status is still one `isQuoteExpirable`
+   * considers open (PENDING/SENT/VIEWED, see quote-expiration-rules.ts) —
+   * feeds ExpireQuotesUseCase's batch. Deliberately not paginated: the
+   * cron's own use case is expected to run at least daily, so the pending
+   * set stays small; a future high-volume deployment can add pagination
+   * here without changing the interface's callers.
+   */
+  findExpirable(now: Date): Promise<QuoteRecord[]>;
 }

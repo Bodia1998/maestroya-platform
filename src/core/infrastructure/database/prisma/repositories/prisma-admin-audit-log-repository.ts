@@ -73,6 +73,14 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   SUPPORT_TICKET_STATUS_CHANGED: "STATUS_CHANGE",
   SUPPORT_TICKET_RESOLVED: "STATUS_CHANGE",
   SUPPORT_TICKET_CLOSED: "STATUS_CHANGE",
+  // Module 28 — Workflow Completion: each per-record expiry is a status
+  // change; the cron's own summary entry has no closer existing value than
+  // OTHER.
+  SERVICE_REQUEST_EXPIRED: "STATUS_CHANGE",
+  QUOTE_EXPIRED: "STATUS_CHANGE",
+  VERIFICATION_EXPIRED: "VERIFICATION",
+  COMPANY_VERIFICATION_EXPIRED: "VERIFICATION",
+  WORKFLOW_EXPIRATION_RUN: "OTHER",
 };
 
 const SELECT = {

@@ -148,6 +148,19 @@ const envSchema = z
     MAPBOX_API_KEY: z.string().optional(),
     GOOGLE_GEOCODING_API_KEY: z.string().optional(),
     HERE_API_KEY: z.string().optional(),
+
+    // --- Workflow expiration cron (Module 28 — Workflow Completion) ---
+    // Shared-secret bearer token the cron route
+    // (src/app/api/cron/expire-workflows/route.ts) requires on every
+    // request's `Authorization: Bearer <token>` header — the standard
+    // Vercel Cron pattern (Vercel signs its own scheduled requests with
+    // whatever value is configured here; see vercel.json's `crons` entry
+    // and that route's own doc comment for the full authorization
+    // reasoning). Optional so every environment that never configures
+    // scheduled cron (local dev, most CI runs) doesn't fail startup over
+    // it — the route itself refuses every request with a 503 if this is
+    // unset, rather than falling back to an insecure "no check" behavior.
+    CRON_SECRET: z.string().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV !== "production") return;

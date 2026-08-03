@@ -19,6 +19,7 @@ const SELECT = {
   urgency: true,
   budgetMin: true,
   budgetMax: true,
+  expiresAt: true,
   createdAt: true,
   updatedAt: true,
   category: { select: { name: true } },
@@ -50,6 +51,7 @@ type PrismaServiceRequestRow = {
   urgency: string;
   budgetMin: unknown;
   budgetMax: unknown;
+  expiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   category: { name: string };
@@ -80,6 +82,7 @@ function toRecord(row: PrismaServiceRequestRow): ServiceRequestRecord {
     // repository boundary, same convention as PrismaProfessionalRepository.
     budgetMin: row.budgetMin === null ? null : Number(row.budgetMin),
     budgetMax: row.budgetMax === null ? null : Number(row.budgetMax),
+    expiresAt: row.expiresAt,
     location: {
       line1: row.address.line1,
       line2: row.address.line2,
@@ -206,6 +209,18 @@ export class PrismaServiceRequestRepository implements ServiceRequestRepository 
 
   async updateStatus(id: string, status: ServiceRequestStatusValue): Promise<void> {
     await prisma.serviceRequest.update({ where: { id }, data: { status } });
+  }
+
+  async findExpirable(now: Date): Promise<ServiceRequestRecord[]> {
+    const rows = await prisma.serviceRequest.findMany({
+      where: {
+        deletedAt: null,
+        status: { in: ["PUBLISHED", "QUOTED"] },
+        expiresAt: { lte: now },
+      },
+      select: SELECT,
+    });
+    return rows.map(toRecord);
   }
 
   async addPhoto(serviceRequestId: string, url: string, caption: string | null): Promise<RequestPhotoRecord> {

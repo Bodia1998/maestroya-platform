@@ -58,7 +58,22 @@ export type NotificationTypeValue =
   | "SUPPORT_TICKET_ASSIGNED"
   | "SUPPORT_TICKET_STATUS_CHANGED"
   | "SUPPORT_TICKET_RESOLVED"
-  | "SUPPORT_TICKET_CLOSED";
+  | "SUPPORT_TICKET_CLOSED"
+  // Module 28 — Workflow Completion: fired by the daily expiration cron
+  // (ExpireServiceRequestsUseCase / ExpireQuotesUseCase /
+  // ExpireProfessionalVerificationsUseCase / ExpireCompanyVerificationsUseCase
+  // — see docs/MODULE_28_WORKFLOW_COMPLETION.md). Recipient is always the
+  // owning party whose record just expired (the request's customer, the
+  // quote's submitting professional). Naming mirrors the existing
+  // VERIFICATION_*/COMPANY_VERIFICATION_* split (Module 17/18) rather than
+  // a single "PROFESSIONAL_VERIFICATION_EXPIRED" — VERIFICATION_EXPIRED for
+  // the solo-professional case, COMPANY_VERIFICATION_EXPIRED for the
+  // company case, exactly like every other verification-lifecycle event
+  // already on this enum.
+  | "SERVICE_REQUEST_EXPIRED"
+  | "QUOTE_EXPIRED"
+  | "VERIFICATION_EXPIRED"
+  | "COMPANY_VERIFICATION_EXPIRED";
 
 export interface NotificationRecord {
   id: string;

@@ -38,7 +38,11 @@ import type { QuoteStatusValue } from "@/domain/repositories/quote-repository";
  * acceptance workflow rather than allowing individual quote state transitions
  * to bypass it.
  *
- * EXPIRED remains unimplemented — no use case in this codebase sets it yet.
+ * EXPIRED is now implemented, but not by this module — Module 28
+ * (Workflow Completion)'s `ExpireQuotesUseCase` /
+ * `quote-expiration-rules.ts` sets it via the daily expiration cron for
+ * PENDING/SENT/VIEWED quotes, entirely outside the transitions this file
+ * models.
  */
 export const INITIAL_QUOTE_STATUS: QuoteStatusValue = "SENT";
 export const WITHDRAWN_QUOTE_STATUS: QuoteStatusValue = "WITHDRAWN";
