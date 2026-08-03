@@ -1,0 +1,16 @@
+{
+  "required": "Acest câmp este obligatoriu.",
+  "email": "Introdu o adresă de e-mail validă.",
+  "url": "Introdu un URL valid.",
+  "minLength": "Trebuie să aibă cel puțin {min, plural, one {# caracter} few {# caractere} other {# de caractere}}.",
+  "maxLength": "Nu poate depăși {max, plural, one {# caracter} few {# caractere} other {# de caractere}}.",
+  "tooSmall": "Valoarea minimă este {min, number}.",
+  "tooBig": "Valoarea maximă este {max, number}.",
+  "number": "Introdu un număr valid.",
+  "date": "Introdu o dată validă.",
+  "phone": "Introdu un număr de telefon valid.",
+  "passwordTooWeak": "Parola trebuie să conțină majuscule, minuscule și cifre.",
+  "mismatch": "Valorile nu corespund.",
+  "invalid": "Valoarea introdusă nu este validă.",
+  "summary": "Corectează erorile din formular."
+}

@@ -1,0 +1,24 @@
+{
+  "hero": {
+    "title": "Trouvez des professionnels de confiance pour votre maison",
+    "subtitle": "Publiez votre besoin et recevez des devis de professionnels vérifiés près de chez vous.",
+    "ctaPrimary": "Publier une demande",
+    "ctaSecondary": "Parcourir les professionnels"
+  },
+  "howItWorks": {
+    "title": "Comment ça marche",
+    "step1": "Décrivez votre besoin",
+    "step2": "Recevez des devis",
+    "step3": "Choisissez votre professionnel"
+  },
+  "professionals": {
+    "title": "Professionnels"
+  },
+  "search": {
+    "title": "Trouver des professionnels",
+    "resultCount": "{count, plural, =0 {Aucun résultat} one {# professionnel} other {# professionnels}}"
+  },
+  "footer": {
+    "rights": "© {year, number} MaestroYa. Tous droits réservés."
+  }
+}

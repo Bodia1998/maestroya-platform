@@ -1,0 +1,22 @@
+{
+  "appName": "MaestroYa",
+  "actions": {
+    "save": "Salvează",
+    "cancel": "Anulează",
+    "delete": "Șterge",
+    "edit": "Editează",
+    "confirm": "Confirmă",
+    "back": "Înapoi",
+    "retry": "Reîncearcă",
+    "close": "Închide"
+  },
+  "states": {
+    "loading": "Se încarcă…",
+    "saving": "Se salvează…",
+    "empty": "Nimic de afișat."
+  },
+  "errors": {
+    "generic": "Ceva nu a funcționat. Încearcă din nou.",
+    "notFound": "Nu am găsit ceea ce cauți."
+  }
+}

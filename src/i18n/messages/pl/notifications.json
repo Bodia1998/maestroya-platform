@@ -1,0 +1,15 @@
+{
+  "title": "Powiadomienia",
+  "empty": "Nie masz powiadomień.",
+  "markAllRead": "Oznacz wszystkie jako przeczytane",
+  "unreadCount": "{count, plural, =0 {Brak nowych powiadomień} one {# nieprzeczytane powiadomienie} few {# nieprzeczytane powiadomienia} many {# nieprzeczytanych powiadomień} other {# nieprzeczytanego powiadomienia}}",
+  "receivedAt": "Otrzymano {date, date, medium} o {date, time, short}",
+  "types": {
+    "jobUpdate": "Aktualizacja zlecenia",
+    "newMessage": "Nowa wiadomość",
+    "quoteReceived": "Otrzymano wycenę",
+    "appointmentProposed": "Zaproponowano wizytę",
+    "verificationExpired": "Weryfikacja wygasła",
+    "systemMessage": "Wiadomość systemowa"
+  }
+}

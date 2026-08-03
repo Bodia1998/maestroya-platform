@@ -1,0 +1,20 @@
+{
+  "title": "Panou",
+  "welcome": "Salut, {name}",
+  "summary": {
+    "requests": "Cereri",
+    "quotes": "Oferte",
+    "jobs": "Lucrări",
+    "messages": "Mesaje",
+    "appointments": "Programări"
+  },
+  "professional": {
+    "title": "Panoul profesionistului",
+    "onboarding": "Completează-ți profilul profesional"
+  },
+  "company": {
+    "title": "Panoul companiei",
+    "members": "Membri",
+    "invitations": "Invitații"
+  }
+}

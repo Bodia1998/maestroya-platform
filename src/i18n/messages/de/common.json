@@ -1,0 +1,22 @@
+{
+  "appName": "MaestroYa",
+  "actions": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "confirm": "Bestätigen",
+    "back": "Zurück",
+    "retry": "Erneut versuchen",
+    "close": "Schließen"
+  },
+  "states": {
+    "loading": "Wird geladen…",
+    "saving": "Wird gespeichert…",
+    "empty": "Nichts anzuzeigen."
+  },
+  "errors": {
+    "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "notFound": "Wir konnten nicht finden, wonach du gesucht hast."
+  }
+}

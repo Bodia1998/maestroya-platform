@@ -1,0 +1,20 @@
+{
+  "title": "Lavori",
+  "status": {
+    "pending": "In attesa",
+    "inProgress": "In corso",
+    "completed": "Completato",
+    "cancelled": "Annullato",
+    "expired": "Scaduto"
+  },
+  "empty": "Non hai ancora lavori.",
+  "count": "{count, plural, =0 {Nessun lavoro} one {# lavoro} other {# lavori}}",
+  "viewDetails": "Vedi dettagli",
+  "scheduledFor": "Programmato per {date, date, long}",
+  "requests": {
+    "title": "Richieste di servizio"
+  },
+  "quotes": {
+    "title": "Preventivi"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Nastavení",
+  "subtitle": "Přizpůsobte si, jak MaestroYa funguje.",
+  "language": {
+    "title": "Jazyk rozhraní",
+    "description": "Vyberte jazyk, ve kterém chcete MaestroYa zobrazovat. Neovlivní to obsah napsaný jinými lidmi, například zprávy nebo recenze.",
+    "label": "Jazyk",
+    "saved": "Jazyk byl aktualizován.",
+    "error": "Jazyk se nepodařilo uložit.",
+    "saving": "Ukládání jazyka…",
+    "switchTo": "Přepnout na {language}",
+    "guestNotice": "Váš jazyk se ukládá jen v tomto prohlížeči. Přihlaste se, aby se uložil k účtu."
+  },
+  "notifications": {
+    "title": "Oznámení"
+  }
+}

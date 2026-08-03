@@ -1,0 +1,24 @@
+{
+  "hero": {
+    "title": "Spojte se s prověřenými profesionály pro váš domov",
+    "subtitle": "Popište, co potřebujete, a získejte nabídky od ověřených profesionálů ve vašem okolí.",
+    "ctaPrimary": "Zadat poptávku",
+    "ctaSecondary": "Procházet profesionály"
+  },
+  "howItWorks": {
+    "title": "Jak to funguje",
+    "step1": "Popište, co potřebujete",
+    "step2": "Získejte nabídky",
+    "step3": "Vyberte si profesionála"
+  },
+  "professionals": {
+    "title": "Profesionálové"
+  },
+  "search": {
+    "title": "Najít profesionály",
+    "resultCount": "{count, plural, =0 {Žádné výsledky} one {# profesionál} few {# profesionálové} other {# profesionálů}}"
+  },
+  "footer": {
+    "rights": "© {year, number} MaestroYa. Všechna práva vyhrazena."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Profil",
+  "subtitle": "Gestionează datele și preferințele contului tău.",
+  "section": {
+    "avatar": "Fotografie de profil",
+    "details": "Detalii profil",
+    "password": "Schimbă parola",
+    "danger": "Zonă periculoasă"
+  },
+  "field": {
+    "name": "Nume",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "timezone": "Fus orar"
+  },
+  "memberSince": "Membru din {date, date, long}"
+}

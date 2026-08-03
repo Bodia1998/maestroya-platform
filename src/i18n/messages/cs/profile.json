@@ -1,0 +1,17 @@
+{
+  "title": "Profil",
+  "subtitle": "Spravujte údaje a předvolby svého účtu.",
+  "section": {
+    "avatar": "Profilová fotka",
+    "details": "Údaje profilu",
+    "password": "Změnit heslo",
+    "danger": "Nebezpečná zóna"
+  },
+  "field": {
+    "name": "Jméno",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "timezone": "Časové pásmo"
+  },
+  "memberSince": "Členem od {date, date, long}"
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Benachrichtigungen",
+  "empty": "Du hast keine Benachrichtigungen.",
+  "markAllRead": "Alle als gelesen markieren",
+  "unreadCount": "{count, plural, =0 {Keine neuen Benachrichtigungen} one {# ungelesene Benachrichtigung} other {# ungelesene Benachrichtigungen}}",
+  "receivedAt": "Erhalten am {date, date, medium} um {date, time, short}",
+  "types": {
+    "jobUpdate": "Auftrags-Update",
+    "newMessage": "Neue Nachricht",
+    "quoteReceived": "Angebot erhalten",
+    "appointmentProposed": "Termin vorgeschlagen",
+    "verificationExpired": "Verifizierung abgelaufen",
+    "systemMessage": "Systemnachricht"
+  }
+}

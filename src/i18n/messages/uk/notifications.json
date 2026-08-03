@@ -1,0 +1,15 @@
+{
+  "title": "Сповіщення",
+  "empty": "У вас немає сповіщень.",
+  "markAllRead": "Позначити всі як прочитані",
+  "unreadCount": "{count, plural, =0 {Немає нових сповіщень} one {# непрочитане сповіщення} few {# непрочитані сповіщення} many {# непрочитаних сповіщень} other {# непрочитаного сповіщення}}",
+  "receivedAt": "Отримано {date, date, medium} о {date, time, short}",
+  "types": {
+    "jobUpdate": "Оновлення роботи",
+    "newMessage": "Нове повідомлення",
+    "quoteReceived": "Отримано пропозицію",
+    "appointmentProposed": "Запропоновано зустріч",
+    "verificationExpired": "Термін верифікації минув",
+    "systemMessage": "Системне повідомлення"
+  }
+}

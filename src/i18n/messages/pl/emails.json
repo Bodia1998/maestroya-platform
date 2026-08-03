@@ -1,0 +1,19 @@
+{
+  "common": {
+    "greeting": "Cześć {name},",
+    "signature": "Zespół MaestroYa",
+    "footer": "Otrzymujesz tę wiadomość, ponieważ masz konto w MaestroYa.",
+    "ignoreNotice": "Jeśli to nie Ty wysłałeś tę prośbę, zignoruj tę wiadomość."
+  },
+  "verifyEmail": {
+    "subject": "Zweryfikuj swój adres e-mail",
+    "body": "Potwierdź swój adres e-mail, aby aktywować konto MaestroYa.",
+    "cta": "Zweryfikuj e-mail"
+  },
+  "resetPassword": {
+    "subject": "Zresetuj hasło",
+    "body": "Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta.",
+    "cta": "Ustaw nowe hasło",
+    "expiry": "Ten link wygasa {date, date, medium} o {date, time, short}."
+  }
+}

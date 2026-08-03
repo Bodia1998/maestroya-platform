@@ -1,0 +1,13 @@
+{
+  "title": "Admin panel",
+  "users": "Users",
+  "jobs": "Jobs",
+  "disputes": "Disputes",
+  "supportTickets": "Support tickets",
+  "verifications": "Verifications",
+  "companies": "Companies",
+  "reviews": "Reviews",
+  "auditLogs": "Audit log",
+  "analytics": "Analytics",
+  "accessDenied": "You do not have permission to access this section."
+}

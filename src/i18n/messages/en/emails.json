@@ -1,0 +1,19 @@
+{
+  "common": {
+    "greeting": "Hi {name},",
+    "signature": "The MaestroYa team",
+    "footer": "You received this email because you have a MaestroYa account.",
+    "ignoreNotice": "If you didn't request this, you can safely ignore this email."
+  },
+  "verifyEmail": {
+    "subject": "Verify your email address",
+    "body": "Confirm your email address to activate your MaestroYa account.",
+    "cta": "Verify my email"
+  },
+  "resetPassword": {
+    "subject": "Reset your password",
+    "body": "We received a request to reset the password for your account.",
+    "cta": "Set a new password",
+    "expiry": "This link expires on {date, date, medium} at {date, time, short}."
+  }
+}

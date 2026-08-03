@@ -1,0 +1,19 @@
+{
+  "common": {
+    "greeting": "Olá {name},",
+    "signature": "A equipa MaestroYa",
+    "footer": "Recebeu este e-mail porque tem uma conta no MaestroYa.",
+    "ignoreNotice": "Se não solicitou isto, pode ignorar este e-mail."
+  },
+  "verifyEmail": {
+    "subject": "Verifique o seu endereço de e-mail",
+    "body": "Confirme o seu e-mail para ativar a sua conta MaestroYa.",
+    "cta": "Verificar o meu e-mail"
+  },
+  "resetPassword": {
+    "subject": "Redefina a sua palavra-passe",
+    "body": "Recebemos um pedido para redefinir a palavra-passe da sua conta.",
+    "cta": "Definir nova palavra-passe",
+    "expiry": "Esta ligação expira a {date, date, medium} às {date, time, short}."
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "required": "Este campo é obrigatório.",
+  "email": "Introduza um e-mail válido.",
+  "url": "Introduza um URL válido.",
+  "minLength": "Deve ter pelo menos {min, plural, one {# carácter} other {# caracteres}}.",
+  "maxLength": "Não pode exceder {max, plural, one {# carácter} other {# caracteres}}.",
+  "tooSmall": "O valor mínimo é {min, number}.",
+  "tooBig": "O valor máximo é {max, number}.",
+  "number": "Introduza um número válido.",
+  "date": "Introduza uma data válida.",
+  "phone": "Introduza um número de telefone válido.",
+  "passwordTooWeak": "A palavra-passe deve incluir maiúsculas, minúsculas e números.",
+  "mismatch": "Os valores não coincidem.",
+  "invalid": "O valor introduzido não é válido.",
+  "summary": "Corrija os erros do formulário."
+}

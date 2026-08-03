@@ -1,0 +1,20 @@
+{
+  "title": "Panel",
+  "welcome": "Cześć, {name}",
+  "summary": {
+    "requests": "Zapytania",
+    "quotes": "Wyceny",
+    "jobs": "Zlecenia",
+    "messages": "Wiadomości",
+    "appointments": "Wizyty"
+  },
+  "professional": {
+    "title": "Panel specjalisty",
+    "onboarding": "Uzupełnij swój profil specjalisty"
+  },
+  "company": {
+    "title": "Panel firmy",
+    "members": "Członkowie",
+    "invitations": "Zaproszenia"
+  }
+}

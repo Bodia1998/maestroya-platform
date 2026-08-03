@@ -1,0 +1,24 @@
+{
+  "hero": {
+    "title": "Conecta con profesionales de confianza para tu hogar",
+    "subtitle": "Publica lo que necesitas y recibe presupuestos de profesionales verificados cerca de ti.",
+    "ctaPrimary": "Publicar una solicitud",
+    "ctaSecondary": "Explorar profesionales"
+  },
+  "howItWorks": {
+    "title": "Cómo funciona",
+    "step1": "Describe lo que necesitas",
+    "step2": "Recibe presupuestos",
+    "step3": "Elige a tu profesional"
+  },
+  "professionals": {
+    "title": "Profesionales"
+  },
+  "search": {
+    "title": "Buscar profesionales",
+    "resultCount": "{count, plural, =0 {Sin resultados} one {# profesional} other {# profesionales}}"
+  },
+  "footer": {
+    "rights": "© {year, number} MaestroYa. Todos los derechos reservados."
+  }
+}

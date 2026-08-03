@@ -1,0 +1,17 @@
+{
+  "title": "Definições",
+  "subtitle": "Personalize a forma como o MaestroYa funciona para si.",
+  "language": {
+    "title": "Idioma da interface",
+    "description": "Escolha o idioma em que quer ver o MaestroYa. Não afeta o conteúdo escrito por outras pessoas, como mensagens ou avaliações.",
+    "label": "Idioma",
+    "saved": "Idioma atualizado.",
+    "error": "Não foi possível guardar o idioma.",
+    "saving": "A guardar o idioma…",
+    "switchTo": "Mudar para {language}",
+    "guestNotice": "O seu idioma é guardado apenas neste navegador. Inicie sessão para o guardar na sua conta."
+  },
+  "notifications": {
+    "title": "Notificações"
+  }
+}

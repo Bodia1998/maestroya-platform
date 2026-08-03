@@ -1,0 +1,24 @@
+{
+  "hero": {
+    "title": "Connect with trusted professionals for your home",
+    "subtitle": "Post what you need and get quotes from verified professionals near you.",
+    "ctaPrimary": "Post a request",
+    "ctaSecondary": "Browse professionals"
+  },
+  "howItWorks": {
+    "title": "How it works",
+    "step1": "Describe what you need",
+    "step2": "Receive quotes",
+    "step3": "Choose your professional"
+  },
+  "professionals": {
+    "title": "Professionals"
+  },
+  "search": {
+    "title": "Find professionals",
+    "resultCount": "{count, plural, =0 {No results} one {# professional} other {# professionals}}"
+  },
+  "footer": {
+    "rights": "© {year, number} MaestroYa. All rights reserved."
+  }
+}

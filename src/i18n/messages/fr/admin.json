@@ -1,0 +1,13 @@
+{
+  "title": "Panneau d'administration",
+  "users": "Utilisateurs",
+  "jobs": "Missions",
+  "disputes": "Litiges",
+  "supportTickets": "Tickets d'assistance",
+  "verifications": "Vérifications",
+  "companies": "Entreprises",
+  "reviews": "Avis",
+  "auditLogs": "Journal d'audit",
+  "analytics": "Analyses",
+  "accessDenied": "Vous n'avez pas l'autorisation d'accéder à cette section."
+}

@@ -1,0 +1,14 @@
+{
+  "home": "Inicio",
+  "search": "Buscar profesionales",
+  "professionals": "Profesionales",
+  "howItWorks": "Cómo funciona",
+  "dashboard": "Mi panel",
+  "account": "Mi cuenta",
+  "login": "Iniciar sesión",
+  "register": "Crear cuenta",
+  "logout": "Cerrar sesión",
+  "language": "Idioma",
+  "professionalCta": "Soy profesional",
+  "mainNavLabel": "Navegación principal"
+}

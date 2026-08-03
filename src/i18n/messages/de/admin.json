@@ -1,0 +1,13 @@
+{
+  "title": "Administrationsbereich",
+  "users": "Benutzer",
+  "jobs": "Aufträge",
+  "disputes": "Streitfälle",
+  "supportTickets": "Support-Tickets",
+  "verifications": "Verifizierungen",
+  "companies": "Unternehmen",
+  "reviews": "Bewertungen",
+  "auditLogs": "Audit-Protokoll",
+  "analytics": "Analysen",
+  "accessDenied": "Du hast keine Berechtigung für diesen Bereich."
+}

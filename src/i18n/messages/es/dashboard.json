@@ -1,0 +1,20 @@
+{
+  "title": "Panel",
+  "welcome": "Hola, {name}",
+  "summary": {
+    "requests": "Solicitudes",
+    "quotes": "Presupuestos",
+    "jobs": "Trabajos",
+    "messages": "Mensajes",
+    "appointments": "Citas"
+  },
+  "professional": {
+    "title": "Panel profesional",
+    "onboarding": "Completa tu perfil profesional"
+  },
+  "company": {
+    "title": "Panel de empresa",
+    "members": "Miembros",
+    "invitations": "Invitaciones"
+  }
+}
