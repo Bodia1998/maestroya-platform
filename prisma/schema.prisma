@@ -62,6 +62,33 @@ model User {
   /// through professional onboarding."
   signupIntent     SignupIntent?
   preferredLanguageId String? @db.Uuid
+  /// Module 29 — Internationalization: the user's chosen **interface**
+  /// language, stored as a plain ISO 639-1 locale code ("es", "en", "uk",
+  /// "cs", "de", "fr", "it", "pt", "ro", "pl").
+  ///
+  /// Deliberately a new code column rather than a reuse of the
+  /// `preferredLanguageId` FK above. Those are two different concepts that
+  /// happen to share a word:
+  ///  - `preferredLanguageId` -> `Language` reference table: a *seeded
+  ///    marketplace lookup* ("which languages does this person speak/prefer
+  ///    to be contacted in"), rows of which are administrator-managed data
+  ///    and may include languages the UI has no translations for at all
+  ///    (e.g. "ca").
+  ///  - `preferredLocale`: a *product/UI capability* — it may only ever
+  ///    hold a code that the app actually ships translation files for (see
+  ///    `SUPPORTED_LOCALES` in src/shared/i18n/locales.ts). Adding a new
+  ///    interface language must be a "drop in translation files" change,
+  ///    never "insert a row and hope the UI has messages for it".
+  /// Coupling the two would make every new interface language depend on a
+  /// data migration and would let an admin break the UI by deactivating a
+  /// `Language` row. See docs/MODULE_29_INTERNATIONALIZATION.md §4.
+  ///
+  /// Null means "never chosen explicitly" — resolution then falls through
+  /// to the cookie/`Accept-Language`/Spanish chain, it does NOT mean
+  /// Spanish. Validation of the value lives at the application edge
+  /// (`languagePreferenceSchema`), not in a Postgres enum, precisely so
+  /// adding a locale stays code-only with no migration.
+  preferredLocale  String?    @db.VarChar(10)
   timezone         String?
   notificationPreferences Json? @db.JsonB
   lastLoginAt      DateTime?

@@ -1,0 +1,41 @@
+-- Hand-authored (same caveat as every prior migration in this repo: no
+-- Postgres/engine access in this environment to run `prisma migrate dev`
+-- and have it generate this file from a real diff — `docker` is not
+-- installed in the sandbox this was written in and the npm registry is
+-- unreachable, so docker-compose.yml's `postgres` service could not be
+-- started). Mirrors exactly what `prisma migrate dev --create-only
+-- --name add_user_preferred_locale` would produce for the schema change
+-- below. Run the real command once you have a database locally to
+-- double-check, then `prisma migrate deploy` as usual.
+--
+-- Module 29 — Internationalization: adds the interface-language
+-- preference for authenticated users. See
+-- docs/MODULE_29_INTERNATIONALIZATION.md §4 ("Persistence strategy").
+--
+-- Forward-only and additive: a single nullable column, no default, no
+-- backfill, no index. NULL is meaningful here — it means "this user has
+-- never explicitly chosen an interface language", which makes resolution
+-- fall through to the cookie -> Accept-Language -> Spanish chain rather
+-- than pinning every pre-existing user to Spanish. Every existing row is
+-- therefore correct as-is with no data migration.
+--
+-- Note this is NOT the pre-existing `preferredLanguageId` FK (-> the
+-- seeded "languages" reference table, which models spoken/contact
+-- languages as admin-managed marketplace data). That column is untouched
+-- by this migration and keeps its current meaning. See the doc comment on
+-- `User.preferredLocale` in prisma/schema.prisma for why the two are kept
+-- separate.
+--
+-- Deliberately a plain VARCHAR(10) rather than a Postgres enum: the whole
+-- point of this module's architecture is that adding a new interface
+-- language is a translation-files-only change. An enum would force a
+-- migration (and an `ALTER TYPE ... ADD VALUE`, which cannot run inside a
+-- transaction block on older Postgres) for every new language. The
+-- allowed set is validated at the application edge instead — see
+-- `languagePreferenceSchema` in src/core/application/dto/i18n.dto.ts and
+-- `SUPPORTED_LOCALES` in src/shared/i18n/locales.ts. VARCHAR(10) is wide
+-- enough for any BCP-47 tag this product would plausibly ship
+-- ("pt-BR", "zh-Hans") without being unbounded.
+
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN "preferredLocale" VARCHAR(10);
