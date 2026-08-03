@@ -1,22 +1,23 @@
+import { createTranslator } from "use-intl/core";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { getNamespaceMessages } from "@/infrastructure/i18n/message-loader";
-import { createTranslator } from "@/shared/i18n/translator";
 import {
   VALIDATION_KEYS,
   isValidationKey,
   parseWithTranslatedErrors,
   toTranslatedFieldErrors,
   translateValidationMessage,
+  type Translator,
 } from "@/shared/i18n/validation-messages";
 
-function translatorFor(locale: "es" | "en" | "pl") {
+function translatorFor(locale: "es" | "en" | "pl"): Translator {
   return createTranslator({
     locale,
     namespace: "validation",
-    messages: getNamespaceMessages(locale, "validation"),
-  });
+    messages: { validation: getNamespaceMessages(locale, "validation") },
+  }) as unknown as Translator;
 }
 
 describe("translateValidationMessage", () => {

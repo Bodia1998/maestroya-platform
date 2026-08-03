@@ -1,6 +1,16 @@
 import { z } from "zod";
 
-import type { Translator } from "@/shared/i18n/translator";
+/**
+ * A minimal structural type for "a next-intl translator" — deliberately
+ * not an import of `next-intl` itself. This file is used from Zod error
+ * maps that DTOs (application layer) may eventually reach for, and the
+ * application layer must never depend on next-intl or carry translated
+ * strings (see this file's own doc comment above). Any function shaped
+ * like `t(key, values) => string` satisfies this — including the
+ * `useTranslations`/`getTranslations` return value from `next-intl` and
+ * `next-intl/server`, which is exactly what every call site passes in.
+ */
+export type Translator = (key: string, values?: Record<string, string | number>) => string;
 
 /**
  * Module 29 — Internationalization: translatable Zod validation messages.

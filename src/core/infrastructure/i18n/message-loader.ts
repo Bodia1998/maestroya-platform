@@ -1,11 +1,35 @@
 import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/locales";
-import { mergeWithFallback, type NamespaceMessages } from "@/shared/i18n/translator";
 import {
   NAMESPACES,
   getLocaleCatalog,
   type LocaleCatalog,
   type Namespace,
+  type NamespaceMessages,
 } from "@/infrastructure/i18n/message-catalog";
+
+/**
+ * Deep-merges a locale's namespace over the default locale's, so an
+ * incomplete translation degrades key-by-key to Spanish instead of
+ * rendering a raw key via next-intl's own missing-message fallback. Pure
+ * and side-effect-free — neither input is mutated, because both are
+ * module-level imported JSON objects shared across every request in the
+ * process.
+ */
+function mergeWithFallback(
+  fallback: NamespaceMessages,
+  override: NamespaceMessages,
+): NamespaceMessages {
+  const merged: NamespaceMessages = { ...fallback };
+  for (const [key, value] of Object.entries(override)) {
+    const base = merged[key];
+    if (typeof value === "object" && value !== null && typeof base === "object" && base !== null) {
+      merged[key] = mergeWithFallback(base, value);
+    } else {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
 
 /**
  * Module 29 — Internationalization: turns the static catalog into the

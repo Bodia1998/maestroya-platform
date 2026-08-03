@@ -71,7 +71,7 @@ describe("switching as a guest", () => {
 
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
     expect(window.localStorage.getItem(LOCALE_STORAGE_KEY)).toBe("pl");
-    expect(document.cookie).toContain("maestroya_locale=pl");
+    expect(document.cookie).toContain("NEXT_LOCALE=pl");
     // A guest's language is never written to the account.
     expect(fetchMock).not.toHaveBeenCalled();
   });

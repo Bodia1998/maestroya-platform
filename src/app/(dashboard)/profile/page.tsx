@@ -1,6 +1,7 @@
+import { getTranslations } from "next-intl/server";
+
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { requireAuth } from "@/infrastructure/auth/rbac";
-import { getTranslations } from "@/infrastructure/i18n/server-locale";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { makeGetProfileUseCase } from "@/application/use-cases/profile/compose";
 import { AvatarUpload } from "./avatar-upload";

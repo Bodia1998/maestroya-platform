@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 /**
  * Next.js configuration.
@@ -123,4 +124,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Module 29 — Internationalization: wires up next-intl's Server Component
+ * plugin, which resolves `src/i18n/request.ts` (this app's
+ * `getRequestConfig`, "without i18n routing" — no `[locale]` URL
+ * segment, see that file's doc comment) and makes it available to
+ * `next-intl/server`'s `getTranslations()`/`getLocale()`/`getMessages()`/
+ * `getFormatter()` calls throughout the app.
+ */
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+export default withNextIntl(nextConfig);

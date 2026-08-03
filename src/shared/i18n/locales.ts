@@ -76,13 +76,17 @@ export const LOCALE_DESCRIPTORS: readonly LocaleDescriptor[] = [
 ];
 
 /**
- * Cookie name. A cookie — not only `localStorage` — because the server
- * has to render the *first* HTML response in the right language, and
- * `localStorage` is unreadable from a Server Component, a Route Handler
- * or Edge middleware. `localStorage` remains the client-side store of
- * record for guests (per the product requirement); the cookie is its
- * server-readable mirror, written by the same client code that writes
- * `localStorage`. See docs/MODULE_29_INTERNATIONALIZATION.md §4.
+ * Cookie name. `NEXT_LOCALE` is next-intl's own documented cookie name
+ * for the "without i18n routing" setup this app uses (no `/[locale]/...`
+ * URL segment — see middleware.ts's `negotiateLocale` doc comment) — a
+ * cookie, not only `localStorage`, because the server has to render the
+ * *first* HTML response in the right language, and `localStorage` is
+ * unreadable from a Server Component, a Route Handler or Edge middleware.
+ * `localStorage` remains the client-side store of record for guests (per
+ * the product requirement); the cookie is its server-readable mirror,
+ * written by the same client code that writes `localStorage`, and is
+ * read by `src/i18n/request.ts` (next-intl's `getRequestConfig`). See
+ * docs/MODULE_29_INTERNATIONALIZATION.md §4.
  *
  * Not prefixed `__Host-`/`__Secure-`: this value must be readable by
  * client JS (the switcher mirrors it into `localStorage`) and carries no
@@ -91,7 +95,7 @@ export const LOCALE_DESCRIPTORS: readonly LocaleDescriptor[] = [
  * against `SUPPORTED_LOCALES` on every read, so it can never be used to
  * smuggle a path fragment into a message-file lookup.
  */
-export const LOCALE_COOKIE_NAME = "maestroya_locale";
+export const LOCALE_COOKIE_NAME = "NEXT_LOCALE";
 
 /** `localStorage` key. Same value, same validation, browser-only store. */
 export const LOCALE_STORAGE_KEY = "maestroya_locale";

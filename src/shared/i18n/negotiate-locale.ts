@@ -78,7 +78,7 @@ export function matchSupportedLocale(
 export interface LocaleResolutionInput {
   /** `User.preferredLocale` — only ever pass this for an authenticated user. */
   userPreference?: string | null;
-  /** The `maestroya_locale` cookie / `localStorage` value. */
+  /** The `NEXT_LOCALE` cookie / `localStorage` value. */
   storedPreference?: string | null;
   /** The raw `Accept-Language` request header. */
   acceptLanguage?: string | null;

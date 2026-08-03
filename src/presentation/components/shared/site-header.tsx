@@ -1,7 +1,8 @@
 import Link from "next/link";
 
+import { getTranslations } from "next-intl/server";
+
 import { getCurrentUser, ROLES } from "@/infrastructure/auth/rbac";
-import { getTranslations } from "@/infrastructure/i18n/server-locale";
 import { ButtonLink } from "@/components/ui/button-link";
 import { LanguageSwitcher } from "./language-switcher";
 import { MobileNav } from "./mobile-nav";

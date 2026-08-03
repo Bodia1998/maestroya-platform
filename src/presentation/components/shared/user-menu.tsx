@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, LayoutDashboard, LogOut, User } from "lucide-react";
 
-import { useTranslations } from "@/components/shared/i18n-provider";
 import { cn } from "@/shared/utils/cn";
 
 export interface UserMenuProps {

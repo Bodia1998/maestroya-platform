@@ -1,14 +1,14 @@
+import { createTranslator } from "use-intl/core";
 import { describe, expect, it } from "vitest";
 
 import {
   MESSAGE_CATALOG,
   NAMESPACES,
   getLocaleCatalog,
+  type NamespaceMessages,
 } from "@/infrastructure/i18n/message-catalog";
 import { getMessages, getNamespaceMessages } from "@/infrastructure/i18n/message-loader";
-import { formatMessage } from "@/shared/i18n/message-format";
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/shared/i18n/locales";
-import type { NamespaceMessages } from "@/shared/i18n/translator";
 
 function flatten(messages: NamespaceMessages, prefix = ""): Map<string, string> {
   const flat = new Map<string, string>();
@@ -21,11 +21,31 @@ function flatten(messages: NamespaceMessages, prefix = ""): Map<string, string> 
 }
 
 /**
+ * Renders one message with next-intl's own translator (`use-intl/core`'s
+ * `createTranslator`, the same engine `getTranslations`/`useTranslations`
+ * use) rather than this repo's retired hand-rolled ICU renderer.
+ */
+function renderMessage(
+  namespace: string,
+  key: string,
+  template: string,
+  values: Record<string, unknown>,
+  locale: string,
+): string {
+  const t = createTranslator({
+    locale,
+    namespace,
+    messages: { [namespace]: { [key]: template } },
+  });
+  return t(key, values as never);
+}
+
+/**
  * The guard rail behind the "adding a language is translation-files-only"
  * promise. If `SUPPORTED_LOCALES` and the catalog ever drift apart, or a
  * translator's file is missing a key the default locale has, or a message
- * uses ICU syntax this platform's renderer does not implement, it fails
- * here rather than rendering a raw key to a user.
+ * uses ICU syntax next-intl does not implement, it fails here rather than
+ * rendering a raw key to a user.
  */
 describe("message catalog completeness", () => {
   it("covers every supported locale, and nothing else", () => {
@@ -74,7 +94,7 @@ describe("message catalog completeness", () => {
     for (const locale of SUPPORTED_LOCALES) {
       for (const namespace of NAMESPACES) {
         for (const [key, template] of flatten(getLocaleCatalog(locale)[namespace])) {
-          const rendered = formatMessage(template, values, locale);
+          const rendered = renderMessage(namespace, key, template, values, locale);
           expect(rendered, `${locale}/${namespace}/${key}`).not.toContain("{");
           expect(rendered, `${locale}/${namespace}/${key}`).not.toContain("}");
         }
@@ -86,8 +106,9 @@ describe("message catalog completeness", () => {
     // Polish 'few' (2-4) vs 'many' (5+) — a two-branch English-shaped
     // translation would render identically for 3 and 5.
     const pl = getNamespaceMessages("pl", "jobs");
-    const three = formatMessage(flatten(pl).get("count")!, { count: 3 }, "pl");
-    const five = formatMessage(flatten(pl).get("count")!, { count: 5 }, "pl");
+    const template = flatten(pl).get("count")!;
+    const three = renderMessage("jobs", "count", template, { count: 3 }, "pl");
+    const five = renderMessage("jobs", "count", template, { count: 5 }, "pl");
     expect(three).not.toBe(five);
   });
 });

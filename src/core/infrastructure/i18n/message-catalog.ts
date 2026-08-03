@@ -141,7 +141,15 @@ import pl_emails from "@/i18n/messages/pl/emails.json";
 import pl_marketing from "@/i18n/messages/pl/marketing.json";
 
 import { SUPPORTED_LOCALES, type Locale } from "@/shared/i18n/locales";
-import type { NamespaceMessages } from "@/shared/i18n/translator";
+
+/**
+ * A namespace file: nested objects bottoming out in message strings.
+ * Shaped exactly as next-intl's `AbstractIntlMessages` expects, which is
+ * what lets `LocaleCatalog` below (a `Record<Namespace, NamespaceMessages>`
+ * keyed by namespace) be handed to next-intl as a single `messages`
+ * object unchanged — see `src/i18n/request.ts`.
+ */
+export type NamespaceMessages = { [key: string]: string | NamespaceMessages };
 
 /**
  * Every namespace the app ships translations for. The single source of

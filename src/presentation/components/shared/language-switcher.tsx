@@ -1,9 +1,10 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown, Globe, Loader2 } from "lucide-react";
 
-import { useI18n, useTranslations } from "@/components/shared/i18n-provider";
+import { useI18n } from "@/components/shared/i18n-provider";
 import { LOCALE_DESCRIPTORS, getLocaleDescriptor, type Locale } from "@/shared/i18n/locales";
 import { cn } from "@/shared/utils/cn";
 
@@ -78,7 +79,8 @@ export function LanguageSwitcher({
   compact = false,
   className,
 }: LanguageSwitcherProps) {
-  const { locale, isSwitching, switchFailed, setLocale } = useI18n();
+  const { isSwitching, switchFailed, setLocale } = useI18n();
+  const locale = useLocale() as Locale;
   const t = useTranslations("settings");
   const tNav = useTranslations("nav");
   const [open, setOpen] = useState(false);

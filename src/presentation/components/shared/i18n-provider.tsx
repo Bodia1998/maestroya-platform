@@ -1,49 +1,57 @@
 "use client";
 
+import { NextIntlClientProvider } from "next-intl";
+import type { AbstractIntlMessages } from "use-intl/core";
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo, useState, useTransition } from "react";
 
-import type { LocaleCatalog, Namespace } from "@/infrastructure/i18n/message-loader";
-import { DEFAULT_LOCALE, type Locale } from "@/shared/i18n/locales";
+import type { Locale } from "@/shared/i18n/locales";
 import { persistLocale } from "@/shared/i18n/locale-storage";
-import { createTranslator, type Translator } from "@/shared/i18n/translator";
-import { createLocaleFormatter, type LocaleFormatter } from "@/shared/utils/intl-format";
 
 /**
- * Module 29 — Internationalization: the client-side counterpart of
- * `server-locale.ts`.
+ * Module 29 — Internationalization: the client-side switch-state
+ * provider, wrapping next-intl's own `NextIntlClientProvider`.
+ *
+ * Translations and formatting are now next-intl's job everywhere —
+ * `useTranslations`/`useLocale`/`useFormatter` from `next-intl` read
+ * directly from `NextIntlClientProvider`'s context, no wrapper needed.
+ * What next-intl does *not* provide, and what this file exists for, is
+ * the app's own language-*switching* UX: an instant optimistic locale
+ * flip, the fire-and-forget `PATCH /api/user/language` write for signed-in
+ * users, and the pending/failed state the switcher renders.
  *
  * ## How a switch produces an instant, refresh-free update
  *
- * The provider never loads message files itself. The root layout resolves
- * the locale on the server and passes `{ locale, messages }` down as
- * props (the same shape `next-intl`'s `NextIntlClientProvider` takes).
- * When the user picks a language, `setLocale`:
+ * The root layout resolves the locale + messages on the server (via
+ * `src/i18n/request.ts`) and passes them down as props to `Providers`,
+ * which hands them straight to `NextIntlClientProvider`. When the user
+ * picks a language, `setLocale`:
  *
- * 1. writes `localStorage` + the mirror cookie synchronously, so the very
- *    next server render already sees the new choice;
+ * 1. writes the `NEXT_LOCALE` cookie + `localStorage` synchronously
+ *    (`persistLocale`), so the very next server render already sees the
+ *    new choice;
  * 2. fires the `PATCH /api/user/language` write for signed-in users
  *    (fire-and-forget — the UI must not wait on a round trip to change
  *    language, and the cookie already carries the choice if it fails);
  * 3. calls `router.refresh()` inside a transition.
  *
  * `router.refresh()` re-fetches the current route's RSC payload — root
- * layout included — so the server re-renders every Server Component *and*
- * re-sends this provider's `messages` prop in the new language, with no
- * full page load, no lost client state, no re-mount, and no effect
- * whatsoever on the session (the user is never signed out).
+ * layout included — so `src/i18n/request.ts` re-resolves the locale from
+ * the now-updated cookie and every Server Component re-renders in the
+ * new language, with no full page load, no locale URL segment (this app
+ * deliberately has none — see `middleware.ts`), no lost client state, no
+ * re-mount, and no effect on the session.
  *
- * `optimisticLocale` covers the gap: `locale` and everything derived from
- * it (`<html lang>`, formatters, the checkmark in the switcher) flips the
- * instant the user clicks, before the refresh lands. Message *strings*
- * arrive with the refresh a moment later — see
- * docs/MODULE_29_INTERNATIONALIZATION.md §10 for why shipping all ten
- * catalogs to the client to close that last gap is a deliberate no.
+ * `optimisticLocale` covers the gap: everything driven by `useI18n()`
+ * (the checkmark in the switcher, `isSwitching`) flips the instant the
+ * user clicks, before the refresh lands. Message *strings* — which come
+ * from the server-provided `messages` prop, not from this context — only
+ * update once the refresh lands.
  */
 
 export interface I18nContextValue {
+  /** The optimistic locale — flips instantly on click, ahead of the server refresh. */
   locale: Locale;
-  messages: LocaleCatalog;
   /** True while a language switch is in flight. Drives the pending UI. */
   isSwitching: boolean;
   /**
@@ -60,7 +68,7 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 
 export interface I18nProviderProps {
   locale: Locale;
-  messages: LocaleCatalog;
+  messages: AbstractIntlMessages;
   /**
    * Whether to also persist to the database. Passed down from the server
    * (which already knows the session) rather than read from
@@ -120,22 +128,27 @@ export function I18nProvider({ locale, messages, isAuthenticated, children }: I1
   const value = useMemo<I18nContextValue>(
     () => ({
       locale: effectiveLocale,
-      messages,
       isSwitching: isPending,
       switchFailed,
       setLocale,
     }),
-    [effectiveLocale, messages, isPending, switchFailed, setLocale],
+    [effectiveLocale, isPending, switchFailed, setLocale],
   );
 
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+  return (
+    <I18nContext.Provider value={value}>
+      <NextIntlClientProvider locale={effectiveLocale} messages={messages}>
+        {children}
+      </NextIntlClientProvider>
+    </I18nContext.Provider>
+  );
 }
 
 /**
  * Throws rather than silently defaulting when the provider is missing.
- * A Client Component rendering untranslated text because a provider was
- * forgotten is a bug that reaches production; a thrown error is one that
- * reaches the first render in development.
+ * A switcher rendering with no pending/failed state because a provider
+ * was forgotten is a bug that reaches production; a thrown error is one
+ * that reaches the first render in development.
  */
 export function useI18n(): I18nContextValue {
   const context = useContext(I18nContext);
@@ -144,23 +157,3 @@ export function useI18n(): I18nContextValue {
   }
   return context;
 }
-
-/** `useTranslations("settings")` — same signature as its server twin. */
-export function useTranslations(namespace: Namespace): Translator {
-  const { locale, messages } = useI18n();
-  return useMemo(
-    () => createTranslator({ locale, namespace, messages: messages[namespace] }),
-    [locale, messages, namespace],
-  );
-}
-
-export function useLocale(): Locale {
-  return useI18n().locale;
-}
-
-export function useFormatter(): LocaleFormatter {
-  const { locale } = useI18n();
-  return useMemo(() => createLocaleFormatter(locale), [locale]);
-}
-
-export { DEFAULT_LOCALE };

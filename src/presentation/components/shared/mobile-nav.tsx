@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button-link";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
-import { useTranslations } from "@/components/shared/i18n-provider";
 
 export interface MobileNavProps {
   links: Array<{ href: string; label: string }>;

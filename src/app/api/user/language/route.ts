@@ -26,7 +26,7 @@ import { LOCALE_COOKIE_MAX_AGE_SECONDS, LOCALE_COOKIE_NAME } from "@/shared/i18n
  * `SUPPORTED_LOCALES`, so a new language is accepted here automatically
  * and an unsupported one can never reach the database.
  *
- * The response also re-writes the `maestroya_locale` cookie. The browser
+ * The response also re-writes the `NEXT_LOCALE` cookie. The browser
  * already wrote it client-side before calling this, so this is belt and
  * braces for the case where client-side cookie writing is unavailable
  * (some privacy modes) — and it keeps the server the authority on the

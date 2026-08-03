@@ -3,10 +3,10 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { SessionProvider } from "next-auth/react";
+import type { AbstractIntlMessages } from "use-intl/core";
 import { useState } from "react";
 
 import { I18nProvider } from "@/components/shared/i18n-provider";
-import type { LocaleCatalog } from "@/infrastructure/i18n/message-loader";
 import type { Locale } from "@/shared/i18n/locales";
 
 import { createQueryClient } from "@/lib/query-client";
@@ -37,15 +37,16 @@ import { createQueryClient } from "@/lib/query-client";
 export interface ProvidersProps {
   children: React.ReactNode;
   /**
-   * Module 29 — Internationalization. Resolved on the *server* (root
-   * layout) and passed down, never re-resolved here: the client must
-   * render the first pass with exactly the messages the server used, or
-   * React reports a hydration mismatch on every translated string. This
-   * is the same contract `next-intl`'s `NextIntlClientProvider` has with
-   * its own `locale`/`messages` props.
+   * Module 29 — Internationalization. Resolved on the *server*
+   * (`src/i18n/request.ts`, read in the root layout via `getLocale()`/
+   * `getMessages()` from `next-intl/server`) and passed down, never
+   * re-resolved here: the client must render the first pass with exactly
+   * the messages the server used, or React reports a hydration mismatch
+   * on every translated string. This is `NextIntlClientProvider`'s own
+   * documented contract, which `I18nProvider` forwards to.
    */
   locale: Locale;
-  messages: LocaleCatalog;
+  messages: AbstractIntlMessages;
   isAuthenticated: boolean;
 }
 
