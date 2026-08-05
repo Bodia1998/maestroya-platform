@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { makeGetAdminVerificationUseCase } from "@/application/use-cases/verification/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Section } from "@/components/layout/section";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import {
   approveVerificationFormAction,
   rejectVerificationFormAction,
@@ -56,7 +58,7 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
         actions={<span className="text-sm font-medium">{detail.status}</span>}
       />
 
-      <section className="grid grid-cols-2 gap-4 rounded-md border border-border p-4 text-sm">
+      <ResponsiveGrid cols="2" gap="md" bordered>
         <div>
           <p className="text-foreground/60">Submitted</p>
           <p className="font-medium">{detail.submittedAt ? detail.submittedAt.toLocaleString() : "—"}</p>
@@ -69,7 +71,7 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
           <p className="text-foreground/60">Expires</p>
           <p className="font-medium">{detail.expiresAt ? detail.expiresAt.toLocaleDateString() : "—"}</p>
         </div>
-      </section>
+      </ResponsiveGrid>
 
       {detail.rejectionReason && (
         <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
@@ -84,8 +86,7 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
         </div>
       )}
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Documents</h2>
+      <Section title="Documents">
         {detail.documents.length === 0 ? (
           <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-foreground/70">
             No documents were uploaded.
@@ -115,11 +116,9 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
             ))}
           </ul>
         )}
-      </section>
+      </Section>
 
-      <section className="flex flex-col gap-4 rounded-md border border-border p-4">
-        <h2 className="text-lg font-medium">Review actions</h2>
-
+      <Section title="Review actions" gap="lg" bordered>
         {isPending && (
           <form action={startVerificationReviewFormAction.bind(null, detail.id)}>
             <button type="submit" className="h-10 rounded-md border border-border px-4 text-sm">
@@ -181,7 +180,7 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
             No review decision is available for a request in the “{detail.status}” state.
           </p>
         )}
-      </section>
+      </Section>
     </div>
   );
 }

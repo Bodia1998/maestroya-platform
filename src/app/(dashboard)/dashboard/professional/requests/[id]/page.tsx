@@ -5,6 +5,9 @@ import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetServiceRequestForProfessionalUseCase } from "@/application/use-cases/quotes/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Section } from "@/components/layout/section";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
+import { ActionBar } from "@/components/layout/action-bar";
 
 export const metadata = { title: "Service request" };
 
@@ -53,15 +56,14 @@ export default async function ProfessionalServiceRequestDetailPage({
         like to propose a price for the work.
       </p>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-medium">Description</h2>
+      <Section title="Description" gap="sm">
         <p className="whitespace-pre-line text-sm text-foreground/80">{request.description}</p>
-      </section>
+      </Section>
 
       {/* Only coarse location (city/province) is ever shown here — the
           customer's exact address is never exposed to a professional who
           hasn't been accepted for the job (see ServiceRequestDiscoveryRepository). */}
-      <section className="grid grid-cols-2 gap-4 rounded-md border border-border p-4 text-sm">
+      <ResponsiveGrid cols="2" gap="md" bordered>
         <div>
           <p className="text-foreground/60">Location</p>
           <p className="font-medium">
@@ -77,16 +79,16 @@ export default async function ProfessionalServiceRequestDetailPage({
           <p className="text-foreground/60">Posted</p>
           <p className="font-medium">{request.createdAt.toLocaleDateString()}</p>
         </div>
-      </section>
+      </ResponsiveGrid>
 
-      <section className="flex flex-wrap gap-3 border-t border-border pt-6">
+      <ActionBar>
         <Link
           href={`/dashboard/professional/requests/${request.id}/quote`}
           className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
         >
           Create quote
         </Link>
-      </section>
+      </ActionBar>
     </div>
   );
 }

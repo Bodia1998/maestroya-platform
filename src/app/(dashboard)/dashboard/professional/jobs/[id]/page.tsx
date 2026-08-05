@@ -11,6 +11,8 @@ import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointme
 import { JobStatusBadge } from "@/app/(dashboard)/jobs/job-status-badge";
 import { JobActions } from "@/app/(dashboard)/jobs/[id]/job-actions";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Section } from "@/components/layout/section";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 
 export const metadata = { title: "Job" };
 
@@ -66,7 +68,7 @@ export default async function ProfessionalJobDetailPage({ params }: { params: Pr
         actions={<JobStatusBadge status={job.status} />}
       />
 
-      <dl className="grid grid-cols-1 gap-3 rounded-md border border-border p-4 text-sm sm:grid-cols-2">
+      <ResponsiveGrid as="dl" cols="1-2" gap="sm" bordered>
         <div>
           <dt className="text-foreground/60">Started</dt>
           <dd>{formatDate(job.startedAt)}</dd>
@@ -84,10 +86,9 @@ export default async function ProfessionalJobDetailPage({ params }: { params: Pr
             </dd>
           </div>
         )}
-      </dl>
+      </ResponsiveGrid>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Appointments on this job</h2>
+      <Section title="Appointments on this job">
         {jobAppointments.length === 0 ? (
           <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-foreground/70">
             No appointments yet.
@@ -107,7 +108,7 @@ export default async function ProfessionalJobDetailPage({ params }: { params: Pr
             ))}
           </ul>
         )}
-      </section>
+      </Section>
 
       <JobActions jobId={job.id} status={job.status} viewerRole={viewerRole} hasOpenAppointments={hasOpenAppointments} />
     </div>

@@ -5,6 +5,10 @@ import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetServiceRequestUseCase } from "@/application/use-cases/service-request/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageContainer } from "@/components/layout/page-container";
+import { Section } from "@/components/layout/section";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
+import { ActionBar } from "@/components/layout/action-bar";
 import { RequestStatusBadge } from "../request-status-badge";
 import { CancelServiceRequestDialog } from "./cancel-service-request-dialog";
 import { ServiceRequestPhotoManager } from "./service-request-photo-manager";
@@ -40,7 +44,7 @@ export default async function ServiceRequestDetailPage({
   const isEditable = request.status === "PUBLISHED";
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
+    <PageContainer>
       <PageHeader
         title={request.title}
         subtitle={request.categoryName}
@@ -48,12 +52,11 @@ export default async function ServiceRequestDetailPage({
         actions={<RequestStatusBadge status={request.status} />}
       />
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-medium">Description</h2>
+      <Section title="Description" gap="sm">
         <p className="whitespace-pre-line text-sm text-foreground/80">{request.description}</p>
-      </section>
+      </Section>
 
-      <section className="grid grid-cols-2 gap-4 rounded-md border border-border p-4 text-sm">
+      <ResponsiveGrid cols="2" gap="md" bordered>
         <div>
           <p className="text-foreground/60">Location</p>
           <p className="font-medium">
@@ -89,16 +92,15 @@ export default async function ServiceRequestDetailPage({
           <p className="text-foreground/60">Last updated</p>
           <p className="font-medium">{request.updatedAt.toLocaleString()}</p>
         </div>
-      </section>
+      </ResponsiveGrid>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Photos</h2>
+      <Section title="Photos">
         <ServiceRequestPhotoManager
           requestId={request.id}
           photos={request.photos}
           editable={isEditable}
         />
-      </section>
+      </Section>
 
       {request.status === "ACCEPTED" && (
         <section className="rounded-md border border-border bg-black/5 p-4">
@@ -117,7 +119,7 @@ export default async function ServiceRequestDetailPage({
       )}
 
       {isEditable && (
-        <section className="flex flex-wrap gap-3 border-t border-border pt-6">
+        <ActionBar>
           <Link
             href={`/requests/${request.id}/edit`}
             className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-transparent px-4 text-sm font-medium hover:bg-black/5"
@@ -125,8 +127,8 @@ export default async function ServiceRequestDetailPage({
             Edit request
           </Link>
           <CancelServiceRequestDialog requestId={request.id} />
-        </section>
+        </ActionBar>
       )}
-    </div>
+    </PageContainer>
   );
 }

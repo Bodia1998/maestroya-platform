@@ -5,6 +5,9 @@ import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalQuoteUseCase } from "@/application/use-cases/quotes/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Section } from "@/components/layout/section";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
+import { ActionBar } from "@/components/layout/action-bar";
 import { OpenConversationButton } from "../../../../messages/open-conversation-button";
 import { QuoteStatusBadge } from "../quote-status-badge";
 import { WithdrawQuoteDialog } from "../withdraw-quote-dialog";
@@ -47,14 +50,12 @@ export default async function ProfessionalQuoteDetailPage({
       />
 
       {quote.notes && (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-medium">Notes / proposal</h2>
+        <Section title="Notes / proposal" gap="sm">
           <p className="whitespace-pre-line text-sm text-foreground/80">{quote.notes}</p>
-        </section>
+        </Section>
       )}
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-medium">Items</h2>
+      <Section title="Items" gap="sm">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-foreground/60">
@@ -85,9 +86,9 @@ export default async function ProfessionalQuoteDetailPage({
             ))}
           </tbody>
         </table>
-      </section>
+      </Section>
 
-      <section className="grid grid-cols-2 gap-4 rounded-md border border-border p-4 text-sm">
+      <ResponsiveGrid cols="2" gap="md" bordered>
         <div>
           <p className="text-foreground/60">Valid until</p>
           <p className="font-medium">
@@ -102,9 +103,9 @@ export default async function ProfessionalQuoteDetailPage({
           <p className="text-foreground/60">Last updated</p>
           <p className="font-medium">{quote.updatedAt.toLocaleString()}</p>
         </div>
-      </section>
+      </ResponsiveGrid>
 
-      <section className="flex flex-wrap items-center gap-3 border-t border-border pt-6">
+      <ActionBar itemsCenter>
         {isEditable && (
           <>
             <Link
@@ -117,7 +118,7 @@ export default async function ProfessionalQuoteDetailPage({
           </>
         )}
         <OpenConversationButton serviceRequestId={quote.serviceRequestId} label="Message customer" />
-      </section>
+      </ActionBar>
     </div>
   );
 }

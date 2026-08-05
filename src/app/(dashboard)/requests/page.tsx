@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { RequestCard } from "@/components/dashboard/cards/request-card";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageContainer } from "@/components/layout/page-container";
 
 export const metadata = { title: "My requests" };
 
@@ -17,7 +18,7 @@ export default async function ServiceRequestsPage() {
   const requests = await makeGetCustomerServiceRequestsUseCase().execute(user.id);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+    <PageContainer maxWidth="3xl" gap="sm">
       <PageHeader
         title="My requests"
         subtitle="Service requests you've posted for professionals to quote on."
@@ -48,6 +49,6 @@ export default async function ServiceRequestsPage() {
           ))}
         </ul>
       )}
-    </div>
+    </PageContainer>
   );
 }

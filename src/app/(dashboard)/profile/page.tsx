@@ -4,6 +4,8 @@ import { prisma } from "@/infrastructure/database/prisma/client";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageContainer } from "@/components/layout/page-container";
+import { Section } from "@/components/layout/section";
 import { makeGetProfileUseCase } from "@/application/use-cases/profile/compose";
 import { AvatarUpload } from "./avatar-upload";
 import { ChangePasswordForm } from "./change-password-form";
@@ -32,47 +34,42 @@ export default async function ProfilePage() {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-10">
+    <PageContainer gap="lg">
       <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-medium">{t("section.avatar")}</h2>
+      <Section title={t("section.avatar")} gap="lg">
         <AvatarUpload currentImageUrl={profile.image} />
         <p className="text-xs text-foreground/60">
           This photo is just for your account — it has no effect on professional identity
           verification. Professionals manage that separately from Professional profile → Manage
           identity verification.
         </p>
-      </section>
+      </Section>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-medium">{t("section.details")}</h2>
+      <Section title={t("section.details")} gap="lg">
         <EditProfileForm profile={profile} address={address} languages={languages} />
-      </section>
+      </Section>
 
       {/* Module 29 — Internationalization: the user-facing home of the
           language preference. The header switcher is the quick path; this
           is the discoverable one, and the only place that explains what
           the setting does and does not affect. */}
-      <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-medium">{tSettings("language.title")}</h2>
+      <Section title={tSettings("language.title")} gap="lg">
         <p className="text-sm text-foreground/70">{tSettings("language.description")}</p>
         <LanguageSwitcher variant="list" className="max-w-sm" />
-      </section>
+      </Section>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-medium">{t("section.password")}</h2>
+      <Section title={t("section.password")} gap="lg">
         <ChangePasswordForm hasPassword={profile.hasPassword} />
-      </section>
+      </Section>
 
-      <section className="flex flex-col gap-4 border-t border-border pt-8">
-        <h2 className="text-lg font-medium text-red-700">{t("section.danger")}</h2>
+      <Section title={t("section.danger")} titleTone="danger" gap="lg" divider>
         <p className="text-sm text-foreground/70">
           Deleting your account is reversible only by contacting support — your data is deactivated,
           not immediately erased.
         </p>
         <DeleteAccountDialog hasPassword={profile.hasPassword} />
-      </section>
-    </div>
+      </Section>
+    </PageContainer>
   );
 }

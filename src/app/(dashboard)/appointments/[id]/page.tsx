@@ -4,6 +4,8 @@ import { makeGetAppointmentUseCase } from "@/application/use-cases/booking/compo
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageContainer } from "@/components/layout/page-container";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { AppointmentStatusBadge } from "../appointment-status-badge";
 import { AppointmentActions } from "./appointment-actions";
 
@@ -36,14 +38,14 @@ export default async function AppointmentDetailPage({ params }: { params: Promis
   const canConfirm = appointment.status === "PROPOSED" && appointment.proposedByUserId !== user.id;
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    <PageContainer gap="sm">
       <PageHeader
         title="Appointment"
         breadcrumbs={[{ label: "My appointments", href: "/appointments" }, { label: "Appointment" }]}
         actions={<AppointmentStatusBadge status={appointment.status} />}
       />
 
-      <dl className="grid grid-cols-1 gap-3 rounded-md border border-border p-4 text-sm sm:grid-cols-2">
+      <ResponsiveGrid as="dl" cols="1-2" gap="sm" bordered>
         <div>
           <dt className="text-foreground/60">Confirmed time</dt>
           <dd>{formatWindow(appointment.scheduledStart, appointment.scheduledEnd)}</dd>
@@ -61,9 +63,9 @@ export default async function AppointmentDetailPage({ params }: { params: Promis
             </dd>
           </div>
         )}
-      </dl>
+      </ResponsiveGrid>
 
       <AppointmentActions appointmentId={appointment.id} status={appointment.status} canConfirm={canConfirm} />
-    </div>
+    </PageContainer>
   );
 }

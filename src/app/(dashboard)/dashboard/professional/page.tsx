@@ -5,6 +5,7 @@ import { prisma } from "@/infrastructure/database/prisma/client";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalByUserIdUseCase } from "@/application/use-cases/professional/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageContainer } from "@/components/layout/page-container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heading, Text } from "@/components/ui/typography";
 import { DeactivateProfessionalDialog } from "./deactivate-professional-dialog";
@@ -31,7 +32,7 @@ export default async function ProfessionalDashboardPage() {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
+    <PageContainer>
       <PageHeader
         title="Professional profile"
         subtitle="Manage how you appear to customers as an individual professional."
@@ -94,6 +95,6 @@ export default async function ProfessionalDashboardPage() {
           )}
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

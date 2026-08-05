@@ -25,6 +25,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Heading } from "@/components/ui/typography";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageContainer } from "@/components/layout/page-container";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointment-status-badge";
 import { QuoteStatusBadge } from "@/app/(dashboard)/dashboard/professional/quotes/quote-status-badge";
 import { RequestStatusBadge } from "@/app/(dashboard)/requests/request-status-badge";
@@ -119,7 +121,7 @@ export default async function DashboardPage() {
   const activeRequestCount = requests.filter((r) => !INACTIVE_REQUEST_STATUSES.has(r.status)).length;
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+    <PageContainer maxWidth="6xl">
       <PageHeader
         title={`Welcome back${user.email ? `, ${user.email}` : ""}`}
         subtitle="Here's an overview of your MaestroYa account."
@@ -135,7 +137,7 @@ export default async function DashboardPage() {
               Customer requests you can respond to, and the quotes, appointments, and jobs that follow.
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ResponsiveGrid cols="1-2-4">
             <DashboardStatCard
               icon={FileText}
               label="Available requests"
@@ -172,7 +174,7 @@ export default async function DashboardPage() {
               value={completedJobs.length}
               href="/dashboard/professional/jobs"
             />
-          </div>
+          </ResponsiveGrid>
 
           <nav aria-label="Quick actions" className="flex flex-wrap gap-2">
             {PROFESSIONAL_QUICK_ACTIONS.map((action) => (
@@ -193,24 +195,22 @@ export default async function DashboardPage() {
           from this overview. See the doc comment on DashboardPage above. */}
       {!isProfessional && (
         <>
-          <div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <DashboardStatCard icon={FileText} label="Active requests" value={activeRequestCount} href="/requests" />
-              <DashboardStatCard
-                icon={CalendarDays}
-                label="Upcoming appointments"
-                value={appointments.length}
-                href="/appointments"
-              />
-              <DashboardStatCard icon={Briefcase} label="Active jobs" value={jobs.length} href="/jobs" />
-              <DashboardStatCard
-                icon={MessageSquare}
-                label="Unread messages"
-                value={unreadMessages}
-                href="/messages"
-              />
-            </div>
-          </div>
+          <ResponsiveGrid cols="1-2-4">
+            <DashboardStatCard icon={FileText} label="Active requests" value={activeRequestCount} href="/requests" />
+            <DashboardStatCard
+              icon={CalendarDays}
+              label="Upcoming appointments"
+              value={appointments.length}
+              href="/appointments"
+            />
+            <DashboardStatCard icon={Briefcase} label="Active jobs" value={jobs.length} href="/jobs" />
+            <DashboardStatCard
+              icon={MessageSquare}
+              label="Unread messages"
+              value={unreadMessages}
+              href="/messages"
+            />
+          </ResponsiveGrid>
 
           <nav aria-label="Quick actions" className="flex flex-wrap gap-2">
             {CUSTOMER_QUICK_ACTIONS.map((action) => (
@@ -221,7 +221,7 @@ export default async function DashboardPage() {
             ))}
           </nav>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <ResponsiveGrid cols="1-2-lg" gap="lg">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle>Your requests</CardTitle>
@@ -295,11 +295,11 @@ export default async function DashboardPage() {
                 )}
               </CardContent>
             </Card>
-          </div>
+          </ResponsiveGrid>
         </>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <ResponsiveGrid cols="1-2-lg" gap="lg">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle>Messages</CardTitle>
@@ -395,7 +395,7 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         )}
-      </div>
-    </div>
+      </ResponsiveGrid>
+    </PageContainer>
   );
 }

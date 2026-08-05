@@ -6,6 +6,8 @@ import { makeSearchDirectoryUseCase } from "@/application/use-cases/search/compo
 import type { SearchDirectoryResult } from "@/application/use-cases/search/search-directory.use-case";
 import { DomainError } from "@/domain/errors/domain-error";
 import { SEARCH_SORT_OPTIONS } from "@/domain/value-objects/search-sort-option";
+import { PageContainer } from "@/components/layout/page-container";
+import { Section } from "@/components/layout/section";
 import { DirectorySearchForm } from "./search-form";
 import { DirectorySearchResultsList } from "./results-list";
 
@@ -78,7 +80,7 @@ export default async function DirectorySearchPage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-10">
+    <PageContainer maxWidth="3xl" padded>
       <div>
         <h1 className="text-2xl font-semibold">Find a professional or company</h1>
         <p className="mt-1 text-sm text-foreground/70">
@@ -107,10 +109,7 @@ export default async function DirectorySearchPage({
       )}
 
       {hasAnyFilter && !searchError && results && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-medium">
-            {results.total} result{results.total === 1 ? "" : "s"} found
-          </h2>
+        <Section title={`${results.total} result${results.total === 1 ? "" : "s"} found`}>
           <DirectorySearchResultsList results={results.items} />
           {results.total > results.pageSize && (
             <nav className="flex items-center justify-between text-sm">
@@ -129,9 +128,9 @@ export default async function DirectorySearchPage({
               )}
             </nav>
           )}
-        </section>
+        </Section>
       )}
-    </div>
+    </PageContainer>
   );
 }
 

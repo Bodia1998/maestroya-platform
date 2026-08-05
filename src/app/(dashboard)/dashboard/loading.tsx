@@ -1,18 +1,20 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { KPIGridSkeleton, PanelSkeleton } from "@/components/dashboard/skeletons";
+import { PageContainer } from "@/components/layout/page-container";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 
 export default function Loading() {
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+    <PageContainer maxWidth="6xl">
       <div className="space-y-2">
         <Skeleton className="h-7 w-64" />
         <Skeleton className="h-4 w-80" />
       </div>
       <KPIGridSkeleton count={4} />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <ResponsiveGrid cols="1-2-lg" gap="lg">
         <PanelSkeleton />
         <PanelSkeleton />
-      </div>
-    </div>
+      </ResponsiveGrid>
+    </PageContainer>
   );
 }

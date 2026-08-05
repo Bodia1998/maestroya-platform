@@ -4,6 +4,7 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalVerificationUseCase } from "@/application/use-cases/verification/compose";
 import { VERIFICATION_DOCUMENT_TYPE_VALUES } from "@/domain/services/professional-verification-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Section } from "@/components/layout/section";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import {
   removeVerificationDocumentFormAction,
@@ -129,8 +130,7 @@ export default async function ProfessionalVerificationPage() {
             )}
           </section>
 
-          <section className="flex flex-col gap-3">
-            <h2 className="text-lg font-medium">Documents</h2>
+          <Section title="Documents">
             {verification.documents.length === 0 ? (
               <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-foreground/70">
                 No documents uploaded yet.
@@ -189,7 +189,7 @@ export default async function ProfessionalVerificationPage() {
                 </button>
               </form>
             )}
-          </section>
+          </Section>
 
           {(canSubmit || canResubmit) && (
             <section className="flex flex-col gap-2">

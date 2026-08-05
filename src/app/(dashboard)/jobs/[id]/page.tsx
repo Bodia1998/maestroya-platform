@@ -10,6 +10,9 @@ import {
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageContainer } from "@/components/layout/page-container";
+import { Section } from "@/components/layout/section";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointment-status-badge";
 import { JobStatusBadge } from "../job-status-badge";
 import { JobActions } from "./job-actions";
@@ -68,14 +71,14 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const backHref = viewerRole === "customer" ? "/jobs" : "/dashboard/professional/jobs";
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    <PageContainer gap="sm">
       <PageHeader
         title="Job"
         breadcrumbs={[{ label: "My jobs", href: backHref }, { label: "Job" }]}
         actions={<JobStatusBadge status={job.status} />}
       />
 
-      <dl className="grid grid-cols-1 gap-3 rounded-md border border-border p-4 text-sm sm:grid-cols-2">
+      <ResponsiveGrid as="dl" cols="1-2" gap="sm" bordered>
         <div>
           <dt className="text-foreground/60">Started</dt>
           <dd>{formatDate(job.startedAt)}</dd>
@@ -93,10 +96,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             </dd>
           </div>
         )}
-      </dl>
+      </ResponsiveGrid>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Appointments on this job</h2>
+      <Section title="Appointments on this job">
         {jobAppointments.length === 0 ? (
           <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-foreground/70">
             No appointments yet.
@@ -116,9 +118,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             ))}
           </ul>
         )}
-      </section>
+      </Section>
 
       <JobActions jobId={job.id} status={job.status} viewerRole={viewerRole} hasOpenAppointments={hasOpenAppointments} />
-    </div>
+    </PageContainer>
   );
 }

@@ -7,6 +7,8 @@ import { makeSearchProfessionalsUseCase, makeSearchCompaniesUseCase } from "@/ap
 import type { SearchProfessionalsResult } from "@/application/use-cases/discovery/search-professionals.use-case";
 import type { SearchCompaniesResult } from "@/application/use-cases/discovery/search-companies.use-case";
 import { DomainError } from "@/domain/errors/domain-error";
+import { PageContainer } from "@/components/layout/page-container";
+import { Section } from "@/components/layout/section";
 import { ProfessionalSearchForm } from "./search-form";
 import { SearchResultsList } from "./search-results-list";
 
@@ -84,7 +86,7 @@ export default async function ProfessionalsSearchPage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
+    <PageContainer padded>
       <div>
         <h1 className="text-2xl font-semibold">Find a professional</h1>
         <p className="mt-1 text-sm text-foreground/70">
@@ -108,19 +110,13 @@ export default async function ProfessionalsSearchPage({
       )}
 
       {hasSearch && !searchError && results && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-medium">
-            {results.total} professional{results.total === 1 ? "" : "s"} found
-          </h2>
+        <Section title={`${results.total} professional${results.total === 1 ? "" : "s"} found`}>
           <SearchResultsList results={results.results} categoryNamesById={categoryNamesById} />
-        </section>
+        </Section>
       )}
 
       {hasSearch && companyResults && companyResults.total > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-medium">
-            {companyResults.total} compan{companyResults.total === 1 ? "y" : "ies"} found
-          </h2>
+        <Section title={`${companyResults.total} compan${companyResults.total === 1 ? "y" : "ies"} found`}>
           <ul className="flex flex-col gap-2">
             {companyResults.results.map((company) => (
               <li key={company.id} className="flex items-center justify-between rounded-md border border-border p-3 text-sm">
@@ -138,8 +134,8 @@ export default async function ProfessionalsSearchPage({
               </li>
             ))}
           </ul>
-        </section>
+        </Section>
       )}
-    </div>
+    </PageContainer>
   );
 }

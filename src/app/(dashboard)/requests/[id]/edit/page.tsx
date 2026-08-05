@@ -5,6 +5,7 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
 import { makeGetServiceRequestUseCase } from "@/application/use-cases/service-request/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Section } from "@/components/layout/section";
 import { ServiceRequestForm } from "../../service-request-form";
 import { ServiceRequestPhotoManager } from "../service-request-photo-manager";
 
@@ -52,10 +53,9 @@ export default async function EditServiceRequestPage({
 
       <ServiceRequestForm mode="edit" categories={categories} request={request} />
 
-      <section className="flex flex-col gap-3 border-t border-border pt-6">
-        <h2 className="text-lg font-medium">Photos</h2>
+      <Section title="Photos" divider>
         <ServiceRequestPhotoManager requestId={request.id} photos={request.photos} editable />
-      </section>
+      </Section>
     </div>
   );
 }
