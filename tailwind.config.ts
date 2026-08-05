@@ -111,19 +111,64 @@ const config: Config = {
       },
       keyframes: {
         "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
+        "fade-out": { from: { opacity: "1" }, to: { opacity: "0" } },
         "slide-up": {
           from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-down": {
+          from: { opacity: "0", transform: "translateY(-8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-in-right": {
+          from: { opacity: "0", transform: "translateX(100%)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "slide-out-right": {
+          from: { opacity: "1", transform: "translateX(0)" },
+          to: { opacity: "0", transform: "translateX(100%)" },
+        },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.96)" },
+          to: { opacity: "1", transform: "scale(1)" },
         },
         shimmer: {
           "0%": { backgroundPosition: "-400px 0" },
           "100%": { backgroundPosition: "400px 0" },
         },
+        spin: {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.2s ease-out",
+        "fade-out": "fade-out 0.2s ease-in",
         "slide-up": "slide-up 0.3s ease-out",
+        "slide-down": "slide-down 0.2s ease-out",
+        "slide-in-right": "slide-in-right 0.3s ease-out",
+        "slide-out-right": "slide-out-right 0.2s ease-in",
+        "scale-in": "scale-in 0.15s ease-out",
         shimmer: "shimmer 1.6s linear infinite",
+        "spin-slow": "spin 1.2s linear infinite",
+      },
+      transitionDuration: {
+        fast: "150ms",
+        DEFAULT: "200ms",
+        slow: "300ms",
+      },
+      zIndex: {
+        dropdown: "1000",
+        sticky: "1100",
+        overlay: "1200",
+        drawer: "1300",
+        modal: "1400",
+        popover: "1500",
+        tooltip: "1600",
+        toast: "1700",
+      },
+      maxWidth: {
+        prose: "65ch",
       },
     },
   },
