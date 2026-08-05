@@ -7,6 +7,7 @@ import {
   hashToken,
 } from "@/infrastructure/auth/tokens";
 import type { EmailSender } from "@/application/interfaces/email-sender";
+import { renderActionLinkEmailHtml } from "@/infrastructure/email/email-template";
 
 export class RequestPasswordResetUseCase {
   constructor(
@@ -39,7 +40,11 @@ export class RequestPasswordResetUseCase {
     await this.emailSender.send({
       to: email,
       subject: "Reset your MaestroYa password",
-      html: `<p>Reset your password:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>This link expires in 1 hour. If you didn't request this, ignore this email.</p>`,
+      html: renderActionLinkEmailHtml({
+        intro: "Reset your password:",
+        actionUrl: resetUrl,
+        expiryNote: "This link expires in 1 hour. If you didn't request this, ignore this email.",
+      }),
     });
   }
 }

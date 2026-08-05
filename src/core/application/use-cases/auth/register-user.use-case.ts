@@ -9,6 +9,7 @@ import {
   hashToken,
 } from "@/infrastructure/auth/tokens";
 import type { EmailSender } from "@/application/interfaces/email-sender";
+import { renderActionLinkEmailHtml } from "@/infrastructure/email/email-template";
 import type { RegisterInput } from "@/application/dto/auth.dto";
 
 export class RegisterUserUseCase {
@@ -50,7 +51,11 @@ export class RegisterUserUseCase {
     await this.emailSender.send({
       to: input.email,
       subject: "Verify your MaestroYa email",
-      html: `<p>Welcome to MaestroYa. Confirm your email address:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>This link expires in 24 hours.</p>`,
+      html: renderActionLinkEmailHtml({
+        intro: "Welcome to MaestroYa. Confirm your email address:",
+        actionUrl: verifyUrl,
+        expiryNote: "This link expires in 24 hours.",
+      }),
     });
 
     return { userId: user.id };
