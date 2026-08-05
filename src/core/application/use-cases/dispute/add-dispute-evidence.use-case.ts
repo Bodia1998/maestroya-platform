@@ -11,6 +11,7 @@ import type { ProfessionalRepository } from "@/domain/repositories/professional-
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import { resolveDisputeActor } from "@/application/use-cases/dispute/resolve-dispute-actor";
 import { isTerminalStatus } from "@/domain/services/dispute-state";
+import { isValidMediaUrl } from "@/domain/services/portfolio-rules";
 
 export interface AddDisputeEvidenceInput {
   fileUrl: string;
@@ -58,6 +59,16 @@ export class AddDisputeEvidenceUseCase {
 
     if (isTerminalStatus(dispute.status)) {
       throw new ValidationError("This dispute is closed and no longer accepts new evidence.");
+    }
+
+    // Module 33 — Security Hardening: re-checked here too (not just in the
+    // Server Action's Zod schema) — this use case shouldn't blindly trust
+    // its caller either, same defense-in-depth convention as the
+    // Cloudinary upload services' own re-checked MIME allowlist. Rejects
+    // `javascript:`/`data:`/other dangerous schemes that would otherwise
+    // be stored and later rendered as a clickable evidence link.
+    if (!isValidMediaUrl(input.fileUrl)) {
+      throw new ValidationError("File URL must be an http(s) link.");
     }
 
     if (!options.isAdminCaller) {

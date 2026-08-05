@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { DomainError } from "@/domain/errors/domain-error";
+import { DomainError, RateLimitedError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import {
   ALLOWED_AVATAR_MIME_TYPES,
@@ -17,6 +17,7 @@ import {
   makeUpdateProfileUseCase,
   makeUploadAvatarUseCase,
 } from "@/application/use-cases/profile/compose";
+import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 
 export type ActionResult =
   | { success: true }
@@ -60,17 +61,32 @@ export async function uploadAvatarAction(formData: FormData): Promise<ActionResu
   }
   // Server-side checks — the client's <input accept> and the browser-
   // reported File.type are both just hints an attacker fully controls
-  // via a raw request; these are the checks that actually matter. Note
-  // this still trusts the browser-reported content type string rather
-  // than sniffing the file's actual magic bytes — the project has no
-  // file-signature-sniffing library, and adding one for this alone would
-  // be disproportionate. CloudinaryAvatarUploadService re-checks the same
-  // allowlist independently as defense-in-depth.
+  // via a raw request; these are the checks that actually matter. The
+  // browser-reported content type is a hint only — CloudinaryAvatarUploadService
+  // re-checks this same allowlist, and additionally sniffs the file's actual
+  // magic bytes (Module 33 — Security Hardening), as independent defense-in-depth.
   if (!ALLOWED_AVATAR_MIME_TYPES.includes(file.type as (typeof ALLOWED_AVATAR_MIME_TYPES)[number])) {
     return { success: false, error: "Avatar must be a JPEG, PNG, or WebP image." };
   }
   if (file.size > MAX_AVATAR_BYTES) {
     return { success: false, error: "Avatar must be smaller than 5MB." };
+  }
+
+  // Module 33 — Security Hardening: uploads were previously unrestricted
+  // in frequency — see FILE_UPLOAD_BY_USER's own doc comment
+  // (rate-limit-policies.ts) for why that's a real resource-cost risk,
+  // not just an auth-flow concern.
+  try {
+    await makeAntiAbuseService().enforceRateLimit(
+      "FILE_UPLOAD_BY_USER",
+      { userId: user.id },
+      "RATE_LIMIT_TRIGGERED",
+    );
+  } catch (error) {
+    if (error instanceof RateLimitedError) {
+      return { success: false, error: error.message };
+    }
+    throw error;
   }
 
   try {

@@ -46,6 +46,20 @@ export const RATE_LIMIT_POLICIES = {
   // --- Review abuse (E) ---
   REVIEW_CREATE_BY_USER: { limit: 10, windowMs: HOUR },
 
+  // --- File upload abuse (Module 33 — Security Hardening) — every
+  // Cloudinary-backed upload Server Action (avatar, service-request photo,
+  // professional/company verification documents) was previously
+  // unrestricted in frequency: file-type/size were validated, but nothing
+  // stopped an authenticated account from uploading in a tight loop,
+  // running up Cloudinary storage/bandwidth cost or degrading the upload
+  // pipeline for everyone else. One shared per-user policy across all
+  // upload actions (not one policy per action) — this is a resource-cost
+  // control, not a per-feature business rule, so a single generous budget
+  // covering "how many uploads can one account push per hour" is the
+  // right shape, mirroring how LOGIN_BY_EMAIL/LOGIN_BY_IP are two views of
+  // one concern rather than a policy per provider.
+  FILE_UPLOAD_BY_USER: { limit: 30, windowMs: HOUR },
+
   // --- Financial-sensitive ops observable today (F) — Module 22's own
   // FinancialAdjustment already has a DB-level idempotencyKey (see
   // financial-adjustment-repository.ts); this policy is the additional

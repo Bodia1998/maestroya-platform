@@ -11,6 +11,7 @@ import {
   MIN_DESCRIPTION_LENGTH,
   MIN_TITLE_LENGTH,
 } from "@/domain/services/dispute-rules";
+import { isValidMediaUrl } from "@/domain/services/portfolio-rules";
 
 /**
  * Module 21 — Disputes & Support. Same convention as review.dto.ts/
@@ -130,7 +131,18 @@ export type AddDisputeInternalNoteInput = z.infer<typeof addDisputeInternalNoteS
 
 export const addDisputeEvidenceSchema = z.object({
   disputeId: z.string().uuid("Invalid dispute."),
-  fileUrl: z.string().url("Invalid file URL."),
+  // Module 33 — Security Hardening: `z.string().url()` alone accepts any
+  // URL-shaped string the `URL` constructor parses, including
+  // `javascript:...`/`data:...`/`vbscript:...` — every one of those is a
+  // valid "URL" by that check. This field is later rendered as a plain
+  // `<a href={fileUrl}>` on both the dispute participants' page and the
+  // admin dispute page, so a `javascript:` value here would be a stored
+  // XSS payload triggered whenever anyone clicks the "evidence" link.
+  // `isValidMediaUrl` (already used for portfolio media URLs, the same
+  // "user-submitted URL rendered as a link" shape) enforces http(s)-only,
+  // which is the only scheme this platform's upload pipeline can ever
+  // produce.
+  fileUrl: z.string().url("Invalid file URL.").refine(isValidMediaUrl, "File URL must be an http(s) link."),
   fileName: z.string().trim().max(255).optional(),
   fileType: z.string().trim().max(100).optional(),
   fileSizeBytes: z.coerce.number().int().positive().optional(),

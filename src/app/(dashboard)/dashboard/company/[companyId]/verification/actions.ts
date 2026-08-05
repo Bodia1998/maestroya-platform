@@ -15,8 +15,9 @@ import {
   makeSubmitCompanyVerificationUseCase,
   makeUploadCompanyVerificationDocumentUseCase,
 } from "@/application/use-cases/company-verification/compose";
-import { DomainError } from "@/domain/errors/domain-error";
+import { DomainError, RateLimitedError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 
 /** Module 18 — Company Professional: company verification Server Actions —
  *  mirrors dashboard/professional/verification/actions.ts (Module 17). */
@@ -55,6 +56,22 @@ export async function uploadCompanyVerificationDocumentAction(companyId: string,
     return { success: false, error: "Documents must be a JPEG, PNG, WebP image or a PDF." };
   }
   if (file.size > MAX_COMPANY_VERIFICATION_DOCUMENT_BYTES) return { success: false, error: "Each document must be smaller than 10MB." };
+
+  // Module 33 — Security Hardening: see FILE_UPLOAD_BY_USER's doc comment
+  // (rate-limit-policies.ts) — uploads were previously unrestricted in
+  // frequency.
+  try {
+    await makeAntiAbuseService().enforceRateLimit(
+      "FILE_UPLOAD_BY_USER",
+      { userId: user.id },
+      "RATE_LIMIT_TRIGGERED",
+    );
+  } catch (error) {
+    if (error instanceof RateLimitedError) {
+      return { success: false, error: error.message };
+    }
+    throw error;
+  }
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());

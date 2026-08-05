@@ -1,6 +1,7 @@
 import { cloudinary } from "@/infrastructure/storage/cloudinary/client";
 import type { AvatarUploadService } from "@/application/interfaces/avatar-upload-service";
 import { ALLOWED_AVATAR_MIME_TYPES, MAX_AVATAR_BYTES } from "@/application/dto/profile.dto";
+import { assertFileSignatureMatches } from "@/infrastructure/storage/file-signature";
 
 export class CloudinaryAvatarUploadService implements AvatarUploadService {
   async uploadAvatar(userId: string, fileBuffer: Buffer, contentType: string): Promise<string> {
@@ -13,6 +14,15 @@ export class CloudinaryAvatarUploadService implements AvatarUploadService {
     if (fileBuffer.byteLength > MAX_AVATAR_BYTES) {
       throw new Error("Avatar must be smaller than 5MB.");
     }
+    // Module 33 — Security Hardening: the declared Content-Type above is
+    // attacker-controlled (browser `File.type`). Confirm the bytes
+    // themselves actually are one of the allowed image formats before
+    // handing them to Cloudinary.
+    assertFileSignatureMatches(
+      fileBuffer,
+      ALLOWED_AVATAR_MIME_TYPES,
+      "Avatar file content does not match a JPEG, PNG, or WebP image.",
+    );
 
     return new Promise<string>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(

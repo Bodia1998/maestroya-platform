@@ -58,7 +58,14 @@ export function isSafeActionUrl(url: string | null): boolean {
   const trimmed = url.trim();
   if (trimmed.length === 0 || trimmed.length > MAX_ACTION_URL_LENGTH) return false;
   if (!trimmed.startsWith("/")) return false;
-  if (trimmed.startsWith("//")) return false;
+  // Rejects protocol-relative paths ("//evil.com") and the equivalent
+  // backslash form ("/\evil.com") — several browsers normalize a leading
+  // backslash to a forward slash, so "/\evil.com" is parsed identically to
+  // "//evil.com" (an absolute, off-origin URL) despite starting with a
+  // single "/". Module 33 — Security Hardening: same check already applied
+  // to the post-login `callbackUrl` guard (resolve-post-login-destination.ts)
+  // for the identical reason.
+  if (trimmed.startsWith("//") || trimmed.startsWith("/\\")) return false;
   // Defense in depth against encoded/whitespace-obfuscated dangerous
   // schemes appearing anywhere in the string (e.g. "/x\njavascript:...").
   const lowered = trimmed.toLowerCase();
