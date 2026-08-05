@@ -195,19 +195,31 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
         <fieldset className="flex flex-col gap-3 rounded-lg border border-border p-4">
           <legend className="sr-only">Contact information</legend>
           <div className="flex flex-col gap-1.5">
-            <Input placeholder="Contact email" aria-invalid={!!errors.contactEmail} {...register("contactEmail")} />
+            <Label htmlFor="contactEmail">
+              Contact email <OptionalBadge />
+            </Label>
+            <Input id="contactEmail" aria-invalid={!!errors.contactEmail} {...register("contactEmail")} />
             <FormFieldError>{errors.contactEmail?.message}</FormFieldError>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Input placeholder="Contact phone" aria-invalid={!!errors.contactPhone} {...register("contactPhone")} />
+            <Label htmlFor="contactPhone">
+              Contact phone <OptionalBadge />
+            </Label>
+            <Input id="contactPhone" aria-invalid={!!errors.contactPhone} {...register("contactPhone")} />
             <FormFieldError>{errors.contactPhone?.message}</FormFieldError>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Input placeholder="Website URL" aria-invalid={!!errors.websiteUrl} {...register("websiteUrl")} />
+            <Label htmlFor="websiteUrl">
+              Website URL <OptionalBadge />
+            </Label>
+            <Input id="websiteUrl" aria-invalid={!!errors.websiteUrl} {...register("websiteUrl")} />
             <FormFieldError>{errors.websiteUrl?.message}</FormFieldError>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Input placeholder="Tax ID (NIF/CIF, optional)" aria-invalid={!!errors.taxId} {...register("taxId")} />
+            <Label htmlFor="taxId">
+              Tax ID (NIF/CIF) <OptionalBadge />
+            </Label>
+            <Input id="taxId" aria-invalid={!!errors.taxId} {...register("taxId")} />
             <FormFieldError>{errors.taxId?.message}</FormFieldError>
           </div>
         </fieldset>
@@ -215,10 +227,12 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
 
       {isEditing && (
         <FormSection title="Availability">
-          <label className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-border px-4 py-2">
-            <span className="text-sm font-medium text-foreground">Currently accepting new requests</span>
-            <Switch {...register("isAcceptingRequests")} />
-          </label>
+          <div className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-border px-4 py-2">
+            <Label htmlFor="isAcceptingRequests" className="text-sm font-medium text-foreground">
+              Currently accepting new requests
+            </Label>
+            <Switch id="isAcceptingRequests" {...register("isAcceptingRequests")} />
+          </div>
         </FormSection>
       )}
 

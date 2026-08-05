@@ -1,23 +1,22 @@
 import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
 
-import {
-  changeCompanyMemberRoleFormAction,
-  removeCompanyMemberFormAction,
-  transferCompanyOwnershipFormAction,
-} from "@/app/(dashboard)/dashboard/company/[companyId]/members/actions";
+import { changeCompanyMemberRoleFormAction } from "@/app/(dashboard)/dashboard/company/[companyId]/members/actions";
 import { makeGetCompanyForMemberUseCase } from "@/application/use-cases/company/compose";
 import { makeListCompanyMembersUseCase } from "@/application/use-cases/company-membership/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageContainer } from "@/components/layout/page-container";
+import { Section } from "@/components/layout/section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { FormSection } from "@/components/forms/form-section";
+import { CompanyTabNav } from "../company-tab-nav";
+import { RemoveMemberButton } from "./remove-member-button";
+import { TransferOwnershipDialog } from "./transfer-ownership-dialog";
 
 export const metadata = { title: "Company members" };
 
@@ -42,8 +41,14 @@ export default async function CompanyMembersPage({ params }: { params: Promise<{
   const members = await makeListCompanyMembersUseCase().execute(user.id, companyId);
   const activeMembers = members.filter((m) => m.joinedAt && !m.removedAt);
 
+  const transferCandidates = activeMembers
+    .filter((m) => m.role !== "OWNER")
+    .map((m) => ({ id: m.id, label: m.userName ?? m.userEmail ?? m.id }));
+
   return (
-    <div className="flex flex-col gap-6">
+    <PageContainer gap="sm">
+      <CompanyTabNav companyId={companyId} active="members" />
+
       <PageHeader
         title="Members"
         subtitle={`${activeMembers.length} active member(s).`}
@@ -108,11 +113,11 @@ export default async function CompanyMembersPage({ params }: { params: Promise<{
                               Update role
                             </Button>
                           </form>
-                          <form action={removeCompanyMemberFormAction.bind(null, companyId, member.id)}>
-                            <Button type="submit" variant="outline" size="sm">
-                              Remove
-                            </Button>
-                          </form>
+                          <RemoveMemberButton
+                            companyId={companyId}
+                            memberId={member.id}
+                            memberLabel={member.userName ?? member.userEmail ?? member.id}
+                          />
                         </div>
                       )}
                     </td>
@@ -124,34 +129,15 @@ export default async function CompanyMembersPage({ params }: { params: Promise<{
         </div>
       )}
 
-      <section className="rounded-lg border border-border p-4 sm:p-6">
-        <FormSection
-          title="Transfer ownership"
-          description="Only the current owner can transfer ownership. This action is irreversible without the new owner transferring it back."
-        >
-          <form action={transferCompanyOwnershipFormAction.bind(null, companyId)} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="newOwnerMemberId">New owner (member ID)</Label>
-              <Select id="newOwnerMemberId" name="newOwnerMemberId" className="sm:max-w-sm">
-                {activeMembers
-                  .filter((m) => m.role !== "OWNER")
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.userName ?? m.userEmail ?? m.id}
-                    </option>
-                  ))}
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="confirmationText">Type TRANSFER to confirm</Label>
-              <Input id="confirmationText" name="confirmationText" required className="sm:max-w-sm" />
-            </div>
-            <Button type="submit" variant="outline" className="w-full sm:w-auto">
-              Transfer ownership
-            </Button>
-          </form>
-        </FormSection>
-      </section>
-    </div>
+      {transferCandidates.length > 0 && (
+        <Section title="Transfer ownership" bordered divider>
+          <p className="text-sm text-muted-foreground">
+            Only the current owner can transfer ownership. This action is irreversible without the new
+            owner transferring it back.
+          </p>
+          <TransferOwnershipDialog companyId={companyId} candidates={transferCandidates} />
+        </Section>
+      )}
+    </PageContainer>
   );
 }

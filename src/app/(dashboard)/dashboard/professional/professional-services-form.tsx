@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { FormActions } from "@/components/forms/form-actions";
 import { FormFieldError } from "@/components/forms/form-field-description";
 import { FormSection } from "@/components/forms/form-section";
 import {
@@ -84,9 +85,11 @@ export function ProfessionalServicesForm({
         <FormFieldError>{errors.categoryIds?.message}</FormFieldError>
       </FormSection>
 
-      <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-        {isSubmitting ? "Saving…" : "Save service categories"}
-      </Button>
+      <FormActions stickyOnMobile>
+        <Button type="submit" disabled={isSubmitting} className="sm:min-w-48">
+          {isSubmitting ? "Saving…" : "Save service categories"}
+        </Button>
+      </FormActions>
     </form>
   );
 }

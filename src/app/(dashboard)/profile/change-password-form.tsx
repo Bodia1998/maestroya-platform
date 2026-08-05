@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import { FormActions } from "@/components/forms/form-actions";
 import { FormFieldError } from "@/components/forms/form-field-description";
 import { FormSection } from "@/components/forms/form-section";
 import { changePasswordSchema, type ChangePasswordInput } from "@/application/dto/profile.dto";
@@ -108,9 +109,11 @@ export function ChangePasswordForm({ hasPassword }: { hasPassword: boolean }) {
         </div>
       </FormSection>
 
-      <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-        {isSubmitting ? "Changing…" : "Change password"}
-      </Button>
+      <FormActions>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Changing…" : "Change password"}
+        </Button>
+      </FormActions>
     </form>
   );
 }

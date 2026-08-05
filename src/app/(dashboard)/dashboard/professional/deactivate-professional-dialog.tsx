@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormActions } from "@/components/forms/form-actions";
@@ -50,60 +51,50 @@ export function DeactivateProfessionalDialog() {
     );
   }
 
-  if (!isOpen) {
-    return (
+  return (
+    <>
       <Button type="button" variant="outline" onClick={() => setIsOpen(true)}>
         Deactivate professional profile
       </Button>
-    );
-  }
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogHeader>
+          <DialogTitle className="text-danger">This will stop new customers from finding you</DialogTitle>
+          <DialogDescription>
+            Existing quotes, appointments, and reviews are kept. You can be reactivated later by
+            support if needed.
+          </DialogDescription>
+        </DialogHeader>
 
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="deactivate-professional-title"
-      className="flex flex-col gap-4 rounded-lg border border-danger/30 bg-danger-muted/40 p-4"
-    >
-      <div className="flex flex-col gap-1">
-        <h3 id="deactivate-professional-title" className="text-sm font-semibold text-danger">
-          This will stop new customers from finding you
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Existing quotes, appointments, and reviews are kept. You can be reactivated later by
-          support if needed.
-        </p>
-      </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+          {serverError && (
+            <Alert variant="danger" role="alert">
+              {serverError}
+            </Alert>
+          )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
-        {serverError && (
-          <Alert variant="danger" role="alert">
-            {serverError}
-          </Alert>
-        )}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="deactivate-confirmation">Type DEACTIVATE to confirm</Label>
+            <Input
+              id="deactivate-confirmation"
+              aria-invalid={!!errors.confirmationText}
+              aria-describedby={errors.confirmationText ? "deactivate-confirmation-error" : undefined}
+              {...register("confirmationText")}
+            />
+            <FormFieldError id="deactivate-confirmation-error">
+              {errors.confirmationText?.message}
+            </FormFieldError>
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="deactivate-confirmation">Type DEACTIVATE to confirm</Label>
-          <Input
-            id="deactivate-confirmation"
-            aria-invalid={!!errors.confirmationText}
-            aria-describedby={errors.confirmationText ? "deactivate-confirmation-error" : undefined}
-            {...register("confirmationText")}
-          />
-          <FormFieldError id="deactivate-confirmation-error">
-            {errors.confirmationText?.message}
-          </FormFieldError>
-        </div>
-
-        <FormActions>
-          <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="outline" disabled={isSubmitting}>
-            {isSubmitting ? "Deactivating…" : "Deactivate my professional profile"}
-          </Button>
-        </FormActions>
-      </form>
-    </div>
+          <FormActions>
+            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="outline" disabled={isSubmitting}>
+              {isSubmitting ? "Deactivating…" : "Deactivate my professional profile"}
+            </Button>
+          </FormActions>
+        </form>
+      </Dialog>
+    </>
   );
 }

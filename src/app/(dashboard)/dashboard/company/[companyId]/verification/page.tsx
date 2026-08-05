@@ -12,7 +12,14 @@ import { makeGetCompanyVerificationUseCase } from "@/application/use-cases/compa
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
+import { StatusBadge } from "@/components/dashboard/status-badge";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { CompanyTabNav } from "../company-tab-nav";
 
 export const metadata = { title: "Company verification" };
 
@@ -24,6 +31,15 @@ const STATUS_COPY: Record<string, string> = {
   REJECTED: "Rejected. See the reason below and resubmit when ready.",
   RESUBMISSION_REQUIRED: "Changes are required before this can be approved. See the instructions below.",
   EXPIRED: "This approval has expired. Start a new verification request.",
+};
+
+const DOC_TYPE_LABELS: Record<string, string> = {
+  BUSINESS_LICENSE: "Business licence",
+  TAX_CERTIFICATE: "Tax certificate",
+  INSURANCE_CERTIFICATE: "Insurance certificate",
+  PROFESSIONAL_CERTIFICATION: "Professional certification",
+  PROOF_OF_ADDRESS: "Proof of address",
+  OTHER: "Other",
 };
 
 /** Module 18 — Company Professional: company verification dashboard —
@@ -46,7 +62,9 @@ export default async function CompanyVerificationPage({ params }: { params: Prom
   const verification = await makeGetCompanyVerificationUseCase().execute(user.id, companyId).catch(() => null);
 
   return (
-    <div className="flex flex-col gap-6">
+    <PageContainer gap="sm">
+      <CompanyTabNav companyId={companyId} active="verification" />
+
       <PageHeader
         title="Verification"
         breadcrumbs={[
@@ -56,60 +74,84 @@ export default async function CompanyVerificationPage({ params }: { params: Prom
       />
 
       {!verification ? (
-        <form action={requestCompanyVerificationFormAction.bind(null, companyId)}>
-          <p className="text-sm text-foreground/70">This company has not started verification yet.</p>
-          <button type="submit" className="mt-3 h-10 rounded-md bg-black px-4 text-sm font-medium text-white">
-            Start verification
-          </button>
-        </form>
+        <Section bordered gap="lg">
+          <p className="text-sm text-foreground/80">This company has not started verification yet.</p>
+          <form action={requestCompanyVerificationFormAction.bind(null, companyId)}>
+            <Button type="submit">Start verification</Button>
+          </form>
+        </Section>
       ) : (
         <>
-          <p className="rounded-md border border-border p-3 text-sm">
-            Status: <span className="font-medium">{verification.status}</span> —{" "}
-            {STATUS_COPY[verification.status] ?? ""}
-          </p>
+          <Section bordered gap="sm">
+            <div className="flex items-center gap-3">
+              <StatusBadge status={verification.status} />
+            </div>
+            <p className="text-sm text-foreground/80">{STATUS_COPY[verification.status] ?? ""}</p>
 
-          {verification.rejectionReason && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">{verification.rejectionReason}</div>
-          )}
-          {verification.resubmissionReason && (
-            <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">{verification.resubmissionReason}</div>
-          )}
+            {verification.rejectionReason && (
+              <Alert variant="danger" title="Reason">
+                <p className="whitespace-pre-line">{verification.rejectionReason}</p>
+              </Alert>
+            )}
+            {verification.resubmissionReason && (
+              <Alert variant="warning" title="What to update">
+                <p className="whitespace-pre-line">{verification.resubmissionReason}</p>
+              </Alert>
+            )}
+          </Section>
 
           <Section title="Documents">
-            <ul className="flex flex-col gap-2">
-              {verification.documents.map((doc) => (
-                <li key={doc.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
-                  <span>{doc.type} — {doc.originalFilename}</span>
-                  {(verification.status === "DRAFT" || verification.status === "RESUBMISSION_REQUIRED") && (
-                    <form action={removeCompanyVerificationDocumentFormAction.bind(null, companyId, doc.id)}>
-                      <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs">
-                        Remove
-                      </button>
-                    </form>
-                  )}
-                </li>
-              ))}
-            </ul>
+            {verification.documents.length === 0 ? (
+              <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-foreground/70">
+                No documents uploaded yet.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {verification.documents.map((doc) => (
+                  <li
+                    key={doc.id}
+                    className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium">{DOC_TYPE_LABELS[doc.type] ?? doc.type}</p>
+                      <p className="truncate text-xs text-foreground/60">{doc.originalFilename}</p>
+                    </div>
+                    {(verification.status === "DRAFT" || verification.status === "RESUBMISSION_REQUIRED") && (
+                      <form action={removeCompanyVerificationDocumentFormAction.bind(null, companyId, doc.id)}>
+                        <Button type="submit" variant="outline" size="sm">
+                          Remove
+                        </Button>
+                      </form>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {(verification.status === "DRAFT" || verification.status === "RESUBMISSION_REQUIRED") && (
               <form
                 action={uploadCompanyVerificationDocumentFormAction.bind(null, companyId)}
                 encType="multipart/form-data"
-                className="flex flex-col gap-2"
+                className="flex flex-col gap-3 rounded-md border border-border p-4"
               >
-                <select name="type" className="rounded-md border border-border p-2 text-sm">
-                  <option value="BUSINESS_LICENSE">Business licence</option>
-                  <option value="TAX_CERTIFICATE">Tax certificate</option>
-                  <option value="INSURANCE_CERTIFICATE">Insurance certificate</option>
-                  <option value="PROFESSIONAL_CERTIFICATION">Professional certification</option>
-                  <option value="PROOF_OF_ADDRESS">Proof of address</option>
-                  <option value="OTHER">Other</option>
-                </select>
-                <input type="file" name="file" required className="text-sm" />
-                <button type="submit" className="h-10 w-fit rounded-md border border-border px-4 text-sm">
+                <p className="text-sm font-medium">Upload a document</p>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="company-verification-doc-type">Document type</Label>
+                  <Select id="company-verification-doc-type" name="type">
+                    {Object.entries(DOC_TYPE_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="company-verification-doc-file">File</Label>
+                  <input id="company-verification-doc-file" type="file" name="file" required className="text-sm" />
+                </div>
+                <Button type="submit" variant="outline" className="w-fit">
                   Upload document
-                </button>
+                </Button>
               </form>
             )}
           </Section>
@@ -117,21 +159,17 @@ export default async function CompanyVerificationPage({ params }: { params: Prom
           <div className="flex gap-3">
             {verification.status === "DRAFT" && (
               <form action={submitCompanyVerificationFormAction.bind(null, companyId)}>
-                <button type="submit" className="h-10 rounded-md bg-black px-4 text-sm font-medium text-white">
-                  Submit for review
-                </button>
+                <Button type="submit">Submit for review</Button>
               </form>
             )}
             {(verification.status === "REJECTED" || verification.status === "RESUBMISSION_REQUIRED") && (
               <form action={resubmitCompanyVerificationFormAction.bind(null, companyId)}>
-                <button type="submit" className="h-10 rounded-md bg-black px-4 text-sm font-medium text-white">
-                  Resubmit
-                </button>
+                <Button type="submit">Resubmit</Button>
               </form>
             )}
           </div>
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }
