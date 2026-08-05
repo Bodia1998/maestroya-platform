@@ -1,11 +1,22 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { FormActions } from "@/components/forms/form-actions";
+import { FormFieldError } from "@/components/forms/form-field-description";
+import { FormSection } from "@/components/forms/form-section";
+import { OptionalBadge } from "@/components/forms/field-badges";
 import {
   createQuoteSchema,
   updateQuoteSchema,
@@ -125,126 +136,169 @@ export function QuoteForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8" noValidate>
       {serverError && (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <Alert variant="danger" role="alert">
           {serverError}
-        </p>
+        </Alert>
       )}
 
-      <div className="flex flex-col gap-3 rounded-md border border-border p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">Items</h3>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => append({ description: "", quantity: 1, unitPrice: 0, category: "LABOR" })}
-          >
-            Add item
-          </Button>
+      <FormSection title="Items" description="Break down labor and materials so the customer sees exactly what they're paying for.">
+        <div className="flex flex-col gap-3 rounded-lg border border-border p-4">
+          <div className="flex items-center justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => append({ description: "", quantity: 1, unitPrice: 0, category: "LABOR" })}
+            >
+              <Plus aria-hidden className="h-4 w-4" />
+              Add item
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {fields.map((field, index) => (
+              <div
+                key={field.id}
+                className="grid grid-cols-1 gap-2 border-b border-border pb-4 last:border-0 last:pb-0 sm:grid-cols-[1fr_5rem_6rem_7rem_2.5rem] sm:items-start"
+              >
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor={`item-${field.id}-description`} className="sm:sr-only">
+                    Description
+                  </Label>
+                  <Input
+                    id={`item-${field.id}-description`}
+                    placeholder="Description (e.g. Labor, materials)"
+                    aria-invalid={!!errors.items?.[index]?.description}
+                    aria-describedby={
+                      errors.items?.[index]?.description ? `item-${field.id}-description-error` : undefined
+                    }
+                    {...register(`items.${index}.description` as const)}
+                  />
+                  <FormFieldError id={`item-${field.id}-description-error`}>
+                    {errors.items?.[index]?.description?.message}
+                  </FormFieldError>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor={`item-${field.id}-quantity`} className="sm:sr-only">
+                    Quantity
+                  </Label>
+                  <Input
+                    id={`item-${field.id}-quantity`}
+                    type="number"
+                    step="any"
+                    min={0}
+                    placeholder="Qty"
+                    aria-invalid={!!errors.items?.[index]?.quantity}
+                    aria-describedby={
+                      errors.items?.[index]?.quantity ? `item-${field.id}-quantity-error` : undefined
+                    }
+                    {...register(`items.${index}.quantity` as const)}
+                  />
+                  <FormFieldError id={`item-${field.id}-quantity-error`}>
+                    {errors.items?.[index]?.quantity?.message}
+                  </FormFieldError>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor={`item-${field.id}-unitPrice`} className="sm:sr-only">
+                    Unit price
+                  </Label>
+                  <Input
+                    id={`item-${field.id}-unitPrice`}
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    placeholder="Unit €"
+                    aria-invalid={!!errors.items?.[index]?.unitPrice}
+                    aria-describedby={
+                      errors.items?.[index]?.unitPrice ? `item-${field.id}-unitPrice-error` : undefined
+                    }
+                    {...register(`items.${index}.unitPrice` as const)}
+                  />
+                  <FormFieldError id={`item-${field.id}-unitPrice-error`}>
+                    {errors.items?.[index]?.unitPrice?.message}
+                  </FormFieldError>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor={`item-${field.id}-category`} className="sm:sr-only">
+                    Item type
+                  </Label>
+                  <Select
+                    id={`item-${field.id}-category`}
+                    aria-invalid={!!errors.items?.[index]?.category}
+                    aria-describedby={
+                      errors.items?.[index]?.category ? `item-${field.id}-category-error` : undefined
+                    }
+                    {...register(`items.${index}.category` as const)}
+                  >
+                    <option value="LABOR">Labor</option>
+                    <option value="MATERIALS">Materials</option>
+                  </Select>
+                  <FormFieldError id={`item-${field.id}-category-error`}>
+                    {errors.items?.[index]?.category?.message}
+                  </FormFieldError>
+                </div>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={fields.length <= 1}
+                  onClick={() => remove(index)}
+                  aria-label="Remove item"
+                  className="justify-self-end text-danger hover:bg-danger-muted sm:justify-self-auto"
+                >
+                  <X aria-hidden className="h-4 w-4" />
+                </IconButton>
+              </div>
+            ))}
+          </div>
+          <FormFieldError>{errors.items?.message as string | undefined}</FormFieldError>
+
+          <p className="text-right text-sm font-medium text-foreground">
+            Estimated total: €{estimatedTotal.toFixed(2)}
+          </p>
+        </div>
+      </FormSection>
+
+      <FormSection title="Details">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="notes">
+            Notes / proposal <OptionalBadge />
+          </Label>
+          <Textarea
+            id="notes"
+            rows={4}
+            placeholder="Describe your proposal, timeline, or anything the customer should know."
+            aria-invalid={!!errors.notes}
+            aria-describedby={errors.notes ? "notes-error" : undefined}
+            {...register("notes")}
+          />
+          <FormFieldError id="notes-error">{errors.notes?.message}</FormFieldError>
         </div>
 
-        {fields.map((field, index) => (
-          <div key={field.id} className="grid grid-cols-[1fr_5rem_6rem_7rem_2rem] items-start gap-2">
-            <div className="flex flex-col gap-1">
-              <input
-                className="h-10 rounded-md border border-border px-3 text-sm"
-                placeholder="Description (e.g. Labor, materials)"
-                {...register(`items.${index}.description` as const)}
-              />
-              {errors.items?.[index]?.description && (
-                <p className="text-xs text-red-600">{errors.items[index]?.description?.message}</p>
-              )}
-            </div>
-            <div className="flex flex-col gap-1">
-              <input
-                type="number"
-                step="any"
-                min={0}
-                className="h-10 rounded-md border border-border px-3 text-sm"
-                placeholder="Qty"
-                {...register(`items.${index}.quantity` as const)}
-              />
-              {errors.items?.[index]?.quantity && (
-                <p className="text-xs text-red-600">{errors.items[index]?.quantity?.message}</p>
-              )}
-            </div>
-            <div className="flex flex-col gap-1">
-              <input
-                type="number"
-                step="0.01"
-                min={0}
-                className="h-10 rounded-md border border-border px-3 text-sm"
-                placeholder="Unit €"
-                {...register(`items.${index}.unitPrice` as const)}
-              />
-              {errors.items?.[index]?.unitPrice && (
-                <p className="text-xs text-red-600">{errors.items[index]?.unitPrice?.message}</p>
-              )}
-            </div>
-            <div className="flex flex-col gap-1">
-              <select
-                className="h-10 rounded-md border border-border px-2 text-sm"
-                aria-label="Item type"
-                {...register(`items.${index}.category` as const)}
-              >
-                <option value="LABOR">Labor</option>
-                <option value="MATERIALS">Materials</option>
-              </select>
-              {errors.items?.[index]?.category && (
-                <p className="text-xs text-red-600">{errors.items[index]?.category?.message}</p>
-              )}
-            </div>
-            <button
-              type="button"
-              className="h-10 rounded-md text-sm text-red-600 hover:bg-red-50 disabled:opacity-40"
-              disabled={fields.length <= 1}
-              onClick={() => remove(index)}
-              aria-label="Remove item"
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-        {errors.items?.message && <p className="text-xs text-red-600">{errors.items.message}</p>}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="validUntil">
+            Valid until <OptionalBadge />
+          </Label>
+          <Input
+            id="validUntil"
+            type="date"
+            className="sm:max-w-xs"
+            defaultValue={toDateInputValue(quote?.validUntil ?? null)}
+            aria-invalid={!!errors.validUntil}
+            aria-describedby={errors.validUntil ? "validUntil-error" : undefined}
+            {...register("validUntil")}
+          />
+          <FormFieldError id="validUntil-error">{errors.validUntil?.message}</FormFieldError>
+        </div>
+      </FormSection>
 
-        <p className="text-right text-sm font-medium">
-          Estimated total: €{estimatedTotal.toFixed(2)}
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="notes" className="text-sm font-medium">
-          Notes / proposal (optional)
-        </label>
-        <textarea
-          id="notes"
-          rows={4}
-          placeholder="Describe your proposal, timeline, or anything the customer should know."
-          className="rounded-md border border-border px-3 py-2 text-sm"
-          {...register("notes")}
-        />
-        {errors.notes && <p className="text-xs text-red-600">{errors.notes.message}</p>}
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="validUntil" className="text-sm font-medium">
-          Valid until (optional)
-        </label>
-        <input
-          id="validUntil"
-          type="date"
-          defaultValue={toDateInputValue(quote?.validUntil ?? null)}
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("validUntil")}
-        />
-        {errors.validUntil && <p className="text-xs text-red-600">{errors.validUntil.message}</p>}
-      </div>
-
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create quote"}
-      </Button>
+      <FormActions stickyOnMobile>
+        <Button type="submit" disabled={isSubmitting} className="sm:min-w-48">
+          {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create quote"}
+        </Button>
+      </FormActions>
     </form>
   );
 }

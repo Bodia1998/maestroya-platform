@@ -1,11 +1,21 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { FormActions } from "@/components/forms/form-actions";
+import { FormFieldDescription, FormFieldError } from "@/components/forms/form-field-description";
+import { FormSection } from "@/components/forms/form-section";
+import { OptionalBadge, RequiredBadge } from "@/components/forms/field-badges";
 import {
   createServiceRequestSchema,
   updateServiceRequestSchema,
@@ -150,182 +160,161 @@ export function ServiceRequestForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8" noValidate>
       {serverError && (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <Alert variant="danger" role="alert">
           {serverError}
-        </p>
+        </Alert>
       )}
       {successMessage && (
-        <p role="status" className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+        <Alert variant="success" role="status">
           {successMessage}
-        </p>
+        </Alert>
       )}
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="categoryId" className="text-sm font-medium">
-          Service category
-        </label>
-        <select
-          id="categoryId"
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("categoryId")}
-        >
-          <option value="">Select a category</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-        {errors.categoryId && <p className="text-xs text-red-600">{errors.categoryId.message}</p>}
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="title" className="text-sm font-medium">
-          Title
-        </label>
-        <input
-          id="title"
-          placeholder="e.g. Fix leaking kitchen tap"
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("title")}
-        />
-        {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="description" className="text-sm font-medium">
-          Description
-        </label>
-        <textarea
-          id="description"
-          rows={5}
-          placeholder="Describe the job in detail — what needs doing, any relevant context."
-          className="rounded-md border border-border px-3 py-2 text-sm"
-          {...register("description")}
-        />
-        {errors.description && <p className="text-xs text-red-600">{errors.description.message}</p>}
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="urgency" className="text-sm font-medium">
-          Urgency
-        </label>
-        <select
-          id="urgency"
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("urgency")}
-        >
-          <option value="LOW">Low</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="HIGH">High</option>
-          <option value="EMERGENCY">Emergency</option>
-        </select>
-        {errors.urgency && <p className="text-xs text-red-600">{errors.urgency.message}</p>}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="budgetMin" className="text-sm font-medium">
-            Budget min (EUR, optional)
-          </label>
-          <input
-            id="budgetMin"
-            type="number"
-            min={0}
-            step="0.01"
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            {...register("budgetMin")}
-          />
-          {errors.budgetMin && <p className="text-xs text-red-600">{errors.budgetMin.message}</p>}
+      <FormSection title="The job">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="categoryId">
+            Service category <RequiredBadge />
+          </Label>
+          <Select
+            id="categoryId"
+            aria-invalid={!!errors.categoryId}
+            aria-describedby={errors.categoryId ? "categoryId-error" : undefined}
+            {...register("categoryId")}
+          >
+            <option value="">Select a category</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </Select>
+          <FormFieldError id="categoryId-error">{errors.categoryId?.message}</FormFieldError>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="budgetMax" className="text-sm font-medium">
-            Budget max (EUR, optional)
-          </label>
-          <input
-            id="budgetMax"
-            type="number"
-            min={0}
-            step="0.01"
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            {...register("budgetMax")}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="title">
+            Title <RequiredBadge />
+          </Label>
+          <Input
+            id="title"
+            placeholder="e.g. Fix leaking kitchen tap"
+            aria-invalid={!!errors.title}
+            aria-describedby={errors.title ? "title-error" : undefined}
+            {...register("title")}
           />
-          {errors.budgetMax && <p className="text-xs text-red-600">{errors.budgetMax.message}</p>}
+          <FormFieldError id="title-error">{errors.title?.message}</FormFieldError>
         </div>
-      </div>
 
-      <fieldset className="flex flex-col gap-3 rounded-md border border-border p-4">
-        <legend className="px-1 text-sm font-medium">Job location</legend>
-        <input
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          placeholder="Street address"
-          {...register("location.line1")}
-        />
-        {errors.location?.line1 && (
-          <p className="text-xs text-red-600">{errors.location.line1.message}</p>
-        )}
-        <input
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          placeholder="Apartment, floor, etc. (optional)"
-          {...register("location.line2")}
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="City"
-            {...register("location.city")}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="description">
+            Description <RequiredBadge />
+          </Label>
+          <Textarea
+            id="description"
+            rows={5}
+            placeholder="Describe the job in detail — what needs doing, any relevant context."
+            aria-invalid={!!errors.description}
+            aria-describedby={errors.description ? "description-error" : undefined}
+            {...register("description")}
           />
-          <input
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="Postal code"
-            {...register("location.postalCode")}
-          />
+          <FormFieldError id="description-error">{errors.description?.message}</FormFieldError>
         </div>
-        {errors.location?.city && (
-          <p className="text-xs text-red-600">{errors.location.city.message}</p>
-        )}
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="Province"
-            {...register("location.province")}
-          />
-          <input
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="Country"
-            {...register("location.country")}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            type="number"
-            step="any"
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="Latitude (optional)"
-            {...register("location.latitude")}
-          />
-          <input
-            type="number"
-            step="any"
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="Longitude (optional)"
-            {...register("location.longitude")}
-          />
-        </div>
-        {errors.location?.latitude && (
-          <p className="text-xs text-red-600">{errors.location.latitude.message}</p>
-        )}
-        {errors.location?.longitude && (
-          <p className="text-xs text-red-600">{errors.location.longitude.message}</p>
-        )}
-      </fieldset>
 
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Post request"}
-      </Button>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="urgency">
+            Urgency <RequiredBadge />
+          </Label>
+          <Select
+            id="urgency"
+            className="sm:max-w-xs"
+            aria-invalid={!!errors.urgency}
+            aria-describedby={errors.urgency ? "urgency-error" : undefined}
+            {...register("urgency")}
+          >
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+            <option value="EMERGENCY">Emergency</option>
+          </Select>
+          <FormFieldError id="urgency-error">{errors.urgency?.message}</FormFieldError>
+        </div>
+      </FormSection>
+
+      <FormSection title="Budget" description="Give professionals a ballpark so quotes come in on target.">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="budgetMin">
+              Budget min (EUR) <OptionalBadge />
+            </Label>
+            <Input
+              id="budgetMin"
+              type="number"
+              min={0}
+              step="0.01"
+              aria-invalid={!!errors.budgetMin}
+              aria-describedby={errors.budgetMin ? "budgetMin-error" : undefined}
+              {...register("budgetMin")}
+            />
+            <FormFieldError id="budgetMin-error">{errors.budgetMin?.message}</FormFieldError>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="budgetMax">
+              Budget max (EUR) <OptionalBadge />
+            </Label>
+            <Input
+              id="budgetMax"
+              type="number"
+              min={0}
+              step="0.01"
+              aria-invalid={!!errors.budgetMax}
+              aria-describedby={errors.budgetMax ? "budgetMax-error" : undefined}
+              {...register("budgetMax")}
+            />
+            <FormFieldError id="budgetMax-error">{errors.budgetMax?.message}</FormFieldError>
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection title="Job location" titleAside={<RequiredBadge />}>
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-border p-4">
+          <legend className="flex items-center gap-1.5 px-1 text-sm font-medium text-foreground">
+            <MapPin aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
+            Address
+          </legend>
+          <div className="flex flex-col gap-1.5">
+            <Input placeholder="Street address" aria-invalid={!!errors.location?.line1} {...register("location.line1")} />
+            <FormFieldError>{errors.location?.line1?.message}</FormFieldError>
+          </div>
+          <Input placeholder="Apartment, floor, etc. (optional)" {...register("location.line2")} />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input placeholder="City" aria-invalid={!!errors.location?.city} {...register("location.city")} />
+            <Input placeholder="Postal code" {...register("location.postalCode")} />
+          </div>
+          <FormFieldError>{errors.location?.city?.message}</FormFieldError>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input placeholder="Province" {...register("location.province")} />
+            <Input placeholder="Country" {...register("location.country")} />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input type="number" step="any" placeholder="Latitude (optional)" {...register("location.latitude")} />
+            <Input type="number" step="any" placeholder="Longitude (optional)" {...register("location.longitude")} />
+          </div>
+          <FormFieldError>{errors.location?.latitude?.message}</FormFieldError>
+          <FormFieldError>{errors.location?.longitude?.message}</FormFieldError>
+          <FormFieldDescription>
+            Latitude/longitude are filled in automatically where possible — leave blank if unsure.
+          </FormFieldDescription>
+        </fieldset>
+      </FormSection>
+
+      <FormActions stickyOnMobile>
+        <Button type="submit" disabled={isSubmitting} className="sm:min-w-48">
+          {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Post request"}
+        </Button>
+      </FormActions>
     </form>
   );
 }

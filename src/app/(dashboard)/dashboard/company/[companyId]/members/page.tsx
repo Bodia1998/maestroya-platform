@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Users } from "lucide-react";
 
 import {
   changeCompanyMemberRoleFormAction,
@@ -10,6 +11,13 @@ import { makeListCompanyMembersUseCase } from "@/application/use-cases/company-m
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { FormSection } from "@/components/forms/form-section";
 
 export const metadata = { title: "Company members" };
 
@@ -45,79 +53,104 @@ export default async function CompanyMembersPage({ params }: { params: Promise<{
         ]}
       />
 
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-border text-left text-foreground/70">
-            <th className="py-2 pr-4">Name</th>
-            <th className="py-2 pr-4">Email</th>
-            <th className="py-2 pr-4">Role</th>
-            <th className="py-2 pr-4">Status</th>
-            <th className="py-2 pr-4">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {members.map((member) => {
-            const status = member.removedAt ? "REMOVED" : member.joinedAt ? "ACTIVE" : "PENDING";
-            return (
-              <tr key={member.id} className="border-b border-border/50">
-                <td className="py-2 pr-4">{member.userName ?? "—"}</td>
-                <td className="py-2 pr-4">{member.userEmail ?? "—"}</td>
-                <td className="py-2 pr-4">{member.role}</td>
-                <td className="py-2 pr-4">{status}</td>
-                <td className="py-2 pr-4">
-                  {status === "ACTIVE" && member.role !== "OWNER" && (
-                    <div className="flex flex-wrap gap-2">
-                      <form action={changeCompanyMemberRoleFormAction.bind(null, companyId, member.id)} className="flex gap-1">
-                        <select name="role" defaultValue={member.role} className="rounded-md border border-border p-1 text-xs">
-                          <option value="ADMIN">ADMIN</option>
-                          <option value="MANAGER">MANAGER</option>
-                          <option value="MEMBER">MEMBER</option>
-                        </select>
-                        <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs">
-                          Update role
-                        </button>
-                      </form>
-                      <form action={removeCompanyMemberFormAction.bind(null, companyId, member.id)}>
-                        <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs">
-                          Remove
-                        </button>
-                      </form>
-                    </div>
-                  )}
-                </td>
+      {members.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No company members yet"
+          description="Invite teammates from the Invitations tab to start collaborating on this company account."
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="w-full min-w-[640px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/40 text-left text-muted-foreground">
+                <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-medium">Email</th>
+                <th className="px-4 py-3 font-medium">Role</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {members.map((member) => {
+                const status = member.removedAt ? "REMOVED" : member.joinedAt ? "ACTIVE" : "PENDING";
+                const statusVariant =
+                  status === "ACTIVE" ? "success" : status === "PENDING" ? "warning" : "secondary";
+                return (
+                  <tr key={member.id} className="border-b border-border/50 last:border-0">
+                    <td className="px-4 py-3">{member.userName ?? "—"}</td>
+                    <td className="px-4 py-3">{member.userEmail ?? "—"}</td>
+                    <td className="px-4 py-3">{member.role}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant={statusVariant}>{status}</Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      {status === "ACTIVE" && member.role !== "OWNER" && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <form
+                            action={changeCompanyMemberRoleFormAction.bind(null, companyId, member.id)}
+                            className="flex items-center gap-1.5"
+                          >
+                            <Label htmlFor={`role-${member.id}`} className="sr-only">
+                              Role for {member.userName ?? member.userEmail ?? member.id}
+                            </Label>
+                            <Select
+                              id={`role-${member.id}`}
+                              name="role"
+                              defaultValue={member.role}
+                              className="h-9 min-w-28 text-xs"
+                            >
+                              <option value="ADMIN">ADMIN</option>
+                              <option value="MANAGER">MANAGER</option>
+                              <option value="MEMBER">MEMBER</option>
+                            </Select>
+                            <Button type="submit" variant="outline" size="sm">
+                              Update role
+                            </Button>
+                          </form>
+                          <form action={removeCompanyMemberFormAction.bind(null, companyId, member.id)}>
+                            <Button type="submit" variant="outline" size="sm">
+                              Remove
+                            </Button>
+                          </form>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      <section className="rounded-md border border-border p-4">
-        <h2 className="text-lg font-medium">Transfer ownership</h2>
-        <p className="mt-1 text-sm text-foreground/70">
-          Only the current owner can transfer ownership. This action is irreversible without the new owner
-          transferring it back.
-        </p>
-        <form action={transferCompanyOwnershipFormAction.bind(null, companyId)} className="mt-3 flex flex-col gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-foreground/70">New owner (member id)</span>
-            <select name="newOwnerMemberId" className="rounded-md border border-border p-2 text-sm">
-              {activeMembers
-                .filter((m) => m.role !== "OWNER")
-                .map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.userName ?? m.userEmail ?? m.id}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-foreground/70">Type TRANSFER to confirm</span>
-            <input name="confirmationText" required className="rounded-md border border-border p-2 text-sm" />
-          </label>
-          <button type="submit" className="h-10 w-fit rounded-md border border-border px-4 text-sm">
-            Transfer ownership
-          </button>
-        </form>
+      <section className="rounded-lg border border-border p-4 sm:p-6">
+        <FormSection
+          title="Transfer ownership"
+          description="Only the current owner can transfer ownership. This action is irreversible without the new owner transferring it back."
+        >
+          <form action={transferCompanyOwnershipFormAction.bind(null, companyId)} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="newOwnerMemberId">New owner (member ID)</Label>
+              <Select id="newOwnerMemberId" name="newOwnerMemberId" className="sm:max-w-sm">
+                {activeMembers
+                  .filter((m) => m.role !== "OWNER")
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.userName ?? m.userEmail ?? m.id}
+                    </option>
+                  ))}
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="confirmationText">Type TRANSFER to confirm</Label>
+              <Input id="confirmationText" name="confirmationText" required className="sm:max-w-sm" />
+            </div>
+            <Button type="submit" variant="outline" className="w-full sm:w-auto">
+              Transfer ownership
+            </Button>
+          </form>
+        </FormSection>
       </section>
     </div>
   );

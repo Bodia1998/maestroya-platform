@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
+import { FormActions } from "@/components/forms/form-actions";
+import { FormFieldError } from "@/components/forms/form-field-description";
 import { deleteAccountSchema, type DeleteAccountInput } from "@/application/dto/profile.dto";
 import { deleteAccountAction } from "./actions";
 
@@ -48,61 +54,54 @@ export function DeleteAccountDialog({ hasPassword }: { hasPassword: boolean }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="delete-account-title"
-      className="flex flex-col gap-4 rounded-md border border-red-200 bg-red-50/50 p-4"
+      className="flex flex-col gap-4 rounded-lg border border-danger/30 bg-danger-muted/40 p-4"
     >
-      <h3 id="delete-account-title" className="text-sm font-semibold text-red-700">
+      <h3 id="delete-account-title" className="text-sm font-semibold text-danger">
         This will deactivate your account
       </h3>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         {serverError && (
-          <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
+          <Alert variant="danger" role="alert">
             {serverError}
-          </p>
+          </Alert>
         )}
 
         {/* Only accounts with a password have anything to confirm this
             way — OAuth-only accounts have no password to enter, and
             requiring one would be unsatisfiable, not just inconvenient. */}
         {hasPassword && (
-          <div className="flex flex-col gap-1">
-            <label htmlFor="delete-password" className="text-sm font-medium">
-              Password
-            </label>
-            <input
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="delete-password">Password</Label>
+            <PasswordInput
               id="delete-password"
-              type="password"
-              className="h-10 rounded-md border border-border px-3 text-sm"
+              aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? "delete-password-error" : undefined}
               {...register("password")}
             />
-            {errors.password && (
-              <p className="text-xs text-red-600">{errors.password.message}</p>
-            )}
+            <FormFieldError id="delete-password-error">{errors.password?.message}</FormFieldError>
           </div>
         )}
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="delete-confirmation" className="text-sm font-medium">
-            Type DELETE to confirm
-          </label>
-          <input
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="delete-confirmation">Type DELETE to confirm</Label>
+          <Input
             id="delete-confirmation"
-            className="h-10 rounded-md border border-border px-3 text-sm"
+            aria-invalid={!!errors.confirmationText}
+            aria-describedby={errors.confirmationText ? "delete-confirmation-error" : undefined}
             {...register("confirmationText")}
           />
-          {errors.confirmationText && (
-            <p className="text-xs text-red-600">{errors.confirmationText.message}</p>
-          )}
+          <FormFieldError id="delete-confirmation-error">{errors.confirmationText?.message}</FormFieldError>
         </div>
 
-        <div className="flex gap-2">
-          <Button type="submit" variant="outline" disabled={isSubmitting}>
-            {isSubmitting ? "Deactivating…" : "Deactivate my account"}
-          </Button>
+        <FormActions>
           <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
             Cancel
           </Button>
-        </div>
+          <Button type="submit" variant="outline" disabled={isSubmitting}>
+            {isSubmitting ? "Deactivating…" : "Deactivate my account"}
+          </Button>
+        </FormActions>
       </form>
     </div>
   );

@@ -1,12 +1,21 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { MapPin, Phone, Radar, Sparkles } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { FormActions } from "@/components/forms/form-actions";
+import { FormFieldError } from "@/components/forms/form-field-description";
+import { FormSection } from "@/components/forms/form-section";
+import { RequiredBadge } from "@/components/forms/field-badges";
 import {
   professionalOnboardingSchema,
   type ProfessionalOnboardingInput,
@@ -79,136 +88,153 @@ export function ProfessionalOnboardingForm({ categories }: { categories: Categor
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8" noValidate>
       {serverError && (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <Alert variant="danger" role="alert">
           {serverError}
-        </p>
+        </Alert>
       )}
 
-      <fieldset className="flex flex-col gap-3 rounded-md border border-border p-4">
-        <legend className="px-1 text-sm font-medium">Primary profession / category</legend>
-        <div className="grid grid-cols-2 gap-2">
-          {categories.map((category) => (
-            <label key={category.id} className="flex items-center gap-2 text-sm">
-              <input type="checkbox" value={category.id} {...register("categoryIds")} />
-              {category.name}
-            </label>
-          ))}
-          {categories.length === 0 && (
-            <p className="text-sm text-foreground/70">No service categories are available yet.</p>
-          )}
-        </div>
-        {errors.categoryIds && (
-          <p className="text-xs text-red-600">{errors.categoryIds.message}</p>
-        )}
-      </fieldset>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="contactPhone" className="text-sm font-medium">
-          Phone number
-        </label>
-        <input
-          id="contactPhone"
-          type="tel"
-          autoComplete="tel"
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("contactPhone")}
-        />
-        {errors.contactPhone && (
-          <p className="text-xs text-red-600">{errors.contactPhone.message}</p>
-        )}
-      </div>
-
-      <fieldset className="flex flex-col gap-3 rounded-md border border-border p-4">
-        <legend className="px-1 text-sm font-medium">Base location</legend>
-        <input
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          placeholder="Street address"
-          autoComplete="address-line1"
-          {...register("address.line1")}
-        />
-        {errors.address?.line1 && (
-          <p className="text-xs text-red-600">{errors.address.line1.message}</p>
-        )}
-        <input
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          placeholder="Apartment, suite, etc. (optional)"
-          autoComplete="address-line2"
-          {...register("address.line2")}
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <input
-              className="h-10 w-full rounded-md border border-border px-3 text-sm"
-              placeholder="City"
-              autoComplete="address-level2"
-              {...register("address.city")}
-            />
-            {errors.address?.city && (
-              <p className="text-xs text-red-600">{errors.address.city.message}</p>
+      <FormSection
+        title="Primary profession / category"
+        description="Choose every category that describes the work you do."
+        titleAside={<RequiredBadge />}
+      >
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-border p-4">
+          <legend className="sr-only">Primary profession / category</legend>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {categories.map((category) => (
+              <label
+                key={category.id}
+                className="flex min-h-11 items-center gap-2 rounded-md px-1 text-sm text-foreground"
+              >
+                <input
+                  type="checkbox"
+                  value={category.id}
+                  className="h-4 w-4 shrink-0 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  {...register("categoryIds")}
+                />
+                {category.name}
+              </label>
+            ))}
+            {categories.length === 0 && (
+              <p className="text-sm text-muted-foreground">No service categories are available yet.</p>
             )}
           </div>
-          <input
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="Province (optional)"
-            autoComplete="address-level1"
-            {...register("address.province")}
+          <FormFieldError>{errors.categoryIds?.message}</FormFieldError>
+        </fieldset>
+      </FormSection>
+
+      <FormSection title="Contact" titleAside={<RequiredBadge />}>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="contactPhone" className="flex items-center gap-1.5">
+            <Phone aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
+            Phone number
+          </Label>
+          <Input
+            id="contactPhone"
+            type="tel"
+            autoComplete="tel"
+            aria-invalid={!!errors.contactPhone}
+            aria-describedby={errors.contactPhone ? "contactPhone-error" : undefined}
+            {...register("contactPhone")}
           />
+          <FormFieldError id="contactPhone-error">{errors.contactPhone?.message}</FormFieldError>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <input
-              className="h-10 w-full rounded-md border border-border px-3 text-sm"
-              placeholder="Postal code"
-              autoComplete="postal-code"
-              {...register("address.postalCode")}
+      </FormSection>
+
+      <FormSection
+        title="Base location"
+        description="Where you're based — used to match you with nearby requests."
+        titleAside={<RequiredBadge />}
+      >
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-border p-4">
+          <legend className="flex items-center gap-1.5 px-1 text-sm font-medium text-foreground">
+            <MapPin aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
+            Address
+          </legend>
+          <div className="flex flex-col gap-1.5">
+            <Input
+              placeholder="Street address"
+              autoComplete="address-line1"
+              aria-invalid={!!errors.address?.line1}
+              {...register("address.line1")}
             />
-            {errors.address?.postalCode && (
-              <p className="text-xs text-red-600">{errors.address.postalCode.message}</p>
-            )}
+            <FormFieldError>{errors.address?.line1?.message}</FormFieldError>
           </div>
-          <input
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="Country"
-            autoComplete="country-name"
-            {...register("address.country")}
+          <Input
+            placeholder="Apartment, suite, etc. (optional)"
+            autoComplete="address-line2"
+            {...register("address.line2")}
           />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Input
+                placeholder="City"
+                autoComplete="address-level2"
+                aria-invalid={!!errors.address?.city}
+                {...register("address.city")}
+              />
+              <FormFieldError>{errors.address?.city?.message}</FormFieldError>
+            </div>
+            <Input placeholder="Province (optional)" autoComplete="address-level1" {...register("address.province")} />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Input
+                placeholder="Postal code"
+                autoComplete="postal-code"
+                aria-invalid={!!errors.address?.postalCode}
+                {...register("address.postalCode")}
+              />
+              <FormFieldError>{errors.address?.postalCode?.message}</FormFieldError>
+            </div>
+            <Input placeholder="Country" autoComplete="country-name" {...register("address.country")} />
+          </div>
+        </fieldset>
+      </FormSection>
+
+      <FormSection title="Coverage & about you">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="serviceRadiusKm" className="flex items-center gap-1.5">
+            <Radar aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
+            Service radius (km)
+            <RequiredBadge />
+          </Label>
+          <Input
+            id="serviceRadiusKm"
+            type="number"
+            min={0}
+            className="sm:max-w-xs"
+            aria-invalid={!!errors.serviceRadiusKm}
+            aria-describedby={errors.serviceRadiusKm ? "serviceRadiusKm-error" : undefined}
+            {...register("serviceRadiusKm")}
+          />
+          <FormFieldError id="serviceRadiusKm-error">{errors.serviceRadiusKm?.message}</FormFieldError>
         </div>
-      </fieldset>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="serviceRadiusKm" className="text-sm font-medium">
-          Service radius (km)
-        </label>
-        <input
-          id="serviceRadiusKm"
-          type="number"
-          min={0}
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("serviceRadiusKm")}
-        />
-        {errors.serviceRadiusKm && (
-          <p className="text-xs text-red-600">{errors.serviceRadiusKm.message}</p>
-        )}
-      </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="bio" className="flex items-center gap-1.5">
+            <Sparkles aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
+            Short professional description
+            <RequiredBadge />
+          </Label>
+          <Textarea
+            id="bio"
+            rows={4}
+            aria-invalid={!!errors.bio}
+            aria-describedby={errors.bio ? "bio-error" : undefined}
+            {...register("bio")}
+          />
+          <FormFieldError id="bio-error">{errors.bio?.message}</FormFieldError>
+        </div>
+      </FormSection>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="bio" className="text-sm font-medium">
-          Short professional description
-        </label>
-        <textarea
-          id="bio"
-          rows={4}
-          className="rounded-md border border-border px-3 py-2 text-sm"
-          {...register("bio")}
-        />
-        {errors.bio && <p className="text-xs text-red-600">{errors.bio.message}</p>}
-      </div>
-
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Setting up…" : "Finish setting up my professional profile"}
-      </Button>
+      <FormActions stickyOnMobile>
+        <Button type="submit" disabled={isSubmitting} className="sm:min-w-64">
+          {isSubmitting ? "Setting up…" : "Finish setting up my professional profile"}
+        </Button>
+      </FormActions>
     </form>
   );
 }

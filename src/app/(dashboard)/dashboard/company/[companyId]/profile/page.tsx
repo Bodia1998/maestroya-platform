@@ -6,6 +6,13 @@ import { makeGetCompanyForMemberUseCase } from "@/application/use-cases/company/
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { FormActions } from "@/components/forms/form-actions";
+import { FormSection } from "@/components/forms/form-section";
+import { OptionalBadge } from "@/components/forms/field-badges";
 
 export const metadata = { title: "Company profile" };
 
@@ -53,44 +60,66 @@ export default async function CompanyProfilePage({ params }: { params: Promise<{
         ]}
       />
 
-      <form action={updateCompanyFormAction.bind(null, companyId)} className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Legal name</span>
-          <input name="legalName" defaultValue={company.legalName} maxLength={200} className="rounded-md border border-border p-2 text-sm" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Trade / display name</span>
-          <input name="tradeName" defaultValue={company.tradeName ?? ""} maxLength={200} className="rounded-md border border-border p-2 text-sm" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Description</span>
-          <textarea name="description" defaultValue={company.description ?? ""} rows={4} maxLength={5000} className="rounded-md border border-border p-2 text-sm" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Website</span>
-          <input name="websiteUrl" defaultValue={company.websiteUrl ?? ""} className="rounded-md border border-border p-2 text-sm" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Contact email</span>
-          <input name="contactEmail" defaultValue={company.contactEmail ?? ""} className="rounded-md border border-border p-2 text-sm" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Contact phone</span>
-          <input name="contactPhone" defaultValue={company.contactPhone ?? ""} className="rounded-md border border-border p-2 text-sm" />
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-foreground/70">City</span>
-            <input name="city" defaultValue={company.city ?? ""} className="rounded-md border border-border p-2 text-sm" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-foreground/70">Province</span>
-            <input name="province" defaultValue={company.province ?? ""} className="rounded-md border border-border p-2 text-sm" />
-          </label>
-        </div>
-        <button type="submit" className="h-10 w-fit rounded-md bg-black px-4 text-sm font-medium text-white">
-          Save changes
-        </button>
+      <form action={updateCompanyFormAction.bind(null, companyId)} className="flex flex-col gap-8">
+        <FormSection title="Company details">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="legalName">Legal name</Label>
+            <Input id="legalName" name="legalName" defaultValue={company.legalName} maxLength={200} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tradeName">
+              Trade / display name <OptionalBadge />
+            </Label>
+            <Input id="tradeName" name="tradeName" defaultValue={company.tradeName ?? ""} maxLength={200} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="description">
+              Description <OptionalBadge />
+            </Label>
+            <Textarea id="description" name="description" defaultValue={company.description ?? ""} rows={4} maxLength={5000} />
+          </div>
+        </FormSection>
+
+        <FormSection title="Contact information">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="websiteUrl">
+              Website <OptionalBadge />
+            </Label>
+            <Input id="websiteUrl" name="websiteUrl" defaultValue={company.websiteUrl ?? ""} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="contactEmail">
+              Contact email <OptionalBadge />
+            </Label>
+            <Input id="contactEmail" name="contactEmail" defaultValue={company.contactEmail ?? ""} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="contactPhone">
+              Contact phone <OptionalBadge />
+            </Label>
+            <Input id="contactPhone" name="contactPhone" defaultValue={company.contactPhone ?? ""} />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="city">
+                City <OptionalBadge />
+              </Label>
+              <Input id="city" name="city" defaultValue={company.city ?? ""} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="province">
+                Province <OptionalBadge />
+              </Label>
+              <Input id="province" name="province" defaultValue={company.province ?? ""} />
+            </div>
+          </div>
+        </FormSection>
+
+        <FormActions stickyOnMobile>
+          <Button type="submit" className="sm:min-w-40">
+            Save changes
+          </Button>
+        </FormActions>
       </form>
     </div>
   );

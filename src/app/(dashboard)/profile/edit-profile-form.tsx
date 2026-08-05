@@ -1,10 +1,20 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { FormActions } from "@/components/forms/form-actions";
+import { FormFieldError } from "@/components/forms/form-field-description";
+import { FormSection } from "@/components/forms/form-section";
+import { OptionalBadge } from "@/components/forms/field-badges";
 import { updateProfileSchema, type UpdateProfileInput } from "@/application/dto/profile.dto";
 import { updateProfileAction } from "./actions";
 
@@ -106,146 +116,115 @@ export function EditProfileForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8" noValidate>
       {serverError && (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <Alert variant="danger" role="alert">
           {serverError}
-        </p>
+        </Alert>
       )}
       {successMessage && (
-        <p role="status" className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+        <Alert variant="success" role="status">
           {successMessage}
-        </p>
+        </Alert>
       )}
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="name" className="text-sm font-medium">
-          Display name
-        </label>
-        <input
-          id="name"
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("name")}
-        />
-        {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
-      </div>
+      <FormSection title="Basics">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="name">Display name</Label>
+          <Input
+            id="name"
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? "name-error" : undefined}
+            {...register("name")}
+          />
+          <FormFieldError id="name-error">{errors.name?.message}</FormFieldError>
+        </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="phone" className="text-sm font-medium">
-          Phone
-        </label>
-        <input
-          id="phone"
-          type="tel"
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("phone")}
-        />
-        {errors.phone && <p className="text-xs text-red-600">{errors.phone.message}</p>}
-      </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="phone">
+            Phone <OptionalBadge />
+          </Label>
+          <Input
+            id="phone"
+            type="tel"
+            aria-invalid={!!errors.phone}
+            aria-describedby={errors.phone ? "phone-error" : undefined}
+            {...register("phone")}
+          />
+          <FormFieldError id="phone-error">{errors.phone?.message}</FormFieldError>
+        </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="timezone" className="text-sm font-medium">
-            Timezone
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="timezone">Timezone</Label>
+            <Select id="timezone" {...register("timezone")}>
+              {timezones.map((tz) => (
+                <option key={tz} value={tz}>
+                  {tz}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="preferredLanguageId">Preferred language</Label>
+            <Select id="preferredLanguageId" {...register("preferredLanguageId")}>
+              <option value="">No preference</option>
+              {languages.map((lang) => (
+                <option key={lang.id} value={lang.id}>
+                  {lang.nativeName}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection title="Address">
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-border p-4">
+          <legend className="flex items-center gap-1.5 px-1 text-sm font-medium text-foreground">
+            <MapPin aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
+            Address
+          </legend>
+          <div className="flex flex-col gap-1.5">
+            <Input placeholder="Street address" aria-invalid={!!errors.address?.line1} {...register("address.line1")} />
+            <FormFieldError>{errors.address?.line1?.message}</FormFieldError>
+          </div>
+          <Input placeholder="Apartment, floor, etc. (optional)" {...register("address.line2")} />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input placeholder="City" aria-invalid={!!errors.address?.city} {...register("address.city")} />
+            <Input placeholder="Postal code" {...register("address.postalCode")} />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input placeholder="Province" {...register("address.province")} />
+            <Input placeholder="Country" {...register("address.country")} />
+          </div>
+        </fieldset>
+      </FormSection>
+
+      <FormSection title="Notifications">
+        <fieldset className="flex flex-col gap-2 rounded-lg border border-border p-4">
+          <legend className="sr-only">Notifications</legend>
+          <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
+            <Checkbox {...register("notificationPreferences.emailMarketing")} />
+            Marketing emails
           </label>
-          <select
-            id="timezone"
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            {...register("timezone")}
-          >
-            {timezones.map((tz) => (
-              <option key={tz} value={tz}>
-                {tz}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label htmlFor="preferredLanguageId" className="text-sm font-medium">
-            Preferred language
+          <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
+            <Checkbox {...register("notificationPreferences.emailServiceUpdates")} />
+            Service update emails
           </label>
-          <select
-            id="preferredLanguageId"
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            {...register("preferredLanguageId")}
-          >
-            <option value="">No preference</option>
-            {languages.map((lang) => (
-              <option key={lang.id} value={lang.id}>
-                {lang.nativeName}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+          <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
+            <Checkbox {...register("notificationPreferences.smsAppointmentReminders")} />
+            SMS appointment reminders
+          </label>
+        </fieldset>
+      </FormSection>
 
-      <fieldset className="flex flex-col gap-3 rounded-md border border-border p-4">
-        <legend className="px-1 text-sm font-medium">Address</legend>
-        <input
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          placeholder="Street address"
-          {...register("address.line1")}
-        />
-        {errors.address?.line1 && (
-          <p className="text-xs text-red-600">{errors.address.line1.message}</p>
-        )}
-        <input
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          placeholder="Apartment, floor, etc. (optional)"
-          {...register("address.line2")}
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="City"
-            {...register("address.city")}
-          />
-          <input
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="Postal code"
-            {...register("address.postalCode")}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="Province"
-            {...register("address.province")}
-          />
-          <input
-            className="h-10 rounded-md border border-border px-3 text-sm"
-            placeholder="Country"
-            {...register("address.country")}
-          />
-        </div>
-      </fieldset>
-
-      <fieldset className="flex flex-col gap-2 rounded-md border border-border p-4">
-        <legend className="px-1 text-sm font-medium">Notifications</legend>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" {...register("notificationPreferences.emailMarketing")} />
-          Marketing emails
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            {...register("notificationPreferences.emailServiceUpdates")}
-          />
-          Service update emails
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            {...register("notificationPreferences.smsAppointmentReminders")}
-          />
-          SMS appointment reminders
-        </label>
-      </fieldset>
-
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Saving…" : "Save changes"}
-      </Button>
+      <FormActions stickyOnMobile>
+        <Button type="submit" disabled={isSubmitting} className="sm:min-w-40">
+          {isSubmitting ? "Saving…" : "Save changes"}
+        </Button>
+      </FormActions>
     </form>
   );
 }

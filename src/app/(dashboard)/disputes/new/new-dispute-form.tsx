@@ -3,7 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { FormSection } from "@/components/forms/form-section";
+import { RequiredBadge } from "@/components/forms/field-badges";
 import { createDisputeAction } from "../actions";
 
 const REASONS = [
@@ -40,50 +47,55 @@ export function NewDisputeForm({ initialJobId }: { initialJobId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <label className="flex flex-col gap-1 text-sm">
-        Job ID
-        <input
-          value={jobId}
-          onChange={(e) => setJobId(e.target.value)}
-          className="rounded-md border border-border px-3 py-2 text-sm"
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Reason
-        <select value={reason} onChange={(e) => setReason(e.target.value)} className="rounded-md border border-border px-3 py-2 text-sm">
+    <FormSection title="Open a dispute" description="Give as much detail as possible — this helps us resolve it faster.">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="dispute-jobId">
+          Job ID <RequiredBadge />
+        </Label>
+        <Input id="dispute-jobId" value={jobId} onChange={(e) => setJobId(e.target.value)} />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="dispute-reason">
+          Reason <RequiredBadge />
+        </Label>
+        <Select id="dispute-reason" value={reason} onChange={(e) => setReason(e.target.value)}>
           {REASONS.map((r) => (
             <option key={r} value={r}>
               {r}
             </option>
           ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Title
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="rounded-md border border-border px-3 py-2 text-sm"
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Description
-        <textarea
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="dispute-title">
+          Title <RequiredBadge />
+        </Label>
+        <Input id="dispute-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="dispute-description">
+          Description <RequiredBadge />
+        </Label>
+        <Textarea
+          id="dispute-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={5}
-          className="rounded-md border border-border px-3 py-2 text-sm"
         />
-      </label>
+      </div>
+
       {error && (
-        <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
+        <Alert variant="danger" role="alert">
           {error}
-        </p>
+        </Alert>
       )}
-      <Button type="button" disabled={isSubmitting} onClick={handleSubmit}>
+
+      <Button type="button" disabled={isSubmitting} onClick={handleSubmit} className="w-full sm:w-auto">
         {isSubmitting ? "Submitting…" : "Open dispute"}
       </Button>
-    </div>
+    </FormSection>
   );
 }
