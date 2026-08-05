@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Section } from "@/components/layout/section";
 import { changeSupportTicketStatusAction, closeSupportTicketAction, resolveSupportTicketAction } from "../actions";
 
 const NEXT_STATUSES: Record<string, string[]> = {
@@ -35,10 +38,9 @@ export function AdminSupportTicketActions({ ticketId, status }: { ticketId: stri
   const canClose = status === "RESOLVED";
 
   return (
-    <div className="flex flex-col gap-4 rounded-md border border-border p-4">
-      <h2 className="text-sm font-semibold">Admin actions</h2>
+    <Section title="Admin actions" bordered aria-busy={isSubmitting}>
       {nextStatuses.length > 0 && (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {nextStatuses.map((s) => (
             <Button key={s} type="button" variant="ghost" disabled={isSubmitting} onClick={() => run(() => changeSupportTicketStatusAction(ticketId, s))}>
               Move to {s}
@@ -48,22 +50,32 @@ export function AdminSupportTicketActions({ ticketId, status }: { ticketId: stri
       )}
       {canResolve && (
         <div className="flex flex-col gap-2">
-          <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Resolution note" className="rounded-md border border-border px-3 py-2 text-sm" />
-          <Button type="button" disabled={isSubmitting || note.trim().length === 0} onClick={() => run(() => resolveSupportTicketAction(ticketId, note))}>
+          <Label htmlFor="support-ticket-resolution-note">Resolution note</Label>
+          <Textarea
+            id="support-ticket-resolution-note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={2}
+            placeholder="Resolution note"
+          />
+          <Button
+            type="button"
+            className="w-fit"
+            disabled={isSubmitting || note.trim().length === 0}
+            onClick={() => run(() => resolveSupportTicketAction(ticketId, note))}
+          >
             Resolve
           </Button>
         </div>
       )}
       {canClose && (
-        <Button type="button" disabled={isSubmitting} onClick={() => run(() => closeSupportTicketAction(ticketId))}>
+        <Button type="button" className="w-fit" disabled={isSubmitting} onClick={() => run(() => closeSupportTicketAction(ticketId))}>
           Close ticket
         </Button>
       )}
-      {error && (
-        <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
-      )}
-    </div>
+      <div role="alert" aria-live="assertive">
+        {error && <p className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">{error}</p>}
+      </div>
+    </Section>
   );
 }

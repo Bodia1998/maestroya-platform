@@ -6,8 +6,13 @@ import { makeListAdminCompaniesUseCase } from "@/application/use-cases/admin/com
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { AdminDataTable, AdminTableHeadRow, AdminTh, AdminTableBody, AdminTableRow } from "@/components/dashboard/admin-data-table";
+import { AdminFilterForm } from "@/components/dashboard/admin-filter-form";
+import { AdminRowActionButton } from "@/components/dashboard/admin-row-action-button";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 
 export const metadata = { title: "Admin — Companies" };
 
@@ -41,82 +46,76 @@ export default async function AdminCompaniesPage({ searchParams }: { searchParam
     <div className="flex flex-col gap-6">
       <PageHeader title="Companies" subtitle="Company profiles, owners, verification, and status." />
 
-      <form method="get" className="flex gap-2">
-        <input
+      <AdminFilterForm aria-label="Search and filter companies" submitLabel="Filter">
+        <Input
           type="text"
           name="search"
           defaultValue={search}
           placeholder="Search by legal/trade name, owner name, or email"
-          className="h-10 flex-1 rounded-md border border-border px-3 text-sm"
+          aria-label="Search by legal/trade name, owner name, or email"
+          className="h-10 flex-1 min-w-[220px]"
         />
-        <select name="status" defaultValue={status ?? ""} className="h-10 rounded-md border border-border px-2 text-sm">
+        <Select name="status" defaultValue={status ?? ""} aria-label="Filter by status" className="h-10 w-auto">
           <option value="">All statuses</option>
           <option value="PENDING">Pending</option>
           <option value="ACTIVE">Active</option>
           <option value="SUSPENDED">Suspended</option>
           <option value="DEACTIVATED">Deactivated</option>
-        </select>
-        <button type="submit" className="h-10 rounded-md border border-border px-4 text-sm">
-          Filter
-        </button>
-      </form>
+        </Select>
+      </AdminFilterForm>
 
       {companies.length === 0 ? (
         <EmptyState icon={Building2} title="No companies found" description="Try a different search or filter." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full min-w-[720px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-3">Legal name</th>
-                <th className="px-4 py-3">Owner</th>
-                <th className="px-4 py-3">Members</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Verified</th>
-                <th className="px-4 py-3">Rating</th>
-                <th className="px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {companies.map((company) => (
-                <tr key={company.id} className="transition-colors hover:bg-muted/40">
-                  <td className="px-4 py-3">
-                    <Link href={`/admin/companies/${company.id}`} className="font-medium text-primary hover:underline">
-                      {company.tradeName ?? company.legalName}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">{company.ownerName ?? company.ownerEmail ?? "—"}</td>
-                  <td className="px-4 py-3">{company.memberCount}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={company.status} />
-                  </td>
-                  <td className="px-4 py-3">{company.isVerified ? "Yes" : "No"}</td>
-                  <td className="px-4 py-3">
-                    {company.averageRating !== null ? `${company.averageRating} (${company.reviewCount})` : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      {(company.status === "ACTIVE" || company.status === "PENDING") && (
-                        <form action={suspendCompanyFormAction.bind(null, company.id)}>
-                          <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted">
-                            Suspend
-                          </button>
-                        </form>
-                      )}
-                      {company.status === "SUSPENDED" && (
-                        <form action={reactivateCompanyFormAction.bind(null, company.id)}>
-                          <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted">
-                            Reactivate
-                          </button>
-                        </form>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AdminDataTable caption="Companies" minWidth={720}>
+          <AdminTableHeadRow>
+            <AdminTh>Legal name</AdminTh>
+            <AdminTh>Owner</AdminTh>
+            <AdminTh>Members</AdminTh>
+            <AdminTh>Status</AdminTh>
+            <AdminTh>Verified</AdminTh>
+            <AdminTh>Rating</AdminTh>
+            <AdminTh>Actions</AdminTh>
+          </AdminTableHeadRow>
+          <AdminTableBody>
+            {companies.map((company) => (
+              <AdminTableRow key={company.id}>
+                <td className="px-4 py-3">
+                  <Link href={`/admin/companies/${company.id}`} className="font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                    {company.tradeName ?? company.legalName}
+                  </Link>
+                </td>
+                <td className="px-4 py-3">{company.ownerName ?? company.ownerEmail ?? "—"}</td>
+                <td className="px-4 py-3">{company.memberCount}</td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={company.status} />
+                </td>
+                <td className="px-4 py-3">{company.isVerified ? "Yes" : "No"}</td>
+                <td className="px-4 py-3">
+                  {company.averageRating !== null ? `${company.averageRating} (${company.reviewCount})` : "—"}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-2">
+                    {(company.status === "ACTIVE" || company.status === "PENDING") && (
+                      <form action={suspendCompanyFormAction.bind(null, company.id)}>
+                        <AdminRowActionButton>
+                          Suspend<span className="sr-only"> company {company.tradeName ?? company.legalName}</span>
+                        </AdminRowActionButton>
+                      </form>
+                    )}
+                    {company.status === "SUSPENDED" && (
+                      <form action={reactivateCompanyFormAction.bind(null, company.id)}>
+                        <AdminRowActionButton>
+                          Reactivate<span className="sr-only"> company {company.tradeName ?? company.legalName}</span>
+                        </AdminRowActionButton>
+                      </form>
+                    )}
+                  </div>
+                </td>
+              </AdminTableRow>
+            ))}
+          </AdminTableBody>
+        </AdminDataTable>
       )}
 
       <AdminTablePager

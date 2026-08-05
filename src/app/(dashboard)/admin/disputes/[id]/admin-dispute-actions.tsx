@@ -4,6 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Select } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Section } from "@/components/layout/section";
 import {
   addDisputeInternalNoteAction,
   changeDisputeStatusAction,
@@ -57,11 +61,9 @@ export function AdminDisputeActions({ disputeId, status }: { disputeId: string; 
   const canClose = status === "RESOLVED" || status === "REJECTED";
 
   return (
-    <div className="flex flex-col gap-4 rounded-md border border-border p-4">
-      <h2 className="text-sm font-semibold">Admin actions</h2>
-
+    <Section title="Admin actions" bordered aria-busy={isSubmitting}>
       {nextStatuses.length > 0 && (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {nextStatuses.map((s) => (
             <Button key={s} type="button" variant="ghost" disabled={isSubmitting} onClick={() => run(() => changeDisputeStatusAction(disputeId, s))}>
               Move to {s}
@@ -70,13 +72,14 @@ export function AdminDisputeActions({ disputeId, status }: { disputeId: string; 
         </div>
       )}
 
-      <label className="flex flex-col gap-1 text-sm">
-        Internal note (never visible to customer/professional)
-        <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className="rounded-md border border-border px-3 py-2 text-sm" />
-      </label>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="dispute-internal-note">Internal note (never visible to customer/professional)</Label>
+        <Textarea id="dispute-internal-note" value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
+      </div>
       <Button
         type="button"
         variant="ghost"
+        className="w-fit"
         disabled={isSubmitting || note.trim().length === 0}
         onClick={() => run(() => addDisputeInternalNoteAction(disputeId, note)).then(() => setNote(""))}
       >
@@ -85,21 +88,21 @@ export function AdminDisputeActions({ disputeId, status }: { disputeId: string; 
 
       {canResolveOrReject && (
         <div className="flex flex-col gap-2 border-t border-border pt-4">
-          <label className="flex flex-col gap-1 text-sm">
-            Resolution
-            <select value={resolution} onChange={(e) => setResolution(e.target.value)} className="rounded-md border border-border px-3 py-2 text-sm">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="dispute-resolution">Resolution</Label>
+            <Select id="dispute-resolution" value={resolution} onChange={(e) => setResolution(e.target.value)} className="w-auto">
               {RESOLUTIONS.map((r) => (
                 <option key={r} value={r}>
                   {r}
                 </option>
               ))}
-            </select>
-          </label>
-          <div className="flex gap-2">
+            </Select>
+          </div>
+          <div className="flex flex-wrap gap-2">
             <Button type="button" disabled={isSubmitting || note.trim().length === 0} onClick={() => run(() => resolveDisputeAction(disputeId, resolution, note))}>
               Resolve
             </Button>
-            <Button type="button" variant="ghost" disabled={isSubmitting || note.trim().length === 0} onClick={() => run(() => rejectDisputeAction(disputeId, note))}>
+            <Button type="button" variant="danger" disabled={isSubmitting || note.trim().length === 0} onClick={() => run(() => rejectDisputeAction(disputeId, note))}>
               Reject
             </Button>
           </div>
@@ -107,16 +110,14 @@ export function AdminDisputeActions({ disputeId, status }: { disputeId: string; 
       )}
 
       {canClose && (
-        <Button type="button" disabled={isSubmitting} onClick={() => run(() => closeDisputeAction(disputeId))}>
+        <Button type="button" onClick={() => run(() => closeDisputeAction(disputeId))} disabled={isSubmitting} className="w-fit">
           Close case
         </Button>
       )}
 
-      {error && (
-        <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
-      )}
-    </div>
+      <div role="alert" aria-live="assertive">
+        {error && <p className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">{error}</p>}
+      </div>
+    </Section>
   );
 }

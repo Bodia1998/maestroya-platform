@@ -4,6 +4,7 @@ import { makeListAdminJobsUseCase } from "@/application/use-cases/admin/compose"
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { AdminDataTable, AdminTableHeadRow, AdminTh, AdminTableBody, AdminTableRow } from "@/components/dashboard/admin-data-table";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -27,28 +28,24 @@ export default async function AdminJobsPage({ searchParams }: { searchParams: Se
       {jobs.length === 0 ? (
         <EmptyState icon={Briefcase} title="No jobs found" description="Jobs created from accepted quotes will appear here." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full min-w-[480px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-3">Job</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Appointments</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {jobs.map((job) => (
-                <tr key={job.id} className="transition-colors hover:bg-muted/40">
-                  <td className="px-4 py-3 font-mono text-xs">{job.id}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={job.status} />
-                  </td>
-                  <td className="px-4 py-3">{job.appointmentCount}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AdminDataTable caption="Appointments and jobs" minWidth={480}>
+          <AdminTableHeadRow>
+            <AdminTh>Job</AdminTh>
+            <AdminTh>Status</AdminTh>
+            <AdminTh>Appointments</AdminTh>
+          </AdminTableHeadRow>
+          <AdminTableBody>
+            {jobs.map((job) => (
+              <AdminTableRow key={job.id}>
+                <td className="px-4 py-3 font-mono text-xs">{job.id}</td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={job.status} />
+                </td>
+                <td className="px-4 py-3">{job.appointmentCount}</td>
+              </AdminTableRow>
+            ))}
+          </AdminTableBody>
+        </AdminDataTable>
       )}
 
       <AdminTablePager page={page} hasNextPage={jobs.length === DEFAULT_PAGE_SIZE} buildHref={(p) => `/admin/jobs?page=${p}`} />

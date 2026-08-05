@@ -4,6 +4,7 @@ import { makeListAdminServiceRequestsUseCase } from "@/application/use-cases/adm
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { AdminDataTable, AdminTableHeadRow, AdminTh, AdminTableBody, AdminTableRow } from "@/components/dashboard/admin-data-table";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -27,32 +28,28 @@ export default async function AdminServiceRequestsPage({ searchParams }: { searc
       {requests.length === 0 ? (
         <EmptyState icon={FileText} title="No service requests found" description="Customer service requests will appear here." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full min-w-[600px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-3">Title</th>
-                <th className="px-4 py-3">Customer</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Quotes</th>
-                <th className="px-4 py-3">Jobs</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {requests.map((request) => (
-                <tr key={request.id} className="transition-colors hover:bg-muted/40">
-                  <td className="px-4 py-3">{request.title}</td>
-                  <td className="px-4 py-3">{request.customerName ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={request.status} />
-                  </td>
-                  <td className="px-4 py-3">{request.quoteCount}</td>
-                  <td className="px-4 py-3">{request.jobCount}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AdminDataTable caption="Service requests" minWidth={600}>
+          <AdminTableHeadRow>
+            <AdminTh>Title</AdminTh>
+            <AdminTh>Customer</AdminTh>
+            <AdminTh>Status</AdminTh>
+            <AdminTh>Quotes</AdminTh>
+            <AdminTh>Jobs</AdminTh>
+          </AdminTableHeadRow>
+          <AdminTableBody>
+            {requests.map((request) => (
+              <AdminTableRow key={request.id}>
+                <td className="px-4 py-3">{request.title}</td>
+                <td className="px-4 py-3">{request.customerName ?? "—"}</td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={request.status} />
+                </td>
+                <td className="px-4 py-3">{request.quoteCount}</td>
+                <td className="px-4 py-3">{request.jobCount}</td>
+              </AdminTableRow>
+            ))}
+          </AdminTableBody>
+        </AdminDataTable>
       )}
 
       <AdminTablePager
