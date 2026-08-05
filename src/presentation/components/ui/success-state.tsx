@@ -14,7 +14,7 @@ export function SuccessState({ title, description, action, className }: SuccessS
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-3 rounded-xl border border-success/20 bg-success-muted/40 px-6 py-12 text-center",
+        "flex animate-fade-in flex-col items-center gap-3 rounded-xl border border-success/20 bg-success-muted/40 px-6 py-12 text-center",
         className,
       )}
     >

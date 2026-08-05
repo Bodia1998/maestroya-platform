@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { I18nProvider } from "@/components/shared/i18n-provider";
@@ -120,17 +120,20 @@ describe("DashboardShell", () => {
     expect(within(dialog).getAllByRole("link", { name: /Professional dashboard|Companies/ }).length).toBeGreaterThan(0);
   });
 
-  it("closes the mobile drawer via its close button", () => {
+  it("closes the mobile drawer via its close button", async () => {
+    // The drawer now plays a ~200ms exit animation (Module 30.8) before
+    // unmounting, so it briefly stays in the DOM after the close trigger —
+    // wait for the delayed unmount instead of asserting synchronous removal.
     renderShell("/dashboard");
     fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
     expect(screen.getByRole("dialog")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: /cerrar/i }));
 
-    expect(screen.queryByRole("dialog")).toBeNull();
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
-  it("closes the mobile drawer when a nav link inside it is clicked", () => {
+  it("closes the mobile drawer when a nav link inside it is clicked", async () => {
     renderShell("/dashboard");
     fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
     const dialog = screen.getByRole("dialog");
@@ -138,7 +141,7 @@ describe("DashboardShell", () => {
     const link = within(dialog).getAllByRole("link")[0]!;
     fireEvent.click(link);
 
-    expect(screen.queryByRole("dialog")).toBeNull();
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
   it("shows only the Professional nav group while on a /dashboard/professional/* route, for a dual-role account", () => {

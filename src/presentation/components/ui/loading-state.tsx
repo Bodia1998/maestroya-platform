@@ -11,7 +11,7 @@ export function LoadingState({ label = "Cargando…", className }: LoadingStateP
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-xl px-6 py-16 text-center",
+        "flex animate-fade-in flex-col items-center justify-center gap-3 rounded-xl px-6 py-16 text-center",
         className,
       )}
     >

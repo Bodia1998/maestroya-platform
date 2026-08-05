@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 import { cn } from "@/shared/utils/cn";
+import { useDelayedUnmount } from "@/hooks/use-delayed-unmount";
 
 export interface DrawerProps {
   open: boolean;
@@ -17,37 +18,56 @@ export interface DrawerProps {
  * Slide-in side panel — `Dialog`'s sibling for mobile nav / filter panels
  * / detail-on-the-side use cases. Same portal + Escape + backdrop-click
  * + scroll-lock behavior as `Dialog`, just anchored to an edge.
+ *
+ * Bug fixed here: a `side="left"` drawer (the mobile nav in
+ * `DashboardShell` — the single most-triggered drawer in the app) used to
+ * cancel its own enter animation entirely (`animate-none`) because the
+ * base class always applied `animate-slide-in-right`, which visually
+ * contradicts a left-anchored panel. It now gets its own symmetric
+ * `slide-in-left`/`slide-out-left` keyframes instead of no animation at
+ * all. Exit animation via `useDelayedUnmount` — see that hook's doc
+ * comment.
  */
 export function Drawer({ open, onOpenChange, children, side = "right" }: DrawerProps) {
+  const { shouldRender, closing } = useDelayedUnmount(open, 200);
+
   React.useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onOpenChange(false);
     };
     document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onOpenChange]);
+
+  React.useEffect(() => {
+    if (!shouldRender) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [open, onOpenChange]);
+  }, [shouldRender]);
 
-  if (!open || typeof document === "undefined") return null;
+  if (!shouldRender || typeof document === "undefined") return null;
+
+  const enterClass = side === "right" ? "animate-slide-in-right" : "animate-slide-in-left";
+  const exitClass = side === "right" ? "animate-slide-out-right" : "animate-slide-out-left";
 
   return createPortal(
     <div className="fixed inset-0 z-drawer flex">
       <div
         aria-hidden
-        className="absolute inset-0 animate-fade-in bg-foreground/40 backdrop-blur-sm"
+        className={cn("absolute inset-0 bg-foreground/40 backdrop-blur-sm", closing ? "animate-fade-out" : "animate-fade-in")}
         onClick={() => onOpenChange(false)}
       />
       <div
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative flex h-full w-full max-w-sm flex-col overflow-y-auto border-border bg-card p-6 shadow-xl animate-slide-in-right",
-          side === "right" ? "ml-auto border-l" : "mr-auto border-r animate-none",
+          "relative flex h-full w-full max-w-sm flex-col overflow-y-auto border-border bg-card p-6 shadow-xl",
+          side === "right" ? "ml-auto border-l" : "mr-auto border-r",
+          closing ? exitClass : enterClass,
         )}
       >
         {children}

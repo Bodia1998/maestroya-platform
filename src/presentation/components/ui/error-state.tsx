@@ -23,7 +23,7 @@ export function ErrorState({
     <div
       role="alert"
       className={cn(
-        "flex flex-col items-center gap-3 rounded-xl border border-dashed border-danger/30 bg-danger-muted/40 px-6 py-12 text-center",
+        "flex animate-fade-in flex-col items-center gap-3 rounded-xl border border-dashed border-danger/30 bg-danger-muted/40 px-6 py-12 text-center",
         className,
       )}
     >

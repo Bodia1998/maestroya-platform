@@ -18,7 +18,7 @@ export function EmptyState({ icon: Icon, title, description, action, secondaryAc
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-muted/40 px-6 py-12 text-center",
+        "flex animate-fade-in flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-muted/40 px-6 py-12 text-center",
         className,
       )}
     >

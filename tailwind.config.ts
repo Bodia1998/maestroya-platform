@@ -128,6 +128,14 @@ const config: Config = {
           from: { opacity: "1", transform: "translateX(0)" },
           to: { opacity: "0", transform: "translateX(100%)" },
         },
+        "slide-in-left": {
+          from: { opacity: "0", transform: "translateX(-100%)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "slide-out-left": {
+          from: { opacity: "1", transform: "translateX(0)" },
+          to: { opacity: "0", transform: "translateX(-100%)" },
+        },
         "scale-in": {
           from: { opacity: "0", transform: "scale(0.96)" },
           to: { opacity: "1", transform: "scale(1)" },
@@ -148,6 +156,8 @@ const config: Config = {
         "slide-down": "slide-down 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "slide-out-right": "slide-out-right 0.2s ease-in",
+        "slide-in-left": "slide-in-left 0.3s ease-out",
+        "slide-out-left": "slide-out-left 0.2s ease-in",
         "scale-in": "scale-in 0.15s ease-out",
         shimmer: "shimmer 1.6s linear infinite",
         "spin-slow": "spin 1.2s linear infinite",

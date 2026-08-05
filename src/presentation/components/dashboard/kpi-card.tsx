@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, cardHoverClassName } from "@/components/ui/card";
 import { cn } from "@/shared/utils/cn";
 
 export interface KPICardProps {
@@ -37,8 +37,8 @@ export function KPICard({ icon: Icon, label, value, subtext, trend, href, classN
   const content = (
     <Card
       className={cn(
-        "h-full shadow-sm transition-all hover:shadow-md",
-        href && "hover:-translate-y-0.5 hover:border-primary/40",
+        "h-full",
+        href ? cn(cardHoverClassName, "hover:border-primary/40") : "shadow-sm",
         className,
       )}
     >

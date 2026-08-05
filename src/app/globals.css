@@ -119,3 +119,27 @@
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
+
+/*
+ * Module 30.8 — Motion & Microinteractions: global `prefers-reduced-motion`
+ * support. Every transition/animation in the design system (Tailwind's
+ * `transition-*` utilities, the `animate-*` keyframes in tailwind.config.ts,
+ * and the one-off `animate-pulse` on `Skeleton`) resolves to a CSS
+ * `transition`/`animation` under the hood, so collapsing every duration to
+ * effectively zero here is a single blanket fix rather than a per-component
+ * `motion-reduce:` class needed everywhere. Individual components still add
+ * `motion-reduce:` overrides where a *transform* itself (not just its
+ * duration) should be skipped entirely — e.g. a hover card no longer lifting
+ * on hover — since a near-zero-duration transform still repaints a shifted
+ * layout, which this rule alone doesn't prevent.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { LifeBuoy } from "lucide-react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatusBadge } from "@/components/dashboard/status-badge";
-import { Card } from "@/components/ui/card";
+import { LinkCard } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Heading } from "@/components/ui/typography";
 import { PageContainer } from "@/components/layout/page-container";
@@ -32,14 +31,12 @@ export default async function SupportTicketsPage() {
           <ul className="flex flex-col gap-2">
             {tickets.map((t) => (
               <li key={t.id}>
-                <Link href={`/support-tickets/${t.id}`} className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                  <Card className="flex items-center justify-between gap-4 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-                    <span className="min-w-0 truncate">
-                      <span className="font-mono text-xs text-muted-foreground">{t.ticketNumber}</span> — {t.subject}
-                    </span>
-                    <StatusBadge status={t.status} />
-                  </Card>
-                </Link>
+                <LinkCard href={`/support-tickets/${t.id}`} cardClassName="flex items-center justify-between gap-4 p-3">
+                  <span className="min-w-0 truncate">
+                    <span className="font-mono text-xs text-muted-foreground">{t.ticketNumber}</span> — {t.subject}
+                  </span>
+                  <StatusBadge status={t.status} />
+                </LinkCard>
               </li>
             ))}
           </ul>

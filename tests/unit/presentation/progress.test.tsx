@@ -17,13 +17,19 @@ describe("Progress", () => {
     expect(screen.getByRole("progressbar").getAttribute("aria-valuemax")).toBe("10");
   });
 
-  it("clamps the rendered width to [0, 100]%", () => {
+  it("clamps the rendered fill to [0, 100]%", () => {
+    // The fill's `width` is a constant 100% (Module 30.8 — animating it via
+    // a GPU-friendly `transform: scaleX()` instead of the `width` property
+    // avoids layout thrashing), so the clamped value now shows up in
+    // `transform` rather than `width`.
     const { rerender } = render(<Progress value={150} />);
     const fill = screen.getByRole("progressbar").querySelector("div") as HTMLElement;
     expect(fill.style.width).toBe("100%");
+    expect(fill.style.transform).toBe("scaleX(1)");
 
     rerender(<Progress value={-20} />);
     const fillNegative = screen.getByRole("progressbar").querySelector("div") as HTMLElement;
-    expect(fillNegative.style.width).toBe("0%");
+    expect(fillNegative.style.width).toBe("100%");
+    expect(fillNegative.style.transform).toBe("scaleX(0)");
   });
 });

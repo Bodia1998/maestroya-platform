@@ -7,7 +7,7 @@ import { X } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
 const chipVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.98] motion-reduce:active:scale-100",
   {
     variants: {
       variant: {
