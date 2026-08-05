@@ -69,6 +69,39 @@ describe("resolvePostLoginDestination", () => {
     expect(destination).toBe("/dashboard/messages");
   });
 
+  /**
+   * Module 33 — Security Hardening (open-redirect regression coverage).
+   * `callbackUrl` is an attacker-controllable query param (`/auth/login?
+   * callbackUrl=...`); a value that isn't a same-origin, root-relative path
+   * must never be honored, or a crafted link could redirect a freshly
+   * authenticated user straight to an external phishing page.
+   */
+  describe("rejects unsafe explicit callbackUrl values (open-redirect protection)", () => {
+    it.each([
+      "https://evil.example/phish",
+      "http://evil.example",
+      "//evil.example",
+      "/\\evil.example",
+      "javascript:alert(1)",
+    ])("falls back to the default destination for %s", (unsafeCallbackUrl) => {
+      const destination = resolvePostLoginDestination(
+        { roles: ["CUSTOMER"], signupIntent: null },
+        { explicitCallbackUrl: unsafeCallbackUrl, defaultDestination: "/dashboard" },
+      );
+
+      expect(destination).toBe("/dashboard");
+    });
+
+    it("still applies the role/intent decision (not just the plain default) when the unsafe callbackUrl is discarded", () => {
+      const destination = resolvePostLoginDestination(
+        { roles: ["CUSTOMER"], signupIntent: "PROFESSIONAL" },
+        { explicitCallbackUrl: "https://evil.example", defaultDestination: "/dashboard" },
+      );
+
+      expect(destination).toBe("/dashboard/professional/onboarding");
+    });
+  });
+
   it("treats an empty-string signupIntent-less roles array the same as a plain customer", () => {
     const destination = resolvePostLoginDestination(
       { roles: [], signupIntent: null },

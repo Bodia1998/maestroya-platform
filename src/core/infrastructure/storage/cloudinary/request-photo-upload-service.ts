@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { cloudinary } from "@/infrastructure/storage/cloudinary/client";
 import type { RequestPhotoUploadService } from "@/application/interfaces/request-photo-upload-service";
 import { ALLOWED_REQUEST_PHOTO_MIME_TYPES, MAX_REQUEST_PHOTO_BYTES } from "@/application/dto/service-request.dto";
+import { assertFileSignatureMatches } from "@/infrastructure/storage/file-signature";
 
 /**
  * Reuses the exact same Cloudinary upload mechanism as
@@ -21,6 +22,13 @@ export class CloudinaryRequestPhotoUploadService implements RequestPhotoUploadSe
     if (fileBuffer.byteLength > MAX_REQUEST_PHOTO_BYTES) {
       throw new Error("Each photo must be smaller than 5MB.");
     }
+    // Module 33 — Security Hardening: verify actual file bytes, not just
+    // the attacker-controlled declared Content-Type — see file-signature.ts.
+    assertFileSignatureMatches(
+      fileBuffer,
+      ALLOWED_REQUEST_PHOTO_MIME_TYPES,
+      "Photo file content does not match a JPEG, PNG, or WebP image.",
+    );
 
     return new Promise<string>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(

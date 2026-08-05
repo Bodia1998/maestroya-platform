@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { DomainError } from "@/domain/errors/domain-error";
+import { DomainError, RateLimitedError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import {
   ALLOWED_REQUEST_PHOTO_MIME_TYPES,
@@ -139,6 +139,22 @@ export async function addServiceRequestPhotoAction(
   }
   if (file.size > MAX_REQUEST_PHOTO_BYTES) {
     return { success: false, error: "Each photo must be smaller than 5MB." };
+  }
+
+  // Module 33 — Security Hardening: see FILE_UPLOAD_BY_USER's doc comment
+  // (rate-limit-policies.ts) — uploads were previously unrestricted in
+  // frequency.
+  try {
+    await makeAntiAbuseService().enforceRateLimit(
+      "FILE_UPLOAD_BY_USER",
+      { userId: user.id },
+      "RATE_LIMIT_TRIGGERED",
+    );
+  } catch (error) {
+    if (error instanceof RateLimitedError) {
+      return { success: false, error: error.message };
+    }
+    throw error;
   }
 
   const caption = formData.get("caption");

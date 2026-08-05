@@ -90,11 +90,40 @@ export interface ResolvePostLoginDestinationOptions {
   loginIntent?: "professional" | null;
 }
 
+/**
+ * Module 33 — Security Hardening (open-redirect fix).
+ *
+ * `explicitCallbackUrl` originates from the `callbackUrl` query param on
+ * `/auth/login` and `/auth/post-login` — fully attacker-controlled: anyone
+ * can send a victim a link like
+ * `/auth/login?callbackUrl=https://evil.example/phish`. Before this check,
+ * a successful login would `redirect()` (a real HTTP redirect, including to
+ * an absolute external URL) straight to that attacker-chosen destination
+ * immediately after the user authenticated — a classic post-login
+ * open-redirect used for phishing/credential-harvesting follow-up pages.
+ *
+ * Every legitimate caller of this function only ever produces a same-origin,
+ * root-relative path here: `middleware.ts` builds `callbackUrl` from
+ * `req.nextUrl.pathname`/`search` on the same origin, and every in-app link
+ * to `/auth/login` that sets `callbackUrl` does the same. A single leading
+ * `/` (and not `//` or `/\`, both of which browsers can interpret as
+ * protocol-relative and happily follow to a different host) is sufficient
+ * to distinguish "safe in-app path" from "attacker-supplied absolute URL".
+ * Anything else is treated exactly as if no `callbackUrl` had been given —
+ * falling through to the same role/intent-based decision below — rather
+ * than surfacing an error, since an invalid/malicious value is
+ * indistinguishable from "no callback requested" from the user's
+ * perspective.
+ */
+function isSafeRelativeCallbackUrl(url: string): boolean {
+  return url.startsWith("/") && !url.startsWith("//") && !url.startsWith("/\\");
+}
+
 export function resolvePostLoginDestination(
   session: PostLoginSession,
   { explicitCallbackUrl, defaultDestination, loginIntent = null }: ResolvePostLoginDestinationOptions,
 ): string {
-  if (explicitCallbackUrl) {
+  if (explicitCallbackUrl && isSafeRelativeCallbackUrl(explicitCallbackUrl)) {
     return explicitCallbackUrl;
   }
 

@@ -6,6 +6,7 @@ import {
   ALLOWED_COMPANY_VERIFICATION_DOCUMENT_MIME_TYPES,
   MAX_COMPANY_VERIFICATION_DOCUMENT_BYTES,
 } from "@/application/dto/company-verification.dto";
+import { assertFileSignatureMatches } from "@/infrastructure/storage/file-signature";
 
 /** Module 18 — Company Professional: reuses the exact same Cloudinary
  *  `upload_stream` mechanism as CloudinaryVerificationDocumentUploadService
@@ -28,6 +29,13 @@ export class CloudinaryCompanyVerificationDocumentUploadService implements Compa
     if (fileBuffer.byteLength > MAX_COMPANY_VERIFICATION_DOCUMENT_BYTES) {
       throw new Error("Each document must be smaller than 10MB.");
     }
+    // Module 33 — Security Hardening: verify actual file bytes, not just
+    // the attacker-controlled declared Content-Type — see file-signature.ts.
+    assertFileSignatureMatches(
+      fileBuffer,
+      ALLOWED_COMPANY_VERIFICATION_DOCUMENT_MIME_TYPES,
+      "Document file content does not match a JPEG, PNG, WebP image, or PDF.",
+    );
 
     return new Promise<string>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(

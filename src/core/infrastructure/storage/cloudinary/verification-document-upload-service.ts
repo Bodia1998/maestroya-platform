@@ -6,6 +6,7 @@ import {
   ALLOWED_VERIFICATION_DOCUMENT_MIME_TYPES,
   MAX_VERIFICATION_DOCUMENT_BYTES,
 } from "@/application/dto/verification.dto";
+import { assertFileSignatureMatches } from "@/infrastructure/storage/file-signature";
 
 /**
  * Professional Verification module (Module 17): reuses the exact same
@@ -40,6 +41,13 @@ export class CloudinaryVerificationDocumentUploadService implements Verification
     if (fileBuffer.byteLength > MAX_VERIFICATION_DOCUMENT_BYTES) {
       throw new Error("Each document must be smaller than 10MB.");
     }
+    // Module 33 — Security Hardening: verify actual file bytes, not just
+    // the attacker-controlled declared Content-Type — see file-signature.ts.
+    assertFileSignatureMatches(
+      fileBuffer,
+      ALLOWED_VERIFICATION_DOCUMENT_MIME_TYPES,
+      "Document file content does not match a JPEG, PNG, WebP image, or PDF.",
+    );
 
     return new Promise<string>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
