@@ -1,4 +1,6 @@
 import type { NotificationTypeValue } from "@/domain/repositories/notification-repository";
+import type { NotificationCategory } from "@/domain/value-objects/notification-category";
+import type { NotificationChannel } from "@/application/ports/notification-channel";
 
 /**
  * Notifications module (Module 15): the one seam through which every other
@@ -21,6 +23,17 @@ import type { NotificationTypeValue } from "@/domain/repositories/notification-r
  * triggered it. This port's implementation does not swallow errors itself
  * so real failures stay visible in logs rather than being silently
  * swallowed twice.
+ *
+ * Module 32 — Notifications & Real-Time Communication: `category`,
+ * `email`, and `channels` below are new, **optional** fields added so this
+ * same port/event shape can flow through the new channel-agnostic
+ * `NotificationService` (`application/ports/notification-service.ts`)
+ * without changing this interface's required shape or any of its ~20
+ * existing call sites. Omitting them is identical to this port's pre-
+ * Module-32 behavior: `category` defaults to `"INFORMATION"` and
+ * `channels` defaults to `["IN_APP"]` in `NotificationServiceCreator`
+ * (`infrastructure/notifications/notification-service.ts`) — i.e. every
+ * existing caller keeps getting in-app-only delivery, unchanged.
  */
 export interface NotificationEvent {
   /** The recipient — always resolved server-side from the triggering
@@ -34,6 +47,17 @@ export interface NotificationEvent {
   resourceId?: string | null;
   actionUrl?: string | null;
   metadata?: Record<string, unknown> | null;
+  /** Optional — see this file's Module 32 doc comment above. Defaults to
+   *  `"INFORMATION"` when omitted. */
+  category?: NotificationCategory;
+  /** Optional — only relevant if a future caller wants to also deliver
+   *  over `EMAIL`. Unused by the `IN_APP`-only call sites this codebase
+   *  has today. */
+  email?: string | null;
+  /** Optional — see this file's Module 32 doc comment above. Defaults to
+   *  `["IN_APP"]` when omitted, preserving every existing call site's
+   *  current behavior exactly. */
+  channels?: NotificationChannel[];
 }
 
 export interface NotificationCreator {

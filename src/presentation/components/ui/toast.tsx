@@ -118,38 +118,64 @@ export function Toaster() {
 
   if (!mounted || typeof document === "undefined") return null;
 
+  // Module 32 — Notifications & Real-Time Communication (accessibility
+  // fix): this container used to be a single `aria-live="polite"` region
+  // for every variant, including `danger` (errors). Per WAI-ARIA, an
+  // error the user needs to act on should interrupt an assistive-tech
+  // user's current reading via `aria-live="assertive"`, while routine
+  // success/info/warning toasts should announce politely without cutting
+  // off whatever the screen reader was already saying. Splitting into two
+  // regions (rather than mutating one region's `aria-live` at runtime,
+  // which most screen readers don't reliably pick up after first paint)
+  // fixes that without changing focus behavior — neither region ever
+  // receives keyboard focus, so a toast never steals it from the user's
+  // current task.
+  const politeToasts = toasts.filter((t) => t.variant !== "danger");
+  const assertiveToasts = toasts.filter((t) => t.variant === "danger");
+
+  const renderToast = (t: ToastItem) => {
+    const Icon = icons[t.variant];
+    return (
+      <div
+        key={t.id}
+        role="status"
+        className={cn(
+          "pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground shadow-lg motion-safe:animate-slide-up",
+        )}
+      >
+        <Icon aria-hidden className={cn("mt-0.5 h-5 w-5 shrink-0", iconTone[t.variant])} />
+        <div className="flex flex-1 flex-col gap-0.5">
+          <p className="text-sm font-medium">{t.title}</p>
+          {t.description && <p className="text-sm text-muted-foreground">{t.description}</p>}
+        </div>
+        <button
+          type="button"
+          aria-label="Cerrar notificación"
+          onClick={() => store.dismiss(t.id)}
+          className="rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <X aria-hidden className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  };
+
   return createPortal(
-    <div
-      aria-live="polite"
-      aria-label="Notificaciones"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-toast flex flex-col items-end gap-2 p-4 sm:inset-x-auto sm:right-0"
-    >
-      {toasts.map((t) => {
-        const Icon = icons[t.variant];
-        return (
-          <div
-            key={t.id}
-            role="status"
-            className={cn(
-              "pointer-events-auto flex w-full max-w-sm animate-slide-up items-start gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground shadow-lg",
-            )}
-          >
-            <Icon aria-hidden className={cn("mt-0.5 h-5 w-5 shrink-0", iconTone[t.variant])} />
-            <div className="flex flex-1 flex-col gap-0.5">
-              <p className="text-sm font-medium">{t.title}</p>
-              {t.description && <p className="text-sm text-muted-foreground">{t.description}</p>}
-            </div>
-            <button
-              type="button"
-              aria-label="Cerrar notificación"
-              onClick={() => store.dismiss(t.id)}
-              className="rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <X aria-hidden className="h-4 w-4" />
-            </button>
-          </div>
-        );
-      })}
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-toast flex flex-col items-end gap-2 p-4 sm:inset-x-auto sm:right-0">
+      <div
+        aria-live="polite"
+        aria-label="Notificaciones"
+        className="flex flex-col items-end gap-2"
+      >
+        {politeToasts.map(renderToast)}
+      </div>
+      <div
+        aria-live="assertive"
+        aria-label="Notificaciones importantes"
+        className="flex flex-col items-end gap-2"
+      >
+        {assertiveToasts.map(renderToast)}
+      </div>
     </div>,
     document.body,
   );
