@@ -23,8 +23,8 @@ export const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         {...props}
       >
         <div
-          className="h-full rounded-full bg-primary transition-all duration-slow ease-out"
-          style={{ width: `${pct}%` }}
+          className="h-full origin-left rounded-full bg-primary transition-transform duration-slow ease-out motion-reduce:transition-none"
+          style={{ width: "100%", transform: `scaleX(${pct / 100})` }}
         />
       </div>
     );

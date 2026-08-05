@@ -36,18 +36,21 @@ describe("ConfirmDialog", () => {
     expect(screen.getByText("The customer will no longer be able to accept it.")).toBeTruthy();
   });
 
-  it("closes without confirming when Cancel is clicked", () => {
+  it("closes without confirming when Cancel is clicked", async () => {
+    // The dialog now plays a ~200ms exit animation (Module 30.8) before
+    // unmounting, so it briefly stays in the DOM after the close trigger —
+    // wait for the delayed unmount instead of asserting synchronous removal.
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: "Withdraw this quote" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(screen.queryByRole("dialog")).toBeNull();
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
-  it("closes on Escape", () => {
+  it("closes on Escape", async () => {
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: "Withdraw this quote" }));
     fireEvent.keyDown(document, { key: "Escape" });
-    expect(screen.queryByRole("dialog")).toBeNull();
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
   it("calls onConfirm and closes the dialog on success", async () => {
