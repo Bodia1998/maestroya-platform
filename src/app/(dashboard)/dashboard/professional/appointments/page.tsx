@@ -3,6 +3,7 @@ import Link from "next/link";
 import { makeListAppointmentsForProfessionalUseCase } from "@/application/use-cases/booking/compose";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointment-status-badge";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "My appointments" };
 
@@ -19,11 +20,8 @@ export default async function ProfessionalAppointmentsPage() {
   const appointments = await makeListAppointmentsForProfessionalUseCase().execute(user.id, "upcoming");
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">My appointments</h1>
-        <p className="mt-1 text-sm text-foreground/70">Appointments from quotes your customers have accepted.</p>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader title="My appointments" subtitle="Appointments from quotes your customers have accepted." />
 
       {appointments.length === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">

@@ -5,6 +5,7 @@ import { updateCompanyFormAction } from "@/app/(dashboard)/dashboard/company/act
 import { makeGetCompanyForMemberUseCase } from "@/application/use-cases/company/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Company profile" };
 
@@ -43,12 +44,14 @@ export default async function CompanyProfilePage({ params }: { params: Promise<{
         ))}
       </nav>
 
-      <div>
-        <h1 className="text-2xl font-semibold">{company.tradeName ?? company.legalName}</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          Status: {company.status} · {company.isVerified ? "Verified" : "Not verified"}
-        </p>
-      </div>
+      <PageHeader
+        title={company.tradeName ?? company.legalName}
+        subtitle={`Status: ${company.status} · ${company.isVerified ? "Verified" : "Not verified"}`}
+        breadcrumbs={[
+          { label: "My companies", href: "/dashboard/company" },
+          { label: company.tradeName ?? company.legalName },
+        ]}
+      />
 
       <form action={updateCompanyFormAction.bind(null, companyId)} className="flex flex-col gap-3">
         <label className="flex flex-col gap-1 text-sm">

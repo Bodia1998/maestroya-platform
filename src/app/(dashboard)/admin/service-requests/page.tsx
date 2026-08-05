@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { makeListAdminServiceRequestsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Admin — Service requests" };
 
@@ -18,10 +19,7 @@ export default async function AdminServiceRequestsPage({ searchParams }: { searc
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Service requests</h1>
-        <p className="mt-1 text-sm text-foreground/70">Read-only oversight of customer service requests.</p>
-      </div>
+      <PageHeader title="Service requests" subtitle="Read-only oversight of customer service requests." />
 
       {requests.length === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">

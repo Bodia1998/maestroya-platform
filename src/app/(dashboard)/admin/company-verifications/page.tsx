@@ -3,6 +3,7 @@ import Link from "next/link";
 import { makeListAdminCompanyVerificationsUseCase } from "@/application/use-cases/company-verification/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { VERIFICATION_CASE_STATUS_VALUES } from "@/domain/services/company-verification-rules";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Admin — Company verifications" };
 
@@ -28,10 +29,10 @@ export default async function AdminCompanyVerificationsPage({ searchParams }: { 
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Company verifications</h1>
-        <p className="mt-1 text-sm text-foreground/70">Review company business/identity verification requests.</p>
-      </div>
+      <PageHeader
+        title="Company verifications"
+        subtitle="Review company business/identity verification requests."
+      />
 
       <form method="get" className="flex gap-2">
         <select name="status" defaultValue={status ?? ""} className="h-10 rounded-md border border-border px-2 text-sm">

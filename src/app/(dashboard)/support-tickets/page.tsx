@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { PageHeader } from "@/components/dashboard/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { listMySupportTicketsAction } from "./actions";
 import { NewSupportTicketForm } from "./new-support-ticket-form";
 
@@ -10,20 +12,15 @@ export default async function SupportTicketsPage() {
   const tickets = result.success ? result.data : [];
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Support</h1>
-        <p className="mt-1 text-sm text-foreground/70">Account problems, verification issues, bugs, or general questions.</p>
-      </div>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
+      <PageHeader title="Support" subtitle="Account problems, verification issues, bugs, or general questions." />
 
       <NewSupportTicketForm />
 
       <section>
         <h2 className="mb-2 text-lg font-medium">My tickets</h2>
         {tickets.length === 0 ? (
-          <p className="rounded-md border border-dashed border-border p-4 text-sm text-foreground/70">
-            You haven&apos;t opened any support tickets.
-          </p>
+          <EmptyState title="No support tickets" description="You haven't opened any support tickets." />
         ) : (
           <ul className="flex flex-col gap-2">
             {tickets.map((t) => (

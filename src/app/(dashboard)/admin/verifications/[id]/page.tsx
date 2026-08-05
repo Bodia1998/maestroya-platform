@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { makeGetAdminVerificationUseCase } from "@/application/use-cases/verification/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
+import { PageHeader } from "@/components/dashboard/page-header";
 import {
   approveVerificationFormAction,
   rejectVerificationFormAction,
@@ -45,20 +45,16 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
   const isPending = detail.status === "PENDING";
   const isDecidable = detail.status === "PENDING" || detail.status === "UNDER_REVIEW";
 
+  const detailTitle = detail.businessName ?? detail.professionalName ?? detail.professionalEmail ?? "Professional";
+
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/admin/verifications" className="text-sm text-foreground/70 hover:underline">
-        ← Back to queue
-      </Link>
-
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {detail.businessName ?? detail.professionalName ?? detail.professionalEmail ?? "Professional"}
-        </h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          {detail.professionalEmail ?? "—"} · Status: <span className="font-medium">{detail.status}</span>
-        </p>
-      </div>
+      <PageHeader
+        title={detailTitle}
+        subtitle={detail.professionalEmail ?? "—"}
+        breadcrumbs={[{ label: "Verifications", href: "/admin/verifications" }, { label: detailTitle }]}
+        actions={<span className="text-sm font-medium">{detail.status}</span>}
+      />
 
       <section className="grid grid-cols-2 gap-4 rounded-md border border-border p-4 text-sm">
         <div>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalByUserIdUseCase } from "@/application/use-cases/professional/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { DeactivateProfessionalDialog } from "./deactivate-professional-dialog";
 import { ProfessionalProfileForm } from "./professional-profile-form";
 import { ProfessionalServicesForm } from "./professional-services-form";
@@ -27,13 +28,11 @@ export default async function ProfessionalDashboardPage() {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-10 px-4 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Professional profile</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          Manage how you appear to customers as an individual professional.
-        </p>
-      </div>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-10">
+      <PageHeader
+        title="Professional profile"
+        subtitle="Manage how you appear to customers as an individual professional."
+      />
 
       {!professional ? (
         <section className="flex flex-col gap-4">

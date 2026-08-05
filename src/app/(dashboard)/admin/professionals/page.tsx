@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { makeListAdminProfessionalsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Admin — Professionals" };
 
@@ -20,10 +21,7 @@ export default async function AdminProfessionalsPage({ searchParams }: { searchP
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Professionals</h1>
-        <p className="mt-1 text-sm text-foreground/70">Read-only oversight of professional profiles.</p>
-      </div>
+      <PageHeader title="Professionals" subtitle="Read-only oversight of professional profiles." />
 
       <form method="get" className="flex gap-2">
         <input

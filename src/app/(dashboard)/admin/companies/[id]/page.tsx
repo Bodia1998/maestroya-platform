@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { reactivateCompanyFormAction, suspendCompanyFormAction } from "@/app/(dashboard)/admin/companies/actions";
 import { makeGetAdminCompanyUseCase } from "@/application/use-cases/admin/compose";
 import { DomainError } from "@/domain/errors/domain-error";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Admin — Company detail" };
 
@@ -23,10 +24,11 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{company.tradeName ?? company.legalName}</h1>
-        <p className="mt-1 text-sm text-foreground/70">{company.legalName}</p>
-      </div>
+      <PageHeader
+        title={company.tradeName ?? company.legalName}
+        subtitle={company.legalName}
+        breadcrumbs={[{ label: "Companies", href: "/admin/companies" }, { label: company.tradeName ?? company.legalName }]}
+      />
 
       <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
         <dt className="text-foreground/60">Tax ID</dt>

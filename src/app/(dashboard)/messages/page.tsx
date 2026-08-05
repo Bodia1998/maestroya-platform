@@ -1,8 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import { MessageSquare } from "lucide-react";
 
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeListConversationsUseCase } from "@/application/use-cases/chat/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = { title: "Messages" };
 
@@ -18,14 +21,15 @@ export default async function MessagesPage() {
   const conversations = await makeListConversationsUseCase().execute(user.id);
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
-      <h1 className="text-2xl font-semibold">Messages</h1>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      <PageHeader title="Messages" />
 
       {conversations.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          No conversations yet. Once you and a customer or professional have a quote in common, you can message
-          each other here.
-        </p>
+        <EmptyState
+          icon={MessageSquare}
+          title="No conversations yet"
+          description="Once you and a customer or professional have a quote in common, you can message each other here."
+        />
       ) : (
         <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
           {conversations.map((conversation) => (

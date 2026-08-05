@@ -3,6 +3,7 @@ import Link from "next/link";
 import { moderatePortfolioItemFormAction, restorePortfolioItemFormAction } from "@/app/(dashboard)/admin/actions";
 import { makeListAdminPortfolioItemsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Admin — Portfolio" };
 
@@ -20,10 +21,7 @@ export default async function AdminPortfolioPage({ searchParams }: { searchParam
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Portfolio items</h1>
-        <p className="mt-1 text-sm text-foreground/70">Moderate professionals&apos; showcased work.</p>
-      </div>
+      <PageHeader title="Portfolio items" subtitle="Moderate professionals' showcased work." />
 
       {items.length === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">

@@ -9,6 +9,7 @@ import { makeGetCompanyForMemberUseCase } from "@/application/use-cases/company/
 import { makeListCompanyMembersUseCase } from "@/application/use-cases/company-membership/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Company members" };
 
@@ -35,10 +36,14 @@ export default async function CompanyMembersPage({ params }: { params: Promise<{
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Members — {company.tradeName ?? company.legalName}</h1>
-        <p className="mt-1 text-sm text-foreground/70">{activeMembers.length} active member(s).</p>
-      </div>
+      <PageHeader
+        title="Members"
+        subtitle={`${activeMembers.length} active member(s).`}
+        breadcrumbs={[
+          { label: company.tradeName ?? company.legalName, href: `/dashboard/company/${companyId}/profile` },
+          { label: "Members" },
+        ]}
+      />
 
       <table className="w-full border-collapse text-sm">
         <thead>

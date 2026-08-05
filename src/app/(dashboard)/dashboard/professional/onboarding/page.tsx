@@ -5,6 +5,7 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalByUserIdUseCase } from "@/application/use-cases/professional/compose";
 import { makeGetProfileUseCase } from "@/application/use-cases/profile/compose";
 import { AvatarUpload } from "@/app/(dashboard)/profile/avatar-upload";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { ProfessionalOnboardingForm } from "./professional-onboarding-form";
 
 export const metadata = { title: "Professional onboarding" };
@@ -42,14 +43,11 @@ export default async function ProfessionalOnboardingPage() {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Set up your professional profile</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          A few details so customers can find and contact you. You can add more later from your
-          professional dashboard.
-        </p>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Set up your professional profile"
+        subtitle="A few details so customers can find and contact you. You can add more later from your professional dashboard."
+      />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">Profile photo (optional)</h2>

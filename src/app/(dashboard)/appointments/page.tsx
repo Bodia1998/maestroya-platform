@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { CalendarDays } from "lucide-react";
 
 import { makeListAppointmentsForCustomerUseCase } from "@/application/use-cases/booking/compose";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { AppointmentStatusBadge } from "./appointment-status-badge";
 
 export const metadata = { title: "My appointments" };
@@ -19,18 +22,11 @@ export default async function AppointmentsPage() {
   const appointments = await makeListAppointmentsForCustomerUseCase().execute(user.id, "upcoming");
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">My appointments</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          Appointments created from quotes you&apos;ve accepted.
-        </p>
-      </div>
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <PageHeader title="My appointments" subtitle="Appointments created from quotes you've accepted." />
 
       {appointments.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          You have no upcoming appointments.
-        </p>
+        <EmptyState icon={CalendarDays} title="No upcoming appointments" description="You have no upcoming appointments." />
       ) : (
         <ul className="flex flex-col gap-3">
           {appointments.map((appointment) => (

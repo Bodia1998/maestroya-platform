@@ -1,7 +1,11 @@
 import Link from "next/link";
+import { FileText } from "lucide-react";
 
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetCustomerServiceRequestsUseCase } from "@/application/use-cases/service-request/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { ButtonLink } from "@/components/ui/button-link";
+import { EmptyState } from "@/components/ui/empty-state";
 import { RequestStatusBadge } from "./request-status-badge";
 
 export const metadata = { title: "My requests" };
@@ -14,26 +18,20 @@ export default async function ServiceRequestsPage() {
   const requests = await makeGetCustomerServiceRequestsUseCase().execute(user.id);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">My requests</h1>
-          <p className="mt-1 text-sm text-foreground/70">
-            Service requests you&apos;ve posted for professionals to quote on.
-          </p>
-        </div>
-        <Link
-          href="/requests/new"
-          className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
-        >
-          New request
-        </Link>
-      </div>
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <PageHeader
+        title="My requests"
+        subtitle="Service requests you've posted for professionals to quote on."
+        actions={<ButtonLink href="/requests/new">New request</ButtonLink>}
+      />
 
       {requests.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          You haven&apos;t posted any service requests yet.
-        </p>
+        <EmptyState
+          icon={FileText}
+          title="No service requests yet"
+          description="You haven't posted any service requests yet."
+          action={<ButtonLink href="/requests/new">New request</ButtonLink>}
+        />
       ) : (
         <ul className="flex flex-col gap-3">
           {requests.map((request) => (

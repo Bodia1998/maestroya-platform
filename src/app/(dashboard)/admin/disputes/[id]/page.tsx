@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getAdminDisputeAction } from "../actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { AdminDisputeActions } from "./admin-dispute-actions";
 
 export const metadata = { title: "Admin — Dispute" };
@@ -18,17 +19,20 @@ export default async function AdminDisputeDetailPage({ params }: { params: Promi
   const { dispute, messages, evidence } = result.data;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <div>
-        <p className="font-mono text-xs text-foreground/60">{dispute.caseNumber}</p>
-        <h1 className="text-2xl font-semibold">{dispute.title}</h1>
-        <div className="mt-2 flex gap-3 text-xs text-foreground/70">
-          <span>Status: {dispute.status}</span>
-          <span>Priority: {dispute.priority}</span>
-          <span>Reason: {dispute.reason}</span>
-          <span>Assigned: {dispute.assignedAdminUserId ?? "unassigned"}</span>
-        </div>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={dispute.title}
+        subtitle={dispute.caseNumber}
+        breadcrumbs={[{ label: "Disputes", href: "/admin/disputes" }, { label: dispute.caseNumber }]}
+        actions={
+          <div className="flex gap-3 text-xs text-foreground/70">
+            <span>Status: {dispute.status}</span>
+            <span>Priority: {dispute.priority}</span>
+            <span>Reason: {dispute.reason}</span>
+            <span>Assigned: {dispute.assignedAdminUserId ?? "unassigned"}</span>
+          </div>
+        }
+      />
 
       <p className="whitespace-pre-wrap text-sm">{dispute.description}</p>
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { listAdminSupportTicketsAction } from "./actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Admin — Support tickets" };
 
@@ -9,8 +10,8 @@ export default async function AdminSupportTicketsPage() {
   const tickets = result.success ? result.data : [];
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-10">
-      <h1 className="text-2xl font-semibold">Support tickets</h1>
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Support tickets" />
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-border">

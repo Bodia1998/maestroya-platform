@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalQuoteUseCase } from "@/application/use-cases/quotes/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { QuoteForm } from "../../quote-form";
 
 export const metadata = { title: "Edit quote" };
@@ -33,19 +33,19 @@ export default async function EditQuotePage({
     notFound();
   }
 
-  return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
-      <Link
-        href={`/dashboard/professional/quotes/${quote.id}`}
-        className="text-sm text-foreground/70 hover:underline"
-      >
-        ← Back to quote
-      </Link>
+  const quoteLabel = `${quote.currency} ${quote.totalAmount.toFixed(2)}`;
 
-      <div>
-        <h1 className="text-2xl font-semibold">Edit quote</h1>
-        <p className="mt-1 text-sm text-foreground/70">Update your pricing or proposal details.</p>
-      </div>
+  return (
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Edit quote"
+        subtitle="Update your pricing or proposal details."
+        breadcrumbs={[
+          { label: "My quotes", href: "/dashboard/professional/quotes" },
+          { label: quoteLabel, href: `/dashboard/professional/quotes/${quote.id}` },
+          { label: "Edit quote" },
+        ]}
+      />
 
       <QuoteForm mode="edit" quote={quote} />
     </div>

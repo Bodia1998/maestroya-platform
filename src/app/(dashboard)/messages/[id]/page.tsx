@@ -1,10 +1,10 @@
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeListConversationsUseCase, makeListMessagesUseCase } from "@/application/use-cases/chat/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { MarkReadOnView } from "./mark-read-on-view";
 import { MessageComposer } from "./message-composer";
 import { MessageBubble } from "./message-bubble";
@@ -40,28 +40,25 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   if (!conversation) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-10">
-      <Link href="/messages" className="text-sm text-foreground/70 hover:underline">
-        ← All messages
-      </Link>
-
-      <div className="flex items-center gap-3 border-b border-border pb-4">
-        {conversation.otherParticipant.image ? (
-          <Image
-            src={conversation.otherParticipant.image}
-            alt={conversation.otherParticipant.name ?? "Participant"}
-            width={40}
-            height={40}
-            className="h-10 w-10 rounded-full object-cover"
-          />
-        ) : (
-          <div className="h-10 w-10 rounded-full bg-black/10" aria-hidden="true" />
-        )}
-        <div>
-          <p className="font-medium">{conversation.otherParticipant.name ?? "Marketplace user"}</p>
-          <p className="text-xs text-foreground/60">{conversation.serviceRequestTitle}</p>
-        </div>
-      </div>
+    <div className="flex flex-col gap-4">
+      <PageHeader
+        title={conversation.otherParticipant.name ?? "Marketplace user"}
+        subtitle={conversation.serviceRequestTitle}
+        breadcrumbs={[{ label: "Messages", href: "/messages" }, { label: conversation.otherParticipant.name ?? "Conversation" }]}
+        actions={
+          conversation.otherParticipant.image ? (
+            <Image
+              src={conversation.otherParticipant.image}
+              alt={conversation.otherParticipant.name ?? "Participant"}
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-black/10" aria-hidden="true" />
+          )
+        }
+      />
 
       <MarkReadOnView conversationId={id} />
 

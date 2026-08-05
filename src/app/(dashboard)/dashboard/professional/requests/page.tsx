@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetAvailableServiceRequestsForProfessionalUseCase } from "@/application/use-cases/quotes/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Available requests" };
 
@@ -17,14 +18,11 @@ export default async function AvailableServiceRequestsPage() {
   const requests = await makeGetAvailableServiceRequestsForProfessionalUseCase().execute(user.id);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Available requests</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          Service requests from customers that match your categories and service radius. Review one and create a
-          quote to respond.
-        </p>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Available requests"
+        subtitle="Service requests from customers that match your categories and service radius. Review one and create a quote to respond."
+      />
 
       {requests.length === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">

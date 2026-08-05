@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { makeGetJobUseCase } from "@/application/use-cases/job/compose";
@@ -11,6 +10,7 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointment-status-badge";
 import { JobStatusBadge } from "@/app/(dashboard)/jobs/job-status-badge";
 import { JobActions } from "@/app/(dashboard)/jobs/[id]/job-actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Job" };
 
@@ -59,15 +59,12 @@ export default async function ProfessionalJobDetailPage({ params }: { params: Pr
   const hasOpenAppointments = jobAppointments.some((a) => APPOINTMENT_NON_TERMINAL.includes(a.status));
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
-      <Link href="/dashboard/professional/jobs" className="text-sm text-foreground/70 hover:underline">
-        ← Back to my jobs
-      </Link>
-
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Job</h1>
-        <JobStatusBadge status={job.status} />
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Job"
+        breadcrumbs={[{ label: "My jobs", href: "/dashboard/professional/jobs" }, { label: "Job" }]}
+        actions={<JobStatusBadge status={job.status} />}
+      />
 
       <dl className="grid grid-cols-1 gap-3 rounded-md border border-border p-4 text-sm sm:grid-cols-2">
         <div>

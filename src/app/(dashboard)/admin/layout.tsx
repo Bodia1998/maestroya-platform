@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ROLES, getCurrentUser } from "@/infrastructure/auth/rbac";
+import { AdminNav } from "./admin-nav";
 
 /**
  * Admin Panel module (Module 16): guards every route nested under
@@ -43,15 +43,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl gap-8 px-4 py-10">
-      <nav className="flex w-48 shrink-0 flex-col gap-1">
-        <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-foreground/50">Admin</p>
-        {NAV_ITEMS.map((item) => (
-          <Link key={item.href} href={item.href} className="rounded-md px-2 py-1.5 text-sm hover:bg-black/5">
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+    <div className="flex w-full flex-col gap-6 lg:flex-row lg:gap-8">
+      <aside className="lg:w-56 lg:shrink-0" aria-label="Admin sidebar">
+        <AdminNav items={NAV_ITEMS} />
+      </aside>
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );

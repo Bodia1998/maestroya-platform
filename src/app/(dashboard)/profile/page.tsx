@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { makeGetProfileUseCase } from "@/application/use-cases/profile/compose";
 import { AvatarUpload } from "./avatar-upload";
 import { ChangePasswordForm } from "./change-password-form";
@@ -31,11 +32,8 @@ export default async function ProfilePage() {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-10 px-4 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">{t("title")}</h1>
-        <p className="mt-1 text-sm text-foreground/70">{t("subtitle")}</p>
-      </div>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-10">
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-medium">{t("section.avatar")}</h2>

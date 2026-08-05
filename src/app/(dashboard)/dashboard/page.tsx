@@ -14,6 +14,7 @@ import {
 import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointment-status-badge";
 import { QuoteStatusBadge } from "@/app/(dashboard)/dashboard/professional/quotes/quote-status-badge";
 import { RequestStatusBadge } from "@/app/(dashboard)/requests/request-status-badge";
@@ -92,13 +93,11 @@ export default async function DashboardPage() {
   const activeRequestCount = requests.filter((r) => !INACTIVE_REQUEST_STATUSES.has(r.status)).length;
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Welcome back{user.email ? `, ${user.email}` : ""}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Here&apos;s an overview of your MaestroYa account.
-        </p>
-      </div>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+      <PageHeader
+        title={`Welcome back${user.email ? `, ${user.email}` : ""}`}
+        subtitle="Here's an overview of your MaestroYa account."
+      />
 
       {isProfessional && (
         <div>

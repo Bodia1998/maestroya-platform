@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { listAdminDisputesAction } from "./actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Admin — Disputes" };
 
@@ -19,8 +20,8 @@ export default async function AdminDisputesPage({
   const disputes = result.success ? result.data : [];
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-10">
-      <h1 className="text-2xl font-semibold">Disputes</h1>
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Disputes" />
       <form className="flex gap-2">
         <input name="search" defaultValue={search} placeholder="Search case number or title" className="rounded-md border border-border px-3 py-2 text-sm" />
         <button type="submit" className="rounded-md border border-border px-3 py-2 text-sm">
