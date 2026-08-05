@@ -7,6 +7,7 @@ import type { AbstractIntlMessages } from "use-intl/core";
 import { useState } from "react";
 
 import { I18nProvider } from "@/components/shared/i18n-provider";
+import { Toaster } from "@/components/ui/toast";
 import type { Locale } from "@/shared/i18n/locales";
 
 import { createQueryClient } from "@/lib/query-client";
@@ -62,6 +63,7 @@ export function Providers({ children, locale, messages, isAuthenticated }: Provi
         <I18nProvider locale={locale} messages={messages} isAuthenticated={isAuthenticated}>
           {children}
         </I18nProvider>
+        <Toaster />
         {process.env.NODE_ENV === "development" && <ReactQueryDevtools initialIsOpen={false} />}
       </QueryClientProvider>
     </SessionProvider>
