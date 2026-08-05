@@ -4,7 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { FormActions } from "@/components/forms/form-actions";
+import { FormFieldError } from "@/components/forms/form-field-description";
 import {
   deactivateProfessionalSchema,
   type DeactivateProfessionalInput,
@@ -39,9 +44,9 @@ export function DeactivateProfessionalDialog() {
 
   if (isDeactivated) {
     return (
-      <p role="status" className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+      <Alert variant="success" role="status">
         Your professional profile has been deactivated.
-      </p>
+      </Alert>
     );
   }
 
@@ -58,45 +63,46 @@ export function DeactivateProfessionalDialog() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="deactivate-professional-title"
-      className="flex flex-col gap-4 rounded-md border border-red-200 bg-red-50/50 p-4"
+      className="flex flex-col gap-4 rounded-lg border border-danger/30 bg-danger-muted/40 p-4"
     >
-      <h3 id="deactivate-professional-title" className="text-sm font-semibold text-red-700">
-        This will stop new customers from finding you
-      </h3>
-      <p className="text-sm text-foreground/70">
-        Existing quotes, appointments, and reviews are kept. You can be reactivated later by
-        support if needed.
-      </p>
+      <div className="flex flex-col gap-1">
+        <h3 id="deactivate-professional-title" className="text-sm font-semibold text-danger">
+          This will stop new customers from finding you
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Existing quotes, appointments, and reviews are kept. You can be reactivated later by
+          support if needed.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         {serverError && (
-          <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
+          <Alert variant="danger" role="alert">
             {serverError}
-          </p>
+          </Alert>
         )}
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="deactivate-confirmation" className="text-sm font-medium">
-            Type DEACTIVATE to confirm
-          </label>
-          <input
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="deactivate-confirmation">Type DEACTIVATE to confirm</Label>
+          <Input
             id="deactivate-confirmation"
-            className="h-10 rounded-md border border-border px-3 text-sm"
+            aria-invalid={!!errors.confirmationText}
+            aria-describedby={errors.confirmationText ? "deactivate-confirmation-error" : undefined}
             {...register("confirmationText")}
           />
-          {errors.confirmationText && (
-            <p className="text-xs text-red-600">{errors.confirmationText.message}</p>
-          )}
+          <FormFieldError id="deactivate-confirmation-error">
+            {errors.confirmationText?.message}
+          </FormFieldError>
         </div>
 
-        <div className="flex gap-2">
-          <Button type="submit" variant="outline" disabled={isSubmitting}>
-            {isSubmitting ? "Deactivating…" : "Deactivate my professional profile"}
-          </Button>
+        <FormActions>
           <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
             Cancel
           </Button>
-        </div>
+          <Button type="submit" variant="outline" disabled={isSubmitting}>
+            {isSubmitting ? "Deactivating…" : "Deactivate my professional profile"}
+          </Button>
+        </FormActions>
       </form>
     </div>
   );

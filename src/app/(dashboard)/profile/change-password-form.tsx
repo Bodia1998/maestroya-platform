@@ -4,7 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
+import { FormFieldError } from "@/components/forms/form-field-description";
+import { FormSection } from "@/components/forms/form-section";
 import { changePasswordSchema, type ChangePasswordInput } from "@/application/dto/profile.dto";
 import { changePasswordAction } from "./actions";
 
@@ -46,74 +51,64 @@ export function ChangePasswordForm({ hasPassword }: { hasPassword: boolean }) {
 
   if (!hasPassword) {
     return (
-      <p className="rounded-md bg-black/5 px-3 py-2 text-sm text-foreground/70">
+      <Alert variant="info">
         This account signs in via a social login and has no password to change.
-      </p>
+      </Alert>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
       {serverError && (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <Alert variant="danger" role="alert">
           {serverError}
-        </p>
+        </Alert>
       )}
       {successMessage && (
-        <p role="status" className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+        <Alert variant="success" role="status">
           {successMessage}
-        </p>
+        </Alert>
       )}
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="currentPassword" className="text-sm font-medium">
-          Current password
-        </label>
-        <input
-          id="currentPassword"
-          type="password"
-          autoComplete="current-password"
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("currentPassword")}
-        />
-        {errors.currentPassword && (
-          <p className="text-xs text-red-600">{errors.currentPassword.message}</p>
-        )}
-      </div>
+      <FormSection title="Change password">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="currentPassword">Current password</Label>
+          <PasswordInput
+            id="currentPassword"
+            autoComplete="current-password"
+            aria-invalid={!!errors.currentPassword}
+            aria-describedby={errors.currentPassword ? "currentPassword-error" : undefined}
+            {...register("currentPassword")}
+          />
+          <FormFieldError id="currentPassword-error">{errors.currentPassword?.message}</FormFieldError>
+        </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="newPassword" className="text-sm font-medium">
-          New password
-        </label>
-        <input
-          id="newPassword"
-          type="password"
-          autoComplete="new-password"
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("newPassword")}
-        />
-        {errors.newPassword && (
-          <p className="text-xs text-red-600">{errors.newPassword.message}</p>
-        )}
-      </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="newPassword">New password</Label>
+          <PasswordInput
+            id="newPassword"
+            autoComplete="new-password"
+            aria-invalid={!!errors.newPassword}
+            aria-describedby={errors.newPassword ? "newPassword-error" : undefined}
+            {...register("newPassword")}
+          />
+          <FormFieldError id="newPassword-error">{errors.newPassword?.message}</FormFieldError>
+        </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="confirmNewPassword" className="text-sm font-medium">
-          Confirm new password
-        </label>
-        <input
-          id="confirmNewPassword"
-          type="password"
-          autoComplete="new-password"
-          className="h-10 rounded-md border border-border px-3 text-sm"
-          {...register("confirmNewPassword")}
-        />
-        {errors.confirmNewPassword && (
-          <p className="text-xs text-red-600">{errors.confirmNewPassword.message}</p>
-        )}
-      </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="confirmNewPassword">Confirm new password</Label>
+          <PasswordInput
+            id="confirmNewPassword"
+            autoComplete="new-password"
+            aria-invalid={!!errors.confirmNewPassword}
+            aria-describedby={errors.confirmNewPassword ? "confirmNewPassword-error" : undefined}
+            {...register("confirmNewPassword")}
+          />
+          <FormFieldError id="confirmNewPassword-error">{errors.confirmNewPassword?.message}</FormFieldError>
+        </div>
+      </FormSection>
 
-      <Button type="submit" disabled={isSubmitting}>
+      <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
         {isSubmitting ? "Changing…" : "Change password"}
       </Button>
     </form>

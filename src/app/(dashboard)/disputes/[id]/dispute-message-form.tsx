@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { addDisputeMessageAction } from "../actions";
 
 /** Module 21 — Disputes & Support: minimal message-composer for a
@@ -31,19 +34,22 @@ export function DisputeMessageForm({ disputeId }: { disputeId: string }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <textarea
+      <Label htmlFor="dispute-message-body" className="sr-only">
+        Write a message
+      </Label>
+      <Textarea
+        id="dispute-message-body"
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={3}
         placeholder="Write a message…"
-        className="rounded-md border border-border px-3 py-2 text-sm"
       />
       {error && (
-        <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
+        <Alert variant="danger" role="alert">
           {error}
-        </p>
+        </Alert>
       )}
-      <Button type="button" disabled={isSubmitting} onClick={handleSubmit}>
+      <Button type="button" disabled={isSubmitting} onClick={handleSubmit} className="w-full sm:w-auto">
         {isSubmitting ? "Sending…" : "Send message"}
       </Button>
     </div>

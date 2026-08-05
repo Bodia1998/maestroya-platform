@@ -4,7 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { FormFieldError } from "@/components/forms/form-field-description";
+import { FormSection } from "@/components/forms/form-section";
 import {
   updateProfessionalServicesSchema,
   type UpdateProfessionalServicesInput,
@@ -48,34 +51,40 @@ export function ProfessionalServicesForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
       {serverError && (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <Alert variant="danger" role="alert">
           {serverError}
-        </p>
+        </Alert>
       )}
       {successMessage && (
-        <p role="status" className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+        <Alert variant="success" role="status">
           {successMessage}
-        </p>
+        </Alert>
       )}
 
-      <div className="grid grid-cols-2 gap-2 rounded-md border border-border p-4">
-        {categories.map((category) => (
-          <label key={category.id} className="flex items-center gap-2 text-sm">
-            <input type="checkbox" value={category.id} {...register("categoryIds")} />
-            {category.name}
-          </label>
-        ))}
-        {categories.length === 0 && (
-          <p className="text-sm text-foreground/70">No service categories are available yet.</p>
-        )}
-      </div>
-      {errors.categoryIds && (
-        <p className="text-xs text-red-600">{errors.categoryIds.message}</p>
-      )}
+      <FormSection title="Service categories" description="Customers find you by these categories — pick every one that applies.">
+        <fieldset className="grid grid-cols-1 gap-2 rounded-lg border border-border p-4 sm:grid-cols-2">
+          <legend className="sr-only">Service categories</legend>
+          {categories.map((category) => (
+            <label key={category.id} className="flex min-h-11 items-center gap-2 rounded-md px-1 text-sm text-foreground">
+              <input
+                type="checkbox"
+                value={category.id}
+                className="h-4 w-4 shrink-0 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                {...register("categoryIds")}
+              />
+              {category.name}
+            </label>
+          ))}
+          {categories.length === 0 && (
+            <p className="text-sm text-muted-foreground">No service categories are available yet.</p>
+          )}
+        </fieldset>
+        <FormFieldError>{errors.categoryIds?.message}</FormFieldError>
+      </FormSection>
 
-      <Button type="submit" disabled={isSubmitting}>
+      <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
         {isSubmitting ? "Saving…" : "Save service categories"}
       </Button>
     </form>
