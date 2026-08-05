@@ -6,6 +6,7 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetServiceRequestUseCase } from "@/application/use-cases/service-request/compose";
 import { makeGetServiceRequestQuotesUseCase } from "@/application/use-cases/quotes/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { QuoteItemsTable, formatMoney } from "@/components/dashboard/quote-items-table";
 import { OpenConversationButton } from "../../../messages/open-conversation-button";
 import { QuoteStatusBadge } from "../../../dashboard/professional/quotes/quote-status-badge";
 import { AcceptQuoteDialog } from "./accept-quote-dialog";
@@ -90,27 +91,11 @@ export default async function ServiceRequestQuotesPage({
                 <QuoteStatusBadge status={quote.status} />
               </div>
 
-              <p className="text-lg font-semibold">
-                {quote.currency} {quote.totalAmount.toFixed(2)}
-              </p>
+              <p className="text-lg font-semibold">{formatMoney(quote.totalAmount, quote.currency)}</p>
 
               {quote.notes && <p className="whitespace-pre-line text-sm text-foreground/80">{quote.notes}</p>}
 
-              <table className="w-full text-sm">
-                <tbody>
-                  {quote.items.map((item) => (
-                    <tr key={item.id} className="border-t border-border/50">
-                      <td className="py-1.5">{item.description}</td>
-                      <td className="py-1.5 text-right text-foreground/70">
-                        {item.quantity} × {quote.currency} {item.unitPrice.toFixed(2)}
-                      </td>
-                      <td className="py-1.5 pl-3 text-right font-medium">
-                        {quote.currency} {item.amount.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <QuoteItemsTable items={quote.items} currency={quote.currency} />
 
               <p className="text-xs text-foreground/50">
                 {quote.validUntil ? `Valid until ${quote.validUntil.toLocaleDateString()} — ` : ""}

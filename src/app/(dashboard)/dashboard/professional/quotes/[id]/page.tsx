@@ -8,6 +8,9 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { Section } from "@/components/layout/section";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { ActionBar } from "@/components/layout/action-bar";
+import { StatusTimeline } from "@/components/dashboard/status-timeline";
+import { getQuoteTimelineSteps } from "@/components/dashboard/quote-timeline-steps";
+import { QuoteItemsTable, formatMoney } from "@/components/dashboard/quote-items-table";
 import { OpenConversationButton } from "../../../../messages/open-conversation-button";
 import { QuoteStatusBadge } from "../quote-status-badge";
 import { WithdrawQuoteDialog } from "../withdraw-quote-dialog";
@@ -39,7 +42,7 @@ export default async function ProfessionalQuoteDetailPage({
 
   const isEditable = quote.status === "SENT" || quote.status === "VIEWED";
 
-  const quoteLabel = `${quote.currency} ${quote.totalAmount.toFixed(2)}`;
+  const quoteLabel = formatMoney(quote.totalAmount, quote.currency);
 
   return (
     <div className="flex flex-col gap-8">
@@ -49,6 +52,8 @@ export default async function ProfessionalQuoteDetailPage({
         actions={<QuoteStatusBadge status={quote.status} />}
       />
 
+      <StatusTimeline steps={getQuoteTimelineSteps(quote.status)} />
+
       {quote.notes && (
         <Section title="Notes / proposal" gap="sm">
           <p className="whitespace-pre-line text-sm text-foreground/80">{quote.notes}</p>
@@ -56,36 +61,7 @@ export default async function ProfessionalQuoteDetailPage({
       )}
 
       <Section title="Items" gap="sm">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-foreground/60">
-              <th className="py-2">Description</th>
-              <th className="py-2">Type</th>
-              <th className="py-2">Qty</th>
-              <th className="py-2">Unit price</th>
-              <th className="py-2 text-right">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {quote.items.map((item) => (
-              <tr key={item.id} className="border-b border-border/50">
-                <td className="py-2">{item.description}</td>
-                <td className="py-2">
-                  <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-foreground/70">
-                    {item.category === "MATERIALS" ? "Materials" : "Labor"}
-                  </span>
-                </td>
-                <td className="py-2">{item.quantity}</td>
-                <td className="py-2">
-                  {quote.currency} {item.unitPrice.toFixed(2)}
-                </td>
-                <td className="py-2 text-right">
-                  {quote.currency} {item.amount.toFixed(2)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <QuoteItemsTable items={quote.items} currency={quote.currency} totalAmount={quote.totalAmount} />
       </Section>
 
       <ResponsiveGrid cols="2" gap="md" bordered>

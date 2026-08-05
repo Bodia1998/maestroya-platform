@@ -6,15 +6,13 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PageContainer } from "@/components/layout/page-container";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
+import { StatusTimeline } from "@/components/dashboard/status-timeline";
+import { getAppointmentTimelineSteps } from "@/components/dashboard/appointment-timeline-steps";
+import { formatAppointmentWindow } from "@/shared/utils/format-appointment-window";
 import { AppointmentStatusBadge } from "../appointment-status-badge";
 import { AppointmentActions } from "./appointment-actions";
 
 export const metadata = { title: "Appointment" };
-
-function formatWindow(start: Date | null, end: Date | null): string {
-  if (!start || !end) return "Not set";
-  return `${start.toLocaleString()} – ${end.toLocaleTimeString()}`;
-}
 
 export default async function AppointmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -45,14 +43,16 @@ export default async function AppointmentDetailPage({ params }: { params: Promis
         actions={<AppointmentStatusBadge status={appointment.status} />}
       />
 
+      <StatusTimeline steps={getAppointmentTimelineSteps(appointment.status)} />
+
       <ResponsiveGrid as="dl" cols="1-2" gap="sm" bordered>
         <div>
           <dt className="text-foreground/60">Confirmed time</dt>
-          <dd>{formatWindow(appointment.scheduledStart, appointment.scheduledEnd)}</dd>
+          <dd>{formatAppointmentWindow(appointment.scheduledStart, appointment.scheduledEnd)}</dd>
         </div>
         <div>
           <dt className="text-foreground/60">Proposed time</dt>
-          <dd>{formatWindow(appointment.proposedStart, appointment.proposedEnd)}</dd>
+          <dd>{formatAppointmentWindow(appointment.proposedStart, appointment.proposedEnd)}</dd>
         </div>
         {appointment.status === "CANCELLED" && (
           <div className="sm:col-span-2">
