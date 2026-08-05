@@ -5,6 +5,7 @@ import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointment-status-badge";
 import { AppointmentActions } from "@/app/(dashboard)/appointments/[id]/appointment-actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Appointment" };
 
@@ -45,11 +46,12 @@ export default async function ProfessionalAppointmentDetailPage({
   const canConfirm = appointment.status === "PROPOSED" && appointment.proposedByUserId !== user.id;
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Appointment</h1>
-        <AppointmentStatusBadge status={appointment.status} />
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Appointment"
+        breadcrumbs={[{ label: "My appointments", href: "/dashboard/professional/appointments" }, { label: "Appointment" }]}
+        actions={<AppointmentStatusBadge status={appointment.status} />}
+      />
 
       <dl className="grid grid-cols-1 gap-3 rounded-md border border-border p-4 text-sm sm:grid-cols-2">
         <div>

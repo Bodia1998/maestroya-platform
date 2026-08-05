@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetServiceRequestForProfessionalUseCase } from "@/application/use-cases/quotes/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { QuoteForm } from "../../../quotes/quote-form";
 
 export const metadata = { title: "Create quote" };
@@ -33,22 +33,21 @@ export default async function SubmitQuotePage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
-      <Link
-        href={`/dashboard/professional/requests/${request.id}`}
-        className="text-sm text-foreground/70 hover:underline"
-      >
-        ← Back to request
-      </Link>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Create quote"
+        subtitle={request.title}
+        breadcrumbs={[
+          { label: "Available requests", href: "/dashboard/professional/requests" },
+          { label: request.title, href: `/dashboard/professional/requests/${request.id}` },
+          { label: "Create quote" },
+        ]}
+      />
 
-      <div>
-        <h1 className="text-2xl font-semibold">Create quote</h1>
-        <p className="mt-1 text-sm text-foreground/70">{request.title}</p>
-        <p className="mt-3 rounded-md bg-black/5 px-4 py-3 text-sm text-foreground/70">
-          This is a customer&apos;s service request. Create a quote describing the work and materials you propose,
-          and the price you&apos;re offering to complete it.
-        </p>
-      </div>
+      <p className="rounded-md bg-black/5 px-4 py-3 text-sm text-foreground/70">
+        This is a customer&apos;s service request. Create a quote describing the work and materials you propose, and
+        the price you&apos;re offering to complete it.
+      </p>
 
       <QuoteForm mode="create" requestId={request.id} quote={null} />
     </div>

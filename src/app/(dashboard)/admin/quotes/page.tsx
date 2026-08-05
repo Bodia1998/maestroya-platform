@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { makeListAdminQuotesUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Admin — Quotes" };
 
@@ -18,10 +19,7 @@ export default async function AdminQuotesPage({ searchParams }: { searchParams: 
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Quotes</h1>
-        <p className="mt-1 text-sm text-foreground/70">Read-only oversight of quotes.</p>
-      </div>
+      <PageHeader title="Quotes" subtitle="Read-only oversight of quotes." />
 
       {quotes.length === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">

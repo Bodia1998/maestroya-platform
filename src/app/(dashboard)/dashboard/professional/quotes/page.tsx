@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalQuotesUseCase } from "@/application/use-cases/quotes/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { QuoteStatusBadge } from "./quote-status-badge";
 
 export const metadata = { title: "My quotes" };
@@ -14,21 +15,19 @@ export default async function ProfessionalQuotesPage() {
   const quotes = await makeGetProfessionalQuotesUseCase().execute(user.id);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">My quotes</h1>
-          <p className="mt-1 text-sm text-foreground/70">
-            Quotes you&apos;ve submitted to customers&apos; service requests.
-          </p>
-        </div>
-        <Link
-          href="/dashboard/professional/requests"
-          className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
-        >
-          Find requests
-        </Link>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="My quotes"
+        subtitle="Quotes you've submitted to customers' service requests."
+        actions={
+          <Link
+            href="/dashboard/professional/requests"
+            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
+          >
+            Find requests
+          </Link>
+        }
+      />
 
       {quotes.length === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">

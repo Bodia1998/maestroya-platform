@@ -2,6 +2,7 @@ import {
   acceptCompanyInvitationFormAction,
   declineCompanyInvitationFormAction,
 } from "@/app/(dashboard)/dashboard/company/accept-invitation/actions";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Company invitation" };
 
@@ -19,11 +20,11 @@ export default async function AcceptCompanyInvitationPage({ searchParams }: { se
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">Company invitation</h1>
-      <p className="text-sm text-foreground/70">
-        You&apos;ve been invited to join a company on MaestroYa. Accepting will make you an active member immediately.
-      </p>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Company invitation"
+        subtitle="You've been invited to join a company on MaestroYa. Accepting will make you an active member immediately."
+      />
       <div className="flex gap-3">
         <form action={acceptCompanyInvitationFormAction.bind(null, token)}>
           <button type="submit" className="h-10 rounded-md bg-black px-4 text-sm font-medium text-white">

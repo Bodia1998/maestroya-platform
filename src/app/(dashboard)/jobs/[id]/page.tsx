@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import {
@@ -10,6 +9,7 @@ import {
 } from "@/application/use-cases/booking/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointment-status-badge";
 import { JobStatusBadge } from "../job-status-badge";
 import { JobActions } from "./job-actions";
@@ -68,15 +68,12 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const backHref = viewerRole === "customer" ? "/jobs" : "/dashboard/professional/jobs";
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
-      <Link href={backHref} className="text-sm text-foreground/70 hover:underline">
-        ← Back to my jobs
-      </Link>
-
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Job</h1>
-        <JobStatusBadge status={job.status} />
-      </div>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      <PageHeader
+        title="Job"
+        breadcrumbs={[{ label: "My jobs", href: backHref }, { label: "Job" }]}
+        actions={<JobStatusBadge status={job.status} />}
+      />
 
       <dl className="grid grid-cols-1 gap-3 rounded-md border border-border p-4 text-sm sm:grid-cols-2">
         <div>

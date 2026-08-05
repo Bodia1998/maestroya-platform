@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { Building2 } from "lucide-react";
 
 import { createCompanyFormAction } from "@/app/(dashboard)/dashboard/company/actions";
 import { makeListMyCompaniesUseCase } from "@/application/use-cases/company/compose";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = { title: "My companies" };
 
@@ -21,17 +24,13 @@ export default async function CompanyIndexPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-semibold">My companies</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          Operate as a company/team with multiple professionals, alongside any individual professional profile you have.
-        </p>
-      </div>
+      <PageHeader
+        title="My companies"
+        subtitle="Operate as a company/team with multiple professionals, alongside any individual professional profile you have."
+      />
 
       {companies.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          You are not a member of any company yet.
-        </p>
+        <EmptyState icon={Building2} title="No companies yet" description="You are not a member of any company yet." />
       ) : (
         <ul className="flex flex-col gap-2">
           {companies.map((company) => (

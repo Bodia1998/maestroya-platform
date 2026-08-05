@@ -8,6 +8,7 @@ import { makeGetCompanyForMemberUseCase } from "@/application/use-cases/company/
 import { makeListCompanyInvitationsUseCase } from "@/application/use-cases/company-invitation/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Company invitations" };
 
@@ -32,9 +33,13 @@ export default async function CompanyInvitationsPage({ params }: { params: Promi
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Invitations — {company.tradeName ?? company.legalName}</h1>
-      </div>
+      <PageHeader
+        title="Invitations"
+        breadcrumbs={[
+          { label: company.tradeName ?? company.legalName, href: `/dashboard/company/${companyId}/profile` },
+          { label: "Invitations" },
+        ]}
+      />
 
       <section className="rounded-md border border-border p-4">
         <h2 className="text-lg font-medium">Invite a member</h2>

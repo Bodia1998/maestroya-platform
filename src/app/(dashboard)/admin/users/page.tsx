@@ -3,6 +3,9 @@ import Link from "next/link";
 import { reactivateUserFormAction, suspendUserFormAction } from "@/app/(dashboard)/admin/actions";
 import { makeListAdminUsersUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SearchInput } from "@/components/ui/search-input";
 
 export const metadata = { title: "Admin — Users" };
 
@@ -26,30 +29,20 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: S
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Users</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          {users.length} user{users.length === 1 ? "" : "s"} on this page.
-        </p>
-      </div>
+      <PageHeader
+        title="Users"
+        subtitle={`${users.length} user${users.length === 1 ? "" : "s"} on this page.`}
+      />
 
       <form method="get" className="flex gap-2">
-        <input
-          type="text"
-          name="search"
-          defaultValue={search}
-          placeholder="Search by name or email"
-          className="h-10 flex-1 rounded-md border border-border px-3 text-sm"
-        />
-        <button type="submit" className="h-10 rounded-md border border-border px-4 text-sm">
+        <SearchInput name="search" defaultValue={search} placeholder="Search by name or email" className="flex-1" />
+        <button type="submit" className="h-10 shrink-0 rounded-md border border-border px-4 text-sm font-medium transition-colors hover:bg-muted">
           Search
         </button>
       </form>
 
       {users.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          No users found.
-        </p>
+        <EmptyState title="No users found" description="Try a different search term." />
       ) : (
         <table className="w-full border-collapse text-sm">
           <thead>

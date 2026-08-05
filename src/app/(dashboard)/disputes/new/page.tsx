@@ -1,4 +1,5 @@
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { NewDisputeForm } from "./new-dispute-form";
 
 export const metadata = { title: "Open a dispute" };
@@ -12,13 +13,12 @@ export default async function NewDisputePage({ searchParams }: { searchParams: P
   const { jobId } = await searchParams;
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Open a dispute</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          Only for jobs that are in progress, completed, or cancelled — see your job&apos;s detail page.
-        </p>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Open a dispute"
+        subtitle="Only for jobs that are in progress, completed, or cancelled — see your job's detail page."
+        breadcrumbs={[{ label: "My disputes", href: "/disputes" }, { label: "Open a dispute" }]}
+      />
       <NewDisputeForm initialJobId={jobId ?? ""} />
     </div>
   );

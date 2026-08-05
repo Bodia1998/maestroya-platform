@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { PageHeader } from "@/components/dashboard/page-header";
 import { getDisputeAction } from "../actions";
 import { DisputeMessageForm } from "./dispute-message-form";
 
@@ -20,16 +21,12 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
   const { dispute, messages, evidence } = result.data;
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
-      <div>
-        <p className="font-mono text-xs text-foreground/60">{dispute.caseNumber}</p>
-        <h1 className="text-2xl font-semibold">{dispute.title}</h1>
-        <div className="mt-2 flex gap-3 text-xs text-foreground/70">
-          <span>Status: {dispute.status}</span>
-          <span>Priority: {dispute.priority}</span>
-          <span>Reason: {dispute.reason}</span>
-        </div>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={dispute.title}
+        subtitle={`${dispute.caseNumber} · Status: ${dispute.status} · Priority: ${dispute.priority} · Reason: ${dispute.reason}`}
+        breadcrumbs={[{ label: "My disputes", href: "/disputes" }, { label: dispute.title }]}
+      />
 
       <section>
         <h2 className="mb-2 text-sm font-semibold uppercase text-foreground/60">Description</h2>

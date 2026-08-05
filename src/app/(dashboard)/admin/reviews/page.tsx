@@ -3,6 +3,7 @@ import Link from "next/link";
 import { moderateReviewFormAction, restoreReviewFormAction } from "@/app/(dashboard)/admin/actions";
 import { makeListAdminReviewsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Admin — Reviews" };
 
@@ -20,10 +21,7 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Reviews</h1>
-        <p className="mt-1 text-sm text-foreground/70">Moderate customer reviews of professionals.</p>
-      </div>
+      <PageHeader title="Reviews" subtitle="Moderate customer reviews of professionals." />
 
       {reviews.length === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">

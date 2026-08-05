@@ -1,4 +1,6 @@
 import { makeGetAdminDashboardOverviewUseCase } from "@/application/use-cases/admin/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata = { title: "Admin overview" };
 
@@ -31,16 +33,15 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Admin overview</h1>
-        <p className="mt-1 text-sm text-foreground/70">Platform-wide operational counts.</p>
-      </div>
+      <PageHeader title="Admin overview" subtitle="Platform-wide operational counts." />
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {CARDS.map((card) => (
-          <div key={card.key} className="rounded-md border border-border p-4">
-            <p className="text-2xl font-semibold">{data[card.key]}</p>
-            <p className="mt-1 text-xs text-foreground/70">{card.label}</p>
-          </div>
+          <Card key={card.key}>
+            <CardContent className="p-4">
+              <p className="text-2xl font-semibold">{data[card.key]}</p>
+              <p className="mt-1 text-xs text-foreground/70">{card.label}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

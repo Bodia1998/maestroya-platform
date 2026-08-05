@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
 import { makeGetServiceRequestUseCase } from "@/application/use-cases/service-request/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { ServiceRequestForm } from "../../service-request-form";
 import { ServiceRequestPhotoManager } from "../service-request-photo-manager";
 
@@ -39,17 +39,16 @@ export default async function EditServiceRequestPage({
   const categories = await new PrismaServiceCategoryRepository().listActive();
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
-      <Link href={`/requests/${request.id}`} className="text-sm text-foreground/70 hover:underline">
-        ← Back to request
-      </Link>
-
-      <div>
-        <h1 className="text-2xl font-semibold">Edit service request</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          You can edit this request while it&apos;s still open.
-        </p>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Edit service request"
+        subtitle="You can edit this request while it's still open."
+        breadcrumbs={[
+          { label: "My requests", href: "/requests" },
+          { label: request.title, href: `/requests/${request.id}` },
+          { label: "Edit" },
+        ]}
+      />
 
       <ServiceRequestForm mode="edit" categories={categories} request={request} />
 

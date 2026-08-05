@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetServiceRequestForProfessionalUseCase } from "@/application/use-cases/quotes/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Service request" };
 
@@ -32,20 +33,20 @@ export default async function ProfessionalServiceRequestDetailPage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
-      <Link href="/dashboard/professional/requests" className="text-sm text-foreground/70 hover:underline">
-        ← Back to available requests
-      </Link>
-
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">{request.title}</h1>
-          <p className="mt-1 text-sm text-foreground/70">{request.categoryName}</p>
-        </div>
-        <span className="rounded-full bg-black/5 px-3 py-1 text-xs font-medium text-foreground/70">
-          {request.distanceKm} km away
-        </span>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title={request.title}
+        subtitle={request.categoryName}
+        breadcrumbs={[
+          { label: "Available requests", href: "/dashboard/professional/requests" },
+          { label: request.title },
+        ]}
+        actions={
+          <span className="rounded-full bg-black/5 px-3 py-1 text-xs font-medium text-foreground/70">
+            {request.distanceKm} km away
+          </span>
+        }
+      />
 
       <p className="rounded-md bg-black/5 px-4 py-3 text-sm text-foreground/70">
         This is a service request from a customer. Review the details below, then create a quote if you&apos;d

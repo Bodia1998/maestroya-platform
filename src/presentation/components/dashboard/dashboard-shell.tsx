@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   AlertTriangle,
   Award,
+  Bell,
   Briefcase,
   Building2,
   CalendarDays,
@@ -18,11 +19,26 @@ import {
   MessageSquare,
   Shield,
   User,
-  X,
 } from "lucide-react";
 
 import { cn } from "@/shared/utils/cn";
 import { logoutAction } from "@/app/auth/logout/actions";
+import { Avatar } from "@/components/ui/avatar";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerHeader,
+} from "@/components/ui/drawer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { IconButton } from "@/components/ui/icon-button";
+import { Tooltip } from "@/components/ui/tooltip";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
 
 const ICONS = {
   dashboard: LayoutDashboard,
@@ -221,13 +237,20 @@ function NavLinks({ navGroups, pathname, onNavigate }: { navGroups: DashboardNav
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "group flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition-colors",
+                  "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
                   active
                     ? "bg-primary/10 text-primary"
                     : "text-foreground/75 hover:bg-muted hover:text-foreground",
                 )}
               >
-                <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                <Icon
+                  className={cn(
+                    "h-[18px] w-[18px] shrink-0 transition-colors",
+                    active ? "text-primary" : "text-foreground/50 group-hover:text-foreground",
+                  )}
+                  aria-hidden
+                />
                 <span className="truncate">{item.label}</span>
               </Link>
             );
@@ -235,6 +258,80 @@ function NavLinks({ navGroups, pathname, onNavigate }: { navGroups: DashboardNav
         </div>
       ))}
     </nav>
+  );
+}
+
+function BrandMark() {
+  return (
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+      M
+    </span>
+  );
+}
+
+function SignOutButton({ className }: { className?: string }) {
+  return (
+    <form action={logoutAction}>
+      <button
+        type="submit"
+        className={cn(
+          "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground/75 outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+          className,
+        )}
+      >
+        <LogOut className="h-[18px] w-[18px] shrink-0 text-foreground/50" aria-hidden />
+        Sign out
+      </button>
+    </form>
+  );
+}
+
+function UserMenuTrigger({ userEmail }: { userEmail: string | null }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Account menu"
+          className="flex h-10 items-center gap-2 rounded-full px-1.5 outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring sm:pr-3"
+        >
+          <Avatar alt={userEmail ?? "Account"} size="sm" />
+          {userEmail && (
+            <span className="hidden max-w-[12rem] truncate text-sm font-medium text-foreground/80 sm:inline">
+              {userEmail}
+            </span>
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        {userEmail && (
+          <>
+            <div className="px-3 py-2">
+              <p className="truncate text-sm font-medium text-foreground">{userEmail}</p>
+            </div>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        <Link
+          href="/profile"
+          role="menuitem"
+          onClick={() => setOpen(false)}
+          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <User className="h-4 w-4" aria-hidden />
+          Profile
+        </Link>
+        <DropdownMenuSeparator />
+        <form action={logoutAction}>
+          <DropdownMenuItem type="submit" destructive className="flex items-center gap-2">
+            <LogOut className="h-4 w-4" aria-hidden />
+            Sign out
+          </DropdownMenuItem>
+        </form>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -253,98 +350,87 @@ export function DashboardShell({ navGroups, userEmail, banner, children }: Dashb
 
   return (
     <div className="flex min-h-screen w-full bg-background">
+      <a
+        href="#main-content"
+        className="sr-only rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-modal"
+      >
+        Skip to main content
+      </a>
+
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 hidden w-64 flex-col border-r border-border bg-card/60 px-3 py-6 lg:flex">
+      <aside
+        className="fixed inset-y-0 hidden w-64 flex-col border-r border-border bg-card/60 px-3 py-6 lg:flex"
+        aria-label="Sidebar"
+      >
         <Link href="/dashboard" className="mb-6 flex items-center gap-2 px-3 text-lg font-bold tracking-tight text-foreground">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            M
-          </span>
+          <BrandMark />
           MaestroYa
         </Link>
         <div className="flex-1 overflow-y-auto">
           <NavLinks navGroups={visibleNavGroups} pathname={pathname} />
         </div>
         <div className="border-t border-border pt-3">
-          <form action={logoutAction}>
-            <button
-              type="submit"
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-foreground/75 transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <LogOut className="h-4 w-4 shrink-0" aria-hidden />
-              Sign out
-            </button>
-          </form>
+          <SignOutButton />
         </div>
       </aside>
 
       {/* Mobile drawer */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} aria-hidden="true" />
-          <div className="relative flex w-72 max-w-[80vw] flex-col bg-background px-3 py-6 shadow-xl">
-            <div className="mb-6 flex items-center justify-between px-3">
-              <Link
-                href="/dashboard"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 text-lg font-bold tracking-tight text-foreground"
-              >
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  M
-                </span>
-                MaestroYa
-              </Link>
-              <button
-                type="button"
-                onClick={() => setMobileOpen(false)}
-                aria-label="Close menu"
-                className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted"
-              >
-                <X className="h-5 w-5" aria-hidden />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <NavLinks navGroups={visibleNavGroups} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
-            </div>
-            <div className="border-t border-border pt-3">
-              <form action={logoutAction}>
-                <button
-                  type="submit"
-                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-foreground/75 hover:bg-muted hover:text-foreground"
-                >
-                  <LogOut className="h-4 w-4 shrink-0" aria-hidden />
-                  Sign out
-                </button>
-              </form>
-            </div>
-          </div>
+      <Drawer open={mobileOpen} onOpenChange={setMobileOpen} side="left">
+        <DrawerClose onClose={() => setMobileOpen(false)} />
+        <DrawerHeader>
+          <Link
+            href="/dashboard"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-2 text-lg font-bold tracking-tight text-foreground"
+          >
+            <BrandMark />
+            MaestroYa
+          </Link>
+        </DrawerHeader>
+        <div className="flex-1 overflow-y-auto">
+          <NavLinks navGroups={visibleNavGroups} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
         </div>
-      )}
+        <div className="border-t border-border pt-3">
+          <SignOutButton />
+        </div>
+      </Drawer>
 
       {/* Content column */}
       <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
-        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-4 border-b border-border bg-background/90 px-4 backdrop-blur sm:px-6 lg:px-8">
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
+        <header className="sticky top-0 z-sticky flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background/90 px-4 backdrop-blur sm:px-6 lg:px-8">
+          <IconButton
+            variant="ghost"
             aria-label="Open menu"
-            className="flex h-10 w-10 items-center justify-center rounded-md text-foreground hover:bg-muted lg:hidden"
+            onClick={() => setMobileOpen(true)}
+            className="lg:hidden"
           >
             <Menu className="h-5 w-5" aria-hidden />
-          </button>
+          </IconButton>
 
-          <div className="ml-auto flex items-center gap-3">
-            {userEmail && (
-              <span className="hidden max-w-[14rem] truncate text-sm text-foreground/70 sm:inline">{userEmail}</span>
-            )}
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-              {(userEmail?.[0] ?? "?").toUpperCase()}
-            </span>
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 text-base font-bold tracking-tight text-foreground lg:hidden"
+          >
+            <BrandMark />
+            <span>MaestroYa</span>
+          </Link>
+
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <LanguageSwitcher compact />
+            <Tooltip content="Notifications">
+              <IconButton variant="ghost" aria-label="Notifications">
+                <Bell className="h-[18px] w-[18px]" aria-hidden />
+              </IconButton>
+            </Tooltip>
+            <UserMenuTrigger userEmail={userEmail} />
           </div>
         </header>
 
         {banner && <div className="px-4 pt-4 sm:px-6 lg:px-8">{banner}</div>}
 
-        <main className="flex-1">{children}</main>
+        <main id="main-content" className="flex-1 focus:outline-none" tabIndex={-1}>
+          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
+        </main>
       </div>
     </div>
   );

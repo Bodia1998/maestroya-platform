@@ -1,11 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetServiceRequestUseCase } from "@/application/use-cases/service-request/compose";
 import { makeGetServiceRequestQuotesUseCase } from "@/application/use-cases/quotes/compose";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { OpenConversationButton } from "../../../messages/open-conversation-button";
 import { QuoteStatusBadge } from "../../../dashboard/professional/quotes/quote-status-badge";
 import { AcceptQuoteDialog } from "./accept-quote-dialog";
@@ -47,17 +47,16 @@ export default async function ServiceRequestQuotesPage({
   const quotes = await makeGetServiceRequestQuotesUseCase().execute(user.id, id);
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
-      <Link href={`/requests/${id}`} className="text-sm text-foreground/70 hover:underline">
-        ← Back to request
-      </Link>
-
-      <div>
-        <h1 className="text-2xl font-semibold">Quotes for &ldquo;{request.title}&rdquo;</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          Quotes professionals have submitted for this request.
-        </p>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Received quotes"
+        subtitle="Quotes professionals have submitted for this request."
+        breadcrumbs={[
+          { label: "My requests", href: "/requests" },
+          { label: request.title, href: `/requests/${id}` },
+          { label: "Quotes" },
+        ]}
+      />
 
       {quotes.length === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">

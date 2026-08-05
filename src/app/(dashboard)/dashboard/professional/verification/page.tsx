@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalVerificationUseCase } from "@/application/use-cases/verification/compose";
 import { VERIFICATION_DOCUMENT_TYPE_VALUES } from "@/domain/services/professional-verification-rules";
+import { PageHeader } from "@/components/dashboard/page-header";
 import {
   removeVerificationDocumentFormAction,
   requestVerificationFormAction,
@@ -72,8 +73,8 @@ export default async function ProfessionalVerificationPage() {
 
   if (!hasProfessionalProfile) {
     return (
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-10">
-        <h1 className="text-2xl font-semibold">Verification</h1>
+      <div className="flex flex-col gap-4">
+        <PageHeader title="Verification" />
         <p className="text-sm text-foreground/70">
           You need a professional profile before you can request verification.{" "}
           <Link href="/dashboard/professional" className="underline">
@@ -91,13 +92,11 @@ export default async function ProfessionalVerificationPage() {
   const canResubmit = status === "RESUBMISSION_REQUIRED" || status === "REJECTED";
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Verification</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          Verify your identity to earn a “Verified professional” badge on your public profile.
-        </p>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Verification"
+        subtitle="Verify your identity to earn a “Verified professional” badge on your public profile."
+      />
 
       {!verification ? (
         <section className="flex flex-col gap-4 rounded-md border border-border p-5">

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { PageHeader } from "@/components/dashboard/page-header";
 import { getSupportTicketAction } from "../actions";
 
 export const metadata = { title: "Support ticket" };
@@ -13,16 +14,12 @@ export default async function SupportTicketDetailPage({ params }: { params: Prom
   const ticket = result.data;
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-10">
-      <div>
-        <p className="font-mono text-xs text-foreground/60">{ticket.ticketNumber}</p>
-        <h1 className="text-2xl font-semibold">{ticket.subject}</h1>
-        <div className="mt-2 flex gap-3 text-xs text-foreground/70">
-          <span>Status: {ticket.status}</span>
-          <span>Category: {ticket.category}</span>
-          <span>Priority: {ticket.priority}</span>
-        </div>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={ticket.subject}
+        subtitle={`${ticket.ticketNumber} · Status: ${ticket.status} · Category: ${ticket.category} · Priority: ${ticket.priority}`}
+        breadcrumbs={[{ label: "Support tickets", href: "/support-tickets" }, { label: ticket.subject }]}
+      />
       <p className="whitespace-pre-wrap text-sm">{ticket.description}</p>
       {ticket.resolutionNote && (
         <section className="rounded-md border border-border bg-black/5 p-4">

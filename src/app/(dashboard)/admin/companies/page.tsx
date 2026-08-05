@@ -3,6 +3,7 @@ import Link from "next/link";
 import { reactivateCompanyFormAction, suspendCompanyFormAction } from "@/app/(dashboard)/admin/companies/actions";
 import { makeListAdminCompaniesUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Admin — Companies" };
 
@@ -34,10 +35,7 @@ export default async function AdminCompaniesPage({ searchParams }: { searchParam
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Companies</h1>
-        <p className="mt-1 text-sm text-foreground/70">Company profiles, owners, verification, and status.</p>
-      </div>
+      <PageHeader title="Companies" subtitle="Company profiles, owners, verification, and status." />
 
       <form method="get" className="flex gap-2">
         <input

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { makeListAdminAuditLogsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Admin — Audit log" };
 
@@ -19,10 +20,7 @@ export default async function AdminAuditLogsPage({ searchParams }: { searchParam
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Audit log</h1>
-        <p className="mt-1 text-sm text-foreground/70">Append-only record of sensitive admin actions.</p>
-      </div>
+      <PageHeader title="Audit log" subtitle="Append-only record of sensitive admin actions." />
 
       {logs.length === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">

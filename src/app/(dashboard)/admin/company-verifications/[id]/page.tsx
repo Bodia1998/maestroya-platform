@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { makeGetAdminCompanyVerificationUseCase } from "@/application/use-cases/company-verification/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
+import { PageHeader } from "@/components/dashboard/page-header";
 import {
   approveCompanyVerificationFormAction,
   rejectCompanyVerificationFormAction,
@@ -42,17 +42,15 @@ export default async function AdminCompanyVerificationDetailPage({ params }: { p
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/admin/company-verifications" className="text-sm text-foreground/70 hover:underline">
-        ← Back to queue
-      </Link>
-
-      <div>
-        <h1 className="text-2xl font-semibold">{detail.companyLegalName}</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          Owner: {detail.ownerName ?? detail.ownerEmail ?? "—"} · Status:{" "}
-          <span className="font-medium">{detail.status}</span>
-        </p>
-      </div>
+      <PageHeader
+        title={detail.companyLegalName}
+        subtitle={`Owner: ${detail.ownerName ?? detail.ownerEmail ?? "—"}`}
+        breadcrumbs={[
+          { label: "Company verifications", href: "/admin/company-verifications" },
+          { label: detail.companyLegalName },
+        ]}
+        actions={<span className="text-sm font-medium">{detail.status}</span>}
+      />
 
       <section className="grid grid-cols-2 gap-4 rounded-md border border-border p-4 text-sm">
         <div>

@@ -11,6 +11,7 @@ import { makeGetCompanyForMemberUseCase } from "@/application/use-cases/company/
 import { makeGetCompanyVerificationUseCase } from "@/application/use-cases/company-verification/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export const metadata = { title: "Company verification" };
 
@@ -45,9 +46,13 @@ export default async function CompanyVerificationPage({ params }: { params: Prom
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Verification — {company.tradeName ?? company.legalName}</h1>
-      </div>
+      <PageHeader
+        title="Verification"
+        breadcrumbs={[
+          { label: company.tradeName ?? company.legalName, href: `/dashboard/company/${companyId}/profile` },
+          { label: "Verification" },
+        ]}
+      />
 
       {!verification ? (
         <form action={requestCompanyVerificationFormAction.bind(null, companyId)}>
