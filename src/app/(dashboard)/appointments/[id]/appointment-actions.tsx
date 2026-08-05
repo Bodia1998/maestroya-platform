@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   cancelAppointmentAction,
   completeAppointmentAction,
@@ -163,80 +164,50 @@ function CompleteButton({ appointmentId }: { appointmentId: string }) {
 
 function CancelDialog({ appointmentId }: { appointmentId: string }) {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
   const [reason, setReason] = useState<string>(CANCELLATION_REASONS[0]?.value ?? "OTHER");
   const [note, setNote] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleCancel() {
-    setIsSubmitting(true);
-    setError(null);
-    const result = await cancelAppointmentAction(appointmentId, reason, note);
-    setIsSubmitting(false);
-    if (!result.success) {
-      setError(result.error);
-      return;
-    }
-    setIsOpen(false);
-    router.refresh();
-  }
-
-  if (!isOpen) {
-    return (
-      <Button type="button" variant="ghost" onClick={() => setIsOpen(true)}>
-        Cancel appointment
-      </Button>
-    );
-  }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="cancel-appointment-title"
-      className="flex flex-col gap-3 rounded-md border border-border bg-black/5 p-4"
+    <ConfirmDialog
+      triggerLabel="Cancel appointment"
+      triggerVariant="ghost"
+      title="Cancel this appointment?"
+      confirmLabel="Yes, cancel"
+      pendingLabel="Cancelling…"
+      cancelLabel="Not now"
+      destructive
+      onConfirm={async () => {
+        const result = await cancelAppointmentAction(appointmentId, reason, note);
+        if (result.success) router.refresh();
+        return result;
+      }}
     >
-      <h3 id="cancel-appointment-title" className="text-sm font-semibold">
-        Cancel this appointment?
-      </h3>
-      <label className="flex flex-col gap-1 text-sm">
-        Reason
-        <select
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          className="rounded-md border border-border px-3 py-2 text-sm"
-        >
-          {CANCELLATION_REASONS.map((r) => (
-            <option key={r.value} value={r.value}>
-              {r.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Note (optional)
-        <textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={2}
-          className="rounded-md border border-border px-3 py-2 text-sm"
-        />
-      </label>
-      {error && (
-        <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
-      )}
-      <div className="flex gap-2">
-        <Button type="button" disabled={isSubmitting} onClick={handleCancel}>
-          {isSubmitting ? "Cancelling…" : "Yes, cancel"}
-        </Button>
-        <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
-          Not now
-        </Button>
+      <div className="flex flex-col gap-3">
+        <label className="flex flex-col gap-1 text-sm">
+          Reason
+          <select
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="rounded-md border border-border px-3 py-2 text-sm"
+          >
+            {CANCELLATION_REASONS.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Note (optional)
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={2}
+            className="rounded-md border border-border px-3 py-2 text-sm"
+          />
+        </label>
       </div>
-    </div>
+    </ConfirmDialog>
   );
 }
 

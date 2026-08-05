@@ -7,13 +7,9 @@ import { AppointmentCard } from "@/components/dashboard/cards/appointment-card";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageContainer } from "@/components/layout/page-container";
+import { formatAppointmentWindow } from "@/shared/utils/format-appointment-window";
 
 export const metadata = { title: "My appointments" };
-
-function formatWindow(start: Date | null, end: Date | null): string {
-  if (!start || !end) return "No time proposed yet";
-  return `${start.toLocaleString()} – ${end.toLocaleTimeString()}`;
-}
 
 export default async function AppointmentsPage() {
   const user = await requireAuth();
@@ -42,7 +38,11 @@ export default async function AppointmentsPage() {
                 title={appointment.serviceRequestTitle}
                 status={appointment.status}
                 counterpartyName={appointment.counterpartyName}
-                window={formatWindow(appointment.scheduledStart, appointment.scheduledEnd)}
+                window={formatAppointmentWindow(
+                  appointment.scheduledStart,
+                  appointment.scheduledEnd,
+                  "No time proposed yet",
+                )}
               />
             </li>
           ))}
