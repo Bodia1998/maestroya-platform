@@ -5,6 +5,7 @@ import { MessageSquare } from "lucide-react";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeListConversationsUseCase } from "@/application/use-cases/chat/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = { title: "Messages" };
@@ -31,12 +32,13 @@ export default async function MessagesPage() {
           description="Once you and a customer or professional have a quote in common, you can message each other here."
         />
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
+        <Card className="overflow-hidden p-0 shadow-sm">
+          <ul className="flex flex-col divide-y divide-border">
           {conversations.map((conversation) => (
             <li key={conversation.id}>
               <Link
                 href={`/messages/${conversation.id}`}
-                className="flex items-center gap-3 p-4 hover:bg-black/5"
+                className="flex items-center gap-3 p-4 outline-none transition-colors hover:bg-muted focus-visible:bg-muted"
               >
                 {conversation.otherParticipant.image ? (
                   <Image
@@ -75,7 +77,8 @@ export default async function MessagesPage() {
               </Link>
             </li>
           ))}
-        </ul>
+          </ul>
+        </Card>
       )}
     </div>
   );

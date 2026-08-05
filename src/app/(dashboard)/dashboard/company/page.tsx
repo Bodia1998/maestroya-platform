@@ -1,11 +1,16 @@
-import Link from "next/link";
 import { Building2 } from "lucide-react";
 
 import { createCompanyFormAction } from "@/app/(dashboard)/dashboard/company/actions";
 import { makeListMyCompaniesUseCase } from "@/application/use-cases/company/compose";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { CompanyCard } from "@/components/dashboard/cards/company-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "My companies" };
 
@@ -30,47 +35,53 @@ export default async function CompanyIndexPage() {
       />
 
       {companies.length === 0 ? (
-        <EmptyState icon={Building2} title="No companies yet" description="You are not a member of any company yet." />
+        <EmptyState
+          icon={Building2}
+          title="No companies yet"
+          description="You are not a member of any company yet. Create one below to start operating as a team."
+        />
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {companies.map((company) => (
-            <li key={company.id} className="flex items-center justify-between rounded-md border border-border p-3 text-sm">
-              <div>
-                <p className="font-medium">{company.tradeName ?? company.legalName}</p>
-                <p className="text-foreground/60">Status: {company.status}</p>
-              </div>
-              <Link href={`/dashboard/company/${company.id}/profile`} className="underline">
-                Manage
-              </Link>
+            <li key={company.id}>
+              <CompanyCard
+                href={`/dashboard/company/${company.id}/profile`}
+                name={company.tradeName ?? company.legalName}
+                status={company.status}
+              />
             </li>
           ))}
         </ul>
       )}
 
-      <section className="rounded-md border border-border p-4">
-        <h2 className="text-lg font-medium">Create a company</h2>
-        <form action={createCompanyFormAction} className="mt-3 flex flex-col gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-foreground/70">Legal name (required)</span>
-            <input name="legalName" required minLength={2} maxLength={200} className="rounded-md border border-border p-2 text-sm" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-foreground/70">Trade / display name</span>
-            <input name="tradeName" maxLength={200} className="rounded-md border border-border p-2 text-sm" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-foreground/70">Tax ID (required)</span>
-            <input name="taxId" required maxLength={50} className="rounded-md border border-border p-2 text-sm" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-foreground/70">Description</span>
-            <textarea name="description" rows={3} maxLength={5000} className="rounded-md border border-border p-2 text-sm" />
-          </label>
-          <button type="submit" className="h-10 w-fit rounded-md bg-black px-4 text-sm font-medium text-white">
-            Create company
-          </button>
-        </form>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Create a company</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={createCompanyFormAction} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="legalName">Legal name (required)</Label>
+              <Input id="legalName" name="legalName" required minLength={2} maxLength={200} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="tradeName">Trade / display name</Label>
+              <Input id="tradeName" name="tradeName" maxLength={200} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="taxId">Tax ID (required)</Label>
+              <Input id="taxId" name="taxId" required maxLength={50} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="description">Description</Label>
+              <Textarea id="description" name="description" rows={3} maxLength={5000} />
+            </div>
+            <Button type="submit" className="w-fit">
+              Create company
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

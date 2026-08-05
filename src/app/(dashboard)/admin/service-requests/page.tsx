@@ -1,8 +1,11 @@
-import Link from "next/link";
+import { FileText } from "lucide-react";
 
 import { makeListAdminServiceRequestsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { StatusBadge } from "@/components/dashboard/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = { title: "Admin — Service requests" };
 
@@ -22,40 +25,41 @@ export default async function AdminServiceRequestsPage({ searchParams }: { searc
       <PageHeader title="Service requests" subtitle="Read-only oversight of customer service requests." />
 
       {requests.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          No service requests found.
-        </p>
+        <EmptyState icon={FileText} title="No service requests found" description="Customer service requests will appear here." />
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-foreground/70">
-              <th className="py-2 pr-4">Title</th>
-              <th className="py-2 pr-4">Customer</th>
-              <th className="py-2 pr-4">Status</th>
-              <th className="py-2 pr-4">Quotes</th>
-              <th className="py-2 pr-4">Jobs</th>
-            </tr>
-          </thead>
-          <tbody>
-            {requests.map((request) => (
-              <tr key={request.id} className="border-b border-border/50">
-                <td className="py-2 pr-4">{request.title}</td>
-                <td className="py-2 pr-4">{request.customerName ?? "—"}</td>
-                <td className="py-2 pr-4">{request.status}</td>
-                <td className="py-2 pr-4">{request.quoteCount}</td>
-                <td className="py-2 pr-4">{request.jobCount}</td>
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[600px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-3">Title</th>
+                <th className="px-4 py-3">Customer</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Quotes</th>
+                <th className="px-4 py-3">Jobs</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {requests.map((request) => (
+                <tr key={request.id} className="transition-colors hover:bg-muted/40">
+                  <td className="px-4 py-3">{request.title}</td>
+                  <td className="px-4 py-3">{request.customerName ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={request.status} />
+                  </td>
+                  <td className="px-4 py-3">{request.quoteCount}</td>
+                  <td className="px-4 py-3">{request.jobCount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <div className="flex justify-between text-sm">
-        {page > 1 ? <Link href={`/admin/service-requests?page=${page - 1}`}>← Previous</Link> : <span />}
-        {requests.length === DEFAULT_PAGE_SIZE && (
-          <Link href={`/admin/service-requests?page=${page + 1}`}>Next →</Link>
-        )}
-      </div>
+      <AdminTablePager
+        page={page}
+        hasNextPage={requests.length === DEFAULT_PAGE_SIZE}
+        buildHref={(p) => `/admin/service-requests?page=${p}`}
+      />
     </div>
   );
 }

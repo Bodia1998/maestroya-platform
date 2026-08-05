@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { Building2 } from "lucide-react";
 
 import { reactivateCompanyFormAction, suspendCompanyFormAction } from "@/app/(dashboard)/admin/companies/actions";
 import { makeListAdminCompaniesUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { StatusBadge } from "@/components/dashboard/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = { title: "Admin — Companies" };
 
@@ -58,67 +62,68 @@ export default async function AdminCompaniesPage({ searchParams }: { searchParam
       </form>
 
       {companies.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          No companies found.
-        </p>
+        <EmptyState icon={Building2} title="No companies found" description="Try a different search or filter." />
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-foreground/70">
-              <th className="py-2 pr-4">Legal name</th>
-              <th className="py-2 pr-4">Owner</th>
-              <th className="py-2 pr-4">Members</th>
-              <th className="py-2 pr-4">Status</th>
-              <th className="py-2 pr-4">Verified</th>
-              <th className="py-2 pr-4">Rating</th>
-              <th className="py-2 pr-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {companies.map((company) => (
-              <tr key={company.id} className="border-b border-border/50">
-                <td className="py-2 pr-4">
-                  <Link href={`/admin/companies/${company.id}`} className="underline">
-                    {company.tradeName ?? company.legalName}
-                  </Link>
-                </td>
-                <td className="py-2 pr-4">{company.ownerName ?? company.ownerEmail ?? "—"}</td>
-                <td className="py-2 pr-4">{company.memberCount}</td>
-                <td className="py-2 pr-4">{company.status}</td>
-                <td className="py-2 pr-4">{company.isVerified ? "Yes" : "No"}</td>
-                <td className="py-2 pr-4">
-                  {company.averageRating !== null ? `${company.averageRating} (${company.reviewCount})` : "—"}
-                </td>
-                <td className="py-2 pr-4">
-                  <div className="flex gap-2">
-                    {(company.status === "ACTIVE" || company.status === "PENDING") && (
-                      <form action={suspendCompanyFormAction.bind(null, company.id)}>
-                        <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs">
-                          Suspend
-                        </button>
-                      </form>
-                    )}
-                    {company.status === "SUSPENDED" && (
-                      <form action={reactivateCompanyFormAction.bind(null, company.id)}>
-                        <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs">
-                          Reactivate
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                </td>
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[720px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-3">Legal name</th>
+                <th className="px-4 py-3">Owner</th>
+                <th className="px-4 py-3">Members</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Verified</th>
+                <th className="px-4 py-3">Rating</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {companies.map((company) => (
+                <tr key={company.id} className="transition-colors hover:bg-muted/40">
+                  <td className="px-4 py-3">
+                    <Link href={`/admin/companies/${company.id}`} className="font-medium text-primary hover:underline">
+                      {company.tradeName ?? company.legalName}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3">{company.ownerName ?? company.ownerEmail ?? "—"}</td>
+                  <td className="px-4 py-3">{company.memberCount}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={company.status} />
+                  </td>
+                  <td className="px-4 py-3">{company.isVerified ? "Yes" : "No"}</td>
+                  <td className="px-4 py-3">
+                    {company.averageRating !== null ? `${company.averageRating} (${company.reviewCount})` : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      {(company.status === "ACTIVE" || company.status === "PENDING") && (
+                        <form action={suspendCompanyFormAction.bind(null, company.id)}>
+                          <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted">
+                            Suspend
+                          </button>
+                        </form>
+                      )}
+                      {company.status === "SUSPENDED" && (
+                        <form action={reactivateCompanyFormAction.bind(null, company.id)}>
+                          <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted">
+                            Reactivate
+                          </button>
+                        </form>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <div className="flex justify-between text-sm">
-        {page > 1 ? <Link href={`/admin/companies?${qs(`page=${page - 1}`)}`}>← Previous</Link> : <span />}
-        {companies.length === DEFAULT_PAGE_SIZE && (
-          <Link href={`/admin/companies?${qs(`page=${page + 1}`)}`}>Next →</Link>
-        )}
-      </div>
+      <AdminTablePager
+        page={page}
+        hasNextPage={companies.length === DEFAULT_PAGE_SIZE}
+        buildHref={(p) => `/admin/companies?${qs(`page=${p}`)}`}
+      />
     </div>
   );
 }

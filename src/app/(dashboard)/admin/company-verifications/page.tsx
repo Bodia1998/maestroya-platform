@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 
 import { makeListAdminCompanyVerificationsUseCase } from "@/application/use-cases/company-verification/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { VERIFICATION_CASE_STATUS_VALUES } from "@/domain/services/company-verification-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { StatusBadge } from "@/components/dashboard/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = { title: "Admin — Company verifications" };
 
@@ -49,42 +53,41 @@ export default async function AdminCompanyVerificationsPage({ searchParams }: { 
       </form>
 
       {verifications.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          No company verification requests found.
-        </p>
+        <EmptyState icon={ShieldCheck} title="No company verification requests found" description="Company verification requests will appear here." />
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-foreground/70">
-              <th className="py-2 pr-4">Company</th>
-              <th className="py-2 pr-4">Status</th>
-              <th className="py-2 pr-4">Submitted</th>
-              <th className="py-2 pr-4">Reviewed</th>
-              <th className="py-2 pr-4"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {verifications.map((v) => (
-              <tr key={v.id} className="border-b border-border/50">
-                <td className="py-2 pr-4">{v.companyLegalName}</td>
-                <td className="py-2 pr-4">{v.status}</td>
-                <td className="py-2 pr-4">{v.submittedAt ? v.submittedAt.toLocaleDateString() : "—"}</td>
-                <td className="py-2 pr-4">{v.reviewedAt ? v.reviewedAt.toLocaleDateString() : "—"}</td>
-                <td className="py-2 pr-4">
-                  <Link href={`/admin/company-verifications/${v.id}`} className="underline">
-                    Review
-                  </Link>
-                </td>
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[640px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-3">Company</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Submitted</th>
+                <th className="px-4 py-3">Reviewed</th>
+                <th className="px-4 py-3"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {verifications.map((v) => (
+                <tr key={v.id} className="transition-colors hover:bg-muted/40">
+                  <td className="px-4 py-3">{v.companyLegalName}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={v.status} />
+                  </td>
+                  <td className="px-4 py-3">{v.submittedAt ? v.submittedAt.toLocaleDateString() : "—"}</td>
+                  <td className="px-4 py-3">{v.reviewedAt ? v.reviewedAt.toLocaleDateString() : "—"}</td>
+                  <td className="px-4 py-3">
+                    <Link href={`/admin/company-verifications/${v.id}`} className="font-medium text-primary hover:underline">
+                      Review
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <div className="flex justify-between text-sm">
-        {page > 1 ? <Link href={qs(page - 1)}>← Previous</Link> : <span />}
-        {verifications.length === DEFAULT_PAGE_SIZE && <Link href={qs(page + 1)}>Next →</Link>}
-      </div>
+      <AdminTablePager page={page} hasNextPage={verifications.length === DEFAULT_PAGE_SIZE} buildHref={(p) => qs(p)} />
     </div>
   );
 }

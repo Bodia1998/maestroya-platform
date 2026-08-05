@@ -1,8 +1,10 @@
-import Link from "next/link";
+import { ScrollText } from "lucide-react";
 
 import { makeListAdminAuditLogsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = { title: "Admin — Audit log" };
 
@@ -23,39 +25,36 @@ export default async function AdminAuditLogsPage({ searchParams }: { searchParam
       <PageHeader title="Audit log" subtitle="Append-only record of sensitive admin actions." />
 
       {logs.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          No audit log entries yet.
-        </p>
+        <EmptyState icon={ScrollText} title="No audit log entries yet" description="Sensitive admin actions will be recorded here." />
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-foreground/70">
-              <th className="py-2 pr-4">When</th>
-              <th className="py-2 pr-4">Admin</th>
-              <th className="py-2 pr-4">Action</th>
-              <th className="py-2 pr-4">Target</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.map((log) => (
-              <tr key={log.id} className="border-b border-border/50">
-                <td className="py-2 pr-4">{log.createdAt.toLocaleString()}</td>
-                <td className="py-2 pr-4 font-mono text-xs">{log.adminUserId ?? "system"}</td>
-                <td className="py-2 pr-4">{log.action}</td>
-                <td className="py-2 pr-4 font-mono text-xs">
-                  {log.targetType}
-                  {log.targetId ? `/${log.targetId}` : ""}
-                </td>
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[640px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-3">When</th>
+                <th className="px-4 py-3">Admin</th>
+                <th className="px-4 py-3">Action</th>
+                <th className="px-4 py-3">Target</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {logs.map((log) => (
+                <tr key={log.id} className="transition-colors hover:bg-muted/40">
+                  <td className="px-4 py-3">{log.createdAt.toLocaleString()}</td>
+                  <td className="px-4 py-3 font-mono text-xs">{log.adminUserId ?? "system"}</td>
+                  <td className="px-4 py-3">{log.action}</td>
+                  <td className="px-4 py-3 font-mono text-xs">
+                    {log.targetType}
+                    {log.targetId ? `/${log.targetId}` : ""}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <div className="flex justify-between text-sm">
-        {page > 1 ? <Link href={`/admin/audit-logs?page=${page - 1}`}>← Previous</Link> : <span />}
-        {logs.length === DEFAULT_PAGE_SIZE && <Link href={`/admin/audit-logs?page=${page + 1}`}>Next →</Link>}
-      </div>
+      <AdminTablePager page={page} hasNextPage={logs.length === DEFAULT_PAGE_SIZE} buildHref={(p) => `/admin/audit-logs?page=${p}`} />
     </div>
   );
 }

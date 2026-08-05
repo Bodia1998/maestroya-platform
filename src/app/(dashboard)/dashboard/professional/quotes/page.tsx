@@ -1,9 +1,11 @@
-import Link from "next/link";
+import { Award } from "lucide-react";
 
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalQuotesUseCase } from "@/application/use-cases/quotes/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { QuoteStatusBadge } from "./quote-status-badge";
+import { QuoteCard } from "@/components/dashboard/cards/quote-card";
+import { ButtonLink } from "@/components/ui/button-link";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = { title: "My quotes" };
 
@@ -19,41 +21,29 @@ export default async function ProfessionalQuotesPage() {
       <PageHeader
         title="My quotes"
         subtitle="Quotes you've submitted to customers' service requests."
-        actions={
-          <Link
-            href="/dashboard/professional/requests"
-            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
-          >
-            Find requests
-          </Link>
-        }
+        actions={<ButtonLink href="/dashboard/professional/requests">Find requests</ButtonLink>}
       />
 
       {quotes.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          You haven&apos;t submitted any quotes yet.
-        </p>
+        <EmptyState
+          icon={Award}
+          title="No quotes submitted yet"
+          description="Browse open service requests and send your first quote."
+          action={<ButtonLink href="/dashboard/professional/requests">Browse requests</ButtonLink>}
+        />
       ) : (
         <ul className="flex flex-col gap-3">
           {quotes.map((quote) => (
             <li key={quote.id}>
-              <Link
+              <QuoteCard
                 href={`/dashboard/professional/quotes/${quote.id}`}
-                className="flex flex-col gap-2 rounded-md border border-border p-4 hover:bg-black/5"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <h2 className="font-medium">{quote.serviceRequestTitle}</h2>
-                  <QuoteStatusBadge status={quote.status} />
-                </div>
-                <p className="text-sm text-foreground/70">{quote.serviceRequestCategoryName}</p>
-                <p className="text-sm font-medium">
-                  {quote.currency} {quote.totalAmount.toFixed(2)}
-                </p>
-                <p className="text-xs text-foreground/50">
-                  Submitted {quote.createdAt.toLocaleDateString()} — updated{" "}
-                  {quote.updatedAt.toLocaleDateString()}
-                </p>
-              </Link>
+                title={quote.serviceRequestTitle}
+                status={quote.status}
+                categoryName={quote.serviceRequestCategoryName}
+                amountLabel={`${quote.currency} ${quote.totalAmount.toFixed(2)}`}
+                createdAt={quote.createdAt}
+                updatedAt={quote.updatedAt}
+              />
             </li>
           ))}
         </ul>

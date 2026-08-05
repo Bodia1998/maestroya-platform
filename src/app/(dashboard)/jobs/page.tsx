@@ -1,11 +1,11 @@
-import Link from "next/link";
 import { Briefcase } from "lucide-react";
 
 import { makeListJobsForCustomerUseCase } from "@/application/use-cases/job/compose";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { JobCard } from "@/components/dashboard/cards/job-card";
+import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
-import { JobStatusBadge } from "./job-status-badge";
 
 export const metadata = { title: "My jobs" };
 
@@ -21,21 +21,22 @@ export default async function JobsPage() {
       <PageHeader title="My jobs" subtitle="The overall progress of work you've accepted a quote for." />
 
       {jobs.length === 0 ? (
-        <EmptyState icon={Briefcase} title="No active jobs" description="You have no active jobs." />
+        <EmptyState
+          icon={Briefcase}
+          title="No active jobs"
+          description="Jobs appear here once you accept a quote from a professional and work begins."
+          action={<ButtonLink href="/requests">View my requests</ButtonLink>}
+        />
       ) : (
         <ul className="flex flex-col gap-3">
           {jobs.map((job) => (
             <li key={job.id}>
-              <Link
+              <JobCard
                 href={`/jobs/${job.id}`}
-                className="flex flex-col gap-2 rounded-md border border-border p-4 hover:bg-black/5"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <h2 className="font-medium">{job.serviceRequestTitle}</h2>
-                  <JobStatusBadge status={job.status} />
-                </div>
-                {job.counterpartyName && <p className="text-sm text-foreground/70">with {job.counterpartyName}</p>}
-              </Link>
+                title={job.serviceRequestTitle}
+                status={job.status}
+                counterpartyName={job.counterpartyName}
+              />
             </li>
           ))}
         </ul>
