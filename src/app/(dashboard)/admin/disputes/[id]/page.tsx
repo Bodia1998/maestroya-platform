@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 
 import { getAdminDisputeAction } from "../actions";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { StatusBadge } from "@/components/dashboard/status-badge";
+import { Section } from "@/components/layout/section";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { AdminDisputeActions } from "./admin-dispute-actions";
 
 export const metadata = { title: "Admin — Dispute" };
@@ -24,41 +27,53 @@ export default async function AdminDisputeDetailPage({ params }: { params: Promi
         title={dispute.title}
         subtitle={dispute.caseNumber}
         breadcrumbs={[{ label: "Disputes", href: "/admin/disputes" }, { label: dispute.caseNumber }]}
-        actions={
-          <div className="flex gap-3 text-xs text-foreground/70">
-            <span>Status: {dispute.status}</span>
-            <span>Priority: {dispute.priority}</span>
-            <span>Reason: {dispute.reason}</span>
-            <span>Assigned: {dispute.assignedAdminUserId ?? "unassigned"}</span>
-          </div>
-        }
+        actions={<StatusBadge status={dispute.status} />}
       />
+
+      <ResponsiveGrid cols="2" gap="md" bordered aria-label="Dispute details" className="sm:grid-cols-3">
+        <div>
+          <p className="text-foreground/60">Priority</p>
+          <p className="font-medium">{dispute.priority}</p>
+        </div>
+        <div>
+          <p className="text-foreground/60">Reason</p>
+          <p className="font-medium">{dispute.reason}</p>
+        </div>
+        <div>
+          <p className="text-foreground/60">Assigned to</p>
+          <p className="font-medium">{dispute.assignedAdminUserId ?? "Unassigned"}</p>
+        </div>
+      </ResponsiveGrid>
 
       <p className="whitespace-pre-wrap text-sm">{dispute.description}</p>
 
       {dispute.resolution && (
-        <section className="rounded-md border border-border bg-black/5 p-4">
-          <h2 className="mb-1 text-sm font-semibold uppercase text-foreground/60">Resolution</h2>
+        <Section title="Resolution" bordered className="bg-black/5">
           <p className="text-sm font-medium">{dispute.resolution}</p>
           {dispute.resolutionNote && <p className="mt-1 text-sm">{dispute.resolutionNote}</p>}
-        </section>
+        </Section>
       )}
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase text-foreground/60">Evidence ({evidence.length})</h2>
+      <Section title={`Evidence (${evidence.length})`}>
         <ul className="flex flex-col gap-2">
           {evidence.map((e) => (
             <li key={e.id} className="rounded-md border border-border p-3 text-sm">
-              <a href={e.fileUrl} target="_blank" rel="noreferrer" className="underline">
+              <a
+                href={e.fileUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+              >
                 {e.fileName ?? e.fileUrl}
+                <span className="sr-only"> (opens in a new tab)</span>
               </a>
             </li>
           ))}
+          {evidence.length === 0 && <p className="text-sm text-foreground/70">No evidence submitted.</p>}
         </ul>
-      </section>
+      </Section>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase text-foreground/60">Thread (including internal notes)</h2>
+      <Section title="Thread (including internal notes)">
         <ul className="flex flex-col gap-2">
           {messages.map((m) => (
             <li
@@ -72,7 +87,7 @@ export default async function AdminDisputeDetailPage({ params }: { params: Promi
           ))}
           {messages.length === 0 && <p className="text-sm text-foreground/70">No messages yet.</p>}
         </ul>
-      </section>
+      </Section>
 
       <AdminDisputeActions disputeId={dispute.id} status={dispute.status} />
     </div>

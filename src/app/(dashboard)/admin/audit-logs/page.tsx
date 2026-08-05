@@ -4,6 +4,7 @@ import { makeListAdminAuditLogsUseCase } from "@/application/use-cases/admin/com
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { AdminDataTable, AdminTableHeadRow, AdminTh, AdminTableBody, AdminTableRow } from "@/components/dashboard/admin-data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = { title: "Admin — Audit log" };
@@ -27,31 +28,27 @@ export default async function AdminAuditLogsPage({ searchParams }: { searchParam
       {logs.length === 0 ? (
         <EmptyState icon={ScrollText} title="No audit log entries yet" description="Sensitive admin actions will be recorded here." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full min-w-[640px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-3">When</th>
-                <th className="px-4 py-3">Admin</th>
-                <th className="px-4 py-3">Action</th>
-                <th className="px-4 py-3">Target</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {logs.map((log) => (
-                <tr key={log.id} className="transition-colors hover:bg-muted/40">
-                  <td className="px-4 py-3">{log.createdAt.toLocaleString()}</td>
-                  <td className="px-4 py-3 font-mono text-xs">{log.adminUserId ?? "system"}</td>
-                  <td className="px-4 py-3">{log.action}</td>
-                  <td className="px-4 py-3 font-mono text-xs">
-                    {log.targetType}
-                    {log.targetId ? `/${log.targetId}` : ""}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AdminDataTable caption="Audit log" minWidth={640}>
+          <AdminTableHeadRow>
+            <AdminTh>When</AdminTh>
+            <AdminTh>Admin</AdminTh>
+            <AdminTh>Action</AdminTh>
+            <AdminTh>Target</AdminTh>
+          </AdminTableHeadRow>
+          <AdminTableBody>
+            {logs.map((log) => (
+              <AdminTableRow key={log.id}>
+                <td className="px-4 py-3">{log.createdAt.toLocaleString()}</td>
+                <td className="px-4 py-3 font-mono text-xs">{log.adminUserId ?? "system"}</td>
+                <td className="px-4 py-3">{log.action}</td>
+                <td className="px-4 py-3 font-mono text-xs">
+                  {log.targetType}
+                  {log.targetId ? `/${log.targetId}` : ""}
+                </td>
+              </AdminTableRow>
+            ))}
+          </AdminTableBody>
+        </AdminDataTable>
       )}
 
       <AdminTablePager page={page} hasNextPage={logs.length === DEFAULT_PAGE_SIZE} buildHref={(p) => `/admin/audit-logs?page=${p}`} />

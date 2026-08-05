@@ -3,8 +3,12 @@ import { notFound } from "next/navigation";
 import { makeGetAdminVerificationUseCase } from "@/application/use-cases/verification/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Section } from "@/components/layout/section";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   approveVerificationFormAction,
   rejectVerificationFormAction,
@@ -55,10 +59,10 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
         title={detailTitle}
         subtitle={detail.professionalEmail ?? "—"}
         breadcrumbs={[{ label: "Verifications", href: "/admin/verifications" }, { label: detailTitle }]}
-        actions={<span className="text-sm font-medium">{detail.status}</span>}
+        actions={<StatusBadge status={detail.status} />}
       />
 
-      <ResponsiveGrid cols="2" gap="md" bordered>
+      <ResponsiveGrid cols="2" gap="md" bordered aria-label="Verification timeline">
         <div>
           <p className="text-foreground/60">Submitted</p>
           <p className="font-medium">{detail.submittedAt ? detail.submittedAt.toLocaleString() : "—"}</p>
@@ -74,13 +78,13 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
       </ResponsiveGrid>
 
       {detail.rejectionReason && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+        <div role="status" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
           <p className="font-medium">Rejection reason</p>
           <p className="whitespace-pre-line">{detail.rejectionReason}</p>
         </div>
       )}
       {detail.resubmissionReason && (
-        <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+        <div role="status" className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
           <p className="font-medium">Resubmission instructions</p>
           <p className="whitespace-pre-line">{detail.resubmissionReason}</p>
         </div>
@@ -96,7 +100,7 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
             {detail.documents.map((doc) => (
               <li
                 key={doc.id}
-                className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm"
+                className="flex flex-col gap-2 rounded-md border border-border px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0">
                   <p className="font-medium">{DOC_TYPE_LABELS[doc.type] ?? doc.type}</p>
@@ -108,9 +112,9 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
                   href={doc.fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-md border border-border px-2 py-1 text-xs"
+                  className="shrink-0 self-start rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:self-auto"
                 >
-                  Open
+                  Open<span className="sr-only"> {DOC_TYPE_LABELS[doc.type] ?? doc.type} document (opens in a new tab)</span>
                 </a>
               </li>
             ))}
@@ -121,58 +125,34 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
       <Section title="Review actions" gap="lg" bordered>
         {isPending && (
           <form action={startVerificationReviewFormAction.bind(null, detail.id)}>
-            <button type="submit" className="h-10 rounded-md border border-border px-4 text-sm">
+            <Button type="submit" variant="outline">
               Start review
-            </button>
+            </Button>
           </form>
         )}
 
         {isDecidable ? (
           <>
             <form action={approveVerificationFormAction.bind(null, detail.id)}>
-              <button
-                type="submit"
-                className="h-10 rounded-md bg-green-600 px-4 text-sm font-medium text-white"
-              >
+              <Button type="submit" className="bg-green-600 text-white hover:bg-green-700">
                 Approve
-              </button>
+              </Button>
             </form>
 
             <form action={rejectVerificationFormAction.bind(null, detail.id)} className="flex flex-col gap-2">
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="text-foreground/70">Rejection reason (required)</span>
-                <textarea
-                  name="reason"
-                  required
-                  minLength={10}
-                  maxLength={1000}
-                  rows={2}
-                  className="rounded-md border border-border p-2 text-sm"
-                />
-              </label>
-              <button type="submit" className="h-10 w-fit rounded-md bg-red-600 px-4 text-sm font-medium text-white">
+              <Label htmlFor="verification-reject-reason">Rejection reason (required)</Label>
+              <Textarea id="verification-reject-reason" name="reason" required minLength={10} maxLength={1000} rows={2} />
+              <Button type="submit" variant="danger" className="w-fit">
                 Reject
-              </button>
+              </Button>
             </form>
 
-            <form
-              action={requestVerificationResubmissionFormAction.bind(null, detail.id)}
-              className="flex flex-col gap-2"
-            >
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="text-foreground/70">Resubmission instructions (required)</span>
-                <textarea
-                  name="reason"
-                  required
-                  minLength={10}
-                  maxLength={1000}
-                  rows={2}
-                  className="rounded-md border border-border p-2 text-sm"
-                />
-              </label>
-              <button type="submit" className="h-10 w-fit rounded-md border border-border px-4 text-sm">
+            <form action={requestVerificationResubmissionFormAction.bind(null, detail.id)} className="flex flex-col gap-2">
+              <Label htmlFor="verification-resubmission-reason">Resubmission instructions (required)</Label>
+              <Textarea id="verification-resubmission-reason" name="reason" required minLength={10} maxLength={1000} rows={2} />
+              <Button type="submit" variant="outline" className="w-fit">
                 Request resubmission
-              </button>
+              </Button>
             </form>
           </>
         ) : (

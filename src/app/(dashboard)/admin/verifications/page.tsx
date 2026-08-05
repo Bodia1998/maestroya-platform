@@ -6,8 +6,11 @@ import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { PROFESSIONAL_VERIFICATION_STATUS_VALUES } from "@/domain/services/professional-verification-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { AdminDataTable, AdminTableHeadRow, AdminTh, AdminTableBody, AdminTableRow } from "@/components/dashboard/admin-data-table";
+import { AdminFilterForm } from "@/components/dashboard/admin-filter-form";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Select } from "@/components/ui/select";
 
 export const metadata = { title: "Admin — Verifications" };
 
@@ -42,53 +45,51 @@ export default async function AdminVerificationsPage({ searchParams }: { searchP
         subtitle="Review professional identity/trust verification requests."
       />
 
-      <form method="get" className="flex gap-2">
-        <select name="status" defaultValue={status ?? ""} className="h-10 rounded-md border border-border px-2 text-sm">
+      <AdminFilterForm aria-label="Filter verifications" submitLabel="Filter">
+        <Select name="status" defaultValue={status ?? ""} aria-label="Filter by status" className="h-10 w-auto">
           <option value="">All statuses</option>
           {PROFESSIONAL_VERIFICATION_STATUS_VALUES.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
           ))}
-        </select>
-        <button type="submit" className="h-10 rounded-md border border-border px-4 text-sm">
-          Filter
-        </button>
-      </form>
+        </Select>
+      </AdminFilterForm>
 
       {verifications.length === 0 ? (
         <EmptyState icon={ShieldCheck} title="No verification requests found" description="Professional identity verification requests will appear here." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full min-w-[640px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-3">Professional</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Submitted</th>
-                <th className="px-4 py-3">Reviewed</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {verifications.map((v) => (
-                <tr key={v.id} className="transition-colors hover:bg-muted/40">
-                  <td className="px-4 py-3">{v.businessName ?? v.professionalName ?? v.professionalEmail ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={v.status} />
-                  </td>
-                  <td className="px-4 py-3">{v.submittedAt ? v.submittedAt.toLocaleDateString() : "—"}</td>
-                  <td className="px-4 py-3">{v.reviewedAt ? v.reviewedAt.toLocaleDateString() : "—"}</td>
-                  <td className="px-4 py-3">
-                    <Link href={`/admin/verifications/${v.id}`} className="font-medium text-primary hover:underline">
-                      Review
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AdminDataTable caption="Verifications" minWidth={640}>
+          <AdminTableHeadRow>
+            <AdminTh>Professional</AdminTh>
+            <AdminTh>Status</AdminTh>
+            <AdminTh>Submitted</AdminTh>
+            <AdminTh>Reviewed</AdminTh>
+            <AdminTh>
+              <span className="sr-only">Review</span>
+            </AdminTh>
+          </AdminTableHeadRow>
+          <AdminTableBody>
+            {verifications.map((v) => (
+              <AdminTableRow key={v.id}>
+                <td className="px-4 py-3">{v.businessName ?? v.professionalName ?? v.professionalEmail ?? "—"}</td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={v.status} />
+                </td>
+                <td className="px-4 py-3">{v.submittedAt ? v.submittedAt.toLocaleDateString() : "—"}</td>
+                <td className="px-4 py-3">{v.reviewedAt ? v.reviewedAt.toLocaleDateString() : "—"}</td>
+                <td className="px-4 py-3">
+                  <Link
+                    href={`/admin/verifications/${v.id}`}
+                    className="font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                  >
+                    Review<span className="sr-only"> {v.businessName ?? v.professionalName ?? v.professionalEmail ?? ""}</span>
+                  </Link>
+                </td>
+              </AdminTableRow>
+            ))}
+          </AdminTableBody>
+        </AdminDataTable>
       )}
 
       <AdminTablePager page={page} hasNextPage={verifications.length === DEFAULT_PAGE_SIZE} buildHref={(p) => qs(p)} />
