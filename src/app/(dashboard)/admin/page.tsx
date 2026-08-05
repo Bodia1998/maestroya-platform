@@ -1,22 +1,36 @@
+import {
+  Award,
+  Bell,
+  BellRing,
+  Briefcase,
+  CalendarDays,
+  FileSignature,
+  FileText,
+  Image as ImageIcon,
+  Star,
+  Users,
+} from "lucide-react";
+
 import { makeGetAdminDashboardOverviewUseCase } from "@/application/use-cases/admin/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { KPICard } from "@/components/dashboard/kpi-card";
+import { Heading } from "@/components/ui/typography";
 
 export const metadata = { title: "Admin overview" };
 
 export const dynamic = "force-dynamic";
 
-const CARDS: Array<{ key: string; label: string }> = [
-  { key: "totalUsers", label: "Total users" },
-  { key: "totalProfessionals", label: "Professional profiles" },
-  { key: "totalServiceRequests", label: "Service requests" },
-  { key: "totalQuotes", label: "Quotes" },
-  { key: "totalAppointments", label: "Appointments" },
-  { key: "totalJobs", label: "Jobs" },
-  { key: "totalReviews", label: "Reviews" },
-  { key: "totalPortfolioItems", label: "Portfolio items" },
-  { key: "totalNotifications", label: "Notifications (active)" },
-  { key: "unreadNotifications", label: "Unread notifications" },
+const CARDS: Array<{ key: string; label: string; icon: typeof Users; href?: string }> = [
+  { key: "totalUsers", label: "Total users", icon: Users, href: "/admin/users" },
+  { key: "totalProfessionals", label: "Professional profiles", icon: Award, href: "/admin/professionals" },
+  { key: "totalServiceRequests", label: "Service requests", icon: FileText, href: "/admin/service-requests" },
+  { key: "totalQuotes", label: "Quotes", icon: FileSignature, href: "/admin/quotes" },
+  { key: "totalAppointments", label: "Appointments", icon: CalendarDays },
+  { key: "totalJobs", label: "Jobs", icon: Briefcase, href: "/admin/jobs" },
+  { key: "totalReviews", label: "Reviews", icon: Star, href: "/admin/reviews" },
+  { key: "totalPortfolioItems", label: "Portfolio items", icon: ImageIcon, href: "/admin/portfolio" },
+  { key: "totalNotifications", label: "Notifications (active)", icon: Bell },
+  { key: "unreadNotifications", label: "Unread notifications", icon: BellRing },
 ];
 
 /**
@@ -32,18 +46,25 @@ export default async function AdminOverviewPage() {
   const data = overview as unknown as Record<string, number>;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader title="Admin overview" subtitle="Platform-wide operational counts." />
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {CARDS.map((card) => (
-          <Card key={card.key}>
-            <CardContent className="p-4">
-              <p className="text-2xl font-semibold">{data[card.key]}</p>
-              <p className="mt-1 text-xs text-foreground/70">{card.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+
+      <section className="flex flex-col gap-4">
+        <Heading as="h2" level="h6">
+          Marketplace activity
+        </Heading>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {CARDS.map((card) => (
+            <KPICard
+              key={card.key}
+              icon={card.icon}
+              label={card.label}
+              value={data[card.key] ?? 0}
+              href={card.href}
+            />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

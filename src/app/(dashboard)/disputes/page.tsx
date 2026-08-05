@@ -1,10 +1,14 @@
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 
 import { makeListDisputesAgainstMeUseCase, makeListMyDisputesUseCase } from "@/application/use-cases/dispute/compose";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { StatusBadge } from "@/components/dashboard/status-badge";
+import { Card } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Heading } from "@/components/ui/typography";
 
 export const metadata = { title: "My disputes" };
 
@@ -35,19 +39,23 @@ export default async function DisputesPage() {
         }
       />
 
-      <section>
-        <h2 className="mb-2 text-lg font-medium">Opened by me</h2>
+      <section className="flex flex-col gap-3">
+        <Heading as="h2" level="h6">
+          Opened by me
+        </Heading>
         {mine.length === 0 ? (
-          <EmptyState title="No disputes opened" description="You haven't opened any disputes." />
+          <EmptyState icon={AlertTriangle} title="No disputes opened" description="You haven't opened any disputes." />
         ) : (
           <ul className="flex flex-col gap-2">
             {mine.map((d) => (
               <li key={d.id}>
-                <Link href={`/disputes/${d.id}`} className="flex items-center justify-between rounded-md border border-border p-3 hover:bg-black/5">
-                  <span>
-                    <span className="font-mono text-xs text-foreground/60">{d.caseNumber}</span> — {d.title}
-                  </span>
-                  <span className="text-xs">{d.status}</span>
+                <Link href={`/disputes/${d.id}`} className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                  <Card className="flex items-center justify-between gap-4 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+                    <span className="min-w-0 truncate">
+                      <span className="font-mono text-xs text-muted-foreground">{d.caseNumber}</span> — {d.title}
+                    </span>
+                    <StatusBadge status={d.status} />
+                  </Card>
                 </Link>
               </li>
             ))}
@@ -55,19 +63,23 @@ export default async function DisputesPage() {
         )}
       </section>
 
-      <section>
-        <h2 className="mb-2 text-lg font-medium">Opened about my work</h2>
+      <section className="flex flex-col gap-3">
+        <Heading as="h2" level="h6">
+          Opened about my work
+        </Heading>
         {againstMe.length === 0 ? (
-          <EmptyState title="Nothing here" description="No disputes have been opened about your work." />
+          <EmptyState icon={AlertTriangle} title="Nothing here" description="No disputes have been opened about your work." />
         ) : (
           <ul className="flex flex-col gap-2">
             {againstMe.map((d) => (
               <li key={d.id}>
-                <Link href={`/disputes/${d.id}`} className="flex items-center justify-between rounded-md border border-border p-3 hover:bg-black/5">
-                  <span>
-                    <span className="font-mono text-xs text-foreground/60">{d.caseNumber}</span> — {d.title}
-                  </span>
-                  <span className="text-xs">{d.status}</span>
+                <Link href={`/disputes/${d.id}`} className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                  <Card className="flex items-center justify-between gap-4 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+                    <span className="min-w-0 truncate">
+                      <span className="font-mono text-xs text-muted-foreground">{d.caseNumber}</span> — {d.title}
+                    </span>
+                    <StatusBadge status={d.status} />
+                  </Card>
                 </Link>
               </li>
             ))}

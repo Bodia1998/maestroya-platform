@@ -1,8 +1,11 @@
-import Link from "next/link";
+import { Briefcase } from "lucide-react";
 
 import { makeListAdminJobsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { StatusBadge } from "@/components/dashboard/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = { title: "Admin — Appointments & jobs" };
 
@@ -22,34 +25,33 @@ export default async function AdminJobsPage({ searchParams }: { searchParams: Se
       <PageHeader title="Appointments & jobs" subtitle="Read-only oversight of the execution lifecycle." />
 
       {jobs.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          No jobs found.
-        </p>
+        <EmptyState icon={Briefcase} title="No jobs found" description="Jobs created from accepted quotes will appear here." />
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-foreground/70">
-              <th className="py-2 pr-4">Job</th>
-              <th className="py-2 pr-4">Status</th>
-              <th className="py-2 pr-4">Appointments</th>
-            </tr>
-          </thead>
-          <tbody>
-            {jobs.map((job) => (
-              <tr key={job.id} className="border-b border-border/50">
-                <td className="py-2 pr-4 font-mono text-xs">{job.id}</td>
-                <td className="py-2 pr-4">{job.status}</td>
-                <td className="py-2 pr-4">{job.appointmentCount}</td>
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[480px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-3">Job</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Appointments</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {jobs.map((job) => (
+                <tr key={job.id} className="transition-colors hover:bg-muted/40">
+                  <td className="px-4 py-3 font-mono text-xs">{job.id}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={job.status} />
+                  </td>
+                  <td className="px-4 py-3">{job.appointmentCount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <div className="flex justify-between text-sm">
-        {page > 1 ? <Link href={`/admin/jobs?page=${page - 1}`}>← Previous</Link> : <span />}
-        {jobs.length === DEFAULT_PAGE_SIZE && <Link href={`/admin/jobs?page=${page + 1}`}>Next →</Link>}
-      </div>
+      <AdminTablePager page={page} hasNextPage={jobs.length === DEFAULT_PAGE_SIZE} buildHref={(p) => `/admin/jobs?page=${p}`} />
     </div>
   );
 }

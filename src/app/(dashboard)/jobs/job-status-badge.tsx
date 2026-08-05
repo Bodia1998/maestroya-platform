@@ -1,25 +1,13 @@
-const STATUS_STYLES: Record<string, string> = {
-  CREATED: "bg-black/5 text-foreground/70",
-  IN_PROGRESS: "bg-blue-50 text-blue-700",
-  COMPLETED: "bg-green-50 text-green-700",
-  CANCELLED: "bg-red-50 text-red-700",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  CREATED: "Not started",
-  IN_PROGRESS: "In progress",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
-};
+import { StatusBadge } from "@/components/dashboard/status-badge";
 
 /**
  * Order / Job Lifecycle module (Module 11). Same pattern as
  * AppointmentStatusBadge/QuoteStatusBadge/RequestStatusBadge.
+ *
+ * Delegates to the shared `StatusBadge` (Module 30.3) for the actual
+ * color/label mapping — kept as its own named component so every existing
+ * call site across the app keeps working unchanged.
  */
 export function JobStatusBadge({ status }: { status: string }) {
-  return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_STYLES[status] ?? "bg-black/5"}`}>
-      {STATUS_LABELS[status] ?? status}
-    </span>
-  );
+  return <StatusBadge status={status} label={status === "CREATED" ? "Not started" : undefined} />;
 }

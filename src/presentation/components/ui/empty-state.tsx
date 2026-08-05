@@ -6,12 +6,15 @@ export interface EmptyStateProps {
   icon?: LucideIcon;
   title: string;
   description?: string;
+  /** Primary call to action — typically a `ButtonLink`/`Button`. */
   action?: React.ReactNode;
+  /** Optional secondary, less prominent action rendered next to `action`. */
+  secondaryAction?: React.ReactNode;
   className?: string;
 }
 
 /** Consistent "nothing here yet" state — used across dashboards and list pages. */
-export function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
+export function EmptyState({ icon: Icon, title, description, action, secondaryAction, className }: EmptyStateProps) {
   return (
     <div
       className={cn(
@@ -28,7 +31,12 @@ export function EmptyState({ icon: Icon, title, description, action, className }
         <p className="font-medium text-foreground">{title}</p>
         {description && <p className="max-w-sm text-sm text-muted-foreground">{description}</p>}
       </div>
-      {action}
+      {(action || secondaryAction) && (
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+          {action}
+          {secondaryAction}
+        </div>
+      )}
     </div>
   );
 }

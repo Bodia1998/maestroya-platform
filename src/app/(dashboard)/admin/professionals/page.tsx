@@ -1,8 +1,12 @@
-import Link from "next/link";
+import { Award } from "lucide-react";
 
 import { makeListAdminProfessionalsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { StatusBadge } from "@/components/dashboard/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SearchInput } from "@/components/ui/search-input";
 
 export const metadata = { title: "Admin — Professionals" };
 
@@ -24,65 +28,54 @@ export default async function AdminProfessionalsPage({ searchParams }: { searchP
       <PageHeader title="Professionals" subtitle="Read-only oversight of professional profiles." />
 
       <form method="get" className="flex gap-2">
-        <input
-          type="text"
-          name="search"
-          defaultValue={search}
-          placeholder="Search by business name, name, or email"
-          className="h-10 flex-1 rounded-md border border-border px-3 text-sm"
-        />
-        <button type="submit" className="h-10 rounded-md border border-border px-4 text-sm">
+        <SearchInput name="search" defaultValue={search} placeholder="Search by business name, name, or email" className="flex-1" />
+        <button type="submit" className="h-10 shrink-0 rounded-md border border-border px-4 text-sm font-medium transition-colors hover:bg-muted">
           Search
         </button>
       </form>
 
       {professionals.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          No professionals found.
-        </p>
+        <EmptyState icon={Award} title="No professionals found" description="Try a different search term." />
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-foreground/70">
-              <th className="py-2 pr-4">Business name</th>
-              <th className="py-2 pr-4">Owner</th>
-              <th className="py-2 pr-4">Status</th>
-              <th className="py-2 pr-4">Verification</th>
-              <th className="py-2 pr-4">Rating</th>
-              <th className="py-2 pr-4">Portfolio</th>
-            </tr>
-          </thead>
-          <tbody>
-            {professionals.map((pro) => (
-              <tr key={pro.id} className="border-b border-border/50">
-                <td className="py-2 pr-4">{pro.businessName ?? "—"}</td>
-                <td className="py-2 pr-4">{pro.userName ?? pro.userEmail ?? "—"}</td>
-                <td className="py-2 pr-4">{pro.status}</td>
-                <td className="py-2 pr-4">{pro.verificationStatus}</td>
-                <td className="py-2 pr-4">
-                  {pro.averageRating !== null ? `${pro.averageRating} (${pro.reviewCount})` : "—"}
-                </td>
-                <td className="py-2 pr-4">{pro.portfolioItemCount}</td>
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[640px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-3">Business name</th>
+                <th className="px-4 py-3">Owner</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Verification</th>
+                <th className="px-4 py-3">Rating</th>
+                <th className="px-4 py-3">Portfolio</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {professionals.map((pro) => (
+                <tr key={pro.id} className="transition-colors hover:bg-muted/40">
+                  <td className="px-4 py-3">{pro.businessName ?? "—"}</td>
+                  <td className="px-4 py-3">{pro.userName ?? pro.userEmail ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={pro.status} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={pro.verificationStatus} />
+                  </td>
+                  <td className="px-4 py-3">
+                    {pro.averageRating !== null ? `${pro.averageRating} (${pro.reviewCount})` : "—"}
+                  </td>
+                  <td className="px-4 py-3">{pro.portfolioItemCount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <div className="flex justify-between text-sm">
-        {page > 1 ? (
-          <Link href={`/admin/professionals?page=${page - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}>
-            ← Previous
-          </Link>
-        ) : (
-          <span />
-        )}
-        {professionals.length === DEFAULT_PAGE_SIZE && (
-          <Link href={`/admin/professionals?page=${page + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}>
-            Next →
-          </Link>
-        )}
-      </div>
+      <AdminTablePager
+        page={page}
+        hasNextPage={professionals.length === DEFAULT_PAGE_SIZE}
+        buildHref={(p) => `/admin/professionals?page=${p}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
+      />
     </div>
   );
 }

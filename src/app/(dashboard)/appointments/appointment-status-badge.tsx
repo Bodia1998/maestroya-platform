@@ -1,20 +1,4 @@
-const STATUS_STYLES: Record<string, string> = {
-  PENDING_SCHEDULE: "bg-black/5 text-foreground/70",
-  PROPOSED: "bg-blue-50 text-blue-700",
-  CONFIRMED: "bg-green-50 text-green-700",
-  COMPLETED: "bg-green-50 text-green-700",
-  CANCELLED: "bg-red-50 text-red-700",
-  RESCHEDULED: "bg-black/5 text-foreground/70",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING_SCHEDULE: "Awaiting a proposed time",
-  PROPOSED: "Time proposed",
-  CONFIRMED: "Confirmed",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
-  RESCHEDULED: "Rescheduled",
-};
+import { StatusBadge } from "@/components/dashboard/status-badge";
 
 /**
  * Booking & Scheduling module (Module 10). Same pattern as
@@ -24,11 +8,11 @@ const STATUS_LABELS: Record<string, string> = {
  * NO_SHOW are never written by any code path but fall back to the raw
  * status string if ever encountered. COMPLETED is written by the Order /
  * Job Lifecycle module's CompleteAppointmentUseCase (Module 11).
+ *
+ * Delegates to the shared `StatusBadge` (Module 30.3) for the actual
+ * color/label mapping — kept as its own named component so every existing
+ * call site across the app keeps working unchanged.
  */
 export function AppointmentStatusBadge({ status }: { status: string }) {
-  return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_STYLES[status] ?? "bg-black/5"}`}>
-      {STATUS_LABELS[status] ?? status}
-    </span>
-  );
+  return <StatusBadge status={status} label={status === "PENDING_SCHEDULE" ? "Awaiting a proposed time" : undefined} />;
 }

@@ -1,9 +1,9 @@
-import Link from "next/link";
-
 import { reactivateUserFormAction, suspendUserFormAction } from "@/app/(dashboard)/admin/actions";
 import { makeListAdminUsersUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
 
@@ -44,63 +44,58 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: S
       {users.length === 0 ? (
         <EmptyState title="No users found" description="Try a different search term." />
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-foreground/70">
-              <th className="py-2 pr-4">Name</th>
-              <th className="py-2 pr-4">Email</th>
-              <th className="py-2 pr-4">Status</th>
-              <th className="py-2 pr-4">Roles</th>
-              <th className="py-2 pr-4">Pro?</th>
-              <th className="py-2 pr-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="border-b border-border/50">
-                <td className="py-2 pr-4">{user.name ?? "—"}</td>
-                <td className="py-2 pr-4">{user.email ?? "—"}</td>
-                <td className="py-2 pr-4">{user.status}</td>
-                <td className="py-2 pr-4">{user.roles.join(", ") || "—"}</td>
-                <td className="py-2 pr-4">{user.hasProfessionalProfile ? "Yes" : "No"}</td>
-                <td className="py-2 pr-4">
-                  <div className="flex gap-2">
-                    {user.status === "ACTIVE" && (
-                      <form action={suspendUserFormAction.bind(null, user.id)}>
-                        <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs">
-                          Suspend
-                        </button>
-                      </form>
-                    )}
-                    {(user.status === "SUSPENDED" || user.status === "DEACTIVATED") && (
-                      <form action={reactivateUserFormAction.bind(null, user.id)}>
-                        <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs">
-                          Reactivate
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                </td>
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[640px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Roles</th>
+                <th className="px-4 py-3">Pro?</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {users.map((user) => (
+                <tr key={user.id} className="transition-colors hover:bg-muted/40">
+                  <td className="px-4 py-3">{user.name ?? "—"}</td>
+                  <td className="px-4 py-3">{user.email ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={user.status} />
+                  </td>
+                  <td className="px-4 py-3">{user.roles.join(", ") || "—"}</td>
+                  <td className="px-4 py-3">{user.hasProfessionalProfile ? "Yes" : "No"}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      {user.status === "ACTIVE" && (
+                        <form action={suspendUserFormAction.bind(null, user.id)}>
+                          <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted">
+                            Suspend
+                          </button>
+                        </form>
+                      )}
+                      {(user.status === "SUSPENDED" || user.status === "DEACTIVATED") && (
+                        <form action={reactivateUserFormAction.bind(null, user.id)}>
+                          <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted">
+                            Reactivate
+                          </button>
+                        </form>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <div className="flex justify-between text-sm">
-        {page > 1 ? (
-          <Link href={`/admin/users?page=${page - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}>
-            ← Previous
-          </Link>
-        ) : (
-          <span />
-        )}
-        {users.length === DEFAULT_PAGE_SIZE && (
-          <Link href={`/admin/users?page=${page + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}>
-            Next →
-          </Link>
-        )}
-      </div>
+      <AdminTablePager
+        page={page}
+        hasNextPage={users.length === DEFAULT_PAGE_SIZE}
+        buildHref={(p) => `/admin/users?page=${p}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
+      />
     </div>
   );
 }

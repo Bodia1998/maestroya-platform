@@ -1,5 +1,14 @@
 import Link from "next/link";
-import { Award, Briefcase, CalendarDays, FileText, MessageSquare } from "lucide-react";
+import {
+  Award,
+  Briefcase,
+  CalendarDays,
+  FileSignature,
+  FileText,
+  MessageSquare,
+  Search,
+  User,
+} from "lucide-react";
 
 import { requireAuth, ROLES } from "@/infrastructure/auth/rbac";
 import { makeGetCustomerServiceRequestsUseCase } from "@/application/use-cases/service-request/compose";
@@ -14,11 +23,28 @@ import {
 import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Heading } from "@/components/ui/typography";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointment-status-badge";
 import { QuoteStatusBadge } from "@/app/(dashboard)/dashboard/professional/quotes/quote-status-badge";
 import { RequestStatusBadge } from "@/app/(dashboard)/requests/request-status-badge";
 import { DashboardStatCard } from "./dashboard-stat-card";
+
+/** Customer-side quick actions — every href is an existing, already-linked route. */
+const CUSTOMER_QUICK_ACTIONS = [
+  { href: "/requests/new", label: "New request", icon: FileText },
+  { href: "/appointments", label: "Appointments", icon: CalendarDays },
+  { href: "/messages", label: "Messages", icon: MessageSquare },
+  { href: "/profile", label: "Profile", icon: User },
+] as const;
+
+/** Professional-side quick actions — every href is an existing, already-linked route. */
+const PROFESSIONAL_QUICK_ACTIONS = [
+  { href: "/dashboard/professional/requests", label: "Browse requests", icon: Search },
+  { href: "/dashboard/professional/quotes", label: "My quotes", icon: FileSignature },
+  { href: "/dashboard/professional/appointments", label: "Appointments", icon: CalendarDays },
+  { href: "/dashboard/professional", label: "Professional profile", icon: User },
+] as const;
 
 /** Quote statuses that mean "sent to the customer, no answer yet". */
 const QUOTE_AWAITING_RESPONSE_STATUSES = new Set(["SENT", "VIEWED"]);
@@ -100,12 +126,16 @@ export default async function DashboardPage() {
       />
 
       {isProfessional && (
-        <div>
-          <h2 className="text-lg font-medium">Professional overview</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Customer requests you can respond to, and the quotes, appointments, and jobs that follow.
-          </p>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="flex flex-col gap-4">
+          <div>
+            <Heading as="h2" level="h6">
+              Professional overview
+            </Heading>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Customer requests you can respond to, and the quotes, appointments, and jobs that follow.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <DashboardStatCard
               icon={FileText}
               label="Available requests"
@@ -143,7 +173,16 @@ export default async function DashboardPage() {
               href="/dashboard/professional/jobs"
             />
           </div>
-        </div>
+
+          <nav aria-label="Quick actions" className="flex flex-wrap gap-2">
+            {PROFESSIONAL_QUICK_ACTIONS.map((action) => (
+              <ButtonLink key={action.href} href={action.href} variant="outline" size="sm">
+                <action.icon className="h-4 w-4" aria-hidden />
+                {action.label}
+              </ButtonLink>
+            ))}
+          </nav>
+        </section>
       )}
 
       {/* Customer-side overview — never rendered for a professional account.
@@ -172,6 +211,15 @@ export default async function DashboardPage() {
               />
             </div>
           </div>
+
+          <nav aria-label="Quick actions" className="flex flex-wrap gap-2">
+            {CUSTOMER_QUICK_ACTIONS.map((action) => (
+              <ButtonLink key={action.href} href={action.href} variant="outline" size="sm">
+                <action.icon className="h-4 w-4" aria-hidden />
+                {action.label}
+              </ButtonLink>
+            ))}
+          </nav>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card>
@@ -224,6 +272,11 @@ export default async function DashboardPage() {
                     icon={CalendarDays}
                     title="No upcoming appointments."
                     description="Appointments appear here once you accept a quote from a professional."
+                    action={
+                      <ButtonLink href="/requests" size="sm" variant="outline">
+                        View my requests
+                      </ButtonLink>
+                    }
                   />
                 ) : (
                   <ul className="flex flex-col gap-3">
@@ -260,6 +313,11 @@ export default async function DashboardPage() {
                 icon={MessageSquare}
                 title="No new messages."
                 description="Conversations with customers and professionals show up here."
+                action={
+                  <ButtonLink href="/messages" size="sm" variant="outline">
+                    Go to messages
+                  </ButtonLink>
+                }
               />
             ) : (
               <ul className="flex flex-col divide-y divide-border">

@@ -4,6 +4,7 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalVerificationUseCase } from "@/application/use-cases/verification/compose";
 import { VERIFICATION_DOCUMENT_TYPE_VALUES } from "@/domain/services/professional-verification-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 import {
   removeVerificationDocumentFormAction,
   requestVerificationFormAction,
@@ -14,36 +15,30 @@ import {
 
 export const metadata = { title: "Professional verification" };
 
-const STATUS_COPY: Record<string, { label: string; badge: string; description: string }> = {
+const STATUS_COPY: Record<string, { label: string; description: string }> = {
   DRAFT: {
     label: "Not submitted",
-    badge: "bg-black/5 text-foreground/70",
     description:
       "Upload at least one identity document (national ID, passport or driver's licence) and any supporting documents, then submit for review.",
   },
   PENDING: {
     label: "Pending review",
-    badge: "bg-amber-50 text-amber-700",
     description: "Your request is in the review queue. We'll let you know once a reviewer has looked at it.",
   },
   UNDER_REVIEW: {
     label: "Under review",
-    badge: "bg-blue-50 text-blue-700",
     description: "A reviewer is currently checking your documents. No action is needed from you right now.",
   },
   APPROVED: {
     label: "Approved",
-    badge: "bg-green-50 text-green-700",
     description: "You are a verified professional. A verified badge appears on your public profile.",
   },
   REJECTED: {
     label: "Rejected",
-    badge: "bg-red-50 text-red-700",
     description: "Your request was not approved. See the reason below — you can address it and resubmit.",
   },
   RESUBMISSION_REQUIRED: {
     label: "Resubmission required",
-    badge: "bg-amber-50 text-amber-700",
     description: "A reviewer needs you to update your request. Follow the instructions below, then resubmit.",
   },
 };
@@ -111,11 +106,7 @@ export default async function ProfessionalVerificationPage() {
         <>
           <section className="flex flex-col gap-3 rounded-md border border-border p-5">
             <div className="flex items-center gap-3">
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_COPY[verification.status]?.badge ?? "bg-black/5"}`}
-              >
-                {STATUS_COPY[verification.status]?.label ?? verification.status}
-              </span>
+              <StatusBadge status={verification.status} label={STATUS_COPY[verification.status]?.label} />
               {verification.expiresAt && verification.status === "APPROVED" && (
                 <span className="text-xs text-foreground/60">
                   Valid until {verification.expiresAt.toLocaleDateString()}
