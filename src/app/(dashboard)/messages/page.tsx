@@ -7,6 +7,7 @@ import { makeListConversationsUseCase } from "@/application/use-cases/chat/compo
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageContainer } from "@/components/layout/page-container";
 
 export const metadata = { title: "Messages" };
 
@@ -22,7 +23,7 @@ export default async function MessagesPage() {
   const conversations = await makeListConversationsUseCase().execute(user.id);
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    <PageContainer gap="sm">
       <PageHeader title="Messages" />
 
       {conversations.length === 0 ? (
@@ -80,6 +81,6 @@ export default async function MessagesPage() {
           </ul>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

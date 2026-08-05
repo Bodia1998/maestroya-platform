@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { AppointmentCard } from "@/components/dashboard/cards/appointment-card";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageContainer } from "@/components/layout/page-container";
 
 export const metadata = { title: "My appointments" };
 
@@ -22,7 +23,7 @@ export default async function AppointmentsPage() {
   const appointments = await makeListAppointmentsForCustomerUseCase().execute(user.id, "upcoming");
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+    <PageContainer maxWidth="3xl" gap="sm">
       <PageHeader title="My appointments" subtitle="Appointments created from quotes you've accepted." />
 
       {appointments.length === 0 ? (
@@ -47,6 +48,6 @@ export default async function AppointmentsPage() {
           ))}
         </ul>
       )}
-    </div>
+    </PageContainer>
   );
 }

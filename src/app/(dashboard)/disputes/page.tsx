@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Heading } from "@/components/ui/typography";
+import { PageContainer } from "@/components/layout/page-container";
 
 export const metadata = { title: "My disputes" };
 
@@ -28,7 +29,7 @@ export default async function DisputesPage() {
   ]);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
+    <PageContainer maxWidth="3xl">
       <PageHeader
         title="Disputes"
         subtitle="Cases you've opened, and cases opened about your work."
@@ -86,6 +87,6 @@ export default async function DisputesPage() {
           </ul>
         )}
       </section>
-    </div>
+    </PageContainer>
   );
 }

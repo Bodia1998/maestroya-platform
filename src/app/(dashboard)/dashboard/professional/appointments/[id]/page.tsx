@@ -6,6 +6,7 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointment-status-badge";
 import { AppointmentActions } from "@/app/(dashboard)/appointments/[id]/appointment-actions";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 
 export const metadata = { title: "Appointment" };
 
@@ -53,7 +54,7 @@ export default async function ProfessionalAppointmentDetailPage({
         actions={<AppointmentStatusBadge status={appointment.status} />}
       />
 
-      <dl className="grid grid-cols-1 gap-3 rounded-md border border-border p-4 text-sm sm:grid-cols-2">
+      <ResponsiveGrid as="dl" cols="1-2" gap="sm" bordered>
         <div>
           <dt className="text-foreground/60">Confirmed time</dt>
           <dd>{formatWindow(appointment.scheduledStart, appointment.scheduledEnd)}</dd>
@@ -71,7 +72,7 @@ export default async function ProfessionalAppointmentDetailPage({
             </dd>
           </div>
         )}
-      </dl>
+      </ResponsiveGrid>
 
       <AppointmentActions appointmentId={appointment.id} status={appointment.status} canConfirm={canConfirm} />
     </div>

@@ -12,6 +12,7 @@ import { makeGetCompanyVerificationUseCase } from "@/application/use-cases/compa
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Section } from "@/components/layout/section";
 
 export const metadata = { title: "Company verification" };
 
@@ -75,8 +76,7 @@ export default async function CompanyVerificationPage({ params }: { params: Prom
             <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">{verification.resubmissionReason}</div>
           )}
 
-          <section className="flex flex-col gap-3">
-            <h2 className="text-lg font-medium">Documents</h2>
+          <Section title="Documents">
             <ul className="flex flex-col gap-2">
               {verification.documents.map((doc) => (
                 <li key={doc.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
@@ -112,7 +112,7 @@ export default async function CompanyVerificationPage({ params }: { params: Prom
                 </button>
               </form>
             )}
-          </section>
+          </Section>
 
           <div className="flex gap-3">
             {verification.status === "DRAFT" && (

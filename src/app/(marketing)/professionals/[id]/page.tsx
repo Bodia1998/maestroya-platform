@@ -5,6 +5,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { makeGetProfessionalPublicProfileUseCase } from "@/application/use-cases/discovery/compose";
+import { PageContainer } from "@/components/layout/page-container";
+import { Section } from "@/components/layout/section";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { VerificationBadge } from "../verification-badge";
 
 /**
@@ -43,7 +46,7 @@ export default async function PublicProfessionalProfilePage({
     : [];
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
+    <PageContainer padded>
       <Link href="/professionals" className="text-sm text-foreground/70 hover:underline">
         ← Back to search
       </Link>
@@ -71,13 +74,12 @@ export default async function PublicProfessionalProfilePage({
       </div>
 
       {profile.bio && (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-medium">About</h2>
+        <Section title="About" gap="sm">
           <p className="whitespace-pre-line text-sm text-foreground/80">{profile.bio}</p>
-        </section>
+        </Section>
       )}
 
-      <section className="grid grid-cols-2 gap-4 rounded-md border border-border p-4 text-sm">
+      <ResponsiveGrid cols="2" gap="md" bordered>
         {profile.yearsExperience !== null && (
           <div>
             <p className="text-foreground/60">Experience</p>
@@ -98,11 +100,10 @@ export default async function PublicProfessionalProfilePage({
             </p>
           </div>
         )}
-      </section>
+      </ResponsiveGrid>
 
       {categories.length > 0 && (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-medium">Services</h2>
+        <Section title="Services" gap="sm">
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <span
@@ -113,7 +114,7 @@ export default async function PublicProfessionalProfilePage({
               </span>
             ))}
           </div>
-        </section>
+        </Section>
       )}
 
       {/*
@@ -153,6 +154,6 @@ export default async function PublicProfessionalProfilePage({
           Request this service
         </Link>
       </section>
-    </div>
+    </PageContainer>
   );
 }

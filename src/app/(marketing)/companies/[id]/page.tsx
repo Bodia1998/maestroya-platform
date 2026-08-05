@@ -6,6 +6,9 @@ import { prisma } from "@/infrastructure/database/prisma/client";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { makeGetCompanyPublicProfileUseCase } from "@/application/use-cases/discovery/compose";
 import { makeListCompanyPortfolioItemsUseCase } from "@/application/use-cases/portfolio/compose";
+import { PageContainer } from "@/components/layout/page-container";
+import { Section } from "@/components/layout/section";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 
 /**
  * Module 18 — Company Professional: public company profile page —
@@ -33,7 +36,7 @@ export default async function PublicCompanyProfilePage({ params }: { params: Pro
   ]);
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
+    <PageContainer padded>
       <Link href="/professionals" className="text-sm text-foreground/70 hover:underline">
         ← Back to search
       </Link>
@@ -53,13 +56,12 @@ export default async function PublicCompanyProfilePage({ params }: { params: Pro
       </div>
 
       {profile.description && (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-medium">About</h2>
+        <Section title="About" gap="sm">
           <p className="whitespace-pre-line text-sm text-foreground/80">{profile.description}</p>
-        </section>
+        </Section>
       )}
 
-      <section className="grid grid-cols-2 gap-4 rounded-md border border-border p-4 text-sm">
+      <ResponsiveGrid cols="2" gap="md" bordered>
         <div>
           <p className="text-foreground/60">Team size</p>
           <p className="font-medium">{profile.teamSize}</p>
@@ -78,11 +80,10 @@ export default async function PublicCompanyProfilePage({ params }: { params: Pro
             <p className="font-medium">{[profile.city, profile.province].filter(Boolean).join(", ")}</p>
           </div>
         )}
-      </section>
+      </ResponsiveGrid>
 
       {categories.length > 0 && (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-medium">Services</h2>
+        <Section title="Services" gap="sm">
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <span key={category.id} className="rounded-full bg-black/5 px-3 py-1 text-xs text-foreground/70">
@@ -90,12 +91,11 @@ export default async function PublicCompanyProfilePage({ params }: { params: Pro
               </span>
             ))}
           </div>
-        </section>
+        </Section>
       )}
 
       {portfolioItems.length > 0 && (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-medium">Portfolio</h2>
+        <Section title="Portfolio" gap="sm">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {portfolioItems.map((item) => (
               <div key={item.id} className="overflow-hidden rounded-md border border-border">
@@ -104,8 +104,8 @@ export default async function PublicCompanyProfilePage({ params }: { params: Pro
               </div>
             ))}
           </div>
-        </section>
+        </Section>
       )}
-    </div>
+    </PageContainer>
   );
 }

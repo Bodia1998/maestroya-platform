@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { JobCard } from "@/components/dashboard/cards/job-card";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageContainer } from "@/components/layout/page-container";
 
 export const metadata = { title: "My jobs" };
 
@@ -17,7 +18,7 @@ export default async function JobsPage() {
   const jobs = await makeListJobsForCustomerUseCase().execute(user.id, "active");
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+    <PageContainer maxWidth="3xl" gap="sm">
       <PageHeader title="My jobs" subtitle="The overall progress of work you've accepted a quote for." />
 
       {jobs.length === 0 ? (
@@ -41,6 +42,6 @@ export default async function JobsPage() {
           ))}
         </ul>
       )}
-    </div>
+    </PageContainer>
   );
 }

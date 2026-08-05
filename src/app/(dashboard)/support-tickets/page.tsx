@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Heading } from "@/components/ui/typography";
+import { PageContainer } from "@/components/layout/page-container";
 import { listMySupportTicketsAction } from "./actions";
 import { NewSupportTicketForm } from "./new-support-ticket-form";
 
@@ -16,7 +17,7 @@ export default async function SupportTicketsPage() {
   const tickets = result.success ? result.data : [];
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
+    <PageContainer>
       <PageHeader title="Support" subtitle="Account problems, verification issues, bugs, or general questions." />
 
       <NewSupportTicketForm />
@@ -44,6 +45,6 @@ export default async function SupportTicketsPage() {
           </ul>
         )}
       </section>
-    </div>
+    </PageContainer>
   );
 }

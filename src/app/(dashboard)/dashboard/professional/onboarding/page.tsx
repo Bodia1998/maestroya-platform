@@ -6,6 +6,7 @@ import { makeGetProfessionalByUserIdUseCase } from "@/application/use-cases/prof
 import { makeGetProfileUseCase } from "@/application/use-cases/profile/compose";
 import { AvatarUpload } from "@/app/(dashboard)/profile/avatar-upload";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Section } from "@/components/layout/section";
 import { ProfessionalOnboardingForm } from "./professional-onboarding-form";
 
 export const metadata = { title: "Professional onboarding" };
@@ -49,10 +50,9 @@ export default async function ProfessionalOnboardingPage() {
         subtitle="A few details so customers can find and contact you. You can add more later from your professional dashboard."
       />
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-medium">Profile photo (optional)</h2>
+      <Section title="Profile photo (optional)" gap="lg">
         <AvatarUpload currentImageUrl={profile.image} />
-      </section>
+      </Section>
 
       <ProfessionalOnboardingForm categories={categories} />
     </div>

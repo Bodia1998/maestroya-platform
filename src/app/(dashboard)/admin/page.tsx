@@ -14,6 +14,7 @@ import {
 import { makeGetAdminDashboardOverviewUseCase } from "@/application/use-cases/admin/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { KPICard } from "@/components/dashboard/kpi-card";
+import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { Heading } from "@/components/ui/typography";
 
 export const metadata = { title: "Admin overview" };
@@ -53,7 +54,7 @@ export default async function AdminOverviewPage() {
         <Heading as="h2" level="h6">
           Marketplace activity
         </Heading>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ResponsiveGrid cols="1-2-4">
           {CARDS.map((card) => (
             <KPICard
               key={card.key}
@@ -63,7 +64,7 @@ export default async function AdminOverviewPage() {
               href={card.href}
             />
           ))}
-        </div>
+        </ResponsiveGrid>
       </section>
     </div>
   );
