@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
@@ -12,6 +12,28 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * precedent for but which works because a Server Component is just an
  * async function returning JSX.
  */
+// RemoveMemberButton and TransferOwnershipDialog (Module 30.6) call
+// useRouter().refresh() after a successful action. Without a mock, Next's
+// App Router context isn't mounted under `render()` and useRouter() throws
+// "invariant expected app router to be mounted". Same inline-mock pattern
+// already used by e.g. tests/unit/app/quote-form.test.tsx.
+const mockPush = vi.fn();
+const mockReplace = vi.fn();
+const mockRefresh = vi.fn();
+const mockBack = vi.fn();
+const mockForward = vi.fn();
+const mockPrefetch = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    refresh: mockRefresh,
+    back: mockBack,
+    forward: mockForward,
+    prefetch: mockPrefetch,
+  }),
+}));
+
 const mockRequireAuth = vi.fn();
 vi.mock("@/infrastructure/auth/rbac", () => ({
   requireAuth: () => mockRequireAuth(),
@@ -61,6 +83,12 @@ beforeEach(() => {
   mockRequireAuth.mockReset().mockResolvedValue({ id: "user-1", email: "alice@example.com", roles: [] });
   mockGetCompanyForMember.mockReset().mockResolvedValue(company);
   mockListCompanyMembers.mockReset().mockResolvedValue(members);
+  mockPush.mockReset();
+  mockReplace.mockReset();
+  mockRefresh.mockReset();
+  mockBack.mockReset();
+  mockForward.mockReset();
+  mockPrefetch.mockReset();
 });
 
 describe("CompanyMembersPage", () => {
@@ -74,12 +102,17 @@ describe("CompanyMembersPage", () => {
     expect(screen.queryByLabelText("Role for Alice Owner")).toBeNull();
   });
 
-  it("renders the transfer-ownership section as a FormSection with associated, labeled fields", async () => {
+  it("renders the transfer-ownership section with a confirm dialog exposing associated, labeled fields", async () => {
     const element = await CompanyMembersPage({ params: Promise.resolve({ companyId: "company-1" }) });
     render(element);
 
     expect(screen.getByRole("heading", { name: "Transfer ownership" })).toBeTruthy();
-    expect(screen.getByLabelText("New owner (member ID)")).toBeTruthy();
+
+    // The new-owner select and confirmation input live inside a ConfirmDialog
+    // (Module 30.6) that isn't mounted until its trigger is clicked.
+    fireEvent.click(screen.getByRole("button", { name: "Transfer ownership" }));
+
+    expect(screen.getByLabelText("New owner")).toBeTruthy();
     expect(screen.getByLabelText("Type TRANSFER to confirm")).toBeTruthy();
   });
 
@@ -87,7 +120,9 @@ describe("CompanyMembersPage", () => {
     const element = await CompanyMembersPage({ params: Promise.resolve({ companyId: "company-1" }) });
     render(element);
 
-    const select = screen.getByLabelText("New owner (member ID)") as HTMLSelectElement;
+    fireEvent.click(screen.getByRole("button", { name: "Transfer ownership" }));
+
+    const select = screen.getByLabelText("New owner") as HTMLSelectElement;
     const optionLabels = within(select)
       .getAllByRole("option")
       .map((option) => option.textContent);

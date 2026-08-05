@@ -1,16 +1,29 @@
 import { notFound } from "next/navigation";
+import { Mail } from "lucide-react";
 
-import {
-  cancelCompanyInvitationFormAction,
-  createCompanyInvitationFormAction,
-} from "@/app/(dashboard)/dashboard/company/[companyId]/invitations/actions";
+import { createCompanyInvitationFormAction } from "@/app/(dashboard)/dashboard/company/[companyId]/invitations/actions";
 import { makeGetCompanyForMemberUseCase } from "@/application/use-cases/company/compose";
 import { makeListCompanyInvitationsUseCase } from "@/application/use-cases/company-invitation/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageContainer } from "@/components/layout/page-container";
+import { Section } from "@/components/layout/section";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { CompanyTabNav } from "../company-tab-nav";
+import { CancelInvitationButton } from "./cancel-invitation-button";
 
 export const metadata = { title: "Company invitations" };
+
+const STATUS_VARIANT: Record<string, "success" | "warning" | "secondary"> = {
+  PENDING: "warning",
+  ACCEPTED: "success",
+};
 
 /** Module 18 — Company Professional: invitation management — invite an
  *  existing user by email, list every invitation (any status), cancel a
@@ -32,7 +45,9 @@ export default async function CompanyInvitationsPage({ params }: { params: Promi
   const invitations = await makeListCompanyInvitationsUseCase().execute(user.id, companyId);
 
   return (
-    <div className="flex flex-col gap-6">
+    <PageContainer gap="sm">
+      <CompanyTabNav companyId={companyId} active="invitations" />
+
       <PageHeader
         title="Invitations"
         breadcrumbs={[
@@ -41,66 +56,67 @@ export default async function CompanyInvitationsPage({ params }: { params: Promi
         ]}
       />
 
-      <section className="rounded-md border border-border p-4">
-        <h2 className="text-lg font-medium">Invite a member</h2>
-        <p className="mt-1 text-sm text-foreground/70">
+      <Section title="Invite a member" bordered>
+        <p className="text-sm text-muted-foreground">
           Only existing MaestroYa users can be invited today. The invitation is valid for 14 days.
         </p>
-        <form action={createCompanyInvitationFormAction.bind(null, companyId)} className="mt-3 flex flex-col gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-foreground/70">Email</span>
-            <input name="email" type="email" required className="rounded-md border border-border p-2 text-sm" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-foreground/70">Role</span>
-            <select name="role" defaultValue="MEMBER" className="rounded-md border border-border p-2 text-sm">
+        <form action={createCompanyInvitationFormAction.bind(null, companyId)} className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="invite-email">Email</Label>
+            <Input id="invite-email" name="email" type="email" required />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="invite-role">Role</Label>
+            <Select id="invite-role" name="role" defaultValue="MEMBER" className="sm:max-w-xs">
               <option value="ADMIN">ADMIN</option>
               <option value="MANAGER">MANAGER</option>
               <option value="MEMBER">MEMBER</option>
-            </select>
-          </label>
-          <button type="submit" className="h-10 w-fit rounded-md bg-black px-4 text-sm font-medium text-white">
+            </Select>
+          </div>
+          <Button type="submit" className="w-fit">
             Send invitation
-          </button>
+          </Button>
         </form>
-      </section>
+      </Section>
 
       {invitations.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          No invitations yet.
-        </p>
+        <EmptyState
+          icon={Mail}
+          title="No invitations yet"
+          description="Invitations you send will appear here until they're accepted or cancelled."
+        />
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-foreground/70">
-              <th className="py-2 pr-4">Email</th>
-              <th className="py-2 pr-4">Role</th>
-              <th className="py-2 pr-4">Status</th>
-              <th className="py-2 pr-4">Expires</th>
-              <th className="py-2 pr-4"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {invitations.map((invitation) => (
-              <tr key={invitation.id} className="border-b border-border/50">
-                <td className="py-2 pr-4">{invitation.email}</td>
-                <td className="py-2 pr-4">{invitation.role}</td>
-                <td className="py-2 pr-4">{invitation.status}</td>
-                <td className="py-2 pr-4">{invitation.expiresAt.toLocaleDateString()}</td>
-                <td className="py-2 pr-4">
-                  {invitation.status === "PENDING" && (
-                    <form action={cancelCompanyInvitationFormAction.bind(null, companyId, invitation.id)}>
-                      <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs">
-                        Cancel
-                      </button>
-                    </form>
-                  )}
-                </td>
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="w-full min-w-[560px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/40 text-left text-muted-foreground">
+                <th className="px-4 py-3 font-medium">Email</th>
+                <th className="px-4 py-3 font-medium">Role</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Expires</th>
+                <th className="px-4 py-3 font-medium"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {invitations.map((invitation) => (
+                <tr key={invitation.id} className="border-b border-border/50 last:border-0">
+                  <td className="px-4 py-3">{invitation.email}</td>
+                  <td className="px-4 py-3">{invitation.role}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant={STATUS_VARIANT[invitation.status] ?? "secondary"}>{invitation.status}</Badge>
+                  </td>
+                  <td className="px-4 py-3">{invitation.expiresAt.toLocaleDateString()}</td>
+                  <td className="px-4 py-3">
+                    {invitation.status === "PENDING" && (
+                      <CancelInvitationButton companyId={companyId} invitationId={invitation.id} email={invitation.email} />
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

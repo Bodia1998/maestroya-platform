@@ -4,8 +4,13 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalVerificationUseCase } from "@/application/use-cases/verification/compose";
 import { VERIFICATION_DOCUMENT_TYPE_VALUES } from "@/domain/services/professional-verification-rules";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
 import { StatusBadge } from "@/components/dashboard/status-badge";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import {
   removeVerificationDocumentFormAction,
   requestVerificationFormAction,
@@ -69,7 +74,7 @@ export default async function ProfessionalVerificationPage() {
 
   if (!hasProfessionalProfile) {
     return (
-      <div className="flex flex-col gap-4">
+      <PageContainer gap="sm">
         <PageHeader title="Verification" />
         <p className="text-sm text-foreground/70">
           You need a professional profile before you can request verification.{" "}
@@ -78,7 +83,7 @@ export default async function ProfessionalVerificationPage() {
           </Link>
           .
         </p>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -88,24 +93,22 @@ export default async function ProfessionalVerificationPage() {
   const canResubmit = status === "RESUBMISSION_REQUIRED" || status === "REJECTED";
 
   return (
-    <div className="flex flex-col gap-8">
+    <PageContainer>
       <PageHeader
         title="Verification"
         subtitle="Verify your identity to earn a “Verified professional” badge on your public profile."
       />
 
       {!verification ? (
-        <section className="flex flex-col gap-4 rounded-md border border-border p-5">
+        <Section bordered gap="lg">
           <p className="text-sm text-foreground/80">You have not started a verification request yet.</p>
           <form action={requestVerificationFormAction}>
-            <button type="submit" className="h-10 rounded-md bg-foreground px-4 text-sm font-medium text-background">
-              Start verification
-            </button>
+            <Button type="submit">Start verification</Button>
           </form>
-        </section>
+        </Section>
       ) : (
         <>
-          <section className="flex flex-col gap-3 rounded-md border border-border p-5">
+          <Section bordered gap="sm">
             <div className="flex items-center gap-3">
               <StatusBadge status={verification.status} label={STATUS_COPY[verification.status]?.label} />
               {verification.expiresAt && verification.status === "APPROVED" && (
@@ -117,18 +120,16 @@ export default async function ProfessionalVerificationPage() {
             <p className="text-sm text-foreground/80">{STATUS_COPY[verification.status]?.description}</p>
 
             {verification.status === "REJECTED" && verification.rejectionReason && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-                <p className="font-medium">Reason</p>
+              <Alert variant="danger" title="Reason">
                 <p className="whitespace-pre-line">{verification.rejectionReason}</p>
-              </div>
+              </Alert>
             )}
             {verification.status === "RESUBMISSION_REQUIRED" && verification.resubmissionReason && (
-              <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
-                <p className="font-medium">What to update</p>
+              <Alert variant="warning" title="What to update">
                 <p className="whitespace-pre-line">{verification.resubmissionReason}</p>
-              </div>
+              </Alert>
             )}
-          </section>
+          </Section>
 
           <Section title="Documents">
             {verification.documents.length === 0 ? (
@@ -148,9 +149,9 @@ export default async function ProfessionalVerificationPage() {
                     </div>
                     {canModifyDocs && (
                       <form action={removeVerificationDocumentFormAction.bind(null, doc.id)}>
-                        <button type="submit" className="rounded-md border border-border px-2 py-1 text-xs">
+                        <Button type="submit" variant="outline" size="sm">
                           Remove
-                        </button>
+                        </Button>
                       </form>
                     )}
                   </li>
@@ -164,29 +165,30 @@ export default async function ProfessionalVerificationPage() {
                 className="flex flex-col gap-3 rounded-md border border-border p-4"
               >
                 <p className="text-sm font-medium">Upload a document</p>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="text-foreground/70">Document type</span>
-                  <select name="type" required className="h-10 rounded-md border border-border px-2 text-sm">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="verification-doc-type">Document type</Label>
+                  <Select id="verification-doc-type" name="type" required>
                     {VERIFICATION_DOCUMENT_TYPE_VALUES.map((t) => (
                       <option key={t} value={t}>
                         {DOC_TYPE_LABELS[t] ?? t}
                       </option>
                     ))}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="text-foreground/70">File (JPEG, PNG, WebP or PDF, max 10MB)</span>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="verification-doc-file">File (JPEG, PNG, WebP or PDF, max 10MB)</Label>
                   <input
+                    id="verification-doc-file"
                     type="file"
                     name="file"
                     required
                     accept="image/jpeg,image/png,image/webp,application/pdf"
                     className="text-sm"
                   />
-                </label>
-                <button type="submit" className="h-10 w-fit rounded-md border border-border px-4 text-sm">
+                </div>
+                <Button type="submit" variant="outline" className="w-fit">
                   Upload
-                </button>
+                </Button>
               </form>
             )}
           </Section>
@@ -194,12 +196,7 @@ export default async function ProfessionalVerificationPage() {
           {(canSubmit || canResubmit) && (
             <section className="flex flex-col gap-2">
               <form action={canSubmit ? submitVerificationFormAction : resubmitVerificationFormAction}>
-                <button
-                  type="submit"
-                  className="h-10 rounded-md bg-foreground px-4 text-sm font-medium text-background"
-                >
-                  {canSubmit ? "Submit for review" : "Resubmit for review"}
-                </button>
+                <Button type="submit">{canSubmit ? "Submit for review" : "Resubmit for review"}</Button>
               </form>
               <p className="text-xs text-foreground/60">
                 You must have at least one identity document uploaded before submitting.
@@ -208,6 +205,6 @@ export default async function ProfessionalVerificationPage() {
           )}
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

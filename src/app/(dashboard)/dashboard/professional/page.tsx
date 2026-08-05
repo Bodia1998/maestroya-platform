@@ -6,8 +6,8 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalByUserIdUseCase } from "@/application/use-cases/professional/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PageContainer } from "@/components/layout/page-container";
+import { Section } from "@/components/layout/section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heading, Text } from "@/components/ui/typography";
 import { DeactivateProfessionalDialog } from "./deactivate-professional-dialog";
 import { ProfessionalProfileForm } from "./professional-profile-form";
 import { ProfessionalServicesForm } from "./professional-services-form";
@@ -65,33 +65,24 @@ export default async function ProfessionalDashboardPage() {
             </CardContent>
           </Card>
 
-          <section className="flex flex-col gap-4">
-            <Heading as="h2" level="h6">
-              Profile details
-            </Heading>
+          <Section title="Profile details" gap="lg">
             <ProfessionalProfileForm professional={professional} />
-          </section>
+          </Section>
 
-          <section className="flex flex-col gap-4">
-            <Heading as="h2" level="h6">
-              Service categories
-            </Heading>
+          <Section title="Service categories" gap="lg">
             <ProfessionalServicesForm
               categories={categories}
               selectedCategoryIds={professional.categoryIds}
             />
-          </section>
+          </Section>
 
           {professional.status === "ACTIVE" && (
-            <section className="flex flex-col gap-4 border-t border-border pt-8">
-              <Heading as="h2" level="h6" className="text-danger">
-                Danger zone
-              </Heading>
-              <Text size="sm" tone="muted">
+            <Section title="Danger zone" titleTone="danger" gap="lg" divider>
+              <p className="text-sm text-muted-foreground">
                 Deactivating your profile removes it from customer search until reactivated.
-              </Text>
+              </p>
               <DeactivateProfessionalDialog />
-            </section>
+            </Section>
           )}
         </>
       )}

@@ -187,17 +187,56 @@ export function EditProfileForm({
             Address
           </legend>
           <div className="flex flex-col gap-1.5">
-            <Input placeholder="Street address" aria-invalid={!!errors.address?.line1} {...register("address.line1")} />
-            <FormFieldError>{errors.address?.line1?.message}</FormFieldError>
+            <Label htmlFor="address.line1" className="sr-only">
+              Street address
+            </Label>
+            <Input
+              id="address.line1"
+              placeholder="Street address"
+              aria-invalid={!!errors.address?.line1}
+              aria-describedby={errors.address?.line1 ? "address.line1-error" : undefined}
+              {...register("address.line1")}
+            />
+            <FormFieldError id="address.line1-error">{errors.address?.line1?.message}</FormFieldError>
           </div>
-          <Input placeholder="Apartment, floor, etc. (optional)" {...register("address.line2")} />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Input placeholder="City" aria-invalid={!!errors.address?.city} {...register("address.city")} />
-            <Input placeholder="Postal code" {...register("address.postalCode")} />
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="address.line2" className="sr-only">
+              Apartment, floor, etc. (optional)
+            </Label>
+            <Input id="address.line2" placeholder="Apartment, floor, etc. (optional)" {...register("address.line2")} />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Input placeholder="Province" {...register("address.province")} />
-            <Input placeholder="Country" {...register("address.country")} />
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="address.city" className="sr-only">
+                City
+              </Label>
+              <Input
+                id="address.city"
+                placeholder="City"
+                aria-invalid={!!errors.address?.city}
+                {...register("address.city")}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="address.postalCode" className="sr-only">
+                Postal code
+              </Label>
+              <Input id="address.postalCode" placeholder="Postal code" {...register("address.postalCode")} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="address.province" className="sr-only">
+                Province
+              </Label>
+              <Input id="address.province" placeholder="Province" {...register("address.province")} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="address.country" className="sr-only">
+                Country
+              </Label>
+              <Input id="address.country" placeholder="Country" {...register("address.country")} />
+            </div>
           </div>
         </fieldset>
       </FormSection>

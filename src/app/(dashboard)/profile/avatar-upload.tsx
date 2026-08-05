@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { ALLOWED_AVATAR_MIME_TYPES } from "@/application/dto/profile.dto";
 import { uploadAvatarAction } from "./actions";
 
@@ -13,6 +14,8 @@ export function AvatarUpload({ currentImageUrl }: { currentImageUrl: string | nu
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const inputId = useId();
+  const statusId = useId();
 
   // `useState(currentImageUrl)` above only ever consults its argument on
   // this component's *first* mount — an already-mounted instance ignores
@@ -64,11 +67,11 @@ export function AvatarUpload({ currentImageUrl }: { currentImageUrl: string | nu
 
   return (
     <div className="flex items-center gap-4">
-      <div className="h-20 w-20 overflow-hidden rounded-full bg-black/5">
+      <div className="h-20 w-20 overflow-hidden rounded-full bg-black/5" aria-hidden={!previewUrl}>
         {previewUrl && (
           <Image
             src={previewUrl}
-            alt="Avatar preview"
+            alt="Your avatar"
             width={80}
             height={80}
             className="h-full w-full object-cover"
@@ -78,26 +81,25 @@ export function AvatarUpload({ currentImageUrl }: { currentImageUrl: string | nu
       </div>
 
       <div className="flex flex-col gap-2">
+        <Label htmlFor={inputId} className="sr-only">
+          Choose an avatar image
+        </Label>
         <input
           ref={fileInputRef}
+          id={inputId}
           type="file"
           accept={ALLOWED_AVATAR_MIME_TYPES.join(",")}
           onChange={handleFileChange}
+          aria-describedby={error || success ? statusId : undefined}
           className="text-sm"
         />
         <Button type="button" size="sm" disabled={isUploading} onClick={handleUpload}>
           {isUploading ? "Uploading…" : "Upload avatar"}
         </Button>
-        {error && (
-          <p role="alert" className="text-xs text-red-600">
-            {error}
-          </p>
-        )}
-        {success && (
-          <p role="status" className="text-xs text-green-700">
-            Avatar updated.
-          </p>
-        )}
+        <div id={statusId} aria-live="polite">
+          {error && <p role="alert" className="text-xs text-danger">{error}</p>}
+          {success && <p role="status" className="text-xs text-success">Avatar updated.</p>}
+        </div>
       </div>
     </div>
   );

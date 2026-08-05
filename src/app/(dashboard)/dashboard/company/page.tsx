@@ -5,12 +5,14 @@ import { makeListMyCompaniesUseCase } from "@/application/use-cases/company/comp
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { CompanyCard } from "@/components/dashboard/cards/company-card";
+import { PageContainer } from "@/components/layout/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { FormActions } from "@/components/forms/form-actions";
+import { FormSection } from "@/components/forms/form-section";
 
 export const metadata = { title: "My companies" };
 
@@ -28,7 +30,7 @@ export default async function CompanyIndexPage() {
   const companies = await makeListMyCompaniesUseCase().execute(user.id);
 
   return (
-    <div className="flex flex-col gap-8">
+    <PageContainer>
       <PageHeader
         title="My companies"
         subtitle="Operate as a company/team with multiple professionals, alongside any individual professional profile you have."
@@ -54,34 +56,31 @@ export default async function CompanyIndexPage() {
         </ul>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create a company</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={createCompanyFormAction} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="legalName">Legal name (required)</Label>
-              <Input id="legalName" name="legalName" required minLength={2} maxLength={200} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="tradeName">Trade / display name</Label>
-              <Input id="tradeName" name="tradeName" maxLength={200} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="taxId">Tax ID (required)</Label>
-              <Input id="taxId" name="taxId" required maxLength={50} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" name="description" rows={3} maxLength={5000} />
-            </div>
-            <Button type="submit" className="w-fit">
+      <FormSection title="Create a company">
+        <form action={createCompanyFormAction} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="legalName">Legal name (required)</Label>
+            <Input id="legalName" name="legalName" required minLength={2} maxLength={200} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tradeName">Trade / display name</Label>
+            <Input id="tradeName" name="tradeName" maxLength={200} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="taxId">Tax ID (required)</Label>
+            <Input id="taxId" name="taxId" required maxLength={50} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="description">Description</Label>
+            <Textarea id="description" name="description" rows={3} maxLength={5000} />
+          </div>
+          <FormActions>
+            <Button type="submit" className="sm:w-fit">
               Create company
             </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          </FormActions>
+        </form>
+      </FormSection>
+    </PageContainer>
   );
 }
