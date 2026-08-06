@@ -1,13 +1,14 @@
-import { NullNotificationCreator } from "@/application/ports/notification-creator";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { SupportTicketStatusChanged } from "@/domain/events/support-ticket-status-changed";
 import type {
   SupportTicketRecord,
   SupportTicketRepository,
   SupportTicketStatusValue,
 } from "@/domain/repositories/support-ticket-repository";
 import { canTransitionSupportTicketStatus } from "@/domain/services/support-ticket-state";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 /**
  * Module 21 — Disputes & Support: admin-only generic status transition for
@@ -15,12 +16,16 @@ import { canTransitionSupportTicketStatus } from "@/domain/services/support-tick
  * WAITING_FOR_USER. RESOLVED/CLOSED each have their own dedicated use case
  * (ResolveSupportTicketUseCase/CloseSupportTicketUseCase), mirroring
  * ChangeDisputeStatusUseCase's own split and its reasoning.
+ *
+ * Module 37 — Domain Event Subscribers: see `AssignSupportTicketUseCase`'s
+ * own doc comment — same rationale, same `SupportTicketStatusChanged`
+ * publish-and-report-don't-rethrow pattern.
  */
 export class ChangeSupportTicketStatusUseCase {
   constructor(
     private readonly tickets: SupportTicketRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(adminUserId: string, ticketId: string, nextStatus: SupportTicketStatusValue): Promise<SupportTicketRecord> {
@@ -40,30 +45,20 @@ export class ChangeSupportTicketStatusUseCase {
     const updated = await this.tickets.updateStatus(ticketId, ticket.status, { status: nextStatus });
 
     try {
-      await this.auditLog.record({
-        adminUserId,
-        action: "SUPPORT_TICKET_STATUS_CHANGED",
-        targetType: "SupportTicket",
-        targetId: ticketId,
-        metadata: { from: ticket.status, to: nextStatus },
-      });
+      await this.eventBus.publishAll([
+        new SupportTicketStatusChanged(
+          ticketId,
+          updated.ticketNumber,
+          adminUserId,
+          ticket.openedByUserId,
+          "STATUS_CHANGED",
+          ticket.status,
+          nextStatus,
+        ),
+      ]);
     } catch (error) {
-      console.error("Failed to record support-ticket-status-changed audit log", error);
-    }
-
-    try {
-      await this.notifications.notify({
-        userId: ticket.openedByUserId,
-        type: "SUPPORT_TICKET_STATUS_CHANGED",
-        title: "Your support ticket was updated",
-        message: `Ticket ${updated.ticketNumber} is now ${nextStatus.replaceAll("_", " ").toLowerCase()}.`,
-        resourceType: "SUPPORT_TICKET",
-        resourceId: updated.id,
-        actionUrl: `/support-tickets/${updated.id}`,
-        metadata: { ticketNumber: updated.ticketNumber, status: nextStatus },
-      });
-    } catch (error) {
-      console.error("Failed to create support-ticket-status-changed notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

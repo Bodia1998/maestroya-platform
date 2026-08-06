@@ -41,6 +41,29 @@ export async function register() {
 
   const { prisma } = await import("@/infrastructure/database/prisma/client");
 
+  // Module 37 — Domain Event Subscribers: each module registers its own
+  // `eventBus.subscribe(...)` calls as a side effect of importing its own
+  // `compose.ts` (see `infrastructure/events/compose.ts`'s own doc
+  // comment) — but that registration only actually runs once something
+  // imports that file. Importing every compose.ts that registers a
+  // subscriber here guarantees all of them are wired up deterministically
+  // at boot, before any request can publish an event a subscriber should
+  // react to — the same "don't depend on which route happens to be hit
+  // first" rationale as the env-validation import above. Individual
+  // publishing modules (e.g. `admin/compose.ts`) may still import a
+  // subscribing module's `compose.ts` directly where correctness of that
+  // one flow shouldn't depend on this hook having run first (see that
+  // file's own comment) — this list is a deterministic-at-boot backstop,
+  // not the only place registration happens.
+  await import("@/application/use-cases/admin/compose");
+  await import("@/application/use-cases/notification/compose");
+  await import("@/application/use-cases/verification/compose");
+  await import("@/application/use-cases/company-verification/compose");
+  await import("@/application/use-cases/dispute/compose");
+  await import("@/application/use-cases/support-ticket/compose");
+  await import("@/application/use-cases/company-invitation/compose");
+  await import("@/application/use-cases/company-membership/compose");
+
   let shuttingDown = false;
   const shutdown = async (signal: string) => {
     if (shuttingDown) return;

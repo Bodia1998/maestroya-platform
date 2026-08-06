@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "@/domain/errors/domain-error";
-import { NullNotificationCreator } from "@/application/ports/notification-creator";
 import { CreateCompanyUseCase } from "@/application/use-cases/company/create-company.use-case";
 import { GetCompanyForMemberUseCase } from "@/application/use-cases/company/get-company-for-member.use-case";
 import { UpdateCompanyUseCase } from "@/application/use-cases/company/update-company.use-case";
@@ -12,8 +11,8 @@ import { CreateCompanyInvitationUseCase } from "@/application/use-cases/company-
 import { AcceptCompanyInvitationUseCase } from "@/application/use-cases/company-invitation/accept-company-invitation.use-case";
 import { DeclineCompanyInvitationUseCase } from "@/application/use-cases/company-invitation/decline-company-invitation.use-case";
 import { generateInvitationToken } from "@/domain/services/company-invitation-rules";
+import { SynchronousEventBus } from "@/infrastructure/events/synchronous-event-bus";
 
-import { FakeAdminAuditLogRepository } from "../admin/fakes";
 import {
   FakeCompanyInvitationRepository,
   FakeCompanyMembershipRepository,
@@ -28,8 +27,13 @@ describe("Module 18 — Company Professional integration flows", () => {
   let invitations: FakeCompanyInvitationRepository;
   let users: FakeUserRepository;
   let categories: FakeServiceCategoryRepository;
-  let auditLog: FakeAdminAuditLogRepository;
-  const notifications = new NullNotificationCreator();
+  // Module 37: CreateCompanyInvitationUseCase/AcceptCompanyInvitationUseCase/
+  // DeclineCompanyInvitationUseCase publish through an EventBus instead of
+  // calling an audit log/notification creator directly — no subscribers are
+  // registered here since this file's assertions don't depend on the
+  // audit/notification side effects, mirroring the "not a full integration
+  // test of the event wiring" scope for this migration pass.
+  const eventBus = new SynchronousEventBus();
 
   beforeEach(() => {
     companies = new FakeCompanyRepository();
@@ -37,7 +41,6 @@ describe("Module 18 — Company Professional integration flows", () => {
     invitations = new FakeCompanyInvitationRepository();
     users = new FakeUserRepository();
     categories = new FakeServiceCategoryRepository();
-    auditLog = new FakeAdminAuditLogRepository();
   });
 
   async function createCompany(ownerUserId: string) {
@@ -100,7 +103,7 @@ describe("Module 18 — Company Professional integration flows", () => {
       const company = await createCompany("owner-1");
       const member = memberships.seed({ companyId: company.id, userId: "member-1", role: "MEMBER" });
 
-      const useCase = new ChangeCompanyMemberRoleUseCase(memberships, auditLog, notifications);
+      const useCase = new ChangeCompanyMemberRoleUseCase(memberships, eventBus);
       const updated = await useCase.execute("owner-1", company.id, member.id, "MANAGER");
       expect(updated.role).toBe("MANAGER");
     });
@@ -111,7 +114,7 @@ describe("Module 18 — Company Professional integration flows", () => {
       const otherAdmin = memberships.seed({ companyId: company.id, userId: "admin-2", role: "ADMIN" });
       const member = memberships.seed({ companyId: company.id, userId: "member-1", role: "MEMBER" });
 
-      const useCase = new ChangeCompanyMemberRoleUseCase(memberships, auditLog, notifications);
+      const useCase = new ChangeCompanyMemberRoleUseCase(memberships, eventBus);
       await expect(useCase.execute("admin-1", company.id, member.id, "ADMIN")).rejects.toThrow(UnauthorizedError);
       await expect(useCase.execute("admin-1", company.id, otherAdmin.id, "MEMBER")).rejects.toThrow(
         UnauthorizedError,
@@ -123,7 +126,7 @@ describe("Module 18 — Company Professional integration flows", () => {
       memberships.seed({ companyId: company.id, userId: "manager-1", role: "MANAGER" });
       const member = memberships.seed({ companyId: company.id, userId: "member-1", role: "MEMBER" });
 
-      const useCase = new ChangeCompanyMemberRoleUseCase(memberships, auditLog, notifications);
+      const useCase = new ChangeCompanyMemberRoleUseCase(memberships, eventBus);
       await expect(useCase.execute("manager-1", company.id, member.id, "MANAGER")).rejects.toThrow(
         UnauthorizedError,
       );
@@ -135,7 +138,7 @@ describe("Module 18 — Company Professional integration flows", () => {
       const company = await createCompany("owner-1");
       const owner = await memberships.findByCompanyAndUser(company.id, "owner-1");
 
-      const useCase = new RemoveCompanyMemberUseCase(memberships, auditLog, notifications);
+      const useCase = new RemoveCompanyMemberUseCase(memberships, eventBus);
       await expect(useCase.execute("owner-1", company.id, owner!.id)).rejects.toThrow(UnauthorizedError);
     });
 
@@ -144,7 +147,7 @@ describe("Module 18 — Company Professional integration flows", () => {
       memberships.seed({ companyId: company.id, userId: "member-1", role: "MEMBER" });
       const member2 = memberships.seed({ companyId: company.id, userId: "member-2", role: "MEMBER" });
 
-      const useCase = new RemoveCompanyMemberUseCase(memberships, auditLog, notifications);
+      const useCase = new RemoveCompanyMemberUseCase(memberships, eventBus);
       await expect(useCase.execute("member-1", company.id, member2.id)).rejects.toThrow(UnauthorizedError);
     });
 
@@ -152,7 +155,7 @@ describe("Module 18 — Company Professional integration flows", () => {
       const company = await createCompany("owner-1");
       const member = memberships.seed({ companyId: company.id, userId: "member-1", role: "MEMBER" });
 
-      const useCase = new RemoveCompanyMemberUseCase(memberships, auditLog, notifications);
+      const useCase = new RemoveCompanyMemberUseCase(memberships, eventBus);
       await useCase.execute("member-1", company.id, member.id);
       const reloaded = await memberships.findById(member.id);
       expect(reloaded?.removedAt).not.toBeNull();
@@ -165,7 +168,7 @@ describe("Module 18 — Company Professional integration flows", () => {
       const owner = await memberships.findByCompanyAndUser(company.id, "owner-1");
       const admin = memberships.seed({ companyId: company.id, userId: "admin-1", role: "ADMIN" });
 
-      const useCase = new TransferCompanyOwnershipUseCase(companies, memberships, auditLog, notifications);
+      const useCase = new TransferCompanyOwnershipUseCase(companies, memberships, eventBus);
       await useCase.execute("owner-1", company.id, admin.id);
 
       const newOwnerRow = await memberships.findById(admin.id);
@@ -182,7 +185,7 @@ describe("Module 18 — Company Professional integration flows", () => {
       memberships.seed({ companyId: company.id, userId: "admin-1", role: "ADMIN" });
       const member = memberships.seed({ companyId: company.id, userId: "member-1", role: "MEMBER" });
 
-      const useCase = new TransferCompanyOwnershipUseCase(companies, memberships, auditLog, notifications);
+      const useCase = new TransferCompanyOwnershipUseCase(companies, memberships, eventBus);
       await expect(useCase.execute("admin-1", company.id, member.id)).rejects.toThrow(UnauthorizedError);
     });
 
@@ -195,14 +198,14 @@ describe("Module 18 — Company Professional integration flows", () => {
         removedAt: new Date(),
       });
 
-      const useCase = new TransferCompanyOwnershipUseCase(companies, memberships, auditLog, notifications);
+      const useCase = new TransferCompanyOwnershipUseCase(companies, memberships, eventBus);
       await expect(useCase.execute("owner-1", company.id, removed.id)).rejects.toThrow(ValidationError);
     });
   });
 
   describe("Invitations", () => {
     async function makeInvitationUseCase() {
-      return new CreateCompanyInvitationUseCase(invitations, memberships, users, auditLog, notifications);
+      return new CreateCompanyInvitationUseCase(invitations, memberships, users, eventBus);
     }
 
     it("rejects duplicate pending invitations for the same email", async () => {
@@ -238,7 +241,7 @@ describe("Module 18 — Company Professional integration flows", () => {
         role: "MEMBER",
       });
 
-      const acceptUseCase = new AcceptCompanyInvitationUseCase(invitations, memberships, users, auditLog, notifications);
+      const acceptUseCase = new AcceptCompanyInvitationUseCase(invitations, memberships, users, eventBus);
       await expect(acceptUseCase.execute(attacker.id, token)).rejects.toThrow(UnauthorizedError);
       // The rightful invitee can still accept it afterwards.
       await expect(acceptUseCase.execute("invitee-1", token)).resolves.toMatchObject({ status: "ACCEPTED" });
@@ -258,7 +261,7 @@ describe("Module 18 — Company Professional integration flows", () => {
         expiresAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
       });
 
-      const acceptUseCase = new AcceptCompanyInvitationUseCase(invitations, memberships, users, auditLog, notifications);
+      const acceptUseCase = new AcceptCompanyInvitationUseCase(invitations, memberships, users, eventBus);
       await expect(acceptUseCase.execute("invitee-1", token)).rejects.toThrow(ConflictError);
     });
 
@@ -277,8 +280,8 @@ describe("Module 18 — Company Professional integration flows", () => {
       });
       await invitations.updateStatus(invitation.id, { status: "CANCELLED", cancelledAt: new Date() });
 
-      const acceptUseCase = new AcceptCompanyInvitationUseCase(invitations, memberships, users, auditLog, notifications);
-      const declineUseCase = new DeclineCompanyInvitationUseCase(invitations, users, auditLog, notifications);
+      const acceptUseCase = new AcceptCompanyInvitationUseCase(invitations, memberships, users, eventBus);
+      const declineUseCase = new DeclineCompanyInvitationUseCase(invitations, users, eventBus);
       await expect(acceptUseCase.execute("invitee-1", token)).rejects.toThrow(ConflictError);
       await expect(declineUseCase.execute("invitee-1", token)).rejects.toThrow(ConflictError);
     });
@@ -292,7 +295,7 @@ describe("Module 18 — Company Professional integration flows", () => {
         role: "MANAGER",
       });
 
-      const acceptUseCase = new AcceptCompanyInvitationUseCase(invitations, memberships, users, auditLog, notifications);
+      const acceptUseCase = new AcceptCompanyInvitationUseCase(invitations, memberships, users, eventBus);
       await acceptUseCase.execute("invitee-1", token);
 
       const membership = await memberships.findByCompanyAndUser(company.id, "invitee-1");
@@ -309,7 +312,7 @@ describe("Module 18 — Company Professional integration flows", () => {
         role: "MEMBER",
       });
 
-      const acceptUseCase = new AcceptCompanyInvitationUseCase(invitations, memberships, users, auditLog, notifications);
+      const acceptUseCase = new AcceptCompanyInvitationUseCase(invitations, memberships, users, eventBus);
       await acceptUseCase.execute("invitee-1", token);
       await expect(acceptUseCase.execute("invitee-1", token)).rejects.toThrow(ConflictError);
     });

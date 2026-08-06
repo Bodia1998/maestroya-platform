@@ -1,19 +1,28 @@
 import { ConflictError, NotFoundError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { CompanyVerificationStatusChanged } from "@/domain/events/company-verification-status-changed";
 import type { CompanyRepository } from "@/domain/repositories/company-repository";
 import type { CompanyVerificationRecord, CompanyVerificationRepository } from "@/domain/repositories/company-verification-repository";
 import { canApprove, canTransition, computeExpiresAt } from "@/domain/services/company-verification-rules";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 /** Module 18 — Company Professional: an admin approves a case
  *  (PENDING/UNDER_REVIEW → APPROVED). Flips CompanyProfile.isVerified,
- *  notifies the company's owner. Mirrors ApproveProfessionalVerificationUseCase. */
+ *  notifies the company's owner. Mirrors ApproveProfessionalVerificationUseCase.
+ *
+ *  Module 37 — Domain Event Subscribers: see
+ *  `ApproveProfessionalVerificationUseCase`'s own doc comment — same
+ *  rationale, same pattern, mirrored here exactly. `recipientUserId` on the
+ *  published event is `null` if the case's own company can no longer be
+ *  found — the same defensive `if (company)` guard this use case had around
+ *  its old inline `notify` call. */
 export class ApproveCompanyVerificationUseCase {
   constructor(
     private readonly verifications: CompanyVerificationRepository,
     private readonly companies: CompanyRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator,
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(adminUserId: string, verificationId: string): Promise<CompanyVerificationRecord> {
@@ -38,29 +47,23 @@ export class ApproveCompanyVerificationUseCase {
 
     await this.verifications.setCompanyVerifiedStatus(verification.companyProfileId, true, now);
 
-    await this.auditLog.record({
-      adminUserId,
-      action: "COMPANY_VERIFICATION_APPROVED",
-      targetType: "CompanyVerification",
-      targetId: verificationId,
-      metadata: { companyProfileId: verification.companyProfileId },
-    });
-
     const company = await this.companies.findById(verification.companyProfileId);
-    if (company) {
-      try {
-        await this.notifications.notify({
-          userId: company.ownerUserId,
-          type: "COMPANY_VERIFICATION_APPROVED",
-          title: "Your company is now verified",
-          message: "Your company's verification has been approved. A verified badge now appears on its public profile.",
-          resourceType: "COMPANY_VERIFICATION",
-          resourceId: verificationId,
-          actionUrl: "/dashboard/company/verification",
-        });
-      } catch (error) {
-        console.error("Failed to create company-verification-approved notification", error);
-      }
+
+    try {
+      await this.eventBus.publishAll([
+        new CompanyVerificationStatusChanged(
+          verificationId,
+          verification.companyProfileId,
+          company?.ownerUserId ?? null,
+          verification.status,
+          "APPROVED",
+          adminUserId,
+          "APPROVED",
+        ),
+      ]);
+    } catch (error) {
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

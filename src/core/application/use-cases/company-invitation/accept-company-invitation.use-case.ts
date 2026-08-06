@@ -1,11 +1,13 @@
 import { ConflictError, NotFoundError, UnauthorizedError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { CompanyInvitationStatusChanged } from "@/domain/events/company-invitation-status-changed";
 import type { CompanyInvitationRecord, CompanyInvitationRepository } from "@/domain/repositories/company-invitation-repository";
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import type { UserRepository } from "@/domain/repositories/user-repository";
 import { deriveMembershipStatus } from "@/domain/services/company-membership-rules";
 import { hashInvitationToken, isInvitationActionable } from "@/domain/services/company-invitation-rules";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 /**
  * Module 18 — Company Professional: accepts a pending invitation for the
@@ -27,14 +29,23 @@ import type { NotificationCreator } from "@/application/ports/notification-creat
  *     spec calls out.
  *   - A duplicate-active-membership is rejected (ConflictError) rather than
  *     silently creating a second row.
+ *
+ * Module 37 — Domain Event Subscribers: this use case no longer writes the
+ * audit log entry or notifies the inviter itself — both happen because
+ * `CompanyInvitationStatusChanged` is published through the Module 34
+ * `EventBus`, reacted to by `RecordCompanyInvitationAuditLogSubscriber`/
+ * `NotifyCompanyInvitationStatusChangeSubscriber`. See
+ * `SubmitProfessionalVerificationUseCase`'s own doc comment for the
+ * identical publish-and-report-don't-rethrow rationale, mirrored here
+ * exactly.
  */
 export class AcceptCompanyInvitationUseCase {
   constructor(
     private readonly invitations: CompanyInvitationRepository,
     private readonly memberships: CompanyMembershipRepository,
     private readonly users: UserRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator,
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(userId: string, token: string): Promise<CompanyInvitationRecord> {
@@ -67,26 +78,21 @@ export class AcceptCompanyInvitationUseCase {
       acceptedAt: new Date(),
     });
 
-    await this.auditLog.record({
-      adminUserId: userId,
-      action: "COMPANY_INVITATION_ACCEPTED",
-      targetType: "CompanyInvitation",
-      targetId: invitation.id,
-      metadata: { companyId: invitation.companyId, role: invitation.role },
-    });
-
     try {
-      await this.notifications.notify({
-        userId: invitation.invitedByUserId,
-        type: "COMPANY_INVITATION_ACCEPTED",
-        title: "Invitation accepted",
-        message: "A pending company invitation was accepted.",
-        resourceType: "COMPANY",
-        resourceId: invitation.companyId,
-        actionUrl: "/dashboard/company/members",
-      });
+      await this.eventBus.publishAll([
+        new CompanyInvitationStatusChanged(
+          invitation.id,
+          invitation.companyId,
+          invitation.invitedByUserId,
+          userId,
+          "ACCEPTED",
+          "ACCEPTED",
+          invitation.role,
+        ),
+      ]);
     } catch (error) {
-      console.error("Failed to create company-invitation-accepted notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

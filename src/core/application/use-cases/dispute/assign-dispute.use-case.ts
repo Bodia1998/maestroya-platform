@@ -1,20 +1,28 @@
-import { NullNotificationCreator } from "@/application/ports/notification-creator";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { DisputeAssigned } from "@/domain/events/dispute-assigned";
 import type { DisputeRecord, DisputeRepository } from "@/domain/repositories/dispute-repository";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 /**
  * Module 21 — Disputes & Support: assigns (or unassigns, when
  * `adminUserId` is null) a Dispute to an admin/support agent. Admin-only —
  * trusts the caller has already been authorized via
  * `requireRole(ADMIN, SUPER_ADMIN, SUPPORT)` at the Server Action boundary.
+ *
+ * Module 37 — Domain Event Subscribers: this use case no longer writes the
+ * audit log entry or notifies the new assignee itself — both happen
+ * because `DisputeAssigned` is published through the Module 34 `EventBus`,
+ * reacted to by `RecordDisputeAssignedAuditLogSubscriber`/
+ * `NotifyDisputeAssignedSubscriber`. See `ResolveDisputeUseCase`'s own doc
+ * comment for the identical publish-and-report-don't-rethrow rationale.
  */
 export class AssignDisputeUseCase {
   constructor(
     private readonly disputes: DisputeRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(adminUserId: string, disputeId: string, assigneeUserId: string | null): Promise<DisputeRecord> {
@@ -26,32 +34,12 @@ export class AssignDisputeUseCase {
     const updated = await this.disputes.assign(disputeId, assigneeUserId);
 
     try {
-      await this.auditLog.record({
-        adminUserId,
-        action: "DISPUTE_ASSIGNED",
-        targetType: "Dispute",
-        targetId: disputeId,
-        metadata: { previousAssignee: existing.assignedAdminUserId, newAssignee: assigneeUserId },
-      });
+      await this.eventBus.publishAll([
+        new DisputeAssigned(disputeId, updated.caseNumber, existing.assignedAdminUserId, assigneeUserId, adminUserId),
+      ]);
     } catch (error) {
-      console.error("Failed to record dispute-assigned audit log", error);
-    }
-
-    if (assigneeUserId) {
-      try {
-        await this.notifications.notify({
-          userId: assigneeUserId,
-          type: "DISPUTE_ASSIGNED",
-          title: "A dispute was assigned to you",
-          message: `Dispute ${updated.caseNumber} was assigned to you.`,
-          resourceType: "DISPUTE",
-          resourceId: updated.id,
-          actionUrl: `/admin/disputes/${updated.id}`,
-          metadata: { caseNumber: updated.caseNumber },
-        });
-      } catch (error) {
-        console.error("Failed to create dispute-assigned notification", error);
-      }
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

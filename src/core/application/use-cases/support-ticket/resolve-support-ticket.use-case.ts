@@ -1,16 +1,23 @@
-import { NullNotificationCreator } from "@/application/ports/notification-creator";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { SupportTicketStatusChanged } from "@/domain/events/support-ticket-status-changed";
 import type { SupportTicketRecord, SupportTicketRepository } from "@/domain/repositories/support-ticket-repository";
 import { isResolvableStatus } from "@/domain/services/support-ticket-state";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
-/** Module 21 — Disputes & Support: resolves a SupportTicket. Admin-only. */
+/**
+ * Module 21 — Disputes & Support: resolves a SupportTicket. Admin-only.
+ *
+ * Module 37 — Domain Event Subscribers: see `AssignSupportTicketUseCase`'s
+ * own doc comment — same rationale, same `SupportTicketStatusChanged`
+ * publish-and-report-don't-rethrow pattern.
+ */
 export class ResolveSupportTicketUseCase {
   constructor(
     private readonly tickets: SupportTicketRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(adminUserId: string, ticketId: string, resolutionNote: string): Promise<SupportTicketRecord> {
@@ -31,30 +38,20 @@ export class ResolveSupportTicketUseCase {
     });
 
     try {
-      await this.auditLog.record({
-        adminUserId,
-        action: "SUPPORT_TICKET_RESOLVED",
-        targetType: "SupportTicket",
-        targetId: ticketId,
-        metadata: {},
-      });
+      await this.eventBus.publishAll([
+        new SupportTicketStatusChanged(
+          ticketId,
+          updated.ticketNumber,
+          adminUserId,
+          ticket.openedByUserId,
+          "RESOLVED",
+          ticket.status,
+          "RESOLVED",
+        ),
+      ]);
     } catch (error) {
-      console.error("Failed to record support-ticket-resolved audit log", error);
-    }
-
-    try {
-      await this.notifications.notify({
-        userId: ticket.openedByUserId,
-        type: "SUPPORT_TICKET_RESOLVED",
-        title: "Your support ticket was resolved",
-        message: `Ticket ${updated.ticketNumber} has been resolved.`,
-        resourceType: "SUPPORT_TICKET",
-        resourceId: updated.id,
-        actionUrl: `/support-tickets/${updated.id}`,
-        metadata: { ticketNumber: updated.ticketNumber },
-      });
-    } catch (error) {
-      console.error("Failed to create support-ticket-resolved notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

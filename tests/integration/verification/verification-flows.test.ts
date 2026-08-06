@@ -5,6 +5,8 @@ import { CreateProfessionalVerificationUseCase } from "@/application/use-cases/v
 import { GetAdminVerificationUseCase } from "@/application/use-cases/verification/get-admin-verification.use-case";
 import { GetProfessionalVerificationUseCase } from "@/application/use-cases/verification/get-professional-verification.use-case";
 import { ListAdminVerificationsUseCase } from "@/application/use-cases/verification/list-admin-verifications.use-case";
+import { RecordProfessionalVerificationAuditLogSubscriber } from "@/application/use-cases/verification/record-professional-verification-audit-log.subscriber";
+import { NotifyProfessionalVerificationStatusChangeSubscriber } from "@/application/use-cases/notification/notify-professional-verification-status-change.subscriber";
 import { RejectProfessionalVerificationUseCase } from "@/application/use-cases/verification/reject-professional-verification.use-case";
 import { RemoveVerificationDocumentUseCase } from "@/application/use-cases/verification/remove-verification-document.use-case";
 import { RequestVerificationResubmissionUseCase } from "@/application/use-cases/verification/request-verification-resubmission.use-case";
@@ -12,7 +14,9 @@ import { ResubmitProfessionalVerificationUseCase } from "@/application/use-cases
 import { StartVerificationReviewUseCase } from "@/application/use-cases/verification/start-verification-review.use-case";
 import { SubmitProfessionalVerificationUseCase } from "@/application/use-cases/verification/submit-professional-verification.use-case";
 import { UploadVerificationDocumentUseCase } from "@/application/use-cases/verification/upload-verification-document.use-case";
+import { ProfessionalVerificationStatusChanged } from "@/domain/events/professional-verification-status-changed";
 import { ConflictError, NotFoundError, ValidationError } from "@/domain/errors/domain-error";
+import { SynchronousEventBus } from "@/infrastructure/events/synchronous-event-bus";
 import {
   FakeAdminAuditLogRepository,
   FakeNotificationCreator,
@@ -33,6 +37,22 @@ function makeContext() {
   const notifications = new FakeNotificationCreator();
   const uploads = new FakeVerificationDocumentUploadService();
 
+  // Module 37 — Domain Event Subscribers: submit/resubmit/approve/reject/
+  // request-resubmission publish `ProfessionalVerificationStatusChanged`
+  // instead of calling `auditLog`/`notifications` directly — wire a real
+  // `SynchronousEventBus` with the real subscribers so this integration
+  // test still exercises the full, genuine side-effect path end to end,
+  // same pattern as tests/integration/admin/company-status-change-events.test.ts.
+  const eventBus = new SynchronousEventBus();
+  eventBus.subscribe(
+    ProfessionalVerificationStatusChanged,
+    new RecordProfessionalVerificationAuditLogSubscriber(auditLog),
+  );
+  eventBus.subscribe(
+    ProfessionalVerificationStatusChanged,
+    new NotifyProfessionalVerificationStatusChangeSubscriber(notifications),
+  );
+
   return {
     professionals,
     verifications,
@@ -43,19 +63,14 @@ function makeContext() {
     create: new CreateProfessionalVerificationUseCase(verifications, professionals),
     upload: new UploadVerificationDocumentUseCase(verifications, professionals, uploads, auditLog),
     remove: new RemoveVerificationDocumentUseCase(verifications, professionals, auditLog),
-    submit: new SubmitProfessionalVerificationUseCase(verifications, professionals, auditLog, notifications),
-    resubmit: new ResubmitProfessionalVerificationUseCase(verifications, professionals, auditLog, notifications),
+    submit: new SubmitProfessionalVerificationUseCase(verifications, professionals, eventBus),
+    resubmit: new ResubmitProfessionalVerificationUseCase(verifications, professionals, eventBus),
     list: new ListAdminVerificationsUseCase(verifications),
     getAdmin: new GetAdminVerificationUseCase(verifications),
     startReview: new StartVerificationReviewUseCase(verifications, auditLog),
-    approve: new ApproveProfessionalVerificationUseCase(verifications, professionals, auditLog, notifications),
-    reject: new RejectProfessionalVerificationUseCase(verifications, professionals, auditLog, notifications),
-    requestResubmission: new RequestVerificationResubmissionUseCase(
-      verifications,
-      professionals,
-      auditLog,
-      notifications,
-    ),
+    approve: new ApproveProfessionalVerificationUseCase(verifications, professionals, eventBus),
+    reject: new RejectProfessionalVerificationUseCase(verifications, professionals, eventBus),
+    requestResubmission: new RequestVerificationResubmissionUseCase(verifications, professionals, eventBus),
   };
 }
 

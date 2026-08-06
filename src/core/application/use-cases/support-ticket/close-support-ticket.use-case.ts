@@ -1,17 +1,24 @@
-import { NullNotificationCreator } from "@/application/ports/notification-creator";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { SupportTicketStatusChanged } from "@/domain/events/support-ticket-status-changed";
 import type { SupportTicketRecord, SupportTicketRepository } from "@/domain/repositories/support-ticket-repository";
 import { isClosableStatus } from "@/domain/services/support-ticket-state";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
-/** Module 21 — Disputes & Support: closes a SupportTicket — only reachable
- *  from RESOLVED. Admin-only. */
+/**
+ * Module 21 — Disputes & Support: closes a SupportTicket — only reachable
+ * from RESOLVED. Admin-only.
+ *
+ * Module 37 — Domain Event Subscribers: see `AssignSupportTicketUseCase`'s
+ * own doc comment — same rationale, same `SupportTicketStatusChanged`
+ * publish-and-report-don't-rethrow pattern.
+ */
 export class CloseSupportTicketUseCase {
   constructor(
     private readonly tickets: SupportTicketRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(adminUserId: string, ticketId: string): Promise<SupportTicketRecord> {
@@ -31,30 +38,20 @@ export class CloseSupportTicketUseCase {
     });
 
     try {
-      await this.auditLog.record({
-        adminUserId,
-        action: "SUPPORT_TICKET_CLOSED",
-        targetType: "SupportTicket",
-        targetId: ticketId,
-        metadata: {},
-      });
+      await this.eventBus.publishAll([
+        new SupportTicketStatusChanged(
+          ticketId,
+          updated.ticketNumber,
+          adminUserId,
+          ticket.openedByUserId,
+          "CLOSED",
+          ticket.status,
+          "CLOSED",
+        ),
+      ]);
     } catch (error) {
-      console.error("Failed to record support-ticket-closed audit log", error);
-    }
-
-    try {
-      await this.notifications.notify({
-        userId: ticket.openedByUserId,
-        type: "SUPPORT_TICKET_CLOSED",
-        title: "Your support ticket was closed",
-        message: `Ticket ${updated.ticketNumber} has been closed.`,
-        resourceType: "SUPPORT_TICKET",
-        resourceId: updated.id,
-        actionUrl: `/support-tickets/${updated.id}`,
-        metadata: { ticketNumber: updated.ticketNumber },
-      });
-    } catch (error) {
-      console.error("Failed to create support-ticket-closed notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

@@ -1,8 +1,10 @@
 import { NotFoundError, UnauthorizedError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
 import type { CompanyMemberRecord, CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import { canChangeMemberRole, deriveMembershipStatus, type CompanyMemberRoleValue } from "@/domain/services/company-membership-rules";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
+import { CompanyMembershipChanged } from "@/domain/events/company-membership-changed";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 import { resolveCompanyActor } from "@/application/use-cases/company/resolve-company-actor";
 
 /**
@@ -13,12 +15,21 @@ import { resolveCompanyActor } from "@/application/use-cases/company/resolve-com
  * same company the caller is resolved against — a memberId from a different
  * company surfaces as NotFoundError (never leaks whether that id exists
  * elsewhere).
+ *
+ * Module 37 — Domain Event Subscribers: this use case no longer writes the
+ * audit log entry or notifies the affected member itself — both happen
+ * because `CompanyMembershipChanged` is published through the Module 34
+ * `EventBus`, reacted to by `RecordCompanyMembershipAuditLogSubscriber`/
+ * `NotifyCompanyMembershipChangeSubscriber`. See
+ * `SubmitProfessionalVerificationUseCase`'s own doc comment for the
+ * identical publish-and-report-don't-rethrow rationale, mirrored here
+ * exactly.
  */
 export class ChangeCompanyMemberRoleUseCase {
   constructor(
     private readonly memberships: CompanyMembershipRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator,
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(
@@ -44,26 +55,21 @@ export class ChangeCompanyMemberRoleUseCase {
 
     const updated = await this.memberships.updateRole(memberId, newRole);
 
-    await this.auditLog.record({
-      adminUserId: userId,
-      action: "COMPANY_MEMBER_ROLE_CHANGED",
-      targetType: "CompanyMember",
-      targetId: memberId,
-      metadata: { companyId, fromRole: target.role, toRole: newRole },
-    });
-
     try {
-      await this.notifications.notify({
-        userId: target.userId,
-        type: "COMPANY_MEMBER_ROLE_CHANGED",
-        title: "Your role has changed",
-        message: `Your role in the company was changed to ${newRole}.`,
-        resourceType: "COMPANY",
-        resourceId: companyId,
-        actionUrl: "/dashboard/company/members",
-      });
+      await this.eventBus.publishAll([
+        new CompanyMembershipChanged(
+          companyId,
+          memberId,
+          target.userId,
+          userId,
+          "ROLE_CHANGED",
+          target.role,
+          newRole,
+        ),
+      ]);
     } catch (error) {
-      console.error("Failed to create company-member-role-changed notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

@@ -1,7 +1,5 @@
-import { NullNotificationCreator } from "@/application/ports/notification-creator";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { DisputeStatusChanged } from "@/domain/events/dispute-status-changed";
 import type { DisputeRecord, DisputeRepository } from "@/domain/repositories/dispute-repository";
 import type { JobRepository } from "@/domain/repositories/job-repository";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
@@ -9,6 +7,9 @@ import type { ProfessionalRepository } from "@/domain/repositories/professional-
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import { isRejectableStatus } from "@/domain/services/dispute-state";
 import { resolveDisputeParticipantUserIds } from "@/application/use-cases/dispute/resolve-dispute-participant-user-ids";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 /**
  * Module 21 — Disputes & Support: rejects a Dispute (declines to uphold it
@@ -17,6 +18,11 @@ import { resolveDisputeParticipantUserIds } from "@/application/use-cases/disput
  * (Dispute.resolution stays null) — REJECTED means "there is nothing for
  * Module 22 to act on", not "the customer/professional was favored". Sets
  * `resolutionNote` to the rejection reason for the audit trail. Admin-only.
+ *
+ * Module 37 — Domain Event Subscribers: see `ResolveDisputeUseCase`'s own
+ * doc comment — same rationale, same `DisputeStatusChanged`
+ * publish-and-report-don't-rethrow pattern, mirrored here with
+ * `transition: "REJECTED"`.
  */
 export class RejectDisputeUseCase {
   constructor(
@@ -25,8 +31,8 @@ export class RejectDisputeUseCase {
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly professionals: ProfessionalRepository,
     private readonly companyMembers: CompanyMembershipRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(adminUserId: string, disputeId: string, resolutionNote: string): Promise<DisputeRecord> {
@@ -46,41 +52,30 @@ export class RejectDisputeUseCase {
       resolvedByUserId: adminUserId,
     });
 
-    try {
-      await this.auditLog.record({
-        adminUserId,
-        action: "DISPUTE_REJECTED",
-        targetType: "Dispute",
-        targetId: disputeId,
-        metadata: {},
-      });
-    } catch (error) {
-      console.error("Failed to record dispute-rejected audit log", error);
-    }
-
-    try {
-      const job = await this.jobs.findById(dispute.jobId);
-      if (job) {
-        const userIds = await resolveDisputeParticipantUserIds(job, {
+    const job = await this.jobs.findById(dispute.jobId);
+    const recipientUserIds = job
+      ? await resolveDisputeParticipantUserIds(job, {
           customerProfiles: this.customerProfiles,
           professionals: this.professionals,
           companyMembers: this.companyMembers,
-        });
-        for (const userId of userIds) {
-          await this.notifications.notify({
-            userId,
-            type: "DISPUTE_REJECTED",
-            title: "Your dispute was rejected",
-            message: `Dispute ${updated.caseNumber} has been rejected.`,
-            resourceType: "DISPUTE",
-            resourceId: updated.id,
-            actionUrl: `/disputes/${updated.id}`,
-            metadata: { caseNumber: updated.caseNumber },
-          });
-        }
-      }
+        })
+      : [];
+
+    try {
+      await this.eventBus.publishAll([
+        new DisputeStatusChanged(
+          disputeId,
+          updated.caseNumber,
+          dispute.status,
+          "REJECTED",
+          adminUserId,
+          "REJECTED",
+          recipientUserIds,
+        ),
+      ]);
     } catch (error) {
-      console.error("Failed to create dispute-rejected notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

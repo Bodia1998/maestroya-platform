@@ -2,7 +2,15 @@ import { PrismaAdminAuditLogRepository } from "@/infrastructure/database/prisma/
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaProfessionalVerificationRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-verification-repository";
 import { CloudinaryVerificationDocumentUploadService } from "@/infrastructure/storage/cloudinary/verification-document-upload-service";
-import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
+import { ConsoleFailureReporter } from "@/infrastructure/observability/console-failure-reporter";
+import { eventBus } from "@/infrastructure/events/compose";
+// Side-effect import: registers NotifyProfessionalVerificationStatusChangeSubscriber
+// against the shared eventBus. Mirrors admin/compose.ts's own identical
+// import of notification/compose.ts — see that file's doc comment for why
+// this is imported here rather than relying solely on instrumentation.ts.
+import "@/application/use-cases/notification/compose";
+import { ProfessionalVerificationStatusChanged } from "@/domain/events/professional-verification-status-changed";
+import { RecordProfessionalVerificationAuditLogSubscriber } from "@/application/use-cases/verification/record-professional-verification-audit-log.subscriber";
 import { ApproveProfessionalVerificationUseCase } from "@/application/use-cases/verification/approve-professional-verification.use-case";
 import { CreateProfessionalVerificationUseCase } from "@/application/use-cases/verification/create-professional-verification.use-case";
 import { GetAdminVerificationUseCase } from "@/application/use-cases/verification/get-admin-verification.use-case";
@@ -29,7 +37,21 @@ const verifications = new PrismaProfessionalVerificationRepository();
 const professionals = new PrismaProfessionalRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
 const uploads = new CloudinaryVerificationDocumentUploadService();
-const notifications = new NotificationServiceCreator();
+const failureReporter = new ConsoleFailureReporter();
+
+/**
+ * Module 37 — Domain Event Subscribers: registers this module's
+ * `ProfessionalVerificationStatusChanged` audit-log subscriber against the
+ * shared `eventBus`, at module load time — the exact pattern documented in
+ * `infrastructure/events/compose.ts`'s own doc comment and mirrored from
+ * `admin/compose.ts`. The sibling notification subscriber is registered
+ * the same way from `notification/compose.ts`; neither file imports the
+ * other's use cases.
+ */
+eventBus.subscribe(
+  ProfessionalVerificationStatusChanged,
+  new RecordProfessionalVerificationAuditLogSubscriber(auditLog),
+);
 
 // --- Professional side ---
 
@@ -50,11 +72,11 @@ export function makeRemoveVerificationDocumentUseCase() {
 }
 
 export function makeSubmitProfessionalVerificationUseCase() {
-  return new SubmitProfessionalVerificationUseCase(verifications, professionals, auditLog, notifications);
+  return new SubmitProfessionalVerificationUseCase(verifications, professionals, eventBus, failureReporter);
 }
 
 export function makeResubmitProfessionalVerificationUseCase() {
-  return new ResubmitProfessionalVerificationUseCase(verifications, professionals, auditLog, notifications);
+  return new ResubmitProfessionalVerificationUseCase(verifications, professionals, eventBus, failureReporter);
 }
 
 // --- Admin side ---
@@ -72,13 +94,13 @@ export function makeStartVerificationReviewUseCase() {
 }
 
 export function makeApproveProfessionalVerificationUseCase() {
-  return new ApproveProfessionalVerificationUseCase(verifications, professionals, auditLog, notifications);
+  return new ApproveProfessionalVerificationUseCase(verifications, professionals, eventBus, failureReporter);
 }
 
 export function makeRejectProfessionalVerificationUseCase() {
-  return new RejectProfessionalVerificationUseCase(verifications, professionals, auditLog, notifications);
+  return new RejectProfessionalVerificationUseCase(verifications, professionals, eventBus, failureReporter);
 }
 
 export function makeRequestVerificationResubmissionUseCase() {
-  return new RequestVerificationResubmissionUseCase(verifications, professionals, auditLog, notifications);
+  return new RequestVerificationResubmissionUseCase(verifications, professionals, eventBus, failureReporter);
 }

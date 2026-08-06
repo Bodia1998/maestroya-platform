@@ -1,7 +1,5 @@
-import { NullNotificationCreator } from "@/application/ports/notification-creator";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { DisputeStatusChanged } from "@/domain/events/dispute-status-changed";
 import type {
   DisputeRecord,
   DisputeRepository,
@@ -13,6 +11,9 @@ import type { ProfessionalRepository } from "@/domain/repositories/professional-
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import { isResolvableStatus } from "@/domain/services/dispute-state";
 import { resolveDisputeParticipantUserIds } from "@/application/use-cases/dispute/resolve-dispute-participant-user-ids";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 export interface ResolveDisputeInput {
   resolution: DisputeResolutionValue;
@@ -33,6 +34,15 @@ export interface ResolveDisputeInput {
  * Does NOT close the case — RESOLVED and CLOSED are deliberately distinct
  * (see dispute-state.ts's own doc comment); a separate admin action
  * (CloseDisputeUseCase) closes it.
+ *
+ * Module 37 — Domain Event Subscribers: this use case no longer writes the
+ * audit log entry or notifies the dispute's participants itself — both
+ * happen because `DisputeStatusChanged` is published through the Module 34
+ * `EventBus`, reacted to by `RecordDisputeStatusChangeAuditLogSubscriber`/
+ * `NotifyDisputeStatusChangeSubscriber`. See
+ * `SubmitProfessionalVerificationUseCase`'s own doc comment for the
+ * identical publish-and-report-don't-rethrow rationale, mirrored here
+ * exactly.
  */
 export class ResolveDisputeUseCase {
   constructor(
@@ -41,8 +51,8 @@ export class ResolveDisputeUseCase {
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly professionals: ProfessionalRepository,
     private readonly companyMembers: CompanyMembershipRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(adminUserId: string, disputeId: string, input: ResolveDisputeInput): Promise<DisputeRecord> {
@@ -63,45 +73,31 @@ export class ResolveDisputeUseCase {
       resolvedByUserId: adminUserId,
     });
 
-    try {
-      await this.auditLog.record({
-        adminUserId,
-        action: "DISPUTE_RESOLVED",
-        targetType: "Dispute",
-        targetId: disputeId,
-        // Deliberately no full resolutionNote/evidence content dumped into
-        // metadata (see the module spec's "do not log sensitive data
-        // unnecessarily" requirement) — just the outcome enum, which is
-        // never sensitive.
-        metadata: { resolution: input.resolution },
-      });
-    } catch (error) {
-      console.error("Failed to record dispute-resolved audit log", error);
-    }
-
-    try {
-      const job = await this.jobs.findById(dispute.jobId);
-      if (job) {
-        const userIds = await resolveDisputeParticipantUserIds(job, {
+    const job = await this.jobs.findById(dispute.jobId);
+    const recipientUserIds = job
+      ? await resolveDisputeParticipantUserIds(job, {
           customerProfiles: this.customerProfiles,
           professionals: this.professionals,
           companyMembers: this.companyMembers,
-        });
-        for (const userId of userIds) {
-          await this.notifications.notify({
-            userId,
-            type: "DISPUTE_RESOLVED",
-            title: "Your dispute was resolved",
-            message: `Dispute ${updated.caseNumber} has been resolved.`,
-            resourceType: "DISPUTE",
-            resourceId: updated.id,
-            actionUrl: `/disputes/${updated.id}`,
-            metadata: { caseNumber: updated.caseNumber, resolution: input.resolution },
-          });
-        }
-      }
+        })
+      : [];
+
+    try {
+      await this.eventBus.publishAll([
+        new DisputeStatusChanged(
+          disputeId,
+          updated.caseNumber,
+          dispute.status,
+          "RESOLVED",
+          adminUserId,
+          "RESOLVED",
+          recipientUserIds,
+          input.resolution,
+        ),
+      ]);
     } catch (error) {
-      console.error("Failed to create dispute-resolved notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

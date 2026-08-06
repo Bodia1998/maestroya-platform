@@ -1,16 +1,24 @@
 import { ConflictError, NotFoundError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { CompanyStatusChanged } from "@/domain/events/company-status-changed";
 import type { AdminCompanyRecord, AdminRepository } from "@/domain/repositories/admin-repository";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 import { canTransitionCompanyStatus } from "@/domain/services/company-rules";
 
-/** Module 18 — Company Professional: an admin reactivates a SUSPENDED
- *  company back to ACTIVE. Mirrors ReactivateAdminUserUseCase. */
+/**
+ * Module 18 — Company Professional: an admin reactivates a SUSPENDED
+ * company back to ACTIVE. Mirrors ReactivateAdminUserUseCase.
+ *
+ * Module 37 — Domain Event Subscribers: see `SuspendCompanyUseCase`'s own
+ * doc comment — same rationale, same `CompanyStatusChanged`
+ * publish-and-report-don't-rethrow pattern, mirrored here exactly.
+ */
 export class ReactivateCompanyUseCase {
   constructor(
     private readonly admins: AdminRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator,
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(adminUserId: string, companyId: string): Promise<AdminCompanyRecord> {
@@ -24,25 +32,13 @@ export class ReactivateCompanyUseCase {
     const updated = await this.admins.setCompanyStatus(companyId, "ACTIVE", null);
     if (!updated) throw new NotFoundError("Company", companyId);
 
-    await this.auditLog.record({
-      adminUserId,
-      action: "COMPANY_REACTIVATED",
-      targetType: "Company",
-      targetId: companyId,
-      metadata: { previousStatus: target.status },
-    });
-
     try {
-      await this.notifications.notify({
-        userId: target.ownerUserId,
-        type: "COMPANY_REACTIVATED",
-        title: "Your company has been reactivated",
-        message: "Your company profile is active again.",
-        resourceType: "COMPANY",
-        resourceId: companyId,
-      });
+      await this.eventBus.publishAll([
+        new CompanyStatusChanged(companyId, target.ownerUserId, target.status, "ACTIVE", adminUserId),
+      ]);
     } catch (error) {
-      console.error("Failed to create company-reactivated notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

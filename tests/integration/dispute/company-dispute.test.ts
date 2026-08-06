@@ -2,8 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import type { NotificationCreator, NotificationEvent } from "@/application/ports/notification-creator";
 import { CreateDisputeUseCase } from "@/application/use-cases/dispute/create-dispute.use-case";
+import { RecordDisputeCreatedAuditLogSubscriber } from "@/application/use-cases/dispute/record-dispute-created-audit-log.subscriber";
+import { NotifyDisputeCreatedSubscriber } from "@/application/use-cases/notification/notify-dispute-created.subscriber";
 import { NotFoundError } from "@/domain/errors/domain-error";
+import { DisputeCreated } from "@/domain/events/dispute-created";
 import type { JobRecord } from "@/domain/repositories/job-repository";
+import { SynchronousEventBus } from "@/infrastructure/events/synchronous-event-bus";
 import { createAppointmentStore, createJobStore, FakeCustomerProfileRepository, FakeJobRepository } from "../booking/fakes";
 import { FakeCompanyMembershipRepository } from "../company/fakes";
 import { FakeProfessionalRepository } from "../quotes/fakes";
@@ -42,6 +46,18 @@ function makeRepos() {
   const auditLog = new FakeAdminAuditLogRepository();
   const notifications = new FakeNotificationCreator();
   return { customerProfiles, professionals, companyMembers, jobStore, jobs, disputes, auditLog, notifications };
+}
+
+/** Module 37 — Domain Event Subscribers: `CreateDisputeUseCase` now
+ *  publishes `DisputeCreated` instead of calling repos.auditLog/
+ *  repos.notifications directly — wire a real `SynchronousEventBus` with
+ *  the real subscribers so this test still exercises the full, genuine
+ *  side-effect path, same pattern as dispute-flows.test.ts. */
+function makeDisputeEventBus(repos: ReturnType<typeof makeRepos>) {
+  const eventBus = new SynchronousEventBus();
+  eventBus.subscribe(DisputeCreated, new RecordDisputeCreatedAuditLogSubscriber(repos.auditLog));
+  eventBus.subscribe(DisputeCreated, new NotifyDisputeCreatedSubscriber(repos.notifications));
+  return eventBus;
 }
 
 async function seedCompanyJob(
@@ -86,8 +102,7 @@ describe("Company disputes (Module 28 — Workflow Completion)", () => {
       repos.customerProfiles,
       repos.professionals,
       repos.companyMembers,
-      repos.auditLog,
-      repos.notifications,
+      makeDisputeEventBus(repos),
     );
 
     const dispute = await useCase.execute("owner-user", {
@@ -122,8 +137,7 @@ describe("Company disputes (Module 28 — Workflow Completion)", () => {
         repos.customerProfiles,
         repos.professionals,
         repos.companyMembers,
-        repos.auditLog,
-        repos.notifications,
+        makeDisputeEventBus(repos),
       );
 
       const dispute = await useCase.execute(`${role}-user`, {
@@ -147,8 +161,7 @@ describe("Company disputes (Module 28 — Workflow Completion)", () => {
       repos.customerProfiles,
       repos.professionals,
       repos.companyMembers,
-      repos.auditLog,
-      repos.notifications,
+      makeDisputeEventBus(repos),
     );
 
     await expect(
@@ -177,8 +190,7 @@ describe("Company disputes (Module 28 — Workflow Completion)", () => {
       repos.customerProfiles,
       repos.professionals,
       repos.companyMembers,
-      repos.auditLog,
-      repos.notifications,
+      makeDisputeEventBus(repos),
     );
 
     await expect(
@@ -201,8 +213,7 @@ describe("Company disputes (Module 28 — Workflow Completion)", () => {
       repos.customerProfiles,
       repos.professionals,
       repos.companyMembers,
-      repos.auditLog,
-      repos.notifications,
+      makeDisputeEventBus(repos),
     );
 
     await expect(

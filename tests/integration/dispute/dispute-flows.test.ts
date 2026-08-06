@@ -14,15 +14,31 @@ import { GetAdminDisputeUseCase } from "@/application/use-cases/dispute/get-admi
 import { GetDisputeByIdUseCase } from "@/application/use-cases/dispute/get-dispute-by-id.use-case";
 import { RejectDisputeUseCase } from "@/application/use-cases/dispute/reject-dispute.use-case";
 import { ResolveDisputeUseCase } from "@/application/use-cases/dispute/resolve-dispute.use-case";
+import { RecordDisputeStatusChangeAuditLogSubscriber } from "@/application/use-cases/dispute/record-dispute-status-change-audit-log.subscriber";
+import { RecordDisputeAssignedAuditLogSubscriber } from "@/application/use-cases/dispute/record-dispute-assigned-audit-log.subscriber";
+import { RecordDisputeMessageAddedAuditLogSubscriber } from "@/application/use-cases/dispute/record-dispute-message-added-audit-log.subscriber";
+import { RecordDisputeCreatedAuditLogSubscriber } from "@/application/use-cases/dispute/record-dispute-created-audit-log.subscriber";
+import { NotifyDisputeStatusChangeSubscriber } from "@/application/use-cases/notification/notify-dispute-status-change.subscriber";
+import { NotifyDisputeAssignedSubscriber } from "@/application/use-cases/notification/notify-dispute-assigned.subscriber";
+import { NotifyDisputeMessageAddedSubscriber } from "@/application/use-cases/notification/notify-dispute-message-added.subscriber";
+import { NotifyDisputeCreatedSubscriber } from "@/application/use-cases/notification/notify-dispute-created.subscriber";
 import { AssignSupportTicketUseCase } from "@/application/use-cases/support-ticket/assign-support-ticket.use-case";
 import { ChangeSupportTicketStatusUseCase } from "@/application/use-cases/support-ticket/change-support-ticket-status.use-case";
 import { CloseSupportTicketUseCase } from "@/application/use-cases/support-ticket/close-support-ticket.use-case";
 import { CreateSupportTicketUseCase } from "@/application/use-cases/support-ticket/create-support-ticket.use-case";
 import { GetSupportTicketByIdUseCase } from "@/application/use-cases/support-ticket/get-support-ticket-by-id.use-case";
 import { ListMySupportTicketsUseCase } from "@/application/use-cases/support-ticket/list-my-support-tickets.use-case";
+import { RecordSupportTicketAuditLogSubscriber } from "@/application/use-cases/support-ticket/record-support-ticket-audit-log.subscriber";
 import { ResolveSupportTicketUseCase } from "@/application/use-cases/support-ticket/resolve-support-ticket.use-case";
+import { NotifySupportTicketStatusChangeSubscriber } from "@/application/use-cases/notification/notify-support-ticket-status-change.subscriber";
 import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "@/domain/errors/domain-error";
+import { SupportTicketStatusChanged } from "@/domain/events/support-ticket-status-changed";
+import { DisputeStatusChanged } from "@/domain/events/dispute-status-changed";
+import { DisputeAssigned } from "@/domain/events/dispute-assigned";
+import { DisputeMessageAdded } from "@/domain/events/dispute-message-added";
+import { DisputeCreated } from "@/domain/events/dispute-created";
 import { canTransitionDisputeStatus } from "@/domain/services/dispute-state";
+import { SynchronousEventBus } from "@/infrastructure/events/synchronous-event-bus";
 import {
   FakeAppointmentRepository,
   FakeCustomerProfileRepository,
@@ -152,6 +168,38 @@ function future(hoursFromNow: number, durationMinutes = 60) {
 }
 
 function makeUseCases(repos: Repos) {
+  // Module 37 — Domain Event Subscribers: the support-ticket use cases below
+  // publish `SupportTicketStatusChanged` instead of calling
+  // repos.auditLog/repos.notifications directly — wire a real
+  // `SynchronousEventBus` with the real subscribers so this integration test
+  // still exercises the full, genuine side-effect path end to end, same
+  // pattern as tests/integration/verification/verification-flows.test.ts.
+  const supportTicketEventBus = new SynchronousEventBus();
+  supportTicketEventBus.subscribe(
+    SupportTicketStatusChanged,
+    new RecordSupportTicketAuditLogSubscriber(repos.auditLog),
+  );
+  supportTicketEventBus.subscribe(
+    SupportTicketStatusChanged,
+    new NotifySupportTicketStatusChangeSubscriber(repos.notifications),
+  );
+
+  // Module 37 — Domain Event Subscribers: the dispute use cases below
+  // publish DisputeStatusChanged/DisputeAssigned/DisputeMessageAdded/
+  // DisputeCreated instead of calling repos.auditLog/repos.notifications
+  // directly — wire a real `SynchronousEventBus` with the real subscribers
+  // so this integration test still exercises the full, genuine side-effect
+  // path end to end, same pattern as the support-ticket wiring above.
+  const disputeEventBus = new SynchronousEventBus();
+  disputeEventBus.subscribe(DisputeStatusChanged, new RecordDisputeStatusChangeAuditLogSubscriber(repos.auditLog));
+  disputeEventBus.subscribe(DisputeStatusChanged, new NotifyDisputeStatusChangeSubscriber(repos.notifications));
+  disputeEventBus.subscribe(DisputeAssigned, new RecordDisputeAssignedAuditLogSubscriber(repos.auditLog));
+  disputeEventBus.subscribe(DisputeAssigned, new NotifyDisputeAssignedSubscriber(repos.notifications));
+  disputeEventBus.subscribe(DisputeMessageAdded, new RecordDisputeMessageAddedAuditLogSubscriber(repos.auditLog));
+  disputeEventBus.subscribe(DisputeMessageAdded, new NotifyDisputeMessageAddedSubscriber(repos.notifications));
+  disputeEventBus.subscribe(DisputeCreated, new RecordDisputeCreatedAuditLogSubscriber(repos.auditLog));
+  disputeEventBus.subscribe(DisputeCreated, new NotifyDisputeCreatedSubscriber(repos.notifications));
+
   return {
     createDispute: new CreateDisputeUseCase(
       repos.disputes,
@@ -159,8 +207,7 @@ function makeUseCases(repos: Repos) {
       repos.customerProfiles,
       repos.professionals,
       repos.companyMembers,
-      repos.auditLog,
-      repos.notifications,
+      disputeEventBus,
     ),
     getDispute: new GetDisputeByIdUseCase(
       repos.disputes,
@@ -172,15 +219,14 @@ function makeUseCases(repos: Repos) {
       repos.companyMembers,
     ),
     getAdminDispute: new GetAdminDisputeUseCase(repos.disputes, repos.disputeMessages, repos.disputeEvidence),
-    assign: new AssignDisputeUseCase(repos.disputes, repos.auditLog, repos.notifications),
+    assign: new AssignDisputeUseCase(repos.disputes, disputeEventBus),
     changeStatus: new ChangeDisputeStatusUseCase(
       repos.disputes,
       repos.jobs,
       repos.customerProfiles,
       repos.professionals,
       repos.companyMembers,
-      repos.auditLog,
-      repos.notifications,
+      disputeEventBus,
     ),
     addMessage: new AddDisputeMessageUseCase(
       repos.disputes,
@@ -189,8 +235,7 @@ function makeUseCases(repos: Repos) {
       repos.customerProfiles,
       repos.professionals,
       repos.companyMembers,
-      repos.auditLog,
-      repos.notifications,
+      disputeEventBus,
     ),
     addInternalNote: new AddDisputeInternalNoteUseCase(repos.disputes, repos.disputeMessages, repos.auditLog),
     addEvidence: new AddDisputeEvidenceUseCase(
@@ -208,8 +253,7 @@ function makeUseCases(repos: Repos) {
       repos.customerProfiles,
       repos.professionals,
       repos.companyMembers,
-      repos.auditLog,
-      repos.notifications,
+      disputeEventBus,
     ),
     reject: new RejectDisputeUseCase(
       repos.disputes,
@@ -217,8 +261,7 @@ function makeUseCases(repos: Repos) {
       repos.customerProfiles,
       repos.professionals,
       repos.companyMembers,
-      repos.auditLog,
-      repos.notifications,
+      disputeEventBus,
     ),
     close: new CloseDisputeUseCase(
       repos.disputes,
@@ -226,16 +269,15 @@ function makeUseCases(repos: Repos) {
       repos.customerProfiles,
       repos.professionals,
       repos.companyMembers,
-      repos.auditLog,
-      repos.notifications,
+      disputeEventBus,
     ),
     createTicket: new CreateSupportTicketUseCase(repos.supportTickets, repos.auditLog),
     getTicket: new GetSupportTicketByIdUseCase(repos.supportTickets),
     listMyTickets: new ListMySupportTicketsUseCase(repos.supportTickets),
-    assignTicket: new AssignSupportTicketUseCase(repos.supportTickets, repos.auditLog, repos.notifications),
-    changeTicketStatus: new ChangeSupportTicketStatusUseCase(repos.supportTickets, repos.auditLog, repos.notifications),
-    resolveTicket: new ResolveSupportTicketUseCase(repos.supportTickets, repos.auditLog, repos.notifications),
-    closeTicket: new CloseSupportTicketUseCase(repos.supportTickets, repos.auditLog, repos.notifications),
+    assignTicket: new AssignSupportTicketUseCase(repos.supportTickets, supportTicketEventBus),
+    changeTicketStatus: new ChangeSupportTicketStatusUseCase(repos.supportTickets, supportTicketEventBus),
+    resolveTicket: new ResolveSupportTicketUseCase(repos.supportTickets, supportTicketEventBus),
+    closeTicket: new CloseSupportTicketUseCase(repos.supportTickets, supportTicketEventBus),
   };
 }
 

@@ -1,18 +1,24 @@
 import { ConflictError, NotFoundError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { CompanyVerificationStatusChanged } from "@/domain/events/company-verification-status-changed";
 import type { CompanyRepository } from "@/domain/repositories/company-repository";
 import type { CompanyVerificationRecord, CompanyVerificationRepository } from "@/domain/repositories/company-verification-repository";
 import { canReject, canTransition, isValidReviewReason } from "@/domain/services/company-verification-rules";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 /** Module 18 — Company Professional: an admin rejects a case (a reason is
- *  required, 10–1000 chars). Mirrors RejectProfessionalVerificationUseCase. */
+ *  required, 10–1000 chars). Mirrors RejectProfessionalVerificationUseCase.
+ *
+ *  Module 37 — Domain Event Subscribers: see
+ *  `ApproveCompanyVerificationUseCase`'s own doc comment — same rationale,
+ *  same pattern, mirrored here exactly. */
 export class RejectCompanyVerificationUseCase {
   constructor(
     private readonly verifications: CompanyVerificationRepository,
     private readonly companies: CompanyRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator,
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(adminUserId: string, verificationId: string, reason: string): Promise<CompanyVerificationRecord> {
@@ -37,29 +43,23 @@ export class RejectCompanyVerificationUseCase {
       resubmissionReason: null,
     });
 
-    await this.auditLog.record({
-      adminUserId,
-      action: "COMPANY_VERIFICATION_REJECTED",
-      targetType: "CompanyVerification",
-      targetId: verificationId,
-      metadata: { companyProfileId: verification.companyProfileId },
-    });
-
     const company = await this.companies.findById(verification.companyProfileId);
-    if (company) {
-      try {
-        await this.notifications.notify({
-          userId: company.ownerUserId,
-          type: "COMPANY_VERIFICATION_REJECTED",
-          title: "Verification request rejected",
-          message: "Your company's verification request was rejected. See the details for the reason.",
-          resourceType: "COMPANY_VERIFICATION",
-          resourceId: verificationId,
-          actionUrl: "/dashboard/company/verification",
-        });
-      } catch (error) {
-        console.error("Failed to create company-verification-rejected notification", error);
-      }
+
+    try {
+      await this.eventBus.publishAll([
+        new CompanyVerificationStatusChanged(
+          verificationId,
+          verification.companyProfileId,
+          company?.ownerUserId ?? null,
+          verification.status,
+          "REJECTED",
+          adminUserId,
+          "REJECTED",
+        ),
+      ]);
+    } catch (error) {
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;
