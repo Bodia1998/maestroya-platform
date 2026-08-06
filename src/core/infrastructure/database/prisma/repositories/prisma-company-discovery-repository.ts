@@ -34,10 +34,10 @@ const CANDIDATE_SELECT = {
   longitude: true,
   createdAt: true,
   categories: { select: { id: true } },
-  members: { where: { joinedAt: { not: null }, removedAt: null }, select: { id: true } },
   _count: {
     select: {
       portfolioItems: { where: { deletedAt: null, moderatedAt: null } },
+      members: { where: { joinedAt: { not: null }, removedAt: null } },
     },
   },
 } as const;
@@ -57,8 +57,7 @@ type CandidateRow = {
   longitude: number | null;
   createdAt: Date;
   categories: { id: string }[];
-  members: { id: string }[];
-  _count: { portfolioItems: number };
+  _count: { portfolioItems: number; members: number };
 };
 
 function toCandidate(row: CandidateRow): CompanyDiscoveryCandidate {
@@ -76,7 +75,7 @@ function toCandidate(row: CandidateRow): CompanyDiscoveryCandidate {
     province: row.province,
     latitude: row.latitude,
     longitude: row.longitude,
-    teamSize: row.members.length,
+    teamSize: row._count.members,
     portfolioItemCount: row._count.portfolioItems,
     createdAt: row.createdAt,
   };
@@ -175,7 +174,11 @@ export class PrismaCompanyDiscoveryRepository implements CompanyDiscoveryReposit
         city: true,
         province: true,
         categories: { select: { id: true } },
-        members: { where: { joinedAt: { not: null }, removedAt: null }, select: { id: true } },
+        _count: {
+          select: {
+            members: { where: { joinedAt: { not: null }, removedAt: null } },
+          },
+        },
       },
     });
     if (!row) return null;
@@ -193,7 +196,7 @@ export class PrismaCompanyDiscoveryRepository implements CompanyDiscoveryReposit
       categoryIds: row.categories.map((c) => c.id),
       city: row.city,
       province: row.province,
-      teamSize: row.members.length,
+      teamSize: row._count.members,
     };
   }
 }

@@ -246,7 +246,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     const rows = await prisma.appointment.findMany({
       where: { serviceRequest: { customerId }, ...statusFilter(options.filter) },
       select: CUSTOMER_VIEW_APPOINTMENT_SELECT,
-      orderBy: [{ scheduledStart: "desc" }, { createdAt: "desc" }],
+      orderBy: [{ scheduledStart: "desc" }, { createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
@@ -260,7 +260,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     const rows = await prisma.appointment.findMany({
       where: { professionalProfileId, ...statusFilter(options.filter) },
       select: PROFESSIONAL_VIEW_APPOINTMENT_SELECT,
-      orderBy: [{ scheduledStart: "desc" }, { createdAt: "desc" }],
+      orderBy: [{ scheduledStart: "desc" }, { createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });

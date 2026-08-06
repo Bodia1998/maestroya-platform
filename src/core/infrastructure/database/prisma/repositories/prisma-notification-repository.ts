@@ -105,7 +105,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
     const rows = await prisma.notification.findMany({
       where: { userId, dismissedAt: null },
       select: DETAIL_SELECT,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });

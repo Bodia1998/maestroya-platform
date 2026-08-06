@@ -75,7 +75,7 @@ export class PrismaPortfolioRepository implements PortfolioRepository {
     const rows = await prisma.portfolioItem.findMany({
       where: { professionalProfileId, deletedAt: null, moderatedAt: null },
       select: DETAIL_SELECT,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
@@ -88,7 +88,7 @@ export class PrismaPortfolioRepository implements PortfolioRepository {
     const rows = await prisma.portfolioItem.findMany({
       where: { companyProfileId: companyId, deletedAt: null, moderatedAt: null },
       select: DETAIL_SELECT,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });

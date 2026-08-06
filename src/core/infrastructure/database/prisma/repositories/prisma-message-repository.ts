@@ -82,7 +82,7 @@ export class PrismaMessageRepository implements MessageRepository {
         ...(options.before ? { createdAt: { lt: await this.createdAtOf(options.before) } } : {}),
       },
       select: SELECT,
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
     });
     // Fetched newest-first (so `take` grabs the most recent page even when

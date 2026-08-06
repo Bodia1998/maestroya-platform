@@ -90,7 +90,7 @@ export class PrismaReviewRepository implements ReviewRepository {
     const rows = await prisma.review.findMany({
       where: { revieweeProfessionalProfileId: professionalProfileId, status: PUBLIC_STATUS },
       select: DETAIL_SELECT,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
