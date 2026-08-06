@@ -63,6 +63,7 @@ export async function register() {
   await import("@/application/use-cases/support-ticket/compose");
   await import("@/application/use-cases/company-invitation/compose");
   await import("@/application/use-cases/company-membership/compose");
+  await import("@/application/use-cases/gdpr/compose");
 
   let shuttingDown = false;
   const shutdown = async (signal: string) => {

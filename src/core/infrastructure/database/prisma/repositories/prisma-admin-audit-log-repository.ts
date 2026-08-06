@@ -81,6 +81,16 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   VERIFICATION_EXPIRED: "VERIFICATION",
   COMPANY_VERIFICATION_EXPIRED: "VERIFICATION",
   WORKFLOW_EXPIRATION_RUN: "OTHER",
+  // Module 38 — GDPR Compliance: same "map to the closest existing
+  // AuditLogAction value, preserve the concrete action name in
+  // metadata.adminAction" convention. None of these are a status change on
+  // an existing entity or a create/update of one — "OTHER" is the closest
+  // fit for all five, same reasoning as WORKFLOW_EXPIRATION_RUN above.
+  GDPR_EXPORT_REQUESTED: "OTHER",
+  GDPR_EXPORT_PREPARED: "OTHER",
+  GDPR_DELETION_REQUESTED: "OTHER",
+  GDPR_CONSENT_GRANTED: "OTHER",
+  GDPR_CONSENT_WITHDRAWN: "OTHER",
 };
 
 const SELECT = {

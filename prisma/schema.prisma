@@ -159,6 +159,8 @@ model User {
   startedJobs            Job[]                  @relation("JobStartedBy")
   completedJobs          Job[]                  @relation("JobCompletedBy")
   cancelledJobs          Job[]                  @relation("JobCancelledBy")
+  /// Module 38 — GDPR Compliance.
+  consents               Consent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2719,4 +2721,42 @@ enum AccountRestrictionReason {
   REVIEW_ABUSE
   ADMIN_DECISION
   OTHER
+}
+
+// ============================================================================
+// Module 38 — GDPR Compliance
+// ============================================================================
+
+/// Append-only record of a user granting (and, later, possibly withdrawing)
+/// one of the platform's tracked consent types. See
+/// src/core/domain/entities/consent.ts for the domain model and
+/// src/core/domain/value-objects/consent-type.ts for why these three values
+/// were chosen. Granting the same type again after a withdrawal creates a
+/// brand-new row rather than reactivating the old one — a full history is
+/// the point, not just current state.
+model Consent {
+  id          String      @id @default(uuid()) @db.Uuid
+  userId      String      @db.Uuid
+  type        ConsentType
+  /// Free-form identifier for the terms/policy text version consented to
+  /// (e.g. "2026-01-15"). Not validated against a fixed list here — that
+  /// lives at the application edge/CMS that manages legal copy.
+  version     String
+  grantedAt   DateTime    @default(now())
+  withdrawnAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, type])
+  @@map("consents")
+}
+
+enum ConsentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  MARKETING
 }
