@@ -80,3 +80,22 @@ export class AccountRestrictedError extends DomainError {
     super(message);
   }
 }
+
+/**
+ * Module 35 — Payment Domain Model Preparation: thrown by the `Payment`
+ * aggregate (`domain/entities/payment.ts`) when a caller requests a status
+ * change its lifecycle does not allow from the current status — e.g.
+ * capturing a payment that already `FAILED`, or refunding one that was
+ * never `CAPTURED`. Raised from inside the aggregate itself (see
+ * `Payment.transitionTo`/`Payment.refund`), not re-validated ad hoc at
+ * every call site, so "invalid state changes are prevented" is a property
+ * of `Payment` itself — true for today's application code and for the
+ * Module 59 Stripe webhook handler that will call these same methods.
+ */
+export class InvalidPaymentTransitionError extends DomainError {
+  readonly code = "INVALID_PAYMENT_TRANSITION";
+
+  constructor(message: string) {
+    super(message);
+  }
+}
