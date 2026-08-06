@@ -12,6 +12,13 @@ async function loadModule(nodeEnv: "development" | "production") {
     mutableEnv.AUTH_SECRET = "a".repeat(32);
     mutableEnv.STRIPE_SECRET_KEY = "sk_live_x";
     mutableEnv.STRIPE_PUBLISHABLE_KEY = "pk_live_x";
+    // Module 39 — Sentry + CI/CD Hardening: production now requires
+    // SENTRY_DSN (see env.ts's superRefine) — set to a syntactically
+    // valid but fake DSN. Left unresolvable (no real Sentry project) is
+    // fine here: createErrorReporter()'s SentryErrorReporter falls back
+    // to the logger if the SDK fails to load, so this test's existing
+    // assertions on logged/returned content are unaffected either way.
+    mutableEnv.SENTRY_DSN = "https://examplePublicKey@o0.ingest.sentry.io/0";
   }
   vi.resetModules();
   const [errorModule, domainErrorModule] = await Promise.all([
@@ -81,5 +88,42 @@ describe("infrastructure/observability/http-error-response", () => {
       route: "/api/test",
     });
     expect(response.status).toBe(429);
+  });
+
+  describe("error reporting (Module 39 — Sentry + CI/CD Hardening)", () => {
+    it("reports an unexpected error to the ErrorReporter", async () => {
+      vi.resetModules();
+      const mutableEnv = process.env as Record<string, string | undefined>;
+      for (const [key, value] of Object.entries(VALID_BASE_ENV)) mutableEnv[key] = value;
+      mutableEnv.NODE_ENV = "development";
+
+      const factory = await import("@/infrastructure/observability/error-reporter-factory");
+      const reportSpy = vi.spyOn(factory.createErrorReporter(), "reportException");
+
+      const { toHttpErrorResponse } = await import("@/infrastructure/observability/http-error-response");
+      toHttpErrorResponse(new Error("unexpected"), { requestId: "req-4", route: "/api/test" });
+
+      expect(reportSpy).toHaveBeenCalledTimes(1);
+      const [reportedError] = reportSpy.mock.calls[0]!;
+      expect((reportedError as Error).message).toBe("unexpected");
+      reportSpy.mockRestore();
+    });
+
+    it("does not report an expected DomainError to the ErrorReporter", async () => {
+      vi.resetModules();
+      const mutableEnv = process.env as Record<string, string | undefined>;
+      for (const [key, value] of Object.entries(VALID_BASE_ENV)) mutableEnv[key] = value;
+      mutableEnv.NODE_ENV = "development";
+
+      const factory = await import("@/infrastructure/observability/error-reporter-factory");
+      const reportSpy = vi.spyOn(factory.createErrorReporter(), "reportException");
+
+      const { toHttpErrorResponse } = await import("@/infrastructure/observability/http-error-response");
+      const { NotFoundError } = await import("@/domain/errors/domain-error");
+      toHttpErrorResponse(new NotFoundError("Job", "job_1"), { requestId: "req-5", route: "/api/test" });
+
+      expect(reportSpy).not.toHaveBeenCalled();
+      reportSpy.mockRestore();
+    });
   });
 });

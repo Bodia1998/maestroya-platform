@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 import { DomainError } from "@/domain/errors/domain-error";
 import { getCurrentUser } from "@/infrastructure/auth/rbac";
 import { logger } from "@/infrastructure/observability/logger";
+import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
 import { updateLanguagePreferenceSchema } from "@/application/dto/i18n.dto";
 import { makeUpdateUserLanguagePreferenceUseCase } from "@/application/use-cases/i18n/compose";
@@ -101,6 +102,14 @@ export async function PATCH(request: NextRequest) {
       requestId,
       route: "/api/user/language",
       error,
+    });
+    // Module 39 — Sentry + CI/CD Hardening: only reached for a non-
+    // DomainError (the `if` above already returned for expected failures),
+    // so this is always an unexpected exception.
+    createErrorReporter().reportException(error, {
+      tags: { route: "/api/user/language", source: "http-route-handler" },
+      extra: { requestId },
+      user: { id: user.id },
     });
     return NextResponse.json(
       { status: "error", message: "Could not update language preference." },

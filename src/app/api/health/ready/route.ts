@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { logger } from "@/infrastructure/observability/logger";
+import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
 
 /**
@@ -47,6 +48,15 @@ export async function GET(request: NextRequest) {
       requestId,
       route: "/api/health/ready",
       error,
+    });
+
+    // Module 39 — Sentry + CI/CD Hardening: a readiness probe failure
+    // means the database is unreachable from this instance — always an
+    // unexpected, operationally significant failure worth reporting, not
+    // routine traffic.
+    createErrorReporter().reportException(error, {
+      tags: { route: "/api/health/ready", source: "http-route-handler" },
+      extra: { requestId },
     });
 
     return NextResponse.json(

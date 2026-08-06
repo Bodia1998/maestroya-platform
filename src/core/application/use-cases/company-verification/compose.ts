@@ -3,7 +3,7 @@ import { PrismaCompanyRepository } from "@/infrastructure/database/prisma/reposi
 import { PrismaCompanyMembershipRepository } from "@/infrastructure/database/prisma/repositories/prisma-company-membership-repository";
 import { PrismaCompanyVerificationRepository } from "@/infrastructure/database/prisma/repositories/prisma-company-verification-repository";
 import { CloudinaryCompanyVerificationDocumentUploadService } from "@/infrastructure/storage/cloudinary/company-verification-document-upload-service";
-import { ConsoleFailureReporter } from "@/infrastructure/observability/console-failure-reporter";
+import { createFailureReporter } from "@/infrastructure/observability/failure-reporter-factory";
 import { eventBus } from "@/infrastructure/events/compose";
 // Side-effect import: registers NotifyCompanyVerificationStatusChangeSubscriber
 // against the shared eventBus. Mirrors verification/compose.ts's own
@@ -32,7 +32,11 @@ const companies = new PrismaCompanyRepository();
 const memberships = new PrismaCompanyMembershipRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
 const uploads = new CloudinaryCompanyVerificationDocumentUploadService();
-const failureReporter = new ConsoleFailureReporter();
+// Module 39 — Sentry + CI/CD Hardening: SentryFailureReporter in
+// production, ConsoleFailureReporter (Module 37) otherwise — see
+// failure-reporter-factory.ts's own doc comment. No use case or
+// subscriber in this module changes.
+const failureReporter = createFailureReporter();
 
 /**
  * Module 37 — Domain Event Subscribers: registers this module's

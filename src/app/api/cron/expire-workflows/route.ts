@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { env } from "@/infrastructure/config/env";
 import { logger } from "@/infrastructure/observability/logger";
+import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
 import { makeRunWorkflowExpirationsUseCase } from "@/application/use-cases/workflow-expiration/compose";
 
@@ -77,6 +78,14 @@ export async function GET(request: NextRequest) {
       requestId,
       route: "/api/cron/expire-workflows",
       error,
+    });
+    // Module 39 — Sentry + CI/CD Hardening: this is always an unexpected
+    // failure of the cron sweep itself (never a caller input problem — the
+    // auth checks above already returned before reaching here), so it's
+    // always reported, not just logged.
+    createErrorReporter().reportException(error, {
+      tags: { route: "/api/cron/expire-workflows", source: "background-job" },
+      extra: { requestId },
     });
     return NextResponse.json(
       { status: "error", message: "Workflow expiration run failed." },
