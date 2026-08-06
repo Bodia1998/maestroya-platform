@@ -99,3 +99,63 @@ export class InvalidPaymentTransitionError extends DomainError {
     super(message);
   }
 }
+
+/**
+ * Module 36 — Tax Engine Preparation: thrown by `domain/services/tax-*`
+ * for any tax-calculation input that fails validation (e.g. a negative or
+ * non-finite `taxableAmount`/`serviceAmount`/`materialsAmount`, or an
+ * empty `countryCode`) that isn't more specifically an
+ * `UnsupportedCountryError` or `InvalidTaxRateError`. Kept as its own
+ * class (rather than reusing `ValidationError`) so tax-module failures are
+ * distinguishable from generic application-layer input validation — see
+ * `docs/MODULE_22_COMMISSION_FINANCIAL.md`'s "Module 26 (IVA/Tax)
+ * boundary" for why this module's errors are kept separately addressable.
+ */
+export class TaxCalculationError extends DomainError {
+  readonly code = "TAX_CALCULATION_ERROR";
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/**
+ * Module 36 — Tax Engine Preparation: thrown by
+ * `domain/services/tax-calculator.ts`'s `resolveTaxCalculator` when no
+ * `TaxCalculator` is registered for a given (normalized) country code.
+ * Deliberately never falls back to a default calculator — an unsupported
+ * country must always be a caller-visible error, never a silently-wrong
+ * tax rate.
+ */
+export class UnsupportedCountryError extends DomainError {
+  readonly code = "UNSUPPORTED_COUNTRY";
+  readonly countryCode: string;
+
+  constructor(countryCode: string) {
+    super(`No tax calculator registered for country code "${countryCode}".`);
+    this.countryCode = countryCode;
+  }
+}
+
+/**
+ * Module 36 — Tax Engine Preparation: thrown by a `TaxCalculator`
+ * implementation (e.g. `SpainIvaCalculator`) when a caller-supplied
+ * `rateBps` isn't one of the rates that country actually recognizes.
+ * Exposes `rateBps`/`validRatesBps` as structured fields (same convention
+ * as `RateLimitedError.retryAfterMs`) so a caller can build a helpful
+ * message without re-parsing this error's own text.
+ */
+export class InvalidTaxRateError extends DomainError {
+  readonly code = "INVALID_TAX_RATE";
+  readonly rateBps: number;
+  readonly validRatesBps: readonly number[];
+
+  constructor(rateBps: number, validRatesBps: readonly number[], countryCode: string) {
+    super(
+      `${rateBps} bps is not a valid tax rate for country code "${countryCode}". ` +
+        `Valid rates (bps): ${validRatesBps.join(", ")}.`,
+    );
+    this.rateBps = rateBps;
+    this.validRatesBps = validRatesBps;
+  }
+}
