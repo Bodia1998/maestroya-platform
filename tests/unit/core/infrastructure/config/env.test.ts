@@ -72,6 +72,13 @@ describe("infrastructure/config/env", () => {
   });
 
   describe("production hardening", () => {
+    // Every case below also sets SENTRY_DSN — a valid production
+    // configuration requires it (Module 39, see the dedicated "Sentry
+    // configuration validation" suite below); a case that isn't testing
+    // that specific requirement sets it purely so the test only exercises
+    // the one thing it's named for.
+    const SENTRY_DSN = "https://examplePublicKey@o0.ingest.sentry.io/0";
+
     it("rejects an AUTH_SECRET shorter than 32 characters", async () => {
       await expect(
         loadEnvWith({
@@ -79,6 +86,7 @@ describe("infrastructure/config/env", () => {
           NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
           AUTH_URL: "https://maestroya.example.com",
           AUTH_SECRET: "too-short",
+          SENTRY_DSN,
         }),
       ).rejects.toThrow(/Invalid environment variables/);
     });
@@ -90,6 +98,7 @@ describe("infrastructure/config/env", () => {
           NEXT_PUBLIC_APP_URL: "http://maestroya.example.com",
           AUTH_URL: "https://maestroya.example.com",
           AUTH_SECRET: "a".repeat(32),
+          SENTRY_DSN,
         }),
       ).rejects.toThrow(/Invalid environment variables/);
     });
@@ -102,6 +111,7 @@ describe("infrastructure/config/env", () => {
           AUTH_URL: "https://maestroya.example.com",
           AUTH_SECRET: "a".repeat(32),
           STRIPE_SECRET_KEY: "sk_test_shouldnotbeallowed",
+          SENTRY_DSN,
         }),
       ).rejects.toThrow(/Invalid environment variables/);
     });
@@ -114,6 +124,7 @@ describe("infrastructure/config/env", () => {
         AUTH_SECRET: "a".repeat(32),
         STRIPE_SECRET_KEY: "sk_live_realkey",
         STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+        SENTRY_DSN,
       });
       expect(isProduction).toBe(true);
       expect(env.AUTH_SECRET.length).toBeGreaterThanOrEqual(32);
@@ -131,6 +142,70 @@ describe("infrastructure/config/env", () => {
         AUTH_URL: "http://localhost:3000",
       });
       expect(env.NODE_ENV).toBe("production");
+    });
+  });
+
+  describe("Sentry configuration validation (Module 39 — Sentry + CI/CD Hardening)", () => {
+    it("rejects a production configuration missing SENTRY_DSN", async () => {
+      await expect(
+        loadEnvWith({
+          NODE_ENV: "production",
+          NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+          AUTH_URL: "https://maestroya.example.com",
+          AUTH_SECRET: "a".repeat(32),
+          STRIPE_SECRET_KEY: "sk_live_realkey",
+          STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+          SENTRY_DSN: undefined,
+        }),
+      ).rejects.toThrow(/Invalid environment variables/);
+    });
+
+    it("accepts a production configuration with SENTRY_DSN set", async () => {
+      const { env } = await loadEnvWith({
+        NODE_ENV: "production",
+        NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+        AUTH_URL: "https://maestroya.example.com",
+        AUTH_SECRET: "a".repeat(32),
+        STRIPE_SECRET_KEY: "sk_live_realkey",
+        STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+        SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+      });
+      expect(env.SENTRY_DSN).toBe("https://examplePublicKey@o0.ingest.sentry.io/0");
+    });
+
+    it("does not require SENTRY_DSN in development", async () => {
+      const { env } = await loadEnvWith({ SENTRY_DSN: undefined });
+      expect(env.SENTRY_DSN).toBeUndefined();
+      expect(env.NODE_ENV).toBe("development");
+    });
+
+    it("does not require SENTRY_DSN during the Next.js build phase", async () => {
+      const { env } = await loadEnvWith({
+        NODE_ENV: "production",
+        NEXT_PHASE: "phase-production-build",
+        SENTRY_DSN: undefined,
+        NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+        AUTH_URL: "http://localhost:3000",
+      });
+      expect(env.NODE_ENV).toBe("production");
+      expect(env.SENTRY_DSN).toBeUndefined();
+    });
+
+    it("rejects a malformed SENTRY_DSN value in any environment", async () => {
+      await expect(loadEnvWith({ SENTRY_DSN: "not-a-url" })).rejects.toThrow(
+        /Invalid environment variables/,
+      );
+    });
+
+    it("rejects a SENTRY_TRACES_SAMPLE_RATE outside 0-1", async () => {
+      await expect(loadEnvWith({ SENTRY_TRACES_SAMPLE_RATE: "1.5" })).rejects.toThrow(
+        /Invalid environment variables/,
+      );
+    });
+
+    it("accepts a valid SENTRY_TRACES_SAMPLE_RATE", async () => {
+      const { env } = await loadEnvWith({ SENTRY_TRACES_SAMPLE_RATE: "0.25" });
+      expect(env.SENTRY_TRACES_SAMPLE_RATE).toBe(0.25);
     });
   });
 

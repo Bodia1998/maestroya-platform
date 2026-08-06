@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { DomainError } from "@/domain/errors/domain-error";
 import { logger } from "@/infrastructure/observability/logger";
 import { isProduction } from "@/infrastructure/config/env";
+import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 
 /**
  * Production-safe error → HTTP response mapping for Route Handlers
@@ -71,6 +72,15 @@ export function toHttpErrorResponse(
     requestId: context.requestId ?? undefined,
     route: context.route,
     error,
+  });
+
+  // Module 39 — Sentry + CI/CD Hardening: only this branch — genuinely
+  // unexpected exceptions — reaches the error reporter. The `DomainError`
+  // branch above (expected validation/not-found/etc. failures) never
+  // does; see `ErrorReporter.reportException`'s own doc comment.
+  createErrorReporter().reportException(error, {
+    tags: { route: context.route, source: "http-route-handler" },
+    extra: { requestId: context.requestId ?? undefined },
   });
 
   return NextResponse.json(

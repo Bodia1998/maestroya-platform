@@ -33,10 +33,12 @@ export async function register() {
 
   const { env } = await import("@/infrastructure/config/env");
   const { logger } = await import("@/infrastructure/observability/logger");
+  const { isSentryConfigured } = await import("@/infrastructure/observability/sentry-client");
 
   logger.info("app_startup", {
     nodeEnv: env.NODE_ENV,
     logLevel: env.LOG_LEVEL,
+    sentryConfigured: isSentryConfigured(),
   });
 
   const { prisma } = await import("@/infrastructure/database/prisma/client");
@@ -81,4 +83,51 @@ export async function register() {
 
   process.once("SIGTERM", () => void shutdown("SIGTERM"));
   process.once("SIGINT", () => void shutdown("SIGINT"));
+}
+
+/**
+ * Module 39 — Sentry + CI/CD Hardening: Next.js's global error-reporting
+ * hook (App Router, Next 13.4+/stable in 15) — invoked automatically for
+ * any exception that escapes a Server Component, Route Handler, or
+ * Server Action *without* already having been caught and turned into a
+ * response by that code itself. This is the backstop for "some route
+ * handler didn't get its own explicit reporting call updated" — the
+ * primary, more precise reporting paths remain
+ * `http-error-response.ts`'s `toHttpErrorResponse` (Route Handlers that
+ * use it) and each Route Handler's own `catch` block (the health/ready,
+ * user/language, and cron routes) — this hook exists in addition to
+ * those, not instead of them, since it can't distinguish an intentionally
+ * caught `DomainError` a route already handled and responded to (no
+ * exception escapes in that case, so this hook never even runs) from one
+ * that wasn't.
+ *
+ * Only reports `DomainError`s that *do* escape uncaught (a bug in a route
+ * that forgot to catch one) — never treats "an error escaped" as
+ * automatically "ignore because it might be expected"; `DomainError`
+ * instances are still expected to be caught deliberately by the code that
+ * throws them, per `domain/errors/domain-error.ts`'s own doc comment.
+ * Filtering by `instanceof DomainError` here still matches the "only
+ * unexpected exceptions reach Sentry" requirement for the normal case
+ * where routes do catch their own domain errors.
+ */
+export async function onRequestError(
+  error: unknown,
+  request: { path: string; method: string; headers: Record<string, string | undefined> },
+  context: { routerKind: string; routePath: string; routeType: string },
+): Promise<void> {
+  if (process.env.NEXT_RUNTIME !== "nodejs") return;
+
+  const { DomainError } = await import("@/domain/errors/domain-error");
+  if (error instanceof DomainError) return;
+
+  const { createErrorReporter } = await import("@/infrastructure/observability/error-reporter-factory");
+  createErrorReporter().reportException(error, {
+    tags: {
+      source: "next-instrumentation",
+      routePath: context.routePath,
+      routeType: context.routeType,
+      routerKind: context.routerKind,
+    },
+    extra: { path: request.path, method: request.method },
+  });
 }

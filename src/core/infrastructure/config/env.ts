@@ -49,6 +49,15 @@ import { z } from "zod";
 const isProductionRuntime = process.env.NODE_ENV === "production";
 
 /**
+ * Module 39 — Sentry + CI/CD Hardening: treats an empty-string env value
+ * as absent, for the `z.preprocess` calls below (`SENTRY_DSN`/
+ * `NEXT_PUBLIC_SENTRY_DSN`) — see those fields' own comments for why.
+ */
+function emptyStringToUndefined(value: unknown): unknown {
+  return value === "" ? undefined : value;
+}
+
+/**
  * Base schema, shared across environments. Secrets that are hard
  * requirements in production (Stripe, Cloudinary) are still required in
  * every environment today because there is no environment-specific
@@ -161,6 +170,47 @@ const envSchema = z
     // it — the route itself refuses every request with a 503 if this is
     // unset, rather than falling back to an insecure "no check" behavior.
     CRON_SECRET: z.string().optional(),
+
+    // --- Error reporting (Module 39 — Sentry + CI/CD Hardening) ---
+    // `SENTRY_DSN` gates every Sentry-backed implementation in
+    // `infrastructure/observability/` (see `sentry-client.ts`): unset
+    // anywhere → Sentry stays fully inert and `createErrorReporter()`/
+    // `createFailureReporter()` fall back to their console-based
+    // implementations, so local development never needs a Sentry account.
+    // Required in production (see `.superRefine` below) — a production
+    // deployment must fail fast rather than silently run with no error
+    // reporting.
+    // `.env`/`.env.production`-style files in this codebase conventionally
+    // mark an unset optional variable as `""` (see e.g. `REDIS_URL`,
+    // `MAPBOX_API_KEY` below) rather than omitting the line entirely.
+    // `z.string().url()` rejects `""` outright (it isn't a valid URL), so
+    // both DSN fields are preprocessed to treat an empty string exactly
+    // like an absent variable — before the `.url()` check runs — rather
+    // than requiring every env file to omit the line instead of leaving it
+    // empty. Does not weaken the production requirement below: `.superRefine`
+    // still sees `undefined`, not `""`, and still fails fast.
+    SENTRY_DSN: z.preprocess(emptyStringToUndefined, z.string().url().optional()),
+    // Public/browser counterpart of `SENTRY_DSN`, read by `src/app/error.tsx`
+    // (the root error boundary, which runs client-side). Deliberately a
+    // separate variable, never `SENTRY_DSN` itself — anything under
+    // `NEXT_PUBLIC_*` is inlined into the client bundle at build time, so
+    // the server-only DSN must never be reused here. Optional in every
+    // environment: a missing value simply means client-side (browser)
+    // exceptions aren't reported, while server-side reporting (the
+    // primary requirement) is unaffected.
+    NEXT_PUBLIC_SENTRY_DSN: z.preprocess(emptyStringToUndefined, z.string().url().optional()),
+    // Sentry's own "environment" tag, distinct from NODE_ENV so e.g. a
+    // staging deployment that must run with NODE_ENV=production (to get
+    // production build behavior) can still be told apart from real
+    // production traffic inside Sentry. Falls back to NODE_ENV when unset
+    // (see `sentry-client.ts`).
+    SENTRY_ENVIRONMENT: z.string().optional(),
+    // Fraction (0-1) of transactions Sentry samples for performance
+    // tracing. Optional and defaults to 0 (tracing off, errors only) —
+    // this module's scope is error reporting, not APM; left configurable
+    // rather than hardcoded so it can be enabled later without another
+    // env-layer change.
+    SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV !== "production") return;
@@ -216,6 +266,20 @@ const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ["STRIPE_SECRET_KEY"],
         message: "Test-mode Stripe keys (sk_test_/pk_test_) must not be used in production.",
+      });
+    }
+
+    // Module 39 — Sentry + CI/CD Hardening: a production deployment must
+    // fail fast if it would otherwise run with no error reporting at all,
+    // rather than silently operating unobserved until someone notices.
+    // Every other environment (development, test, and the `next build`
+    // build-phase case already exempted above) is unaffected — Sentry
+    // stays fully optional there.
+    if (!value.SENTRY_DSN) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["SENTRY_DSN"],
+        message: "SENTRY_DSN is required in production for error reporting (Module 39).",
       });
     }
   });

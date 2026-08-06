@@ -17,7 +17,7 @@ import { PrismaReviewRepository } from "@/infrastructure/database/prisma/reposit
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { PrismaSupportTicketRepository } from "@/infrastructure/database/prisma/repositories/prisma-support-ticket-repository";
 import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
-import { ConsoleFailureReporter } from "@/infrastructure/observability/console-failure-reporter";
+import { createFailureReporter } from "@/infrastructure/observability/failure-reporter-factory";
 import { eventBus } from "@/infrastructure/events/compose";
 import { PersonalDataExportRequested } from "@/domain/events/personal-data-export-requested";
 import { PersonalDataExportPrepared } from "@/domain/events/personal-data-export-prepared";
@@ -54,7 +54,11 @@ const disputes = new PrismaDisputeRepository();
 const professionalVerifications = new PrismaProfessionalVerificationRepository();
 const consents = new PrismaConsentRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
-const failureReporter = new ConsoleFailureReporter();
+// Module 39 — Sentry + CI/CD Hardening: SentryFailureReporter in
+// production, ConsoleFailureReporter (Module 37) otherwise — see
+// failure-reporter-factory.ts's own doc comment. No use case or
+// subscriber in this module changes.
+const failureReporter = createFailureReporter();
 
 const inventoryRepos: GdprInventoryRepos = {
   users,

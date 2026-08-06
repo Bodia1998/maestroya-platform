@@ -5,8 +5,17 @@
  * requirement; error boundaries rely on React state, which needs
  * client-side rendering).
  *
- * Kept minimal here. Add error reporting (Sentry or similar) inside the
- * useEffect once an observability provider is chosen.
+ * Module 39 — Sentry + CI/CD Hardening: reports the caught error to
+ * Sentry's browser SDK when `NEXT_PUBLIC_SENTRY_DSN` is configured
+ * (production only — see `infrastructure/config/env.ts`). Deliberately
+ * does not import `@/infrastructure/config/env` or any other
+ * `server-only`-guarded module (this file runs in the browser); reads
+ * `process.env.NEXT_PUBLIC_SENTRY_DSN` directly, the standard Next.js way
+ * to reference a `NEXT_PUBLIC_*` variable from client code, and the SDK
+ * is only ever loaded when that value is present. Falls back to
+ * `console.error` (unchanged from before this module) whenever the DSN
+ * is unset, so local development needs no Sentry account or network
+ * access at all.
  */
 import { useEffect } from "react";
 
@@ -19,6 +28,18 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error(error);
+
+    const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+    if (!dsn) return;
+
+    void import("@sentry/nextjs")
+      .then((Sentry) => {
+        Sentry.captureException(error);
+      })
+      .catch(() => {
+        // Sentry's browser SDK failing to load must never break the
+        // error boundary itself — `console.error` above already ran.
+      });
   }, [error]);
 
   return (

@@ -38,6 +38,16 @@ jobs:
       CLOUDINARY_CLOUD_NAME: "placeholder"
       CLOUDINARY_API_KEY: "placeholder"
       CLOUDINARY_API_SECRET: "placeholder"
+      # Module 39 — Sentry + CI/CD Hardening: `next build` forces
+      # NODE_ENV=production for the build step itself, and env.ts's
+      # production `superRefine` requires SENTRY_DSN whenever NODE_ENV is
+      # "production" outside the Next.js build phase (see that file's own
+      # comment on NEXT_PHASE) — `next build` does set NEXT_PHASE, so this
+      # placeholder isn't strictly required for the build step to pass,
+      # but is set anyway so any future step/script that imports env.ts
+      # under a forced production NODE_ENV (outside next build itself)
+      # doesn't fail CI over a missing placeholder.
+      SENTRY_DSN: "https://ci-placeholder@o0.ingest.sentry.io/0"
 
     steps:
       - uses: actions/checkout@v4
@@ -50,11 +60,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
+      - name: Prisma generate
+        run: npm run prisma:generate
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
 
       - name: Prisma validate
         run: npx prisma validate
@@ -66,7 +79,10 @@ jobs:
         run: npx prisma migrate status
 
       - name: Unit tests
-        run: npm run test
+        run: npm run test:unit
+
+      - name: Integration tests
+        run: npm run test:integration
 
       - name: Build
         run: npm run build
