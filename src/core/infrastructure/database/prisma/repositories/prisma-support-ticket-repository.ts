@@ -72,7 +72,7 @@ export class PrismaSupportTicketRepository implements SupportTicketRepository {
     const rows = await prisma.supportTicket.findMany({
       where: { openedByUserId: userId, ...(options.status ? { status: options.status } : {}) },
       select: SELECT,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });

@@ -113,7 +113,7 @@ export class PrismaDisputeRepository implements DisputeRepository {
     const rows = await prisma.dispute.findMany({
       where: { raisedByUserId: userId, ...(options.status ? { status: options.status } : {}) },
       select: DETAIL_SELECT,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });

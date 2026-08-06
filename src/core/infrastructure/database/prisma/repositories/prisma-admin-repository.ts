@@ -103,7 +103,7 @@ export class PrismaAdminRepository implements AdminRepository {
           : {}),
       },
       select: userSelect,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
@@ -175,7 +175,7 @@ export class PrismaAdminRepository implements AdminRepository {
           : {}),
       },
       select: professionalSelect,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
@@ -198,7 +198,7 @@ export class PrismaAdminRepository implements AdminRepository {
     const rows = await prisma.serviceRequest.findMany({
       where: { deletedAt: null, ...(options.status ? { status: options.status } : {}) },
       select: serviceRequestSelect,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
@@ -218,7 +218,7 @@ export class PrismaAdminRepository implements AdminRepository {
     const rows = await prisma.quote.findMany({
       where: options.status ? { status: options.status } : {},
       select: quoteSelect,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
@@ -238,7 +238,7 @@ export class PrismaAdminRepository implements AdminRepository {
     const rows = await prisma.job.findMany({
       where: options.status ? { status: options.status } : {},
       select: jobSelect,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
@@ -258,7 +258,7 @@ export class PrismaAdminRepository implements AdminRepository {
     const rows = await prisma.review.findMany({
       where: options.status ? { status: options.status } : {},
       select: reviewSelect,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
@@ -284,7 +284,7 @@ export class PrismaAdminRepository implements AdminRepository {
   async listPortfolioItems(options: ListAdminPortfolioItemsOptions): Promise<AdminPortfolioItemRecord[]> {
     const rows = await prisma.portfolioItem.findMany({
       select: portfolioSelect,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
@@ -325,7 +325,7 @@ export class PrismaAdminRepository implements AdminRepository {
           : {}),
       },
       select: companySelect,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });

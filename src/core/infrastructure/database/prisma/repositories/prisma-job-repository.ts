@@ -184,7 +184,7 @@ export class PrismaJobRepository implements JobRepository {
     const rows = await prisma.job.findMany({
       where: { customerId, ...statusFilter(options.filter) },
       select: CUSTOMER_VIEW_JOB_SELECT,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
@@ -195,7 +195,7 @@ export class PrismaJobRepository implements JobRepository {
     const rows = await prisma.job.findMany({
       where: { professionalProfileId, ...statusFilter(options.filter) },
       select: PROFESSIONAL_VIEW_JOB_SELECT,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: options.limit,
       skip: options.offset,
     });
