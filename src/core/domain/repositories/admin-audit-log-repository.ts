@@ -100,7 +100,17 @@ export type AdminAuditAction =
   | "QUOTE_EXPIRED"
   | "VERIFICATION_EXPIRED"
   | "COMPANY_VERIFICATION_EXPIRED"
-  | "WORKFLOW_EXPIRATION_RUN";
+  | "WORKFLOW_EXPIRATION_RUN"
+  // Module 38 — GDPR Compliance: performed by the data subject themselves
+  // (exporting/requesting deletion of their own data, granting/withdrawing
+  // consent) but recorded on this same append-only trail, same reasoning as
+  // VERIFICATION_SUBMITTED above — GDPR itself expects a record of when
+  // these rights were exercised.
+  | "GDPR_EXPORT_REQUESTED"
+  | "GDPR_EXPORT_PREPARED"
+  | "GDPR_DELETION_REQUESTED"
+  | "GDPR_CONSENT_GRANTED"
+  | "GDPR_CONSENT_WITHDRAWN";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved
