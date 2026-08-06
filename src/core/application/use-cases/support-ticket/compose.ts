@@ -1,6 +1,15 @@
 import { PrismaAdminAuditLogRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-audit-log-repository";
 import { PrismaSupportTicketRepository } from "@/infrastructure/database/prisma/repositories/prisma-support-ticket-repository";
-import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
+import { ConsoleFailureReporter } from "@/infrastructure/observability/console-failure-reporter";
+import { eventBus } from "@/infrastructure/events/compose";
+// Side-effect import: registers NotifySupportTicketStatusChangeSubscriber
+// against the shared eventBus. Mirrors verification/compose.ts's own
+// identical import of notification/compose.ts — see that file's doc
+// comment for why this is imported here rather than relying solely on
+// instrumentation.ts.
+import "@/application/use-cases/notification/compose";
+import { SupportTicketStatusChanged } from "@/domain/events/support-ticket-status-changed";
+import { RecordSupportTicketAuditLogSubscriber } from "@/application/use-cases/support-ticket/record-support-ticket-audit-log.subscriber";
 import { AssignSupportTicketUseCase } from "@/application/use-cases/support-ticket/assign-support-ticket.use-case";
 import { ChangeSupportTicketStatusUseCase } from "@/application/use-cases/support-ticket/change-support-ticket-status.use-case";
 import { CloseSupportTicketUseCase } from "@/application/use-cases/support-ticket/close-support-ticket.use-case";
@@ -13,7 +22,18 @@ import { ResolveSupportTicketUseCase } from "@/application/use-cases/support-tic
 
 const tickets = new PrismaSupportTicketRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
-const notifications = new NotificationServiceCreator();
+const failureReporter = new ConsoleFailureReporter();
+
+/**
+ * Module 37 — Domain Event Subscribers: registers this module's
+ * `SupportTicketStatusChanged` audit-log subscriber against the shared
+ * `eventBus`, at module load time — the exact pattern documented in
+ * `infrastructure/events/compose.ts`'s own doc comment and mirrored from
+ * `verification/compose.ts`. The sibling notification subscriber is
+ * registered the same way from `notification/compose.ts`; neither file
+ * imports the other's use cases.
+ */
+eventBus.subscribe(SupportTicketStatusChanged, new RecordSupportTicketAuditLogSubscriber(auditLog));
 
 export function makeCreateSupportTicketUseCase() {
   return new CreateSupportTicketUseCase(tickets, auditLog);
@@ -36,17 +56,17 @@ export function makeListAdminSupportTicketsUseCase() {
 }
 
 export function makeAssignSupportTicketUseCase() {
-  return new AssignSupportTicketUseCase(tickets, auditLog, notifications);
+  return new AssignSupportTicketUseCase(tickets, eventBus, failureReporter);
 }
 
 export function makeChangeSupportTicketStatusUseCase() {
-  return new ChangeSupportTicketStatusUseCase(tickets, auditLog, notifications);
+  return new ChangeSupportTicketStatusUseCase(tickets, eventBus, failureReporter);
 }
 
 export function makeResolveSupportTicketUseCase() {
-  return new ResolveSupportTicketUseCase(tickets, auditLog, notifications);
+  return new ResolveSupportTicketUseCase(tickets, eventBus, failureReporter);
 }
 
 export function makeCloseSupportTicketUseCase() {
-  return new CloseSupportTicketUseCase(tickets, auditLog, notifications);
+  return new CloseSupportTicketUseCase(tickets, eventBus, failureReporter);
 }

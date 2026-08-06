@@ -1,8 +1,10 @@
 import { NotFoundError, UnauthorizedError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import { canRemoveMember, deriveMembershipStatus } from "@/domain/services/company-membership-rules";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
+import { CompanyMembershipChanged } from "@/domain/events/company-membership-changed";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 import { resolveCompanyActor } from "@/application/use-cases/company/resolve-company-actor";
 
 /**
@@ -15,12 +17,17 @@ import { resolveCompanyActor } from "@/application/use-cases/company/resolve-com
  * their own rank — MEMBER/MANAGER leaving is always allowed via this same
  * rule (canRemoveMember treats "removing yourself" as removing a member of
  * your own current role, which every role can do to itself except OWNER).
+ *
+ * Module 37 — Domain Event Subscribers: see
+ * `ChangeCompanyMemberRoleUseCase`'s own doc comment — same rationale, same
+ * `CompanyMembershipChanged` publish-and-report-don't-rethrow pattern,
+ * mirrored here with `transition: "REMOVED"`.
  */
 export class RemoveCompanyMemberUseCase {
   constructor(
     private readonly memberships: CompanyMembershipRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator,
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(userId: string, companyId: string, memberId: string): Promise<void> {
@@ -41,25 +48,22 @@ export class RemoveCompanyMemberUseCase {
 
     await this.memberships.remove(memberId, new Date());
 
-    await this.auditLog.record({
-      adminUserId: userId,
-      action: "COMPANY_MEMBER_REMOVED",
-      targetType: "CompanyMember",
-      targetId: memberId,
-      metadata: { companyId, role: target.role, selfRemoval: isSelfRemoval },
-    });
-
     try {
-      await this.notifications.notify({
-        userId: target.userId,
-        type: "COMPANY_MEMBER_REMOVED",
-        title: "You have been removed from a company",
-        message: "You are no longer a member of this company.",
-        resourceType: "COMPANY",
-        resourceId: companyId,
-      });
+      await this.eventBus.publishAll([
+        new CompanyMembershipChanged(
+          companyId,
+          memberId,
+          target.userId,
+          userId,
+          "REMOVED",
+          target.role,
+          null,
+          isSelfRemoval,
+        ),
+      ]);
     } catch (error) {
-      console.error("Failed to create company-member-removed notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
   }
 }

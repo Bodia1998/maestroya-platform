@@ -1,7 +1,5 @@
-import { NullNotificationCreator } from "@/application/ports/notification-creator";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { DisputeMessageAdded } from "@/domain/events/dispute-message-added";
 import type { DisputeRepository } from "@/domain/repositories/dispute-repository";
 import type { DisputeMessageRecord, DisputeMessageRepository } from "@/domain/repositories/dispute-message-repository";
 import type { JobRepository } from "@/domain/repositories/job-repository";
@@ -10,6 +8,9 @@ import type { ProfessionalRepository } from "@/domain/repositories/professional-
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import { resolveDisputeActor } from "@/application/use-cases/dispute/resolve-dispute-actor";
 import { isTerminalStatus, isWaitingOnResponse } from "@/domain/services/dispute-state";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 /**
  * Module 21 — Disputes & Support: posts a public message on a Dispute's
@@ -26,6 +27,16 @@ import { isTerminalStatus, isWaitingOnResponse } from "@/domain/services/dispute
  * requested party responded" is exactly what ends the waiting state. An
  * admin posting a message never triggers this auto-transition (an admin
  * commenting isn't "the response" being waited for).
+ *
+ * Module 37 — Domain Event Subscribers: this use case no longer writes the
+ * audit log entry or notifies the dispute's other participants itself —
+ * both happen because `DisputeMessageAdded` is published through the
+ * Module 34 `EventBus`, reacted to by
+ * `RecordDisputeMessageAddedAuditLogSubscriber`/
+ * `NotifyDisputeMessageAddedSubscriber`. The auto-transition back to
+ * UNDER_REVIEW above is unrelated business logic and stays untouched —
+ * see `DisputeMessageAdded`'s own doc comment for why it was never itself
+ * audited/notified, pre- or post-Module-37.
  */
 export class AddDisputeMessageUseCase {
   constructor(
@@ -35,8 +46,8 @@ export class AddDisputeMessageUseCase {
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly professionals: ProfessionalRepository,
     private readonly companyMembers: CompanyMembershipRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(
@@ -71,22 +82,6 @@ export class AddDisputeMessageUseCase {
 
     const message = await this.disputeMessages.create({ disputeId, authorUserId: userId, body, isInternalNote: false });
 
-    try {
-      await this.auditLog.record({
-        adminUserId: userId,
-        action: "DISPUTE_MESSAGE_ADDED",
-        targetType: "Dispute",
-        targetId: disputeId,
-        // No message body in metadata — messages are already visible in
-        // the dispute thread itself; the audit trail only needs to record
-        // that a message happened and who added it (see the module spec's
-        // "do not log sensitive data unnecessarily" requirement).
-        metadata: { messageId: message.id },
-      });
-    } catch (error) {
-      console.error("Failed to record dispute-message-added audit log", error);
-    }
-
     // Auto-transition: the waited-on party responded.
     if (
       isWaitingOnResponse(dispute.status) &&
@@ -103,29 +98,22 @@ export class AddDisputeMessageUseCase {
       }
     }
 
+    const recipientUserIds = new Set<string>();
+    if (dispute.raisedByUserId !== userId) recipientUserIds.add(dispute.raisedByUserId);
+    const customer = await this.customerProfiles.findById(job.customerId);
+    if (customer && customer.userId !== userId) recipientUserIds.add(customer.userId);
+    if (job.professionalProfileId) {
+      const professional = await this.professionals.findById(job.professionalProfileId);
+      if (professional && professional.userId !== userId) recipientUserIds.add(professional.userId);
+    }
+
     try {
-      const recipientUserIds = new Set<string>();
-      if (dispute.raisedByUserId !== userId) recipientUserIds.add(dispute.raisedByUserId);
-      const customer = await this.customerProfiles.findById(job.customerId);
-      if (customer && customer.userId !== userId) recipientUserIds.add(customer.userId);
-      if (job.professionalProfileId) {
-        const professional = await this.professionals.findById(job.professionalProfileId);
-        if (professional && professional.userId !== userId) recipientUserIds.add(professional.userId);
-      }
-      for (const recipientUserId of recipientUserIds) {
-        await this.notifications.notify({
-          userId: recipientUserId,
-          type: "DISPUTE_STATUS_CHANGED",
-          title: "New message on your dispute",
-          message: `There's a new message on dispute ${dispute.caseNumber}.`,
-          resourceType: "DISPUTE",
-          resourceId: dispute.id,
-          actionUrl: `/disputes/${dispute.id}`,
-          metadata: { caseNumber: dispute.caseNumber },
-        });
-      }
+      await this.eventBus.publishAll([
+        new DisputeMessageAdded(disputeId, dispute.caseNumber, message.id, userId, [...recipientUserIds]),
+      ]);
     } catch (error) {
-      console.error("Failed to create dispute-message notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return message;

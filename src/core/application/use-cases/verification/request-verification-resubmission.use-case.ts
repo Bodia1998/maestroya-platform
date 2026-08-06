@@ -1,12 +1,14 @@
 import { ConflictError, NotFoundError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { ProfessionalVerificationStatusChanged } from "@/domain/events/professional-verification-status-changed";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type {
   ProfessionalVerificationRecord,
   ProfessionalVerificationRepository,
 } from "@/domain/repositories/professional-verification-repository";
 import { canRequestResubmission, canTransition, isValidReviewReason } from "@/domain/services/professional-verification-rules";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 /**
  * Professional Verification module (Module 17): an admin asks the
@@ -14,14 +16,17 @@ import type { NotificationCreator } from "@/application/ports/notification-creat
  * RESUBMISSION_REQUIRED). A reason (instructions) is REQUIRED and stored on
  * the case so the professional sees exactly what to change. The public trust
  * signal stays PENDING (the professional is still mid-verification, not
- * rejected). Audits and notifies.
+ * rejected).
+ *
+ * Module 37 — Domain Event Subscribers: see `ApproveProfessionalVerificationUseCase`'s
+ * own doc comment — same rationale, same pattern, mirrored here exactly.
  */
 export class RequestVerificationResubmissionUseCase {
   constructor(
     private readonly verifications: ProfessionalVerificationRepository,
     private readonly professionals: ProfessionalRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator,
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(adminUserId: string, verificationId: string, reason: string): Promise<ProfessionalVerificationRecord> {
@@ -49,29 +54,23 @@ export class RequestVerificationResubmissionUseCase {
     // Still mid-verification — keep the public signal PENDING.
     await this.verifications.setProfileVerificationStatus(verification.professionalProfileId, "PENDING", null);
 
-    await this.auditLog.record({
-      adminUserId,
-      action: "VERIFICATION_RESUBMISSION_REQUESTED",
-      targetType: "ProfessionalVerification",
-      targetId: verificationId,
-      metadata: { professionalProfileId: verification.professionalProfileId },
-    });
-
     const professional = await this.professionals.findById(verification.professionalProfileId);
-    if (professional) {
-      try {
-        await this.notifications.notify({
-          userId: professional.userId,
-          type: "VERIFICATION_RESUBMISSION_REQUIRED",
-          title: "More information needed for verification",
-          message: "A reviewer has asked you to update your verification request. Open your verification page for details.",
-          resourceType: "PROFESSIONAL_VERIFICATION",
-          resourceId: verificationId,
-          actionUrl: "/dashboard/professional/verification",
-        });
-      } catch (error) {
-        console.error("Failed to create verification-resubmission notification", error);
-      }
+
+    try {
+      await this.eventBus.publishAll([
+        new ProfessionalVerificationStatusChanged(
+          verificationId,
+          verification.professionalProfileId,
+          professional?.userId ?? null,
+          verification.status,
+          "RESUBMISSION_REQUIRED",
+          adminUserId,
+          "RESUBMISSION_REQUESTED",
+        ),
+      ]);
+    } catch (error) {
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

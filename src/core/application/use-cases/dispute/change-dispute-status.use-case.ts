@@ -1,7 +1,5 @@
-import { NullNotificationCreator } from "@/application/ports/notification-creator";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { DisputeStatusChanged } from "@/domain/events/dispute-status-changed";
 import type { DisputeRecord, DisputeRepository, DisputeStatusValue } from "@/domain/repositories/dispute-repository";
 import type { JobRepository } from "@/domain/repositories/job-repository";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
@@ -9,6 +7,9 @@ import type { ProfessionalRepository } from "@/domain/repositories/professional-
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import { canTransitionDisputeStatus } from "@/domain/services/dispute-state";
 import { resolveDisputeParticipantUserIds } from "@/application/use-cases/dispute/resolve-dispute-participant-user-ids";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 /**
  * Module 21 — Disputes & Support: admin-only generic status transition —
@@ -26,6 +27,15 @@ import { resolveDisputeParticipantUserIds } from "@/application/use-cases/disput
  * `canTransitionDisputeStatus`, never a raw field write. Trusts the caller
  * has already been authorized via `requireRole(ADMIN, SUPER_ADMIN,
  * SUPPORT)` at the Server Action boundary.
+ *
+ * Module 37 — Domain Event Subscribers: see `ResolveDisputeUseCase`'s own
+ * doc comment — same rationale, same `DisputeStatusChanged`
+ * publish-and-report-don't-rethrow pattern, mirrored here with
+ * `transition: "STATUS_CHANGED"` — the notification subscriber further
+ * distinguishes a "response requested" notification from a plain
+ * "status updated" one using `newStatus` itself (see that event's own doc
+ * comment), the same way this use case's own pre-Module-37
+ * `isResponseRequest` check did.
  */
 export class ChangeDisputeStatusUseCase {
   constructor(
@@ -34,8 +44,8 @@ export class ChangeDisputeStatusUseCase {
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly professionals: ProfessionalRepository,
     private readonly companyMembers: CompanyMembershipRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(adminUserId: string, disputeId: string, nextStatus: DisputeStatusValue): Promise<DisputeRecord> {
@@ -56,42 +66,30 @@ export class ChangeDisputeStatusUseCase {
 
     const updated = await this.disputes.updateStatus(disputeId, dispute.status, { status: nextStatus });
 
-    try {
-      await this.auditLog.record({
-        adminUserId,
-        action: "DISPUTE_STATUS_CHANGED",
-        targetType: "Dispute",
-        targetId: disputeId,
-        metadata: { from: dispute.status, to: nextStatus },
-      });
-    } catch (error) {
-      console.error("Failed to record dispute-status-changed audit log", error);
-    }
-
-    try {
-      const job = await this.jobs.findById(dispute.jobId);
-      if (job) {
-        const userIds = await resolveDisputeParticipantUserIds(job, {
+    const job = await this.jobs.findById(dispute.jobId);
+    const recipientUserIds = job
+      ? await resolveDisputeParticipantUserIds(job, {
           customerProfiles: this.customerProfiles,
           professionals: this.professionals,
           companyMembers: this.companyMembers,
-        });
-        const isResponseRequest = nextStatus === "WAITING_FOR_CUSTOMER" || nextStatus === "WAITING_FOR_PROFESSIONAL";
-        for (const userId of userIds) {
-          await this.notifications.notify({
-            userId,
-            type: isResponseRequest ? "DISPUTE_RESPONSE_REQUESTED" : "DISPUTE_STATUS_CHANGED",
-            title: isResponseRequest ? "Response requested on your dispute" : "Dispute status updated",
-            message: `Dispute ${updated.caseNumber} is now ${nextStatus.replaceAll("_", " ").toLowerCase()}.`,
-            resourceType: "DISPUTE",
-            resourceId: updated.id,
-            actionUrl: `/disputes/${updated.id}`,
-            metadata: { caseNumber: updated.caseNumber, status: nextStatus },
-          });
-        }
-      }
+        })
+      : [];
+
+    try {
+      await this.eventBus.publishAll([
+        new DisputeStatusChanged(
+          disputeId,
+          updated.caseNumber,
+          dispute.status,
+          nextStatus,
+          adminUserId,
+          "STATUS_CHANGED",
+          recipientUserIds,
+        ),
+      ]);
     } catch (error) {
-      console.error("Failed to create dispute-status-changed notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

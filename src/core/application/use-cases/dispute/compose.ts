@@ -6,7 +6,22 @@ import { PrismaDisputeMessageRepository } from "@/infrastructure/database/prisma
 import { PrismaDisputeRepository } from "@/infrastructure/database/prisma/repositories/prisma-dispute-repository";
 import { PrismaJobRepository } from "@/infrastructure/database/prisma/repositories/prisma-job-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
-import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
+import { ConsoleFailureReporter } from "@/infrastructure/observability/console-failure-reporter";
+import { eventBus } from "@/infrastructure/events/compose";
+// Side-effect import: registers the Notify*DisputeSubscriber handlers
+// against the shared eventBus. Mirrors verification/compose.ts's own
+// identical import of notification/compose.ts — see that file's doc
+// comment for why this is imported here rather than relying solely on
+// instrumentation.ts.
+import "@/application/use-cases/notification/compose";
+import { DisputeStatusChanged } from "@/domain/events/dispute-status-changed";
+import { DisputeAssigned } from "@/domain/events/dispute-assigned";
+import { DisputeMessageAdded } from "@/domain/events/dispute-message-added";
+import { DisputeCreated } from "@/domain/events/dispute-created";
+import { RecordDisputeStatusChangeAuditLogSubscriber } from "@/application/use-cases/dispute/record-dispute-status-change-audit-log.subscriber";
+import { RecordDisputeAssignedAuditLogSubscriber } from "@/application/use-cases/dispute/record-dispute-assigned-audit-log.subscriber";
+import { RecordDisputeMessageAddedAuditLogSubscriber } from "@/application/use-cases/dispute/record-dispute-message-added-audit-log.subscriber";
+import { RecordDisputeCreatedAuditLogSubscriber } from "@/application/use-cases/dispute/record-dispute-created-audit-log.subscriber";
 import { AddDisputeEvidenceUseCase } from "@/application/use-cases/dispute/add-dispute-evidence.use-case";
 import { AddDisputeInternalNoteUseCase } from "@/application/use-cases/dispute/add-dispute-internal-note.use-case";
 import { AddDisputeMessageUseCase } from "@/application/use-cases/dispute/add-dispute-message.use-case";
@@ -31,10 +46,23 @@ const customerProfiles = new PrismaCustomerProfileRepository();
 const professionals = new PrismaProfessionalRepository();
 const companyMembers = new PrismaCompanyMembershipRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
-const notifications = new NotificationServiceCreator();
+const failureReporter = new ConsoleFailureReporter();
+
+/**
+ * Module 37 — Domain Event Subscribers: registers this module's four
+ * audit-log subscribers against the shared `eventBus`, at module load
+ * time — the exact pattern documented in `infrastructure/events/compose.ts`'s
+ * own doc comment and mirrored from `verification/compose.ts`. Each
+ * sibling notification subscriber is registered the same way from
+ * `notification/compose.ts`; neither file imports the other's use cases.
+ */
+eventBus.subscribe(DisputeStatusChanged, new RecordDisputeStatusChangeAuditLogSubscriber(auditLog));
+eventBus.subscribe(DisputeAssigned, new RecordDisputeAssignedAuditLogSubscriber(auditLog));
+eventBus.subscribe(DisputeMessageAdded, new RecordDisputeMessageAddedAuditLogSubscriber(auditLog));
+eventBus.subscribe(DisputeCreated, new RecordDisputeCreatedAuditLogSubscriber(auditLog));
 
 export function makeCreateDisputeUseCase() {
-  return new CreateDisputeUseCase(disputes, jobs, customerProfiles, professionals, companyMembers, auditLog, notifications);
+  return new CreateDisputeUseCase(disputes, jobs, customerProfiles, professionals, companyMembers, eventBus, failureReporter);
 }
 
 export function makeGetDisputeByIdUseCase() {
@@ -66,7 +94,7 @@ export function makeListAdminDisputesUseCase() {
 }
 
 export function makeAssignDisputeUseCase() {
-  return new AssignDisputeUseCase(disputes, auditLog, notifications);
+  return new AssignDisputeUseCase(disputes, eventBus, failureReporter);
 }
 
 export function makeSetDisputePriorityUseCase() {
@@ -74,7 +102,7 @@ export function makeSetDisputePriorityUseCase() {
 }
 
 export function makeChangeDisputeStatusUseCase() {
-  return new ChangeDisputeStatusUseCase(disputes, jobs, customerProfiles, professionals, companyMembers, auditLog, notifications);
+  return new ChangeDisputeStatusUseCase(disputes, jobs, customerProfiles, professionals, companyMembers, eventBus, failureReporter);
 }
 
 export function makeAddDisputeMessageUseCase() {
@@ -85,8 +113,8 @@ export function makeAddDisputeMessageUseCase() {
     customerProfiles,
     professionals,
     companyMembers,
-    auditLog,
-    notifications,
+    eventBus,
+    failureReporter,
   );
 }
 
@@ -107,13 +135,13 @@ export function makeAddDisputeEvidenceUseCase() {
 }
 
 export function makeResolveDisputeUseCase() {
-  return new ResolveDisputeUseCase(disputes, jobs, customerProfiles, professionals, companyMembers, auditLog, notifications);
+  return new ResolveDisputeUseCase(disputes, jobs, customerProfiles, professionals, companyMembers, eventBus, failureReporter);
 }
 
 export function makeRejectDisputeUseCase() {
-  return new RejectDisputeUseCase(disputes, jobs, customerProfiles, professionals, companyMembers, auditLog, notifications);
+  return new RejectDisputeUseCase(disputes, jobs, customerProfiles, professionals, companyMembers, eventBus, failureReporter);
 }
 
 export function makeCloseDisputeUseCase() {
-  return new CloseDisputeUseCase(disputes, jobs, customerProfiles, professionals, companyMembers, auditLog, notifications);
+  return new CloseDisputeUseCase(disputes, jobs, customerProfiles, professionals, companyMembers, eventBus, failureReporter);
 }

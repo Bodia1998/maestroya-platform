@@ -1,12 +1,14 @@
 import { ConflictError, NotFoundError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { ProfessionalVerificationStatusChanged } from "@/domain/events/professional-verification-status-changed";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type {
   ProfessionalVerificationRecord,
   ProfessionalVerificationRepository,
 } from "@/domain/repositories/professional-verification-repository";
 import { canResubmit, canTransition, hasRequiredDocuments } from "@/domain/services/professional-verification-rules";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 /**
  * Professional Verification module (Module 17): re-submits a case an admin
@@ -15,13 +17,19 @@ import type { NotificationCreator } from "@/application/ports/notification-creat
  * Same ownership/required-document guarantees as the first submission. Clears
  * the previous resubmission instructions and sets the public trust signal
  * back to PENDING.
+ *
+ * Module 37 — Domain Event Subscribers: see `SubmitProfessionalVerificationUseCase`'s
+ * own doc comment — same rationale, same `ProfessionalVerificationStatusChanged`
+ * publish-and-report-don't-rethrow pattern, mirrored here with
+ * `transition: "RESUBMITTED"` so subscribers can tell this apart from a
+ * first-time submission even though both land on `newStatus: "PENDING"`.
  */
 export class ResubmitProfessionalVerificationUseCase {
   constructor(
     private readonly verifications: ProfessionalVerificationRepository,
     private readonly professionals: ProfessionalRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator,
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(userId: string): Promise<ProfessionalVerificationRecord> {
@@ -54,26 +62,22 @@ export class ResubmitProfessionalVerificationUseCase {
 
     await this.verifications.setProfileVerificationStatus(professional.id, "PENDING", null);
 
-    await this.auditLog.record({
-      adminUserId: userId,
-      action: "VERIFICATION_RESUBMITTED",
-      targetType: "ProfessionalVerification",
-      targetId: verification.id,
-      metadata: { documentCount: documents.length },
-    });
-
     try {
-      await this.notifications.notify({
-        userId,
-        type: "VERIFICATION_SUBMITTED",
-        title: "Verification request resubmitted",
-        message: "We have received your updated verification request and will review it shortly.",
-        resourceType: "PROFESSIONAL_VERIFICATION",
-        resourceId: verification.id,
-        actionUrl: "/dashboard/professional/verification",
-      });
+      await this.eventBus.publishAll([
+        new ProfessionalVerificationStatusChanged(
+          verification.id,
+          professional.id,
+          userId,
+          verification.status,
+          "PENDING",
+          userId,
+          "RESUBMITTED",
+          documents.length,
+        ),
+      ]);
     } catch (error) {
-      console.error("Failed to create verification-resubmitted notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

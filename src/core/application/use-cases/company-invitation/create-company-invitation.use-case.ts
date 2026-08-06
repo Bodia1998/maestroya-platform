@@ -1,11 +1,13 @@
 import { ConflictError, UnauthorizedError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { CompanyInvitationStatusChanged } from "@/domain/events/company-invitation-status-changed";
 import type { CompanyInvitationRecord, CompanyInvitationRepository } from "@/domain/repositories/company-invitation-repository";
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import type { UserRepository } from "@/domain/repositories/user-repository";
 import { canInviteMembers, deriveMembershipStatus } from "@/domain/services/company-membership-rules";
 import { computeInvitationExpiresAt, generateInvitationToken, isInvitableRole } from "@/domain/services/company-invitation-rules";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 import type { CreateCompanyInvitationInput } from "@/application/dto/company-invitation.dto";
 import { resolveCompanyActor } from "@/application/use-cases/company/resolve-company-actor";
 
@@ -32,14 +34,24 @@ export interface CreateCompanyInvitationResult {
  * DTO). At most one PENDING invitation may exist per (companyId, email) —
  * checked here and backed by a DB partial unique index as the final
  * concurrency guarantee.
+ *
+ * Module 37 — Domain Event Subscribers: this use case no longer writes the
+ * audit log entry or notifies the invited user itself — both happen
+ * because `CompanyInvitationStatusChanged` is published through the
+ * Module 34 `EventBus`, reacted to by
+ * `RecordCompanyInvitationAuditLogSubscriber`/
+ * `NotifyCompanyInvitationStatusChangeSubscriber`. See
+ * `SubmitProfessionalVerificationUseCase`'s own doc comment for the
+ * identical publish-and-report-don't-rethrow rationale, mirrored here
+ * exactly.
  */
 export class CreateCompanyInvitationUseCase {
   constructor(
     private readonly invitations: CompanyInvitationRepository,
     private readonly memberships: CompanyMembershipRepository,
     private readonly users: UserRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator,
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(
@@ -81,28 +93,22 @@ export class CreateCompanyInvitationUseCase {
       expiresAt: computeInvitationExpiresAt(now),
     });
 
-    await this.auditLog.record({
-      adminUserId: userId,
-      action: "COMPANY_MEMBER_INVITED",
-      targetType: "CompanyInvitation",
-      targetId: invitation.id,
-      metadata: { companyId, email: input.email, role: input.role },
-    });
-
-    if (invitedUser) {
-      try {
-        await this.notifications.notify({
-          userId: invitedUser.id,
-          type: "COMPANY_INVITATION_RECEIVED",
-          title: "You've been invited to join a company",
-          message: "You have a pending company invitation.",
-          resourceType: "COMPANY_INVITATION",
-          resourceId: invitation.id,
-          actionUrl: "/dashboard/company/invitations",
-        });
-      } catch (error) {
-        console.error("Failed to create company-invitation-received notification", error);
-      }
+    try {
+      await this.eventBus.publishAll([
+        new CompanyInvitationStatusChanged(
+          invitation.id,
+          companyId,
+          invitedUser?.id ?? null,
+          userId,
+          "PENDING",
+          "CREATED",
+          input.role,
+          input.email,
+        ),
+      ]);
+    } catch (error) {
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return { invitation, token };

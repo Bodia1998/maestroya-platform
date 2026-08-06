@@ -1,20 +1,26 @@
 import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { CompanyVerificationStatusChanged } from "@/domain/events/company-verification-status-changed";
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import type { CompanyVerificationRecord, CompanyVerificationRepository } from "@/domain/repositories/company-verification-repository";
 import { canManageCompanyProfile } from "@/domain/services/company-membership-rules";
 import { canResubmit, canTransition, hasRequiredDocuments } from "@/domain/services/company-verification-rules";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 import { resolveCompanyActor } from "@/application/use-cases/company/resolve-company-actor";
 
 /** Module 18 — Company Professional: resubmits after REJECTED or
- *  RESUBMISSION_REQUIRED (→ PENDING). Mirrors ResubmitProfessionalVerificationUseCase. */
+ *  RESUBMISSION_REQUIRED (→ PENDING). Mirrors ResubmitProfessionalVerificationUseCase.
+ *
+ *  Module 37 — Domain Event Subscribers: see `SubmitCompanyVerificationUseCase`'s
+ *  own doc comment — same rationale, same `CompanyVerificationStatusChanged`
+ *  publish-and-report-don't-rethrow pattern, with `transition: "RESUBMITTED"`. */
 export class ResubmitCompanyVerificationUseCase {
   constructor(
     private readonly verifications: CompanyVerificationRepository,
     private readonly memberships: CompanyMembershipRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator,
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(userId: string, companyId: string): Promise<CompanyVerificationRecord> {
@@ -44,26 +50,22 @@ export class ResubmitCompanyVerificationUseCase {
       resubmissionReason: null,
     });
 
-    await this.auditLog.record({
-      adminUserId: userId,
-      action: "COMPANY_VERIFICATION_RESUBMITTED",
-      targetType: "CompanyVerification",
-      targetId: verification.id,
-      metadata: { companyId, documentCount: documents.length },
-    });
-
     try {
-      await this.notifications.notify({
-        userId,
-        type: "COMPANY_VERIFICATION_SUBMITTED",
-        title: "Verification request resubmitted",
-        message: "We have received your company's updated verification request.",
-        resourceType: "COMPANY_VERIFICATION",
-        resourceId: verification.id,
-        actionUrl: "/dashboard/company/verification",
-      });
+      await this.eventBus.publishAll([
+        new CompanyVerificationStatusChanged(
+          verification.id,
+          companyId,
+          userId,
+          verification.status,
+          "PENDING",
+          userId,
+          "RESUBMITTED",
+          documents.length,
+        ),
+      ]);
     } catch (error) {
-      console.error("Failed to create company-verification-resubmitted notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return updated;

@@ -1,7 +1,5 @@
-import { NullNotificationCreator } from "@/application/ports/notification-creator";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { ConflictError, NotFoundError, ValidationError } from "@/domain/errors/domain-error";
-import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
+import { DisputeCreated } from "@/domain/events/dispute-created";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
 import type { DisputeRecord, DisputeReasonValue, DisputeRepository } from "@/domain/repositories/dispute-repository";
 import type { JobRepository } from "@/domain/repositories/job-repository";
@@ -9,6 +7,9 @@ import type { ProfessionalRepository } from "@/domain/repositories/professional-
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import { resolveJobActor } from "@/application/use-cases/job/resolve-job-actor";
 import { formatCaseNumber, isDisputableJobStatus, isWithinDisputeWindow } from "@/domain/services/dispute-rules";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 export interface CreateDisputeInput {
   jobId: string;
@@ -46,6 +47,13 @@ export interface CreateDisputeInput {
  * from client input — a customer opening a dispute always names the Job's
  * professional/company as respondent and vice versa; a company actor
  * opening a dispute always names the Job's customer as respondent.
+ *
+ * Module 37 — Domain Event Subscribers: this use case no longer writes the
+ * audit log entry or notifies the respondent side itself — both happen
+ * because `DisputeCreated` is published through the Module 34 `EventBus`,
+ * reacted to by `RecordDisputeCreatedAuditLogSubscriber`/
+ * `NotifyDisputeCreatedSubscriber`. See `ResolveDisputeUseCase`'s own doc
+ * comment for the identical publish-and-report-don't-rethrow rationale.
  */
 export class CreateDisputeUseCase {
   constructor(
@@ -54,8 +62,8 @@ export class CreateDisputeUseCase {
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly professionals: ProfessionalRepository,
     private readonly companyMembers: CompanyMembershipRepository,
-    private readonly auditLog: AdminAuditLogRepository,
-    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(userId: string, input: CreateDisputeInput): Promise<DisputeRecord> {
@@ -115,34 +123,15 @@ export class CreateDisputeUseCase {
       description: input.description,
     });
 
-    try {
-      await this.auditLog.record({
-        adminUserId: userId,
-        action: "DISPUTE_CREATED",
-        targetType: "Dispute",
-        targetId: dispute.id,
-        metadata: { jobId: job.id, caseNumber: dispute.caseNumber, reason: dispute.reason },
-      });
-    } catch (error) {
-      console.error("Failed to record dispute-created audit log", error);
-    }
+    const recipientUserIds = await this.resolveRespondentUserIds(job, actor.role);
 
     try {
-      const notifyUserIds = await this.resolveRespondentUserIds(job, actor.role);
-      for (const respondentUserId of notifyUserIds) {
-        await this.notifications.notify({
-          userId: respondentUserId,
-          type: "DISPUTE_CREATED",
-          title: "A dispute was opened",
-          message: `A dispute (${dispute.caseNumber}) was opened regarding your job.`,
-          resourceType: "DISPUTE",
-          resourceId: dispute.id,
-          actionUrl: `/disputes/${dispute.id}`,
-          metadata: { jobId: job.id, caseNumber: dispute.caseNumber },
-        });
-      }
+      await this.eventBus.publishAll([
+        new DisputeCreated(dispute.id, dispute.caseNumber, job.id, dispute.reason, userId, recipientUserIds),
+      ]);
     } catch (error) {
-      console.error("Failed to create dispute-created notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return dispute;

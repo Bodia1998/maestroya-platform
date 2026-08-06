@@ -1,7 +1,22 @@
 import { PrismaAdminAuditLogRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-audit-log-repository";
 import { PrismaAdminRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-repository";
-import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
+import { ConsoleFailureReporter } from "@/infrastructure/observability/console-failure-reporter";
+import { eventBus } from "@/infrastructure/events/compose";
+// Side-effect import: registers NotifyCompanyStatusChangeSubscriber against
+// the shared eventBus. Module 34's compose.ts intentionally does not import
+// every module's handlers centrally (see that file's doc comment) — each
+// module registers its *own* handlers. But `SuspendCompanyUseCase`/
+// `ReactivateCompanyUseCase` below publish CompanyStatusChanged, and this
+// module (unlike notification/compose.ts) is not guaranteed to be imported
+// by every code path that also happens to import notification/compose.ts
+// first. Importing it here — the publishing module already depended on
+// NotificationServiceCreator directly before this change — guarantees the
+// notification subscriber is registered before any admin Server Action can
+// publish the event, regardless of Next.js's per-route module graph.
+import "@/application/use-cases/notification/compose";
+import { CompanyStatusChanged } from "@/domain/events/company-status-changed";
 import { ChangeUserRoleUseCase } from "@/application/use-cases/admin/change-user-role.use-case";
+import { RecordCompanyStatusChangeAuditLogSubscriber } from "@/application/use-cases/admin/record-company-status-change-audit-log.subscriber";
 import { ListAdminCompaniesUseCase } from "@/application/use-cases/admin/list-admin-companies.use-case";
 import { GetAdminCompanyUseCase } from "@/application/use-cases/admin/get-admin-company.use-case";
 import { SuspendCompanyUseCase } from "@/application/use-cases/admin/suspend-company.use-case";
@@ -37,7 +52,17 @@ import { SuspendAdminUserUseCase } from "@/application/use-cases/admin/suspend-a
 
 const admins = new PrismaAdminRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
-const notifications = new NotificationServiceCreator();
+const failureReporter = new ConsoleFailureReporter();
+
+/**
+ * Module 37 — Domain Event Subscribers: registers this module's
+ * `CompanyStatusChanged` audit-log subscriber against the shared
+ * `eventBus`, at module load time — the exact pattern documented in
+ * `infrastructure/events/compose.ts`'s own doc comment. The sibling
+ * notification subscriber is registered the same way from
+ * `notification/compose.ts`; neither file imports the other.
+ */
+eventBus.subscribe(CompanyStatusChanged, new RecordCompanyStatusChangeAuditLogSubscriber(auditLog));
 
 export function makeGetAdminDashboardOverviewUseCase() {
   return new GetAdminDashboardOverviewUseCase(admins);
@@ -134,9 +159,9 @@ export function makeGetAdminCompanyUseCase() {
 }
 
 export function makeSuspendCompanyUseCase() {
-  return new SuspendCompanyUseCase(admins, auditLog, notifications);
+  return new SuspendCompanyUseCase(admins, eventBus, failureReporter);
 }
 
 export function makeReactivateCompanyUseCase() {
-  return new ReactivateCompanyUseCase(admins, auditLog, notifications);
+  return new ReactivateCompanyUseCase(admins, eventBus, failureReporter);
 }
