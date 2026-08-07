@@ -5,6 +5,7 @@ import { prisma } from "@/infrastructure/database/prisma/client";
 import { logger } from "@/infrastructure/observability/logger";
 import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
+import { getRedisClient } from "@/infrastructure/cache/redis-client-factory";
 
 /**
  * Readiness check (Module 25 — Production Infrastructure).
@@ -25,9 +26,21 @@ import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observabil
  * docs/MODULE_25_PRODUCTION_INFRASTRUCTURE.md, "Health & readiness" for
  * the full reasoning.
  *
- * Returns 503 (not 500) on failure — the conventional status for "the
- * server is currently unable to handle the request", which is exactly
- * what a load balancer/orchestrator readiness probe is checking for.
+ * Module 44 — Redis Infrastructure: Redis joins that same
+ * "optional/degradable" category, for the same reason and by explicit
+ * design — every Redis-backed service in this codebase
+ * (`CacheService`/`RateLimitRepository`/`DistributedLock`) already falls
+ * back to a correct in-memory implementation on its own; Redis being
+ * briefly unreachable is not this instance's failure to serve traffic.
+ * `checks.cache` is reported for operational visibility only
+ * (`"ok"`/`"error"`/`"not_configured"`) and never changes the response's
+ * overall `status` or HTTP status code — unlike the database check, a
+ * failing Redis check does not cause a 503.
+ *
+ * Returns 503 (not 500) on database failure — the conventional status
+ * for "the server is currently unable to handle the request", which is
+ * exactly what a load balancer/orchestrator readiness probe is checking
+ * for.
  */
 export async function GET(request: NextRequest) {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
@@ -39,7 +52,7 @@ export async function GET(request: NextRequest) {
       {
         status: "ok",
         timestamp: new Date().toISOString(),
-        checks: { database: "ok" },
+        checks: { database: "ok", cache: await checkCache(requestId) },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
@@ -67,5 +80,26 @@ export async function GET(request: NextRequest) {
       },
       { status: 503, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
+  }
+}
+
+/**
+ * Module 44 — Redis Infrastructure: best-effort `PING`, purely for
+ * operational visibility in the readiness payload — never thrown from,
+ * never allowed to affect this route's overall status/HTTP code (see the
+ * doc comment above). Returns `"not_configured"` without attempting a
+ * connection at all when `REDIS_URL` is unset, which is the common,
+ * intended case today.
+ */
+async function checkCache(requestId: string): Promise<"ok" | "error" | "not_configured"> {
+  const client = getRedisClient();
+  if (!client) return "not_configured";
+
+  try {
+    await client.command(["PING"]);
+    return "ok";
+  } catch (error) {
+    logger.warn("readiness_cache_check_failed", { requestId, error });
+    return "error";
   }
 }
