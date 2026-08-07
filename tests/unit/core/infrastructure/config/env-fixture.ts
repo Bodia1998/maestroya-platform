@@ -56,6 +56,9 @@ const ENV_KEYS = [
   "EVENT_QUEUE_ENABLED",
   "QUEUE_CONCURRENCY",
   "QUEUE_MAX_ATTEMPTS",
+  // Module 46 — Caching Layer (Roadmap Module 13).
+  "CACHE_KEY_PREFIX",
+  "CACHE_BYPASS_ENABLED",
 ];
 
 /**

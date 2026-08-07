@@ -6,6 +6,7 @@ import { logger } from "@/infrastructure/observability/logger";
 import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
 import { getRedisClient } from "@/infrastructure/cache/redis-client-factory";
+import { getCacheHealth } from "@/infrastructure/cache/compose";
 import { getBackgroundJobsHealth } from "@/infrastructure/jobs/compose";
 
 /**
@@ -44,7 +45,14 @@ import { getBackgroundJobsHealth } from "@/infrastructure/jobs/compose";
  * HTTP traffic, and `"disabled"` (queued dispatch off — the default) is a
  * healthy, normal state. See `infrastructure/jobs/queue-health.ts`.
  *
-
+ * Module 46 — Caching Layer: `checks.cachingLayer` reports the
+ * `CacheManager`'s own driver, bypass flag, and hit/miss statistics —
+ * distinct from `checks.cache` above (which only pings the raw Redis
+ * connection). Also visibility-only, for the same reason: `CacheManager`
+ * already degrades every operation to a safe miss/no-op on a provider
+ * failure (see `application/services/cache/cache-manager.ts`), so it can
+ * never be the thing that makes this instance unready.
+ *
  * Returns 503 (not 500) on database failure — the conventional status
  * for "the server is currently unable to handle the request", which is
  * exactly what a load balancer/orchestrator readiness probe is checking
@@ -60,7 +68,12 @@ export async function GET(request: NextRequest) {
       {
         status: "ok",
         timestamp: new Date().toISOString(),
-        checks: { database: "ok", cache: await checkCache(requestId), queue: await getBackgroundJobsHealth() },
+        checks: {
+          database: "ok",
+          cache: await checkCache(requestId),
+          queue: await getBackgroundJobsHealth(),
+          cachingLayer: getCacheHealth(),
+        },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },
     );

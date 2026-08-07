@@ -90,6 +90,46 @@ describe("GET /api/health/ready (readiness)", () => {
     delete process.env.REDIS_URL;
   });
 
+  it("Module 46: reports caching-layer health without affecting readiness", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    // REDIS_URL/CACHE_BYPASS_ENABLED are unset by VALID_BASE_ENV, so the
+    // caching layer runs on the in-memory provider with bypass off.
+    expect(body.checks.cachingLayer).toEqual(
+      expect.objectContaining({ status: "ok", driver: "memory", bypass: false }),
+    );
+    expect(body.checks.cachingLayer.stats).toEqual(
+      expect.objectContaining({ hits: 0, misses: 0, hitRatio: 0 }),
+    );
+  });
+
+  it("Module 46: caching-layer status is 'bypassed' when CACHE_BYPASS_ENABLED=true, without affecting readiness", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    process.env.CACHE_BYPASS_ENABLED = "true";
+    vi.resetModules();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.status).toBe("ok");
+    expect(body.checks.cachingLayer.status).toBe("bypassed");
+    expect(body.checks.cachingLayer.bypass).toBe(true);
+
+    delete process.env.CACHE_BYPASS_ENABLED;
+  });
+
   it("Module 45: reports background-job queue status without affecting readiness", async () => {
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
