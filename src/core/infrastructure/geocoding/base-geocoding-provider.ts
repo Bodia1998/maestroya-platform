@@ -44,7 +44,7 @@ export abstract class BaseGeocodingProvider implements GeocodingProvider {
   /** Short, log-friendly vendor name — e.g. "mapbox", "google", "here", "osm". */
   protected abstract readonly providerName: string;
 
-  constructor(private readonly httpClient: GeocodingHttpClient = new FetchGeocodingHttpClient()) {}
+  constructor(protected readonly httpClient: GeocodingHttpClient = new FetchGeocodingHttpClient()) {}
 
   async geocode(query: CityGeocodeQuery): Promise<GeoPoint | null> {
     let url: string | null;
@@ -89,10 +89,9 @@ export abstract class BaseGeocodingProvider implements GeocodingProvider {
   }
 
   /**
-   * Default `reverseGeocode`/`searchCities`: neither is implemented by any
-   * provider in this codebase yet (no vendor call was built without a real
-   * API key to exercise it against — see the module doc). Subclasses that
-   * do implement one override it directly; this base class exists so
+   * Default `reverseGeocode`/`searchCities`: a subclass that implements one
+   * overrides it directly (see `fetchJson` below, the shared helper every
+   * Module 42 `reverseGeocode` override uses); this base class exists so
    * every current and future provider has *some* well-defined,
    * consistent behavior for the other, unimplemented one, rather than a
    * silent `undefined` or an ad-hoc error shape per vendor.
@@ -103,6 +102,42 @@ export abstract class BaseGeocodingProvider implements GeocodingProvider {
 
   async searchCities(_partialQuery: string, _province?: string | null): Promise<CitySuggestion[]> {
     return this.notImplemented("searchCities");
+  }
+
+  /**
+   * Module 42 — Geocoding & Maps: shared "GET a URL, return parsed JSON or
+   * `null`" helper for `reverseGeocode` overrides, mirroring exactly the
+   * same never-throw error handling `geocode()` above already has (missing
+   * URL → `geocoding_provider_not_configured`; non-OK response →
+   * `geocoding_provider_http_error`; network/parse failure →
+   * `geocoding_provider_failed`) so a reverse-geocode call degrades to
+   * `null` — never a thrown exception — using one implementation shared by
+   * every vendor's `reverseGeocode` override, not a copy-pasted try/catch
+   * per provider. Deliberately not used by `geocode()` itself, which is
+   * untouched by this addition.
+   */
+  protected async fetchJson(url: string | null, feature: string): Promise<unknown | null> {
+    if (!url) {
+      logger.warn("geocoding_provider_not_configured", { provider: this.providerName, feature });
+      return null;
+    }
+
+    try {
+      const response = await this.httpClient.get(url, this.requestInit());
+      if (!response.ok) {
+        logger.warn("geocoding_provider_http_error", {
+          provider: this.providerName,
+          feature,
+          status: response.status,
+        });
+        return null;
+      }
+
+      return await response.json();
+    } catch (error) {
+      logger.error("geocoding_provider_failed", { provider: this.providerName, feature, error });
+      return null;
+    }
   }
 
   /**

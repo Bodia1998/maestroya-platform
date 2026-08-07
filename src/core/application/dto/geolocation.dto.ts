@@ -20,3 +20,25 @@ export const geocodeCitySchema = z.object({
 });
 
 export type GeocodeCityInput = z.infer<typeof geocodeCitySchema>;
+
+/**
+ * Module 42 — Geocoding & Maps.
+ *
+ * DTO for resolving the address at a given coordinate — used by
+ * `ReverseGeocodeUseCase`. Same bounded-range validation
+ * `searchDirectorySchema`'s `latitude`/`longitude` fields already use
+ * (Module 20), so a malformed or out-of-range coordinate is rejected before
+ * it ever reaches a `GeocodingProvider`.
+ */
+export const reverseGeocodeSchema = z.object({
+  latitude: z.coerce
+    .number({ invalid_type_error: "Enter a valid latitude." })
+    .min(-90, "Latitude must be between -90 and 90.")
+    .max(90, "Latitude must be between -90 and 90."),
+  longitude: z.coerce
+    .number({ invalid_type_error: "Enter a valid longitude." })
+    .min(-180, "Longitude must be between -180 and 180.")
+    .max(180, "Longitude must be between -180 and 180."),
+});
+
+export type ReverseGeocodeInput = z.infer<typeof reverseGeocodeSchema>;

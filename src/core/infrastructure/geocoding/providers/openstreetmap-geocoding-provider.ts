@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { CityGeocodeQuery } from "@/domain/repositories/geocoding-provider";
+import type { CityGeocodeQuery, FullAddress, ReverseGeocodeResult } from "@/domain/repositories/geocoding-provider";
 import type { GeoPoint } from "@/domain/services/geo-distance";
 import { BaseGeocodingProvider } from "@/infrastructure/geocoding/base-geocoding-provider";
 import type { GeocodingHttpClient } from "@/infrastructure/geocoding/geocoding-http-client";
@@ -57,5 +57,62 @@ export class OpenStreetMapGeocodingProvider extends BaseGeocodingProvider {
     if (Number.isNaN(latitude) || Number.isNaN(longitude)) return null;
 
     return { latitude, longitude };
+  }
+
+  /**
+   * Module 42 — Geocoding & Maps. Nominatim's reverse endpoint
+   * (https://nominatim.org/release-docs/latest/api/Reverse/) — the same
+   * zero-API-key vendor `geocode()` already uses, so reverse geocoding is
+   * reachable with zero configuration exactly like forward geocoding is.
+   * Subject to the same ~1 request/second usage policy `geocode()`'s own
+   * doc comment already notes, which is why this is always used behind
+   * `CachedGeocodingProvider` (see the factory).
+   */
+  override async reverseGeocode(point: GeoPoint): Promise<ReverseGeocodeResult | null> {
+    const params = new URLSearchParams({
+      lat: String(point.latitude),
+      lon: String(point.longitude),
+      format: "json",
+      addressdetails: "1",
+    });
+    const url = `https://nominatim.openstreetmap.org/reverse?${params.toString()}`;
+
+    const json = await this.fetchJson(url, "reverseGeocode");
+    if (!json) return null;
+
+    const body = json as {
+      lat?: string;
+      lon?: string;
+      address?: {
+        road?: string;
+        house_number?: string;
+        city?: string;
+        town?: string;
+        village?: string;
+        municipality?: string;
+        state?: string;
+        province?: string;
+        postcode?: string;
+        country?: string;
+        country_code?: string;
+      };
+    };
+
+    const city = body.address?.city ?? body.address?.town ?? body.address?.village ?? body.address?.municipality;
+    if (!city) return null;
+
+    const latitude = body.lat ? Number.parseFloat(body.lat) : point.latitude;
+    const longitude = body.lon ? Number.parseFloat(body.lon) : point.longitude;
+    if (Number.isNaN(latitude) || Number.isNaN(longitude)) return null;
+
+    const address: FullAddress = {
+      line1: [body.address?.road, body.address?.house_number].filter(Boolean).join(" ") || undefined,
+      city,
+      province: body.address?.state ?? body.address?.province ?? null,
+      postalCode: body.address?.postcode ?? null,
+      country: body.address?.country ?? null,
+    };
+
+    return { address, point: { latitude, longitude } };
   }
 }

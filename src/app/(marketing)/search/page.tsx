@@ -8,6 +8,7 @@ import { DomainError } from "@/domain/errors/domain-error";
 import { SEARCH_SORT_OPTIONS } from "@/domain/value-objects/search-sort-option";
 import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
+import { SearchResultsMap } from "@/components/maps/search-results-map";
 import { DirectorySearchForm } from "./search-form";
 import { DirectorySearchResultsList } from "./results-list";
 
@@ -110,6 +111,11 @@ export default async function DirectorySearchPage({
 
       {hasAnyFilter && !searchError && results && (
         <Section title={`${results.total} result${results.total === 1 ? "" : "s"} found`}>
+          {/* Module 42 — Geocoding & Maps: renders alongside the list, not
+              instead of it — the map is a visual complement to
+              DirectorySearchResultsList, which remains the primary,
+              accessible way to browse results. */}
+          <SearchResultsMap results={results.items} />
           <DirectorySearchResultsList results={results.items} />
           {results.total > results.pageSize && (
             <nav className="flex items-center justify-between text-sm">
