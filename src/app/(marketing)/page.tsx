@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
 import { CategoryGrid } from "./_sections/category-grid";
@@ -6,10 +8,22 @@ import { HowItWorks } from "./_sections/how-it-works";
 import { ProfessionalCta } from "./_sections/professional-cta";
 import { TrustSection } from "./_sections/trust-section";
 
-export const metadata = {
-  title: "MaestroYa — Encuentra profesionales de confianza para tu hogar",
-  description:
-    "Describe lo que necesitas y conecta con profesionales verificados cerca de ti: fontanería, electricidad, reformas, limpieza y mucho más.",
+const TITLE = "MaestroYa — Encuentra profesionales de confianza para tu hogar";
+const DESCRIPTION =
+  "Describe lo que necesitas y conecta con profesionales verificados cerca de ti: fontanería, electricidad, reformas, limpieza y mucho más.";
+
+/** Module 43 — SEO Infrastructure: the homepage's own title/description
+ *  already existed (Module 1) — this only adds the canonical URL and
+ *  Open Graph/Twitter overrides the root layout's defaults don't already
+ *  cover per-page (root layout's `openGraph.url`/`title`/`description`
+ *  happen to already match the homepage, but declaring them here too
+ *  keeps this page correct independent of what the layout defaults to). */
+export const metadata: Metadata = {
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/" },
+  openGraph: { title: TITLE, description: DESCRIPTION, url: "/" },
+  twitter: { title: TITLE, description: DESCRIPTION },
 };
 
 /**

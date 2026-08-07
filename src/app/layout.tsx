@@ -3,17 +3,75 @@ import { getLocale, getMessages } from "next-intl/server";
 
 import { getCurrentUser } from "@/infrastructure/auth/rbac";
 import type { Locale } from "@/shared/i18n/locales";
+import { JsonLd } from "@/components/seo/json-ld";
+import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_URL, toOgLocale } from "@/shared/seo/site";
+import { buildOrganizationJsonLd, buildWebSiteJsonLd } from "@/shared/seo/structured-data";
 
 import { Providers } from "./providers";
 
 import "./globals.css";
 
+/**
+ * Module 43 — SEO Infrastructure: site-wide metadata defaults, inherited
+ * by every route unless it defines its own (Next's Metadata API merges a
+ * child segment's `metadata`/`generateMetadata` over these, field by
+ * field — see the Next.js docs on metadata merging). Per-page overrides
+ * live next to each page (see `(marketing)/**\/page.tsx`,
+ * `(marketing)/professionals/[id]/page.tsx`,
+ * `(marketing)/companies/[id]/page.tsx`).
+ *
+ * `metadataBase` is what lets every other `Metadata` field below and in
+ * every child route use a site-relative path (`"/professionals"`,
+ * `"/opengraph-image"`) instead of repeating `SITE_URL` everywhere — Next
+ * resolves them against this base at render time.
+ */
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "MaestroYa",
-    template: "%s | MaestroYa",
+    default: `${SITE_NAME} — Encuentra profesionales de confianza para tu hogar`,
+    template: `%s | ${SITE_NAME}`,
   },
-  description: "Conecta con profesionales de confianza para tu hogar.",
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  alternates: {
+    canonical: "/",
+  },
+  // Default, permissive crawl policy — individual auth/dashboard routes
+  // never reach this far (see `middleware.ts`'s `PROTECTED_PREFIXES`) and
+  // are additionally excluded via `src/app/robots.ts`'s `disallow` list;
+  // this default only governs the public marketing/discovery pages that
+  // actually render.
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — Encuentra profesionales de confianza para tu hogar`,
+    description: SITE_DESCRIPTION,
+    url: "/",
+    locale: toOgLocale("es"),
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — Encuentra profesionales de confianza para tu hogar`,
+    description: SITE_DESCRIPTION,
+  },
+  icons: {
+    icon: "/icon",
+    apple: "/apple-icon",
+  },
+  manifest: "/manifest.webmanifest",
 };
 
 /**
@@ -56,6 +114,14 @@ export default async function RootLayout({
   return (
     <html lang={typedLocale} suppressHydrationWarning>
       <body>
+        {/* Module 43 — SEO Infrastructure: site-wide structured data,
+            emitted once per page load regardless of route — Organization
+            and WebSite are properties of the platform itself, not of any
+            one page. Per-page structured data (BreadcrumbList,
+            ProfessionalService/LocalBusiness) is emitted by the pages
+            that own that data instead. */}
+        <JsonLd data={buildOrganizationJsonLd()} />
+        <JsonLd data={buildWebSiteJsonLd()} />
         <Providers locale={typedLocale} messages={messages} isAuthenticated={Boolean(user)}>
           {children}
         </Providers>
