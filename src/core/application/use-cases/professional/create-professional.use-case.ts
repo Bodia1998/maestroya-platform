@@ -1,7 +1,11 @@
 import { ConflictError, ValidationError } from "@/domain/errors/domain-error";
+import { ProfessionalCreated } from "@/domain/events/professional-created";
 import type { ProfessionalRecord, ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { ServiceCategoryRepository } from "@/domain/repositories/service-category-repository";
 import type { CreateProfessionalInput } from "@/application/dto/professional.dto";
+import type { EventBus } from "@/application/ports/event-bus";
+import { NullEventBus } from "@/application/ports/null-event-bus";
+import { publishDomainEvent } from "@/application/services/events/publish-domain-event";
 
 /**
  * Creates the ProfessionalProfile for the *authenticated* user — `userId`
@@ -15,6 +19,13 @@ export class CreateProfessionalUseCase {
   constructor(
     private readonly professionals: ProfessionalRepository,
     private readonly categories: ServiceCategoryRepository,
+    /**
+     * Module 47 — CQRS Search Engine: added as a *trailing, defaulted*
+     * parameter so every pre-existing call site and test keeps compiling
+     * and behaving identically (the null bus publishes into a void). The
+     * real composition root injects the shared `eventBus`.
+     */
+    private readonly eventBus: EventBus = new NullEventBus(),
   ) {}
 
   async execute(userId: string, input: CreateProfessionalInput): Promise<ProfessionalRecord> {
@@ -25,7 +36,7 @@ export class CreateProfessionalUseCase {
 
     const categoryIds = await this.validateCategoryIds(input.categoryIds);
 
-    return this.professionals.create(userId, {
+    const professional = await this.professionals.create(userId, {
       businessName: input.businessName || null,
       headline: input.headline || null,
       bio: input.bio || null,
@@ -37,6 +48,15 @@ export class CreateProfessionalUseCase {
       taxId: input.taxId || null,
       categoryIds,
     });
+
+    // Module 47 — CQRS Search Engine: announced only after the write has
+    // succeeded, so the search read model can never learn about a
+    // professional that does not exist. Publishing cannot fail this use
+    // case (see `publishDomainEvent`), and the subscriber only enqueues a
+    // background job — no indexing happens on this request's path.
+    await publishDomainEvent(this.eventBus, new ProfessionalCreated(professional.id, userId));
+
+    return professional;
   }
 
   private async validateCategoryIds(categoryIds: string[] | undefined): Promise<string[]> {

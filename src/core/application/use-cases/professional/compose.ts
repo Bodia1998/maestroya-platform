@@ -1,4 +1,17 @@
 import { PrismaAddressRepository } from "@/infrastructure/database/prisma/repositories/prisma-address-repository";
+/**
+ * Module 47 — CQRS Search Engine: the shared platform `eventBus`, injected
+ * so the lifecycle events this module's use cases now publish actually
+ * reach the search-indexing subscribers (they default to a `NullEventBus`
+ * when constructed directly, e.g. in unit tests). Importing
+ * `infrastructure/search/compose` here is what guarantees those
+ * subscribers are registered for *this* flow even if `instrumentation.ts`'s
+ * boot-time import hasn't run — the same defensive-import convention
+ * `admin/compose.ts` already documents for its own subscribers.
+ */
+import { eventBus } from "@/infrastructure/events/compose";
+import "@/infrastructure/search/compose";
+
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
 import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
@@ -21,7 +34,7 @@ const addresses = new PrismaAddressRepository();
 const geocoding = geocodingProvider;
 
 export function makeCreateProfessionalUseCase() {
-  return new CreateProfessionalUseCase(professionals, categories);
+  return new CreateProfessionalUseCase(professionals, categories, eventBus);
 }
 
 /**
@@ -48,13 +61,13 @@ export function makeGetProfessionalByUserIdUseCase() {
 }
 
 export function makeUpdateProfessionalUseCase() {
-  return new UpdateProfessionalUseCase(professionals);
+  return new UpdateProfessionalUseCase(professionals, eventBus);
 }
 
 export function makeDeactivateProfessionalUseCase() {
-  return new DeactivateProfessionalUseCase(professionals);
+  return new DeactivateProfessionalUseCase(professionals, eventBus);
 }
 
 export function makeUpdateProfessionalServicesUseCase() {
-  return new UpdateProfessionalServicesUseCase(professionals, categories);
+  return new UpdateProfessionalServicesUseCase(professionals, categories, eventBus);
 }

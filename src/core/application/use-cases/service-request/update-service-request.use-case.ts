@@ -1,10 +1,14 @@
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
+import { ServiceRequestUpdated } from "@/domain/events/service-request-updated";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
 import type { GeocodingProvider } from "@/domain/repositories/geocoding-provider";
 import type { ServiceRequestRecord, ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
 import type { ServiceCategoryRepository } from "@/domain/repositories/service-category-repository";
 import { isEditableStatus } from "@/domain/services/service-request-state";
 import type { UpdateServiceRequestInput } from "@/application/dto/service-request.dto";
+import type { EventBus } from "@/application/ports/event-bus";
+import { NullEventBus } from "@/application/ports/null-event-bus";
+import { publishDomainEvent } from "@/application/services/events/publish-domain-event";
 
 /**
  * Updates the *authenticated* customer's own ServiceRequest — looked up by
@@ -31,6 +35,8 @@ export class UpdateServiceRequestUseCase {
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly categories: ServiceCategoryRepository,
     private readonly geocoding: GeocodingProvider,
+    /** Module 47 — CQRS Search Engine: trailing/defaulted, see `CreateProfessionalUseCase`. */
+    private readonly eventBus: EventBus = new NullEventBus(),
   ) {}
 
   async execute(
@@ -93,7 +99,7 @@ export class UpdateServiceRequestUseCase {
       };
     }
 
-    return this.serviceRequests.update(existing.id, {
+    const updated = await this.serviceRequests.update(existing.id, {
       categoryId,
       title: input.title ?? existing.title,
       description: input.description ?? existing.description,
@@ -102,5 +108,12 @@ export class UpdateServiceRequestUseCase {
       budgetMax,
       location,
     });
+
+    // The event carries the post-update status so the search subscriber
+    // can decide index-vs-remove without a read (see
+    // `ServiceRequestUpdated`).
+    await publishDomainEvent(this.eventBus, new ServiceRequestUpdated(updated.id, updated.status));
+
+    return updated;
   }
 }

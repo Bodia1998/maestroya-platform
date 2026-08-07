@@ -1,8 +1,12 @@
 import { UnauthorizedError } from "@/domain/errors/domain-error";
+import { CompanyUpdated } from "@/domain/events/company-updated";
 import type { CompanyRecord, CompanyRepository } from "@/domain/repositories/company-repository";
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import { canManageCompanyProfile } from "@/domain/services/company-membership-rules";
 import type { UpdateCompanyInput } from "@/application/dto/company.dto";
+import type { EventBus } from "@/application/ports/event-bus";
+import { NullEventBus } from "@/application/ports/null-event-bus";
+import { publishDomainEvent } from "@/application/services/events/publish-domain-event";
 import { resolveCompanyActor } from "@/application/use-cases/company/resolve-company-actor";
 
 /**
@@ -16,6 +20,8 @@ export class UpdateCompanyUseCase {
   constructor(
     private readonly companies: CompanyRepository,
     private readonly memberships: CompanyMembershipRepository,
+    /** Module 47 — CQRS Search Engine: trailing/defaulted, see `CreateProfessionalUseCase`. */
+    private readonly eventBus: EventBus = new NullEventBus(),
   ) {}
 
   async execute(userId: string, companyId: string, input: UpdateCompanyInput): Promise<CompanyRecord> {
@@ -24,7 +30,7 @@ export class UpdateCompanyUseCase {
       throw new UnauthorizedError("Only a company owner or admin may edit the company profile.");
     }
 
-    return this.companies.update(companyId, {
+    const company = await this.companies.update(companyId, {
       legalName: input.legalName?.trim(),
       tradeName: input.tradeName || null,
       description: input.description || null,
@@ -41,5 +47,9 @@ export class UpdateCompanyUseCase {
       longitude: input.longitude ?? null,
       isAcceptingRequests: input.isAcceptingRequests,
     });
+
+    await publishDomainEvent(this.eventBus, new CompanyUpdated(companyId, "profile"));
+
+    return company;
   }
 }

@@ -1,7 +1,11 @@
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
+import { ProfessionalUpdated } from "@/domain/events/professional-updated";
 import type { ProfessionalRecord, ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { ServiceCategoryRepository } from "@/domain/repositories/service-category-repository";
 import type { UpdateProfessionalServicesInput } from "@/application/dto/professional.dto";
+import type { EventBus } from "@/application/ports/event-bus";
+import { NullEventBus } from "@/application/ports/null-event-bus";
+import { publishDomainEvent } from "@/application/services/events/publish-domain-event";
 
 /**
  * Replaces the *authenticated* user's own professional profile's set of
@@ -14,6 +18,8 @@ export class UpdateProfessionalServicesUseCase {
   constructor(
     private readonly professionals: ProfessionalRepository,
     private readonly categories: ServiceCategoryRepository,
+    /** Module 47 — CQRS Search Engine: trailing/defaulted, see `CreateProfessionalUseCase`. */
+    private readonly eventBus: EventBus = new NullEventBus(),
   ) {}
 
   async execute(userId: string, input: UpdateProfessionalServicesInput): Promise<ProfessionalRecord> {
@@ -28,6 +34,12 @@ export class UpdateProfessionalServicesUseCase {
       throw new ValidationError("One or more selected service categories are invalid.");
     }
 
-    return this.professionals.updateCategories(existing.id, uniqueIds);
+    const professional = await this.professionals.updateCategories(existing.id, uniqueIds);
+
+    // Categories are an indexed, filterable field of the read model, so a
+    // category change is as much a search change as a profile edit is.
+    await publishDomainEvent(this.eventBus, new ProfessionalUpdated(existing.id, "categories"));
+
+    return professional;
   }
 }

@@ -225,6 +225,56 @@ const envSchema = z
     // `.env`-file convention reason.
     CACHE_BYPASS_ENABLED: z.preprocess(emptyStringToUndefined, z.enum(["true", "false"]).optional()),
 
+    // --- CQRS search engine (Module 47 — CQRS Search Engine) ---
+    // Selects which `SearchIndexProvider` implementation
+    // `createSearchProvider()`
+    // (infrastructure/search/search-provider-factory.ts) constructs.
+    // Defaults to `none` via `.catch()` — not `.default()` — for exactly
+    // the reason `GEOCODING_PROVIDER` above documents: a typo in a
+    // non-critical, swappable backend selector must degrade to the safe
+    // local option, never fail the entire application's startup.
+    //
+    // `none` does **not** mean "search is disabled": it selects
+    // `InMemorySearchProvider`, a fully functional per-process
+    // implementation of the same port (see that class's own doc comment).
+    // That is what makes the read model exercisable in local development
+    // and in CI with no external engine running, the same way
+    // `InMemoryCacheProvider`/`InMemoryJobStore` do for Modules 45/46.
+    // A misconfigured or unreachable Meilisearch/Typesense is likewise
+    // never fatal — the read side degrades to an empty, flagged result
+    // (see `SearchReadModelUseCase`).
+    SEARCH_PROVIDER: z.enum(["none", "meilisearch", "typesense"]).catch("none"),
+    // Root name of the index/collection the read model is written to.
+    // Combined with `SEARCH_INDEX_VERSION` (a code constant, not an env
+    // var — see `search-index-name.ts`) into the effective index name, so
+    // several environments can share one engine without colliding, the
+    // same role `CACHE_KEY_PREFIX` plays for the caching layer.
+    SEARCH_INDEX_PREFIX: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
+    // Connection settings for the two supported engines. All optional in
+    // every environment, including production: an engine that is not
+    // selected must never be a startup requirement, and a selected engine
+    // missing its host falls back to the in-memory provider at the
+    // factory rather than throwing (see `search-provider-factory.ts`) —
+    // the identical "no outbound call can happen unless deliberately and
+    // completely configured" guarantee `GEOCODING_PROVIDER` gives.
+    MEILISEARCH_HOST: z.preprocess(emptyStringToUndefined, z.string().url().optional()),
+    MEILISEARCH_API_KEY: z.preprocess(emptyStringToUndefined, z.string().optional()),
+    TYPESENSE_HOST: z.preprocess(emptyStringToUndefined, z.string().url().optional()),
+    TYPESENSE_API_KEY: z.preprocess(emptyStringToUndefined, z.string().optional()),
+    // Master switch for *writing* to the index. Unset or `"true"` (the
+    // default) keeps the event → job → worker indexing pipeline wired up.
+    // `"false"` unsubscribes the indexing handlers and registers no
+    // worker, leaving reads working against whatever is already indexed —
+    // the operator's escape hatch for "stop hammering the engine while I
+    // fix it", and the switch that makes a controlled, offline rebuild
+    // possible. Deliberately separate from `SEARCH_PROVIDER`: turning
+    // indexing off must not also change which engine reads go to.
+    SEARCH_INDEXING_ENABLED: z.preprocess(emptyStringToUndefined, z.enum(["true", "false"]).optional()),
+    // Documents per provider round trip during a batch/rebuild pass.
+    // `.catch()` for the same "operational tuning knob must never fail
+    // startup" reason as QUEUE_CONCURRENCY.
+    SEARCH_INDEX_BATCH_SIZE: z.coerce.number().int().min(1).max(1000).catch(100),
+
     // --- Error reporting (Module 39 — Sentry + CI/CD Hardening) ---
     // `SENTRY_DSN` gates every Sentry-backed implementation in
     // `infrastructure/observability/` (see `sentry-client.ts`): unset

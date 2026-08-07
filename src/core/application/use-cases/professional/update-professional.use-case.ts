@@ -1,6 +1,10 @@
 import { NotFoundError } from "@/domain/errors/domain-error";
+import { ProfessionalUpdated } from "@/domain/events/professional-updated";
 import type { ProfessionalRecord, ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { UpdateProfessionalInput } from "@/application/dto/professional.dto";
+import type { EventBus } from "@/application/ports/event-bus";
+import { NullEventBus } from "@/application/ports/null-event-bus";
+import { publishDomainEvent } from "@/application/services/events/publish-domain-event";
 
 /**
  * Updates the *authenticated* user's own professional profile. `userId`
@@ -12,7 +16,11 @@ import type { UpdateProfessionalInput } from "@/application/dto/professional.dto
  * DeactivateProfessionalUseCase.
  */
 export class UpdateProfessionalUseCase {
-  constructor(private readonly professionals: ProfessionalRepository) {}
+  constructor(
+    private readonly professionals: ProfessionalRepository,
+    /** Module 47 — CQRS Search Engine: trailing/defaulted, see `CreateProfessionalUseCase`. */
+    private readonly eventBus: EventBus = new NullEventBus(),
+  ) {}
 
   async execute(userId: string, input: UpdateProfessionalInput): Promise<ProfessionalRecord> {
     const existing = await this.professionals.findByUserId(userId);
@@ -20,7 +28,7 @@ export class UpdateProfessionalUseCase {
       throw new NotFoundError("ProfessionalProfile", userId);
     }
 
-    return this.professionals.update(existing.id, {
+    const professional = await this.professionals.update(existing.id, {
       businessName: input.businessName || null,
       headline: input.headline || null,
       bio: input.bio || null,
@@ -32,5 +40,9 @@ export class UpdateProfessionalUseCase {
       taxId: input.taxId || null,
       isAcceptingRequests: input.isAcceptingRequests,
     });
+
+    await publishDomainEvent(this.eventBus, new ProfessionalUpdated(existing.id, "profile"));
+
+    return professional;
   }
 }

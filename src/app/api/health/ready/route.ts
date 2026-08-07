@@ -8,6 +8,7 @@ import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observabil
 import { getRedisClient } from "@/infrastructure/cache/redis-client-factory";
 import { getCacheHealth } from "@/infrastructure/cache/compose";
 import { getBackgroundJobsHealth } from "@/infrastructure/jobs/compose";
+import { getSearchEngineHealth } from "@/infrastructure/search/compose";
 
 /**
  * Readiness check (Module 25 — Production Infrastructure).
@@ -53,6 +54,19 @@ import { getBackgroundJobsHealth } from "@/infrastructure/jobs/compose";
  * failure (see `application/services/cache/cache-manager.ts`), so it can
  * never be the thing that makes this instance unready.
  *
+ * Module 47 — CQRS Search Engine: `checks.searchEngine` joins the same
+ * visibility-only category, with the strongest claim to it of the four.
+ * The search index is *derived* data — Postgres remains the source of
+ * truth, `SearchReadModelUseCase` degrades an unreachable engine to an
+ * empty, explicitly-flagged result rather than an error, and any
+ * divergence is repairable by a rebuild. An instance whose search engine
+ * is down still serves every page, booking, and payment, so a 503 here
+ * would trigger a failover that cannot fix the actual problem. The report
+ * additionally carries the indexing pipeline's own state (queue counts,
+ * last successful sync, index version) — the things an operator needs to
+ * tell "eventually consistent" apart from "silently broken". See
+ * `infrastructure/search/search-health.ts`.
+ *
  * Returns 503 (not 500) on database failure — the conventional status
  * for "the server is currently unable to handle the request", which is
  * exactly what a load balancer/orchestrator readiness probe is checking
@@ -73,6 +87,7 @@ export async function GET(request: NextRequest) {
           cache: await checkCache(requestId),
           queue: await getBackgroundJobsHealth(),
           cachingLayer: getCacheHealth(),
+          searchEngine: await getSearchEngineHealth(),
         },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },
