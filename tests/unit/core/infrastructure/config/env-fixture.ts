@@ -59,6 +59,15 @@ const ENV_KEYS = [
   // Module 46 — Caching Layer (Roadmap Module 13).
   "CACHE_KEY_PREFIX",
   "CACHE_BYPASS_ENABLED",
+  // Module 47 — CQRS Search Engine (Roadmap Module 14).
+  "SEARCH_PROVIDER",
+  "SEARCH_INDEX_PREFIX",
+  "SEARCH_INDEXING_ENABLED",
+  "SEARCH_INDEX_BATCH_SIZE",
+  "MEILISEARCH_HOST",
+  "MEILISEARCH_API_KEY",
+  "TYPESENSE_HOST",
+  "TYPESENSE_API_KEY",
 ];
 
 /**

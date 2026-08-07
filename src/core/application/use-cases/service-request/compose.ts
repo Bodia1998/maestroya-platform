@@ -1,4 +1,17 @@
 import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prisma/repositories/prisma-customer-profile-repository";
+/**
+ * Module 47 — CQRS Search Engine: the shared platform `eventBus`, injected
+ * so the lifecycle events this module's use cases now publish actually
+ * reach the search-indexing subscribers (they default to a `NullEventBus`
+ * when constructed directly, e.g. in unit tests). Importing
+ * `infrastructure/search/compose` here is what guarantees those
+ * subscribers are registered for *this* flow even if `instrumentation.ts`'s
+ * boot-time import hasn't run — the same defensive-import convention
+ * `admin/compose.ts` already documents for its own subscribers.
+ */
+import { eventBus } from "@/infrastructure/events/compose";
+import "@/infrastructure/search/compose";
+
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { CloudinaryRequestPhotoUploadService } from "@/infrastructure/storage/cloudinary/request-photo-upload-service";
@@ -35,7 +48,7 @@ export function makeGetCustomerServiceRequestsUseCase() {
 }
 
 export function makeUpdateServiceRequestUseCase() {
-  return new UpdateServiceRequestUseCase(serviceRequests, customerProfiles, categories, geocoding);
+  return new UpdateServiceRequestUseCase(serviceRequests, customerProfiles, categories, geocoding, eventBus);
 }
 
 export function makeCancelServiceRequestUseCase() {

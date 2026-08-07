@@ -1,9 +1,13 @@
 import { ConflictError, ValidationError } from "@/domain/errors/domain-error";
+import { CompanyCreated } from "@/domain/events/company-created";
 import type { CompanyRecord, CompanyRepository } from "@/domain/repositories/company-repository";
 import type { CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import type { ServiceCategoryRepository } from "@/domain/repositories/service-category-repository";
 import { slugify } from "@/domain/services/company-rules";
 import type { CreateCompanyInput } from "@/application/dto/company.dto";
+import type { EventBus } from "@/application/ports/event-bus";
+import { NullEventBus } from "@/application/ports/null-event-bus";
+import { publishDomainEvent } from "@/application/services/events/publish-domain-event";
 
 /**
  * Module 18 — Company Professional: creates a CompanyProfile owned by the
@@ -20,6 +24,8 @@ export class CreateCompanyUseCase {
     private readonly companies: CompanyRepository,
     private readonly memberships: CompanyMembershipRepository,
     private readonly categories: ServiceCategoryRepository,
+    /** Module 47 — CQRS Search Engine: trailing/defaulted, see `CreateProfessionalUseCase`. */
+    private readonly eventBus: EventBus = new NullEventBus(),
   ) {}
 
   async execute(userId: string, input: CreateCompanyInput): Promise<CompanyRecord> {
@@ -52,6 +58,11 @@ export class CreateCompanyUseCase {
     });
 
     await this.memberships.createOwner(company.id, userId);
+
+    // Published only once both writes (company + owner membership) have
+    // succeeded — the read model must never see a company that is not yet
+    // fully constructed.
+    await publishDomainEvent(this.eventBus, new CompanyCreated(company.id, userId));
 
     return company;
   }

@@ -146,6 +146,42 @@ describe("GET /api/health/ready (readiness)", () => {
     expect(body.checks.queue).toEqual({ status: "disabled", driver: "none", queues: {} });
   });
 
+  it("Module 47: reports search-engine health without affecting readiness", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    // SEARCH_PROVIDER is unset, so the search engine runs on the fully
+    // functional in-memory provider — "ok", not "not_configured"/"disabled".
+    expect(body.checks.searchEngine).toEqual(
+      expect.objectContaining({ status: "ok", provider: "memory", reachable: true, indexingEnabled: true }),
+    );
+  });
+
+  it("Module 47: search-engine status is 'disabled' when SEARCH_INDEXING_ENABLED=false, without affecting readiness", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    process.env.SEARCH_INDEXING_ENABLED = "false";
+    vi.resetModules();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.status).toBe("ok");
+    expect(body.checks.searchEngine.status).toBe("disabled");
+
+    delete process.env.SEARCH_INDEXING_ENABLED;
+  });
+
   it("returns 503 when the database is unreachable", async () => {
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { $queryRaw: vi.fn().mockRejectedValue(new Error("connection refused")) },

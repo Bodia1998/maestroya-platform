@@ -73,6 +73,16 @@ export async function register() {
   await import("@/application/use-cases/company-invitation/compose");
   await import("@/application/use-cases/company-membership/compose");
   await import("@/application/use-cases/gdpr/compose");
+  // Module 47 — CQRS Search Engine: this module's subscribers live in its
+  // own composition root (`infrastructure/search/compose.ts`) rather than
+  // under `application/use-cases/`, because that file also owns the
+  // search-index queue and worker they enqueue into — but it registers
+  // them exactly the same way, at import time, so it belongs in this same
+  // deterministic-at-boot list. Importing it before `startBackgroundJobs()`
+  // below is what guarantees the search-index worker is registered before
+  // the runtime starts, rather than only once the first request happens to
+  // touch search.
+  await import("@/infrastructure/search/compose");
 
   // Module 45 — Background Jobs: starts every registered worker and the
   // job scheduler. Called after the subscriber-registering imports above
