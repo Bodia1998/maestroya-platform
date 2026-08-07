@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,7 +10,61 @@ import { makeGetProfessionalPublicProfileUseCase } from "@/application/use-cases
 import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
+import { JsonLd } from "@/components/seo/json-ld";
+import { buildBreadcrumbJsonLd, buildProfessionalServiceJsonLd } from "@/shared/seo/structured-data";
 import { VerificationBadge } from "../verification-badge";
+
+type ProfessionalPageProps = { params: Promise<{ id: string }> };
+
+/**
+ * Module 43 — SEO Infrastructure: wrapped in React's `cache()` so
+ * `generateMetadata` and the page component below share one fetch per
+ * request instead of two — Next.js runs both independently and does not
+ * dedupe arbitrary async function calls on its own (only `fetch()` gets
+ * that for free), so without this the use case (and its underlying
+ * Prisma query) would run twice per request.
+ */
+const getProfile = cache(async (id: string) => {
+  try {
+    return await makeGetProfessionalPublicProfileUseCase().execute(id);
+  } catch (error) {
+    if (error instanceof NotFoundError) return null;
+    throw error;
+  }
+});
+
+export async function generateMetadata({ params }: ProfessionalPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const profile = await getProfile(id);
+  if (!profile) return {};
+
+  const name = profile.businessName ?? profile.displayName;
+  const location = [profile.city, profile.province].filter(Boolean).join(", ");
+  const description =
+    profile.headline ??
+    (location
+      ? `Profesional verificado en ${location}. Consulta su perfil y solicita presupuesto en MaestroYa.`
+      : "Consulta el perfil de este profesional y solicita presupuesto en MaestroYa.");
+  const path = `/professionals/${id}`;
+
+  return {
+    title: name,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "profile",
+      title: name,
+      description,
+      url: path,
+      ...(profile.profileImageUrl ? { images: [{ url: profile.profileImageUrl }] } : {}),
+    },
+    twitter: {
+      title: name,
+      description,
+      ...(profile.profileImageUrl ? { images: [profile.profileImageUrl] } : {}),
+    },
+  };
+}
 
 /**
  * Public professional profile page — reachable from a Professional
@@ -21,21 +77,12 @@ import { VerificationBadge } from "../verification-badge";
  * id, exact address, or internal moderation fields ever reach this page.
  * Reviews/ratings and booking are explicitly out of scope for this module.
  */
-export default async function PublicProfessionalProfilePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function PublicProfessionalProfilePage({ params }: ProfessionalPageProps) {
   const { id } = await params;
 
-  let profile;
-  try {
-    profile = await makeGetProfessionalPublicProfileUseCase().execute(id);
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      notFound();
-    }
-    throw error;
+  const profile = await getProfile(id);
+  if (!profile) {
+    notFound();
   }
 
   const categories = profile.categoryIds.length
@@ -45,8 +92,36 @@ export default async function PublicProfessionalProfilePage({
       })
     : [];
 
+  const name = profile.businessName ?? profile.displayName;
+  const path = `/professionals/${profile.id}`;
+
   return (
     <PageContainer padded>
+      <JsonLd
+        data={buildProfessionalServiceJsonLd({
+          id: profile.id,
+          name,
+          description: profile.headline ?? profile.bio,
+          image: profile.profileImageUrl,
+          city: profile.city,
+          province: profile.province,
+          // ProfessionalPublicProfileRecord deliberately doesn't expose
+          // rating aggregates (see its own doc comment) — omitted here
+          // rather than faked; `buildProfessionalServiceJsonLd` already
+          // skips the `aggregateRating` block when `averageRating` is null.
+          averageRating: null,
+          reviewCount: 0,
+          path,
+        })}
+      />
+      <JsonLd
+        data={buildBreadcrumbJsonLd([
+          { name: "Inicio", path: "/" },
+          { name: "Profesionales", path: "/professionals" },
+          { name, path },
+        ])}
+      />
+
       <Link href="/professionals" className="text-sm text-foreground/70 hover:underline">
         ← Back to search
       </Link>

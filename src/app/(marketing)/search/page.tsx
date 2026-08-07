@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
@@ -12,7 +13,20 @@ import { SearchResultsMap } from "@/components/maps/search-results-map";
 import { DirectorySearchForm } from "./search-form";
 import { DirectorySearchResultsList } from "./results-list";
 
-export const metadata = { title: "Search professionals & companies" };
+const TITLE = "Buscar profesionales y empresas";
+const DESCRIPTION =
+  "Filtra por categoría, ciudad, valoración y verificación para encontrar el profesional o empresa adecuado para tu proyecto.";
+
+/** Module 43 — SEO Infrastructure: see `(marketing)/professionals/page.tsx`'s
+ *  own doc comment on why `alternates.canonical` is the bare path — same
+ *  reasoning applies here for `/search`'s own query-string filters. */
+export const metadata: Metadata = {
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/search" },
+  openGraph: { title: TITLE, description: DESCRIPTION, url: "/search" },
+  twitter: { title: TITLE, description: DESCRIPTION },
+};
 
 /**
  * Search & Ranking module (Module 19) — unified, customer-facing directory

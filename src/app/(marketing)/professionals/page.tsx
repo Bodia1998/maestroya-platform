@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
@@ -12,7 +13,27 @@ import { Section } from "@/components/layout/section";
 import { ProfessionalSearchForm } from "./search-form";
 import { SearchResultsList } from "./search-results-list";
 
-export const metadata = { title: "Find a professional" };
+const TITLE = "Encuentra un profesional cerca de ti";
+const DESCRIPTION =
+  "Busca profesionales verificados por categoría de servicio y ubicación, ordenados por distancia.";
+
+/**
+ * Module 43 — SEO Infrastructure: `alternates.canonical` is deliberately
+ * the bare `/professionals` path, never including the incoming
+ * `?categoryId=&lat=&lng=` query string this page reads at render time —
+ * every filter combination renders the same page shell over different
+ * result sets, so treating each combination as its own canonical URL
+ * would create unbounded near-duplicate-content URLs for search engines
+ * to crawl. This mirrors `sitemap.ts`'s own decision to list only the
+ * base path (see that file's doc comment).
+ */
+export const metadata: Metadata = {
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/professionals" },
+  openGraph: { title: TITLE, description: DESCRIPTION, url: "/professionals" },
+  twitter: { title: TITLE, description: DESCRIPTION },
+};
 
 /**
  * Customer-facing Professional Discovery & Search page.

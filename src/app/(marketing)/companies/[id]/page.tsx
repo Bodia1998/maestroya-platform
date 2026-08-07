@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,6 +11,54 @@ import { makeListCompanyPortfolioItemsUseCase } from "@/application/use-cases/po
 import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
+import { JsonLd } from "@/components/seo/json-ld";
+import { buildBreadcrumbJsonLd, buildLocalBusinessJsonLd } from "@/shared/seo/structured-data";
+
+type CompanyPageProps = { params: Promise<{ id: string }> };
+
+/** Module 43 — SEO Infrastructure: see the professional profile page's
+ *  identical `getProfile` doc comment — same "share one fetch between
+ *  `generateMetadata` and the page" reasoning. */
+const getProfile = cache(async (id: string) => {
+  try {
+    return await makeGetCompanyPublicProfileUseCase().getById(id);
+  } catch (error) {
+    if (error instanceof NotFoundError) return null;
+    throw error;
+  }
+});
+
+export async function generateMetadata({ params }: CompanyPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const profile = await getProfile(id);
+  if (!profile) return {};
+
+  const location = [profile.city, profile.province].filter(Boolean).join(", ");
+  const description =
+    profile.description ??
+    (location
+      ? `Empresa de servicios para el hogar en ${location}. Consulta su perfil en MaestroYa.`
+      : "Consulta el perfil de esta empresa y solicita presupuesto en MaestroYa.");
+  const path = `/companies/${id}`;
+
+  return {
+    title: profile.displayName,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "website",
+      title: profile.displayName,
+      description,
+      url: path,
+      ...(profile.logoUrl ? { images: [{ url: profile.logoUrl }] } : {}),
+    },
+    twitter: {
+      title: profile.displayName,
+      description,
+      ...(profile.logoUrl ? { images: [profile.logoUrl] } : {}),
+    },
+  };
+}
 
 /**
  * Module 18 — Company Professional: public company profile page —
@@ -17,15 +67,12 @@ import { ResponsiveGrid } from "@/components/layout/responsive-grid";
  * documents, or Stripe/financial data — only the safe fields
  * CompanyPublicProfileRecord exposes.
  */
-export default async function PublicCompanyProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PublicCompanyProfilePage({ params }: CompanyPageProps) {
   const { id } = await params;
 
-  let profile;
-  try {
-    profile = await makeGetCompanyPublicProfileUseCase().getById(id);
-  } catch (error) {
-    if (error instanceof NotFoundError) notFound();
-    throw error;
+  const profile = await getProfile(id);
+  if (!profile) {
+    notFound();
   }
 
   const [categories, portfolioItems] = await Promise.all([
@@ -35,8 +82,31 @@ export default async function PublicCompanyProfilePage({ params }: { params: Pro
     makeListCompanyPortfolioItemsUseCase().execute(profile.id, { limit: 12, offset: 0 }),
   ]);
 
+  const path = `/companies/${profile.id}`;
+
   return (
     <PageContainer padded>
+      <JsonLd
+        data={buildLocalBusinessJsonLd({
+          id: profile.id,
+          name: profile.displayName,
+          description: profile.description,
+          image: profile.logoUrl,
+          city: profile.city,
+          province: profile.province,
+          averageRating: profile.averageRating,
+          reviewCount: profile.reviewCount,
+          path,
+        })}
+      />
+      <JsonLd
+        data={buildBreadcrumbJsonLd([
+          { name: "Inicio", path: "/" },
+          { name: "Profesionales", path: "/professionals" },
+          { name: profile.displayName, path },
+        ])}
+      />
+
       <Link href="/professionals" className="text-sm text-foreground/70 hover:underline">
         ← Back to search
       </Link>
