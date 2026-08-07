@@ -73,7 +73,13 @@ export type NotificationTypeValue =
   | "SERVICE_REQUEST_EXPIRED"
   | "QUOTE_EXPIRED"
   | "VERIFICATION_EXPIRED"
-  | "COMPANY_VERIFICATION_EXPIRED";
+  | "COMPANY_VERIFICATION_EXPIRED"
+  // Module 41 — Reviews & Ratings: sent to the original reviewer when the
+  // reviewed professional posts (or edits) a public reply — see
+  // NotifyReviewResponseAddedSubscriber. REVIEW_RECEIVED (above, Module 13)
+  // already covers the reviewed professional's own "you got a review"
+  // notification; this is the reviewer-facing counterpart for the reply.
+  | "REVIEW_RESPONSE_ADDED";
 
 export interface NotificationRecord {
   id: string;

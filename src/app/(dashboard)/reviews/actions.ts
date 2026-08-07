@@ -2,8 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 
-import { createReviewSchema } from "@/application/dto/review.dto";
-import { makeCreateReviewUseCase } from "@/application/use-cases/review/compose";
+import { createReviewSchema, deleteReviewSchema, respondToReviewSchema, updateReviewSchema } from "@/application/dto/review.dto";
+import {
+  makeCreateReviewUseCase,
+  makeDeleteReviewUseCase,
+  makeRespondToReviewUseCase,
+  makeUpdateReviewUseCase,
+} from "@/application/use-cases/review/compose";
 import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -67,5 +72,83 @@ export async function createReviewAction(jobId: string, rating: number, comment:
     return { success: true };
   } catch (error) {
     return fromDomainError(error, "Something went wrong submitting this review.");
+  }
+}
+
+/**
+ * Module 41 — Reviews & Ratings: thin Server Action adapter for
+ * UpdateReviewUseCase — ownership and the edit-window rule are enforced
+ * entirely inside the use case, never here. `reviewId` is re-verified
+ * server-side against the caller's session; it is never trusted as proof
+ * of ownership just because it was passed in (same convention as
+ * `createReviewAction`'s own doc comment).
+ */
+export async function updateReviewAction(
+  reviewId: string,
+  rating: number,
+  comment: string,
+  jobId: string,
+): Promise<ActionResult> {
+  const user = await requireAuth();
+  const parsed = updateReviewSchema.safeParse({ reviewId, rating, comment });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid review." };
+  }
+
+  try {
+    await makeUpdateReviewUseCase().execute(user.id, parsed.data.reviewId, {
+      rating: parsed.data.rating,
+      comment: parsed.data.comment ? parsed.data.comment : null,
+    });
+    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath("/jobs");
+    return { success: true };
+  } catch (error) {
+    return fromDomainError(error, "Something went wrong updating this review.");
+  }
+}
+
+/**
+ * Module 41 — Reviews & Ratings: thin Server Action adapter for
+ * DeleteReviewUseCase (soft delete — see that class's own doc comment).
+ */
+export async function deleteReviewAction(reviewId: string, jobId: string): Promise<ActionResult> {
+  const user = await requireAuth();
+  const parsed = deleteReviewSchema.safeParse({ reviewId });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid review." };
+  }
+
+  try {
+    await makeDeleteReviewUseCase().execute(user.id, parsed.data.reviewId);
+    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath("/jobs");
+    return { success: true };
+  } catch (error) {
+    return fromDomainError(error, "Something went wrong deleting this review.");
+  }
+}
+
+/**
+ * Module 41 — Reviews & Ratings: thin Server Action adapter for
+ * RespondToReviewUseCase — authorization (only the reviewed professional
+ * may respond) is entirely inside the use case, never here. Calling this
+ * twice for the same review is how a response is edited (see that use
+ * case's own doc comment).
+ */
+export async function respondToReviewAction(reviewId: string, response: string, jobId: string): Promise<ActionResult> {
+  const user = await requireAuth();
+  const parsed = respondToReviewSchema.safeParse({ reviewId, response });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid response." };
+  }
+
+  try {
+    await makeRespondToReviewUseCase().execute(user.id, parsed.data.reviewId, parsed.data.response);
+    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath("/jobs");
+    return { success: true };
+  } catch (error) {
+    return fromDomainError(error, "Something went wrong submitting this response.");
   }
 }

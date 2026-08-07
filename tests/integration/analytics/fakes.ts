@@ -346,9 +346,28 @@ export class FakeReviewRepository implements ReviewRepository {
     return [];
   }
   async getProfessionalRatingSummary(professionalProfileId: string): Promise<ProfessionalRatingSummary> {
-    return this.ratingSummaries.get(professionalProfileId) ?? { professionalProfileId, averageRating: null, reviewCount: 0 };
+    return (
+      this.ratingSummaries.get(professionalProfileId) ?? {
+        professionalProfileId,
+        averageRating: null,
+        reviewCount: 0,
+        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        lastReviewAt: null,
+      }
+    );
   }
   async create(): Promise<never> {
+    throw new Error("not used in analytics tests");
+  }
+  // Module 41 — Reviews & Ratings: not exercised by analytics tests — this
+  // fake only ever seeds `ratingSummaries` directly, never a Review row.
+  async update(): Promise<never> {
+    throw new Error("not used in analytics tests");
+  }
+  async softDelete(): Promise<never> {
+    throw new Error("not used in analytics tests");
+  }
+  async respond(): Promise<never> {
     throw new Error("not used in analytics tests");
   }
 }

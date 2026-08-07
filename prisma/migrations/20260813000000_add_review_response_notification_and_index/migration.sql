@@ -1,0 +1,32 @@
+-- Hand-authored (same caveat as every prior migration in this repo: no
+-- Postgres/Prisma-engine access in this sandbox to run `prisma migrate dev`
+-- and have it generate this file from a real diff — see
+-- docs/MODULE_21_DISPUTES_SUPPORT.md, "Validation Results", for the same
+-- confirmed precedent). Mirrors what that command would produce for the
+-- schema changes below. Run the real command once you have a database
+-- locally to double-check, then delete this comment block.
+--
+-- Module 41 — Reviews & Ratings.
+--
+-- Purely additive: one new NotificationType enum value, one new composite
+-- index. Nothing existing is renamed, dropped, or altered. In particular:
+--   * "reviews"."response", "respondedAt", and "deletedAt" already exist
+--     (added, unused, by Module 13's original migration) — Module 41 wires
+--     application code to them but requires no column changes at all.
+--   * "reviews_rating_range_check" and the professional/company XOR CHECK
+--     constraint are untouched.
+--
+-- 1. NotificationType.REVIEW_RESPONSE_ADDED — sent to the original
+--    reviewer when the reviewed professional posts/edits a public reply
+--    (see NotifyReviewResponseAddedSubscriber). Postgres requires adding an
+--    enum value outside any transaction the migration runner wraps around
+--    it, hence the standalone ALTER TYPE statement below (same shape every
+--    other enum-value-only migration in this repo already uses).
+ALTER TYPE "NotificationType" ADD VALUE 'REVIEW_RESPONSE_ADDED';
+
+-- 2. Composite index covering the exact WHERE shape
+--    ListProfessionalReviewsUseCase/GetProfessionalRatingSummaryUseCase now
+--    query (revieweeProfessionalProfileId + status = 'PUBLISHED' +
+--    deletedAt IS NULL) — see PrismaReviewRepository's PUBLIC_WHERE and
+--    schema.prisma's own doc comment on this index for the full reasoning.
+CREATE INDEX "reviews_revieweeProfessionalProfileId_status_deletedAt_idx" ON "reviews"("revieweeProfessionalProfileId", "status", "deletedAt");

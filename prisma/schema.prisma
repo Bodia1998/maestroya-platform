@@ -873,6 +873,9 @@ enum NotificationType {
   QUOTE_EXPIRED
   VERIFICATION_EXPIRED
   COMPANY_VERIFICATION_EXPIRED
+  /// Module 41 — Reviews & Ratings: sent to the original reviewer when the
+  /// reviewed professional posts or edits a public reply to their review.
+  REVIEW_RESPONSE_ADDED
 }
 
 enum VerificationDocumentType {
@@ -1956,6 +1959,12 @@ model MessageAttachment {
 /// itself (PENDING/PUBLISHED/FLAGGED/REMOVED) is left untouched so Module
 /// 16 can later flag/remove a review, or reintroduce a pending-approval
 /// step, without a schema change.
+///
+/// Module 41 — Reviews & Ratings: `response`/`respondedAt` are now used
+/// (RespondToReviewUseCase) — no schema change was needed, exactly as this
+/// doc comment's own Module 13 note anticipated. `deletedAt` (below) is new
+/// in Module 41: an author-initiated soft delete, distinct from `status`,
+/// which remains Module 16's own admin-moderation axis.
 model Review {
   id                             String       @id @default(uuid()) @db.Uuid
   jobId                          String       @unique @db.Uuid
@@ -1984,6 +1993,17 @@ model Review {
   @@index([revieweeProfessionalProfileId])
   @@index([revieweeCompanyProfileId])
   @@index([status])
+  /// Module 41 — Reviews & Ratings: composite index covering
+  /// ListProfessionalReviewsUseCase/GetProfessionalRatingSummaryUseCase's
+  /// query shape exactly (`WHERE revieweeProfessionalProfileId = ? AND
+  /// status = 'PUBLISHED' AND deletedAt IS NULL`, see
+  /// PrismaReviewRepository's `PUBLIC_WHERE`) — the pre-existing single-
+  /// column `revieweeProfessionalProfileId` index above still serves
+  /// `findByJobId`-adjacent lookups, but every public-facing read this
+  /// module added/extended now hits this one instead, avoiding a filter
+  /// step over rows an index-only scan of the single-column index would
+  /// still have to fetch.
+  @@index([revieweeProfessionalProfileId, status, deletedAt])
   @@map("reviews")
 }
 

@@ -1,12 +1,14 @@
-import { NullNotificationCreator } from "@/application/ports/notification-creator";
-import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { ConflictError, NotFoundError, ValidationError } from "@/domain/errors/domain-error";
+import { ReviewCreated } from "@/domain/events/review-created";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
 import type { JobRepository } from "@/domain/repositories/job-repository";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { ReviewRecord, ReviewRepository } from "@/domain/repositories/review-repository";
 import { isValidRating, normalizeComment } from "@/domain/services/review-rules";
 import { resolveJobActor } from "@/application/use-cases/job/resolve-job-actor";
+import type { EventBus } from "@/application/ports/event-bus";
+import { EventDispatchError } from "@/application/ports/event-dispatch-error";
+import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 
 export interface CreateReviewInput {
   jobId: string;
@@ -15,11 +17,11 @@ export interface CreateReviewInput {
 }
 
 /**
- * Reviews & Ratings module (Module 13): the only write use case this
- * module exposes — a review, once created, is neither edited nor deleted
- * by its author (see the module's documentation, "Immutability" — no
- * product requirement calls for an edit/delete workflow, and admin
- * moderation/removal belongs to Module 16, not here).
+ * Reviews & Ratings module (Module 13, extended by Module 41): creates a
+ * review for a completed Job. A review, once created, may later be edited
+ * (`UpdateReviewUseCase`) or soft-deleted (`DeleteReviewUseCase`) by its
+ * author within the rules `review-rules.ts` defines — see those use cases'
+ * own doc comments; this class only covers creation.
  *
  * The core product rule this enforces end to end: a review may only be
  * created for a Job whose `status` is COMPLETED — never inferred from
@@ -36,15 +38,15 @@ export interface CreateReviewInput {
  * customer merely by calling this with their own userId (resolveJobActor
  * always re-derives which side, if any, the authenticated user is on).
  *
- * Notifications module (Module 15) integration: Module 13's own
- * documentation explicitly deferred a REVIEW_RECEIVED notification to a
- * future notifications module — this is that wiring. The professional
- * being reviewed (never the reviewer/customer — a review is never
- * self-notifying) gets a REVIEW_RECEIVED notification once the review is
- * successfully persisted. Best-effort: a notification-creation failure is
- * caught, logged, and never rolls back or fails the review itself, same
- * convention as every other notifier call site in this codebase (see
- * StartJobUseCase.execute).
+ * Module 41 — Domain Event Integration: this use case no longer calls
+ * `NotificationCreator` directly (Module 13's original implementation did).
+ * It now publishes `ReviewCreated` through the Module 34 `EventBus`
+ * instead — exactly the "publish, don't call directly" pattern
+ * `CreateDisputeUseCase` established (see that class's own doc comment,
+ * mirrored verbatim below down to the publish-and-report, never-rethrow
+ * error handling). `NotifyReviewCreatedSubscriber` (Notifications) and
+ * `RecordReviewCreatedAuditLogSubscriber` (Audit Log) both react to the
+ * same event; neither is called from here.
  */
 export class CreateReviewUseCase {
   constructor(
@@ -52,11 +54,8 @@ export class CreateReviewUseCase {
     private readonly jobs: JobRepository,
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly professionals: ProfessionalRepository,
-    // Notifications module (Module 15): Module 13 explicitly deferred a
-    // REVIEW_RECEIVED notification to this module — see this class's own
-    // doc comment below. Optional, defaults to a no-op — see
-    // NullNotificationCreator's own doc comment.
-    private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    private readonly eventBus: EventBus,
+    private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
   async execute(userId: string, input: CreateReviewInput): Promise<ReviewRecord> {
@@ -118,24 +117,21 @@ export class CreateReviewUseCase {
       comment: normalizeComment(input.comment),
     });
 
+    let revieweeUserId: string | null = null;
+    if (job.professionalProfileId) {
+      const professional = await this.professionals.findById(job.professionalProfileId);
+      revieweeUserId = professional?.userId ?? null;
+    }
+
+    // Publish-and-report, never rethrow — a failing subscriber (an email
+    // provider outage, an audit-log write failure) must never roll back or
+    // fail the review itself, same contract every other event-publishing
+    // use case in this codebase follows (see CreateDisputeUseCase.execute).
     try {
-      if (job.professionalProfileId) {
-        const professional = await this.professionals.findById(job.professionalProfileId);
-        if (professional) {
-          await this.notifications.notify({
-            userId: professional.userId,
-            type: "REVIEW_RECEIVED",
-            title: "You received a new review",
-            message: "A customer left a review for your completed job.",
-            resourceType: "REVIEW",
-            resourceId: review.id,
-            actionUrl: `/jobs/${job.id}`,
-            metadata: { jobId: job.id, rating: review.rating },
-          });
-        }
-      }
+      await this.eventBus.publishAll([new ReviewCreated(review.id, job.id, userId, revieweeUserId, review.rating)]);
     } catch (error) {
-      console.error("Failed to create review-received notification", error);
+      if (!(error instanceof EventDispatchError)) throw error;
+      this.failureReporter.report(error, { event: error.eventName, eventId: error.eventId });
     }
 
     return review;

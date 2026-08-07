@@ -10,6 +10,8 @@ import { DisputeCreated } from "@/domain/events/dispute-created";
 import { DisputeMessageAdded } from "@/domain/events/dispute-message-added";
 import { DisputeStatusChanged } from "@/domain/events/dispute-status-changed";
 import { ProfessionalVerificationStatusChanged } from "@/domain/events/professional-verification-status-changed";
+import { ReviewCreated } from "@/domain/events/review-created";
+import { ReviewResponseAdded } from "@/domain/events/review-response-added";
 import { SupportTicketStatusChanged } from "@/domain/events/support-ticket-status-changed";
 import { CreateNotificationUseCase } from "@/application/use-cases/notification/create-notification.use-case";
 import { DismissNotificationUseCase } from "@/application/use-cases/notification/dismiss-notification.use-case";
@@ -27,6 +29,8 @@ import { NotifyDisputeCreatedSubscriber } from "@/application/use-cases/notifica
 import { NotifyDisputeMessageAddedSubscriber } from "@/application/use-cases/notification/notify-dispute-message-added.subscriber";
 import { NotifyDisputeStatusChangeSubscriber } from "@/application/use-cases/notification/notify-dispute-status-change.subscriber";
 import { NotifyProfessionalVerificationStatusChangeSubscriber } from "@/application/use-cases/notification/notify-professional-verification-status-change.subscriber";
+import { NotifyReviewCreatedSubscriber } from "@/application/use-cases/notification/notify-review-created.subscriber";
+import { NotifyReviewResponseAddedSubscriber } from "@/application/use-cases/notification/notify-review-response-added.subscriber";
 import { NotifySupportTicketStatusChangeSubscriber } from "@/application/use-cases/notification/notify-support-ticket-status-change.subscriber";
 
 const notifications = new PrismaNotificationRepository();
@@ -99,6 +103,16 @@ eventBus.subscribe(
   CompanyMembershipChanged,
   new NotifyCompanyMembershipChangeSubscriber(new NotificationServiceCreator()),
 );
+
+/**
+ * Module 41 — Reviews & Ratings: registers this module's two notification
+ * subscribers against the shared `eventBus` — same pattern as every
+ * registration above. `ReviewCreated` replaces `CreateReviewUseCase`'s
+ * pre-Module-41 direct `NotificationCreator.notify(...)` call (see that use
+ * case's own doc comment); `ReviewResponseAdded` is new in Module 41.
+ */
+eventBus.subscribe(ReviewCreated, new NotifyReviewCreatedSubscriber(new NotificationServiceCreator()));
+eventBus.subscribe(ReviewResponseAdded, new NotifyReviewResponseAddedSubscriber(new NotificationServiceCreator()));
 
 /** Internal only — never wired to a public Server Action. See
  *  CreateNotificationUseCase's own doc comment. Exported for
