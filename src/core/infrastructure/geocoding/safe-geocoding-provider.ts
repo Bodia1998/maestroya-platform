@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { CityGeocodeQuery, GeocodingProvider } from "@/domain/repositories/geocoding-provider";
+import type { CityGeocodeQuery, GeocodingProvider, ReverseGeocodeResult } from "@/domain/repositories/geocoding-provider";
 import type { GeoPoint } from "@/domain/services/geo-distance";
 import { logger } from "@/infrastructure/observability/logger";
 
@@ -33,6 +33,34 @@ export class SafeGeocodingProvider implements GeocodingProvider {
       // Request creation persist the record with null coordinates and
       // move on); a thrown exception here never is.
       logger.error("geocoding_provider_unhandled_error", { provider: this.providerName, error });
+      return null;
+    }
+  }
+
+  /**
+   * Module 42 — Geocoding & Maps: same "never throw, never hang" guarantee
+   * as `geocode()` above, extended to `reverseGeocode`. Collapses every
+   * failure mode — the wrapped provider not implementing it at all
+   * (`inner.reverseGeocode` undefined, e.g. `StaticCityGeocodingProvider`),
+   * `BaseGeocodingProvider`'s default `GeocodingNotImplementedError`, or a
+   * real network/parsing failure — to the same `null` result a caller
+   * already treats as "no address available for this point," matching
+   * `geocode()`'s own "unknown is not an error" contract. A caller that
+   * cares about the distinction talks to an unwrapped provider directly;
+   * every caller going through the composed `GeocodingProvider` this
+   * factory returns gets the simpler, uniform contract.
+   */
+  async reverseGeocode(point: GeoPoint): Promise<ReverseGeocodeResult | null> {
+    if (!this.inner.reverseGeocode) return null;
+
+    try {
+      return await this.inner.reverseGeocode(point);
+    } catch (error) {
+      logger.error("geocoding_provider_unhandled_error", {
+        provider: this.providerName,
+        feature: "reverseGeocode",
+        error,
+      });
       return null;
     }
   }

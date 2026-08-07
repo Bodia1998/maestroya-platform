@@ -1,5 +1,6 @@
 import { createGeocodingProvider } from "@/infrastructure/geocoding/geocoding-provider-factory";
 import { GeocodeCityUseCase } from "@/application/use-cases/geolocation/geocode-city.use-case";
+import { ReverseGeocodeUseCase } from "@/application/use-cases/geolocation/reverse-geocode.use-case";
 
 /**
  * Maps & Geolocation module (Module 20) — composition root, extended by
@@ -20,4 +21,15 @@ export const geocodingProvider = createGeocodingProvider();
 
 export function makeGeocodeCityUseCase() {
   return new GeocodeCityUseCase(geocodingProvider);
+}
+
+/**
+ * Module 42 — Geocoding & Maps: reuses the exact same shared
+ * `geocodingProvider` instance every other composition root in this file
+ * uses — no second provider, no second cache. See
+ * `ReverseGeocodeUseCase`'s own doc comment for why this needs no
+ * authorization wiring.
+ */
+export function makeReverseGeocodeUseCase() {
+  return new ReverseGeocodeUseCase(geocodingProvider);
 }

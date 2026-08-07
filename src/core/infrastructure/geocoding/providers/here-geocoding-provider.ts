@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { CityGeocodeQuery } from "@/domain/repositories/geocoding-provider";
+import type { CityGeocodeQuery, FullAddress, ReverseGeocodeResult } from "@/domain/repositories/geocoding-provider";
 import type { GeoPoint } from "@/domain/services/geo-distance";
 import { BaseGeocodingProvider } from "@/infrastructure/geocoding/base-geocoding-provider";
 import type { GeocodingHttpClient } from "@/infrastructure/geocoding/geocoding-http-client";
@@ -47,5 +47,56 @@ export class HereGeocodingProvider extends BaseGeocodingProvider {
     if (!position || typeof position.lat !== "number" || typeof position.lng !== "number") return null;
 
     return { latitude: position.lat, longitude: position.lng };
+  }
+
+  /**
+   * Module 42 — Geocoding & Maps. HERE's Reverse Geocode v7 endpoint
+   * (https://www.here.com/docs/bundle/geocoding-and-search-api-developer-guide/page/topics/endpoint-reverse-geocode-brief.html) —
+   * same auth/key precondition as `geocode()`.
+   */
+  override async reverseGeocode(point: GeoPoint): Promise<ReverseGeocodeResult | null> {
+    if (!this.apiKey) return null;
+
+    const params = new URLSearchParams({
+      at: `${point.latitude},${point.longitude}`,
+      limit: "1",
+      apiKey: this.apiKey,
+    });
+    const url = `https://revgeocode.search.hereapi.com/v1/revgeocode?${params.toString()}`;
+
+    const json = await this.fetchJson(url, "reverseGeocode");
+    if (!json) return null;
+
+    const body = json as {
+      items?: Array<{
+        position?: { lat?: number; lng?: number };
+        address?: {
+          street?: string;
+          houseNumber?: string;
+          city?: string;
+          county?: string;
+          state?: string;
+          postalCode?: string;
+          countryName?: string;
+        };
+      }>;
+    };
+
+    const item = body.items?.[0];
+    const position = item?.position;
+    if (!item || !position || typeof position.lat !== "number" || typeof position.lng !== "number") return null;
+
+    const city = item.address?.city;
+    if (!city) return null;
+
+    const address: FullAddress = {
+      line1: [item.address?.street, item.address?.houseNumber].filter(Boolean).join(" ") || undefined,
+      city,
+      province: item.address?.state ?? item.address?.county ?? null,
+      postalCode: item.address?.postalCode ?? null,
+      country: item.address?.countryName ?? null,
+    };
+
+    return { address, point: { latitude: position.lat, longitude: position.lng } };
   }
 }

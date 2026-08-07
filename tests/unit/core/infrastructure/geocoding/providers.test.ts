@@ -127,4 +127,168 @@ describe("real GeocodingProvider implementations", () => {
     await expect(new HereGeocodingProvider("k").geocode({ city: "Madrid" })).resolves.toBeNull();
     await expect(new OpenStreetMapGeocodingProvider().geocode({ city: "Madrid" })).resolves.toBeNull();
   });
+
+  /**
+   * Module 42 — Geocoding & Maps: `reverseGeocode` coverage for every real
+   * provider, mirroring exactly the same "correct endpoint, correct
+   * params, correct parsing, never throws" coverage `geocode()` already
+   * has above.
+   */
+  describe("reverseGeocode", () => {
+    it("MapboxGeocodingProvider builds a {lng},{lat} reverse request and parses the response", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          features: [
+            {
+              center: [-0.1817, 38.9665],
+              text: "Carrer Major",
+              address: "12",
+              context: [
+                { id: "place.123", text: "Gandia" },
+                { id: "region.456", text: "Valencia" },
+                { id: "postcode.789", text: "46701" },
+                { id: "country.012", text: "Spain" },
+              ],
+            },
+          ],
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await new MapboxGeocodingProvider("test-key").reverseGeocode({
+        latitude: 38.9665,
+        longitude: -0.1817,
+      });
+
+      expect(result).toEqual({
+        address: { line1: "12 Carrer Major", city: "Gandia", province: "Valencia", postalCode: "46701", country: "Spain" },
+        point: { latitude: 38.9665, longitude: -0.1817 },
+      });
+      const [url] = fetchMock.mock.calls[0] as [string];
+      expect(url).toContain("api.mapbox.com/geocoding/v5/mapbox.places/-0.1817,38.9665.json");
+    });
+
+    it("MapboxGeocodingProvider returns null with no API key, without calling fetch", async () => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(new MapboxGeocodingProvider("").reverseGeocode({ latitude: 38.9665, longitude: -0.1817 })).resolves.toBeNull();
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("GoogleGeocodingProvider builds a latlng reverse request and parses address components", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: "OK",
+          results: [
+            {
+              geometry: { location: { lat: 40.4168, lng: -3.7038 } },
+              address_components: [
+                { long_name: "Gran Via", types: ["route"] },
+                { long_name: "1", types: ["street_number"] },
+                { long_name: "Madrid", types: ["locality"] },
+                { long_name: "Madrid", types: ["administrative_area_level_2"] },
+                { long_name: "28013", types: ["postal_code"] },
+                { long_name: "Spain", types: ["country"] },
+              ],
+            },
+          ],
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await new GoogleGeocodingProvider("test-key").reverseGeocode({ latitude: 40.4168, longitude: -3.7038 });
+
+      expect(result).toEqual({
+        address: { line1: "Gran Via 1", city: "Madrid", province: "Madrid", postalCode: "28013", country: "Spain" },
+        point: { latitude: 40.4168, longitude: -3.7038 },
+      });
+      const [url] = fetchMock.mock.calls[0] as [string];
+      expect(url).toContain("latlng=40.4168%2C-3.7038");
+    });
+
+    it("GoogleGeocodingProvider returns null on a non-OK vendor status", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: "ZERO_RESULTS", results: [] }) });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(new GoogleGeocodingProvider("test-key").reverseGeocode({ latitude: 0, longitude: 0 })).resolves.toBeNull();
+    });
+
+    it("HereGeocodingProvider builds an `at=` reverse request and parses the address", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              position: { lat: 40.4168, lng: -3.7038 },
+              address: { street: "Gran Via", houseNumber: "1", city: "Madrid", state: "Madrid", postalCode: "28013", countryName: "Spain" },
+            },
+          ],
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await new HereGeocodingProvider("test-key").reverseGeocode({ latitude: 40.4168, longitude: -3.7038 });
+
+      expect(result).toEqual({
+        address: { line1: "Gran Via 1", city: "Madrid", province: "Madrid", postalCode: "28013", country: "Spain" },
+        point: { latitude: 40.4168, longitude: -3.7038 },
+      });
+      const [url] = fetchMock.mock.calls[0] as [string];
+      expect(url).toContain("revgeocode.search.hereapi.com/v1/revgeocode");
+      expect(url).toContain("at=40.4168%2C-3.7038");
+    });
+
+    it("OpenStreetMapGeocodingProvider needs no key and parses the Nominatim reverse response", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          lat: "38.9665",
+          lon: "-0.1817",
+          address: { road: "Carrer Major", house_number: "12", city: "Gandia", state: "Valencia", postcode: "46701", country: "Spain" },
+        }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await new OpenStreetMapGeocodingProvider().reverseGeocode({ latitude: 38.9665, longitude: -0.1817 });
+
+      expect(result).toEqual({
+        address: { line1: "Carrer Major 12", city: "Gandia", province: "Valencia", postalCode: "46701", country: "Spain" },
+        point: { latitude: 38.9665, longitude: -0.1817 },
+      });
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect((init.headers as Record<string, string>)["User-Agent"]).toContain("MaestroYa");
+    });
+
+    it("OpenStreetMapGeocodingProvider returns null when no city can be resolved for the point", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ lat: "0", lon: "0", address: {} }) });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(new OpenStreetMapGeocodingProvider().reverseGeocode({ latitude: 0, longitude: 0 })).resolves.toBeNull();
+    });
+
+    it("every provider's reverseGeocode returns null (never throws) on an HTTP error response", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const point = { latitude: 40.4168, longitude: -3.7038 };
+      await expect(new MapboxGeocodingProvider("k").reverseGeocode(point)).resolves.toBeNull();
+      await expect(new GoogleGeocodingProvider("k").reverseGeocode(point)).resolves.toBeNull();
+      await expect(new HereGeocodingProvider("k").reverseGeocode(point)).resolves.toBeNull();
+      await expect(new OpenStreetMapGeocodingProvider().reverseGeocode(point)).resolves.toBeNull();
+    });
+
+    it("every provider's reverseGeocode returns null (never throws) on a network failure", async () => {
+      const fetchMock = vi.fn().mockRejectedValue(new Error("network down"));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const point = { latitude: 40.4168, longitude: -3.7038 };
+      await expect(new MapboxGeocodingProvider("k").reverseGeocode(point)).resolves.toBeNull();
+      await expect(new GoogleGeocodingProvider("k").reverseGeocode(point)).resolves.toBeNull();
+      await expect(new HereGeocodingProvider("k").reverseGeocode(point)).resolves.toBeNull();
+      await expect(new OpenStreetMapGeocodingProvider().reverseGeocode(point)).resolves.toBeNull();
+    });
+  });
 });

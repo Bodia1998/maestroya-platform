@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { CityGeocodeQuery, GeocodingProvider } from "@/domain/repositories/geocoding-provider";
+import type { CityGeocodeQuery, GeocodingProvider, ReverseGeocodeResult } from "@/domain/repositories/geocoding-provider";
 import type { GeoPoint } from "@/domain/services/geo-distance";
 import { normalizeLocationText } from "@/infrastructure/geocoding/normalize-location-text";
 
@@ -45,10 +45,23 @@ interface CacheEntry {
   expiresAt: number;
 }
 
+interface ReverseCacheEntry {
+  value: ReverseGeocodeResult | null;
+  expiresAt: number;
+}
+
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours — city centroids don't move.
+
+// ~11m precision at the equator — coarser than this would risk merging two
+// genuinely different reverse-geocode results (different street, same
+// cache entry); finer would defeat caching entirely for a "use my current
+// location" flow, where the browser's own GPS jitter changes the last few
+// decimal places between calls at the same physical spot.
+const REVERSE_CACHE_COORDINATE_PRECISION = 4;
 
 export class CachedGeocodingProvider implements GeocodingProvider {
   private readonly cache = new Map<string, CacheEntry>();
+  private readonly reverseCache = new Map<string, ReverseCacheEntry>();
 
   constructor(
     private readonly inner: GeocodingProvider,
@@ -69,9 +82,45 @@ export class CachedGeocodingProvider implements GeocodingProvider {
     return value;
   }
 
+  /**
+   * Module 42 — Geocoding & Maps: same caching decorator, extended to
+   * `reverseGeocode`. A separate cache/TTL map from `geocode()`'s own —
+   * different key shape (rounded coordinate pair vs. normalized city
+   * text) and different value type (`ReverseGeocodeResult | null` vs.
+   * `GeoPoint | null`) — but identical caching semantics (hits and misses
+   * both cached, same default TTL). Returns `null` immediately, without
+   * caching anything, when the wrapped provider doesn't implement
+   * `reverseGeocode` at all — there is nothing worth remembering about an
+   * unsupported capability.
+   */
+  async reverseGeocode(point: GeoPoint): Promise<ReverseGeocodeResult | null> {
+    if (!this.inner.reverseGeocode) return null;
+
+    const key = this.reverseCacheKey(point);
+    const cached = this.reverseCache.get(key);
+    const now = Date.now();
+
+    if (cached && cached.expiresAt > now) {
+      return cached.value;
+    }
+
+    const value = await this.inner.reverseGeocode(point);
+    this.reverseCache.set(key, { value, expiresAt: now + this.ttlMs });
+    return value;
+  }
+
   /** Exposed for tests only. */
   size(): number {
     return this.cache.size;
+  }
+
+  /** Exposed for tests only. */
+  reverseSize(): number {
+    return this.reverseCache.size;
+  }
+
+  private reverseCacheKey(point: GeoPoint): string {
+    return `${point.latitude.toFixed(REVERSE_CACHE_COORDINATE_PRECISION)},${point.longitude.toFixed(REVERSE_CACHE_COORDINATE_PRECISION)}`;
   }
 
   private cacheKey(query: CityGeocodeQuery): string {

@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { SearchSortOption } from "@/domain/value-objects/search-sort-option";
+import { LocationPicker } from "./location-picker";
 
 interface CategoryOption {
   id: string;
@@ -19,6 +20,13 @@ interface DirectorySearchFormValues {
   verifiedOnly?: boolean;
   minRating?: number;
   sortBy: SearchSortOption;
+  // Module 42 — Geocoding & Maps: additive, matching exactly the extension
+  // point Module 20's own page.tsx doc comment already forward-referenced
+  // ("a future map-based UI ... can navigate here with lat/lng/radiusKm
+  // query params without any change to this page").
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
 }
 
 const SORT_LABELS: Record<SearchSortOption, string> = {
@@ -58,6 +66,11 @@ export function DirectorySearchForm({
     if (values.province) params.set("province", values.province);
     if (values.verifiedOnly) params.set("verifiedOnly", "true");
     if (values.minRating) params.set("minRating", String(values.minRating));
+    if (values.latitude !== undefined && values.longitude !== undefined) {
+      params.set("lat", String(values.latitude));
+      params.set("lng", String(values.longitude));
+      if (values.radiusKm !== undefined) params.set("radiusKm", String(values.radiusKm));
+    }
     params.set("sortBy", values.sortBy);
     router.push(`/search?${params.toString()}`);
   }
@@ -160,6 +173,14 @@ export function DirectorySearchForm({
         />
         Verified only
       </label>
+
+      <div className="flex flex-col gap-1">
+        <span className="text-sm font-medium">Search near a location (optional)</span>
+        <LocationPicker
+          value={{ latitude: values.latitude, longitude: values.longitude, radiusKm: values.radiusKm }}
+          onChange={(location) => setValues((v) => ({ ...v, ...location }))}
+        />
+      </div>
 
       <Button type="submit">Search</Button>
     </form>
