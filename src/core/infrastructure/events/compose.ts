@@ -1,4 +1,4 @@
-import { SynchronousEventBus } from "@/infrastructure/events/synchronous-event-bus";
+import { createEventBus } from "@/infrastructure/events/event-bus-factory";
 import type { EventBus } from "@/application/ports/event-bus";
 
 /**
@@ -38,14 +38,18 @@ import type { EventBus } from "@/application/ports/event-bus";
  * grep for) while keeping each module responsible only for its own
  * handlers, not anyone else's.
  *
- * When Module 45 introduces `BullMQEventBus`, this is the only file that
- * changes: swap the `new SynchronousEventBus()` below for
- * `new BullMQEventBus(...)`. Every publisher and every handler,
- * elsewhere in the codebase, keeps importing `eventBus`/`makeEventBus`
- * from here and needs no changes, because both classes implement the
- * same `EventBus` port.
+ * Module 45 — Background Jobs (Roadmap Module 12): this ended up being
+ * exactly the only file that changed, as predicted above — `new
+ * SynchronousEventBus()` is now `createEventBus()`
+ * (`infrastructure/events/event-bus-factory.ts`), which returns that same
+ * `SynchronousEventBus` by default and only swaps in the queue-backed
+ * `QueuedEventBus` when `EVENT_QUEUE_ENABLED=true`. Every publisher and
+ * every handler, elsewhere in the codebase, keeps importing
+ * `eventBus`/`makeEventBus` from here and needs no changes, because every
+ * implementation behind `createEventBus()` implements the same `EventBus`
+ * port.
  */
-export const eventBus: EventBus = new SynchronousEventBus();
+export const eventBus: EventBus = createEventBus();
 
 export function makeEventBus(): EventBus {
   return eventBus;

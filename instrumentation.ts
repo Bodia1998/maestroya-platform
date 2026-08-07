@@ -74,6 +74,16 @@ export async function register() {
   await import("@/application/use-cases/company-membership/compose");
   await import("@/application/use-cases/gdpr/compose");
 
+  // Module 45 — Background Jobs: starts every registered worker and the
+  // job scheduler. Called after the subscriber-registering imports above
+  // so the event worker (registered as a side effect of
+  // `infrastructure/events/compose.ts`, itself imported transitively by
+  // every module above) never reserves a job for a handler that hasn't
+  // been subscribed yet. A no-op — no queues were ever registered — when
+  // `EVENT_QUEUE_ENABLED` is unset, the default.
+  const { startBackgroundJobs, shutdownBackgroundJobs } = await import("@/infrastructure/jobs/compose");
+  startBackgroundJobs();
+
   let shuttingDown = false;
   const shutdown = async (signal: string) => {
     if (shuttingDown) return;
@@ -82,6 +92,11 @@ export async function register() {
     logger.info("app_shutdown_start", { signal });
     try {
       await prisma.$disconnect();
+      // Stops every worker from claiming new jobs and waits for in-flight
+      // jobs to finish, before the shared Redis connection they (and the
+      // job store) depend on is closed below. Idempotent and safe even
+      // when queued dispatch was never enabled.
+      await shutdownBackgroundJobs();
       // Only closes an actual connection — getRedisClient() returns null
       // (and quit() is a safe no-op) when REDIS_URL was never configured.
       await getRedisClient()?.quit();

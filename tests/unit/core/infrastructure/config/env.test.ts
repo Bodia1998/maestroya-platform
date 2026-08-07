@@ -209,6 +209,57 @@ describe("infrastructure/config/env", () => {
     });
   });
 
+  describe("Module 45 — Background Jobs", () => {
+    it("EVENT_QUEUE_ENABLED is undefined by default (SynchronousEventBus stays the default)", async () => {
+      const { env } = await loadEnvWith({});
+      expect(env.EVENT_QUEUE_ENABLED).toBeUndefined();
+    });
+
+    it("accepts EVENT_QUEUE_ENABLED as 'true' or 'false'", async () => {
+      expect((await loadEnvWith({ EVENT_QUEUE_ENABLED: "true" })).env.EVENT_QUEUE_ENABLED).toBe("true");
+      expect((await loadEnvWith({ EVENT_QUEUE_ENABLED: "false" })).env.EVENT_QUEUE_ENABLED).toBe("false");
+    });
+
+    it("rejects an EVENT_QUEUE_ENABLED value that isn't 'true'/'false'", async () => {
+      await expect(loadEnvWith({ EVENT_QUEUE_ENABLED: "yes" })).rejects.toThrow(/Invalid environment variables/);
+    });
+
+    it("treats an empty-string EVENT_QUEUE_ENABLED the same as unset", async () => {
+      const { env } = await loadEnvWith({ EVENT_QUEUE_ENABLED: "" });
+      expect(env.EVENT_QUEUE_ENABLED).toBeUndefined();
+    });
+
+    it("QUEUE_CONCURRENCY defaults to 5", async () => {
+      const { env } = await loadEnvWith({});
+      expect(env.QUEUE_CONCURRENCY).toBe(5);
+    });
+
+    it("QUEUE_CONCURRENCY coerces a numeric string", async () => {
+      const { env } = await loadEnvWith({ QUEUE_CONCURRENCY: "20" });
+      expect(env.QUEUE_CONCURRENCY).toBe(20);
+    });
+
+    it("QUEUE_CONCURRENCY falls back to its default rather than failing startup on a malformed value", async () => {
+      const { env } = await loadEnvWith({ QUEUE_CONCURRENCY: "not-a-number" });
+      expect(env.QUEUE_CONCURRENCY).toBe(5);
+    });
+
+    it("QUEUE_CONCURRENCY falls back to its default when out of range", async () => {
+      expect((await loadEnvWith({ QUEUE_CONCURRENCY: "0" })).env.QUEUE_CONCURRENCY).toBe(5);
+      expect((await loadEnvWith({ QUEUE_CONCURRENCY: "1000" })).env.QUEUE_CONCURRENCY).toBe(5);
+    });
+
+    it("QUEUE_MAX_ATTEMPTS defaults to 3", async () => {
+      const { env } = await loadEnvWith({});
+      expect(env.QUEUE_MAX_ATTEMPTS).toBe(3);
+    });
+
+    it("QUEUE_MAX_ATTEMPTS coerces a numeric string and falls back on a malformed one", async () => {
+      expect((await loadEnvWith({ QUEUE_MAX_ATTEMPTS: "8" })).env.QUEUE_MAX_ATTEMPTS).toBe(8);
+      expect((await loadEnvWith({ QUEUE_MAX_ATTEMPTS: "nope" })).env.QUEUE_MAX_ATTEMPTS).toBe(3);
+    });
+  });
+
   it("never includes secret values in the base fixture accidentally left empty", () => {
     // Sanity check on the fixture itself, not env.ts — guards against a
     // future edit accidentally introducing an empty required field that

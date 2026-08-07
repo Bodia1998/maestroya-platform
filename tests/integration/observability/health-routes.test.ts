@@ -90,6 +90,22 @@ describe("GET /api/health/ready (readiness)", () => {
     delete process.env.REDIS_URL;
   });
 
+  it("Module 45: reports background-job queue status without affecting readiness", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    // EVENT_QUEUE_ENABLED is unset by VALID_BASE_ENV, so no queue was ever
+    // registered — "disabled" is the healthy, expected default.
+    expect(body.checks.queue).toEqual({ status: "disabled", driver: "none", queues: {} });
+  });
+
   it("returns 503 when the database is unreachable", async () => {
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { $queryRaw: vi.fn().mockRejectedValue(new Error("connection refused")) },
