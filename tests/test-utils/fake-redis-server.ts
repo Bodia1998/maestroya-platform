@@ -13,10 +13,11 @@ import { parseReply } from "@/infrastructure/cache/redis-protocol";
  *
  * Implements only the commands this codebase's Redis-backed services
  * actually send (`PING`, `AUTH`, `SELECT`, `GET`, `SET` [`PX`/`NX`],
- * `DEL`, `EXISTS`, `EVAL` for the two specific Lua scripts used by
- * `RedisRateLimitRepository`/`RedisLockService`, `QUIT`) — a real Redis
- * server implements hundreds of commands; this is a test double, not a
- * reimplementation of Redis.
+ * `DEL` [one or many keys], `EXISTS`, `EVAL` for the two specific Lua
+ * scripts used by `RedisRateLimitRepository`/`RedisLockService`, `SCAN`
+ * [`MATCH`/`COUNT`, Module 46's `RedisCacheProvider.deletePattern`],
+ * `QUIT`) — a real Redis server implements hundreds of commands; this is
+ * a test double, not a reimplementation of Redis.
  */
 interface StoredEntry {
   value: string;
@@ -121,16 +122,54 @@ export async function startFakeRedisServer(
       }
 
       case "DEL": {
-        const key = args[1] ?? "";
-        const existed = isLive(key) ? 1 : 0;
-        store.delete(key);
-        socket.write(encodeInt(existed));
+        // Module 46 — Caching Layer: `RedisCacheProvider.deletePattern`
+        // sends one `DEL` with every SCAN-matched key at once, not one
+        // `DEL` per key — real Redis's own `DEL` has always accepted
+        // multiple keys, so this fake matches that instead of only ever
+        // handling `args[1]`.
+        let deletedCount = 0;
+        for (let i = 1; i < args.length; i++) {
+          const key = args[i] ?? "";
+          if (isLive(key)) deletedCount++;
+          store.delete(key);
+        }
+        socket.write(encodeInt(deletedCount));
         return;
       }
 
       case "EXISTS": {
         const key = args[1] ?? "";
         socket.write(encodeInt(isLive(key) ? 1 : 0));
+        return;
+      }
+
+      case "SCAN": {
+        // Module 46 — Caching Layer: a deliberately simplified `SCAN` —
+        // real Redis's cursor is an opaque bucket-iteration position that
+        // may revisit or skip keys under concurrent mutation; this fake
+        // instead returns *every* live, currently-matching key in a
+        // single step and always replies with cursor `"0"` (scan
+        // complete). That is a valid, spec-compliant SCAN reply shape
+        // (a client is required to handle "done in one step" — see
+        // `RedisCacheProvider.deletePattern`'s `do...while (cursor !==
+        // "0")` loop, which terminates correctly either way) and exactly
+        // what this fake's own test usage needs: verifying that a
+        // pattern delete removes the right keys, not exercising real
+        // Redis's incremental-iteration guarantees.
+        let matchPattern = "*";
+        for (let i = 2; i < args.length; i++) {
+          if ((args[i] ?? "").toUpperCase() === "MATCH") {
+            matchPattern = args[i + 1] ?? "*";
+          }
+        }
+        const regex = new RegExp(
+          `^${matchPattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`,
+        );
+        const matches: string[] = [];
+        for (const key of store.keys()) {
+          if (isLive(key) && regex.test(key)) matches.push(key);
+        }
+        socket.write(encodeArray([encodeBulk("0"), encodeArray(matches.map((m) => encodeBulk(m)))]));
         return;
       }
 

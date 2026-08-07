@@ -206,6 +206,25 @@ const envSchema = z
     // first. `.catch()` for the same reason as QUEUE_CONCURRENCY.
     QUEUE_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(20).catch(3),
 
+    // --- Caching layer (Module 46 — Caching Layer) ---
+    // Root prefix `CacheKeyBuilder` (application/services/cache/) prepends
+    // to every key this module writes/reads — lets multiple environments
+    // or apps safely share one Redis instance/DB without their cache
+    // entries colliding. `.catch()` rather than `.default()` because a
+    // malformed value here is an operational typo, not something that
+    // should fail startup. Optional; `compose.ts` falls back to
+    // `CacheKeyBuilder`'s own default (`"cache"`) when unset.
+    CACHE_KEY_PREFIX: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
+    // Debugging/testing escape hatch: when `"true"`, every `CacheManager`
+    // read is treated as a miss (the loader always runs; results are
+    // still written, so the cache stays warm for other instances) — see
+    // `CacheManager`'s own `bypass` option. Unset or `"false"` (the
+    // default) is the normal, cache-enabled behavior everywhere,
+    // including production. Uses the same `emptyStringToUndefined`
+    // preprocessing as `EVENT_QUEUE_ENABLED` above, for the same
+    // `.env`-file convention reason.
+    CACHE_BYPASS_ENABLED: z.preprocess(emptyStringToUndefined, z.enum(["true", "false"]).optional()),
+
     // --- Error reporting (Module 39 — Sentry + CI/CD Hardening) ---
     // `SENTRY_DSN` gates every Sentry-backed implementation in
     // `infrastructure/observability/` (see `sentry-client.ts`): unset
