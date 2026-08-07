@@ -51,6 +51,11 @@ const ENV_KEYS = [
   "NEXT_PUBLIC_SENTRY_DSN",
   "SENTRY_ENVIRONMENT",
   "SENTRY_TRACES_SAMPLE_RATE",
+  "CRON_SECRET",
+  // Module 45 — Background Jobs (Roadmap Module 12).
+  "EVENT_QUEUE_ENABLED",
+  "QUEUE_CONCURRENCY",
+  "QUEUE_MAX_ATTEMPTS",
 ];
 
 /**

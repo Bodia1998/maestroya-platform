@@ -174,6 +174,38 @@ const envSchema = z
     // unset, rather than falling back to an insecure "no check" behavior.
     CRON_SECRET: z.string().optional(),
 
+    // --- Background jobs (Module 45 — Background Jobs) ---
+    // Selects how the single platform `EventBus` dispatches to its
+    // subscribers. Unset or `"false"` (the default) keeps the Module 34
+    // `SynchronousEventBus` exactly as it has always behaved — handlers
+    // run inline, in the publisher's call stack. `"true"` swaps in
+    // `QueuedEventBus` (infrastructure/events/queued-event-bus.ts), which
+    // implements the identical `EventBus` port and moves handler
+    // execution onto the job queue, with retries, dead-lettering, and
+    // per-handler idempotency.
+    //
+    // Deliberately opt-in rather than "on whenever REDIS_URL is set",
+    // unlike `CacheService`/`RateLimitRepository`/`DistributedLock`
+    // (Module 44). Those three swap between implementations with
+    // identical observable behavior; this one changes *delivery
+    // semantics* for domain events — from "the handler has run by the
+    // time publish() resolves" to "the handler will run, at least once".
+    // A change of that kind to compliance-relevant audit-log subscribers
+    // must be a deliberate deployment decision, never a side effect of
+    // configuring a cache. See docs/MODULE_45_BACKGROUND_JOBS.md.
+    //
+    // Uses the same `emptyStringToUndefined` preprocessing as SENTRY_DSN
+    // below, for the same `.env`-file convention reason.
+    EVENT_QUEUE_ENABLED: z.preprocess(emptyStringToUndefined, z.enum(["true", "false"]).optional()),
+    // How many jobs one worker runs concurrently (BullMQ's `concurrency`).
+    // `.catch()` rather than `.default()` — a typo in an operational tuning
+    // knob must never fail application startup; it falls back to the safe
+    // default, exactly like GEOCODING_PROVIDER above.
+    QUEUE_CONCURRENCY: z.coerce.number().int().min(1).max(100).catch(5),
+    // Total attempts per job before it is dead-lettered, inclusive of the
+    // first. `.catch()` for the same reason as QUEUE_CONCURRENCY.
+    QUEUE_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(20).catch(3),
+
     // --- Error reporting (Module 39 — Sentry + CI/CD Hardening) ---
     // `SENTRY_DSN` gates every Sentry-backed implementation in
     // `infrastructure/observability/` (see `sentry-client.ts`): unset

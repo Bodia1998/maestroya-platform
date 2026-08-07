@@ -6,6 +6,7 @@ import { logger } from "@/infrastructure/observability/logger";
 import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
 import { getRedisClient } from "@/infrastructure/cache/redis-client-factory";
+import { getBackgroundJobsHealth } from "@/infrastructure/jobs/compose";
 
 /**
  * Readiness check (Module 25 — Production Infrastructure).
@@ -37,6 +38,13 @@ import { getRedisClient } from "@/infrastructure/cache/redis-client-factory";
  * overall `status` or HTTP status code — unlike the database check, a
  * failing Redis check does not cause a 503.
  *
+ * Module 45 — Background Jobs: `checks.queue` joins `checks.cache` in
+ * that same "visibility only" category, for the identical reason — a
+ * degraded background-job system does not mean this instance can't serve
+ * HTTP traffic, and `"disabled"` (queued dispatch off — the default) is a
+ * healthy, normal state. See `infrastructure/jobs/queue-health.ts`.
+ *
+
  * Returns 503 (not 500) on database failure — the conventional status
  * for "the server is currently unable to handle the request", which is
  * exactly what a load balancer/orchestrator readiness probe is checking
@@ -52,7 +60,7 @@ export async function GET(request: NextRequest) {
       {
         status: "ok",
         timestamp: new Date().toISOString(),
-        checks: { database: "ok", cache: await checkCache(requestId) },
+        checks: { database: "ok", cache: await checkCache(requestId), queue: await getBackgroundJobsHealth() },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
