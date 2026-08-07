@@ -42,6 +42,13 @@ export async function register() {
   });
 
   const { prisma } = await import("@/infrastructure/database/prisma/client");
+  // Module 44 — Redis Infrastructure: `getRedisClient()` only ever
+  // constructs a real `RedisClient` (and only ever connects lazily, on
+  // first command) when `REDIS_URL` is configured — importing it here is
+  // safe and side-effect-free in the common case (no Redis configured),
+  // and gives the graceful-shutdown hook below a handle to close the
+  // connection cleanly when it is.
+  const { getRedisClient } = await import("@/infrastructure/cache/redis-client-factory");
 
   // Module 37 — Domain Event Subscribers: each module registers its own
   // `eventBus.subscribe(...)` calls as a side effect of importing its own
@@ -75,6 +82,9 @@ export async function register() {
     logger.info("app_shutdown_start", { signal });
     try {
       await prisma.$disconnect();
+      // Only closes an actual connection — getRedisClient() returns null
+      // (and quit() is a safe no-op) when REDIS_URL was never configured.
+      await getRedisClient()?.quit();
       logger.info("app_shutdown_complete", { signal });
     } catch (error) {
       logger.error("app_shutdown_error", { signal, error });

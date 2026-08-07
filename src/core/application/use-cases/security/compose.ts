@@ -1,4 +1,4 @@
-import { InMemoryRateLimitRepository } from "@/infrastructure/security/in-memory-rate-limit-repository";
+import { createRateLimitRepository } from "@/infrastructure/security/rate-limit-repository-factory";
 import { PrismaAccountRestrictionRepository } from "@/infrastructure/database/prisma/repositories/prisma-account-restriction-repository";
 import { PrismaSecurityEventRepository } from "@/infrastructure/database/prisma/repositories/prisma-security-event-repository";
 import { AntiAbuseService } from "@/application/services/anti-abuse-service";
@@ -14,10 +14,15 @@ import { ListSecurityEventsUseCase } from "@/application/use-cases/security/list
  * `rateLimits` is a module-level singleton (not re-constructed per
  * request) — its whole purpose is to remember state *across* requests
  * within this process; a fresh instance per call would make it a no-op.
- * See InMemoryRateLimitRepository's own doc comment for the multi-instance
- * caveat this implies.
+ *
+ * Module 44 — Redis Infrastructure: `createRateLimitRepository()`
+ * (infrastructure/security/rate-limit-repository-factory.ts) is now the
+ * single place deciding in-memory vs. Redis-backed — this line itself no
+ * longer changes when that backend changes. See
+ * `InMemoryRateLimitRepository`'s and `RedisRateLimitRepository`'s own
+ * doc comments for the multi-instance caveat this factory resolves.
  */
-const rateLimits = new InMemoryRateLimitRepository();
+const rateLimits = createRateLimitRepository();
 const securityEvents = new PrismaSecurityEventRepository();
 const accountRestrictions = new PrismaAccountRestrictionRepository();
 

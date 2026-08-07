@@ -118,16 +118,19 @@ const envSchema = z
     CLOUDINARY_API_KEY: z.string().min(1, "CLOUDINARY_API_KEY is required"),
     CLOUDINARY_API_SECRET: z.string().min(1, "CLOUDINARY_API_SECRET is required"),
 
-    // --- Distributed rate limiting (optional — Module 25) ---
-    // Not required today: the only wired-up `RateLimitRepository` is
-    // in-memory (see infrastructure/security/in-memory-rate-limit-repository.ts),
-    // which is correct for this codebase's current single-instance
-    // deployment shape. Validated here (URL shape only, never connected
-    // to an actual client by this module) so a future Redis-backed
-    // implementation has a ready, validated place to read its connection
-    // string from without another env-layer change. See
-    // docs/MODULE_25_PRODUCTION_INFRASTRUCTURE.md, "Distributed rate
-    // limiting".
+    // --- Redis (optional — Module 25 reserved this variable; Module 44
+    // — Redis Infrastructure — is what actually consumes it) ---
+    // Still optional and unset by default: a single-instance deployment
+    // (local dev, most CI runs) never needs Redis, and every consumer
+    // (`cache-service-factory.ts`, `rate-limit-repository-factory.ts`,
+    // `lock-service-factory.ts`) falls back to a correct in-memory
+    // implementation when this is unset — never a startup failure. When
+    // set, `redis-client-factory.ts`'s `getRedisClient()` constructs the
+    // shared connection every Redis-backed service reuses, and
+    // `CacheService`/`RateLimitRepository`/`DistributedLock` all switch
+    // to their Redis-backed implementations automatically, with no
+    // caller changes. Accepts `redis://` and `rediss://` (TLS) — see
+    // `infrastructure/cache/redis-client.ts`'s `parseRedisUrl`.
     REDIS_URL: z.string().url().optional(),
 
     // --- Geocoding provider (Module 27 — Spain Location Services) ---

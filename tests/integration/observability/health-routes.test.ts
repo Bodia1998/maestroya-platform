@@ -66,6 +66,28 @@ describe("GET /api/health/ready (readiness)", () => {
     const body = await response.json();
     expect(body.status).toBe("ok");
     expect(body.checks.database).toBe("ok");
+    // Module 44 — Redis Infrastructure: reported for visibility, never
+    // required — REDIS_URL is unset by VALID_BASE_ENV in this test suite.
+    expect(body.checks.cache).toBe("not_configured");
+  });
+
+  it("Module 44: an unreachable Redis does not affect readiness status or HTTP code", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    process.env.REDIS_URL = "redis://127.0.0.1:1"; // reserved, never-listening port
+    vi.resetModules();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.status).toBe("ok");
+    expect(body.checks.database).toBe("ok");
+    expect(body.checks.cache).toBe("error");
+
+    delete process.env.REDIS_URL;
   });
 
   it("returns 503 when the database is unreachable", async () => {
