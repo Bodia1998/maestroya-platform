@@ -9,9 +9,24 @@ import { CompleteAppointmentUseCase } from "@/application/use-cases/booking/comp
 import { ConfirmAppointmentUseCase } from "@/application/use-cases/booking/confirm-appointment.use-case";
 import { ProposeAppointmentTimeUseCase } from "@/application/use-cases/booking/propose-appointment-time.use-case";
 import { CreateReviewUseCase } from "@/application/use-cases/review/create-review.use-case";
+import { DeleteReviewUseCase } from "@/application/use-cases/review/delete-review.use-case";
 import { GetProfessionalRatingSummaryUseCase } from "@/application/use-cases/review/get-professional-rating-summary.use-case";
 import { GetReviewByJobUseCase } from "@/application/use-cases/review/get-review-by-job.use-case";
 import { ListProfessionalReviewsUseCase } from "@/application/use-cases/review/list-professional-reviews.use-case";
+import { RespondToReviewUseCase } from "@/application/use-cases/review/respond-to-review.use-case";
+import { UpdateReviewUseCase } from "@/application/use-cases/review/update-review.use-case";
+import { RecordReviewCreatedAuditLogSubscriber } from "@/application/use-cases/review/record-review-created-audit-log.subscriber";
+import { RecordReviewDeletedAuditLogSubscriber } from "@/application/use-cases/review/record-review-deleted-audit-log.subscriber";
+import { RecordReviewResponseAddedAuditLogSubscriber } from "@/application/use-cases/review/record-review-response-added-audit-log.subscriber";
+import { RecordReviewUpdatedAuditLogSubscriber } from "@/application/use-cases/review/record-review-updated-audit-log.subscriber";
+import { NotifyReviewCreatedSubscriber } from "@/application/use-cases/notification/notify-review-created.subscriber";
+import { NotifyReviewResponseAddedSubscriber } from "@/application/use-cases/notification/notify-review-response-added.subscriber";
+import { SynchronousEventBus } from "@/infrastructure/events/synchronous-event-bus";
+import { ReviewCreated } from "@/domain/events/review-created";
+import { ReviewDeleted } from "@/domain/events/review-deleted";
+import { ReviewResponseAdded } from "@/domain/events/review-response-added";
+import { ReviewUpdated } from "@/domain/events/review-updated";
+import { REVIEW_EDIT_WINDOW_HOURS } from "@/domain/services/review-rules";
 import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "@/domain/errors/domain-error";
 import type { ServiceRequestRecord } from "@/domain/repositories/service-request-repository";
 import {
@@ -25,7 +40,7 @@ import {
   createJobStore,
 } from "../booking/fakes";
 import { FakeProfessionalRepository } from "../quotes/fakes";
-import { FakeReviewRepository } from "./fakes";
+import { FakeAdminAuditLogRepository, FakeNotificationCreator, FakeReviewRepository } from "./fakes";
 
 /**
  * Integration tests for the Reviews & Ratings module (Module 13), built on
@@ -48,7 +63,20 @@ function makeRepos() {
   const appointments = new FakeAppointmentRepository(appointmentStore);
   const jobs = new FakeJobRepository(jobStore, appointmentStore);
   const reviews = new FakeReviewRepository();
-  return { customerProfiles, professionals, serviceRequests, quotes, quoteAcceptance, appointments, jobs, reviews };
+  const auditLog = new FakeAdminAuditLogRepository();
+  const notifications = new FakeNotificationCreator();
+  return {
+    customerProfiles,
+    professionals,
+    serviceRequests,
+    quotes,
+    quoteAcceptance,
+    appointments,
+    jobs,
+    reviews,
+    auditLog,
+    notifications,
+  };
 }
 
 type Repos = ReturnType<typeof makeRepos>;
@@ -129,6 +157,21 @@ function future(hoursFromNow: number, durationMinutes = 60) {
 function makeUseCases(repos: Repos) {
   const jobNotifier = new NullJobNotifier();
   const appointmentNotifier = new NullAppointmentNotifier();
+
+  // Module 41 — Domain Event Subscribers: the review use cases below
+  // publish ReviewCreated/ReviewUpdated/ReviewDeleted/ReviewResponseAdded
+  // instead of calling repos.auditLog/repos.notifications directly — wire a
+  // real `SynchronousEventBus` with the real subscribers so this
+  // integration test still exercises the full, genuine side-effect path
+  // end to end, same pattern as tests/integration/dispute/dispute-flows.test.ts.
+  const reviewEventBus = new SynchronousEventBus();
+  reviewEventBus.subscribe(ReviewCreated, new RecordReviewCreatedAuditLogSubscriber(repos.auditLog));
+  reviewEventBus.subscribe(ReviewCreated, new NotifyReviewCreatedSubscriber(repos.notifications));
+  reviewEventBus.subscribe(ReviewUpdated, new RecordReviewUpdatedAuditLogSubscriber(repos.auditLog));
+  reviewEventBus.subscribe(ReviewDeleted, new RecordReviewDeletedAuditLogSubscriber(repos.auditLog));
+  reviewEventBus.subscribe(ReviewResponseAdded, new RecordReviewResponseAddedAuditLogSubscriber(repos.auditLog));
+  reviewEventBus.subscribe(ReviewResponseAdded, new NotifyReviewResponseAddedSubscriber(repos.notifications));
+
   return {
     start: new StartJobUseCase(repos.jobs, repos.customerProfiles, repos.professionals, jobNotifier),
     complete: new CompleteJobUseCase(repos.jobs, repos.customerProfiles, repos.professionals, jobNotifier),
@@ -154,7 +197,16 @@ function makeUseCases(repos: Repos) {
       repos.serviceRequests,
       appointmentNotifier,
     ),
-    createReview: new CreateReviewUseCase(repos.reviews, repos.jobs, repos.customerProfiles, repos.professionals),
+    createReview: new CreateReviewUseCase(
+      repos.reviews,
+      repos.jobs,
+      repos.customerProfiles,
+      repos.professionals,
+      reviewEventBus,
+    ),
+    updateReview: new UpdateReviewUseCase(repos.reviews, reviewEventBus),
+    deleteReview: new DeleteReviewUseCase(repos.reviews, reviewEventBus),
+    respondToReview: new RespondToReviewUseCase(repos.reviews, repos.professionals, reviewEventBus),
     getReviewByJob: new GetReviewByJobUseCase(repos.reviews, repos.jobs, repos.customerProfiles, repos.professionals),
     listProfessionalReviews: new ListProfessionalReviewsUseCase(repos.reviews),
     getRatingSummary: new GetProfessionalRatingSummaryUseCase(repos.reviews),
@@ -599,5 +651,294 @@ describe("Existing Job lifecycle behavior remains unaffected", () => {
     const { job } = await seedCompletedJob(repos);
     const review = await repos.reviews.findByJobId(job.id);
     expect(review).toBeNull();
+  });
+});
+
+describe("Module 41 — Domain events", () => {
+  it("ReviewCreated fires the audit-log and notification subscribers", async () => {
+    const repos = makeRepos();
+    const { job, professional } = await seedCompletedJob(repos);
+    const { createReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 5, comment: "Great!" });
+
+    expect(repos.auditLog.entries.some((e) => e.action === "REVIEW_CREATED" && e.targetId === review.id)).toBe(true);
+    const notified = repos.notifications.events.filter((e) => e.type === "REVIEW_RECEIVED");
+    expect(notified).toHaveLength(1);
+    expect(notified[0]?.userId).toBe(professional.userId);
+  });
+
+  it("ReviewUpdated fires the audit-log subscriber (no notification)", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, updateReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 3, comment: null });
+    await updateReview.execute(CUSTOMER, review.id, { rating: 5, comment: "Actually, great!" });
+
+    expect(repos.auditLog.entries.some((e) => e.action === "REVIEW_UPDATED" && e.targetId === review.id)).toBe(true);
+  });
+
+  it("ReviewDeleted fires the audit-log subscriber", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, deleteReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 3, comment: null });
+    await deleteReview.execute(CUSTOMER, review.id);
+
+    expect(repos.auditLog.entries.some((e) => e.action === "REVIEW_DELETED" && e.targetId === review.id)).toBe(true);
+  });
+
+  it("ReviewResponseAdded fires both the audit-log and notification subscribers", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, respondToReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 4, comment: "Good work." });
+    await respondToReview.execute(PROFESSIONAL, review.id, "Thank you for the feedback!");
+
+    expect(
+      repos.auditLog.entries.some((e) => e.action === "REVIEW_RESPONSE_ADDED" && e.targetId === review.id),
+    ).toBe(true);
+    const notified = repos.notifications.events.filter((e) => e.type === "REVIEW_RESPONSE_ADDED");
+    expect(notified).toHaveLength(1);
+    expect(notified[0]?.userId).toBe(CUSTOMER);
+  });
+});
+
+describe("Module 41 — Update Review", () => {
+  it("allows the author to edit rating and comment within the edit window", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, updateReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 2, comment: "Meh." });
+
+    const updated = await updateReview.execute(CUSTOMER, review.id, { rating: 5, comment: "Actually excellent!" });
+    expect(updated.rating).toBe(5);
+    expect(updated.comment).toBe("Actually excellent!");
+  });
+
+  it("rejects an edit from anyone other than the review's author", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, updateReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 3, comment: null });
+
+    await expect(updateReview.execute(PROFESSIONAL, review.id, { rating: 1, comment: null })).rejects.toThrow(
+      NotFoundError,
+    );
+  });
+
+  it("rejects editing a review outside the edit window", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, updateReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 3, comment: null });
+
+    // Simulate the edit window having elapsed by advancing the system
+    // clock — UpdateReviewUseCase re-derives the window from the review's
+    // own createdAt against `new Date()` at call time (never a
+    // client-supplied flag), so this exercises the real "stale edit"
+    // branch rather than reaching into the fake's internals.
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(review.createdAt.getTime() + (REVIEW_EDIT_WINDOW_HOURS + 1) * 60 * 60 * 1000));
+      await expect(updateReview.execute(CUSTOMER, review.id, { rating: 5, comment: null })).rejects.toThrow(
+        ValidationError,
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("rejects an invalid rating on edit", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, updateReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 3, comment: null });
+
+    await expect(updateReview.execute(CUSTOMER, review.id, { rating: 7, comment: null })).rejects.toThrow(
+      ValidationError,
+    );
+  });
+
+  it("rejects editing a review that no longer exists", async () => {
+    const repos = makeRepos();
+    await repos.customerProfiles.findOrCreateByUserId(CUSTOMER);
+    const { updateReview } = makeUseCases(repos);
+
+    await expect(updateReview.execute(CUSTOMER, "does-not-exist", { rating: 5, comment: null })).rejects.toThrow(
+      NotFoundError,
+    );
+  });
+});
+
+describe("Module 41 — Delete Review (soft delete)", () => {
+  it("allows the author to delete their own review", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, deleteReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 3, comment: null });
+
+    const deleted = await deleteReview.execute(CUSTOMER, review.id);
+    expect(deleted.deletedAt).not.toBeNull();
+  });
+
+  it("rejects deletion from anyone other than the review's author", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, deleteReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 3, comment: null });
+
+    await expect(deleteReview.execute(PROFESSIONAL, review.id)).rejects.toThrow(NotFoundError);
+  });
+
+  it("a soft-deleted review no longer appears in public listings or rating aggregation", async () => {
+    const repos = makeRepos();
+    const { job, professional } = await seedCompletedJob(repos);
+    const { createReview, deleteReview, listProfessionalReviews, getRatingSummary } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 5, comment: "Great!" });
+    await deleteReview.execute(CUSTOMER, review.id);
+
+    const reviews = await listProfessionalReviews.execute(professional.id, { limit: 20, offset: 0 });
+    expect(reviews).toHaveLength(0);
+    const summary = await getRatingSummary.execute(professional.id);
+    expect(summary.reviewCount).toBe(0);
+    expect(summary.averageRating).toBeNull();
+  });
+
+  it("deleting an already-deleted review is rejected, not silently repeated", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, deleteReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 3, comment: null });
+    await deleteReview.execute(CUSTOMER, review.id);
+
+    await expect(deleteReview.execute(CUSTOMER, review.id)).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe("Module 41 — Professional Response", () => {
+  it("allows the reviewed professional to respond to a review", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, respondToReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 4, comment: "Good." });
+
+    const responded = await respondToReview.execute(PROFESSIONAL, review.id, "Thanks for the kind words!");
+    expect(responded.response).toBe("Thanks for the kind words!");
+    expect(responded.respondedAt).not.toBeNull();
+  });
+
+  it("allows the professional to edit their own response", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, respondToReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 4, comment: "Good." });
+    await respondToReview.execute(PROFESSIONAL, review.id, "First response.");
+
+    const edited = await respondToReview.execute(PROFESSIONAL, review.id, "Edited response.");
+    expect(edited.response).toBe("Edited response.");
+  });
+
+  it("never lets a professional respond to another professional's review", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos, CUSTOMER, PROFESSIONAL);
+    await seedProfessional(repos, OTHER_PROFESSIONAL);
+    const { createReview, respondToReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 4, comment: "Good." });
+
+    await expect(respondToReview.execute(OTHER_PROFESSIONAL, review.id, "Not my review!")).rejects.toThrow(
+      NotFoundError,
+    );
+  });
+
+  it("rejects the reviewer responding to their own review", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, respondToReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 4, comment: "Good." });
+
+    await expect(respondToReview.execute(CUSTOMER, review.id, "Replying to myself.")).rejects.toThrow(NotFoundError);
+  });
+
+  it("rejects an empty response", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, respondToReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 4, comment: "Good." });
+
+    await expect(respondToReview.execute(PROFESSIONAL, review.id, "   ")).rejects.toThrow(ValidationError);
+  });
+
+  it("rejects responding to a soft-deleted review", async () => {
+    const repos = makeRepos();
+    const { job } = await seedCompletedJob(repos);
+    const { createReview, deleteReview, respondToReview } = makeUseCases(repos);
+    const review = await createReview.execute(CUSTOMER, { jobId: job.id, rating: 4, comment: "Good." });
+    await deleteReview.execute(CUSTOMER, review.id);
+
+    await expect(respondToReview.execute(PROFESSIONAL, review.id, "Too late!")).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe("Module 41 — Rating statistics (distribution, last review date)", () => {
+  it("returns a zero-filled distribution and null lastReviewAt with no reviews", async () => {
+    const repos = makeRepos();
+    const professional = await seedProfessional(repos, PROFESSIONAL);
+    const { getRatingSummary } = makeUseCases(repos);
+
+    const summary = await getRatingSummary.execute(professional.id);
+    expect(summary.ratingDistribution).toEqual({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+    expect(summary.lastReviewAt).toBeNull();
+  });
+
+  it("computes the correct per-star distribution and last review date", async () => {
+    const repos = makeRepos();
+    const { createReview, getRatingSummary } = makeUseCases(repos);
+
+    const job1 = await seedCompletedJob(repos, "customer-a", PROFESSIONAL);
+    const job2 = await seedCompletedJob(repos, "customer-b", PROFESSIONAL);
+    const job3 = await seedCompletedJob(repos, "customer-c", PROFESSIONAL);
+    await createReview.execute("customer-a", { jobId: job1.job.id, rating: 5, comment: null });
+    await createReview.execute("customer-b", { jobId: job2.job.id, rating: 5, comment: null });
+    const last = await createReview.execute("customer-c", { jobId: job3.job.id, rating: 3, comment: null });
+
+    const summary = await getRatingSummary.execute(job1.professional.id);
+    expect(summary.ratingDistribution).toEqual({ 1: 0, 2: 0, 3: 1, 4: 0, 5: 2 });
+    expect(summary.reviewCount).toBe(3);
+    expect(summary.lastReviewAt?.getTime()).toBe(last.createdAt.getTime());
+  });
+
+  it("excludes a soft-deleted review from the distribution", async () => {
+    const repos = makeRepos();
+    const { createReview, deleteReview, getRatingSummary } = makeUseCases(repos);
+
+    const job1 = await seedCompletedJob(repos, "customer-a", PROFESSIONAL);
+    const job2 = await seedCompletedJob(repos, "customer-b", PROFESSIONAL);
+    await createReview.execute("customer-a", { jobId: job1.job.id, rating: 1, comment: null });
+    const toDelete = await createReview.execute("customer-b", { jobId: job2.job.id, rating: 5, comment: null });
+    await deleteReview.execute("customer-b", toDelete.id);
+
+    const summary = await getRatingSummary.execute(job1.professional.id);
+    expect(summary.ratingDistribution).toEqual({ 1: 1, 2: 0, 3: 0, 4: 0, 5: 0 });
+    expect(summary.reviewCount).toBe(1);
+  });
+});
+
+describe("Module 41 — List filtering by rating", () => {
+  it("filters the public listing to an exact rating", async () => {
+    const repos = makeRepos();
+    const { createReview, listProfessionalReviews } = makeUseCases(repos);
+
+    const job1 = await seedCompletedJob(repos, "customer-a", PROFESSIONAL);
+    const job2 = await seedCompletedJob(repos, "customer-b", PROFESSIONAL);
+    await createReview.execute("customer-a", { jobId: job1.job.id, rating: 5, comment: null });
+    await createReview.execute("customer-b", { jobId: job2.job.id, rating: 2, comment: null });
+
+    const fiveStar = await listProfessionalReviews.execute(job1.professional.id, {
+      limit: 20,
+      offset: 0,
+      rating: 5,
+    });
+    expect(fiveStar).toHaveLength(1);
+    expect(fiveStar[0]?.rating).toBe(5);
   });
 });

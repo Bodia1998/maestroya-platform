@@ -91,6 +91,13 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   GDPR_DELETION_REQUESTED: "OTHER",
   GDPR_CONSENT_GRANTED: "OTHER",
   GDPR_CONSENT_WITHDRAWN: "OTHER",
+  // Module 41 — Reviews & Ratings: same "map to the closest existing
+  // AuditLogAction value, preserve the concrete action name in
+  // metadata.adminAction" convention.
+  REVIEW_CREATED: "CREATE",
+  REVIEW_UPDATED: "UPDATE",
+  REVIEW_DELETED: "DELETE",
+  REVIEW_RESPONSE_ADDED: "CREATE",
 };
 
 const SELECT = {

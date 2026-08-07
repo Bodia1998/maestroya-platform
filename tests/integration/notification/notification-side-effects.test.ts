@@ -6,8 +6,11 @@ import { StartJobUseCase } from "@/application/use-cases/job/start-job.use-case"
 import { AcceptQuoteUseCase } from "@/application/use-cases/quotes/accept-quote.use-case";
 import { CreateQuoteUseCase } from "@/application/use-cases/quotes/create-quote.use-case";
 import { CreateReviewUseCase } from "@/application/use-cases/review/create-review.use-case";
+import { NotifyReviewCreatedSubscriber } from "@/application/use-cases/notification/notify-review-created.subscriber";
 import { SendMessageUseCase } from "@/application/use-cases/chat/send-message.use-case";
 import { NullJobNotifier } from "@/application/ports/job-notifier";
+import { SynchronousEventBus } from "@/infrastructure/events/synchronous-event-bus";
+import { ReviewCreated } from "@/domain/events/review-created";
 import {
   FakeCustomerProfileRepository,
   FakeJobRepository,
@@ -302,14 +305,16 @@ describe("Notification failures never break the primary business operation", () 
       updatedAt: new Date(),
     });
 
-    // First: prove the review itself still succeeds under a throwing notifier.
-    const createReviewThrowing = new CreateReviewUseCase(
-      reviews,
-      jobs,
-      customerProfiles,
-      professionals,
-      new ThrowingNotificationCreator(),
-    );
+    // First: prove the review itself still succeeds even when the
+    // ReviewCreated subscriber chain throws. Module 41 replaced
+    // CreateReviewUseCase's direct NotificationCreator.notify(...) call
+    // with `eventBus.publishAll([new ReviewCreated(...)])` — the same
+    // "never let a side-effect failure break the primary operation"
+    // guarantee now holds one layer out: EventDispatchError is caught and
+    // reported, never rethrown (see CreateReviewUseCase.execute).
+    const throwingEventBus = new SynchronousEventBus();
+    throwingEventBus.subscribe(ReviewCreated, new NotifyReviewCreatedSubscriber(new ThrowingNotificationCreator()));
+    const createReviewThrowing = new CreateReviewUseCase(reviews, jobs, customerProfiles, professionals, throwingEventBus);
     const review = await createReviewThrowing.execute("customer-1", { jobId: "job-1", rating: 5, comment: "Great!" });
     expect(review.id).toBeTruthy();
     expect(review.reviewerId).toBe("customer-1");
@@ -337,7 +342,15 @@ describe("Notification failures never break the primary business operation", () 
     });
 
     const recorder = new RecordingNotificationCreator();
-    const createReviewRecording = new CreateReviewUseCase(reviews, jobs, customerProfiles, professionals, recorder);
+    const recordingEventBus = new SynchronousEventBus();
+    recordingEventBus.subscribe(ReviewCreated, new NotifyReviewCreatedSubscriber(recorder));
+    const createReviewRecording = new CreateReviewUseCase(
+      reviews,
+      jobs,
+      customerProfiles,
+      professionals,
+      recordingEventBus,
+    );
     await createReviewRecording.execute("customer-1", { jobId: "job-2", rating: 4, comment: null });
 
     expect(recorder.events).toHaveLength(1);

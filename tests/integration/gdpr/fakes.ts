@@ -863,10 +863,18 @@ export class FakeReviewRepository implements ReviewRepository {
     const published = [...this.reviews.values()].filter(
       (r) => r.revieweeProfessionalProfileId === professionalProfileId && r.status === "PUBLISHED",
     );
+    const ratingDistribution: ProfessionalRatingSummary["ratingDistribution"] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let lastReviewAt: Date | null = null;
+    for (const r of published) {
+      ratingDistribution[r.rating as 1 | 2 | 3 | 4 | 5] += 1;
+      if (!lastReviewAt || r.createdAt > lastReviewAt) lastReviewAt = r.createdAt;
+    }
     return {
       professionalProfileId,
       averageRating: published.length ? published.reduce((sum, r) => sum + r.rating, 0) / published.length : null,
       reviewCount: published.length,
+      ratingDistribution,
+      lastReviewAt,
     };
   }
   async create(data: CreateReviewData) {
@@ -880,11 +888,25 @@ export class FakeReviewRepository implements ReviewRepository {
       rating: data.rating,
       comment: data.comment,
       status: "PUBLISHED",
+      response: null,
+      respondedAt: null,
+      deletedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
     this.reviews.set(record.id, record);
     return record;
+  }
+  // Module 41 — Reviews & Ratings: not exercised by GDPR tests (this fake
+  // only covers CreateReviewUseCase's own export/erasure interactions).
+  async update(): Promise<never> {
+    throw new Error("not used in gdpr tests");
+  }
+  async softDelete(): Promise<never> {
+    throw new Error("not used in gdpr tests");
+  }
+  async respond(): Promise<never> {
+    throw new Error("not used in gdpr tests");
   }
 }
 

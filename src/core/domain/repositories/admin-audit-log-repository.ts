@@ -110,7 +110,17 @@ export type AdminAuditAction =
   | "GDPR_EXPORT_PREPARED"
   | "GDPR_DELETION_REQUESTED"
   | "GDPR_CONSENT_GRANTED"
-  | "GDPR_CONSENT_WITHDRAWN";
+  | "GDPR_CONSENT_WITHDRAWN"
+  // Module 41 — Reviews & Ratings: performed by the review's own author
+  // (REVIEW_CREATED/REVIEW_UPDATED/REVIEW_DELETED) or the reviewed
+  // professional (REVIEW_RESPONSE_ADDED) — not an admin — but reuse this
+  // same append-only trail, same reasoning as VERIFICATION_SUBMITTED
+  // above. Distinct from the pre-existing REVIEW_MODERATED/REVIEW_RESTORED
+  // (Module 16, admin-only actions on `Review.status`).
+  | "REVIEW_CREATED"
+  | "REVIEW_UPDATED"
+  | "REVIEW_DELETED"
+  | "REVIEW_RESPONSE_ADDED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved
