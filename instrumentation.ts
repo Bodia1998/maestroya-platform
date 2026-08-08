@@ -92,6 +92,13 @@ export async function register() {
   // the runtime starts, rather than only once the first request happens to
   // touch search.
   await import("@/infrastructure/search/compose");
+  // Module 50 — Analytics Dashboard: registers this module's (enqueue-
+  // only) event subscribers as a side effect of import, exactly like
+  // Module 47 above. The scheduled periodic refresh is *not* a side
+  // effect of this import — see `registerScheduledAnalyticsRefresh()`'s
+  // own doc comment for why it is called explicitly, below, immediately
+  // before `startBackgroundJobs()`.
+  const { registerScheduledAnalyticsRefresh } = await import("@/infrastructure/analytics/compose");
 
   // Module 45 — Background Jobs: starts every registered worker and the
   // job scheduler. Called after the subscriber-registering imports above
@@ -101,6 +108,13 @@ export async function register() {
   // been subscribed yet. A no-op — no queues were ever registered — when
   // `EVENT_QUEUE_ENABLED` is unset, the default.
   const { startBackgroundJobs, shutdownBackgroundJobs } = await import("@/infrastructure/jobs/compose");
+  // Module 50 — Analytics Dashboard: builds the analytics-refresh queue/
+  // worker and registers the scheduled backstop with the shared
+  // `JobScheduler` *before* `startBackgroundJobs()` runs, so the
+  // scheduler's timer actually starts with this schedule already present
+  // (see `BackgroundJobRuntime.start()`'s own "only starts the scheduler
+  // if a schedule already exists" behavior).
+  registerScheduledAnalyticsRefresh();
   startBackgroundJobs();
 
   let shuttingDown = false;

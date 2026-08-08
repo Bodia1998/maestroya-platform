@@ -186,6 +186,43 @@ describe("GET /api/health/ready (readiness)", () => {
     delete process.env.SEARCH_INDEXING_ENABLED;
   });
 
+  it("Module 50: reports analytics-dashboard health without affecting readiness", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    // The refresh pipeline is enabled by default and no snapshot has been
+    // computed yet in this fresh module instance — "ok" (not "disabled"),
+    // with no snapshot present yet.
+    expect(body.checks.analytics).toEqual(
+      expect.objectContaining({ status: "ok", refreshEnabled: true, hasSnapshot: false }),
+    );
+  });
+
+  it("Module 50: analytics status is 'disabled' when ANALYTICS_REFRESH_ENABLED=false, without affecting readiness", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    process.env.ANALYTICS_REFRESH_ENABLED = "false";
+    vi.resetModules();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.status).toBe("ok");
+    expect(body.checks.analytics.status).toBe("disabled");
+
+    delete process.env.ANALYTICS_REFRESH_ENABLED;
+  });
+
   it("returns 503 when the database is unreachable", async () => {
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { $queryRaw: vi.fn().mockRejectedValue(new Error("connection refused")) },

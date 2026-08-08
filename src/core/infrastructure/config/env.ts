@@ -371,6 +371,26 @@ const envSchema = z
     // devices/tabs) — a defensive bound against a runaway/misbehaving
     // client opening unbounded SSE streams. `.catch()`, same reasoning.
     REALTIME_MAX_CONNECTIONS_PER_USER: z.coerce.number().int().min(1).max(100).catch(10),
+
+    // --- Analytics Dashboard (Module 50 — CQRS Read Model) ---
+    //
+    // The automatic (event-driven + scheduled) refresh pipeline's kill
+    // switch — opt-out, not opt-in, exactly like `SEARCH_INDEXING_ENABLED`:
+    // with a functional cache-backed store as the default, refreshing is
+    // free and local, and reads keep working regardless (see
+    // `GetDashboardAnalyticsUseCase`'s on-demand live-recompute fallback),
+    // so an operator's "stop refreshing while I investigate" switch should
+    // default to on, not off.
+    ANALYTICS_REFRESH_ENABLED: z.preprocess(emptyStringToUndefined, z.enum(["true", "false"]).optional()),
+    // How long a cached dashboard snapshot may be served before the next
+    // read forces a live recompute. `.catch()` — an operational tuning
+    // knob, same reasoning as `QUEUE_CONCURRENCY`.
+    ANALYTICS_CACHE_TTL_MS: z.coerce.number().int().min(1000).max(3_600_000).catch(300_000),
+    // The periodic full-recompute interval (`JobScheduler`'s `{ every }`),
+    // the backstop that keeps the dashboard fresh even if every
+    // event-subscription happened to miss a change. `.catch()`, same
+    // reasoning.
+    ANALYTICS_SCHEDULED_REFRESH_INTERVAL_MS: z.coerce.number().int().min(60_000).max(86_400_000).catch(900_000),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV !== "production") return;
