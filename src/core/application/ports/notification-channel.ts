@@ -17,8 +17,19 @@ import type { NotificationTypeValue } from "@/domain/repositories/notification-r
  * present" constraint). Their adapters implement this same interface so a
  * future module can wire a real provider in without touching this port or
  * any call site.
+ *
+ * `SMS` was added by Module 49 — SMS Notifications, real as of that
+ * module: `SmsNotificationChannel`
+ * (`infrastructure/notifications/channels/sms-notification-channel.ts`)
+ * enqueues onto the same Module 45 background-job queue every other
+ * at-least-once delivery mechanism in this codebase uses (see that
+ * class's own doc comment), backed by `TwilioSmsSender`/`MockSmsSender`
+ * (`infrastructure/sms/`). Adding this member to the union is additive
+ * and source-compatible: every existing `NotificationRequest`/
+ * `NotificationEvent` caller that does not request `"SMS"` is completely
+ * unaffected, exactly as adding `REALTIME` was in Module 48.
  */
-export const NOTIFICATION_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH", "REALTIME"] as const;
+export const NOTIFICATION_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH", "REALTIME", "SMS"] as const;
 
 export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 
@@ -34,6 +45,17 @@ export interface NotificationChannelPayload {
    *  others. `null`/`undefined` means "no address available"; adapters
    *  must treat that as a safe no-op, never throw. */
   email?: string | null;
+  /** Recipient phone number (E.164, e.g. `+34600000000`) — required for
+   *  the `SMS` channel (Module 49), unused by the others. `null`/
+   *  `undefined` means "no number available"; `SmsNotificationChannel`
+   *  treats that as a safe no-op, never throw — the identical contract
+   *  `email` already establishes for `EMAIL`. */
+  phone?: string | null;
+  /** BCP-47-ish locale code (e.g. `"es"`, `"en"`) used by `SMS` (Module
+   *  49) to pick which localized template to render. Unused by every
+   *  other channel. Falls back to the platform default locale
+   *  (`DEFAULT_LOCALE`, `shared/i18n/locales.ts`) when omitted. */
+  locale?: string | null;
   category: NotificationCategory;
   type: NotificationTypeValue;
   title: string;

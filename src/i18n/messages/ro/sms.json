@@ -1,0 +1,13 @@
+{
+  "bookingConfirmed": "Bună, {name}, rezervarea ta din {date} a fost confirmată. MaestroYa",
+  "appointmentReminder": "Memento: programarea ta este pe {date} la {time}. MaestroYa",
+  "professionalAssigned": "{name} a fost alocat(ă) solicitării tale. MaestroYa",
+  "quoteAccepted": "Oferta ta de {amount} a fost acceptată. MaestroYa",
+  "quoteRejected": "Oferta ta a fost respinsă. MaestroYa",
+  "serviceRequestUpdated": "Starea cererii tale s-a schimbat în {status}. MaestroYa",
+  "chatNotification": "Mesaj nou de la {name}: {preview}",
+  "disputeNotification": "A fost deschis un litigiu ({caseNumber}) pentru lucrarea ta. MaestroYa",
+  "passwordReset": "Codul tău MaestroYa pentru resetarea parolei este {code}. Expiră în 15 min.",
+  "phoneVerification": "Codul tău de verificare MaestroYa este {code}.",
+  "twoFactorAuthentication": "Codul tău de autentificare MaestroYa este {code}."
+}

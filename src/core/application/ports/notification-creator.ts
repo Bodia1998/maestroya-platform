@@ -54,6 +54,13 @@ export interface NotificationEvent {
    *  over `EMAIL`. Unused by the `IN_APP`-only call sites this codebase
    *  has today. */
   email?: string | null;
+  /** Optional — Module 49 — SMS Notifications. Only relevant if a caller
+   *  wants to also deliver over `SMS`. `null`/omitted means the SMS
+   *  channel adapter safely no-ops for this recipient. */
+  phone?: string | null;
+  /** Optional — Module 49. Locale for SMS template selection; falls back
+   *  to the platform default locale when omitted. */
+  locale?: string | null;
   /** Optional — see this file's Module 32 doc comment above. Defaults to
    *  `["IN_APP"]` when omitted, preserving every existing call site's
    *  current behavior exactly. */

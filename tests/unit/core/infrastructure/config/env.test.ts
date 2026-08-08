@@ -260,6 +260,81 @@ describe("infrastructure/config/env", () => {
     });
   });
 
+  describe("Module 49 — SMS Notifications", () => {
+    it("SMS_PROVIDER defaults to mock", async () => {
+      const { env } = await loadEnvWith({});
+      expect(env.SMS_PROVIDER).toBe("mock");
+    });
+
+    it("falls back to mock (never fails startup) for an invalid/unknown value", async () => {
+      const { env } = await loadEnvWith({ SMS_PROVIDER: "not-a-real-provider" });
+      expect(env.SMS_PROVIDER).toBe("mock");
+    });
+
+    it("accepts SMS_PROVIDER=twilio with no credentials outside production", async () => {
+      const { env } = await loadEnvWith({ SMS_PROVIDER: "twilio" });
+      expect(env.SMS_PROVIDER).toBe("twilio");
+      expect(env.TWILIO_ACCOUNT_SID).toBeUndefined();
+    });
+
+    it("accepts and exposes Twilio credentials when provided", async () => {
+      const { env } = await loadEnvWith({
+        SMS_PROVIDER: "twilio",
+        TWILIO_ACCOUNT_SID: "ACxxx",
+        TWILIO_AUTH_TOKEN: "token",
+        TWILIO_FROM_NUMBER: "+15550001111",
+      });
+      expect(env.TWILIO_ACCOUNT_SID).toBe("ACxxx");
+      expect(env.TWILIO_AUTH_TOKEN).toBe("token");
+      expect(env.TWILIO_FROM_NUMBER).toBe("+15550001111");
+    });
+
+    it("rejects a production configuration with SMS_PROVIDER=twilio and missing credentials", async () => {
+      await expect(
+        loadEnvWith({
+          NODE_ENV: "production",
+          NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+          AUTH_URL: "https://maestroya.example.com",
+          AUTH_SECRET: "a".repeat(32),
+          STRIPE_SECRET_KEY: "sk_live_realkey",
+          STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+          SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+          SMS_PROVIDER: "twilio",
+        }),
+      ).rejects.toThrow(/Invalid environment variables/);
+    });
+
+    it("accepts a production configuration with SMS_PROVIDER=twilio and complete credentials", async () => {
+      const { env } = await loadEnvWith({
+        NODE_ENV: "production",
+        NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+        AUTH_URL: "https://maestroya.example.com",
+        AUTH_SECRET: "a".repeat(32),
+        STRIPE_SECRET_KEY: "sk_live_realkey",
+        STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+        SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        SMS_PROVIDER: "twilio",
+        TWILIO_ACCOUNT_SID: "ACxxx",
+        TWILIO_AUTH_TOKEN: "token",
+        TWILIO_FROM_NUMBER: "+15550001111",
+      });
+      expect(env.SMS_PROVIDER).toBe("twilio");
+    });
+
+    it("a production configuration with SMS_PROVIDER=mock never requires Twilio credentials", async () => {
+      const { env } = await loadEnvWith({
+        NODE_ENV: "production",
+        NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+        AUTH_URL: "https://maestroya.example.com",
+        AUTH_SECRET: "a".repeat(32),
+        STRIPE_SECRET_KEY: "sk_live_realkey",
+        STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+        SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+      });
+      expect(env.SMS_PROVIDER).toBe("mock");
+    });
+  });
+
   it("never includes secret values in the base fixture accidentally left empty", () => {
     // Sanity check on the fixture itself, not env.ts — guards against a
     // future edit accidentally introducing an empty required field that

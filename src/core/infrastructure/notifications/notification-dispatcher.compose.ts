@@ -4,10 +4,12 @@ import { InAppNotificationChannel } from "@/infrastructure/notifications/channel
 import { EmailNotificationChannel } from "@/infrastructure/notifications/channels/email-notification-channel";
 import { WebPushNotificationChannel } from "@/infrastructure/notifications/channels/web-push-notification-channel";
 import { RealTimeNotificationChannel } from "@/infrastructure/notifications/channels/realtime-notification-channel";
+import { SmsNotificationChannel } from "@/infrastructure/notifications/channels/sms-notification-channel";
 import { NotificationDispatcher } from "@/infrastructure/notifications/notification-dispatcher";
 import type { NotificationService } from "@/application/ports/notification-service";
 import { PublishToChannelUseCase } from "@/application/use-cases/realtime/publish-to-channel.use-case";
 import { realtimeHub } from "@/infrastructure/realtime/compose";
+import { deferredSmsQueue } from "@/infrastructure/sms/compose";
 
 /**
  * Module 32 — Notifications & Real-Time Communication.
@@ -31,6 +33,13 @@ import { realtimeHub } from "@/infrastructure/realtime/compose";
  *     the recipient's `user:{id}` realtime channel via the shared
  *     `RealtimeHub` (`infrastructure/realtime/compose.ts`). See
  *     `RealTimeNotificationChannel`'s own doc comment.
+ *   - `SMS` — real as of Module 49 — SMS Notifications: enqueues onto the
+ *     `sms-dispatch` background-job queue (`infrastructure/sms/
+ *     compose.ts`), never sends synchronously — see
+ *     `SmsNotificationChannel`'s own doc comment for why. Wired via
+ *     `deferredSmsQueue`, not `getSmsQueue()` directly, so importing this
+ *     file never eagerly constructs the SMS worker (the identical
+ *     laziness `deferredSmsQueue`'s own doc comment explains).
  *
  * A single module-level instance (`notificationService`) is exported and
  * reused — the dispatcher and its adapters are stateless, so there is no
@@ -44,6 +53,7 @@ export const notificationService: NotificationService = new NotificationDispatch
   new EmailNotificationChannel(emailSender),
   new WebPushNotificationChannel(),
   new RealTimeNotificationChannel(new PublishToChannelUseCase(realtimeHub)),
+  new SmsNotificationChannel(deferredSmsQueue),
 ]);
 
 export function makeNotificationService(): NotificationService {

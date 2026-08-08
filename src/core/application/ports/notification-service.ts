@@ -29,6 +29,15 @@ export interface NotificationRequest {
    *  Omit/leave null when the caller doesn't have it on hand; the EMAIL
    *  channel adapter safely no-ops rather than throwing. */
   email?: string | null;
+  /** Recipient phone number (E.164) — only needed if `SMS` is included in
+   *  `channels` (Module 49). Omit/leave null when the caller doesn't have
+   *  it on hand; the SMS channel adapter safely no-ops rather than
+   *  throwing — the identical contract `email` already has for `EMAIL`. */
+  phone?: string | null;
+  /** Locale for `SMS` template selection (Module 49). Falls back to the
+   *  platform default locale when omitted. Unused by every other
+   *  channel. */
+  locale?: string | null;
   category: NotificationCategory;
   type: NotificationTypeValue;
   title: string;

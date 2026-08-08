@@ -84,6 +84,30 @@ const envSchema = z
     RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
     EMAIL_FROM: z.string().min(1, "EMAIL_FROM is required"),
 
+    // --- SMS (Module 49 — SMS Notifications) ---
+    // Selects which `SmsSender` implementation `createSmsSender()`
+    // (infrastructure/sms/sms-sender-factory.ts) constructs. `.catch()`
+    // rather than `.default()` — same "a typo in a swappable-backend
+    // selector must degrade to the safe local option, never fail
+    // startup" reasoning as `SEARCH_PROVIDER`/`GEOCODING_PROVIDER` above.
+    // `mock` is the safe default: it sends nothing over the network,
+    // keeping local dev/CI fully functional with no Twilio account.
+    SMS_PROVIDER: z.enum(["mock", "twilio"]).catch("mock"),
+    // Twilio REST API credentials. All optional in every environment,
+    // including production, for the identical reason `MAPBOX_API_KEY`/
+    // `HERE_API_KEY` are optional above: a provider that isn't selected
+    // must never be a startup requirement. When `SMS_PROVIDER=twilio`,
+    // `createSmsSender()` itself — not this schema — is the one place
+    // that fails fast if any of the three is missing (see that file's
+    // own doc comment), the same division of responsibility
+    // `ResendEmailSender`/`RESEND_API_KEY` already has today (required
+    // unconditionally here only because email has no swappable provider
+    // yet; SMS does, so its keys follow the geocoding/search precedent
+    // instead).
+    TWILIO_ACCOUNT_SID: z.string().optional(),
+    TWILIO_AUTH_TOKEN: z.string().optional(),
+    TWILIO_FROM_NUMBER: z.string().optional(),
+
     // --- Auth.js ---
     AUTH_SECRET: z.string().min(1, "AUTH_SECRET is required"),
     AUTH_URL: z.string().url(),
@@ -417,6 +441,25 @@ const envSchema = z
         path: ["SENTRY_DSN"],
         message: "SENTRY_DSN is required in production for error reporting (Module 39).",
       });
+    }
+
+    // Module 49 — SMS Notifications: a production deployment that
+    // deliberately opted into the real Twilio provider must not silently
+    // fall back to no-op behavior for missing credentials — fail fast
+    // here, the same "deliberate deployment decision, never a silent
+    // gap" reasoning `SENTRY_DSN` above already applies. `SMS_PROVIDER`
+    // itself stays `.catch("mock")` at the field level (a typo must
+    // degrade safely); this only fires once `twilio` was genuinely and
+    // validly selected.
+    if (value.SMS_PROVIDER === "twilio") {
+      if (!value.TWILIO_ACCOUNT_SID || !value.TWILIO_AUTH_TOKEN || !value.TWILIO_FROM_NUMBER) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["SMS_PROVIDER"],
+          message:
+            "TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER are required in production when SMS_PROVIDER=twilio.",
+        });
+      }
     }
   });
 

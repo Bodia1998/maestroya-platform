@@ -1,0 +1,13 @@
+{
+  "bookingConfirmed": "Dobrý den, {name}, vaše rezervace na {date} byla potvrzena. MaestroYa",
+  "appointmentReminder": "Připomenutí: vaše schůzka je {date} v {time}. MaestroYa",
+  "professionalAssigned": "{name} byl(a) přiřazen(a) k vaší zakázce. MaestroYa",
+  "quoteAccepted": "Vaše nabídka za {amount} byla přijata. MaestroYa",
+  "quoteRejected": "Vaše nabídka byla zamítnuta. MaestroYa",
+  "serviceRequestUpdated": "Stav vaší poptávky se změnil na {status}. MaestroYa",
+  "chatNotification": "Nová zpráva od {name}: {preview}",
+  "disputeNotification": "Byl otevřen spor ({caseNumber}) k vaší zakázce. MaestroYa",
+  "passwordReset": "Váš kód pro obnovení hesla MaestroYa je {code}. Platnost 15 minut.",
+  "phoneVerification": "Váš ověřovací kód MaestroYa je {code}.",
+  "twoFactorAuthentication": "Váš přihlašovací kód MaestroYa je {code}."
+}

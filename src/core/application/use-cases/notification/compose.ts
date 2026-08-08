@@ -1,4 +1,5 @@
 import { PrismaNotificationRepository } from "@/infrastructure/database/prisma/repositories/prisma-notification-repository";
+import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
 import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
 import { eventBus } from "@/infrastructure/events/compose";
 import { CompanyStatusChanged } from "@/domain/events/company-status-changed";
@@ -26,6 +27,7 @@ import { NotifyCompanyStatusChangeSubscriber } from "@/application/use-cases/not
 import { NotifyCompanyVerificationStatusChangeSubscriber } from "@/application/use-cases/notification/notify-company-verification-status-change.subscriber";
 import { NotifyDisputeAssignedSubscriber } from "@/application/use-cases/notification/notify-dispute-assigned.subscriber";
 import { NotifyDisputeCreatedSubscriber } from "@/application/use-cases/notification/notify-dispute-created.subscriber";
+import { NotifyDisputeCreatedSmsSubscriber } from "@/application/use-cases/notification/notify-dispute-created-sms.subscriber";
 import { NotifyDisputeMessageAddedSubscriber } from "@/application/use-cases/notification/notify-dispute-message-added.subscriber";
 import { NotifyDisputeStatusChangeSubscriber } from "@/application/use-cases/notification/notify-dispute-status-change.subscriber";
 import { NotifyProfessionalVerificationStatusChangeSubscriber } from "@/application/use-cases/notification/notify-professional-verification-status-change.subscriber";
@@ -34,6 +36,7 @@ import { NotifyReviewResponseAddedSubscriber } from "@/application/use-cases/not
 import { NotifySupportTicketStatusChangeSubscriber } from "@/application/use-cases/notification/notify-support-ticket-status-change.subscriber";
 
 const notifications = new PrismaNotificationRepository();
+const users = new PrismaUserRepository();
 
 /**
  * Module 37 — Domain Event Subscribers: registers this module's
@@ -79,6 +82,14 @@ eventBus.subscribe(DisputeStatusChanged, new NotifyDisputeStatusChangeSubscriber
 eventBus.subscribe(DisputeAssigned, new NotifyDisputeAssignedSubscriber(new NotificationServiceCreator()));
 eventBus.subscribe(DisputeMessageAdded, new NotifyDisputeMessageAddedSubscriber(new NotificationServiceCreator()));
 eventBus.subscribe(DisputeCreated, new NotifyDisputeCreatedSubscriber(new NotificationServiceCreator()));
+
+/**
+ * Module 49 — SMS Notifications: a second, independent handler for the
+ * same `DisputeCreated` event — see `NotifyDisputeCreatedSmsSubscriber`'s
+ * own doc comment for why this is a new registration rather than an edit
+ * to the `IN_APP`+`REALTIME` one immediately above.
+ */
+eventBus.subscribe(DisputeCreated, new NotifyDisputeCreatedSmsSubscriber(new NotificationServiceCreator(), users));
 
 /**
  * Module 37 — Domain Event Subscribers: Support Ticket module (Module 21).
