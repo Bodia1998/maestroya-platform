@@ -6,6 +6,8 @@ import { WebPushNotificationChannel } from "@/infrastructure/notifications/chann
 import { RealTimeNotificationChannel } from "@/infrastructure/notifications/channels/realtime-notification-channel";
 import { NotificationDispatcher } from "@/infrastructure/notifications/notification-dispatcher";
 import type { NotificationService } from "@/application/ports/notification-service";
+import { PublishToChannelUseCase } from "@/application/use-cases/realtime/publish-to-channel.use-case";
+import { realtimeHub } from "@/infrastructure/realtime/compose";
 
 /**
  * Module 32 — Notifications & Real-Time Communication.
@@ -23,8 +25,12 @@ import type { NotificationService } from "@/application/ports/notification-servi
  *     stateless and cheap to construct, and keeping them separate avoids
  *     introducing a cross-module import between Auth and Notifications
  *     purely to share one object.
- *   - `WEB_PUSH` / `REALTIME` — future-ready no-op stubs (see their own doc
- *     comments) — requestable today, harmless, not wired to any provider.
+ *   - `WEB_PUSH` — future-ready no-op stub (see its own doc comment) —
+ *     requestable today, harmless, not wired to any provider.
+ *   - `REALTIME` — real as of Module 48 — Real-Time System: publishes onto
+ *     the recipient's `user:{id}` realtime channel via the shared
+ *     `RealtimeHub` (`infrastructure/realtime/compose.ts`). See
+ *     `RealTimeNotificationChannel`'s own doc comment.
  *
  * A single module-level instance (`notificationService`) is exported and
  * reused — the dispatcher and its adapters are stateless, so there is no
@@ -37,7 +43,7 @@ export const notificationService: NotificationService = new NotificationDispatch
   new InAppNotificationChannel(),
   new EmailNotificationChannel(emailSender),
   new WebPushNotificationChannel(),
-  new RealTimeNotificationChannel(),
+  new RealTimeNotificationChannel(new PublishToChannelUseCase(realtimeHub)),
 ]);
 
 export function makeNotificationService(): NotificationService {
