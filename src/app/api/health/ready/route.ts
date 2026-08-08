@@ -11,6 +11,7 @@ import { getBackgroundJobsHealth } from "@/infrastructure/jobs/compose";
 import { getSearchEngineHealth } from "@/infrastructure/search/compose";
 import { getRealtimeHealth } from "@/infrastructure/realtime/compose";
 import { getSmsProviderHealth } from "@/infrastructure/sms/compose";
+import { getAnalyticsHealth } from "@/infrastructure/analytics/compose";
 
 /**
  * Readiness check (Module 25 — Production Infrastructure).
@@ -86,6 +87,13 @@ import { getSmsProviderHealth } from "@/infrastructure/sms/compose";
  * channel, never this instance's ability to serve HTTP/read/write
  * traffic.
  *
+ * Module 50 — Analytics Dashboard: `checks.analytics` joins the same
+ * visibility-only category, for the identical reasoning `checks.searchEngine`
+ * establishes: the dashboard is a *derived* cached projection, Postgres
+ * (via Module 23) remains the source of truth, and the read side already
+ * degrades an unreachable cache/failed recompute to a flagged, non-throwing
+ * result rather than an error. See `infrastructure/analytics/analytics-health.ts`.
+ *
  * Returns 503 (not 500) on database failure — the conventional status
  * for "the server is currently unable to handle the request", which is
  * exactly what a load balancer/orchestrator readiness probe is checking
@@ -109,6 +117,7 @@ export async function GET(request: NextRequest) {
           searchEngine: await getSearchEngineHealth(),
           realtime: getRealtimeHealth(),
           smsProvider: await getSmsProviderHealth(),
+          analytics: await getAnalyticsHealth(),
         },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },

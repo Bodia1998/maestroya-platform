@@ -335,6 +335,34 @@ describe("infrastructure/config/env", () => {
     });
   });
 
+  describe("Module 50 — Analytics Dashboard (CQRS Read Model)", () => {
+    it("treats an empty-string ANALYTICS_REFRESH_ENABLED the same as unset", async () => {
+      const { env } = await loadEnvWith({ ANALYTICS_REFRESH_ENABLED: "" });
+      expect(env.ANALYTICS_REFRESH_ENABLED).toBeUndefined();
+    });
+
+    it("ANALYTICS_CACHE_TTL_MS defaults to 300000 (5 minutes)", async () => {
+      const { env } = await loadEnvWith({});
+      expect(env.ANALYTICS_CACHE_TTL_MS).toBe(300_000);
+    });
+
+    it("ANALYTICS_CACHE_TTL_MS coerces a numeric string and falls back on a malformed one", async () => {
+      expect((await loadEnvWith({ ANALYTICS_CACHE_TTL_MS: "60000" })).env.ANALYTICS_CACHE_TTL_MS).toBe(60_000);
+      expect((await loadEnvWith({ ANALYTICS_CACHE_TTL_MS: "not-a-number" })).env.ANALYTICS_CACHE_TTL_MS).toBe(300_000);
+    });
+
+    it("ANALYTICS_SCHEDULED_REFRESH_INTERVAL_MS defaults to 900000 (15 minutes)", async () => {
+      const { env } = await loadEnvWith({});
+      expect(env.ANALYTICS_SCHEDULED_REFRESH_INTERVAL_MS).toBe(900_000);
+    });
+
+    it("ANALYTICS_SCHEDULED_REFRESH_INTERVAL_MS falls back to its default when out of range", async () => {
+      expect((await loadEnvWith({ ANALYTICS_SCHEDULED_REFRESH_INTERVAL_MS: "1000" })).env.ANALYTICS_SCHEDULED_REFRESH_INTERVAL_MS).toBe(
+        900_000,
+      );
+    });
+  });
+
   it("never includes secret values in the base fixture accidentally left empty", () => {
     // Sanity check on the fixture itself, not env.ts — guards against a
     // future edit accidentally introducing an empty required field that
