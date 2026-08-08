@@ -8,6 +8,7 @@ import { logger } from "@/infrastructure/observability/logger";
 import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
 import { makeSubscribeToChannelUseCase, makeUnsubscribeFromChannelUseCase } from "@/application/use-cases/realtime/compose";
+import { withApiTracing } from "@/infrastructure/tracing/http-tracing";
 
 const channelActionSchema = z.object({
   connectionId: z.string().min(1),
@@ -29,13 +30,13 @@ const channelActionSchema = z.object({
  * `application/use-cases/realtime/compose.ts`), so authorization is
  * enforced identically to the initial connect-time subscription.
  */
-export async function POST(request: NextRequest) {
+export const POST = withApiTracing("/api/realtime/channels", async function POST(request: NextRequest) {
   return handle(request, "subscribe");
-}
+});
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withApiTracing("/api/realtime/channels", async function DELETE(request: NextRequest) {
   return handle(request, "unsubscribe");
-}
+});
 
 async function handle(request: NextRequest, action: "subscribe" | "unsubscribe") {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));

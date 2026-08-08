@@ -223,6 +223,54 @@ describe("GET /api/health/ready (readiness)", () => {
     delete process.env.ANALYTICS_REFRESH_ENABLED;
   });
 
+  it("Module 51: reports tracing health as 'disabled' by default, without affecting readiness", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    // TRACING_ENABLED is unset by VALID_BASE_ENV — "disabled" is the
+    // healthy, deliberate default (see tracing-health.ts).
+    expect(body.checks.tracing).toEqual({
+      status: "disabled",
+      enabled: false,
+      provider: "none",
+      exporter: "none",
+      serviceName: "none",
+    });
+  });
+
+  it("Module 51: tracing status is 'ok' once TRACING_ENABLED=true and the SDK has started, without affecting readiness", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.doMock("@/infrastructure/tracing/otel-sdk", () => ({
+      startOtelSdk: vi.fn(() => ({ shutdown: vi.fn().mockResolvedValue(undefined), exporting: true })),
+    }));
+    process.env.TRACING_ENABLED = "true";
+    vi.resetModules();
+
+    const { startTracing } = await import("@/infrastructure/tracing/compose");
+    await startTracing();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.checks.tracing.status).toBe("ok");
+    expect(body.checks.tracing.provider).toBe("opentelemetry");
+    expect(body.checks.tracing.exporter).toBe("console");
+
+    vi.doUnmock("@/infrastructure/tracing/otel-sdk");
+    delete process.env.TRACING_ENABLED;
+  });
+
   it("returns 503 when the database is unreachable", async () => {
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { $queryRaw: vi.fn().mockRejectedValue(new Error("connection refused")) },

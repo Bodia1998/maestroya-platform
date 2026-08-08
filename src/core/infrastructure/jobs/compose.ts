@@ -8,6 +8,8 @@ import { JobScheduler } from "@/infrastructure/jobs/job-scheduler";
 import type { QueueCounts } from "@/infrastructure/jobs/job-types";
 import { Queue } from "@/infrastructure/jobs/queue";
 import { collectQueueHealth, DISABLED_QUEUE_HEALTH, type QueueHealthReport } from "@/infrastructure/jobs/queue-health";
+import { getTracer } from "@/infrastructure/tracing/compose";
+import { withJobTracing } from "@/infrastructure/tracing/job-tracing";
 
 /**
  * Module 45 — Background Jobs (Roadmap Module 12).
@@ -122,6 +124,10 @@ export function createManagedQueue<TData>(name: string): Queue<TData> {
   const queue = new Queue<TData>(name, {
     store: createJobStore(),
     observer: getJobObserver(),
+    // Module 51 — Distributed Tracing: lets `Queue.add` stamp the active
+    // trace context onto the job so the worker joins the same trace. A
+    // no-op (`nullTracer`) unless `TRACING_ENABLED=true`.
+    tracer: getTracer(),
   });
   getBackgroundJobRuntime().registerQueue(queue);
   return queue;
@@ -129,8 +135,17 @@ export function createManagedQueue<TData>(name: string): Queue<TData> {
 
 let observer: JobLifecycleObserver | null = null;
 
+/**
+ * The single lifecycle observer every queue and worker in the process
+ * shares. Module 51 — Distributed Tracing composes a span-emitting
+ * observer *around* the existing logger/Sentry one rather than replacing
+ * it: `withJobTracing` returns the delegate untouched when tracing is
+ * disabled, and when enabled calls it first and unconditionally on every
+ * hook — so structured job logs and Sentry dead-letter reports are
+ * identical either way. See `infrastructure/tracing/job-tracing.ts`.
+ */
 export function getJobObserver(): JobLifecycleObserver {
-  if (!observer) observer = createJobLifecycleObserver();
+  if (!observer) observer = withJobTracing(createJobLifecycleObserver(), getTracer());
   return observer;
 }
 

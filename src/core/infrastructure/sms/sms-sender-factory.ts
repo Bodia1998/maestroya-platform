@@ -4,6 +4,7 @@ import type { SmsSender } from "@/application/interfaces/sms-sender";
 import { env } from "@/infrastructure/config/env";
 import { MockSmsSender } from "@/infrastructure/sms/mock-sms-sender";
 import { TwilioSmsSender } from "@/infrastructure/sms/twilio-sms-sender";
+import { createTracedFetch } from "@/infrastructure/tracing/traced-fetch";
 
 /**
  * Module 49 — SMS Notifications.
@@ -35,7 +36,19 @@ export function createSmsSender(): SmsSender {
           "SMS_PROVIDER=twilio requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER to be set.",
         );
       }
-      return new TwilioSmsSender(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN, env.TWILIO_FROM_NUMBER);
+      // Module 51 — Distributed Tracing: `TwilioSmsSender`'s existing
+      // injectable `fetchImpl` seam is the instrumentation point — a
+      // traced `fetch` gives both a `client` span for the Twilio call and
+      // W3C trace-context propagation on the wire, neither of which a
+      // decorator around `SmsSender` could provide. `createTracedFetch`
+      // returns the global `fetch` unchanged when tracing is disabled, so
+      // the sender is constructed exactly as it was before.
+      return new TwilioSmsSender(
+        env.TWILIO_ACCOUNT_SID,
+        env.TWILIO_AUTH_TOKEN,
+        env.TWILIO_FROM_NUMBER,
+        createTracedFetch("twilio"),
+      );
     }
     case "mock":
     default:

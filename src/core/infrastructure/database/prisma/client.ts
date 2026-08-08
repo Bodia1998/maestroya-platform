@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
+import { withPrismaTracing } from "@/infrastructure/tracing/prisma-tracing";
+
 /**
  * Prisma client singleton.
  *
@@ -18,11 +20,24 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+/**
+ * Module 51 — Distributed Tracing: `withPrismaTracing` adds a
+ * `$extends`-based `$allOperations` hook that wraps every query in a
+ * `client` span, and returns the client **completely untouched** when
+ * `TRACING_ENABLED` is not `"true"` (the default). This is the single
+ * instrumentation point for the database — no repository, and no caller
+ * of `prisma`, changes or can tell the difference; the exported symbol's
+ * type is identical either way. See `infrastructure/tracing/prisma-tracing.ts`
+ * for why the extension, rather than 40+ repository decorators or
+ * Prisma's own preview-flagged instrumentation package.
+ */
 export const prisma =
   globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  });
+  withPrismaTracing(
+    new PrismaClient({
+      log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+    }),
+  );
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

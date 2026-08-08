@@ -4,6 +4,8 @@ import type { CacheProvider } from "@/application/ports/cache-provider";
 import { InMemoryCacheProvider } from "@/infrastructure/cache/in-memory-cache-provider";
 import { RedisCacheProvider } from "@/infrastructure/cache/redis-cache-provider";
 import { getRedisClient } from "@/infrastructure/cache/redis-client-factory";
+import { getTracer } from "@/infrastructure/tracing/compose";
+import { withCacheTracing } from "@/infrastructure/tracing/traced-cache-provider";
 
 /**
  * Module 46 — Caching Layer (Roadmap Module 13).
@@ -20,7 +22,16 @@ let instance: CacheProvider | null = null;
 export function createCacheProvider(): CacheProvider {
   if (!instance) {
     const redisClient = getRedisClient();
-    instance = redisClient ? new RedisCacheProvider(redisClient) : new InMemoryCacheProvider();
+    // Module 51 — Distributed Tracing: a decorator over the same
+    // `CacheProvider` port, returned untouched when tracing is disabled.
+    // Applied here so `CacheManager` and every namespace above it are
+    // instrumented without knowing, exactly as the Redis/in-memory choice
+    // itself is invisible to them.
+    instance = withCacheTracing(
+      redisClient ? new RedisCacheProvider(redisClient) : new InMemoryCacheProvider(),
+      getTracer(),
+      redisClient ? "redis" : "memory",
+    );
   }
   return instance;
 }

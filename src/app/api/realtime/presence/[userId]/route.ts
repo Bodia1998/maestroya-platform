@@ -7,6 +7,7 @@ import { logger } from "@/infrastructure/observability/logger";
 import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
 import { makeGetPresenceUseCase } from "@/application/use-cases/realtime/compose";
+import { withApiTracing } from "@/infrastructure/tracing/http-tracing";
 
 /**
  * Module 48 — Real-Time System.
@@ -17,7 +18,7 @@ import { makeGetPresenceUseCase } from "@/application/use-cases/realtime/compose
  * result/errors to HTTP, the same thin-route-handler convention every
  * other route in this codebase follows.
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+export const GET = withApiTracing("/api/realtime/presence/[userId]", async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
   const headers = { [REQUEST_ID_HEADER]: requestId };
   const { userId } = await params;
@@ -47,4 +48,4 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
     return NextResponse.json({ status: "error", message: "Could not load presence." }, { status: 500, headers });
   }
-}
+});

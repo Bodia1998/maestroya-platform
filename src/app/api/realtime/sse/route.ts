@@ -18,6 +18,7 @@ import { SseSink } from "@/infrastructure/realtime/sse-transport";
 // can be invoked in edge/serverless contexts where instrumentation.ts's
 // own timing is less certain.
 import "@/application/use-cases/realtime/compose";
+import { withApiTracing } from "@/infrastructure/tracing/http-tracing";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -45,7 +46,7 @@ export const runtime = "nodejs";
  * whole connection. More channels can be added later over
  * `POST /api/realtime/channels`.
  */
-export async function GET(request: NextRequest) {
+export const GET = withApiTracing("/api/realtime/sse", async function GET(request: NextRequest) {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
 
   const user = await getCurrentUser();
@@ -110,4 +111,4 @@ export async function GET(request: NextRequest) {
       [REQUEST_ID_HEADER]: requestId,
     },
   });
-}
+});

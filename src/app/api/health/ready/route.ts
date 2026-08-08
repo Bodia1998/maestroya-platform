@@ -12,6 +12,7 @@ import { getSearchEngineHealth } from "@/infrastructure/search/compose";
 import { getRealtimeHealth } from "@/infrastructure/realtime/compose";
 import { getSmsProviderHealth } from "@/infrastructure/sms/compose";
 import { getAnalyticsHealth } from "@/infrastructure/analytics/compose";
+import { getTracingHealth } from "@/infrastructure/tracing/compose";
 
 /**
  * Readiness check (Module 25 — Production Infrastructure).
@@ -94,6 +95,16 @@ import { getAnalyticsHealth } from "@/infrastructure/analytics/compose";
  * degrades an unreachable cache/failed recompute to a flagged, non-throwing
  * result rather than an error. See `infrastructure/analytics/analytics-health.ts`.
  *
+ * Module 51 — Distributed Tracing: `checks.tracing` joins the same
+ * visibility-only category, with the strongest claim to it of all of
+ * them. Tracing produces *diagnostic data about work the platform
+ * already did* — an instance whose collector is unreachable serves every
+ * page, booking and payment identically, and the only thing lost is the
+ * operator's own view. `"disabled"` (the default) is a healthy,
+ * deliberate state; `"degraded"` means spans are not reaching the
+ * backend while trace context and correlation ids keep working. See
+ * `infrastructure/tracing/tracing-health.ts`.
+ *
  * Returns 503 (not 500) on database failure — the conventional status
  * for "the server is currently unable to handle the request", which is
  * exactly what a load balancer/orchestrator readiness probe is checking
@@ -118,6 +129,7 @@ export async function GET(request: NextRequest) {
           realtime: getRealtimeHealth(),
           smsProvider: await getSmsProviderHealth(),
           analytics: await getAnalyticsHealth(),
+          tracing: getTracingHealth(),
         },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },

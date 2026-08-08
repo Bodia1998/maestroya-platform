@@ -35,10 +35,24 @@ export async function register() {
   const { logger } = await import("@/infrastructure/observability/logger");
   const { isSentryConfigured } = await import("@/infrastructure/observability/sentry-client");
 
+  // Module 51 — Distributed Tracing: booted first, before anything else
+  // in this hook, for the same "as early as possible" reason the env
+  // validation above exists — a tracer registered after the job runtime
+  // has started would miss the spans for whatever ran during boot, and
+  // Next.js's own built-in `next.js`-scoped request spans only become
+  // recording once a provider is registered. A no-op returning
+  // immediately when `TRACING_ENABLED` is not `"true"` (the default), and
+  // never throwing even when it is — see `startTracing`'s own doc
+  // comment: a tracing SDK that cannot start must not stop the
+  // application from starting.
+  const { startTracing, shutdownTracing, getTracingHealth } = await import("@/infrastructure/tracing/compose");
+  await startTracing();
+
   logger.info("app_startup", {
     nodeEnv: env.NODE_ENV,
     logLevel: env.LOG_LEVEL,
     sentryConfigured: isSentryConfigured(),
+    tracing: getTracingHealth().status,
   });
 
   const { prisma } = await import("@/infrastructure/database/prisma/client");
@@ -133,6 +147,14 @@ export async function register() {
       // Only closes an actual connection — getRedisClient() returns null
       // (and quit() is a safe no-op) when REDIS_URL was never configured.
       await getRedisClient()?.quit();
+      // Module 51 — Distributed Tracing: flushes whatever spans are still
+      // batched before the process exits, so the last requests before a
+      // deploy/scale-down are not silently lost. Last in the sequence
+      // deliberately — it is the only step here that benefits from the
+      // preceding ones having already produced their final spans.
+      // Idempotent, never throws, and a no-op when tracing was never
+      // started.
+      await shutdownTracing();
       logger.info("app_shutdown_complete", { signal });
     } catch (error) {
       logger.error("app_shutdown_error", { signal, error });

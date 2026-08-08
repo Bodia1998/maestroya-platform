@@ -18,6 +18,8 @@ import {
   TypesenseSearchProvider,
   type TypesenseClientApi,
 } from "@/infrastructure/search/providers/typesense-search-provider";
+import { getTracer } from "@/infrastructure/tracing/compose";
+import { withSearchTracing } from "@/infrastructure/tracing/traced-search-provider";
 
 /**
  * Module 47 — CQRS Search Engine (Roadmap Module 14).
@@ -46,7 +48,13 @@ import {
 let instance: SearchIndexProvider | null = null;
 
 export function createSearchProvider(): SearchIndexProvider {
-  if (!instance) instance = buildProvider();
+  // Module 51 — Distributed Tracing: a decorator over the same
+  // `SearchIndexProvider` port, returned untouched when tracing is
+  // disabled. Wrapping here rather than in each of the three providers
+  // means the in-memory, Meilisearch and Typesense paths are all
+  // instrumented by one file, and the read/indexing use cases above stay
+  // unaware — the same reason the provider choice itself lives here.
+  if (!instance) instance = withSearchTracing(buildProvider(), getTracer());
   return instance;
 }
 
