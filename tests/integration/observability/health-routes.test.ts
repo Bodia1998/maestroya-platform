@@ -271,6 +271,41 @@ describe("GET /api/health/ready (readiness)", () => {
     delete process.env.TRACING_ENABLED;
   });
 
+  it("Module 53: reports configuration health as 'ok' for the valid baseline env, without affecting readiness", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.checks.configuration).toEqual(
+      expect.objectContaining({ status: "ok", requiredSecretsConfigured: true, issues: [] }),
+    );
+  });
+
+  it("Module 53: configuration status is 'degraded' when SMS_PROVIDER=twilio is selected without credentials, without affecting readiness", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    process.env.SMS_PROVIDER = "twilio";
+    vi.resetModules();
+
+    const { GET } = await import("@/app/api/health/ready/route");
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.status).toBe("ok");
+    expect(body.checks.configuration.status).toBe("degraded");
+    expect(body.checks.configuration.issues.length).toBeGreaterThan(0);
+
+    delete process.env.SMS_PROVIDER;
+  });
+
   it("returns 503 when the database is unreachable", async () => {
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { $queryRaw: vi.fn().mockRejectedValue(new Error("connection refused")) },
