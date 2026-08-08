@@ -13,6 +13,7 @@ import { getRealtimeHealth } from "@/infrastructure/realtime/compose";
 import { getSmsProviderHealth } from "@/infrastructure/sms/compose";
 import { getAnalyticsHealth } from "@/infrastructure/analytics/compose";
 import { getTracingHealth } from "@/infrastructure/tracing/compose";
+import { getConfigHealth } from "@/infrastructure/config/compose";
 
 /**
  * Readiness check (Module 25 — Production Infrastructure).
@@ -105,6 +106,21 @@ import { getTracingHealth } from "@/infrastructure/tracing/compose";
  * backend while trace context and correlation ids keep working. See
  * `infrastructure/tracing/tracing-health.ts`.
  *
+ * Module 53 — Configuration & Secrets Management: `checks.configuration`
+ * joins the same visibility-only category, with an even weaker claim to
+ * load-bearing status than any check above it. It reports whether every
+ * unconditionally-required secret is present (something that, by
+ * construction, can never actually be false here — `env.ts`'s own
+ * startup validation would have already prevented this process, and
+ * therefore this request handler, from ever running otherwise — see
+ * `infrastructure/config/config-health.ts`'s own doc comment for the
+ * full reasoning) and flags specific, non-fatal inconsistencies in
+ * *optional* provider configuration (e.g. `SMS_PROVIDER=twilio` selected
+ * without complete credentials). Either category is purely informational
+ * for an operator glancing at this endpoint, never a reason to fail this
+ * instance's readiness or trigger a failover that cannot fix a
+ * configuration typo.
+ *
  * Returns 503 (not 500) on database failure — the conventional status
  * for "the server is currently unable to handle the request", which is
  * exactly what a load balancer/orchestrator readiness probe is checking
@@ -130,6 +146,7 @@ export async function GET(request: NextRequest) {
           smsProvider: await getSmsProviderHealth(),
           analytics: await getAnalyticsHealth(),
           tracing: getTracingHealth(),
+          configuration: getConfigHealth(),
         },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },
