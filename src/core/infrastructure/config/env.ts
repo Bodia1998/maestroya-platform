@@ -445,6 +445,34 @@ const envSchema = z
     // grammar; parsed leniently (a malformed pair is skipped, never
     // fatal) by `parseExporterHeaders`.
     OTEL_EXPORTER_HEADERS: z.preprocess(emptyStringToUndefined, z.string().optional()),
+
+    // --- Feature Flags module ---
+    //
+    // Process-wide emergency kill switch — opt-out, unlike
+    // TRACING_ENABLED: with the default in-memory/config-backed provider,
+    // feature-flag evaluation is free, local, and fail-closed on its own
+    // (see FeatureFlagService.evaluate), so this exists purely as an
+    // operator's single "force every flag off" lever (e.g. a bad rollout
+    // rule is causing production incidents and there's no time to fix
+    // individual flags), not a routine deployment toggle. `.catch()`
+    // rather than `.default()`, same "a typo in an operational switch
+    // must never fail startup" reasoning as SMS_PROVIDER/GEOCODING_PROVIDER
+    // — an invalid value degrades to "enabled" (the safe, normal-operation
+    // default), never to an accidental platform-wide outage.
+    FEATURE_FLAGS_ENABLED: z.enum(["true", "false"]).catch("true"),
+    // Optional JSON array of flag definitions
+    // (`featureFlagsConfigSchema` in application/dto/feature-flag.dto.ts),
+    // merged on top of the code-defined defaults in
+    // infrastructure/feature-flags/feature-flag-definitions.ts (by `key`;
+    // an entry here replaces the matching default entirely, never a
+    // partial merge). Left as a raw string here, not parsed by this
+    // schema — env.ts intentionally never needs to know a feature flag's
+    // shape; `feature-flag-definitions.ts`'s `parseFeatureFlagsConfig` is
+    // the single place that validates it, and — same "a malformed
+    // operational config must never fail startup" rule as every other
+    // JSON-ish env var here — falls back to the code-defined defaults
+    // alone (logging a warning) rather than throwing on invalid JSON.
+    FEATURE_FLAGS_CONFIG: z.preprocess(emptyStringToUndefined, z.string().optional()),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV !== "production") return;

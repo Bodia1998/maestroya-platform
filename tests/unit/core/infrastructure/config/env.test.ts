@@ -485,6 +485,34 @@ describe("infrastructure/config/env", () => {
     });
   });
 
+  describe("Feature Flags module", () => {
+    it("FEATURE_FLAGS_ENABLED defaults to 'true' when unset", async () => {
+      const { env } = await loadEnvWith({});
+      expect(env.FEATURE_FLAGS_ENABLED).toBe("true");
+    });
+
+    it("falls back to 'true' for an invalid FEATURE_FLAGS_ENABLED value rather than failing startup", async () => {
+      const { env } = await loadEnvWith({ FEATURE_FLAGS_ENABLED: "nope" });
+      expect(env.FEATURE_FLAGS_ENABLED).toBe("true");
+    });
+
+    it("accepts FEATURE_FLAGS_ENABLED='false'", async () => {
+      const { env } = await loadEnvWith({ FEATURE_FLAGS_ENABLED: "false" });
+      expect(env.FEATURE_FLAGS_ENABLED).toBe("false");
+    });
+
+    it("FEATURE_FLAGS_CONFIG is optional and passed through as a raw string", async () => {
+      const raw = JSON.stringify([{ key: "a", enabled: true }]);
+      const { env } = await loadEnvWith({ FEATURE_FLAGS_CONFIG: raw });
+      expect(env.FEATURE_FLAGS_CONFIG).toBe(raw);
+    });
+
+    it("treats an empty-string FEATURE_FLAGS_CONFIG the same as unset", async () => {
+      const { env } = await loadEnvWith({ FEATURE_FLAGS_CONFIG: "" });
+      expect(env.FEATURE_FLAGS_CONFIG).toBeUndefined();
+    });
+  });
+
   it("never includes secret values in the base fixture accidentally left empty", () => {
     // Sanity check on the fixture itself, not env.ts — guards against a
     // future edit accidentally introducing an empty required field that
