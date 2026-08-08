@@ -10,6 +10,11 @@ import type { NotificationService } from "@/application/ports/notification-servi
 import { PublishToChannelUseCase } from "@/application/use-cases/realtime/publish-to-channel.use-case";
 import { realtimeHub } from "@/infrastructure/realtime/compose";
 import { deferredSmsQueue } from "@/infrastructure/sms/compose";
+import { getTracer } from "@/infrastructure/tracing/compose";
+import {
+  withEmailTracing,
+  withNotificationChannelTracing,
+} from "@/infrastructure/tracing/traced-external-senders";
 
 /**
  * Module 32 — Notifications & Real-Time Communication.
@@ -46,13 +51,28 @@ import { deferredSmsQueue } from "@/infrastructure/sms/compose";
  * benefit to constructing a fresh one per call, mirroring how
  * `auth/compose.ts` keeps a single `emailSender` at module scope.
  */
-const emailSender = new ResendEmailSender(env.RESEND_API_KEY, env.EMAIL_FROM);
+/**
+ * Module 51 — Distributed Tracing: both wrappers below are decorators
+ * over the *unmodified* `EmailSender`/`NotificationChannelAdapter`
+ * interfaces and return their argument untouched when tracing is
+ * disabled — no channel, the dispatcher, or any caller changes. The
+ * `REALTIME` adapter is wrapped specifically because it is this
+ * platform's outbound realtime-gateway boundary (see
+ * `RealTimeNotificationChannel`); the same decorator would apply to the
+ * other channels, but `IN_APP` is already covered by Prisma tracing,
+ * `SMS` by the queue/`fetch` spans, and `WEB_PUSH` is a no-op stub — so
+ * only the two that would otherwise be invisible are wrapped.
+ */
+const emailSender = withEmailTracing(new ResendEmailSender(env.RESEND_API_KEY, env.EMAIL_FROM), getTracer());
 
 export const notificationService: NotificationService = new NotificationDispatcher([
   new InAppNotificationChannel(),
   new EmailNotificationChannel(emailSender),
   new WebPushNotificationChannel(),
-  new RealTimeNotificationChannel(new PublishToChannelUseCase(realtimeHub)),
+  withNotificationChannelTracing(
+    new RealTimeNotificationChannel(new PublishToChannelUseCase(realtimeHub)),
+    getTracer(),
+  ),
   new SmsNotificationChannel(deferredSmsQueue),
 ]);
 

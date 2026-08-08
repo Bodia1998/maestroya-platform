@@ -391,6 +391,60 @@ const envSchema = z
     // event-subscription happened to miss a change. `.catch()`, same
     // reasoning.
     ANALYTICS_SCHEDULED_REFRESH_INTERVAL_MS: z.coerce.number().int().min(60_000).max(86_400_000).catch(900_000),
+
+    // --- Distributed Tracing (Module 51) ---
+    //
+    // Master switch. **Opt-in** (`"true"` to enable), unlike Module 47's
+    // `SEARCH_INDEXING_ENABLED` and Module 50's `ANALYTICS_REFRESH_ENABLED`,
+    // which are opt-out. The distinction those two document is exactly
+    // the one applied here, with the opposite answer: they default on
+    // because their default backend is local, free, and produces
+    // something the app itself consumes. Tracing's default useful backend
+    // is an *external* collector, and its output is consumed by an
+    // operator, not by the platform — nothing in the application degrades
+    // when it is off. That puts it in `EVENT_QUEUE_ENABLED`'s category
+    // ("a deliberate deployment decision, never a side effect"), and it
+    // is what makes the "when disabled there is effectively zero runtime
+    // overhead" guarantee the default rather than a special case: with
+    // this unset, `infrastructure/tracing/compose.ts` hands out
+    // `nullTracer` and the OpenTelemetry SDK is never even imported.
+    //
+    // Uses the same `emptyStringToUndefined` preprocessing as
+    // `EVENT_QUEUE_ENABLED`/`SENTRY_DSN`, for the same `.env`-file
+    // convention reason.
+    TRACING_ENABLED: z.preprocess(emptyStringToUndefined, z.enum(["true", "false"]).optional()),
+    // Where finished spans go: `console` (local dev — stdout, no
+    // collector needed), `otlp` (OTLP/HTTP to
+    // `OTEL_EXPORTER_OTLP_ENDPOINT`), or `none` (spans created and
+    // propagated, nothing exported). `.catch()` rather than `.default()`
+    // — a typo in a swappable-backend selector must degrade to the safe
+    // local option, never fail startup, exactly as `SEARCH_PROVIDER`/
+    // `SMS_PROVIDER`/`GEOCODING_PROVIDER` document. `console` is that
+    // safe option here: it makes no network call of any kind.
+    TRACING_EXPORTER: z.enum(["console", "otlp", "none"]).catch("console"),
+    // `service.name` on every exported span — how this application shows
+    // up in the collector's service map. Optional; defaults to
+    // `"maestroya-platform"` (see `tracing-config.ts`). The `OTEL_`
+    // prefix is deliberate: these four are the OpenTelemetry
+    // specification's own standard variable names, so an operator's
+    // existing collector runbook applies unchanged, and a sidecar/agent
+    // reading the same environment sees consistent values.
+    OTEL_SERVICE_NAME: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
+    // Base URL of the OTLP/HTTP collector (e.g.
+    // `http://localhost:4318/v1/traces`). Optional in every environment,
+    // including production, for the identical reason `MEILISEARCH_HOST`/
+    // `TWILIO_ACCOUNT_SID` are: an exporter that isn't selected must
+    // never be a startup requirement. Selecting `otlp` *without* it
+    // degrades to `none` at the config layer (see `resolveTracingConfig`)
+    // rather than constructing an exporter that would fail every flush —
+    // and is a hard failure in production, see the `.superRefine` below.
+    OTEL_EXPORTER_OTLP_ENDPOINT: z.preprocess(emptyStringToUndefined, z.string().url().optional()),
+    // Comma-separated `key=value` pairs sent as headers on every OTLP
+    // request — the collector's auth token, a tenant id, etc. The
+    // OpenTelemetry specification's own `OTEL_EXPORTER_OTLP_HEADERS`
+    // grammar; parsed leniently (a malformed pair is skipped, never
+    // fatal) by `parseExporterHeaders`.
+    OTEL_EXPORTER_HEADERS: z.preprocess(emptyStringToUndefined, z.string().optional()),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV !== "production") return;
@@ -480,6 +534,25 @@ const envSchema = z
             "TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER are required in production when SMS_PROVIDER=twilio.",
         });
       }
+    }
+
+    // Module 51 — Distributed Tracing: a production deployment that
+    // deliberately enabled tracing *and* selected the OTLP exporter must
+    // not silently fall back to exporting nothing — identical reasoning
+    // to the `SMS_PROVIDER=twilio` check directly above, and to
+    // `SENTRY_DSN`'s. `TRACING_EXPORTER` itself stays `.catch("console")`
+    // at the field level (a typo must degrade safely); this only fires
+    // once `otlp` was genuinely and validly selected with tracing on.
+    // Tracing left disabled — the default — is never a production
+    // requirement here: unlike error reporting, an untraced deployment is
+    // unobservable in one dimension, not unmonitored.
+    if (value.TRACING_ENABLED === "true" && value.TRACING_EXPORTER === "otlp" && !value.OTEL_EXPORTER_OTLP_ENDPOINT) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["OTEL_EXPORTER_OTLP_ENDPOINT"],
+        message:
+          "OTEL_EXPORTER_OTLP_ENDPOINT is required in production when TRACING_ENABLED=true and TRACING_EXPORTER=otlp.",
+      });
     }
   });
 

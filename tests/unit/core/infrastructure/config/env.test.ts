@@ -363,6 +363,128 @@ describe("infrastructure/config/env", () => {
     });
   });
 
+  describe("Module 51 — Distributed Tracing", () => {
+    it("TRACING_ENABLED is undefined by default (nullTracer stays the default)", async () => {
+      const { env } = await loadEnvWith({});
+      expect(env.TRACING_ENABLED).toBeUndefined();
+    });
+
+    it("accepts TRACING_ENABLED as 'true' or 'false'", async () => {
+      expect((await loadEnvWith({ TRACING_ENABLED: "true" })).env.TRACING_ENABLED).toBe("true");
+      expect((await loadEnvWith({ TRACING_ENABLED: "false" })).env.TRACING_ENABLED).toBe("false");
+    });
+
+    it("rejects a TRACING_ENABLED value that isn't 'true'/'false'", async () => {
+      await expect(loadEnvWith({ TRACING_ENABLED: "yes" })).rejects.toThrow(/Invalid environment variables/);
+    });
+
+    it("treats an empty-string TRACING_ENABLED the same as unset", async () => {
+      const { env } = await loadEnvWith({ TRACING_ENABLED: "" });
+      expect(env.TRACING_ENABLED).toBeUndefined();
+    });
+
+    it("TRACING_EXPORTER defaults to 'console'", async () => {
+      const { env } = await loadEnvWith({});
+      expect(env.TRACING_EXPORTER).toBe("console");
+    });
+
+    it("falls back to 'console' (never fails startup) for an invalid/unknown value", async () => {
+      const { env } = await loadEnvWith({ TRACING_EXPORTER: "not-a-real-exporter" });
+      expect(env.TRACING_EXPORTER).toBe("console");
+    });
+
+    it("accepts every valid exporter value unchanged", async () => {
+      for (const value of ["console", "otlp", "none"]) {
+        const { env } = await loadEnvWith({ TRACING_EXPORTER: value });
+        expect(env.TRACING_EXPORTER).toBe(value);
+      }
+    });
+
+    it("OTEL_SERVICE_NAME is undefined by default and treats an empty string the same as unset", async () => {
+      expect((await loadEnvWith({})).env.OTEL_SERVICE_NAME).toBeUndefined();
+      expect((await loadEnvWith({ OTEL_SERVICE_NAME: "" })).env.OTEL_SERVICE_NAME).toBeUndefined();
+    });
+
+    it("accepts a custom OTEL_SERVICE_NAME", async () => {
+      const { env } = await loadEnvWith({ OTEL_SERVICE_NAME: "maestroya-worker" });
+      expect(env.OTEL_SERVICE_NAME).toBe("maestroya-worker");
+    });
+
+    it("OTEL_EXPORTER_OTLP_ENDPOINT is optional, and must be a valid URL when provided", async () => {
+      expect((await loadEnvWith({})).env.OTEL_EXPORTER_OTLP_ENDPOINT).toBeUndefined();
+      await expect(loadEnvWith({ OTEL_EXPORTER_OTLP_ENDPOINT: "not-a-url" })).rejects.toThrow(
+        /Invalid environment variables/,
+      );
+      const { env } = await loadEnvWith({ OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:4318/v1/traces" });
+      expect(env.OTEL_EXPORTER_OTLP_ENDPOINT).toBe("http://localhost:4318/v1/traces");
+    });
+
+    it("OTEL_EXPORTER_HEADERS is optional and passed through as a raw string for tracing-config.ts to parse", async () => {
+      const { env } = await loadEnvWith({ OTEL_EXPORTER_HEADERS: "x-api-key=abc,x-tenant=maestroya" });
+      expect(env.OTEL_EXPORTER_HEADERS).toBe("x-api-key=abc,x-tenant=maestroya");
+    });
+
+    it("does not require any tracing configuration in production when TRACING_ENABLED is unset", async () => {
+      const { env } = await loadEnvWith({
+        NODE_ENV: "production",
+        NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+        AUTH_URL: "https://maestroya.example.com",
+        AUTH_SECRET: "a".repeat(32),
+        STRIPE_SECRET_KEY: "sk_live_realkey",
+        STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+        SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+      });
+      expect(env.TRACING_ENABLED).toBeUndefined();
+    });
+
+    it("rejects a production configuration with TRACING_ENABLED=true, TRACING_EXPORTER=otlp and no OTEL_EXPORTER_OTLP_ENDPOINT", async () => {
+      await expect(
+        loadEnvWith({
+          NODE_ENV: "production",
+          NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+          AUTH_URL: "https://maestroya.example.com",
+          AUTH_SECRET: "a".repeat(32),
+          STRIPE_SECRET_KEY: "sk_live_realkey",
+          STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+          SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+          TRACING_ENABLED: "true",
+          TRACING_EXPORTER: "otlp",
+        }),
+      ).rejects.toThrow(/Invalid environment variables/);
+    });
+
+    it("accepts a production configuration with TRACING_ENABLED=true, TRACING_EXPORTER=otlp and a valid endpoint", async () => {
+      const { env } = await loadEnvWith({
+        NODE_ENV: "production",
+        NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+        AUTH_URL: "https://maestroya.example.com",
+        AUTH_SECRET: "a".repeat(32),
+        STRIPE_SECRET_KEY: "sk_live_realkey",
+        STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+        SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        TRACING_ENABLED: "true",
+        TRACING_EXPORTER: "otlp",
+        OTEL_EXPORTER_OTLP_ENDPOINT: "https://collector.example.com/v1/traces",
+      });
+      expect(env.TRACING_ENABLED).toBe("true");
+    });
+
+    it("a production configuration with TRACING_EXPORTER=console never requires an OTLP endpoint", async () => {
+      const { env } = await loadEnvWith({
+        NODE_ENV: "production",
+        NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+        AUTH_URL: "https://maestroya.example.com",
+        AUTH_SECRET: "a".repeat(32),
+        STRIPE_SECRET_KEY: "sk_live_realkey",
+        STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+        SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        TRACING_ENABLED: "true",
+        TRACING_EXPORTER: "console",
+      });
+      expect(env.TRACING_ENABLED).toBe("true");
+    });
+  });
+
   it("never includes secret values in the base fixture accidentally left empty", () => {
     // Sanity check on the fixture itself, not env.ts — guards against a
     // future edit accidentally introducing an empty required field that

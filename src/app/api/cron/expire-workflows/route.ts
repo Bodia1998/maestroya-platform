@@ -6,6 +6,7 @@ import { logger } from "@/infrastructure/observability/logger";
 import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
 import { makeRunWorkflowExpirationsUseCase } from "@/application/use-cases/workflow-expiration/compose";
+import { withApiTracing } from "@/infrastructure/tracing/http-tracing";
 
 /**
  * Module 28 — Workflow Completion: the single HTTP entry point for the
@@ -32,7 +33,7 @@ import { makeRunWorkflowExpirationsUseCase } from "@/application/use-cases/workf
  * auth applies here at all, this endpoint is never meant to be called from
  * the browser.
  */
-export async function GET(request: NextRequest) {
+export const GET = withApiTracing("/api/cron/expire-workflows", async function GET(request: NextRequest) {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
 
   if (!env.CRON_SECRET) {
@@ -92,4 +93,4 @@ export async function GET(request: NextRequest) {
       { status: 500, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
   }
-}
+});

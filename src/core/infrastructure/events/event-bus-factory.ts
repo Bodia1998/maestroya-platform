@@ -21,6 +21,8 @@ import {
 import type { DeadLetterJobData } from "@/infrastructure/jobs/worker";
 import { Worker } from "@/infrastructure/jobs/worker";
 import { SynchronousEventBus } from "@/infrastructure/events/synchronous-event-bus";
+import { getTracer } from "@/infrastructure/tracing/compose";
+import { withEventBusTracing } from "@/infrastructure/tracing/event-bus-tracing";
 
 /**
  * Module 45 — Background Jobs (Roadmap Module 12).
@@ -49,9 +51,21 @@ export const EVENT_DEAD_LETTER_QUEUE_NAME = "domain-events-dead-letter";
 
 let instance: EventBus | null = null;
 
+/**
+ * Module 51 — Distributed Tracing wraps whichever bus was chosen in
+ * `TracedEventBus`, a decorator over the same unmodified `EventBus`
+ * port. `withEventBusTracing` returns the bus untouched when tracing is
+ * disabled, so the default path is exactly what it was; when enabled,
+ * every publish and every individual handler gets a span, with the
+ * failure contract (`EventDispatchError`, `handlerName`) preserved
+ * verbatim. Applied here — the one place a bus is constructed — for the
+ * same reason this factory exists at all: no publisher and no subscriber
+ * needs to know.
+ */
 export function createEventBus(): EventBus {
   if (!instance) {
-    instance = env.EVENT_QUEUE_ENABLED === "true" ? buildQueuedEventBus() : new SynchronousEventBus();
+    const bus = env.EVENT_QUEUE_ENABLED === "true" ? buildQueuedEventBus() : new SynchronousEventBus();
+    instance = withEventBusTracing(bus, getTracer());
   }
   return instance;
 }

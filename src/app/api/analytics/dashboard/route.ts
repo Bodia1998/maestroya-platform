@@ -6,6 +6,7 @@ import { getDashboardAnalyticsUseCase, getRebuildAnalyticsReadModelUseCase } fro
 import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
 import { toHttpErrorResponse } from "@/infrastructure/observability/http-error-response";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
+import { withApiTracing } from "@/infrastructure/tracing/http-tracing";
 
 /**
  * Module 50 — Analytics Dashboard (CQRS Read Model).
@@ -20,7 +21,7 @@ import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observabil
  * Both are admin-only — the figures here (revenue, dispute counts, ...)
  * are platform-operational data, never customer- or professional-facing.
  */
-export async function GET(request: NextRequest) {
+export const GET = withApiTracing("/api/analytics/dashboard", async function GET(request: NextRequest) {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
   const headers = { [REQUEST_ID_HEADER]: requestId };
 
@@ -44,9 +45,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return toHttpErrorResponse(error, { requestId, route: "/api/analytics/dashboard" });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withApiTracing("/api/analytics/dashboard", async function POST(request: NextRequest) {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
   const headers = { [REQUEST_ID_HEADER]: requestId };
 
@@ -67,4 +68,4 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return toHttpErrorResponse(error, { requestId, route: "/api/analytics/dashboard" });
   }
-}
+});

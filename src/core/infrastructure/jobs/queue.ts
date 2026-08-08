@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 
+import { nullTracer, type TracingPort } from "@/application/ports/tracing";
 import type { JobStore } from "@/infrastructure/jobs/job-store";
 import type { JobLifecycleObserver } from "@/infrastructure/jobs/job-observability";
 import { nullJobLifecycleObserver } from "@/infrastructure/jobs/job-observability";
@@ -11,6 +12,17 @@ export interface QueueDependencies {
   observer?: JobLifecycleObserver;
   /** Injectable for deterministic tests; defaults to `Date.now`. */
   now?: () => number;
+  /**
+   * Module 51 — Distributed Tracing. Used for one thing only: capturing
+   * the active W3C trace context onto the job at enqueue time
+   * (`StoredJob.trace`), so the worker that eventually runs it can join
+   * the same trace. Defaults to the port's `nullTracer`, whose `inject()`
+   * returns an empty carrier — so with tracing off (the default) no
+   * `trace` field is written and a stored job is exactly what it always
+   * was. Injected rather than imported so this class stays a pure,
+   * dependency-free transport, testable with no composition root.
+   */
+  tracer?: TracingPort;
 }
 
 /**
@@ -32,6 +44,7 @@ export class Queue<TData = unknown> {
   private readonly store: JobStore;
   private readonly observer: JobLifecycleObserver;
   private readonly now: () => number;
+  private readonly tracer: TracingPort;
   private closed = false;
 
   constructor(
@@ -41,6 +54,7 @@ export class Queue<TData = unknown> {
     this.store = dependencies.store;
     this.observer = dependencies.observer ?? nullJobLifecycleObserver;
     this.now = dependencies.now ?? Date.now;
+    this.tracer = dependencies.tracer ?? nullTracer;
   }
 
   async add(jobName: string, data: TData, options?: JobOptions): Promise<StoredJob<TData> | null> {
@@ -52,6 +66,12 @@ export class Queue<TData = unknown> {
     const delay = options?.delay ?? 0;
     const createdAt = this.now();
 
+    // Module 51 — Distributed Tracing: an empty carrier (no tracing, or
+    // nothing active) leaves the field off entirely rather than storing
+    // `trace: {}`, so the persisted job shape is unchanged when tracing
+    // is disabled — see `StoredJob.trace`.
+    const trace = this.tracer.inject();
+
     const job: StoredJob<TData> = {
       id: options?.jobId ?? randomUUID(),
       queue: this.name,
@@ -61,6 +81,7 @@ export class Queue<TData = unknown> {
       attemptsMade: 0,
       createdAt,
       processAt: createdAt + delay,
+      ...(Object.keys(trace).length > 0 ? { trace } : {}),
     };
 
     const added = (await this.store.add(job)) as StoredJob<TData> | null;

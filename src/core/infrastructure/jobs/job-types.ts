@@ -105,6 +105,21 @@ export interface StoredJob<TData = unknown> {
   processAt: number;
   /** Set once the job has failed at least once; the most recent failure's message. */
   failedReason?: string;
+  /**
+   * Module 51 — Distributed Tracing: W3C trace context (`traceparent`/
+   * `tracestate`) captured by `Queue.add` from whatever was active at
+   * enqueue time, so the worker's span can be parented to the request
+   * that scheduled the work rather than starting an unrelated trace.
+   *
+   * Optional and absent by default — nothing is written here unless
+   * `TRACING_ENABLED=true`, so a stored job is byte-identical to what it
+   * was before that module existed. A flat string map by construction
+   * (see `TraceCarrier`), which is what keeps this field JSON-safe and
+   * therefore compatible with `RedisJobStore`'s `JSON.stringify` round
+   * trip, per this interface's own "no behaviour, no Date instances"
+   * rule above.
+   */
+  trace?: Record<string, string>;
 }
 
 /** The handle a worker's processor function receives. */
@@ -116,6 +131,10 @@ export interface ActiveJob<TData = unknown> {
   /** 1-based attempt number currently executing. */
   readonly attempt: number;
   readonly maxAttempts: number;
+  /** Module 51 — the enqueue-time trace context, carried through from
+   *  `StoredJob.trace` so `TracingJobLifecycleObserver` can parent the
+   *  processing span to it. `undefined` whenever tracing is disabled. */
+  readonly trace?: Record<string, string>;
 }
 
 export function toActiveJob<TData>(job: StoredJob<TData>): ActiveJob<TData> {
@@ -126,6 +145,10 @@ export function toActiveJob<TData>(job: StoredJob<TData>): ActiveJob<TData> {
     data: job.data,
     attempt: job.attemptsMade,
     maxAttempts: job.opts.attempts,
+    // Spread-free conditional: an untraced job must not gain a
+    // `trace: undefined` key that would show up in a `toEqual` assertion
+    // or a JSON payload it never had before.
+    ...(job.trace ? { trace: job.trace } : {}),
   };
 }
 

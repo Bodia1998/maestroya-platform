@@ -9,6 +9,7 @@ import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observabil
 import { updateLanguagePreferenceSchema } from "@/application/dto/i18n.dto";
 import { makeUpdateUserLanguagePreferenceUseCase } from "@/application/use-cases/i18n/compose";
 import { LOCALE_COOKIE_MAX_AGE_SECONDS, LOCALE_COOKIE_NAME } from "@/shared/i18n/locales";
+import { withApiTracing } from "@/infrastructure/tracing/http-tracing";
 
 /**
  * Module 29 — Internationalization: persist the signed-in user's
@@ -37,7 +38,7 @@ import { LOCALE_COOKIE_MAX_AGE_SECONDS, LOCALE_COOKIE_NAME } from "@/shared/i18n
  * `/api/health` — this route resolves its own request ID rather than
  * relying on a middleware-injected one.
  */
-export async function PATCH(request: NextRequest) {
+export const PATCH = withApiTracing("/api/user/language", async function PATCH(request: NextRequest) {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
   const headersWithRequestId = { [REQUEST_ID_HEADER]: requestId };
 
@@ -116,4 +117,4 @@ export async function PATCH(request: NextRequest) {
       { status: 500, headers: headersWithRequestId },
     );
   }
-}
+});
