@@ -1,0 +1,13 @@
+{
+  "bookingConfirmed": "Hallo {name}, deine Buchung am {date} wurde bestätigt. MaestroYa",
+  "appointmentReminder": "Erinnerung: dein Termin ist am {date} um {time}. MaestroYa",
+  "professionalAssigned": "{name} wurde deinem Auftrag zugewiesen. MaestroYa",
+  "quoteAccepted": "Dein Angebot über {amount} wurde angenommen. MaestroYa",
+  "quoteRejected": "Dein Angebot wurde abgelehnt. MaestroYa",
+  "serviceRequestUpdated": "Der Status deiner Anfrage wurde auf {status} geändert. MaestroYa",
+  "chatNotification": "Neue Nachricht von {name}: {preview}",
+  "disputeNotification": "Ein Streitfall ({caseNumber}) zu deinem Auftrag wurde eröffnet. MaestroYa",
+  "passwordReset": "Dein MaestroYa-Code zum Zurücksetzen des Passworts lautet {code}. Läuft in 15 Min. ab.",
+  "phoneVerification": "Dein MaestroYa-Bestätigungscode lautet {code}.",
+  "twoFactorAuthentication": "Dein MaestroYa-Anmeldecode lautet {code}."
+}

@@ -43,6 +43,8 @@ export class NotificationServiceCreator implements NotificationCreator {
     await notificationService.notify({
       userId: event.userId,
       email: event.email ?? null,
+      phone: event.phone ?? null,
+      locale: event.locale ?? null,
       category: event.category ?? "INFORMATION",
       type: event.type,
       title: event.title,

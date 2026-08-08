@@ -69,6 +69,10 @@ describe("GET /api/health/ready (readiness)", () => {
     // Module 44 — Redis Infrastructure: reported for visibility, never
     // required — REDIS_URL is unset by VALID_BASE_ENV in this test suite.
     expect(body.checks.cache).toBe("not_configured");
+    // Module 49 — SMS Notifications: reported for visibility, never
+    // required — SMS_PROVIDER defaults to "mock", always healthy.
+    expect(body.checks.smsProvider.status).toBe("healthy");
+    expect(body.checks.smsProvider.provider).toBe("mock");
   });
 
   it("Module 44: an unreachable Redis does not affect readiness status or HTTP code", async () => {

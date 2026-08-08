@@ -10,6 +10,7 @@ import { getCacheHealth } from "@/infrastructure/cache/compose";
 import { getBackgroundJobsHealth } from "@/infrastructure/jobs/compose";
 import { getSearchEngineHealth } from "@/infrastructure/search/compose";
 import { getRealtimeHealth } from "@/infrastructure/realtime/compose";
+import { getSmsProviderHealth } from "@/infrastructure/sms/compose";
 
 /**
  * Readiness check (Module 25 — Production Infrastructure).
@@ -76,6 +77,15 @@ import { getRealtimeHealth } from "@/infrastructure/realtime/compose";
  * never this instance's ability to serve HTTP/read/write traffic — every
  * realtime client already has its own reconnect logic.
  *
+ * Module 49 — SMS Notifications: `checks.smsProvider` reports the
+ * configured provider (`mock`/`twilio`), whether it has everything it
+ * needs to send, and the `sms-dispatch` queue's counts (see
+ * `infrastructure/sms/sms-health.ts`). Also visibility-only, for the
+ * identical reason `checks.queue` already establishes: an SMS delivery
+ * failure or misconfiguration degrades one best-effort notification
+ * channel, never this instance's ability to serve HTTP/read/write
+ * traffic.
+ *
  * Returns 503 (not 500) on database failure — the conventional status
  * for "the server is currently unable to handle the request", which is
  * exactly what a load balancer/orchestrator readiness probe is checking
@@ -98,6 +108,7 @@ export async function GET(request: NextRequest) {
           cachingLayer: getCacheHealth(),
           searchEngine: await getSearchEngineHealth(),
           realtime: getRealtimeHealth(),
+          smsProvider: await getSmsProviderHealth(),
         },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },

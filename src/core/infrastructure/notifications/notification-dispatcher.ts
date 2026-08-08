@@ -48,6 +48,8 @@ export class NotificationDispatcher implements NotificationService {
         await adapter.send({
           userId: request.userId,
           email: request.email,
+          phone: request.phone,
+          locale: request.locale,
           category: request.category,
           type: request.type,
           title: request.title,

@@ -68,6 +68,11 @@ const ENV_KEYS = [
   "MEILISEARCH_API_KEY",
   "TYPESENSE_HOST",
   "TYPESENSE_API_KEY",
+  // Module 49 — SMS Notifications.
+  "SMS_PROVIDER",
+  "TWILIO_ACCOUNT_SID",
+  "TWILIO_AUTH_TOKEN",
+  "TWILIO_FROM_NUMBER",
 ];
 
 /**
