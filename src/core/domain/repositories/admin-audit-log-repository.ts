@@ -120,7 +120,14 @@ export type AdminAuditAction =
   | "REVIEW_CREATED"
   | "REVIEW_UPDATED"
   | "REVIEW_DELETED"
-  | "REVIEW_RESPONSE_ADDED";
+  | "REVIEW_RESPONSE_ADDED"
+  // Feature Flags module: FeatureFlagService.updateFlag records one of
+  // these two on every definition change — see that method's own doc
+  // comment for why kill-switch toggles get their own action distinct
+  // from every other field change, and why per-evaluation calls are never
+  // logged here at all (would be prohibitively high-volume noise).
+  | "FEATURE_FLAG_UPDATED"
+  | "FEATURE_FLAG_KILL_SWITCH_TOGGLED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved

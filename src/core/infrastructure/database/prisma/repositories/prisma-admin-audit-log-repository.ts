@@ -98,6 +98,11 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   REVIEW_UPDATED: "UPDATE",
   REVIEW_DELETED: "DELETE",
   REVIEW_RESPONSE_ADDED: "CREATE",
+  // Feature Flags module: same "map to the closest existing
+  // AuditLogAction value, preserve the concrete action name in
+  // metadata.adminAction" convention.
+  FEATURE_FLAG_UPDATED: "UPDATE",
+  FEATURE_FLAG_KILL_SWITCH_TOGGLED: "STATUS_CHANGE",
 };
 
 const SELECT = {
