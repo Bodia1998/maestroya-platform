@@ -315,6 +315,38 @@ const envSchema = z
     // rather than hardcoded so it can be enabled later without another
     // env-layer change.
     SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).optional(),
+
+    // --- Real-Time System (Module 48) ---
+    // How often (ms) the SSE transport writes a `: heartbeat` keep-alive
+    // comment to each connected stream — see `sse-transport.ts`. Also the
+    // cadence a WebSocket client is expected to send its own `heartbeat`
+    // control frame at. `.catch()` for the same "operational tuning knob
+    // must never fail startup" reason as `QUEUE_CONCURRENCY`.
+    REALTIME_HEARTBEAT_INTERVAL_MS: z.coerce.number().int().min(1000).max(120_000).catch(25_000),
+    // How long (ms) a connection may go without a heartbeat before
+    // `RealtimeHub.reapExpired` evicts it — must exceed
+    // `REALTIME_HEARTBEAT_INTERVAL_MS` by a comfortable margin so one or
+    // two missed beats (a slow network, not a dead client) don't cause a
+    // false eviction.
+    REALTIME_CONNECTION_TTL_MS: z.coerce.number().int().min(5000).max(600_000).catch(90_000),
+    // Master switch reported by `getRealtimeHealth()`'s `transports.websocket`
+    // field. The WebSocket transport (`RealtimeWebSocketServer`) itself is
+    // always available to attach — this flag does not gate the SSE
+    // transport (always on) or actually start anything by itself; it only
+    // records, for operators, whether the separate WebSocket gateway
+    // process (`scripts/realtime-gateway.ts` / `npm run realtime:gateway`
+    // — see docs/MODULE_48_REALTIME_SYSTEM.md) is expected to be running
+    // in this deployment, since that process's own health is not
+    // otherwise visible to the main Next.js instance's `/api/health/ready`.
+    REALTIME_WS_ENABLED: z.preprocess(emptyStringToUndefined, z.enum(["true", "false"]).optional()),
+    // Port the standalone WebSocket gateway listens on when run via
+    // `scripts/realtime-gateway.ts`. Irrelevant to the main Next.js
+    // process. `.catch()` for the same reason as the tuning knobs above.
+    REALTIME_WS_PORT: z.coerce.number().int().min(1).max(65_535).catch(3001),
+    // Caps concurrent connections a single user may hold (multiple
+    // devices/tabs) — a defensive bound against a runaway/misbehaving
+    // client opening unbounded SSE streams. `.catch()`, same reasoning.
+    REALTIME_MAX_CONNECTIONS_PER_USER: z.coerce.number().int().min(1).max(100).catch(10),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV !== "production") return;

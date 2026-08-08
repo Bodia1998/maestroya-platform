@@ -13,13 +13,22 @@ import { notificationService } from "@/infrastructure/notifications/notification
  * (`application/ports/notification-service.ts` /
  * `infrastructure/notifications/notification-dispatcher.ts`) instead of
  * calling `CreateNotificationUseCase` directly. Behavior for every one of
- * this port's ~20 existing call sites is unchanged: `category` defaults
- * to `"INFORMATION"` and `channels` defaults to `["IN_APP"]` when a caller
- * doesn't set them on its `NotificationEvent` (none do today), so delivery
- * stays in-app-only, exactly as before this refactor. This is the single
- * place that change was made — no Quotes/Booking/Job/Chat/Reviews/
- * Verification/Company/Dispute/Support/Workflow-Expiration call site had
- * to change.
+ * this port's ~20 existing call sites is unchanged except for the one
+ * noted below: `category` defaults to `"INFORMATION"` when a caller
+ * doesn't set it on its `NotificationEvent`.
+ *
+ * Module 48 — Real-Time System: `channels` now defaults to
+ * `["IN_APP", "REALTIME"]`, not `["IN_APP"]` alone. This is the single
+ * change that makes every one of this port's existing call sites
+ * (Quotes/Booking/Job/Chat/Reviews/Verification/Company/Dispute/Support/
+ * Workflow-Expiration — none of which pass an explicit `channels`) also
+ * push in realtime, with zero call-site changes — see
+ * `docs/MODULE_48_REALTIME_SYSTEM.md`'s "Event flow" section. This is
+ * additive and safe: `RealTimeNotificationChannel.send` never throws and
+ * is a pure no-op for a recipient with no live connection (see that
+ * class's own doc comment), so every existing IN_APP-only behavior is
+ * completely preserved — this only ever adds a *second*, best-effort
+ * delivery attempt alongside it.
  *
  * Does NOT swallow errors itself — same convention as
  * ChatAppointmentNotifier/ChatJobNotifier, which also let real errors
@@ -42,7 +51,7 @@ export class NotificationServiceCreator implements NotificationCreator {
       resourceId: event.resourceId ?? null,
       actionUrl: event.actionUrl ?? null,
       metadata: event.metadata ?? null,
-      channels: event.channels ?? ["IN_APP"],
+      channels: event.channels ?? ["IN_APP", "REALTIME"],
     });
   }
 }

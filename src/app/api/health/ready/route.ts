@@ -9,6 +9,7 @@ import { getRedisClient } from "@/infrastructure/cache/redis-client-factory";
 import { getCacheHealth } from "@/infrastructure/cache/compose";
 import { getBackgroundJobsHealth } from "@/infrastructure/jobs/compose";
 import { getSearchEngineHealth } from "@/infrastructure/search/compose";
+import { getRealtimeHealth } from "@/infrastructure/realtime/compose";
 
 /**
  * Readiness check (Module 25 — Production Infrastructure).
@@ -67,6 +68,14 @@ import { getSearchEngineHealth } from "@/infrastructure/search/compose";
  * tell "eventually consistent" apart from "silently broken". See
  * `infrastructure/search/search-health.ts`.
  *
+ * Module 48 — Real-Time System: `checks.realtime` reports the SSE/
+ * WebSocket transport status and live connection/channel/presence
+ * counters (see `infrastructure/realtime/compose.ts`'s `getRealtimeHealth()`).
+ * Also visibility-only, for the same reason as every module above: a
+ * realtime delivery failure degrades one client's live-update experience,
+ * never this instance's ability to serve HTTP/read/write traffic — every
+ * realtime client already has its own reconnect logic.
+ *
  * Returns 503 (not 500) on database failure — the conventional status
  * for "the server is currently unable to handle the request", which is
  * exactly what a load balancer/orchestrator readiness probe is checking
@@ -88,6 +97,7 @@ export async function GET(request: NextRequest) {
           queue: await getBackgroundJobsHealth(),
           cachingLayer: getCacheHealth(),
           searchEngine: await getSearchEngineHealth(),
+          realtime: getRealtimeHealth(),
         },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },

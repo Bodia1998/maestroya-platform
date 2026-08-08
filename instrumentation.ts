@@ -73,6 +73,15 @@ export async function register() {
   await import("@/application/use-cases/company-invitation/compose");
   await import("@/application/use-cases/company-membership/compose");
   await import("@/application/use-cases/gdpr/compose");
+  // Module 48 — Real-Time System: registers the domain-event → realtime-
+  // channel broadcast subscribers (dispute/service-request updates — see
+  // that compose.ts's own doc comment for which events, and why not all of
+  // them). Also imported directly by `/api/realtime/sse/route.ts` itself,
+  // for the reason that route's own comment gives (Route Handlers can run
+  // in contexts where this hook's timing is less certain) — importing here
+  // too keeps this module consistent with every other subscriber-
+  // registering compose file in this deterministic-at-boot list.
+  await import("@/application/use-cases/realtime/compose");
   // Module 47 — CQRS Search Engine: this module's subscribers live in its
   // own composition root (`infrastructure/search/compose.ts`) rather than
   // under `application/use-cases/`, because that file also owns the
