@@ -14,6 +14,7 @@ import { getSmsProviderHealth } from "@/infrastructure/sms/compose";
 import { getAnalyticsHealth } from "@/infrastructure/analytics/compose";
 import { getTracingHealth } from "@/infrastructure/tracing/compose";
 import { getConfigHealth } from "@/infrastructure/config/compose";
+import { getBackupHealth, getRecoveryHealth } from "@/infrastructure/backup/compose";
 
 /**
  * Readiness check (Module 25 — Production Infrastructure).
@@ -121,6 +122,18 @@ import { getConfigHealth } from "@/infrastructure/config/compose";
  * instance's readiness or trigger a failover that cannot fix a
  * configuration typo.
  *
+ * Module 54 — Backup & Disaster Recovery: `checks.backup` and
+ * `checks.disasterRecovery` join the same visibility-only category, for
+ * the same reasoning `checks.searchEngine`/`checks.analytics` already
+ * establish — a stale, failed, or as-yet-nonexistent backup, or a
+ * disaster-recovery plan whose RPO could not currently be met, describes
+ * a *hypothetical* future incident's recoverability, never this
+ * instance's present ability to serve HTTP/read/write traffic. Both
+ * report `"disabled"` when `BACKUP_ENABLED` is not `"true"` (the
+ * default) — a normal, healthy state for a deployment whose managed
+ * Postgres provider already runs its own snapshots. See
+ * `infrastructure/backup/backup-health.ts` and `recovery-health.ts`.
+ *
  * Returns 503 (not 500) on database failure — the conventional status
  * for "the server is currently unable to handle the request", which is
  * exactly what a load balancer/orchestrator readiness probe is checking
@@ -147,6 +160,8 @@ export async function GET(request: NextRequest) {
           analytics: await getAnalyticsHealth(),
           tracing: getTracingHealth(),
           configuration: getConfigHealth(),
+          backup: await getBackupHealth(),
+          disasterRecovery: await getRecoveryHealth(),
         },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },

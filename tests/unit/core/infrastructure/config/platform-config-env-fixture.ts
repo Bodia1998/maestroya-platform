@@ -82,6 +82,12 @@ export function buildTestEnv(overrides: Partial<Env> = {}): Env {
     OTEL_EXPORTER_HEADERS: undefined,
     FEATURE_FLAGS_ENABLED: "true",
     FEATURE_FLAGS_CONFIG: undefined,
+    BACKUP_ENABLED: "false",
+    BACKUP_STORAGE_DIR: "/var/backups/maestroya",
+    BACKUP_RETENTION_DAYS: 30,
+    BACKUP_MIN_RETAINED_BACKUPS: 3,
+    BACKUP_FULL_INTERVAL_DAYS: 7,
+    BACKUP_SCHEDULE_CRON: "0 2 * * *",
   };
 
   return { ...base, ...overrides };
