@@ -113,6 +113,13 @@ export async function register() {
   // own doc comment for why it is called explicitly, below, immediately
   // before `startBackgroundJobs()`.
   const { registerScheduledAnalyticsRefresh } = await import("@/infrastructure/analytics/compose");
+  // Module 54 — Backup & Disaster Recovery: registers the per-target
+  // scheduled backup jobs against the shared `JobScheduler`, exactly like
+  // Module 50's scheduled refresh above — called explicitly, before
+  // `startBackgroundJobs()`, so the scheduler's timer starts with these
+  // schedules already present. A no-op when `BACKUP_ENABLED` is not
+  // `"true"` (the default).
+  const { registerScheduledBackups } = await import("@/infrastructure/backup/compose");
 
   // Module 45 — Background Jobs: starts every registered worker and the
   // job scheduler. Called after the subscriber-registering imports above
@@ -129,6 +136,7 @@ export async function register() {
   // (see `BackgroundJobRuntime.start()`'s own "only starts the scheduler
   // if a schedule already exists" behavior).
   registerScheduledAnalyticsRefresh();
+  registerScheduledBackups();
   startBackgroundJobs();
 
   let shuttingDown = false;

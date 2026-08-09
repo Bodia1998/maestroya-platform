@@ -159,3 +159,98 @@ export class InvalidTaxRateError extends DomainError {
     this.validRatesBps = validRatesBps;
   }
 }
+
+/**
+ * Module 54 — Backup & Disaster Recovery: thrown by the `BackupRecord`
+ * aggregate (`domain/entities/backup.ts`) when a caller requests a status
+ * change its lifecycle does not allow from the current status — e.g.
+ * marking an already-`COMPLETED` backup `RUNNING` again, or verifying one
+ * that never completed. Mirrors `InvalidPaymentTransitionError` exactly:
+ * raised from inside the aggregate itself, never re-validated ad hoc at
+ * every call site.
+ */
+export class InvalidBackupTransitionError extends DomainError {
+  readonly code = "INVALID_BACKUP_TRANSITION";
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/**
+ * Module 54 — Backup & Disaster Recovery: thrown by
+ * `BackupValidationService` when a completed backup's own metadata is
+ * internally inconsistent (missing checksum, zero/negative size, a
+ * location URI that doesn't match its declared target) — i.e. the backup
+ * artifact itself cannot be trusted, before integrity or restore
+ * questions even arise. Never thrown for a transient provider failure
+ * (that is a plain rejected promise, handled by the calling use case),
+ * only for "the data we were handed doesn't make sense."
+ */
+export class BackupValidationError extends DomainError {
+  readonly code = "BACKUP_VALIDATION_ERROR";
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/**
+ * Module 54 — Backup & Disaster Recovery: thrown by
+ * `RestoreValidationService` when a specific `BackupRecord` is not a
+ * legitimate restore candidate — not `COMPLETED`/`VERIFIED`, already
+ * `EXPIRED`, or targeting a different system than the restore requested.
+ * Kept distinct from `BackupValidationError` (which is about the backup
+ * artifact's own internal consistency) so a caller can tell "this backup
+ * is broken" apart from "this backup is fine but wrong for this restore."
+ */
+export class RestoreValidationError extends DomainError {
+  readonly code = "RESTORE_VALIDATION_ERROR";
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/**
+ * Module 54 — Backup & Disaster Recovery: thrown by
+ * `IntegrityCheckService` when a backup artifact's recomputed checksum no
+ * longer matches the checksum recorded at completion time — the artifact
+ * has been corrupted, truncated, or tampered with since it was written.
+ * Always a hard stop: a corrupted backup must never be offered as a
+ * restore candidate.
+ */
+export class IntegrityCheckError extends DomainError {
+  readonly code = "INTEGRITY_CHECK_ERROR";
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/**
+ * Module 54 — Backup & Disaster Recovery: thrown when a caller references
+ * a disaster-recovery plan id that isn't in the plan catalog
+ * (`application/services/recovery/disaster-recovery-plans.ts`).
+ */
+export class RecoveryPlanNotFoundError extends NotFoundError {
+  constructor(planId: string) {
+    super("DisasterRecoveryPlan", planId);
+  }
+}
+
+/**
+ * Module 54 — Backup & Disaster Recovery: thrown by the `RecoveryExecution`
+ * aggregate (`domain/entities/disaster-recovery.ts`) for a lifecycle
+ * transition its current status does not allow — e.g. recording a
+ * checkpoint against an execution that already `COMPLETED`, or completing
+ * one that was never started. Same reasoning as
+ * `InvalidBackupTransitionError`.
+ */
+export class InvalidRecoveryTransitionError extends DomainError {
+  readonly code = "INVALID_RECOVERY_TRANSITION";
+
+  constructor(message: string) {
+    super(message);
+  }
+}

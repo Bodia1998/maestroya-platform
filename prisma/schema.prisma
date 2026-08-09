@@ -2780,3 +2780,107 @@ enum ConsentType {
   PRIVACY_POLICY
   MARKETING
 }
+
+// ============================================================================
+// Module 54 — Backup & Disaster Recovery
+// ============================================================================
+
+/// One backup run, from being scheduled through to expiry or restore. See
+/// src/core/domain/entities/backup.ts for the aggregate/state-machine this
+/// table backs (src/core/infrastructure/backup/prisma-backup-record-
+/// repository.ts maps between the two). `sizeBytes` is BigInt because a
+/// full database dump can exceed Int's ~2GB ceiling.
+model BackupRecord {
+  id                 String             @id @default(uuid()) @db.Uuid
+  target             BackupTargetKind
+  type               BackupTypeKind
+  status             BackupStatusKind
+  /// Denormalized from the RetentionPolicy value object at schedule time
+  /// (never re-read from live config later) so a policy change can never
+  /// retroactively alter what an already-completed backup's own expiry
+  /// means.
+  retentionDays      Int
+  minRetainedBackups Int
+  startedAt          DateTime?
+  completedAt        DateTime?
+  expiresAt          DateTime?
+  sizeBytes          BigInt?
+  checksumSha256     String?
+  /// A filesystem path or manifest location — never a full connection
+  /// string or credential; see DatabaseBackupProvider's own doc comment
+  /// on never exposing sensitive information.
+  locationUri        String?            @db.Text
+  verifiedAt         DateTime?
+  restoredAt         DateTime?
+  /// Internal diagnostic only; providers are required to raise redacted,
+  /// safe-to-log messages (see PgDumpDatabaseBackupProvider).
+  failureReason      String?            @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([target, status])
+  @@index([target, completedAt])
+  @@index([status, expiresAt])
+  @@map("backup_records")
+}
+
+enum BackupTargetKind {
+  DATABASE
+  FILE_STORAGE
+}
+
+enum BackupTypeKind {
+  FULL
+  INCREMENTAL
+}
+
+enum BackupStatusKind {
+  PENDING
+  RUNNING
+  COMPLETED
+  VERIFIED
+  FAILED
+  RESTORED
+  EXPIRED
+}
+
+/// Audit trail of one disaster-recovery plan execution (real incident or
+/// scheduled drill). Plans themselves are a code-defined catalog (see
+/// src/core/application/services/recovery/disaster-recovery-plans.ts's own
+/// doc comment for why), so only executions are persisted here.
+model RecoveryExecution {
+  id            String              @id @default(uuid()) @db.Uuid
+  /// References a DisasterRecoveryPlan.id from the code catalog — not a
+  /// foreign key, since the catalog is not a database table.
+  planId        String
+  /// Free-text reason this execution started (e.g. "scheduled drill",
+  /// "database-outage-2026-08-09"). Never a secret or PII value.
+  triggeredBy   String
+  isDrill       Boolean             @default(false)
+  status        RecoveryStatusKind
+  startedAt     DateTime            @default(now())
+  completedAt   DateTime?
+  /// Ordered array of { stepId, status, reachedAt, notes } — see
+  /// RecoveryCheckpoint in domain/entities/disaster-recovery.ts. Modeled
+  /// as JSON rather than a child table: checkpoints are always read/written
+  /// as one atomic list scoped to their own execution, never queried
+  /// independently.
+  checkpoints   Json                @default("[]")
+  failureReason String?             @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([planId, status])
+  @@index([planId, isDrill, status])
+  @@map("recovery_executions")
+}
+
+enum RecoveryStatusKind {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  ABORTED
+}

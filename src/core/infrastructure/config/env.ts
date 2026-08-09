@@ -473,6 +473,41 @@ const envSchema = z
     // JSON-ish env var here — falls back to the code-defined defaults
     // alone (logging a warning) rather than throwing on invalid JSON.
     FEATURE_FLAGS_CONFIG: z.preprocess(emptyStringToUndefined, z.string().optional()),
+
+    // --- Module 54 — Backup & Disaster Recovery ---
+    //
+    // Opt-in, like TRACING_ENABLED — a process that never sets this runs
+    // with zero backup/recovery machinery: no scheduled job, no queue, no
+    // worker. Correct for the common case (a managed Postgres provider
+    // already runs its own point-in-time-recovery snapshots; this module
+    // is the self-hosted-deployment path — see docker-compose.prod.yml's
+    // own comment on Postgres deployment options and
+    // docs/MODULE_54_BACKUP_AND_DISASTER_RECOVERY.md).
+    BACKUP_ENABLED: z.enum(["true", "false"]).catch("false"),
+    // Filesystem directory backup artifacts (database dumps and storage
+    // manifests) are written to and read back from. Must be a writable,
+    // durable path outside the container's own ephemeral layer in a real
+    // deployment (e.g. a mounted volume) — this schema does not and
+    // cannot verify that; `PgDumpDatabaseBackupProvider`/
+    // `CloudinaryManifestStorageBackupProvider` fail loudly at backup
+    // time if the directory cannot be written to.
+    BACKUP_STORAGE_DIR: z.string().min(1).catch("/var/backups/maestroya"),
+    // How long a backup remains a valid restore candidate before
+    // retention enforcement expires it. `.catch()` — an operational
+    // tuning knob, same reasoning as `QUEUE_CONCURRENCY`.
+    BACKUP_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).catch(30),
+    // The floor on how many successful backups per target are always kept
+    // regardless of age — see `RetentionPolicy`'s own doc comment for why
+    // this exists.
+    BACKUP_MIN_RETAINED_BACKUPS: z.coerce.number().int().min(1).max(1000).catch(3),
+    // How often a FULL backup is required before an INCREMENTAL is
+    // allowed again — see `BackupPlanningService`.
+    BACKUP_FULL_INTERVAL_DAYS: z.coerce.number().int().min(1).max(365).catch(7),
+    // The scheduled backup cadence, `JobScheduler`'s own 5-field cron
+    // grammar (evaluated in UTC) — see `cron-expression.ts`. Runs once
+    // daily at 02:00 UTC by default, a low-traffic window for this
+    // platform's target market (Spain, UTC+1/+2).
+    BACKUP_SCHEDULE_CRON: z.string().min(1).catch("0 2 * * *"),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV !== "production") return;
