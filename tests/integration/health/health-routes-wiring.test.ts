@@ -1,0 +1,172 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+/**
+ * Module 56 — Health Checks & Circuit Breakers: end-to-end wiring
+ * coverage, the same `vi.doMock` + `vi.resetModules()` pattern
+ * `tests/integration/backup/backup-health-route-wiring.test.ts` uses —
+ * proving the new routes actually work through the real composition
+ * root (`infrastructure/health/compose.ts`), not just that the pure
+ * domain/application pieces work in isolation (already covered by unit
+ * tests).
+ */
+describe("Module 56 — health routes wiring", () => {
+  afterEach(() => {
+    vi.doUnmock("@/infrastructure/database/prisma/client");
+    vi.resetModules();
+  });
+
+  it("/api/health/startup reports 'started' when the database is reachable", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { NextRequest } = await import("next/server");
+    const { GET } = await import("@/app/api/health/startup/route");
+    const response = await GET(new NextRequest("http://localhost:3000/api/health/startup"));
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.status).toBe("started");
+  });
+
+  it("/api/health/startup returns 503 with status 'starting' when the database is unreachable", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockRejectedValue(new Error("connection refused")) },
+    }));
+    vi.resetModules();
+
+    const { NextRequest } = await import("next/server");
+    const { GET } = await import("@/app/api/health/startup/route");
+    const response = await GET(new NextRequest("http://localhost:3000/api/health/startup"));
+
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.status).toBe("starting");
+  });
+
+  it("/api/health/diagnostics aggregates every registered subsystem into one platform report", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { NextRequest } = await import("next/server");
+    const { GET } = await import("@/app/api/health/diagnostics/route");
+    const response = await GET(new NextRequest("http://localhost:3000/api/health/diagnostics"));
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(["HEALTHY", "DEGRADED", "UNHEALTHY"]).toContain(body.status);
+    expect(Array.isArray(body.subsystems)).toBe(true);
+    expect(body.subsystems.length).toBeGreaterThan(0);
+    expect(Array.isArray(body.dependencies)).toBe(true);
+    expect(Array.isArray(body.circuitBreakers)).toBe(true);
+
+    const postgres = body.subsystems.find((c: { component: string }) => c.component === "postgres-primary");
+    expect(postgres?.status).toBe("HEALTHY");
+  });
+
+  it("/api/health/diagnostics reports a failing postgres check as UNHEALTHY without affecting other subsystems", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockRejectedValue(new Error("connection refused")) },
+    }));
+    vi.resetModules();
+
+    const { NextRequest } = await import("next/server");
+    const { GET } = await import("@/app/api/health/diagnostics/route");
+    const response = await GET(new NextRequest("http://localhost:3000/api/health/diagnostics"));
+
+    const body = await response.json();
+    expect(body.status).toBe("UNHEALTHY");
+    const postgres = body.subsystems.find((c: { component: string }) => c.component === "postgres-primary");
+    expect(postgres?.status).toBe("UNHEALTHY");
+    // A dependency configured to have no external backend by default
+    // (e.g. Stripe requires credentials, present in the fixture env) —
+    // failure isolation means unrelated subsystems are unaffected.
+    const backup = body.subsystems.find((c: { component: string }) => c.component === "backup");
+    expect(backup?.status).not.toBe("UNHEALTHY");
+  });
+
+  it("/api/health/circuit-breakers GET returns a snapshot for every registered breaker after diagnostics has run once", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { NextRequest } = await import("next/server");
+    const { GET: getDiagnostics } = await import("@/app/api/health/diagnostics/route");
+    await getDiagnostics(new NextRequest("http://localhost:3000/api/health/diagnostics"));
+
+    const { GET } = await import("@/app/api/health/circuit-breakers/route");
+    const response = await GET(new NextRequest("http://localhost:3000/api/health/circuit-breakers"));
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.circuitBreakers.length).toBeGreaterThan(0);
+    expect(body.dependencies.length).toBe(body.circuitBreakers.length);
+    const postgres = body.circuitBreakers.find((b: { name: string }) => b.name === "postgres-primary");
+    expect(postgres?.state).toBe("CLOSED");
+  });
+
+  it("/api/health/circuit-breakers POST resets a named breaker", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { NextRequest } = await import("next/server");
+    const { GET: getDiagnostics } = await import("@/app/api/health/diagnostics/route");
+    await getDiagnostics(new NextRequest("http://localhost:3000/api/health/diagnostics"));
+
+    const { POST } = await import("@/app/api/health/circuit-breakers/route");
+    const response = await POST(
+      new NextRequest("http://localhost:3000/api/health/circuit-breakers", {
+        method: "POST",
+        body: JSON.stringify({ name: "postgres-primary" }),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.reset).toEqual(["postgres-primary"]);
+  });
+
+  it("/api/health/circuit-breakers POST returns 404 for an unregistered breaker name", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { NextRequest } = await import("next/server");
+    const { POST } = await import("@/app/api/health/circuit-breakers/route");
+    const response = await POST(
+      new NextRequest("http://localhost:3000/api/health/circuit-breakers", {
+        method: "POST",
+        body: JSON.stringify({ name: "does-not-exist" }),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    expect(response.status).toBe(404);
+  });
+
+  it("/api/health and /api/health/ready remain unmodified — untouched by Module 56", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.resetModules();
+
+    const { NextRequest } = await import("next/server");
+    const { GET: liveness } = await import("@/app/api/health/route");
+    const livenessResponse = await liveness(new NextRequest("http://localhost:3000/api/health"));
+    expect(livenessResponse.status).toBe(200);
+    const livenessBody = await livenessResponse.json();
+    expect(livenessBody).toEqual({ status: "ok", timestamp: expect.any(String) });
+
+    const { GET: readiness } = await import("@/app/api/health/ready/route");
+    const readinessResponse = await readiness(new NextRequest("http://localhost:3000/api/health/ready"));
+    expect(readinessResponse.status).toBe(200);
+  });
+});
