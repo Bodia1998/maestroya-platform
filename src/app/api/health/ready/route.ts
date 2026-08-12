@@ -15,6 +15,7 @@ import { getAnalyticsHealth } from "@/infrastructure/analytics/compose";
 import { getTracingHealth } from "@/infrastructure/tracing/compose";
 import { getConfigHealth } from "@/infrastructure/config/compose";
 import { getBackupHealth, getRecoveryHealth } from "@/infrastructure/backup/compose";
+import { getReadReplicaHealth } from "@/infrastructure/database/compose";
 
 /**
  * Readiness check (Module 25 — Production Infrastructure).
@@ -134,6 +135,18 @@ import { getBackupHealth, getRecoveryHealth } from "@/infrastructure/backup/comp
  * Postgres provider already runs its own snapshots. See
  * `infrastructure/backup/backup-health.ts` and `recovery-health.ts`.
  *
+ * Module 55 — Read Replicas: `checks.readReplicas` joins the same
+ * visibility-only category, for the same reasoning `checks.searchEngine`/
+ * `checks.analytics`/`checks.backup` already establish — a replica that
+ * is lagging, unreachable, or has never been pinged does not mean this
+ * instance cannot serve traffic: every read that would have gone there
+ * instead falls back to the primary, transparently, which is exactly
+ * what `checks.database` above already covers as load-bearing. Reports
+ * `"disabled"` when `READ_REPLICAS_ENABLED` is not `"true"`, or is
+ * `"true"` with no configured replicas — a normal, healthy state for a
+ * deployment that has not (yet) provisioned read replicas. See
+ * `infrastructure/database/read-replica-health.ts`.
+ *
  * Returns 503 (not 500) on database failure — the conventional status
  * for "the server is currently unable to handle the request", which is
  * exactly what a load balancer/orchestrator readiness probe is checking
@@ -162,6 +175,7 @@ export async function GET(request: NextRequest) {
           configuration: getConfigHealth(),
           backup: await getBackupHealth(),
           disasterRecovery: await getRecoveryHealth(),
+          readReplicas: await getReadReplicaHealth(),
         },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },

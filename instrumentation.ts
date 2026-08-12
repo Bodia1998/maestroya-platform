@@ -147,6 +147,13 @@ export async function register() {
     logger.info("app_shutdown_start", { signal });
     try {
       await prisma.$disconnect();
+      // Module 55 — Read Replicas: closes every replica connection pool
+      // opened by read-replica routing, alongside the primary's own
+      // disconnect immediately above. Idempotent and a safe no-op when
+      // `READ_REPLICAS_ENABLED` was never `"true"` — no replica client
+      // was ever constructed in that case.
+      const { disconnectReadReplicas } = await import("@/infrastructure/database/compose");
+      await disconnectReadReplicas();
       // Stops every worker from claiming new jobs and waits for in-flight
       // jobs to finish, before the shared Redis connection they (and the
       // job store) depend on is closed below. Idempotent and safe even

@@ -508,6 +508,65 @@ const envSchema = z
     // daily at 02:00 UTC by default, a low-traffic window for this
     // platform's target market (Spain, UTC+1/+2).
     BACKUP_SCHEDULE_CRON: z.string().min(1).catch("0 2 * * *"),
+
+    // --- Module 55 — Read Replicas ---
+    //
+    // Opt-in, like TRACING_ENABLED/BACKUP_ENABLED — a process that never
+    // sets this reads and writes through `DATABASE_URL` alone, exactly
+    // as every environment did before this module existed (see
+    // docs/MODULE_55_READ_REPLICAS.md §7 for the full disabled-path
+    // description).
+    READ_REPLICAS_ENABLED: z.enum(["true", "false"]).catch("false"),
+    // Comma-separated Postgres connection strings, one per replica —
+    // the same grammar `OTEL_EXPORTER_HEADERS`/cron's field lists use
+    // elsewhere in this file. Parsed (not validated as URLs) here:
+    // `resolveReadReplicaConfig()` is the single place that turns this
+    // into the typed, deduplicated, order-preserving list the rest of
+    // the module reads, exactly like `resolveBackupConfig()` does for
+    // `BACKUP_*`. Left as `z.string()` rather than `z.string().url()`
+    // because Postgres connection strings often include a query string
+    // Node's URL parser doesn't need to understand and this schema
+    // shouldn't over-validate.
+    DATABASE_REPLICA_URLS: z.string().catch(""),
+    // Selects the `ReplicaSelector` `resolveReadReplicaConfig()` builds
+    // (`domain/services/replica-selector.ts`). `.catch()` — same "a typo
+    // in a swappable-backend selector must degrade to the safe default,
+    // never fail startup" rule `SEARCH_PROVIDER`/`SMS_PROVIDER` follow.
+    READ_REPLICA_SELECTION_STRATEGY: z.enum(["ROUND_ROBIN", "RANDOM", "LEAST_LAG"]).catch("ROUND_ROBIN"),
+    // The module-wide default `ReadConsistencyLevel`
+    // (`domain/services/read-consistency-policy.ts`) applied to a read
+    // that does not explicitly request `STRONG` consistency via
+    // `withReadConsistency()`. `EVENTUAL` — accept any replica
+    // regardless of lag — is the default because it is the only choice
+    // that actually offloads read traffic from the primary; an operator
+    // who needs a staleness cap opts into `BOUNDED_STALENESS` explicitly.
+    READ_REPLICA_DEFAULT_CONSISTENCY: z.enum(["STRONG", "EVENTUAL", "BOUNDED_STALENESS"]).catch("EVENTUAL"),
+    // Only meaningful when READ_REPLICA_DEFAULT_CONSISTENCY=BOUNDED_STALENESS
+    // (or a call site passes its own `ReadConsistencyPolicy` with this
+    // same level) — the maximum replication lag, in milliseconds, a
+    // replica may report and still be considered an acceptable read
+    // source.
+    READ_REPLICA_MAX_STALENESS_MS: z.coerce.number().int().min(0).max(300_000).catch(5000),
+    // A replica whose most recently observed replication lag exceeds
+    // this is `UNHEALTHY` (`ReplicaHealth.recordSuccess`) and excluded
+    // from selection regardless of consistency level — the hard ceiling
+    // beneath the softer, opt-in `READ_REPLICA_MAX_STALENESS_MS` bound
+    // above; a replica this far behind is presumed to be malfunctioning
+    // (e.g. a stuck WAL apply process), not merely offering slightly
+    // stale reads.
+    READ_REPLICA_MAX_LAG_MS: z.coerce.number().int().min(0).max(600_000).catch(30_000),
+    // Consecutive ping/query failures before `ReplicaRouterService`
+    // trips a replica to `UNHEALTHY` and stops routing reads to it.
+    READ_REPLICA_FAILURE_THRESHOLD: z.coerce.number().int().min(1).max(20).catch(3),
+    // Consecutive successes an `UNHEALTHY`/`DEGRADED` replica needs
+    // before `ReplicaRouterService` trusts it with reads again.
+    READ_REPLICA_RECOVERY_THRESHOLD: z.coerce.number().int().min(1).max(20).catch(2),
+    // A replica's last recorded health signal older than this is treated
+    // as stale and therefore ineligible for routing — protects against
+    // routing to a replica whose failure went unnoticed because no
+    // organic query happened to touch it. See
+    // `ReplicaRouterServiceOptions.maxHealthAgeMs`'s own doc comment.
+    READ_REPLICA_HEALTH_STALE_MS: z.coerce.number().int().min(1000).max(600_000).catch(60_000),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV !== "production") return;
@@ -615,6 +674,22 @@ const envSchema = z
         path: ["OTEL_EXPORTER_OTLP_ENDPOINT"],
         message:
           "OTEL_EXPORTER_OTLP_ENDPOINT is required in production when TRACING_ENABLED=true and TRACING_EXPORTER=otlp.",
+      });
+    }
+
+    // Module 55 — Read Replicas: a production deployment that
+    // deliberately opted into read-replica routing must not silently run
+    // with zero replicas configured (which would route every read to the
+    // primary anyway, defeating the point without saying so) — identical
+    // reasoning to the `SMS_PROVIDER=twilio`/`TRACING_ENABLED` checks
+    // above. `READ_REPLICAS_ENABLED` itself stays `.catch("false")` at the
+    // field level; this only fires once it was genuinely and validly
+    // turned on.
+    if (value.READ_REPLICAS_ENABLED === "true" && value.DATABASE_REPLICA_URLS.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["DATABASE_REPLICA_URLS"],
+        message: "DATABASE_REPLICA_URLS is required in production when READ_REPLICAS_ENABLED=true.",
       });
     }
   });

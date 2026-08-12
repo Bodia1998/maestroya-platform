@@ -1,5 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 
+import { getReplicaClient } from "@/infrastructure/database/prisma/replica-clients";
+import { getReadReplicaConfig, getReplicaRouterService } from "@/infrastructure/database/replica-router";
+import { withReadReplicaRouting } from "@/infrastructure/database/prisma/read-replica-extension";
 import { withPrismaTracing } from "@/infrastructure/tracing/prisma-tracing";
 
 /**
@@ -31,12 +34,36 @@ const globalForPrisma = globalThis as unknown as {
  * for why the extension, rather than 40+ repository decorators or
  * Prisma's own preview-flagged instrumentation package.
  */
+/**
+ * Module 55 — Read Replicas: `withReadReplicaRouting` adds a second
+ * `$extends`-based `$allOperations` hook — applied *after* tracing, so a
+ * query that is routed to a replica is executed via that replica's own
+ * (also traced) `PrismaClient` while a query that stays on the primary
+ * keeps flowing through the tracing hook underneath — that transparently
+ * sends eligible read-only queries to a healthy replica and returns the
+ * client **completely untouched** when `READ_REPLICAS_ENABLED` is not
+ * `"true"` (the default) or no replica is configured. Exactly like
+ * tracing, this is the single instrumentation point: no repository, and
+ * no caller of `prisma`, changes or can tell the difference. See
+ * `infrastructure/database/prisma/read-replica-extension.ts` for why the
+ * extension, rather than 40+ repository decorators.
+ */
 export const prisma =
   globalForPrisma.prisma ??
-  withPrismaTracing(
-    new PrismaClient({
-      log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-    }),
+  withReadReplicaRouting(
+    withPrismaTracing(
+      new PrismaClient({
+        log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+      }),
+    ),
+    getReplicaRouterService(),
+    (replicaId) => {
+      const replica = getReadReplicaConfig().replicas.find((candidate) => candidate.replicaId === replicaId);
+      if (!replica) {
+        throw new Error(`Read-replica routing selected unknown replica id ${JSON.stringify(replicaId)}.`);
+      }
+      return getReplicaClient(replica);
+    },
   );
 
 if (process.env.NODE_ENV !== "production") {
