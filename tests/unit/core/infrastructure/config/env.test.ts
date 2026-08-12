@@ -513,6 +513,49 @@ describe("infrastructure/config/env", () => {
     });
   });
 
+  describe("Module 56 — Health Checks & Circuit Breakers", () => {
+    it("HEALTH_CHECKS_ENABLED defaults to 'true' when unset", async () => {
+      const { env } = await loadEnvWith({});
+      expect(env.HEALTH_CHECKS_ENABLED).toBe("true");
+    });
+
+    it("falls back to 'true' for an invalid HEALTH_CHECKS_ENABLED value rather than failing startup", async () => {
+      const { env } = await loadEnvWith({ HEALTH_CHECKS_ENABLED: "nope" });
+      expect(env.HEALTH_CHECKS_ENABLED).toBe("true");
+    });
+
+    it("accepts HEALTH_CHECKS_ENABLED='false'", async () => {
+      const { env } = await loadEnvWith({ HEALTH_CHECKS_ENABLED: "false" });
+      expect(env.HEALTH_CHECKS_ENABLED).toBe("false");
+    });
+
+    it("circuit breaker tuning knobs fall back to safe defaults on invalid values", async () => {
+      const { env } = await loadEnvWith({
+        CIRCUIT_BREAKER_FAILURE_THRESHOLD: "not-a-number",
+        CIRCUIT_BREAKER_SUCCESS_THRESHOLD: "not-a-number",
+        CIRCUIT_BREAKER_TIMEOUT_MS: "not-a-number",
+        CIRCUIT_BREAKER_RESET_TIMEOUT_MS: "not-a-number",
+      });
+      expect(env.CIRCUIT_BREAKER_FAILURE_THRESHOLD).toBe(5);
+      expect(env.CIRCUIT_BREAKER_SUCCESS_THRESHOLD).toBe(2);
+      expect(env.CIRCUIT_BREAKER_TIMEOUT_MS).toBe(5000);
+      expect(env.CIRCUIT_BREAKER_RESET_TIMEOUT_MS).toBe(30_000);
+    });
+
+    it("circuit breaker tuning knobs accept valid overrides", async () => {
+      const { env } = await loadEnvWith({
+        CIRCUIT_BREAKER_FAILURE_THRESHOLD: "10",
+        CIRCUIT_BREAKER_SUCCESS_THRESHOLD: "3",
+        CIRCUIT_BREAKER_TIMEOUT_MS: "2000",
+        CIRCUIT_BREAKER_RESET_TIMEOUT_MS: "60000",
+      });
+      expect(env.CIRCUIT_BREAKER_FAILURE_THRESHOLD).toBe(10);
+      expect(env.CIRCUIT_BREAKER_SUCCESS_THRESHOLD).toBe(3);
+      expect(env.CIRCUIT_BREAKER_TIMEOUT_MS).toBe(2000);
+      expect(env.CIRCUIT_BREAKER_RESET_TIMEOUT_MS).toBe(60_000);
+    });
+  });
+
   it("never includes secret values in the base fixture accidentally left empty", () => {
     // Sanity check on the fixture itself, not env.ts — guards against a
     // future edit accidentally introducing an empty required field that

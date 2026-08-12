@@ -567,6 +567,37 @@ const envSchema = z
     // organic query happened to touch it. See
     // `ReplicaRouterServiceOptions.maxHealthAgeMs`'s own doc comment.
     READ_REPLICA_HEALTH_STALE_MS: z.coerce.number().int().min(1000).max(600_000).catch(60_000),
+
+    // --- Module 56 — Health Checks & Circuit Breakers ---
+    //
+    // Master switch for the health-check/circuit-breaker framework
+    // itself. Opt-out (default "true"), unlike TRACING_ENABLED/
+    // BACKUP_ENABLED/READ_REPLICAS_ENABLED — this module adds pure
+    // observability and failure-isolation around dependencies every
+    // deployment already has, with safe in-process defaults and no
+    // external backend of its own, the same category
+    // `FEATURE_FLAGS_ENABLED` is in. "false" is an operator's escape
+    // hatch only: `/api/health/diagnostics` and
+    // `/api/health/circuit-breakers` report `disabled` rather than
+    // executing any check, while `/api/health` and `/api/health/ready`
+    // (Module 25) are entirely unaffected either way — this module never
+    // touches those two routes.
+    HEALTH_CHECKS_ENABLED: z.enum(["true", "false"]).catch("true"),
+    // Consecutive failures, from CLOSED, before a circuit breaker trips
+    // to OPEN — the default every breaker `infrastructure/health/
+    // compose.ts` constructs uses unless it passes its own override.
+    // `.catch()` — an operational tuning knob, same reasoning
+    // `QUEUE_CONCURRENCY` documents.
+    CIRCUIT_BREAKER_FAILURE_THRESHOLD: z.coerce.number().int().min(1).max(50).catch(5),
+    // Consecutive successes, from HALF_OPEN, before a breaker closes.
+    CIRCUIT_BREAKER_SUCCESS_THRESHOLD: z.coerce.number().int().min(1).max(20).catch(2),
+    // Per-execution timeout, in milliseconds, before a wrapped call is
+    // treated as a failure (recorded separately, as a timeout — see
+    // `CircuitBreakerMetrics.timeoutCount`).
+    CIRCUIT_BREAKER_TIMEOUT_MS: z.coerce.number().int().min(100).max(60_000).catch(5000),
+    // How long, in milliseconds, a breaker stays OPEN before allowing a
+    // single HALF_OPEN trial call — the automatic-recovery cadence.
+    CIRCUIT_BREAKER_RESET_TIMEOUT_MS: z.coerce.number().int().min(1000).max(600_000).catch(30_000),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV !== "production") return;
