@@ -23,6 +23,7 @@
     "realtime:gateway": "tsx --conditions=react-server scripts/realtime-gateway.ts",
     "capacity-report": "tsx --conditions=react-server scripts/run-capacity-report.ts",
     "load-test": "tsx --conditions=react-server scripts/run-capacity-report.ts",
+    "multi-instance-audit": "tsx --conditions=react-server scripts/run-multi-instance-safety-audit.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
