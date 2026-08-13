@@ -161,6 +161,15 @@ model User {
   cancelledJobs          Job[]                  @relation("JobCancelledBy")
   /// Module 38 — GDPR Compliance.
   consents               Consent[]
+  /// Module 60 — Referral & Marketing Attribution Platform: at most one row
+  /// per user in practice (a user registers exactly once, through exactly
+  /// one visitorId) but modeled as a list — see
+  /// MarketingAttribution.userId's own doc comment for why it is not a
+  /// unique constraint.
+  marketingAttributions   MarketingAttribution[]
+  /// Module 60 — Referral & Marketing Attribution Platform: referral codes
+  /// this user owns (e.g. a professional's own shareable link).
+  referralCodes           ReferralCode[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3067,4 +3076,195 @@ model PerformanceBaseline {
   @@unique([scenarioId, label])
   @@index([scenarioId, capturedAt])
   @@map("performance_baselines")
+}
+
+// ============================================================================
+// Module 60 — Referral & Marketing Attribution Platform
+// ============================================================================
+//
+// Tracking/attribution/reporting only — no payment provider integration, no
+// affiliate payouts, no commission calculation, no Partner System (those are
+// future modules; see docs/MODULE_60_REFERRAL_MARKETING_PLATFORM.md's
+// "Future Affiliate integration" / "Future Commission integration"
+// sections). `ConversionEvent` may reference an existing `Commission.id`
+// via its plain `referenceId` string column, but this module never writes
+// to the `Commission` table and never computes `rateBps`/`amount`.
+//
+// Deliberately no separate `MarketingCampaign` table — a campaign is
+// identified by its `utmCampaign` string (falling back to `referralCode`
+// when `utmCampaign` is absent), not a separately administered entity,
+// because nothing in this module's scope requires campaign lifecycle
+// management (budget, start/end dates, owner). See the module doc's
+// "Campaign modeling" section.
+
+/// The closed set of marketing channels a visit/attribution resolves to.
+/// See src/core/domain/services/marketing-source-rules.ts for the pure
+/// resolution function and its documented precedence order.
+enum MarketingSourceKind {
+  TELEGRAM
+  INSTAGRAM
+  TIKTOK
+  FACEBOOK
+  GOOGLE_ADS
+  YOUTUBE
+  ORGANIC_SEARCH
+  DIRECT
+  REFERRAL
+  EMAIL
+  UNKNOWN
+}
+
+/// The closed set of conversion types this module records as
+/// `ConversionEvent.type`. See conversion-event-repository.ts's own doc
+/// comment for why `referenceId` (a Booking/Payment/Commission id) is a
+/// plain string, not a Prisma relation.
+enum ConversionTypeKind {
+  REGISTRATION
+  PROFESSIONAL_REGISTRATION
+  CLIENT_REGISTRATION
+  BOOKING_CREATED
+  BOOKING_COMPLETED
+  COMMISSION_GENERATED
+}
+
+/// An administered, unique referral code string (e.g. `telegram_valencia`)
+/// a professional/campaign shares as `?r=<code>`. Format rules (length
+/// 3–40, lowercase alphanumeric + underscore) live in
+/// domain/services/referral-code-rules.ts, enforced both there and by this
+/// table's own unique constraint. Mapped by
+/// prisma-referral-code-repository.ts.
+model ReferralCode {
+  id      String  @id @default(uuid()) @db.Uuid
+  code    String  @unique @db.VarChar(40)
+  /// The user this code is attributed to (e.g. a professional's own
+  /// referral link) — null for a platform-level/campaign code with no
+  /// single owner. SetNull on delete: losing the owner pointer must never
+  /// cascade-delete historical visit/attribution data that already
+  /// references this code by its string value.
+  ownerUserId String? @db.Uuid
+  owner       User?   @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  label       String? @db.VarChar(120)
+
+  createdAt DateTime @default(now())
+
+  @@index([ownerUserId])
+  @@map("referral_codes")
+}
+
+/// One row per tracked, non-duplicate click/visit — see
+/// domain/services/referral-visit-dedup-rules.ts for the 60-second dedup
+/// window `TrackVisitUseCase` applies before ever inserting a row here.
+/// `referralCode` is a plain string (not a `ReferralCode` relation/FK) —
+/// a visit may legitimately carry a code that was never administered via
+/// `CreateReferralCodeUseCase` (format-valid but unregistered), and this
+/// table must keep recording UTM-only visits regardless. Mapped by
+/// prisma-referral-visit-repository.ts.
+model ReferralVisit {
+  id     String @id @default(uuid()) @db.Uuid
+  /// Opaque, client-generated/cookie-stored visitor identifier — see
+  /// MarketingAttribution.visitorId's own doc comment for the full
+  /// "visitor identity" design rationale. NOT the ipHash below.
+  visitorId String @db.VarChar(100)
+
+  referralCode String? @db.VarChar(40)
+  utmSource    String? @db.VarChar(191)
+  utmMedium    String? @db.VarChar(191)
+  utmCampaign  String? @db.VarChar(191)
+  utmContent   String? @db.VarChar(191)
+  utmTerm      String? @db.VarChar(191)
+
+  /// Resolved once, at ingestion time, by
+  /// domain/services/marketing-source-rules.ts — never recomputed later
+  /// even if the resolution rules themselves change, so a historical
+  /// visit's recorded source is always what the platform actually believed
+  /// at the time.
+  marketingSource MarketingSourceKind
+
+  /// Keyed hash of the visitor's IP (domain/services/security-key.ts's
+  /// hashIp) — never the raw IP. Stored for abuse/dedup auxiliary signal
+  /// only; never the attribution join key (see MarketingAttribution's own
+  /// doc comment).
+  ipHash             String? @db.VarChar(64)
+  userAgentTruncated String? @db.VarChar(200)
+  landingPage        String  @db.VarChar(500)
+
+  createdAt DateTime @default(now())
+
+  @@index([visitorId, createdAt])
+  @@index([referralCode])
+  @@index([utmCampaign])
+  @@map("referral_visits")
+}
+
+/// One row per visitor (`visitorId` unique) — write-once first-touch,
+/// always-overwritten last-touch attribution. See
+/// domain/services/marketing-attribution-touch-rules.ts's own doc comment
+/// for the immutability rule and prisma-marketing-attribution-repository.ts
+/// for how it's persisted.
+model MarketingAttribution {
+  id        String @id @default(uuid()) @db.Uuid
+  visitorId String @unique @db.VarChar(100)
+
+  firstSource       MarketingSourceKind
+  firstCampaign     String?             @db.VarChar(191)
+  firstReferralCode String?             @db.VarChar(40)
+  firstVisitAt      DateTime
+
+  lastSource       MarketingSourceKind
+  lastCampaign     String?             @db.VarChar(191)
+  lastReferralCode String?             @db.VarChar(40)
+  lastVisitAt      DateTime
+
+  /// Set once the visitor registers (via
+  /// LinkRegistrationAttributionUseCase, called best-effort from
+  /// RegisterUserUseCase). Not a unique constraint: nothing in this
+  /// module's scope prevents a user from having registered under a
+  /// different visitorId than the one carrying this row (e.g. they visited
+  /// from two browsers before signing up on one of them) — a second,
+  /// never-linked MarketingAttribution row simply stays userId: null
+  /// forever, which is an acceptable, non-corrupting outcome for a
+  /// best-effort attribution signal. SetNull on delete: losing the user
+  /// pointer must never delete the historical attribution/visit data.
+  userId String? @db.Uuid
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  conversionEvents ConversionEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("marketing_attributions")
+}
+
+/// A read-only record of "something the platform already considers a
+/// conversion happened for this attributed visitor." This module never
+/// computes `revenueAmount` or decides when a conversion happened — see
+/// conversion-event-repository.ts's own doc comment. No other module's use
+/// case calls RecordConversionUseCase yet (see docs/MODULE_60's "Remaining
+/// Limitations") — this table and its repository are ready for that
+/// wiring, not yet connected to it.
+model ConversionEvent {
+  id            String   @id @default(uuid()) @db.Uuid
+  attributionId String   @db.Uuid
+  attribution   MarketingAttribution @relation(fields: [attributionId], references: [id], onDelete: Cascade)
+
+  type       ConversionTypeKind
+  occurredAt DateTime           @default(now())
+  /// Plain string reference to a Booking/Payment/Commission id, etc. — not
+  /// a Prisma relation across module boundaries (same convention
+  /// CommissionRecord.paymentId already establishes for the identical
+  /// reason: this module has no business depending on those modules'
+  /// schemas).
+  referenceId String? @db.VarChar(191)
+  /// Read from existing Booking/Payment data at recording time by
+  /// whichever caller supplies it — this module stores what it's told,
+  /// never computes it itself.
+  revenueAmount Decimal? @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([attributionId])
+  @@index([type])
+  @@map("conversion_events")
 }

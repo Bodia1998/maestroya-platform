@@ -8,6 +8,14 @@ import { RegisterUserUseCase } from "@/application/use-cases/auth/register-user.
 import { RequestPasswordResetUseCase } from "@/application/use-cases/auth/request-password-reset.use-case";
 import { ResetPasswordUseCase } from "@/application/use-cases/auth/reset-password.use-case";
 import { VerifyEmailUseCase } from "@/application/use-cases/auth/verify-email.use-case";
+// Module 60 — Referral & Marketing Attribution Platform: the
+// RegistrationAttributionLinker RegisterUserUseCase optionally calls after
+// creating a user. Importing the referral module's own compose.ts here is
+// one-directional (referral/compose.ts never imports anything from this
+// file) — same "compose roots may depend on another module's compose
+// root's factory functions, never the reverse" shape admin/compose.ts and
+// notification/compose.ts already establish.
+import { makeLinkRegistrationAttributionUseCase } from "@/application/use-cases/referral/compose";
 
 /**
  * Manual composition root — no DI container in this project, so Server
@@ -32,7 +40,7 @@ const emailSender = withEmailTracing(
 );
 
 export function makeRegisterUserUseCase() {
-  return new RegisterUserUseCase(users, tokens, emailSender);
+  return new RegisterUserUseCase(users, tokens, emailSender, makeLinkRegistrationAttributionUseCase());
 }
 
 export function makeVerifyEmailUseCase() {

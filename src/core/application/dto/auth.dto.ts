@@ -32,6 +32,16 @@ export const registerSchema = z
     // never validated against anything else in this schema. Defaults to
     // "CUSTOMER" so every other registration path is completely unchanged.
     intent: z.enum(["CUSTOMER", "PROFESSIONAL"]).optional().default("CUSTOMER"),
+    // Module 60 — Referral & Marketing Attribution Platform: the opaque,
+    // client-generated/cookie-stored visitor id (see docs/MODULE_60's
+    // "Visitor identity" section) — present whenever the registration form
+    // was loaded with the tracking cookie already set, absent for any
+    // registration that never went through visit tracking (e.g. no
+    // JavaScript, cookie blocked, or the visitor came from a client that
+    // never called the tracking endpoint). Never validated against
+    // anything else in this schema — a missing/unknown visitorId simply
+    // means the registration goes unattributed, never a validation error.
+    visitorId: z.string().trim().min(1).max(100).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match.",

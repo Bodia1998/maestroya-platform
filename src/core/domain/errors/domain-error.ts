@@ -320,3 +320,23 @@ export class VerificationProviderError extends DomainError {
     if (options?.cause !== undefined) this.cause = options.cause;
   }
 }
+
+/**
+ * Module 60 — Referral & Marketing Attribution Platform: thrown by
+ * `domain/services/referral-code-rules.ts`'s `assertValidReferralCode` when
+ * a candidate referral code violates its format rules (length outside
+ * 3–40 characters, or characters other than lowercase letters/digits/
+ * underscore). Kept as its own class — rather than reusing the generic
+ * `ValidationError` — so `CreateReferralCodeUseCase`/`TrackVisitUseCase`
+ * callers can distinguish "this referral code is malformed" from any other
+ * application-layer input-validation failure without string-matching a
+ * message, the same reasoning `InvalidTaxRateError`/`InvalidWorkloadProfileError`
+ * give for their own dedicated error classes.
+ */
+export class ReferralCodeError extends DomainError {
+  readonly code = "REFERRAL_CODE_ERROR";
+
+  constructor(message: string) {
+    super(message);
+  }
+}

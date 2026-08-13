@@ -25,6 +25,7 @@
     "load-test": "tsx --conditions=react-server scripts/run-capacity-report.ts",
     "multi-instance-audit": "tsx --conditions=react-server scripts/run-multi-instance-safety-audit.ts",
     "verification-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-verification-report.ts",
+    "referral-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-referral-report.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
