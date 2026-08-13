@@ -2884,3 +2884,134 @@ enum RecoveryStatusKind {
   FAILED
   ABORTED
 }
+
+// ============================================================================
+// Module 57 — Load Testing & Capacity Planning
+// ============================================================================
+//
+// Persists AGGREGATED results only, never raw per-request samples — a
+// `LoadTestResult` already only ever holds `LatencyStatistics` (six
+// numbers: min/max/average/median/p95/p99), never the raw latency array
+// they were computed from (see domain/value-objects/latency-distribution.ts's
+// own doc comment); that computed shape is exactly what `LoadTestRun`
+// stores. `LoadTestRun` rows come in two flavours distinguished by whether
+// `productionReadinessScore`/`bottlenecks`/`recommendations`/`reportJson`/
+// `reportMarkdown` are set: most rows are one per-scenario execution
+// (those columns null), and at most one row per `npm run capacity-report`
+// invocation additionally anchors the full report (those columns
+// populated) — see PersistCapacityReportUseCase.
+//
+// `PerformanceBaseline` is the comparison point future executions diff
+// against for regression detection — captured once (auto-captured on a
+// scenario's first successful run when none exists yet, see
+// GenerateCapacityReportUseCase) and reused by every later run via
+// `PerformanceBaselineRepository.findLatestByScenario`.
+
+/// One aggregated execution of a PerformanceScenario (see
+/// src/core/domain/entities/load-test-result.ts for the aggregate this
+/// backs) or, for at most one row per capacity-report run, the report's
+/// own anchor/summary row. Mapped by
+/// infrastructure/database/prisma/repositories/prisma-load-test-result-repository.ts.
+model LoadTestRun {
+  id     String  @id @default(uuid()) @db.Uuid
+  scenarioId   String
+  scenarioName String
+  /// The PRNG seed BenchmarkRunner ran this scenario with, if pinned —
+  /// null when the executor derived its own (still deterministic; see
+  /// LoadTestingService.run's own doc comment).
+  seed         Int?
+
+  executedAt DateTime @default(now())
+  durationMs Int
+
+  totalRequests    Int
+  failedRequests   Int
+  timedOutRequests Int
+  retriedRequests  Int
+
+  latencyAverageMs Float
+  latencyMedianMs  Float
+  latencyP95Ms     Float
+  latencyP99Ms     Float
+  latencyMinMs     Float
+  latencyMaxMs     Float
+
+  requestsPerSecond     Float
+  transactionsPerSecond Float
+
+  cpuPercent               Float
+  memoryMB                 Float
+  dbPoolUtilizationPercent Float
+  cacheHitRatioPercent     Float
+
+  errorRate   Float
+  timeoutRate Float
+  retryRate   Float
+
+  /// The four fields below are only set on the single row (per
+  /// capacity-report run) that anchors the full report — null for an
+  /// ordinary per-scenario execution row.
+  productionReadinessScore Float?
+  /// Structured CapacityBottleneck[] snapshot — never raw samples.
+  bottlenecks              Json?
+  /// Structured CapacityRecommendation[] snapshot — never raw samples.
+  recommendations          Json?
+  /// The full StructuredCapacityReport, as returned by
+  /// infrastructure/performance/report-generator.ts's toJsonReport().
+  reportJson               Json?
+  reportMarkdown           String? @db.Text
+
+  gitCommit   String?
+  gitBranch   String?
+  appVersion  String?
+  environment String?
+
+  createdAt DateTime @default(now())
+
+  @@index([scenarioId, executedAt])
+  @@map("load_test_runs")
+}
+
+/// An immutable, labelled snapshot of one LoadTestRun's aggregated
+/// metrics for a scenario — the comparison point regression detection
+/// diffs a later run against. Mirrors
+/// src/core/domain/entities/performance-baseline.ts. Mapped by
+/// prisma-performance-baseline-repository.ts.
+model PerformanceBaseline {
+  id           String   @id @default(uuid()) @db.Uuid
+  scenarioId   String
+  label        String
+  capturedAt   DateTime @default(now())
+  /// References a LoadTestRun.id — not a foreign key, since a baseline is
+  /// designed to outlive the run it was captured from (see
+  /// domain/entities/performance-baseline.ts's own doc comment).
+  sourceRunId  String
+  /// Sample count the source run's LatencyStatistics was computed from —
+  /// descriptive only, needed to rehydrate LatencyStatistics; never a raw
+  /// sample array.
+  sampleCount  Int
+
+  latencyAverageMs Float
+  latencyMedianMs  Float
+  latencyP95Ms     Float
+  latencyP99Ms     Float
+  latencyMinMs     Float
+  latencyMaxMs     Float
+
+  requestsPerSecond     Float
+  transactionsPerSecond Float
+
+  cpuPercent               Float
+  memoryMB                 Float
+  dbPoolUtilizationPercent Float
+  cacheHitRatioPercent     Float
+
+  errorRate Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([scenarioId, label])
+  @@index([scenarioId, capturedAt])
+  @@map("performance_baselines")
+}

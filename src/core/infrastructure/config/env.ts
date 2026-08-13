@@ -598,8 +598,57 @@ const envSchema = z
     // How long, in milliseconds, a breaker stays OPEN before allowing a
     // single HALF_OPEN trial call — the automatic-recovery cadence.
     CIRCUIT_BREAKER_RESET_TIMEOUT_MS: z.coerce.number().int().min(1000).max(600_000).catch(30_000),
+
+    // --- Module 57 — Load Testing & Capacity Planning ---
+    //
+    // Opt-in, like BACKUP_ENABLED/READ_REPLICAS_ENABLED — a process that
+    // never sets this still exposes every use case (the module runs
+    // entirely in-process and on-demand, never as background machinery,
+    // so there is nothing an unset flag needs to prevent from starting);
+    // this flag only gates the optional admin-facing capacity-report
+    // route, the same "kill switch an operator can flip without a
+    // deploy" role BACKUP_ENABLED plays for its own route/health surface.
+    LOAD_TEST_ENABLED: z.enum(["true", "false"]).catch("false"),
+    // The default PRNG seed `BenchmarkRunner` uses when a caller does not
+    // pin their own — kept fixed (not random) so "run a load test with no
+    // arguments" is itself reproducible by default. `.catch()` — an
+    // operational tuning knob, same reasoning `QUEUE_CONCURRENCY`
+    // documents.
+    LOAD_TEST_DEFAULT_SEED: z.coerce.number().int().min(0).max(2_147_483_647).catch(42),
+    // Percentage-worse thresholds a metric's regression must cross to be
+    // classified at each severity (see `RegressionThresholds` in
+    // `domain/entities/performance-regression.ts`). Each must be strictly
+    // greater than the previous — validated below in `.superRefine()`,
+    // the same "cross-field validation of otherwise-independent env vars"
+    // pattern CIRCUIT_BREAKER_*/READ_REPLICA_* already establish.
+    LOAD_TEST_REGRESSION_MINOR_PERCENT: z.coerce.number().min(0).max(1000).catch(10),
+    LOAD_TEST_REGRESSION_MODERATE_PERCENT: z.coerce.number().min(0).max(1000).catch(25),
+    LOAD_TEST_REGRESSION_SEVERE_PERCENT: z.coerce.number().min(0).max(1000).catch(50),
+    LOAD_TEST_REGRESSION_CRITICAL_PERCENT: z.coerce.number().min(0).max(1000).catch(100),
   })
   .superRefine((value, ctx) => {
+    // Module 57 — each regression severity threshold must strictly exceed
+    // the one below it, or `PerformanceRegression.compute`'s severity
+    // classification would silently skip a level (or misclassify a small
+    // regression as CRITICAL). A misconfigured operator override degrades
+    // to the code-defined defaults above via `.catch()` already, so this
+    // only catches the case where all four are still individually valid
+    // numbers but inconsistent relative to each other.
+    if (
+      !(
+        value.LOAD_TEST_REGRESSION_MINOR_PERCENT <= value.LOAD_TEST_REGRESSION_MODERATE_PERCENT &&
+        value.LOAD_TEST_REGRESSION_MODERATE_PERCENT <= value.LOAD_TEST_REGRESSION_SEVERE_PERCENT &&
+        value.LOAD_TEST_REGRESSION_SEVERE_PERCENT <= value.LOAD_TEST_REGRESSION_CRITICAL_PERCENT
+      )
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "LOAD_TEST_REGRESSION_*_PERCENT thresholds must be non-decreasing: MINOR <= MODERATE <= SEVERE <= CRITICAL.",
+        path: ["LOAD_TEST_REGRESSION_MINOR_PERCENT"],
+      });
+    }
+
     if (value.NODE_ENV !== "production") return;
 
     // `next build` unconditionally forces NODE_ENV=production for the

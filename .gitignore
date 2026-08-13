@@ -55,3 +55,6 @@ next-env.d.ts
 .idea
 
 .env.production
+
+# Module 57 — Load Testing & Capacity Planning: generated report output
+/reports
