@@ -23,6 +23,12 @@ import { ResubmitProfessionalVerificationUseCase } from "@/application/use-cases
 import { StartVerificationReviewUseCase } from "@/application/use-cases/verification/start-verification-review.use-case";
 import { SubmitProfessionalVerificationUseCase } from "@/application/use-cases/verification/submit-professional-verification.use-case";
 import { UploadVerificationDocumentUseCase } from "@/application/use-cases/verification/upload-verification-document.use-case";
+// Module 59 — Professional Verification (Persona).
+import { CheckPayoutEligibilityUseCase } from "@/application/use-cases/verification/check-payout-eligibility.use-case";
+import { RefreshVerificationStatusUseCase } from "@/application/use-cases/verification/refresh-verification-status.use-case";
+import { StartProfessionalVerificationUseCase } from "@/application/use-cases/verification/start-professional-verification.use-case";
+import { SynchronizeVerificationUseCase } from "@/application/use-cases/verification/synchronize-verification.use-case";
+import { createVerificationProvider } from "@/infrastructure/verification/verification-provider-factory";
 
 /**
  * Professional Verification module (Module 17): composition root — wires the
@@ -42,6 +48,11 @@ const uploads = new CloudinaryVerificationDocumentUploadService();
 // failure-reporter-factory.ts's own doc comment. No use case or
 // subscriber in this module changes.
 const failureReporter = createFailureReporter();
+// Module 59 — Professional Verification (Persona): `NullVerificationProvider`
+// (VERIFICATION_PROVIDER unset/"manual") or `PersonaVerificationProvider` —
+// see verification-provider-factory.ts's own doc comment for the
+// fallback rule. The manual use cases above never depend on this.
+const verificationProvider = createVerificationProvider();
 
 /**
  * Module 37 — Domain Event Subscribers: registers this module's
@@ -107,4 +118,29 @@ export function makeRejectProfessionalVerificationUseCase() {
 
 export function makeRequestVerificationResubmissionUseCase() {
   return new RequestVerificationResubmissionUseCase(verifications, professionals, eventBus, failureReporter);
+}
+
+// --- Module 59 — Professional Verification (Persona) ---
+
+export function makeStartProfessionalVerificationUseCase() {
+  return new StartProfessionalVerificationUseCase(verifications, professionals, verificationProvider, eventBus, failureReporter);
+}
+
+export function makeRefreshVerificationStatusUseCase() {
+  return new RefreshVerificationStatusUseCase(verifications, professionals, verificationProvider, auditLog);
+}
+
+export function makeSynchronizeVerificationUseCase() {
+  return new SynchronizeVerificationUseCase(verifications, makeRefreshVerificationStatusUseCase());
+}
+
+export function makeCheckPayoutEligibilityUseCase() {
+  return new CheckPayoutEligibilityUseCase(verifications);
+}
+
+/** The provider name the current process is wired to (`"MANUAL"` or
+ *  `"PERSONA"`) — lets a caller (e.g. a dashboard) decide whether to offer
+ *  the automated-check button without importing the factory/env directly. */
+export function getVerificationProviderName() {
+  return verificationProvider.name;
 }

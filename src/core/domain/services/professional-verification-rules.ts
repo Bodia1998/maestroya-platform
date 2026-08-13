@@ -159,3 +159,59 @@ export function normalizeOptionalText(value: string | null | undefined): string 
   const trimmed = value.trim();
   return trimmed.length === 0 ? null : trimmed;
 }
+
+// ============================================================================
+// Module 59 — Professional Verification (Persona)
+// ============================================================================
+//
+// Everything below extends this same rules file rather than starting a
+// parallel one — the module was built under an explicit "extend Module 17,
+// do not duplicate its business rules" constraint (see
+// docs/MODULE_59_PROFESSIONAL_VERIFICATION_PERSONA.md). It adds exactly two
+// things: the provider-selector vocabulary, and the payout-eligibility
+// predicate every one of these `ProfessionalVerificationStatusValue`
+// values already determines the answer to. The status machine itself
+// (TRANSITIONS/canTransition/canApprove/canReject/... above) is untouched.
+
+export const VERIFICATION_PROVIDER_VALUES = ["MANUAL", "PERSONA"] as const;
+export type VerificationProviderValue = (typeof VERIFICATION_PROVIDER_VALUES)[number];
+
+/**
+ * A professional may (re)start an automated provider verification (Persona
+ * `createVerification`) from exactly the same states they could otherwise
+ * submit/resubmit a manual case from — starting a Persona inquiry is an
+ * alternative *front door* into the same PENDING state, not a separate
+ * workflow. See `canSubmit`/`canResubmit` above.
+ */
+export function canStartProviderVerification(status: ProfessionalVerificationStatusValue): boolean {
+  return canSubmit(status) || canResubmit(status);
+}
+
+/**
+ * A case's provider link may be synced (`refreshStatus`/`getVerification`)
+ * only while it is actually in the provider's hands — PENDING (inquiry
+ * created/running) or UNDER_REVIEW (an admin has started a manual look but
+ * the automated decision may still land first). Syncing a DRAFT case (no
+ * provider verification has been started) or a terminal one (APPROVED/
+ * REJECTED/RESUBMISSION_REQUIRED/EXPIRED — already decided, one way or
+ * another) is a no-op the use case should skip rather than a state the
+ * provider could ever legally move.
+ */
+export function canSyncProviderStatus(status: ProfessionalVerificationStatusValue): boolean {
+  return status === "PENDING" || status === "UNDER_REVIEW";
+}
+
+/**
+ * The single predicate `professional.canReceivePayouts()` (per the Module
+ * 59 brief) and the future Stripe Connect payout flow are built on:
+ * payouts are blocked for every status except APPROVED, regardless of
+ * which `VerificationProviderValue` produced that APPROVED decision — a
+ * manually-approved case and a Persona-approved one are equally eligible.
+ * Deliberately the *only* place this predicate is defined; the financial
+ * layer calls this function (via `CheckPayoutEligibilityUseCase`,
+ * application/use-cases/verification/), it never re-derives "is this
+ * professional verified" from the status value itself.
+ */
+export function canReceivePayouts(status: ProfessionalVerificationStatusValue): boolean {
+  return status === "APPROVED";
+}

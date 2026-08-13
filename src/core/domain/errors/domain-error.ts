@@ -291,3 +291,32 @@ export class InvalidWorkloadProfileError extends DomainError {
     super(message);
   }
 }
+
+/**
+ * Module 59 — Professional Verification (Persona): thrown by a
+ * `VerificationProvider` implementation (application/ports/
+ * verification-provider.ts) when the external KYC provider itself fails —
+ * a non-2xx response, a timeout, an unparseable payload, or an invalid
+ * webhook signature. This is the one error shape every use case that
+ * depends on the port needs to know about; provider-specific detail
+ * (Persona's own error codes, HTTP status, etc.) is preserved on
+ * `cause`/`retryable` but never leaks a provider SDK type into the
+ * application or domain layers — same reasoning `PaymentGateway`'s own
+ * doc comment gives for keeping Stripe out of the domain entirely.
+ * `retryable` distinguishes a transient failure (timeout, 5xx, network
+ * error — safe to retry with backoff) from a permanent one (4xx other
+ * than 429, malformed webhook signature) so a caller doesn't have to
+ * string-match `message` to decide whether to retry.
+ */
+export class VerificationProviderError extends DomainError {
+  readonly code = "VERIFICATION_PROVIDER_ERROR";
+  readonly provider: string;
+  readonly retryable: boolean;
+
+  constructor(provider: string, message: string, retryable: boolean, options?: { cause?: unknown }) {
+    super(`[${provider}] ${message}`);
+    this.provider = provider;
+    this.retryable = retryable;
+    if (options?.cause !== undefined) this.cause = options.cause;
+  }
+}

@@ -17,6 +17,7 @@ import type {
   ProfessionalVerificationStatusValue,
   VerificationDocumentStatusValue,
   VerificationDocumentTypeValue,
+  VerificationProviderValue,
 } from "@/domain/services/professional-verification-rules";
 
 /**
@@ -37,6 +38,11 @@ const VERIFICATION_SELECT = {
   rejectionReason: true,
   resubmissionReason: true,
   expiresAt: true,
+  // Module 59 — Professional Verification (Persona).
+  provider: true,
+  providerVerificationId: true,
+  providerStatus: true,
+  providerSyncedAt: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -65,6 +71,10 @@ type VerificationRow = {
   rejectionReason: string | null;
   resubmissionReason: string | null;
   expiresAt: Date | null;
+  provider: string;
+  providerVerificationId: string | null;
+  providerStatus: string | null;
+  providerSyncedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -94,6 +104,10 @@ function toVerificationRecord(row: VerificationRow): ProfessionalVerificationRec
     rejectionReason: row.rejectionReason,
     resubmissionReason: row.resubmissionReason,
     expiresAt: row.expiresAt,
+    provider: row.provider as VerificationProviderValue,
+    providerVerificationId: row.providerVerificationId,
+    providerStatus: row.providerStatus,
+    providerSyncedAt: row.providerSyncedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -164,6 +178,10 @@ export class PrismaProfessionalVerificationRepository implements ProfessionalVer
         ...(data.rejectionReason !== undefined ? { rejectionReason: data.rejectionReason } : {}),
         ...(data.resubmissionReason !== undefined ? { resubmissionReason: data.resubmissionReason } : {}),
         ...(data.expiresAt !== undefined ? { expiresAt: data.expiresAt } : {}),
+        ...(data.provider !== undefined ? { provider: data.provider } : {}),
+        ...(data.providerVerificationId !== undefined ? { providerVerificationId: data.providerVerificationId } : {}),
+        ...(data.providerStatus !== undefined ? { providerStatus: data.providerStatus } : {}),
+        ...(data.providerSyncedAt !== undefined ? { providerSyncedAt: data.providerSyncedAt } : {}),
       },
       select: VERIFICATION_SELECT,
     });
@@ -270,6 +288,28 @@ export class PrismaProfessionalVerificationRepository implements ProfessionalVer
   async findExpirable(now: Date): Promise<ProfessionalVerificationRecord[]> {
     const rows = await prisma.professionalVerification.findMany({
       where: { status: "APPROVED", expiresAt: { lte: now } },
+      select: VERIFICATION_SELECT,
+    });
+    return rows.map(toVerificationRecord);
+  }
+
+  // --- Module 59 — Professional Verification (Persona) ---
+
+  async findByProviderVerificationId(providerVerificationId: string): Promise<ProfessionalVerificationRecord | null> {
+    const row = await prisma.professionalVerification.findFirst({
+      where: { provider: { not: "MANUAL" }, providerVerificationId },
+      select: VERIFICATION_SELECT,
+    });
+    return row ? toVerificationRecord(row) : null;
+  }
+
+  async findSyncable(): Promise<ProfessionalVerificationRecord[]> {
+    const rows = await prisma.professionalVerification.findMany({
+      where: {
+        provider: { not: "MANUAL" },
+        providerVerificationId: { not: null },
+        status: { in: ["PENDING", "UNDER_REVIEW"] },
+      },
       select: VERIFICATION_SELECT,
     });
     return rows.map(toVerificationRecord);

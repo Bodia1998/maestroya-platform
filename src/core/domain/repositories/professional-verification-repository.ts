@@ -3,6 +3,7 @@ import type {
   ProfessionalVerificationStatusValue,
   VerificationDocumentStatusValue,
   VerificationDocumentTypeValue,
+  VerificationProviderValue,
 } from "@/domain/services/professional-verification-rules";
 
 /**
@@ -31,6 +32,14 @@ export interface ProfessionalVerificationRecord {
   rejectionReason: string | null;
   resubmissionReason: string | null;
   expiresAt: Date | null;
+  /** Module 59 — Professional Verification (Persona). `"MANUAL"` for every
+   *  pre-Module-59 case and every case a professional never starts a
+   *  provider inquiry for. See VerificationProviderName's doc comment in
+   *  schema.prisma. */
+  provider: VerificationProviderValue;
+  providerVerificationId: string | null;
+  providerStatus: string | null;
+  providerSyncedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -96,6 +105,16 @@ export interface UpdateVerificationStatusData {
   rejectionReason?: string | null;
   resubmissionReason?: string | null;
   expiresAt?: Date | null;
+  /** Module 59 — Professional Verification (Persona): set together by
+   *  `StartProfessionalVerificationUseCase` (provider + providerVerificationId,
+   *  moving MANUAL -> PERSONA the first time a professional starts a
+   *  Persona inquiry) and `RefreshVerificationStatusUseCase`/
+   *  `SynchronizeVerificationUseCase` (providerStatus + providerSyncedAt on
+   *  every sync, regardless of whether the case's own `status` changed). */
+  provider?: VerificationProviderValue;
+  providerVerificationId?: string | null;
+  providerStatus?: string | null;
+  providerSyncedAt?: Date | null;
 }
 
 export interface ListAdminVerificationsOptions {
@@ -153,4 +172,25 @@ export interface ProfessionalVerificationRepository {
    * batch (see verification-expiration-rules.ts).
    */
   findExpirable(now: Date): Promise<ProfessionalVerificationRecord[]>;
+
+  /**
+   * Module 59 — Professional Verification (Persona): correlates an inbound
+   * provider lookup (or, in the future, a validated webhook) back to the
+   * case it belongs to. `null` for any `providerVerificationId` this
+   * platform never issued/recorded — a caller must treat that as "not
+   * found", never as evidence that a matching case merely hasn't been
+   * synced yet.
+   */
+  findByProviderVerificationId(providerVerificationId: string): Promise<ProfessionalVerificationRecord | null>;
+
+  /**
+   * Module 59 — Professional Verification (Persona): every case whose
+   * provider verification is still awaiting a decision — `provider !=
+   * MANUAL`, `providerVerificationId` set, and `status` in the set
+   * `canSyncProviderStatus` (professional-verification-rules.ts) allows —
+   * feeds `SynchronizeVerificationUseCase`'s batch sync, the same "batch
+   * use case queries a `findX` method, applies pure per-record rules"
+   * shape `findExpirable` above already established.
+   */
+  findSyncable(): Promise<ProfessionalVerificationRecord[]>;
 }

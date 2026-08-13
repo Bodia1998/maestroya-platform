@@ -1042,6 +1042,10 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
       rejectionReason: null,
       resubmissionReason: null,
       expiresAt: null,
+      provider: "MANUAL",
+      providerVerificationId: null,
+      providerStatus: null,
+      providerSyncedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1112,6 +1116,12 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
     return null;
   }
   async findExpirable() {
+    return [];
+  }
+  async findByProviderVerificationId() {
+    return null;
+  }
+  async findSyncable() {
     return [];
   }
 }

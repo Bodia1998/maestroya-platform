@@ -108,6 +108,38 @@ const envSchema = z
     TWILIO_AUTH_TOKEN: z.string().optional(),
     TWILIO_FROM_NUMBER: z.string().optional(),
 
+    // --- Professional identity verification provider (Module 59 —
+    // Professional Verification / Persona) ---
+    // Selects which `VerificationProvider` implementation
+    // `createVerificationProvider()` (infrastructure/verification/
+    // verification-provider-factory.ts) constructs. Same `.catch()`
+    // "a typo in a swappable-backend selector must degrade to the safe
+    // local option, never fail startup" reasoning as `SMS_PROVIDER`/
+    // `SEARCH_PROVIDER`/`GEOCODING_PROVIDER` above. `manual` (the
+    // default) does **not** mean verification is disabled: it means the
+    // Module 17 manual document-upload/admin-review workflow is the only
+    // path — that workflow never depends on this selector or on
+    // `VerificationProvider` at all, so every environment that never
+    // configures Persona keeps a fully working verification system.
+    VERIFICATION_PROVIDER: z.enum(["manual", "persona"]).catch("manual"),
+    // Persona credentials/config. All optional in every environment,
+    // including production, for the identical reason `TWILIO_ACCOUNT_SID`/
+    // `MAPBOX_API_KEY` are: a provider that isn't selected must never be a
+    // startup requirement. When `VERIFICATION_PROVIDER=persona`,
+    // `createVerificationProvider()` itself — not this schema — is the one
+    // place that fails fast if `PERSONA_API_KEY`/`PERSONA_TEMPLATE_ID` are
+    // missing (see that file's own doc comment), the same division of
+    // responsibility `createSmsSender()` already has for Twilio.
+    PERSONA_API_KEY: z.string().optional(),
+    PERSONA_TEMPLATE_ID: z.string().optional(),
+    // HMAC secret used only by `PersonaVerificationProvider.webhookValidation` —
+    // see that method's own doc comment. Not required to *start* an
+    // inquiry or sync its status, only to validate an inbound webhook once
+    // a future module wires up webhook *processing* (Module 59 itself only
+    // prepares the abstraction — see docs/MODULE_59_PROFESSIONAL_VERIFICATION_PERSONA.md).
+    PERSONA_WEBHOOK_SECRET: z.string().optional(),
+    PERSONA_API_BASE_URL: z.preprocess(emptyStringToUndefined, z.string().url().optional()),
+
     // --- Auth.js ---
     AUTH_SECRET: z.string().min(1, "AUTH_SECRET is required"),
     AUTH_URL: z.string().url(),
@@ -734,6 +766,25 @@ const envSchema = z
           path: ["SMS_PROVIDER"],
           message:
             "TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER are required in production when SMS_PROVIDER=twilio.",
+        });
+      }
+    }
+
+    // Module 59 — Professional Verification (Persona): a production
+    // deployment that deliberately opted into the real Persona provider
+    // must not silently fall back to `NullVerificationProvider`'s
+    // always-throws behavior for missing credentials — identical
+    // reasoning to the `SMS_PROVIDER=twilio` check above.
+    // `VERIFICATION_PROVIDER` itself stays `.catch("manual")` at the field
+    // level (a typo must degrade to the safe, fully-functional manual
+    // workflow); this only fires once `persona` was genuinely and validly
+    // selected.
+    if (value.VERIFICATION_PROVIDER === "persona") {
+      if (!value.PERSONA_API_KEY || !value.PERSONA_TEMPLATE_ID) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["VERIFICATION_PROVIDER"],
+          message: "PERSONA_API_KEY and PERSONA_TEMPLATE_ID are required in production when VERIFICATION_PROVIDER=persona.",
         });
       }
     }
