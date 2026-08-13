@@ -1,6 +1,14 @@
 import type { NotificationCreator, NotificationEvent } from "@/application/ports/notification-creator";
 import type { VerificationDocumentUploadService } from "@/application/interfaces/verification-document-upload-service";
 import type {
+  StartVerificationRequest,
+  StartVerificationResult,
+  VerificationProvider,
+  VerificationStatusResult,
+  WebhookValidationResult,
+} from "@/application/ports/verification-provider";
+import type { ProviderVerificationOutcome } from "@/domain/services/verification-provider-outcome";
+import type {
   AdminAuditAction,
   AdminAuditLogRecord,
   AdminAuditLogRepository,
@@ -125,6 +133,10 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
       rejectionReason: null,
       resubmissionReason: null,
       expiresAt: null,
+      provider: "MANUAL",
+      providerVerificationId: null,
+      providerStatus: null,
+      providerSyncedAt: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -168,6 +180,10 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
       ...(data.rejectionReason !== undefined ? { rejectionReason: data.rejectionReason } : {}),
       ...(data.resubmissionReason !== undefined ? { resubmissionReason: data.resubmissionReason } : {}),
       ...(data.expiresAt !== undefined ? { expiresAt: data.expiresAt } : {}),
+      ...(data.provider !== undefined ? { provider: data.provider } : {}),
+      ...(data.providerVerificationId !== undefined ? { providerVerificationId: data.providerVerificationId } : {}),
+      ...(data.providerStatus !== undefined ? { providerStatus: data.providerStatus } : {}),
+      ...(data.providerSyncedAt !== undefined ? { providerSyncedAt: data.providerSyncedAt } : {}),
       updatedAt: new Date(),
     };
     this.verifications.set(id, updated);
@@ -274,6 +290,23 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
       (v) => v.status === "APPROVED" && v.expiresAt != null && v.expiresAt.getTime() <= now.getTime(),
     );
   }
+
+  async findByProviderVerificationId(providerVerificationId: string): Promise<ProfessionalVerificationRecord | null> {
+    return (
+      [...this.verifications.values()].find(
+        (v) => v.provider !== "MANUAL" && v.providerVerificationId === providerVerificationId,
+      ) ?? null
+    );
+  }
+
+  async findSyncable(): Promise<ProfessionalVerificationRecord[]> {
+    return [...this.verifications.values()].filter(
+      (v) =>
+        v.provider !== "MANUAL" &&
+        v.providerVerificationId != null &&
+        (v.status === "PENDING" || v.status === "UNDER_REVIEW"),
+    );
+  }
 }
 
 export class FakeAdminAuditLogRepository implements AdminAuditLogRepository {
@@ -325,5 +358,55 @@ export class FakeVerificationDocumentUploadService implements VerificationDocume
   async uploadVerificationDocument(verificationId: string, _fileBuffer: Buffer, contentType: string): Promise<string> {
     this.uploads.push({ verificationId, contentType });
     return `https://res.cloudinary.com/demo/verifications/${verificationId}/${this.uploads.length}`;
+  }
+}
+
+/**
+ * Module 59 — Professional Verification (Persona): in-memory
+ * `VerificationProvider` test double. `nextOutcome`/`nextRawStatus`
+ * control what `refreshStatus`/`getVerification` report next — tests set
+ * these before calling a use case under test, mirroring how
+ * `FakeVerificationDocumentUploadService` above is driven.
+ */
+export class FakeVerificationProvider implements VerificationProvider {
+  readonly name = "PERSONA" as const;
+  createCalls: StartVerificationRequest[] = [];
+  refreshCalls: string[] = [];
+  nextOutcome: ProviderVerificationOutcome = "PENDING";
+  nextRawStatus = "pending";
+  nextFailureReason: string | null = null;
+  private counter = 0;
+
+  async createVerification(request: StartVerificationRequest): Promise<StartVerificationResult> {
+    this.createCalls.push(request);
+    this.counter += 1;
+    return {
+      providerVerificationId: `fake-inquiry-${this.counter}`,
+      verificationUrl: `https://persona.example/verify/${this.counter}`,
+      outcome: this.nextOutcome,
+    };
+  }
+
+  async getVerification(providerVerificationId: string): Promise<VerificationStatusResult> {
+    return {
+      providerVerificationId,
+      outcome: this.nextOutcome,
+      rawStatus: this.nextRawStatus,
+      failureReason: this.nextFailureReason,
+      checkedAt: new Date(),
+    };
+  }
+
+  async refreshStatus(providerVerificationId: string): Promise<VerificationStatusResult> {
+    this.refreshCalls.push(providerVerificationId);
+    return this.getVerification(providerVerificationId);
+  }
+
+  async generateVerificationLink(providerVerificationId: string): Promise<string> {
+    return `https://persona.example/verify/${providerVerificationId}`;
+  }
+
+  webhookValidation(): WebhookValidationResult {
+    return { valid: false };
   }
 }

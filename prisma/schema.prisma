@@ -921,6 +921,30 @@ enum ProfessionalVerificationStatus {
   EXPIRED
 }
 
+/// Module 59 — Professional Verification (Persona): which system is
+/// responsible for driving a `ProfessionalVerification` case's manual
+/// review steps toward a decision. `MANUAL` (the default) is the entire
+/// pre-Module-59 Module 17 workflow, unchanged: a professional uploads
+/// documents and an ADMIN/SUPER_ADMIN reviews them by hand. `PERSONA`
+/// means the case is (also) linked to an automated Persona inquiry —
+/// `providerVerificationId`/`providerStatus`/`providerSyncedAt` below are
+/// then populated, and `RefreshVerificationStatusUseCase`/
+/// `SynchronizeVerificationUseCase` can pull a decision from Persona and
+/// apply it through the exact same `ProfessionalVerificationStatus`
+/// transitions `professional-verification-rules.ts` already defines — no
+/// parallel state machine. A case can still be finished by hand (an admin
+/// approving/rejecting a PERSONA-provider case) — `provider` records how
+/// verification was *initiated*, not an exclusivity lock on who may act
+/// on it. Deliberately just this one enum, not a new table: see
+/// docs/MODULE_59_PROFESSIONAL_VERIFICATION_PERSONA.md for why
+/// `VerificationAttempt`/`VerificationEvent` from the module brief are
+/// folded into this model's own columns and the existing `AuditLog`
+/// trail instead of new tables.
+enum VerificationProviderName {
+  MANUAL
+  PERSONA
+}
+
 /// Module 21 — Disputes & Support: controlled reason list for a Dispute,
 /// reconciled from the Module 01 scaffold toward home-services-marketplace
 /// vocabulary (see docs/MODULE_21_DISPUTES_SUPPORT.md, "Categories" for the
@@ -2359,6 +2383,30 @@ model ProfessionalVerification {
   /// EXPIRED and a fresh case may be opened.
   expiresAt             DateTime?
 
+  /// Module 59 — Professional Verification (Persona). `MANUAL` (the
+  /// default) for every pre-existing/Module-17-only case. `providerXxx`
+  /// columns are always null while `provider = MANUAL`.
+  provider               VerificationProviderName @default(MANUAL)
+  /// Persona's own identifier for the inquiry created for this case
+  /// (`Inquiry.id`) — opaque to the domain, used only to correlate a
+  /// later `getVerification`/`refreshStatus`/webhook call back to this
+  /// row. Never a document image or any raw PII — see this module's GDPR
+  /// notes in docs/MODULE_59_PROFESSIONAL_VERIFICATION_PERSONA.md.
+  providerVerificationId String?                   @db.VarChar(191)
+  /// The provider's own last-observed status string (e.g. Persona's
+  /// `created`/`pending`/`completed`/`failed`/`needs_review`/`expired`),
+  /// kept verbatim for observability/debugging. Never the source of
+  /// truth for `status` above — `RefreshVerificationStatusUseCase` maps
+  /// it through `verification-provider-outcome.ts` and
+  /// `professional-verification-rules.ts`'s own `canTransition` before
+  /// ever changing `status`.
+  providerStatus         String?
+  /// When `providerStatus` was last refreshed from the provider (a
+  /// `refreshStatus`/`getVerification` call or, in the future, a
+  /// validated webhook) — lets an operator/CLI report tell a stale sync
+  /// apart from one that never started.
+  providerSyncedAt       DateTime?
+
   professionalProfile ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
   reviewedBy          User?               @relation("VerificationReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
 
@@ -2371,6 +2419,11 @@ model ProfessionalVerification {
   @@index([status])
   @@index([reviewedByUserId])
   @@index([status, submittedAt])
+  /// Module 59: correlates an inbound provider lookup/webhook (which only
+  /// carries the provider's own inquiry id) back to a case, and lets
+  /// `SynchronizeVerificationUseCase` cheaply select every PERSONA case
+  /// still awaiting a decision.
+  @@index([provider, providerVerificationId])
   @@map("professional_verifications")
 }
 

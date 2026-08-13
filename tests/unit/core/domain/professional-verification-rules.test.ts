@@ -9,8 +9,11 @@ import {
   canReject,
   canRequestResubmission,
   canResubmit,
+  canReceivePayouts,
+  canStartProviderVerification,
   canStartReview,
   canSubmit,
+  canSyncProviderStatus,
   canTransition,
   computeExpiresAt,
   hasRequiredDocuments,
@@ -111,6 +114,40 @@ describe("professional-verification-rules (Module 17)", () => {
       expect(normalizeOptionalText(null)).toBeNull();
       expect(normalizeOptionalText("   ")).toBeNull();
       expect(normalizeOptionalText("  hi  ")).toBe("hi");
+    });
+  });
+
+  describe("Module 59 — Professional Verification (Persona)", () => {
+    describe("canReceivePayouts", () => {
+      it("is true only for APPROVED", () => {
+        expect(canReceivePayouts("APPROVED")).toBe(true);
+        expect(canReceivePayouts("PENDING")).toBe(false);
+        expect(canReceivePayouts("UNDER_REVIEW")).toBe(false);
+        expect(canReceivePayouts("REJECTED")).toBe(false);
+        expect(canReceivePayouts("RESUBMISSION_REQUIRED")).toBe(false);
+        expect(canReceivePayouts("EXPIRED")).toBe(false);
+        expect(canReceivePayouts("DRAFT")).toBe(false);
+      });
+    });
+
+    describe("canStartProviderVerification", () => {
+      it("matches exactly canSubmit || canResubmit", () => {
+        for (const status of ["DRAFT", "PENDING", "UNDER_REVIEW", "APPROVED", "REJECTED", "RESUBMISSION_REQUIRED", "EXPIRED"] as const) {
+          expect(canStartProviderVerification(status)).toBe(canSubmit(status) || canResubmit(status));
+        }
+      });
+    });
+
+    describe("canSyncProviderStatus", () => {
+      it("is true only for PENDING and UNDER_REVIEW", () => {
+        expect(canSyncProviderStatus("PENDING")).toBe(true);
+        expect(canSyncProviderStatus("UNDER_REVIEW")).toBe(true);
+        expect(canSyncProviderStatus("DRAFT")).toBe(false);
+        expect(canSyncProviderStatus("APPROVED")).toBe(false);
+        expect(canSyncProviderStatus("REJECTED")).toBe(false);
+        expect(canSyncProviderStatus("RESUBMISSION_REQUIRED")).toBe(false);
+        expect(canSyncProviderStatus("EXPIRED")).toBe(false);
+      });
     });
   });
 });

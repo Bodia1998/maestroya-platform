@@ -75,3 +75,26 @@ export const requestVerificationResubmissionSchema = z.object({
   reason: reviewReasonSchema,
 });
 export type RequestVerificationResubmissionInput = z.infer<typeof requestVerificationResubmissionSchema>;
+
+// --- Module 59 — Professional Verification (Persona) ---
+
+/**
+ * No client-supplied identity fields on purpose: `fullName`/`countryCode`
+ * (`StartVerificationRequest` on the `VerificationProvider` port) must
+ * always be resolved server-side — `fullName` from the authenticated
+ * session's own `User.name`, never a value the professional could type
+ * into a form and have sent on to the KYC provider as-is, which would
+ * defeat the point of an identity check. This schema exists only to
+ * validate the one field a caller may legitimately choose: which country's
+ * document format they intend to present (`ES` for DNI/NIE, any other
+ * ISO 3166-1 alpha-2 for a foreign passport).
+ */
+export const startProviderVerificationSchema = z.object({
+  countryCode: z
+    .string()
+    .trim()
+    .length(2, "Country code must be a 2-letter ISO 3166-1 code.")
+    .toUpperCase()
+    .default("ES"),
+});
+export type StartProviderVerificationInput = z.infer<typeof startProviderVerificationSchema>;
