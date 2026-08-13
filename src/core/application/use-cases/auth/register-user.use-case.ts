@@ -9,6 +9,7 @@ import {
   hashToken,
 } from "@/infrastructure/auth/tokens";
 import type { EmailSender } from "@/application/interfaces/email-sender";
+import type { RegistrationAttributionLinker } from "@/application/ports/registration-attribution-linker";
 import { renderActionLinkEmailHtml } from "@/infrastructure/email/email-template";
 import type { RegisterInput } from "@/application/dto/auth.dto";
 
@@ -17,6 +18,11 @@ export class RegisterUserUseCase {
     private readonly users: UserRepository,
     private readonly tokens: AuthTokenRepository,
     private readonly emailSender: EmailSender,
+    // Module 60 — Referral & Marketing Attribution Platform: optional so
+    // every pre-existing caller/test that constructs this use case with
+    // three arguments keeps compiling unchanged. See `execute`'s own
+    // comment for why a failure here can never break registration.
+    private readonly attributionLinker?: RegistrationAttributionLinker,
   ) {}
 
   async execute(input: RegisterInput): Promise<{ userId: string }> {
@@ -39,6 +45,22 @@ export class RegisterUserUseCase {
       signupIntent: input.intent === "PROFESSIONAL" ? "PROFESSIONAL" : undefined,
     });
     await this.users.assignDefaultRole(user.id, "CUSTOMER");
+
+    // Module 60 — Referral & Marketing Attribution Platform: best-effort
+    // link back to whatever visitor/attribution record tracked this
+    // person before they signed up. Never allowed to affect registration
+    // itself — mirrors the independent-side-effect pattern
+    // `RefreshVerificationStatusUseCase` uses for its own non-critical
+    // notification/audit-log calls (Module 59's doc, "does not raise
+    // ProfessionalVerificationStatusChanged"): a failure here is caught,
+    // never rethrown, and never blocks the response to the caller.
+    if (this.attributionLinker && input.visitorId) {
+      try {
+        await this.attributionLinker.linkRegistration(user.id, input.visitorId);
+      } catch {
+        // Swallowed intentionally — see comment above.
+      }
+    }
 
     const rawToken = generateRawToken();
     await this.tokens.createEmailVerificationToken(
