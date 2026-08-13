@@ -21,6 +21,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "realtime:gateway": "tsx --conditions=react-server scripts/realtime-gateway.ts",
+    "capacity-report": "tsx --conditions=react-server scripts/run-capacity-report.ts",
+    "load-test": "tsx --conditions=react-server scripts/run-capacity-report.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",

@@ -254,3 +254,40 @@ export class InvalidRecoveryTransitionError extends DomainError {
     super(message);
   }
 }
+
+/**
+ * Module 57 — Load Testing & Capacity Planning: thrown by the
+ * `LoadTestResult` aggregate (`domain/entities/load-test-result.ts`) for a
+ * lifecycle transition its current status does not allow — e.g. completing
+ * a run that never started, or completing one already `COMPLETED`. Same
+ * reasoning as `InvalidBackupTransitionError`/`InvalidRecoveryTransitionError`:
+ * raised from inside the aggregate itself, never re-validated ad hoc at
+ * every call site.
+ */
+export class InvalidLoadTestTransitionError extends DomainError {
+  readonly code = "INVALID_LOAD_TEST_TRANSITION";
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/**
+ * Module 57 — Load Testing & Capacity Planning: thrown by the
+ * `WorkloadProfile`/`PerformanceScenario` value objects
+ * (`domain/entities/performance-scenario.ts`) when constructed with an
+ * invalid shape (non-positive virtual-user count, a ramp-up longer than
+ * the run itself, an empty scenario id, etc). Kept as its own class,
+ * rather than a bare `RangeError`, so `ExecuteLoadTestUseCase` and its
+ * callers can distinguish "the requested workload itself is malformed"
+ * from any other domain failure without string-matching a message — the
+ * same reasoning `InvalidTaxRateError` is kept distinguishable from a
+ * generic `ValidationError`.
+ */
+export class InvalidWorkloadProfileError extends DomainError {
+  readonly code = "INVALID_WORKLOAD_PROFILE";
+
+  constructor(message: string) {
+    super(message);
+  }
+}
