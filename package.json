@@ -30,6 +30,7 @@
     "onboarding-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-onboarding-report.ts",
     "materials-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-materials-report.ts",
     "pricing-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-pricing-report.ts",
+    "trust-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-trust-report.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",

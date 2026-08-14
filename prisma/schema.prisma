@@ -174,6 +174,19 @@ model User {
   /// this user operates, if any. One per user (Partner.userId unique) —
   /// see Partner's own doc comment.
   partner                 Partner?
+  /// Module 65 — Trust & Integrity System.
+  trustProfile                    TrustProfile?
+  fraudSignalsAsSubject            FraudSignal[]            @relation("FraudSignalSubject")
+  fraudSignalsResolved             FraudSignal[]            @relation("FraudSignalResolvedBy")
+  offPlatformDetectionEvents       OffPlatformDetectionEvent[]
+  trustAutomatedActionsAsSubject   TrustAutomatedAction[]   @relation("TrustAutomatedActionSubject")
+  trustAutomatedActionsCreated     TrustAutomatedAction[]   @relation("TrustAutomatedActionCreatedBy")
+  trustAutomatedActionsReversed    TrustAutomatedAction[]   @relation("TrustAutomatedActionReversedBy")
+  manualReviewCasesAsSubject       ManualReviewCase[]       @relation("ManualReviewCaseSubject")
+  manualReviewCasesAssigned        ManualReviewCase[]       @relation("ManualReviewCaseAssignedAdmin")
+  manualReviewCasesResolved        ManualReviewCase[]       @relation("ManualReviewCaseResolvedBy")
+  trustAppealsAsSubject            TrustAppeal[]            @relation("TrustAppealSubject")
+  trustAppealsReviewed             TrustAppeal[]            @relation("TrustAppealReviewedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3736,4 +3749,379 @@ model ProfessionalPayoutAccount {
   @@index([method])
   @@index([status])
   @@map("professional_payout_accounts")
+}
+
+// ============================================================================
+// Module 65 — Trust & Integrity System
+// ============================================================================
+//
+// The centralized Risk Management layer for the marketplace. Deliberately
+// additive-only against every model it references (User, AccountRestriction,
+// ProfessionalVerification, ProfessionalPayoutAccount, Quote): this module
+// never rewrites Module 24's AccountRestriction contract or Module 59's
+// verification tables, it only reads from / links to them (see
+// docs/MODULE_65_TRUST_AND_INTEGRITY_SYSTEM.md). Every automated
+// consequence this module can take is recorded in its own
+// TrustAutomatedAction ledger rather than folded into AccountRestriction's
+// existing THROTTLED/TEMPORARILY_BLOCKED/FLAGGED vocabulary, which models a
+// narrower Module-24 concern (login/registration/messaging throttling) that
+// this module does not own.
+
+/// A `TrustScoreEvent`/`RiskScoreEvent`'s cause — the closed set of business
+/// reasons that may move a score. Deliberately one shared enum for both
+/// score types (rather than two near-duplicate enums) since most reasons
+/// affect both scores in opposite directions (e.g. `FRAUD_SIGNAL_DETECTED`
+/// lowers trust and raises risk in the same call) — see
+/// `trust-score-policy.ts`/`risk-score-policy.ts`.
+enum TrustRiskEventReason {
+  ACCOUNT_VERIFIED
+  POSITIVE_REVIEW_RECEIVED
+  JOB_COMPLETED_SUCCESSFULLY
+  CLEAN_HISTORY_DECAY
+  OFF_PLATFORM_SIGNAL_DETECTED
+  FRAUD_SIGNAL_DETECTED
+  FAKE_REVIEW_PATTERN_DETECTED
+  SPAM_ACTIVITY_DETECTED
+  SUSPICIOUS_PRICING_DETECTED
+  BOOKING_ABUSE_DETECTED
+  PAYMENT_ABUSE_DETECTED
+  IDENTITY_RISK_DETECTED
+  MANUAL_REVIEW_CONFIRMED
+  APPEAL_APPROVED
+  ADMIN_ADJUSTMENT
+}
+
+enum TrustRiskScoreType {
+  TRUST
+  RISK
+}
+
+/// Current Trust Score (0-100, higher = more trustworthy) and Risk Score
+/// (0-100, higher = more dangerous) for one user — the two independent
+/// numbers every other Module 65 rule and every future module reads. One
+/// row per user, insert-or-replace on recalculation (same "single current
+/// value" shape as `ProfessionalPayoutAccount`); the append-only history of
+/// *how* the score got here lives in `TrustScoreEvent`/`RiskScoreEvent`,
+/// never on this row.
+model TrustProfile {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  trustScore Int @default(70) /// 0-100, see trust-score-policy.ts DEFAULT_TRUST_SCORE
+  riskScore  Int @default(0) /// 0-100, see risk-score-policy.ts DEFAULT_RISK_SCORE
+
+  lastRecalculatedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scoreEvents ScoreEvent[]
+
+  @@index([trustScore])
+  @@index([riskScore])
+  @@map("trust_profiles")
+}
+
+/// Append-only audit trail of every change to a user's Trust Score OR Risk
+/// Score — a single shared table for both, distinguished by `scoreType`.
+/// Replaces the former separate `TrustScoreEvent`/`RiskScoreEvent` tables:
+/// those two models were structurally identical (same columns, same
+/// indexes, same relation to `TrustProfile`), so keeping them as two
+/// tables was pure duplication rather than a deliberate scaling choice —
+/// `scoreType` plus `@@index([scoreType])` gives the same "query Trust
+/// events independently of Risk events" access pattern a dedicated table
+/// would, without maintaining two copies of the same schema/repository/
+/// migration logic. Same "single source of truth" convention as
+/// `AuditLog`/`OffPlatformDetectionEvent`, whose polymorphic
+/// `referenceType`/`sourceType` columns already do this for other concerns.
+model ScoreEvent {
+  id             String               @id @default(uuid()) @db.Uuid
+  trustProfileId String               @db.Uuid
+  trustProfile   TrustProfile         @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
+
+  /// Which of TrustProfile's two independent scores this event applies to.
+  scoreType      TrustRiskScoreType
+  reason         TrustRiskEventReason
+  delta          Int /// signed; positive raises the given scoreType's score
+  scoreBefore    Int
+  scoreAfter     Int
+  /// Free-text, admin-safe detail (e.g. "Job #.. completed with a 5-star review").
+  detail         String               @db.Text
+  /// Polymorphic pointer to whatever produced this event (a FraudSignal id,
+  /// an OffPlatformDetectionEvent id, a ManualReviewCase id, ...) — no FK,
+  /// same "reference id, no referential integrity" convention
+  /// `AuditLog.entityId` already uses, since the referenced table varies.
+  referenceType  String?
+  referenceId    String?
+
+  createdAt DateTime @default(now())
+
+  @@index([trustProfileId])
+  @@index([scoreType])
+  @@index([reason])
+  @@map("score_events")
+}
+
+/// One channel the off-platform-communication rule engine
+/// (`domain/services/off-platform-detection-rules.ts`) knows how to
+/// recognize. `OTHER` covers a future channel added to the rule engine
+/// before this enum is migrated to include it by name.
+enum OffPlatformChannel {
+  WHATSAPP
+  TELEGRAM
+  SIGNAL
+  PHONE_NUMBER
+  EMAIL_ADDRESS
+  INSTAGRAM
+  FACEBOOK
+  TIKTOK
+  DISCORD
+  SKYPE
+  EXTERNAL_PAYMENT_REQUEST
+  CONTACT_EXCHANGE_PHRASE
+  OTHER
+}
+
+/// A single detected attempt at off-platform contact/payment, raised by
+/// `DetectOffPlatformCommunicationUseCase` against a Message/Quote/Review
+/// text body. Always advisory at detection time — see `channel`/`riskScore
+/// contribution documented on the rule engine — a human or the automated
+/// action policy decides the consequence, this table only records what was
+/// seen.
+model OffPlatformDetectionEvent {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  channel    OffPlatformChannel
+  /// The exact matched excerpt, truncated at the application boundary —
+  /// never the full message body, to keep this table lean and to avoid
+  /// duplicating content that already lives on Message/Quote/Review.
+  matchedText String @db.VarChar(500)
+  confidence  Int /// 0-100, see off-platform-detection-rules.ts
+
+  /// Where the flagged text came from — "MESSAGE" | "QUOTE" | "REVIEW" |
+  /// "SERVICE_REQUEST", plus the id of that row. No FK for the same
+  /// polymorphic reason `TrustScoreEvent.referenceId` has none.
+  sourceType String
+  sourceId   String
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([channel])
+  @@index([createdAt])
+  @@map("off_platform_detection_events")
+}
+
+/// The kind of fraud pattern `domain/services/fraud-detection-rules.ts`
+/// raised. `MULTIPLE_ACCOUNTS`/`SAME_PHONE`/`SAME_IBAN`/`SAME_STRIPE_ACCOUNT`/
+/// `DUPLICATE_IDENTITY` model the "one real person/entity behind several
+/// User rows" family this module's brief calls out by name;
+/// `SUSPICIOUS_REGISTRATION_PATTERN`/`REPEATED_FAILED_VERIFICATION` cover
+/// the two remaining named signals.
+enum FraudSignalType {
+  MULTIPLE_ACCOUNTS
+  SAME_PHONE
+  SAME_IBAN
+  SAME_STRIPE_ACCOUNT
+  SAME_DEVICE
+  DUPLICATE_IDENTITY
+  SUSPICIOUS_REGISTRATION_PATTERN
+  REPEATED_FAILED_VERIFICATION
+  FAKE_REVIEW_PATTERN
+  SPAM_ACTIVITY
+  SUSPICIOUS_PRICING
+  BOOKING_ABUSE
+  PAYMENT_ABUSE
+}
+
+/// Mirrors `PartnerFraudFlagStatus` (Module 61) exactly — same "advisory
+/// until a human confirms" review lifecycle, generalized from partners to
+/// any user.
+enum FraudSignalStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+  CONFIRMED
+}
+
+/// A flagged suspicious-activity signal against any user (customer,
+/// professional, or company member) — the general-purpose counterpart to
+/// `PartnerFraudFlag` (which stays scoped to affiliate/partner fraud only;
+/// this module does not replace it). Raised by the various
+/// `Detect*UseCase`s in `application/use-cases/trust-integrity/`.
+model FraudSignal {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation("FraudSignalSubject", fields: [userId], references: [id], onDelete: Cascade)
+
+  type   FraudSignalType
+  status FraudSignalStatus @default(OPEN)
+  /// Human-readable, admin-safe explanation — never a raw IBAN/phone/IP,
+  /// only ever a hash or last-4, matching every other module's own
+  /// "never persist raw PII in a free-text detail column" convention.
+  detail String            @db.Text
+  /// Other users implicated by the same signal (e.g. every account sharing
+  /// the flagged IBAN hash) — stored as a plain array, no join table, same
+  /// convention `AuditLog`/`PartnerFraudFlag` use for loosely-related ids.
+  relatedUserIds String[]
+
+  resolvedAt       DateTime?
+  resolvedByUserId String?   @db.Uuid
+  resolvedBy       User?     @relation("FraudSignalResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+  resolution       String?   @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@map("fraud_signals")
+}
+
+enum TrustAutomatedActionType {
+  WARNING
+  TEMPORARY_RESTRICTION
+  BOOKING_RESTRICTION
+  MESSAGING_RESTRICTION
+  PAYOUT_HOLD
+  MANUAL_REVIEW
+  TEMPORARY_SUSPENSION
+  PERMANENT_SUSPENSION
+}
+
+enum TrustAutomatedActionStatus {
+  ACTIVE
+  EXPIRED
+  REVERSED
+}
+
+/// One automated (or admin-confirmed) consequence applied to a user by the
+/// Trust & Integrity Engine — the ledger `apply-automated-action.use-case.ts`
+/// writes to and every future module (booking, messaging, payouts) should
+/// consult before allowing the corresponding action, via
+/// `TrustAutomatedActionRepository.hasActiveAction`. Distinct from
+/// `AccountRestriction` (Module 24) — see this section's own header comment
+/// for why the two are not merged.
+model TrustAutomatedAction {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation("TrustAutomatedActionSubject", fields: [userId], references: [id], onDelete: Cascade)
+
+  type   TrustAutomatedActionType
+  status TrustAutomatedActionStatus @default(ACTIVE)
+
+  reason           TrustRiskEventReason
+  /// Score that triggered this action, for audit purposes only.
+  triggeringRiskScore Int
+  detail           String               @db.Text
+
+  /// null = fully automated (the trust-integrity-action-policy decided on
+  /// its own); set = an admin confirmed/escalated it manually — same
+  /// `createdByUserId` convention `AccountRestriction` already uses.
+  createdByUserId String? @db.Uuid
+  createdBy       User?   @relation("TrustAutomatedActionCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  /// null = indefinite (PERMANENT_SUSPENSION, or a MANUAL_REVIEW awaiting
+  /// resolution). Automated non-permanent actions always carry one — same
+  /// "no permanent auto-action without an explicit admin decision" rule
+  /// `AccountRestriction.expiresAt` documents.
+  expiresAt  DateTime?
+  reversedAt DateTime?
+  reversedByUserId String? @db.Uuid
+  reversedBy       User?   @relation("TrustAutomatedActionReversedBy", fields: [reversedByUserId], references: [id], onDelete: SetNull)
+
+  appeals TrustAppeal[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([type])
+  @@index([expiresAt])
+  @@map("trust_automated_actions")
+}
+
+enum ManualReviewCaseState {
+  OPEN
+  UNDER_REVIEW
+  ESCALATED
+  RESOLVED
+  REJECTED
+}
+
+/// The manual investigation queue — one case per opened investigation.
+/// A `TrustAutomatedAction` of type `MANUAL_REVIEW` and a `ManualReviewCase`
+/// are usually created together (see `open-manual-review-case.use-case.ts`)
+/// but are kept as two rows: the action is the (reversible) consequence
+/// applied to the user right now, the case is the workflow an admin walks
+/// through to resolve it — mirrors how `Dispute` and its resulting
+/// `FinancialAdjustment` are two separate rows for the same reason.
+model ManualReviewCase {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation("ManualReviewCaseSubject", fields: [userId], references: [id], onDelete: Cascade)
+
+  state  ManualReviewCaseState @default(OPEN)
+  reason TrustRiskEventReason
+  /// Admin-facing summary of why this case was opened.
+  summary String @db.Text
+
+  assignedAdminId String? @db.Uuid
+  assignedAdmin   User?   @relation("ManualReviewCaseAssignedAdmin", fields: [assignedAdminId], references: [id], onDelete: SetNull)
+
+  resolvedAt   DateTime?
+  resolvedByUserId String? @db.Uuid
+  resolvedBy   User?     @relation("ManualReviewCaseResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
+  resolutionNotes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([state])
+  @@map("trust_manual_review_cases")
+}
+
+enum AppealState {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  ACCOUNT_RESTORED
+}
+
+/// A user's appeal against a `TrustAutomatedAction` (or a resolved
+/// `ManualReviewCase`) taken against their account. One appeal always
+/// targets exactly one `TrustAutomatedAction` — see `AppealRepository`'s
+/// own doc comment for why a second appeal against the same action is
+/// rejected rather than silently allowed.
+model TrustAppeal {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation("TrustAppealSubject", fields: [userId], references: [id], onDelete: Cascade)
+
+  automatedActionId String                @db.Uuid
+  automatedAction   TrustAutomatedAction  @relation(fields: [automatedActionId], references: [id], onDelete: Cascade)
+
+  state       AppealState @default(SUBMITTED)
+  /// The user's own explanation, submitted verbatim.
+  userStatement String @db.Text
+
+  reviewedAt       DateTime?
+  reviewedByUserId String?   @db.Uuid
+  reviewedBy       User?     @relation("TrustAppealReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  reviewNotes      String?   @db.Text
+
+  restoredAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([automatedActionId])
+  @@index([state])
+  @@map("trust_appeals")
 }
