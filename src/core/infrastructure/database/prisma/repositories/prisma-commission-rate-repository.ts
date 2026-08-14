@@ -3,15 +3,17 @@ import type { CommissionRateRepository } from "@/domain/repositories/commission-
 import { DEFAULT_COMMISSION_RATES, type CommissionRates } from "@/domain/services/commission-policy";
 
 /**
- * Module 22 — Commission & Financial: reads commission rates from the
- * existing `PlatformSetting` key/value table (see schema.prisma's doc
- * comment on that model — "commission rate" is its own first cited
- * example use case). Two independent keys, not one JSON blob, so ops can
- * change just the customer fee or just the professional commission
- * without needing to know the other's current value.
+ * Module 22 — Commission & Financial (rate storage), updated for Module
+ * 64's flat single-rate model: reads MaestroYa's current flat commission
+ * rate from the existing `PlatformSetting` key/value table under the
+ * `default_commission_rate_bps` key — the same key `prisma/seed.ts`
+ * already seeds at 1000 bps (10%), anticipating this module. Replaces the
+ * two independent `commission.customerPlatformFeeRateBps`/
+ * `commission.professionalCommissionRateBps` keys the removed dual-fee
+ * model used — those keys are no longer read anywhere; a stale row under
+ * either old key has no effect.
  */
-const CUSTOMER_PLATFORM_FEE_RATE_KEY = "commission.customerPlatformFeeRateBps";
-const PROFESSIONAL_COMMISSION_RATE_KEY = "commission.professionalCommissionRateBps";
+const COMMISSION_RATE_KEY = "default_commission_rate_bps";
 
 function parseBpsSetting(value: unknown, fallback: number): number {
   if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
@@ -26,22 +28,13 @@ function parseBpsSetting(value: unknown, fallback: number): number {
 
 export class PrismaCommissionRateRepository implements CommissionRateRepository {
   async getCurrentRates(): Promise<CommissionRates> {
-    const rows = await prisma.platformSetting.findMany({
-      where: { key: { in: [CUSTOMER_PLATFORM_FEE_RATE_KEY, PROFESSIONAL_COMMISSION_RATE_KEY] } },
-      select: { key: true, value: true },
+    const row = await prisma.platformSetting.findUnique({
+      where: { key: COMMISSION_RATE_KEY },
+      select: { value: true },
     });
 
-    const byKey = new Map(rows.map((row) => [row.key, row.value]));
-
     return {
-      customerPlatformFeeRateBps: parseBpsSetting(
-        byKey.get(CUSTOMER_PLATFORM_FEE_RATE_KEY),
-        DEFAULT_COMMISSION_RATES.customerPlatformFeeRateBps,
-      ),
-      professionalCommissionRateBps: parseBpsSetting(
-        byKey.get(PROFESSIONAL_COMMISSION_RATE_KEY),
-        DEFAULT_COMMISSION_RATES.professionalCommissionRateBps,
-      ),
+      commissionRateBps: parseBpsSetting(row?.value, DEFAULT_COMMISSION_RATES.commissionRateBps),
     };
   }
 }

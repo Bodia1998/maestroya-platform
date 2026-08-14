@@ -15,8 +15,10 @@ import type { TaxCalculationInput, TaxCalculationResult, TaxCalculator } from "@
 
 describe("calculatePriceBreakdown (Spain)", () => {
   it("computes the full breakdown for a standard labor+materials quote", () => {
-    // labor 1000, materials 500, 7.5% platform fee -> 75, IVA 21% on
-    // (1000 + 500 + 75) = 1575 -> 330.75
+    // labor 1000, materials 500 -> taxable = 1500 (Module 64: no
+    // separate customer platform fee is added on top), IVA 21% of 1500
+    // -> 315. Commission is informational: 10% of the 1500 total -> 150,
+    // deducted from the professional, never charged to the customer.
     const breakdown = calculatePriceBreakdown({
       serviceAmount: 1000,
       materialsAmount: 500,
@@ -26,11 +28,11 @@ describe("calculatePriceBreakdown (Spain)", () => {
     expect(breakdown.countryCode).toBe("ES");
     expect(breakdown.serviceAmount).toBe(1000);
     expect(breakdown.materialsAmount).toBe(500);
-    expect(breakdown.platformCommission).toBe(75);
-    expect(breakdown.taxableAmount).toBe(1575);
+    expect(breakdown.platformCommission).toBe(150);
+    expect(breakdown.taxableAmount).toBe(1500);
     expect(breakdown.taxRateBps).toBe(SPAIN_IVA_RATES_BPS.GENERAL);
-    expect(breakdown.taxAmount).toBe(330.75);
-    expect(breakdown.totalAmount).toBe(1905.75);
+    expect(breakdown.taxAmount).toBe(315);
+    expect(breakdown.totalAmount).toBe(1815);
   });
 
   it("computes zero IVA for the exempt rate while commission is still charged", () => {
@@ -41,7 +43,7 @@ describe("calculatePriceBreakdown (Spain)", () => {
       taxRateBps: SPAIN_IVA_RATES_BPS.EXEMPT,
     });
 
-    expect(breakdown.platformCommission).toBe(75);
+    expect(breakdown.platformCommission).toBe(100);
     expect(breakdown.taxAmount).toBe(0);
     expect(breakdown.totalAmount).toBe(breakdown.taxableAmount);
   });
@@ -54,10 +56,11 @@ describe("calculatePriceBreakdown (Spain)", () => {
       taxRateBps: SPAIN_IVA_RATES_BPS.REDUCED,
     });
 
-    // taxable = 1000 + 75 = 1075; 10% -> 107.5
-    expect(breakdown.taxableAmount).toBe(1075);
-    expect(breakdown.taxAmount).toBe(107.5);
-    expect(breakdown.totalAmount).toBe(1182.5);
+    // taxable = 1000 (the commission is never added to the taxable base
+    // under Module 64); 10% -> 100.
+    expect(breakdown.taxableAmount).toBe(1000);
+    expect(breakdown.taxAmount).toBe(100);
+    expect(breakdown.totalAmount).toBe(1100);
   });
 
   it("applies the super-reduced 4% rate when explicitly requested", () => {
@@ -68,10 +71,10 @@ describe("calculatePriceBreakdown (Spain)", () => {
       taxRateBps: SPAIN_IVA_RATES_BPS.SUPER_REDUCED,
     });
 
-    expect(breakdown.taxAmount).toBe(43);
+    expect(breakdown.taxAmount).toBe(40);
   });
 
-  it("never lets materials contribute to platform commission, even though they are taxed", () => {
+  it("lets materials contribute to the flat commission exactly like labour (Module 64)", () => {
     const materialsHeavy = calculatePriceBreakdown({
       serviceAmount: 100,
       materialsAmount: 10_000,
@@ -83,22 +86,24 @@ describe("calculatePriceBreakdown (Spain)", () => {
       countryCode: "ES",
     });
 
-    // Commission is identical regardless of materials amount...
-    expect(materialsHeavy.platformCommission).toBe(materialsFree.platformCommission);
-    expect(materialsHeavy.platformCommission).toBe(7.5);
-    // ...but materials still inflate the taxable base and thus the tax.
+    // Unlike the removed dual-fee model, materials now DO change the
+    // commission, because the commission base is the full Total.
+    expect(materialsHeavy.platformCommission).toBeGreaterThan(materialsFree.platformCommission);
+    expect(materialsHeavy.platformCommission).toBe(1010); // 10% of 10,100
+    expect(materialsFree.platformCommission).toBe(10); // 10% of 100
+    // Materials also inflate the taxable base and thus the tax.
     expect(materialsHeavy.taxableAmount).toBeGreaterThan(materialsFree.taxableAmount);
     expect(materialsHeavy.taxAmount).toBeGreaterThan(materialsFree.taxAmount);
   });
 
-  it("handles a materials-only quote (zero labor => zero commission, tax still applies to materials)", () => {
+  it("handles a materials-only quote (zero labor => commission still charged on the materials, Module 64)", () => {
     const breakdown = calculatePriceBreakdown({
       serviceAmount: 0,
       materialsAmount: 500,
       countryCode: "ES",
     });
 
-    expect(breakdown.platformCommission).toBe(0);
+    expect(breakdown.platformCommission).toBe(50); // 10% of 500
     expect(breakdown.taxableAmount).toBe(500);
     expect(breakdown.taxAmount).toBe(105); // 21% of 500
     expect(breakdown.totalAmount).toBe(605);
@@ -117,19 +122,18 @@ describe("calculatePriceBreakdown (Spain)", () => {
     expect(breakdown.totalAmount).toBe(0);
   });
 
-  it("respects configurable commission rates rather than hardcoding 7.5%", () => {
+  it("respects a configurable commission rate rather than hardcoding 10%, without changing what is taxed", () => {
     const breakdown = calculatePriceBreakdown({
       serviceAmount: 1000,
       materialsAmount: 0,
       countryCode: "ES",
-      commissionRates: {
-        customerPlatformFeeRateBps: 1000, // 10%
-        professionalCommissionRateBps: 500,
-      },
+      commissionRates: { commissionRateBps: 500 }, // 5%
     });
 
-    expect(breakdown.platformCommission).toBe(100);
-    expect(breakdown.taxableAmount).toBe(1100);
+    expect(breakdown.platformCommission).toBe(50);
+    // The taxable base is what the customer pays (service + materials)
+    // and never depends on the commission rate.
+    expect(breakdown.taxableAmount).toBe(1000);
   });
 
   it("rounds every stage to whole cents deterministically", () => {
@@ -139,7 +143,12 @@ describe("calculatePriceBreakdown (Spain)", () => {
       countryCode: "ES",
     });
 
-    // No sub-cent values should ever appear.
+    // No sub-cent values should ever appear — compare against the
+    // nearest whole-cent integer with a tiny epsilon rather than a strict
+    // `toBe`, since `value * 100` itself can carry ordinary IEEE-754
+    // binary floating-point representation noise (e.g. `4.44 * 100 ===
+    // 444.00000000000006` in plain JS) even when `value` is already
+    // correctly rounded to whole cents.
     for (const value of [
       breakdown.serviceAmount,
       breakdown.materialsAmount,
@@ -148,7 +157,7 @@ describe("calculatePriceBreakdown (Spain)", () => {
       breakdown.taxAmount,
       breakdown.totalAmount,
     ]) {
-      expect(Math.round(value * 100)).toBe(value * 100);
+      expect(Math.round(value * 100)).toBeCloseTo(value * 100, 6);
     }
   });
 
@@ -306,14 +315,13 @@ describe("calculatePriceBreakdown (Spain)", () => {
     expect(DEFAULT_TAX_CALCULATORS.get("ES")).toBeDefined();
   });
 
-  it("uses the platform's default commission rates when none are supplied", () => {
+  it("uses the platform's default commission rate when none is supplied", () => {
     const breakdown = calculatePriceBreakdown({
       serviceAmount: 1000,
       materialsAmount: 0,
       countryCode: "ES",
     });
-    const expectedFee =
-      (1000 * DEFAULT_COMMISSION_RATES.customerPlatformFeeRateBps) / 10000;
-    expect(breakdown.platformCommission).toBe(expectedFee);
+    const expectedCommission = (1000 * DEFAULT_COMMISSION_RATES.commissionRateBps) / 10000;
+    expect(breakdown.platformCommission).toBe(expectedCommission);
   });
 });

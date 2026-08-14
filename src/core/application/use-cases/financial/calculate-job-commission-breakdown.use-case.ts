@@ -27,7 +27,7 @@ export interface JobCommissionBreakdownResult extends CommissionBreakdown {
  * by RecordCommissionForPaymentUseCase, GetProfessionalEarningsUseCase,
  * GetCustomerFinancialSummaryUseCase, and CreateFinancialAdjustmentUseCase
  * — never called directly by a Server Action, since its output
- * (CommissionBreakdown) includes fields (professionalCommission,
+ * (CommissionBreakdown) includes fields (commission,
  * platformGrossRevenue) that must never be shown to a customer, and other
  * fields a professional must never see for a Job that isn't theirs. Every
  * caller is responsible for its own authorization and for projecting only

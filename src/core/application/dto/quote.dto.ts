@@ -23,9 +23,13 @@ export const MAX_QUOTE_ITEM_UNIT_PRICE = 1000000;
 
 /**
  * Module 22 — Commission & Financial addition: `category` distinguishes
- * labor from materials so commission (7.5% of labor only — see
- * domain/services/commission-policy.ts) is never calculated against
- * materials. Optional (rather than defaulted at the schema level) so the
+ * labor from materials so financial reporting can break a Quote's total
+ * into its labor/materials components. As of Module 64, both categories
+ * are equally commissionable — the flat 10% commission is charged on
+ * their combined total (see domain/services/commission-calculation-
+ * service.ts) — but the category split itself remains meaningful for
+ * materials-procurement workflows (Module 63) and financial summaries.
+ * Optional (rather than defaulted at the schema level) so the
  * *inferred TypeScript type* stays optional too — this keeps every
  * existing call site that builds a CreateQuoteInput/UpdateQuoteInput
  * object literal without a category (tests, and any client that hasn't

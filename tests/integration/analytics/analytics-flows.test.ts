@@ -45,10 +45,10 @@ function earningsEntry(overrides: Partial<ProfessionalEarningsDTO> = {}): Profes
     jobId: "job-1",
     rateBps: 1000,
     laborSubtotal: 1000,
+    materialsSubtotal: 0,
+    totalAmount: 1000,
     professionalCommission: 100,
-    professionalNetLaborEarnings: 900,
-    materialsReimbursed: 0,
-    professionalTotalNetEarnings: 900,
+    professionalPayout: 900,
     status: "SETTLED",
     settledAt: new Date("2026-06-15T00:00:00Z"),
     ...overrides,
@@ -333,8 +333,8 @@ describe("GetProfessionalAnalyticsSummaryUseCase", () => {
   it("reuses Module 22's own earnings figures unmodified — never recalculates a commission", async () => {
     professionals.seed({ userId: "user-me" });
     const entries = [
-      earningsEntry({ professionalCommission: 100, professionalTotalNetEarnings: 900, settledAt: new Date("2026-06-01") }),
-      earningsEntry({ professionalCommission: 50, professionalTotalNetEarnings: 450, settledAt: new Date("2026-06-10") }),
+      earningsEntry({ professionalCommission: 100, professionalPayout: 900, settledAt: new Date("2026-06-01") }),
+      earningsEntry({ professionalCommission: 50, professionalPayout: 450, settledAt: new Date("2026-06-10") }),
     ];
     const useCase = new GetProfessionalAnalyticsSummaryUseCase(
       professionals,

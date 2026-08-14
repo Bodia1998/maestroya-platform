@@ -8,11 +8,12 @@ import { z } from "zod";
  *
  * As with quote.dto.ts's totalAmount, nothing here ever accepts a
  * client-supplied money amount for a *calculated* figure (commission,
- * platform fee, net earnings) — those are always derived server-side from
- * Quote/QuoteItem via commission-policy.ts. The only amount a schema below
- * accepts directly is a FinancialAdjustment's `amount`, and only from an
- * admin/support caller already gated by `requireRole` in the Server Action
- * — never from a customer or professional.
+ * professional payout) — those are always derived server-side from
+ * Quote/QuoteItem via Module 64's `commission-calculation-service.ts`
+ * (through `commission-policy.ts`'s thin adapter). The only amount a
+ * schema below accepts directly is a FinancialAdjustment's `amount`, and
+ * only from an admin/support caller already gated by `requireRole` in the
+ * Server Action — never from a customer or professional.
  */
 
 export const getJobCommissionBreakdownSchema = z.object({
@@ -59,17 +60,20 @@ export type GetPlatformRevenueSummaryInput = z.infer<typeof getPlatformRevenueSu
 
 /**
  * Customer-facing projection of a Payment's finances. Deliberately absent:
- * professionalCommission, professionalNetLaborEarnings, platformGrossRevenue,
- * rateBps — a customer never sees the professional's own commission/earnings
- * or the platform's revenue, only what they themselves were charged and
- * why. See docs/MODULE_22_COMMISSION_FINANCIAL.md, "Authorization."
+ * `commission`/`professionalPayout`/`platformGrossRevenue`/`rateBps` — a
+ * customer never sees the professional's own commission/payout or the
+ * platform's revenue, only what they themselves were charged and why. As
+ * of Module 64 there is also no separate `customerPlatformFee` field —
+ * the flat commission is deducted entirely from the professional's
+ * payout, never added on top of what the customer pays, so
+ * `totalPaid` is simply `laborSubtotal + materialsSubtotal`. See
+ * docs/MODULE_22_COMMISSION_FINANCIAL.md, "Authorization."
  */
 export interface CustomerFinancialSummaryDTO {
   paymentId: string;
   jobId: string | null;
   laborSubtotal: number;
   materialsSubtotal: number;
-  customerPlatformFee: number;
   totalPaid: number;
   currency: string;
   refundedAmount: number;
@@ -77,20 +81,30 @@ export interface CustomerFinancialSummaryDTO {
 }
 
 /**
- * Professional/company-facing projection — their own commission and net
- * earnings only, never another professional's, never the customer's
- * platform fee or the platform's total revenue.
+ * Professional/company-facing projection — their own commission and
+ * payout only, never another professional's, never the platform's total
+ * revenue.
  */
 export interface ProfessionalEarningsDTO {
   commissionId: string;
   paymentId: string;
   jobId: string | null;
+  /** Basis points actually applied — of the Quote's TOTAL
+   *  (labour + materials) under Module 64, not labour-only as it was
+   *  under the removed dual-fee model. */
   rateBps: number;
   laborSubtotal: number;
+  materialsSubtotal: number;
+  /** `laborSubtotal + materialsSubtotal` — the commission base. */
+  totalAmount: number;
   professionalCommission: number;
-  professionalNetLaborEarnings: number;
-  materialsReimbursed: number;
-  professionalTotalNetEarnings: number;
+  /** `totalAmount - professionalCommission` — what the professional
+   *  actually receives. Replaces the removed
+   *  `professionalNetLaborEarnings`/`materialsReimbursed`/
+   *  `professionalTotalNetEarnings` trio: since materials are now part of
+   *  the commission base, there is only ever one payout figure to track,
+   *  not a labour-only net plus materials reimbursement added back. */
+  professionalPayout: number;
   status: string;
   settledAt: Date | null;
 }
@@ -101,6 +115,11 @@ export interface PlatformRevenueSummaryDTO {
   to: Date | null;
   grossLaborVolume: number;
   grossMaterialsVolume: number;
+  /** Always 0 for Payments recorded under Module 64 — kept for backward
+   *  compatibility with historical data recorded under the removed
+   *  dual-fee model (which did charge a separate customer platform fee)
+   *  and with `FinancialReportingRepository`'s existing aggregate shape,
+   *  which several other modules (analytics) also depend on. */
   customerPlatformFees: number;
   professionalCommissions: number;
   platformGrossRevenue: number;
