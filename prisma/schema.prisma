@@ -742,10 +742,17 @@ enum TransactionType {
   LABOR_CHARGE
   /// The materials portion of a captured Payment — never commissionable.
   MATERIALS_CHARGE
-  /// The 7.5%-of-labor fee charged to the customer (see commission-policy.ts).
+  /// Historical (Module 22, removed by Module 64): the 7.5%-of-labor fee
+  /// charged to the customer under the old dual-fee model. No longer
+  /// written by RecordCommissionForPaymentUseCase — Module 64's flat
+  /// commission is deducted entirely from the professional's payout, never
+  /// charged to the customer on top. Kept in the enum only so historical
+  /// rows recorded before Module 64 remain readable.
   CUSTOMER_PLATFORM_FEE
-  /// The professional's/company's earnings after their own 7.5% commission
-  /// is deducted from the labor amount.
+  /// The professional's/company's payout after MaestroYa's commission is
+  /// deducted. As of Module 64: a flat 10% of (labor + materials), see
+  /// domain/services/commission-calculation-service.ts. Previously (Module
+  /// 22, removed): 7.5% of labor only.
   PROFESSIONAL_NET_EARNING
   /// MaestroYa's own gross revenue recognized from a Payment (customer
   /// platform fee + professional commission).

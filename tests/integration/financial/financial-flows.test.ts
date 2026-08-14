@@ -153,7 +153,7 @@ const OTHER_CUSTOMER = "user-customer-2";
 const ADMIN = "user-admin-1";
 
 describe("Module 22 — Commission & Financial", () => {
-  it("calculates the commission breakdown from a Job's accepted Quote — labor only, per the module's worked example", async () => {
+  it("calculates the commission breakdown from a Job's accepted Quote — flat 10% of labor+materials, Module 64's own worked example", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
 
@@ -161,15 +161,15 @@ describe("Module 22 — Commission & Financial", () => {
 
     expect(breakdown.laborSubtotal).toBe(1000);
     expect(breakdown.materialsSubtotal).toBe(500);
-    expect(breakdown.commissionBase).toBe(1000);
-    expect(breakdown.customerPlatformFee).toBe(75);
-    expect(breakdown.professionalCommission).toBe(75);
+    expect(breakdown.commissionBase).toBe(1500);
+    expect(breakdown.commission).toBe(150);
+    expect(breakdown.professionalPayout).toBe(1350);
   });
 
   it("records a commission only once a Payment is CAPTURED, never on quote acceptance alone", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
-    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1575);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
     repos.payments.payments.set(payment.id, { ...payment, status: "PENDING" });
 
     await expect(repos.recordCommission.execute(payment.id)).rejects.toThrow(ValidationError);
@@ -178,17 +178,17 @@ describe("Module 22 — Commission & Financial", () => {
   it("records the commission and full ledger trail once captured", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
-    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1575);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
 
     const commission = await repos.recordCommission.execute(payment.id);
 
-    expect(commission.amount).toBe(75);
-    expect(commission.rateBps).toBe(750);
+    expect(commission.amount).toBe(150);
+    expect(commission.rateBps).toBe(1000);
 
     const entries = await repos.ledger.listForPayment(payment.id);
     const types = entries.map((e) => e.type).sort();
     expect(types).toEqual(
-      ["COMMISSION", "CUSTOMER_PLATFORM_FEE", "LABOR_CHARGE", "MATERIALS_CHARGE", "PLATFORM_REVENUE", "PROFESSIONAL_NET_EARNING"].sort(),
+      ["COMMISSION", "LABOR_CHARGE", "MATERIALS_CHARGE", "PLATFORM_REVENUE", "PROFESSIONAL_NET_EARNING"].sort(),
     );
     const platformRevenue = entries.find((e) => e.type === "PLATFORM_REVENUE");
     expect(platformRevenue?.amount).toBe(150);
@@ -197,26 +197,26 @@ describe("Module 22 — Commission & Financial", () => {
   it("is idempotent — recording a commission twice for the same payment never double-charges", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
-    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1575);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
 
     const first = await repos.recordCommission.execute(payment.id);
     const second = await repos.recordCommission.execute(payment.id);
 
     expect(second.id).toBe(first.id);
     expect(repos.commissions.commissions.size).toBe(1);
-    expect(repos.ledger.entries.filter((e) => e.paymentId === payment.id)).toHaveLength(6);
+    expect(repos.ledger.entries.filter((e) => e.paymentId === payment.id)).toHaveLength(5);
   });
 
   it("lets a professional see only their own earnings", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
-    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1575);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
     await repos.recordCommission.execute(payment.id);
 
     const earnings = await repos.getProfessionalEarnings.execute(PROFESSIONAL);
     expect(earnings).toHaveLength(1);
-    expect(earnings[0]!.professionalCommission).toBe(75);
-    expect(earnings[0]!.professionalTotalNetEarnings).toBe(1425);
+    expect(earnings[0]!.professionalCommission).toBe(150);
+    expect(earnings[0]!.professionalPayout).toBe(1350);
 
     // Never leaks another professional's earnings: a second, genuine
     // professional profile with no commissions of their own sees an empty
@@ -239,33 +239,34 @@ describe("Module 22 — Commission & Financial", () => {
   it("never exposes another customer's financial summary — unauthorized access surfaces as NotFoundError", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
-    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1575);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
     await repos.recordCommission.execute(payment.id);
 
     await expect(repos.getCustomerSummary.execute(OTHER_CUSTOMER, job.id)).rejects.toThrow(NotFoundError);
   });
 
-  it("shows the customer their own platform fee but never the professional's commission or net earnings", async () => {
+  it("shows the customer labour + materials only — no separate platform fee, and never the professional's commission or payout", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
-    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1575);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
     await repos.recordCommission.execute(payment.id);
 
     const summary = await repos.getCustomerSummary.execute(CUSTOMER, job.id);
     expect(summary).toHaveLength(1);
-    expect(summary[0]!.customerPlatformFee).toBe(75);
     expect(summary[0]!.laborSubtotal).toBe(1000);
     expect(summary[0]!.materialsSubtotal).toBe(500);
-    // The DTO type itself has no professionalCommission/platformGrossRevenue
-    // field — this assertion documents that even at runtime, nothing extra
-    // leaked onto the object.
+    expect(summary[0]!.totalPaid).toBe(1500);
+    // The DTO type itself has no customerPlatformFee/professionalCommission/
+    // platformGrossRevenue field — this assertion documents that even at
+    // runtime, nothing extra leaked onto the object.
+    expect(Object.keys(summary[0]!)).not.toContain("customerPlatformFee");
     expect(Object.keys(summary[0]!)).not.toContain("professionalCommission");
   });
 
   it("reflects a processed refund in the customer's financial summary", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
-    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1575);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
     await repos.recordCommission.execute(payment.id);
     repos.payments.seedProcessedRefund(payment.id, 200);
 
@@ -334,7 +335,7 @@ describe("Module 22 — Commission & Financial", () => {
     ).rejects.toThrow(NotFoundError);
   });
 
-  it("never lets materials contribute to commission, even when they dwarf labor", async () => {
+  it("lets materials contribute to commission exactly like labor — the flat model's own point", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL, [
       { description: "Labor", quantity: 1, unitPrice: 2000, category: "LABOR" },
@@ -342,25 +343,24 @@ describe("Module 22 — Commission & Financial", () => {
     ]);
 
     const breakdown = await repos.breakdowns.execute(job.id);
-    expect(breakdown.commissionBase).toBe(2000);
-    expect(breakdown.customerPlatformFee).toBe(150);
-    expect(breakdown.professionalCommission).toBe(150);
+    expect(breakdown.commissionBase).toBe(12000);
+    expect(breakdown.commission).toBe(1200);
+    expect(breakdown.professionalPayout).toBe(10800);
   });
 
   it("respects a configured (non-default) commission rate", async () => {
     const repos = makeRepos();
-    repos.rates.rates = { customerPlatformFeeRateBps: 1000, professionalCommissionRateBps: 500 };
+    repos.rates.rates = { commissionRateBps: 500 };
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
 
     const breakdown = await repos.breakdowns.execute(job.id);
-    expect(breakdown.customerPlatformFee).toBe(100);
-    expect(breakdown.professionalCommission).toBe(50);
+    expect(breakdown.commission).toBe(75);
   });
 
   it("the ledger is append-only — every write produces a new Transaction row, never mutates a prior one", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
-    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1575);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
 
     await repos.recordCommission.execute(payment.id);
     const snapshotAfterFirst = [...repos.ledger.entries];
@@ -385,7 +385,7 @@ describe("Module 22 — Commission & Financial", () => {
   it("every ledger entry traces back to the Payment/Job it originated from", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
-    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1575);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
     await repos.recordCommission.execute(payment.id);
 
     const entries = await repos.ledger.listForPayment(payment.id);

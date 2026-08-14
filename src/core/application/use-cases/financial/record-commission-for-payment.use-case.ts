@@ -15,6 +15,16 @@ import type { CalculateJobCommissionBreakdownUseCase } from "./calculate-job-com
  * Payment through PaymentRepository (dependency inversion: Module 12 will
  * be the thing that eventually calls this, not the other way around).
  *
+ * Commission math: entirely delegated to Module 64's
+ * `CommissionCalculationService` via `CalculateJobCommissionBreakdownUseCase`
+ * — this use case never computes a commission or platform-fee amount
+ * itself, it only writes the already-computed breakdown to the
+ * `Commission` row and the append-only `Transaction` ledger. As of
+ * Module 64 there is no longer a separate `CUSTOMER_PLATFORM_FEE` ledger
+ * entry — the flat commission is deducted entirely from the
+ * professional's payout, never charged to the customer on top of the
+ * Quote total.
+ *
  * Idempotency: keyed deterministically off `paymentId` (never a
  * caller-supplied key — trusting the caller to generate a unique key would
  * make idempotency only as strong as the caller's own discipline). A
@@ -79,8 +89,8 @@ export class RecordCommissionForPaymentUseCase {
       // Snapshot the rate actually used (from CommissionRateRepository at
       // calculation time), never re-derived from the resulting amounts —
       // see JobCommissionBreakdownResult.rates' own doc comment.
-      rateBps: breakdown.rates.professionalCommissionRateBps,
-      amount: breakdown.professionalCommission,
+      rateBps: breakdown.rates.commissionRateBps,
+      amount: breakdown.commission,
     });
 
     await this.ledger.create({
@@ -88,7 +98,7 @@ export class RecordCommissionForPaymentUseCase {
       amount: breakdown.laborSubtotal,
       paymentId: payment.id,
       commissionId: commission.id,
-      description: "Labor portion of captured payment (commission base).",
+      description: "Labor portion of captured payment (part of the flat commission base).",
       idempotencyKey: `${idempotencyKey}:labor`,
     });
 
@@ -98,37 +108,28 @@ export class RecordCommissionForPaymentUseCase {
         amount: breakdown.materialsSubtotal,
         paymentId: payment.id,
         commissionId: commission.id,
-        description: "Materials portion of captured payment (never commissionable).",
+        description: "Materials portion of captured payment (also part of the flat commission base under Module 64).",
         idempotencyKey: `${idempotencyKey}:materials`,
       });
     }
 
     await this.ledger.create({
       type: "COMMISSION",
-      amount: breakdown.professionalCommission,
+      amount: breakdown.commission,
       paymentId: payment.id,
       commissionId: commission.id,
       // Rate is never hardcoded in the description — see
       // breakdown.rates, sourced from CommissionRateRepository.
-      description: `Professional/company commission (${breakdown.rates.professionalCommissionRateBps / 100}% of labor).`,
+      description: `MaestroYa flat commission (${breakdown.rates.commissionRateBps / 100}% of labour + materials).`,
       idempotencyKey: `${idempotencyKey}:commission`,
     });
 
     await this.ledger.create({
-      type: "CUSTOMER_PLATFORM_FEE",
-      amount: breakdown.customerPlatformFee,
-      paymentId: payment.id,
-      commissionId: commission.id,
-      description: `Customer platform fee (${breakdown.rates.customerPlatformFeeRateBps / 100}% of labor).`,
-      idempotencyKey: `${idempotencyKey}:customer-fee`,
-    });
-
-    await this.ledger.create({
       type: "PROFESSIONAL_NET_EARNING",
-      amount: breakdown.professionalTotalNetEarnings,
+      amount: breakdown.professionalPayout,
       paymentId: payment.id,
       commissionId: commission.id,
-      description: "Professional/company net earnings after commission.",
+      description: "Professional/company payout after the flat commission is deducted.",
       idempotencyKey: `${idempotencyKey}:net-earning`,
     });
 
@@ -137,7 +138,7 @@ export class RecordCommissionForPaymentUseCase {
       amount: breakdown.platformGrossRevenue,
       paymentId: payment.id,
       commissionId: commission.id,
-      description: "MaestroYa gross revenue (customer fee + professional commission).",
+      description: "MaestroYa gross revenue (the flat commission).",
       idempotencyKey,
     });
 

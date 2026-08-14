@@ -36,9 +36,11 @@ export interface QuoteItemInput {
    *  this is rounded/validated at the application boundary. */
   quantity: number;
   unitPrice: number;
-  /** Module 22 — Commission & Financial: LABOR is commissionable (7.5%
-   *  customer platform fee + 7.5% professional commission), MATERIALS
-   *  never is — see commission-policy.ts. Optional (defaults to LABOR at
+  /** Module 22 — Commission & Financial: distinguishes labor from
+   *  materials for reporting purposes. As of Module 64 both categories
+   *  are equally commissionable — MaestroYa's flat 10% commission is
+   *  charged on their combined total, see commission-calculation-
+   *  service.ts. Optional (defaults to LABOR at
    *  the repository implementation layer, matching QuoteItem.category's
    *  own DB default) so every pre-existing caller of
    *  QuoteRepository.create/update that doesn't supply one — including

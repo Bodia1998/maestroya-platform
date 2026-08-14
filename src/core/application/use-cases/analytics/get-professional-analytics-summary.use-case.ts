@@ -57,7 +57,7 @@ export class GetProfessionalAnalyticsSummaryUseCase {
       : allEarnings;
 
     const totalCommission = roundToCents(earningsInScope.reduce((sum, e) => sum + e.professionalCommission, 0));
-    const totalNetEarnings = roundToCents(earningsInScope.reduce((sum, e) => sum + e.professionalTotalNetEarnings, 0));
+    const totalNetEarnings = roundToCents(earningsInScope.reduce((sum, e) => sum + e.professionalPayout, 0));
 
     return {
       range: { from: resolved.from, to: resolved.to },

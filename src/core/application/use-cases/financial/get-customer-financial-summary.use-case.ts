@@ -14,9 +14,11 @@ import type { CalculateJobCommissionBreakdownUseCase } from "./calculate-job-com
  * the caller isn't the customer for surfaces as NotFoundError, same
  * anti-enumeration convention as resolveJobActor.
  *
- * Never exposes: the professional's commission or net earnings, or
- * MaestroYa's own gross revenue — see CustomerFinancialSummaryDTO's own
- * doc comment.
+ * Never exposes: the professional's commission or payout, or MaestroYa's
+ * own gross revenue — see CustomerFinancialSummaryDTO's own doc comment.
+ * As of Module 64 the customer's own total is simply
+ * `laborSubtotal + materialsSubtotal` — there is no longer a separate
+ * platform fee added on top of the Quote total.
  */
 export class GetCustomerFinancialSummaryUseCase {
   constructor(
@@ -55,7 +57,6 @@ export class GetCustomerFinancialSummaryUseCase {
         jobId,
         laborSubtotal: breakdown.laborSubtotal,
         materialsSubtotal: breakdown.materialsSubtotal,
-        customerPlatformFee: breakdown.customerPlatformFee,
         totalPaid: roundToCents(payment.amount),
         currency: payment.currency,
         refundedAmount: roundToCents(refundedAmount),

@@ -14,9 +14,17 @@ import type { CalculateJobCommissionBreakdownUseCase } from "./calculate-job-com
  * `professionalProfileId` parameter at all, only `userId`, so there is no
  * way to call it and get back someone else's earnings.
  *
- * Never exposes: another professional's commission, the customer's
- * platform fee, or MaestroYa's own gross revenue — see
- * ProfessionalEarningsDTO's own doc comment in financial.dto.ts.
+ * Never exposes: another professional's commission or MaestroYa's own
+ * gross revenue — see ProfessionalEarningsDTO's own doc comment in
+ * financial.dto.ts.
+ *
+ * Payout math (Module 64): the professional's payout is always
+ * `totalAmount - commission.amount`, using the already-recorded
+ * `Commission.amount` (a snapshot taken at commission-recording time —
+ * see RecordCommissionForPaymentUseCase), never a freshly recomputed
+ * commission at the *current* rate — a later platform-wide rate change
+ * must never retroactively change what an already-recorded Commission
+ * says the professional received.
  *
  * Company-side earnings (CompanyProfile) are out of scope here, same
  * limitation resolveJobActor already documents for company-owned Jobs —
@@ -46,8 +54,8 @@ export class GetProfessionalEarningsUseCase {
         continue;
       }
       const breakdown = await this.breakdowns.execute(payment.jobId);
-      const professionalNetLaborEarnings = roundToCents(breakdown.laborSubtotal - commission.amount);
-      const professionalTotalNetEarnings = roundToCents(professionalNetLaborEarnings + breakdown.materialsSubtotal);
+      const totalAmount = breakdown.commissionBase;
+      const professionalPayout = roundToCents(totalAmount - commission.amount);
 
       results.push({
         commissionId: commission.id,
@@ -55,10 +63,10 @@ export class GetProfessionalEarningsUseCase {
         jobId: payment.jobId,
         rateBps: commission.rateBps,
         laborSubtotal: breakdown.laborSubtotal,
+        materialsSubtotal: breakdown.materialsSubtotal,
+        totalAmount,
         professionalCommission: commission.amount,
-        professionalNetLaborEarnings,
-        materialsReimbursed: breakdown.materialsSubtotal,
-        professionalTotalNetEarnings,
+        professionalPayout,
         status: commission.status,
         settledAt: commission.settledAt,
       });

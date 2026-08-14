@@ -14,7 +14,7 @@ import {
 /**
  * Module 36 — Tax Engine Preparation: the provider-independent Tax Engine
  * itself. This file is the only place that combines two previously
- * separate concerns — Module 22's commission engine and a country's
+ * separate concerns — Module 22/64's commission engine and a country's
  * `TaxCalculator` — into one customer-facing `PriceBreakdown`. Neither the
  * commission engine nor a `TaxCalculator` implementation needs to know the
  * other exists; this module is their integration point, exactly as
@@ -26,17 +26,15 @@ import {
  * (e.g. AEAT), and any persistence — this is a pure, side-effect-free
  * calculation, same convention as `calculateCommissionBreakdown`.
  *
- * Tax base: Spanish law (and VAT/IVA generally) taxes the full
- * consideration a customer pays for a supply — labor, materials, and any
- * service fee are all part of what's being sold, so `taxableAmount` here
- * is `serviceAmount + materialsAmount + platformCommission` (the
- * customer's own platform fee, not the professional's commission, which
- * the customer never pays and is therefore never part of what's taxed).
- * This intentionally does *not* reuse `CommissionBreakdown`'s
- * `customerTotalPayable` field directly — that field predates this module
- * and existed for a pre-tax "what does the customer pay" figure; here we
- * need the taxable base as its own named, addressable value before tax is
- * applied on top of it.
+ * Tax base (updated for Module 64): Spanish law (and VAT/IVA generally)
+ * taxes the full consideration a customer pays for a supply — labor and
+ * materials are what's being sold, so `taxableAmount` here is
+ * `serviceAmount + materialsAmount`. Under Module 64's flat commission
+ * model MaestroYa's own commission is deducted entirely from the
+ * professional's payout and is never part of what the customer pays, so
+ * (unlike the removed dual-fee model, which added a customer-facing
+ * platform fee on top before taxing it) the commission is never added to
+ * the taxable base here.
  */
 
 /** Registry of the countries the Tax Engine currently supports. Extending
@@ -55,9 +53,8 @@ export interface PriceBreakdownInput {
    *  `CommissionBreakdownInput.laborSubtotal`. Never negative. */
   serviceAmount: number;
   /** Sum of MATERIALS-category amounts — same meaning as
-   *  `CommissionBreakdownInput.materialsSubtotal`. Never negative, never
-   *  part of the commission base (enforced by `calculateCommissionBreakdown`,
-   *  not re-implemented here). */
+   *  `CommissionBreakdownInput.materialsSubtotal`. Never negative. Part
+   *  of both the taxable base and (as of Module 64) the commission base. */
   materialsAmount: number;
   /** ISO 3166-1 alpha-2 country code selecting which `TaxCalculator` in
    *  `taxCalculators` applies, e.g. `"ES"`. */
@@ -77,22 +74,22 @@ export interface PriceBreakdownInput {
 
 /**
  * The full customer-facing price breakdown for a Quote/Job: what the
- * service and materials cost, what MaestroYa's own platform fee is, and
- * what tax applies on top — everything a customer-facing summary or
- * receipt needs, expressed as the module spec's own required fields
- * (service amount, materials amount, platform commission, taxable amount,
- * IVA amount, total amount).
+ * service and materials cost, what MaestroYa's own flat commission is
+ * (informational — deducted from the professional, not charged to the
+ * customer), and what tax applies on top of what the customer actually
+ * pays.
  */
 export interface PriceBreakdown {
   countryCode: string;
   serviceAmount: number;
   materialsAmount: number;
-  /** The customer's own platform fee (`CommissionBreakdown.customerPlatformFee`)
-   *  — never the professional's commission, which the customer doesn't pay
-   *  and which is therefore never part of what's taxed here. */
+  /** MaestroYa's flat commission (`CommissionBreakdown.commission`) —
+   *  informational only. Under Module 64 this is deducted from the
+   *  professional's payout, never charged to the customer, and is
+   *  therefore never part of `taxableAmount`. */
   platformCommission: number;
-  /** `serviceAmount + materialsAmount + platformCommission`, rounded —
-   *  the base tax is calculated on. */
+  /** `serviceAmount + materialsAmount`, rounded — the base tax is
+   *  calculated on; equal to what the customer pays before tax. */
   taxableAmount: number;
   /** The rate actually used to compute `taxAmount`, in bps — always
    *  present, even when the caller didn't pass `taxRateBps`, so this
@@ -145,9 +142,7 @@ export function calculatePriceBreakdown(input: PriceBreakdownInput): PriceBreakd
   const registry = input.taxCalculators ?? DEFAULT_TAX_CALCULATORS;
   const calculator = resolveTaxCalculator(input.countryCode, registry);
 
-  const taxableAmount = roundToCents(
-    commission.laborSubtotal + commission.materialsSubtotal + commission.customerPlatformFee,
-  );
+  const taxableAmount = roundToCents(commission.laborSubtotal + commission.materialsSubtotal);
   const tax = calculator.calculate({ taxableAmount, rateBps: input.taxRateBps });
   const totalAmount = roundToCents(taxableAmount + tax.taxAmount);
 
@@ -155,7 +150,7 @@ export function calculatePriceBreakdown(input: PriceBreakdownInput): PriceBreakd
     countryCode: tax.countryCode,
     serviceAmount: commission.laborSubtotal,
     materialsAmount: commission.materialsSubtotal,
-    platformCommission: commission.customerPlatformFee,
+    platformCommission: commission.commission,
     taxableAmount,
     taxRateBps: tax.rateBps,
     taxAmount: tax.taxAmount,
