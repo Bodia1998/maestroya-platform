@@ -420,3 +420,95 @@ export class MaterialsNotConfirmedError extends DomainError {
     super(message);
   }
 }
+
+/**
+ * Module 65 — Trust & Integrity System: thrown when a `TrustProfile` is
+ * looked up (e.g. by `GetUserTrustProfileUseCase`) for a userId that has
+ * never had one created. In practice this should be rare —
+ * `RecordUserBehaviorSignalUseCase` lazily creates a `TrustProfile` on
+ * first use for any user — but every read path still asserts explicitly
+ * rather than silently defaulting, so a caller can tell "this user
+ * genuinely has no trust profile yet" apart from "the profile legitimately
+ * has default score 70/0."
+ */
+export class TrustProfileNotFoundError extends DomainError {
+  readonly code = "TRUST_PROFILE_NOT_FOUND";
+
+  constructor(userId: string) {
+    super(`No TrustProfile exists for user "${userId}".`);
+  }
+}
+
+/**
+ * Module 65 — Trust & Integrity System: thrown by
+ * `domain/entities/manual-review-case.ts`'s `assertValidManualReviewTransition`
+ * when a requested state transition is not in `ManualReviewCase`'s allowed
+ * transition table (e.g. attempting to move a `RESOLVED` case back to
+ * `UNDER_REVIEW`).
+ */
+export class InvalidManualReviewTransitionError extends DomainError {
+  readonly code = "INVALID_MANUAL_REVIEW_TRANSITION";
+
+  constructor(from: string, to: string) {
+    super(`Cannot transition a manual review case from "${from}" to "${to}".`);
+  }
+}
+
+/**
+ * Module 65 — Trust & Integrity System: thrown by
+ * `domain/entities/appeal.ts`'s `assertValidAppealTransition` for the same
+ * reason `InvalidManualReviewTransitionError` exists, applied to the
+ * `TrustAppeal` state machine.
+ */
+export class InvalidAppealTransitionError extends DomainError {
+  readonly code = "INVALID_APPEAL_TRANSITION";
+
+  constructor(from: string, to: string) {
+    super(`Cannot transition an appeal from "${from}" to "${to}".`);
+  }
+}
+
+/**
+ * Module 65 — Trust & Integrity System: thrown when
+ * `SubmitAppealUseCase`/`ReviewAppealUseCase` cannot find the
+ * `TrustAppeal` or `TrustAutomatedAction` a caller referenced by id.
+ */
+export class TrustAppealNotFoundError extends DomainError {
+  readonly code = "TRUST_APPEAL_NOT_FOUND";
+
+  constructor(id: string) {
+    super(`No TrustAppeal exists with id "${id}".`);
+  }
+}
+
+export class TrustAutomatedActionNotFoundError extends DomainError {
+  readonly code = "TRUST_AUTOMATED_ACTION_NOT_FOUND";
+
+  constructor(id: string) {
+    super(`No TrustAutomatedAction exists with id "${id}".`);
+  }
+}
+
+export class ManualReviewCaseNotFoundError extends DomainError {
+  readonly code = "MANUAL_REVIEW_CASE_NOT_FOUND";
+
+  constructor(id: string) {
+    super(`No ManualReviewCase exists with id "${id}".`);
+  }
+}
+
+/**
+ * Module 65 — Trust & Integrity System: thrown by `SubmitAppealUseCase`
+ * when the user already has a non-terminal appeal open against the same
+ * `TrustAutomatedAction` — one live appeal per action at a time, the same
+ * "no duplicate open workflow" rule `PartnerFraudFlagRepository`'s own
+ * open-flag convention implies for a partner, applied here per action
+ * rather than per user.
+ */
+export class DuplicateAppealError extends DomainError {
+  readonly code = "DUPLICATE_APPEAL";
+
+  constructor(automatedActionId: string) {
+    super(`An appeal is already open against action "${automatedActionId}".`);
+  }
+}
