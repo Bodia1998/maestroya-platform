@@ -127,7 +127,14 @@ export type AdminAuditAction =
   // from every other field change, and why per-evaluation calls are never
   // logged here at all (would be prohibitively high-volume noise).
   | "FEATURE_FLAG_UPDATED"
-  | "FEATURE_FLAG_KILL_SWITCH_TOGGLED";
+  | "FEATURE_FLAG_KILL_SWITCH_TOGGLED"
+  // Module 62 — Professional Onboarding: recorded once, by
+  // `RecordOnboardingActivatedAuditLogSubscriber`, the instant a
+  // professional satisfies every onboarding requirement
+  // (`ActivateProfessionalUseCase`). `adminUserId` on this entry is the
+  // professional themselves — not an admin — same reasoning as
+  // VERIFICATION_SUBMITTED above.
+  | "ONBOARDING_ACTIVATED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved

@@ -4,6 +4,7 @@ import {
   buildRateLimitKey,
   contentFingerprint,
   hashIp,
+  hashSecret,
   truncateUserAgent,
 } from "@/domain/services/security-key";
 
@@ -70,6 +71,27 @@ describe("security-key: buildRateLimitKey", () => {
 
   it("throws if no identifying part is provided (would otherwise be a shared, unbounded key)", () => {
     expect(() => buildRateLimitKey("SOME_POLICY", {})).toThrow(RangeError);
+  });
+});
+
+describe("security-key: hashSecret (Module 62)", () => {
+  it("is deterministic for the same value+pepper+context", () => {
+    expect(hashSecret("ES9121000418450200051332", "pepper", "iban")).toBe(
+      hashSecret("ES9121000418450200051332", "pepper", "iban"),
+    );
+  });
+
+  it("never contains the raw value as a substring", () => {
+    const hash = hashSecret("ES9121000418450200051332", "pepper", "iban");
+    expect(hash).not.toContain("ES9121000418450200051332");
+  });
+
+  it("produces different hashes under different contexts for the same value+pepper (namespaced)", () => {
+    expect(hashSecret("value", "pepper", "iban")).not.toBe(hashSecret("value", "pepper", "other-context"));
+  });
+
+  it("produces different hashes for the same value+context with a different pepper (keyed, not a bare hash)", () => {
+    expect(hashSecret("value", "pepper-a", "iban")).not.toBe(hashSecret("value", "pepper-b", "iban"));
   });
 });
 

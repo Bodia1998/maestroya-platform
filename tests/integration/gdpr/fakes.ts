@@ -1148,6 +1148,8 @@ export class FakeConsentRepository implements ConsentRepository {
       version: data.version,
       grantedAt: data.grantedAt,
       withdrawnAt: null,
+      ipHash: data.ipHash ?? null,
+      userAgent: data.userAgent ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

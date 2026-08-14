@@ -26,6 +26,20 @@ export function hashIp(rawIp: string, pepper: string): string {
   return createHash("sha256").update(`${pepper}:ip:${rawIp}`).digest("hex");
 }
 
+/**
+ * Module 62 — Professional Onboarding: generic keyed-hash helper for any
+ * other raw sensitive value that must never be persisted or logged in the
+ * clear (e.g. a professional's IBAN, kept only for duplicate-destination
+ * detection — see `professional-onboarding-rules.ts`'s `isValidIban`/
+ * `maskIban` and `ProfessionalPayoutAccountRecord.ibanHash`). `context`
+ * namespaces the hash the same way `hashIp`'s hard-coded `"ip"` segment
+ * does, so the same raw value hashed under two different contexts never
+ * collides.
+ */
+export function hashSecret(rawValue: string, pepper: string, context: string): string {
+  return createHash("sha256").update(`${pepper}:${context}:${rawValue}`).digest("hex");
+}
+
 /** Caps how much of a User-Agent string is ever persisted — these can be
  *  arbitrarily long and are only useful here as a coarse "same client
  *  again?" signal, not as a field to store in full. */

@@ -40,6 +40,10 @@ export class WithdrawConsentUseCase {
         version: existing.version,
         grantedAt: existing.grantedAt,
         withdrawnAt: existing.withdrawnAt,
+        // Module 62 — Professional Onboarding: additive provenance fields
+        // on ConsentProps — carried through as-is, never re-derived here.
+        ipHash: existing.ipHash,
+        userAgent: existing.userAgent,
       },
       existing.id,
     );
