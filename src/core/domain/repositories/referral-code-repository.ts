@@ -35,4 +35,13 @@ export interface ReferralCodeRepository {
    *  referral-code catalog is expected to stay small; add pagination here
    *  if that assumption stops holding). */
   list(): Promise<ReferralCodeRecord[]>;
+  /**
+   * Module 61 — Affiliate & Partner System: every code owned by
+   * `ownerUserId`, newest first. Added for the Partner System to list a
+   * partner's own generated referral links without introducing a second
+   * "partner referral code" table — a partner's links are just
+   * `ReferralCode` rows whose `ownerUserId` is the partner's own `userId`.
+   * See docs/MODULE_61's "Referral Attribution" section.
+   */
+  findByOwnerUserId(ownerUserId: string): Promise<ReferralCodeRecord[]>;
 }

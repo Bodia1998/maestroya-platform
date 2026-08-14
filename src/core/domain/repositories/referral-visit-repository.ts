@@ -69,4 +69,16 @@ export interface ReferralVisitRepository {
    *  `TouchInput.campaign` uses) ranked by visit count, descending, capped
    *  at `limit`. */
   topCampaignsByVisits(limit: number): Promise<TopCampaignStat[]>;
+
+  /**
+   * Module 61 — Affiliate & Partner System: every visit whose
+   * `referralCode` is one of `codes` — the read `GetPartnerDashboardStatisticsUseCase`
+   * uses to scope "clicks/visits" and per-partner top-campaign/top-code
+   * breakdowns to exactly one partner's own referral codes, without this
+   * module needing a `partnerId`/`ownerUserId` column on `ReferralVisit`
+   * itself (partner scoping is derived entirely from `ReferralCode.code`
+   * membership, reusing Module 60's existing shape as-is). Returns `[]` for
+   * an empty `codes` array rather than every visit.
+   */
+  listByReferralCodes(codes: string[]): Promise<ReferralVisitRecord[]>;
 }

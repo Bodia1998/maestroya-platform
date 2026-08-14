@@ -121,4 +121,14 @@ export class PrismaReferralVisitRepository implements ReferralVisitRepository {
       .filter((g): g is typeof g & { utmCampaign: string } => g.utmCampaign !== null)
       .map((g) => ({ campaign: g.utmCampaign, visits: g._count._all }));
   }
+
+  async listByReferralCodes(codes: string[]): Promise<ReferralVisitRecord[]> {
+    if (codes.length === 0) return [];
+    const rows = await prisma.referralVisit.findMany({
+      where: { referralCode: { in: codes } },
+      orderBy: { createdAt: "desc" },
+      select: REFERRAL_VISIT_SELECT,
+    });
+    return rows.map(toReferralVisitRecord);
+  }
 }

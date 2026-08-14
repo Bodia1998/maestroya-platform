@@ -120,4 +120,13 @@ export class PrismaMarketingAttributionRepository implements MarketingAttributio
   async countWithUser(): Promise<number> {
     return prisma.marketingAttribution.count({ where: { userId: { not: null } } });
   }
+
+  async listByReferralCodes(codes: string[]): Promise<MarketingAttributionRecord[]> {
+    if (codes.length === 0) return [];
+    const rows = await prisma.marketingAttribution.findMany({
+      where: { OR: [{ firstReferralCode: { in: codes } }, { lastReferralCode: { in: codes } }] },
+      select: ATTRIBUTION_SELECT,
+    });
+    return rows.map(toAttributionRecord);
+  }
 }

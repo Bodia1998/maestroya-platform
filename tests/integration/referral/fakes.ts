@@ -54,6 +54,10 @@ export class FakeReferralCodeRepository implements ReferralCodeRepository {
   async list(): Promise<ReferralCodeRecord[]> {
     return [...this.codes.values()];
   }
+
+  async findByOwnerUserId(ownerUserId: string): Promise<ReferralCodeRecord[]> {
+    return [...this.codes.values()].filter((c) => c.ownerUserId === ownerUserId);
+  }
 }
 
 export class FakeReferralVisitRepository implements ReferralVisitRepository {
@@ -96,6 +100,11 @@ export class FakeReferralVisitRepository implements ReferralVisitRepository {
       .sort((a, b) => b.visits - a.visits)
       .slice(0, limit);
   }
+
+  async listByReferralCodes(codes: string[]): Promise<ReferralVisitRecord[]> {
+    if (codes.length === 0) return [];
+    return this.visits.filter((v) => v.referralCode !== null && codes.includes(v.referralCode));
+  }
 }
 
 export class FakeMarketingAttributionRepository implements MarketingAttributionRepository {
@@ -127,6 +136,13 @@ export class FakeMarketingAttributionRepository implements MarketingAttributionR
 
   async countWithUser(): Promise<number> {
     return [...this.attributions.values()].filter((a) => a.userId !== null).length;
+  }
+
+  async listByReferralCodes(codes: string[]): Promise<MarketingAttributionRecord[]> {
+    if (codes.length === 0) return [];
+    return [...this.attributions.values()].filter(
+      (a) => (a.firstReferralCode && codes.includes(a.firstReferralCode)) || (a.lastReferralCode && codes.includes(a.lastReferralCode)),
+    );
   }
 }
 

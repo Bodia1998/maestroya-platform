@@ -340,3 +340,41 @@ export class ReferralCodeError extends DomainError {
     super(message);
   }
 }
+
+/**
+ * Module 61 — Affiliate & Partner System: thrown by
+ * `domain/services/partner-approval-rules.ts`'s
+ * `assertValidPartnerStatusTransition` when a caller (an admin
+ * approve/reject/suspend/ban use case) requests a `Partner.status` change
+ * its lifecycle does not allow from the current status — e.g. approving an
+ * already-`BANNED` partner, or suspending one still `PENDING`. Same
+ * reasoning as `InvalidPaymentTransitionError`/`InvalidBackupTransitionError`:
+ * raised from inside the pure state-machine check itself, never
+ * re-validated ad hoc at every call site.
+ */
+export class InvalidPartnerTransitionError extends DomainError {
+  readonly code = "INVALID_PARTNER_TRANSITION";
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/**
+ * Module 61 — Affiliate & Partner System: thrown when a use case that
+ * requires an `APPROVED` partner (generating a referral link, recording an
+ * affiliate commission, requesting a payout) is called for a partner whose
+ * status is `PENDING`, `REJECTED`, `SUSPENDED`, or `BANNED` — see
+ * `domain/services/partner-approval-rules.ts`'s
+ * `isPartnerActiveForAffiliateActivity`. Kept distinct from the generic
+ * `UnauthorizedError` so callers can tell "this partner isn't approved yet"
+ * apart from "this caller has no permission to act on this partner at
+ * all."
+ */
+export class PartnerNotActiveError extends DomainError {
+  readonly code = "PARTNER_NOT_ACTIVE";
+
+  constructor(status: string) {
+    super(`This partner is not eligible for affiliate activity while status is "${status}".`);
+  }
+}
