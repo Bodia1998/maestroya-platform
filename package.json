@@ -28,6 +28,7 @@
     "referral-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-referral-report.ts",
     "affiliate-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-affiliate-report.ts",
     "onboarding-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-onboarding-report.ts",
+    "materials-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-materials-report.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",

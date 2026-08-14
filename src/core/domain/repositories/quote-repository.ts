@@ -8,7 +8,16 @@
  * professional, submitting a quote) exists on the schema for a future
  * Company module this feature does not implement — every operation here is
  * scoped to `professionalProfileId` only, never `companyProfileId`.
+ *
+ * Module 63 — Materials Procurement Workflow additive note: this interface
+ * now also owns the Quote's `materialsStrategy`/`materials` checklist and
+ * purchase-confirmation state (`QuoteMaterial` in schema.prisma) — the
+ * same "child records live on the aggregate root's own repository"
+ * convention `QuoteItemInput`/`QuoteItemRecord` already established for
+ * quote line items, rather than a second, competing repository.
  */
+
+import type { MaterialsStrategyValue } from "@/domain/value-objects/materials-strategy";
 
 export type QuoteStatusValue =
   | "PENDING"
@@ -49,6 +58,33 @@ export interface QuoteItemRecord extends Omit<QuoteItemInput, "category"> {
   category: QuoteItemCategoryValue;
 }
 
+/**
+ * Module 63 — Materials Procurement Workflow: one line of a Quote's
+ * required-materials checklist (e.g. "Bosch Condens 2300iW boiler", qty
+ * 1). Only ever meaningful when the owning Quote's `materialsStrategy` is
+ * `CUSTOMER_PURCHASED` — see `domain/services/materials-procurement-rules.ts`'s
+ * `assertValidMaterialsList` for the validation this list must satisfy.
+ * Deliberately has no price/amount field — unlike QuoteItem, this list
+ * exists only to tell the customer what to go buy, never to price
+ * anything.
+ */
+export interface QuoteMaterialInput {
+  name: string;
+  brand?: string | null;
+  model?: string | null;
+  /** Decimal(10,2) in the schema, same convention as QuoteItemInput.quantity. */
+  quantity: number;
+  notes?: string | null;
+}
+
+export interface QuoteMaterialRecord extends QuoteMaterialInput {
+  id: string;
+  brand: string | null;
+  model: string | null;
+  notes: string | null;
+  sortOrder: number;
+}
+
 export interface QuoteRecord {
   id: string;
   serviceRequestId: string;
@@ -66,6 +102,21 @@ export interface QuoteRecord {
   validUntil: Date | null;
   notes: string | null;
   items: QuoteItemRecord[];
+  /** Module 63 — Materials Procurement Workflow: defaults to
+   *  PROFESSIONAL_SUPPLIED for every Quote — see
+   *  value-objects/materials-strategy.ts's own doc comment. */
+  materialsStrategy: MaterialsStrategyValue;
+  /** Always empty for a PROFESSIONAL_SUPPLIED quote. */
+  materials: QuoteMaterialRecord[];
+  /** Set once the customer confirms the purchase — see
+   *  ConfirmMaterialsPurchasedUseCase. Always null for
+   *  PROFESSIONAL_SUPPLIED, and null for CUSTOMER_PURCHASED until
+   *  confirmed. */
+  materialsConfirmedAt: Date | null;
+  /** The customer User who confirmed the purchase — mirrors
+   *  Quote.materialsConfirmedByUserId's own "plain scalar, no relation
+   *  needed" doc comment in schema.prisma. */
+  materialsConfirmedByUserId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -79,6 +130,18 @@ export interface CreateQuoteData {
   validUntil: Date | null;
   notes: string | null;
   items: QuoteItemInput[];
+  /** Optional — defaults to PROFESSIONAL_SUPPLIED at the repository
+   *  implementation layer (matching Quote.materialsStrategy's own DB
+   *  default) so every pre-Module-63 caller of
+   *  QuoteRepository.create/update — including every other module's
+   *  integration tests that seed a Quote directly — keeps compiling and
+   *  behaving exactly as before. */
+  materialsStrategy?: MaterialsStrategyValue;
+  /** Only meaningful (and only ever non-empty) when materialsStrategy is
+   *  CUSTOMER_PURCHASED — see assertValidMaterialsList, which every
+   *  caller of this method must run first. Omitted or empty for
+   *  PROFESSIONAL_SUPPLIED. */
+  materials?: QuoteMaterialInput[];
 }
 
 /**
@@ -95,6 +158,12 @@ export interface UpdateQuoteFields {
   validUntil: Date | null;
   notes: string | null;
   items: QuoteItemInput[];
+  /** Same optional/defaulting convention as CreateQuoteData — see its own
+   *  doc comment. An update always resubmits the complete materials
+   *  strategy/list, same as it does for `items`, so there is no
+   *  partial-merge ambiguity here either. */
+  materialsStrategy?: MaterialsStrategyValue;
+  materials?: QuoteMaterialInput[];
 }
 
 export interface QuoteRepository {
@@ -140,4 +209,17 @@ export interface QuoteRepository {
    * here without changing the interface's callers.
    */
   findExpirable(now: Date): Promise<QuoteRecord[]>;
+  /**
+   * Module 63 — Materials Procurement Workflow: records the customer's
+   * confirmation that every item on the required-materials checklist has
+   * been purchased — sets `materialsConfirmedAt`/`materialsConfirmedByUserId`.
+   * `ConfirmMaterialsPurchasedUseCase` is the sole caller; it has already
+   * verified (via `canConfirmMaterialsPurchase`) that the Quote is
+   * CUSTOMER_PURCHASED and not already confirmed before calling this, but
+   * implementations SHOULD still guard against a concurrent double-confirm
+   * (e.g. a `WHERE materialsConfirmedAt IS NULL` clause) the same way
+   * every other mutating method on this repository re-checks state rather
+   * than trusting a previously-fetched record.
+   */
+  confirmMaterialsPurchased(quoteId: string, confirmedByUserId: string): Promise<QuoteRecord>;
 }
