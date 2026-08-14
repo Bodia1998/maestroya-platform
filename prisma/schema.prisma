@@ -1190,6 +1190,14 @@ model ProfessionalProfile {
   /// Professional Verification module (Module 17): the professional's
   /// verification case history (at most one non-EXPIRED at a time).
   verifications           ProfessionalVerification[]
+  /// Module 62 — Professional Onboarding: at most one row per professional
+  /// profile (`@unique` on ProfessionalOnboarding.professionalProfileId).
+  onboarding              ProfessionalOnboarding?
+  /// Module 62 — Professional Onboarding: the professional's single active
+  /// payout destination (`@unique` on ProfessionalPayoutAccount
+  /// .professionalProfileId) — see that model's own doc comment for why
+  /// this is insert-or-replace rather than a history table.
+  payoutAccount           ProfessionalPayoutAccount?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2830,6 +2838,15 @@ model Consent {
   version     String
   grantedAt   DateTime    @default(now())
   withdrawnAt DateTime?
+  /// Module 62 — Professional Onboarding: additive, optional request
+  /// provenance columns, populated when this consent was granted through
+  /// the onboarding flow's Terms & Conditions step (see
+  /// AcceptOnboardingTermsUseCase). `null` for every consent granted
+  /// through a channel with no request context (every pre-Module-62
+  /// caller, and the Privacy Policy onboarding step, which the module
+  /// brief does not require these for).
+  ipHash      String?
+  userAgent   String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -3539,4 +3556,100 @@ model PartnerFraudFlag {
   @@index([partnerId])
   @@index([status])
   @@map("partner_fraud_flags")
+}
+
+// ============================================================================
+// Module 62 — Professional Onboarding
+// ============================================================================
+//
+// Orchestrates existing modules (Consent/Module 38 for terms & privacy,
+// ProfessionalVerification/Module 17+59 for identity, ProfessionalProfile
+// for profile completeness) plus exactly two new tables this module needs
+// that nothing else already owns: the onboarding progress/activation
+// record itself, and the professional's payout destination. See
+// docs/MODULE_62_PROFESSIONAL_ONBOARDING.md.
+
+enum OnboardingStatus {
+  IN_PROGRESS
+  ACTIVATED
+}
+
+enum PayoutMethod {
+  IBAN
+  STRIPE_EXPRESS
+}
+
+enum PayoutAccountStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+/// Module 65 (future) — Stripe Connect / Stripe Express. `NOT_STARTED`
+/// (default) / `PENDING` (professional chose Stripe Express; ready for
+/// Module 65's real account-creation flow) / `READY` (reserved — only
+/// Module 65 ever writes this, once a real Stripe Express account exists).
+/// This module never calls the Stripe SDK — see StripeExpressPayoutProvider's
+/// own doc comment.
+enum StripeExpressReadiness {
+  NOT_STARTED
+  PENDING
+  READY
+}
+
+/// One row per professional profile — progress/activation state for the
+/// Professional Onboarding flow. Distinct from `ProfessionalProfile.status`
+/// (ProfessionalStatus: ACTIVE/INACTIVE/SUSPENDED, the account-lifecycle
+/// column set at profile creation) the same way `AccountRestriction` is
+/// distinct from `UserStatus` — this models a *gate* layered on top of an
+/// already-ACTIVE profile, not a replacement for that column. See
+/// ProfessionalOnboardingActivated's own doc comment for how a future
+/// consumer (booking/payout eligibility) is expected to read this.
+model ProfessionalOnboarding {
+  id                     String           @id @default(uuid()) @db.Uuid
+  professionalProfileId  String           @unique @db.Uuid
+  professionalProfile    ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Cascade)
+
+  status      OnboardingStatus @default(IN_PROGRESS)
+  activatedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("professional_onboardings")
+}
+
+/// The professional's single active payout destination. Insert-or-replace
+/// (`@unique` on professionalProfileId), not a history table — switching
+/// payout method/details replaces the current destination, mirroring
+/// `ProfessionalProfile.stripeConnectAccountId`'s own "single current
+/// value" shape rather than `Payout`'s append-only transaction history
+/// (which this is not — this table never records money movement, only
+/// where it would go). A raw IBAN is never stored: only the last 4 digits
+/// (`ibanLast4`, display only) and a keyed hash (`ibanHash`, duplicate
+/// detection only) — see IbanPayoutProvider's own doc comment.
+model ProfessionalPayoutAccount {
+  id                     String           @id @default(uuid()) @db.Uuid
+  professionalProfileId  String           @unique @db.Uuid
+  professionalProfile    ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Cascade)
+
+  method            PayoutMethod
+  status            PayoutAccountStatus @default(PENDING)
+  accountHolderName String
+
+  ibanLast4 String? @db.VarChar(4)
+  ibanHash  String? @unique
+
+  /// Reserved for Module 65 — never populated by this module (see
+  /// StripeExpressPayoutProvider's own doc comment).
+  stripeExpressAccountId String?                 @unique
+  stripeExpressStatus    StripeExpressReadiness  @default(NOT_STARTED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([method])
+  @@index([status])
+  @@map("professional_payout_accounts")
 }

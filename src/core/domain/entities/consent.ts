@@ -45,6 +45,12 @@ export interface ConsentProps {
    *  `Consent` row is terminal — granting the same type again is always a
    *  new `Consent.grant()`, never a re-activation of a withdrawn one. */
   withdrawnAt: Date | null;
+  /** Module 62 — Professional Onboarding: optional request-provenance
+   *  columns, populated when this consent was granted as part of the
+   *  onboarding flow (see `AcceptOnboardingTermsUseCase`). `null` for every
+   *  consent granted through a channel with no request context. */
+  ipHash: string | null;
+  userAgent: string | null;
 }
 
 export interface GrantConsentInput {
@@ -53,6 +59,8 @@ export interface GrantConsentInput {
   type: ConsentTypeValue;
   version: string;
   grantedAt?: Date;
+  ipHash?: string | null;
+  userAgent?: string | null;
 }
 
 export class Consent extends Entity<ConsentProps> {
@@ -75,6 +83,8 @@ export class Consent extends Entity<ConsentProps> {
         version: input.version,
         grantedAt: input.grantedAt ?? new Date(),
         withdrawnAt: null,
+        ipHash: input.ipHash ?? null,
+        userAgent: input.userAgent ?? null,
       },
       input.id ?? randomUUID(),
     );
@@ -104,6 +114,14 @@ export class Consent extends Entity<ConsentProps> {
 
   get withdrawnAt(): Date | null {
     return this.props.withdrawnAt;
+  }
+
+  get ipHash(): string | null {
+    return this.props.ipHash;
+  }
+
+  get userAgent(): string | null {
+    return this.props.userAgent;
   }
 
   /** Whether this consent is currently in effect (granted and not yet

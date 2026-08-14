@@ -103,6 +103,11 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   // metadata.adminAction" convention.
   FEATURE_FLAG_UPDATED: "UPDATE",
   FEATURE_FLAG_KILL_SWITCH_TOGGLED: "STATUS_CHANGE",
+  // Module 62 — Professional Onboarding: reuses the existing PAYOUT
+  // AuditLogAction value — activation is the moment a professional becomes
+  // eligible for bookings/payouts, the closest existing category to what
+  // this action represents.
+  ONBOARDING_ACTIVATED: "PAYOUT",
 };
 
 const SELECT = {

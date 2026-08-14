@@ -84,6 +84,8 @@ describe("domain/entities/consent (Module 38 — GDPR Compliance)", () => {
           version: "v1",
           grantedAt: new Date("2026-01-01T00:00:00Z"),
           withdrawnAt: new Date("2026-02-01T00:00:00Z"),
+          ipHash: null,
+          userAgent: null,
         },
         "consent_1",
       );

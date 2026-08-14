@@ -12,6 +12,15 @@ import type { ConsentTypeValue } from "@/domain/value-objects/consent-type";
  * mirrors `AdminAuditLogRepository`'s own "no edits, only new facts"
  * design, since a consent history must remain trustworthy evidence of what
  * was actually agreed to and when.
+ *
+ * `ipHash`/`userAgent` (Module 62 — Professional Onboarding): additive,
+ * optional provenance columns — populated by
+ * `AcceptOnboardingTermsUseCase` (which reuses this same repository/entity
+ * rather than introducing a parallel "terms acceptance" table; see that
+ * module's own doc comment), left `null` by every pre-existing caller
+ * (`GrantConsentUseCase`). Never required — a consent granted through a
+ * channel with no request context (e.g. a future admin-assisted flow)
+ * still records validly with both `null`.
  */
 export interface ConsentRecord {
   id: string;
@@ -20,6 +29,8 @@ export interface ConsentRecord {
   version: string;
   grantedAt: Date;
   withdrawnAt: Date | null;
+  ipHash: string | null;
+  userAgent: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +40,8 @@ export interface CreateConsentData {
   type: ConsentTypeValue;
   version: string;
   grantedAt: Date;
+  ipHash?: string | null;
+  userAgent?: string | null;
 }
 
 export interface ConsentRepository {

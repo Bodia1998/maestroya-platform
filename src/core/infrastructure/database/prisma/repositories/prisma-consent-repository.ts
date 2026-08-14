@@ -32,6 +32,11 @@ export class PrismaConsentRepository implements ConsentRepository {
         type: data.type,
         version: data.version,
         grantedAt: data.grantedAt,
+        // Module 62 — Professional Onboarding: additive, optional
+        // provenance columns — `undefined` (every pre-Module-62 caller)
+        // lets Prisma fall back to the column default (`null`).
+        ipHash: data.ipHash ?? null,
+        userAgent: data.userAgent ?? null,
       },
     });
   }
