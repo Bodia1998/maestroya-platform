@@ -46,4 +46,16 @@ export interface MarketingAttributionRepository {
 
   countTotal(): Promise<number>;
   countWithUser(): Promise<number>;
+
+  /**
+   * Module 61 — Affiliate & Partner System: every attribution whose
+   * `firstReferralCode` or `lastReferralCode` is one of `codes` — lets
+   * `GetPartnerDashboardStatisticsUseCase` walk from "a partner's referral
+   * codes" to "every visitor ever attributed to one of them" and from
+   * there to their `ConversionEvent`s (via the existing
+   * `ConversionEventRepository.listByAttributionId`), all without a new
+   * `partnerId` column anywhere in Module 60's schema. Returns `[]` for an
+   * empty `codes` array.
+   */
+  listByReferralCodes(codes: string[]): Promise<MarketingAttributionRecord[]>;
 }

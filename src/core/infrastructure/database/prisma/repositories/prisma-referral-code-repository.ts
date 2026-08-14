@@ -54,4 +54,13 @@ export class PrismaReferralCodeRepository implements ReferralCodeRepository {
     const rows = await prisma.referralCode.findMany({ orderBy: { createdAt: "desc" }, select: REFERRAL_CODE_SELECT });
     return rows.map(toReferralCodeRecord);
   }
+
+  async findByOwnerUserId(ownerUserId: string): Promise<ReferralCodeRecord[]> {
+    const rows = await prisma.referralCode.findMany({
+      where: { ownerUserId },
+      orderBy: { createdAt: "desc" },
+      select: REFERRAL_CODE_SELECT,
+    });
+    return rows.map(toReferralCodeRecord);
+  }
 }

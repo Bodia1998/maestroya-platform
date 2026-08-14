@@ -170,6 +170,10 @@ model User {
   /// Module 60 — Referral & Marketing Attribution Platform: referral codes
   /// this user owns (e.g. a professional's own shareable link).
   referralCodes           ReferralCode[]
+  /// Module 61 — Affiliate & Partner System: the affiliate/partner account
+  /// this user operates, if any. One per user (Partner.userId unique) —
+  /// see Partner's own doc comment.
+  partner                 Partner?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3267,4 +3271,272 @@ model ConversionEvent {
   @@index([attributionId])
   @@index([type])
   @@map("conversion_events")
+}
+
+// ============================================================================
+// Module 61 — Affiliate & Partner System
+// ============================================================================
+//
+// Extends Module 60 — does NOT duplicate it. A Partner's referral links are
+// ordinary `ReferralCode` rows whose `ownerUserId` is the partner's own
+// `userId` (see `ReferralCode.owner`'s existing relation, reused as-is);
+// there is no second "partner referral code" table here. Attribution
+// (first/last touch, UTM, visitor identity) stays entirely owned by
+// `MarketingAttribution`/`ReferralVisit` — this module only ever reads
+// those tables (via `ReferralVisitRepository.listByReferralCodes` /
+// `MarketingAttributionRepository.listByReferralCodes`, both added by this
+// module), never writes to them.
+//
+// MaestroYa's own platform commission calculation (Module 22's
+// `Commission` model / `commission-policy.ts`) is untouched by this
+// module — `AffiliateCommission.platformCommissionAmount` is always a
+// read-only snapshot of an already-existing `Commission.amount`, supplied
+// by whichever future caller invokes `RecordAffiliateCommissionUseCase`.
+// See `domain/services/affiliate-commission-policy.ts` for the exact
+// "10% of MaestroYa's commission, never 10% of the booking" calculation.
+
+/// The kind of partner account — every category the module spec's
+/// "Partner types" section lists. Purely descriptive; no business rule in
+/// this module branches on `type` (a COMPANY partner and an INDIVIDUAL
+/// partner go through the identical approval workflow and commission
+/// calculation) — it exists for admin-panel filtering/reporting only.
+enum PartnerType {
+  INDIVIDUAL
+  COMPANY
+  AGENCY
+  BLOGGER
+  TELEGRAM_CHANNEL
+  INSTAGRAM_CREATOR
+  TIKTOK_CREATOR
+  YOUTUBE_CREATOR
+  FACEBOOK_COMMUNITY
+}
+
+/// The partner approval-workflow state machine's states. See
+/// domain/services/partner-approval-rules.ts for the allowed-transition
+/// table (PENDING -> APPROVED|REJECTED, APPROVED -> SUSPENDED|BANNED,
+/// SUSPENDED -> APPROVED|BANNED; REJECTED/BANNED are terminal).
+enum PartnerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+  BANNED
+}
+
+/// How a partner is paid. STRIPE is modeled now purely so the payout
+/// architecture never needs a migration later — no Stripe SDK call
+/// happens anywhere in this module today. See docs/MODULE_61's "Future
+/// Stripe support" section.
+enum PartnerPayoutMethod {
+  MANUAL
+  STRIPE
+}
+
+/// An affiliate/partner account. One row per User (`userId` unique) — a
+/// user is either a partner or not; there is no "multiple partner
+/// identities per user" concept. See domain/repositories/partner-repository.ts
+/// for the full field-by-field rationale.
+model Partner {
+  id     String      @id @default(uuid()) @db.Uuid
+  userId String      @unique @db.Uuid
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type   PartnerType
+  status PartnerStatus @default(PENDING)
+
+  displayName  String              @db.VarChar(120)
+  contactEmail String              @db.VarChar(191)
+  payoutMethod PartnerPayoutMethod @default(MANUAL)
+  /// Provider-agnostic payout details (e.g. `{ "iban": "..." }`) — see
+  /// PartnerPayoutDetails' own doc comment in partner-repository.ts for why
+  /// this is JSON rather than dedicated columns.
+  payoutDetails Json? @db.JsonB
+
+  /// Minimum accumulated APPROVED commission total before a payout can be
+  /// created for this partner — see
+  /// domain/services/partner-payout-rules.ts. Per-partner (not a single
+  /// platform-wide constant) so a negotiated threshold never requires a
+  /// schema change.
+  minimumPayoutThreshold Decimal @default(50) @db.Decimal(10, 2)
+  /// Admin-only free-text notes — never shown to the partner.
+  notes String? @db.Text
+
+  approvedAt       DateTime?
+  approvedByUserId String?   @db.Uuid
+  rejectedAt       DateTime?
+  rejectedReason   String?   @db.Text
+  suspendedAt      DateTime?
+  suspendedReason  String?   @db.Text
+  bannedAt         DateTime?
+  bannedReason     String?   @db.Text
+
+  affiliateCommissions AffiliateCommission[]
+  payouts              PartnerPayout[]
+  fraudFlags           PartnerFraudFlag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@map("partners")
+}
+
+/// The states an AffiliateCommission ledger row moves through. See
+/// domain/repositories/affiliate-commission-repository.ts's own doc
+/// comment for the full lifecycle (PENDING -> APPROVED -> PAID, or ->
+/// CANCELLED / -> EXPIRED from PENDING).
+enum AffiliateCommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELLED
+  EXPIRED
+}
+
+/// One ledger row per booking whose MaestroYa platform commission (Module
+/// 22's `Commission`) generated an affiliate payout obligation. Read-only
+/// with respect to Module 22 — `platformCommissionRefId`/
+/// `platformCommissionAmount` snapshot an existing `Commission` row via a
+/// plain string id, the same "reference another bounded context without a
+/// cross-module FK" convention `ConversionEvent.referenceId` already
+/// establishes. `conversionEventId` is unique — at most one
+/// AffiliateCommission per Module 60 ConversionEvent, the idempotency
+/// anchor RecordAffiliateCommissionUseCase relies on.
+model AffiliateCommission {
+  id        String  @id @default(uuid()) @db.Uuid
+  partnerId String  @db.Uuid
+  partner   Partner @relation(fields: [partnerId], references: [id], onDelete: Restrict)
+
+  /// Denormalized copy of the ReferralCode.code that drove this
+  /// commission — never a relation (a code can be deleted/reassigned
+  /// without ever invalidating this historical ledger row).
+  referralCode String @db.VarChar(40)
+
+  /// Module 60 ConversionEvent.id (type COMMISSION_GENERATED) this
+  /// commission was derived from.
+  conversionEventId String @unique @db.Uuid
+
+  /// Module 22 Commission.id — plain string reference, no FK (see model
+  /// doc comment).
+  platformCommissionRefId String  @db.VarChar(191)
+  platformCommissionAmount Decimal @db.Decimal(10, 2)
+
+  affiliateRateBps Int
+  affiliateAmount  Decimal @db.Decimal(10, 2)
+
+  status AffiliateCommissionStatus @default(PENDING)
+
+  approvedAt   DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?   @db.Text
+  expiresAt    DateTime
+  expiredAt    DateTime?
+  paidAt       DateTime?
+  payoutId     String?   @db.Uuid
+  payout       PartnerPayout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([partnerId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([payoutId])
+  @@map("affiliate_commissions")
+}
+
+/// The states a PartnerPayout moves through. See
+/// domain/repositories/partner-payout-repository.ts.
+enum PartnerPayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+/// One row per batch of AffiliateCommissions settled together for a
+/// partner. `method` mirrors Partner.payoutMethod at creation time; when
+/// STRIPE, this row is still only ever a record — no Stripe transfer is
+/// ever initiated by this module (see PartnerPayoutMethod's own doc
+/// comment).
+model PartnerPayout {
+  id        String  @id @default(uuid()) @db.Uuid
+  partnerId String  @db.Uuid
+  partner   Partner @relation(fields: [partnerId], references: [id], onDelete: Restrict)
+
+  amount   Decimal             @db.Decimal(10, 2)
+  currency String              @default("EUR")
+  method   PartnerPayoutMethod
+  status   PartnerPayoutStatus @default(PENDING)
+  /// Opaque external reference (a bank transfer reference today, a future
+  /// Stripe transfer id) — never parsed by this module.
+  reference String? @db.VarChar(191)
+
+  periodStart   DateTime
+  periodEnd     DateTime
+  processedAt   DateTime?
+  failureReason String?   @db.Text
+
+  affiliateCommissions AffiliateCommission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([partnerId])
+  @@index([status])
+  @@map("partner_payouts")
+}
+
+/// The kind of fraud signal PartnerFraudFlag records — every category the
+/// module spec's "Fraud Protection" section lists. See
+/// domain/services/affiliate-fraud-rules.ts for the pure detection rules
+/// that produce these.
+enum PartnerFraudFlagType {
+  SELF_REFERRAL
+  DUPLICATE_ACCOUNT
+  SUSPICIOUS_CONVERSION
+  REPEATED_IP
+  REPEATED_DEVICE
+  FAKE_REGISTRATION
+}
+
+/// The review state of a raised fraud flag. Flagging is always advisory —
+/// see domain/repositories/partner-fraud-flag-repository.ts's own doc
+/// comment for why nothing in this module auto-suspends/bans a partner or
+/// cancels a commission purely because a flag exists.
+enum PartnerFraudFlagStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+  CONFIRMED
+}
+
+/// A flagged suspicious-activity signal against a partner, raised by
+/// DetectPartnerFraudSignalsUseCase and reviewed by an admin.
+model PartnerFraudFlag {
+  id        String  @id @default(uuid()) @db.Uuid
+  partnerId String  @db.Uuid
+  partner   Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  type   PartnerFraudFlagType
+  status PartnerFraudFlagStatus @default(OPEN)
+  /// Human-readable explanation — always safe to show an admin verbatim
+  /// (never a raw IP, only ever a truncated/hashed value if relevant).
+  detail String @db.Text
+
+  relatedReferralCode String? @db.VarChar(40)
+  relatedVisitorId    String? @db.VarChar(100)
+  relatedUserId       String? @db.Uuid
+
+  resolvedAt       DateTime?
+  resolvedByUserId String?   @db.Uuid
+  resolution       String?   @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([partnerId])
+  @@index([status])
+  @@map("partner_fraud_flags")
 }
