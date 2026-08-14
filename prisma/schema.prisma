@@ -587,6 +587,21 @@ enum QuoteItemCategory {
   MATERIALS
 }
 
+/// Module 63 — Materials Procurement Workflow: who is responsible for
+/// sourcing the materials a Quote's work requires. PROFESSIONAL_SUPPLIED
+/// (the default) is today's existing behavior — the professional's quoted
+/// price already includes materials, exactly as before this module
+/// existed. CUSTOMER_PURCHASED is additive: the professional instead
+/// hands the customer a required shopping list (QuoteMaterial rows) that
+/// the customer must buy themselves and then explicitly confirm before
+/// the booked work can begin — see Quote.materialsConfirmedAt and
+/// domain/services/materials-procurement-rules.ts for the gating rule
+/// (enforced by StartJobUseCase, never assumed client-side).
+enum MaterialsStrategy {
+  PROFESSIONAL_SUPPLIED
+  CUSTOMER_PURCHASED
+}
+
 enum AppointmentStatus {
   /// Booking/Appointments module (MVP): the Appointment row created the
   /// moment a Quote is accepted, before any actual scheduling has happened.
@@ -889,6 +904,11 @@ enum NotificationType {
   /// Module 41 — Reviews & Ratings: sent to the original reviewer when the
   /// reviewed professional posts or edits a public reply to their review.
   REVIEW_RESPONSE_ADDED
+  /// Module 63 — Materials Procurement Workflow. Recipient: the Quote's
+  /// submitting professional, sent when the customer confirms (via
+  /// ConfirmMaterialsPurchasedUseCase) that every item on the
+  /// required-materials checklist has been purchased.
+  MATERIALS_PURCHASE_CONFIRMED
 }
 
 enum VerificationDocumentType {
@@ -1625,12 +1645,37 @@ model Quote {
   notes                 String?     @db.Text
   respondedAt           DateTime?
 
+  /// Module 63 — Materials Procurement Workflow: defaults to
+  /// PROFESSIONAL_SUPPLIED so every Quote created before this module
+  /// existed (and any client that hasn't been updated to send a strategy
+  /// yet) keeps behaving exactly as before — the conservative default,
+  /// same reasoning QuoteItem.category's own doc comment gives for
+  /// defaulting to LABOR.
+  materialsStrategy         MaterialsStrategy @default(PROFESSIONAL_SUPPLIED)
+  /// Set once the *customer* confirms they have purchased every item on
+  /// the `materials` checklist (see ConfirmMaterialsPurchasedUseCase).
+  /// Always null while materialsStrategy is PROFESSIONAL_SUPPLIED, and
+  /// null for a CUSTOMER_PURCHASED quote until the customer confirms.
+  /// StartJobUseCase refuses to start work while this is still null on a
+  /// CUSTOMER_PURCHASED quote — see
+  /// domain/services/materials-procurement-rules.ts.
+  materialsConfirmedAt      DateTime?
+  /// The customer User who confirmed the purchase. Deliberately a plain
+  /// scalar (no `@relation`) — same convention as
+  /// Appointment.proposedByUserId — since this module never needs to
+  /// query "every quote a given user confirmed materials for".
+  materialsConfirmedByUserId String? @db.Uuid
+
   serviceRequest      ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
   professionalProfile ProfessionalProfile? @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
   companyProfile      CompanyProfile?      @relation(fields: [companyProfileId], references: [id], onDelete: Restrict)
   submittedBy         User                 @relation("QuoteSubmittedBy", fields: [submittedByUserId], references: [id], onDelete: Restrict)
 
   items        QuoteItem[]
+  /// Module 63 — Materials Procurement Workflow: the required-materials
+  /// checklist a professional attaches when materialsStrategy is
+  /// CUSTOMER_PURCHASED. Always empty for a PROFESSIONAL_SUPPLIED quote.
+  materials    QuoteMaterial[]
   appointments Appointment[]
   payments     Payment[]
   /// Order / Job Lifecycle module (Module 11): 1:1 with the Job created
@@ -1680,6 +1725,38 @@ model QuoteItem {
 
   @@index([quoteId])
   @@map("quote_items")
+}
+
+/// Module 63 — Materials Procurement Workflow: one required-materials
+/// checklist line item (e.g. "Bosch Condens 2300iW boiler", qty 1) that a
+/// professional attaches to a Quote whose materialsStrategy is
+/// CUSTOMER_PURCHASED. Deliberately separate from QuoteItem (which prices
+/// labor/materials the professional is *including in their quoted
+/// price*) — a QuoteMaterial never has a price, quantity is a plain
+/// decimal (not currency), and this list only exists to tell the customer
+/// what to go buy before the appointment. See
+/// domain/services/materials-procurement-rules.ts for the validation this
+/// list must satisfy, and Quote.materialsConfirmedAt for how the
+/// customer's purchase confirmation is recorded.
+model QuoteMaterial {
+  id      String  @id @default(uuid()) @db.Uuid
+  quoteId String  @db.Uuid
+  name    String
+  brand   String?
+  model   String?
+  /// Decimal (not Int) for consistency with QuoteItem.quantity — allows
+  /// fractional quantities (e.g. "12.5 m of copper pipe").
+  quantity Decimal @db.Decimal(10, 2)
+  notes   String? @db.Text
+  sortOrder Int    @default(0)
+
+  quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([quoteId])
+  @@map("quote_materials")
 }
 
 /// Order / Job Lifecycle module (Module 11): the execution-lifecycle

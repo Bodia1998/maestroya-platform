@@ -7,6 +7,8 @@ import type { QuoteRecord, QuoteRepository } from "@/domain/repositories/quote-r
 import type { ServiceRequestDiscoveryRepository } from "@/domain/repositories/service-request-discovery-repository";
 import { calculateQuoteTotal } from "@/domain/services/money";
 import { isProfessionalEligibleForRequest } from "@/domain/services/quote-eligibility";
+import { assertValidMaterialsList } from "@/domain/services/materials-procurement-rules";
+import { DEFAULT_MATERIALS_STRATEGY } from "@/domain/value-objects/materials-strategy";
 import type { CreateQuoteInput } from "@/application/dto/quote.dto";
 
 /**
@@ -69,6 +71,22 @@ export class CreateQuoteUseCase {
 
     const totalAmount = calculateQuoteTotal(input.items);
 
+    // Module 63 — Materials Procurement Workflow: defaults to
+    // PROFESSIONAL_SUPPLIED when the caller doesn't specify (see
+    // quote.dto.ts's own comment on why this stays optional at the DTO
+    // layer). This is the authoritative server-side check —
+    // requireMaterialsWhenCustomerPurchased on the DTO is only fast UX
+    // feedback.
+    const materialsStrategy = input.materialsStrategy ?? DEFAULT_MATERIALS_STRATEGY;
+    const materials = (input.materials ?? []).map((material) => ({
+      name: material.name,
+      brand: material.brand || null,
+      model: material.model || null,
+      quantity: material.quantity,
+      notes: material.notes || null,
+    }));
+    assertValidMaterialsList(materialsStrategy, materials);
+
     const quote = await this.quotes.create({
       serviceRequestId: request.id,
       professionalProfileId: professional.id,
@@ -86,6 +104,11 @@ export class CreateQuoteUseCase {
         // this stays optional at the DTO layer.
         category: item.category ?? "LABOR",
       })),
+      materialsStrategy,
+      // PROFESSIONAL_SUPPLIED never persists a materials list, even if
+      // one were somehow supplied — see assertValidMaterialsList's own
+      // "ignored entirely" doc comment.
+      materials: materialsStrategy === "CUSTOMER_PURCHASED" ? materials : [],
     });
 
     // Best-effort — mirrors ChatAppointmentNotifier/ChatJobNotifier's own

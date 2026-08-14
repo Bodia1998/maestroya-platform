@@ -378,3 +378,45 @@ export class PartnerNotActiveError extends DomainError {
     super(`This partner is not eligible for affiliate activity while status is "${status}".`);
   }
 }
+
+/**
+ * Module 63 — Materials Procurement Workflow: thrown by
+ * `domain/services/materials-procurement-rules.ts`'s
+ * `assertValidMaterialsList` when a Quote's `materialsStrategy` is
+ * `CUSTOMER_PURCHASED` but the professional submitted an empty (or
+ * invalid) required-materials list. A `CUSTOMER_PURCHASED` quote without a
+ * checklist would leave the customer with no idea what to buy, so this is
+ * always a hard validation failure — never silently coerced to
+ * `PROFESSIONAL_SUPPLIED`. Kept as its own class (rather than the generic
+ * `ValidationError`) so `CreateQuoteUseCase`/`UpdateQuoteUseCase` callers
+ * can distinguish "the materials list itself is the problem" the same way
+ * `ReferralCodeError`/`InvalidTaxRateError` are kept distinguishable from
+ * a generic input-validation failure.
+ */
+export class MaterialsListRequiredError extends DomainError {
+  readonly code = "MATERIALS_LIST_REQUIRED";
+
+  constructor(message = "A materials list is required when the customer purchases the materials.") {
+    super(message);
+  }
+}
+
+/**
+ * Module 63 — Materials Procurement Workflow: thrown by `StartJobUseCase`
+ * when a Job's accepted Quote has `materialsStrategy` `CUSTOMER_PURCHASED`
+ * and the customer has not yet confirmed (`Quote.materialsConfirmedAt` is
+ * still null) that every required material has been purchased. Implements
+ * the module's core business rule — "the booking cannot begin until the
+ * customer confirms that all required materials have been purchased" —
+ * as a hard stop enforced server-side in the use case itself (see
+ * `domain/services/materials-procurement-rules.ts`'s
+ * `canStartJobGivenMaterials`), never assumed from client-side UI state
+ * alone.
+ */
+export class MaterialsNotConfirmedError extends DomainError {
+  readonly code = "MATERIALS_NOT_CONFIRMED";
+
+  constructor(message = "Materials must be purchased and confirmed before the scheduled work can begin.") {
+    super(message);
+  }
+}

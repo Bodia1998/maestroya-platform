@@ -79,7 +79,12 @@ export type NotificationTypeValue =
   // NotifyReviewResponseAddedSubscriber. REVIEW_RECEIVED (above, Module 13)
   // already covers the reviewed professional's own "you got a review"
   // notification; this is the reviewer-facing counterpart for the reply.
-  | "REVIEW_RESPONSE_ADDED";
+  | "REVIEW_RESPONSE_ADDED"
+  // Module 63 — Materials Procurement Workflow: sent to the Quote's
+  // submitting professional when the customer confirms (via
+  // ConfirmMaterialsPurchasedUseCase) that every required material has
+  // been purchased.
+  | "MATERIALS_PURCHASE_CONFIRMED";
 
 export interface NotificationRecord {
   id: string;

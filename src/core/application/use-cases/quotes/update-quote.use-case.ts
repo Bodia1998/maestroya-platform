@@ -3,6 +3,8 @@ import type { ProfessionalRepository } from "@/domain/repositories/professional-
 import type { QuoteRecord, QuoteRepository } from "@/domain/repositories/quote-repository";
 import { calculateQuoteTotal } from "@/domain/services/money";
 import { isEditableQuoteStatus } from "@/domain/services/quote-state";
+import { assertValidMaterialsList } from "@/domain/services/materials-procurement-rules";
+import { DEFAULT_MATERIALS_STRATEGY } from "@/domain/value-objects/materials-strategy";
 import type { UpdateQuoteInput } from "@/application/dto/quote.dto";
 
 /**
@@ -42,6 +44,23 @@ export class UpdateQuoteUseCase {
 
     const totalAmount = calculateQuoteTotal(input.items);
 
+    // Module 63 — Materials Procurement Workflow: an edit always resupplies
+    // the complete materials strategy/list, same as it does for `items` —
+    // see UpdateQuoteFields' own doc comment. Falls back to the existing
+    // Quote's own strategy when the caller doesn't specify one, so a
+    // client that hasn't been updated to send materials fields yet can't
+    // accidentally downgrade a CUSTOMER_PURCHASED quote back to
+    // PROFESSIONAL_SUPPLIED.
+    const materialsStrategy = input.materialsStrategy ?? existing.materialsStrategy ?? DEFAULT_MATERIALS_STRATEGY;
+    const materials = (input.materials ?? existing.materials).map((material) => ({
+      name: material.name,
+      brand: material.brand || null,
+      model: material.model || null,
+      quantity: material.quantity,
+      notes: material.notes || null,
+    }));
+    assertValidMaterialsList(materialsStrategy, materials);
+
     return this.quotes.update(existing.id, {
       totalAmount,
       currency: existing.currency,
@@ -55,6 +74,8 @@ export class UpdateQuoteUseCase {
         // caller doesn't specify — see quote.dto.ts's own comment.
         category: item.category ?? "LABOR",
       })),
+      materialsStrategy,
+      materials: materialsStrategy === "CUSTOMER_PURCHASED" ? materials : [],
     });
   }
 }

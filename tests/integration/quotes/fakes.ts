@@ -15,6 +15,7 @@ import type {
 import type {
   CreateQuoteData,
   QuoteItemRecord,
+  QuoteMaterialRecord,
   QuoteRecord,
   QuoteRepository,
   QuoteStatusValue,
@@ -33,6 +34,7 @@ import type {
   UpdateServiceRequestFields,
 } from "@/domain/repositories/service-request-repository";
 import { OPEN_QUOTE_STATUSES } from "@/domain/services/quote-state";
+import { DEFAULT_MATERIALS_STRATEGY } from "@/domain/value-objects/materials-strategy";
 
 /**
  * In-memory test doubles for the Offers/Quotes module integration tests,
@@ -201,6 +203,7 @@ export class FakeServiceRequestDiscoveryRepository implements ServiceRequestDisc
 export class FakeQuoteRepository implements QuoteRepository {
   quotes = new Map<string, QuoteRecord>();
   private itemIdCounter = 0;
+  private materialIdCounter = 0;
 
   private toItems(items: CreateQuoteData["items"]): QuoteItemRecord[] {
     return items.map((item, index) => {
@@ -213,6 +216,22 @@ export class FakeQuoteRepository implements QuoteRepository {
         amount: Math.round(item.quantity * item.unitPrice * 100) / 100,
         sortOrder: index,
         category: item.category ?? "LABOR",
+      };
+    });
+  }
+
+  // Module 63 — Materials Procurement Workflow.
+  private toMaterials(materials: CreateQuoteData["materials"]): QuoteMaterialRecord[] {
+    return (materials ?? []).map((material, index) => {
+      this.materialIdCounter += 1;
+      return {
+        id: `fake-quote-material-${this.materialIdCounter}`,
+        name: material.name,
+        brand: material.brand ?? null,
+        model: material.model ?? null,
+        quantity: material.quantity,
+        notes: material.notes ?? null,
+        sortOrder: index,
       };
     });
   }
@@ -254,6 +273,7 @@ export class FakeQuoteRepository implements QuoteRepository {
 
   async create(data: CreateQuoteData): Promise<QuoteRecord> {
     const now = new Date();
+    const materialsStrategy = data.materialsStrategy ?? DEFAULT_MATERIALS_STRATEGY;
     const record: QuoteRecord = {
       id: nextId("fake-quote"),
       serviceRequestId: data.serviceRequestId,
@@ -265,6 +285,10 @@ export class FakeQuoteRepository implements QuoteRepository {
       validUntil: data.validUntil,
       notes: data.notes,
       items: this.toItems(data.items),
+      materialsStrategy,
+      materials: this.toMaterials(data.materials),
+      materialsConfirmedAt: null,
+      materialsConfirmedByUserId: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -282,6 +306,8 @@ export class FakeQuoteRepository implements QuoteRepository {
       validUntil: data.validUntil,
       notes: data.notes,
       items: this.toItems(data.items),
+      materialsStrategy: data.materialsStrategy ?? existing.materialsStrategy,
+      materials: data.materials !== undefined ? this.toMaterials(data.materials) : existing.materials,
       updatedAt: new Date(),
     };
     this.quotes.set(id, updated);
@@ -300,6 +326,30 @@ export class FakeQuoteRepository implements QuoteRepository {
         q.validUntil !== null &&
         q.validUntil.getTime() <= now.getTime(),
     );
+  }
+
+  // Module 63 — Materials Procurement Workflow.
+  async confirmMaterialsPurchased(quoteId: string, confirmedByUserId: string): Promise<QuoteRecord> {
+    const existing = this.quotes.get(quoteId);
+    if (!existing) throw new Error(`No fake quote with id ${quoteId}`);
+    if (existing.materialsConfirmedAt !== null) {
+      throw new Error(`Fake quote ${quoteId} already has materials confirmed`);
+    }
+    const updated: QuoteRecord = {
+      ...existing,
+      materialsConfirmedAt: new Date(),
+      materialsConfirmedByUserId: confirmedByUserId,
+      updatedAt: new Date(),
+    };
+    this.quotes.set(quoteId, updated);
+    return updated;
+  }
+
+  /** Test-only convenience — lets a test seed a Quote directly without
+   *  going through CreateQuoteUseCase (mirrors FakeServiceRequestRepository.seed). */
+  seed(record: QuoteRecord): QuoteRecord {
+    this.quotes.set(record.id, record);
+    return record;
   }
 }
 

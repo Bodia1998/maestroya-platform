@@ -7,6 +7,7 @@ import { PrismaServiceRequestDiscoveryRepository } from "@/infrastructure/databa
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
 import { AcceptQuoteUseCase } from "@/application/use-cases/quotes/accept-quote.use-case";
+import { ConfirmMaterialsPurchasedUseCase } from "@/application/use-cases/quotes/confirm-materials-purchased.use-case";
 import { CreateQuoteUseCase } from "@/application/use-cases/quotes/create-quote.use-case";
 import { GetAvailableServiceRequestsForProfessionalUseCase } from "@/application/use-cases/quotes/get-available-service-requests-for-professional.use-case";
 import { GetProfessionalQuoteUseCase } from "@/application/use-cases/quotes/get-professional-quote.use-case";
@@ -63,4 +64,9 @@ export function makeGetServiceRequestQuotesUseCase() {
 
 export function makeAcceptQuoteUseCase() {
   return new AcceptQuoteUseCase(customerProfiles, serviceRequests, quotes, quoteAcceptance, professionals, notifications);
+}
+
+// Module 63 — Materials Procurement Workflow.
+export function makeConfirmMaterialsPurchasedUseCase() {
+  return new ConfirmMaterialsPurchasedUseCase(customerProfiles, serviceRequests, quotes, professionals, notifications);
 }

@@ -3,6 +3,7 @@ import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prism
 import { PrismaJobRepository } from "@/infrastructure/database/prisma/repositories/prisma-job-repository";
 import { PrismaMessageRepository } from "@/infrastructure/database/prisma/repositories/prisma-message-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
+import { PrismaQuoteRepository } from "@/infrastructure/database/prisma/repositories/prisma-quote-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { ChatJobNotifier } from "@/infrastructure/chat/chat-job-notifier";
 import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
@@ -19,12 +20,17 @@ const professionals = new PrismaProfessionalRepository();
 const serviceRequests = new PrismaServiceRequestRepository();
 const conversations = new PrismaConversationRepository();
 const messages = new PrismaMessageRepository();
+// Module 63 — Materials Procurement Workflow: supplied to StartJobUseCase
+// so its "materials must be confirmed before work begins" gate is always
+// active in production — see that use case's own doc comment for why the
+// dependency is optional at the class level.
+const quotes = new PrismaQuoteRepository();
 
 const notifier = new ChatJobNotifier(serviceRequests, customerProfiles, professionals, conversations, messages);
 const notifications = new NotificationServiceCreator();
 
 export function makeStartJobUseCase() {
-  return new StartJobUseCase(jobs, customerProfiles, professionals, notifier, notifications);
+  return new StartJobUseCase(jobs, customerProfiles, professionals, notifier, notifications, quotes);
 }
 
 export function makeCompleteJobUseCase() {

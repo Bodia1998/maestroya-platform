@@ -93,11 +93,13 @@ import type {
 } from "@/domain/repositories/professional-verification-repository";
 import type {
   CreateQuoteData,
+  QuoteMaterialRecord,
   QuoteRecord,
   QuoteRepository,
   QuoteStatusValue,
   UpdateQuoteFields,
 } from "@/domain/repositories/quote-repository";
+import { DEFAULT_MATERIALS_STRATEGY } from "@/domain/value-objects/materials-strategy";
 import type {
   CreateReviewData,
   ProfessionalRatingSummary,
@@ -473,6 +475,17 @@ export class FakeQuoteRepository implements QuoteRepository {
       ) ?? null
     );
   }
+  private toMaterials(materials: CreateQuoteData["materials"]): QuoteMaterialRecord[] {
+    return (materials ?? []).map((material, index) => ({
+      id: nextId("material"),
+      name: material.name,
+      brand: material.brand ?? null,
+      model: material.model ?? null,
+      quantity: material.quantity,
+      notes: material.notes ?? null,
+      sortOrder: index,
+    }));
+  }
   async create(data: CreateQuoteData) {
     const items = data.items.map((item, index) => ({
       id: nextId("item"),
@@ -494,6 +507,10 @@ export class FakeQuoteRepository implements QuoteRepository {
       validUntil: data.validUntil,
       notes: data.notes,
       items,
+      materialsStrategy: data.materialsStrategy ?? DEFAULT_MATERIALS_STRATEGY,
+      materials: this.toMaterials(data.materials),
+      materialsConfirmedAt: null,
+      materialsConfirmedByUserId: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -511,7 +528,14 @@ export class FakeQuoteRepository implements QuoteRepository {
       sortOrder: index,
       category: item.category ?? "LABOR",
     }));
-    const updated = { ...existing, ...data, items, updatedAt: new Date() };
+    const updated: QuoteRecord = {
+      ...existing,
+      ...data,
+      items,
+      materialsStrategy: data.materialsStrategy ?? existing.materialsStrategy,
+      materials: data.materials !== undefined ? this.toMaterials(data.materials) : existing.materials,
+      updatedAt: new Date(),
+    };
     this.quotes.set(id, updated);
     return updated;
   }
@@ -521,6 +545,17 @@ export class FakeQuoteRepository implements QuoteRepository {
   }
   async findExpirable() {
     return [];
+  }
+  async confirmMaterialsPurchased(quoteId: string, confirmedByUserId: string) {
+    const existing = this.quotes.get(quoteId)!;
+    const updated: QuoteRecord = {
+      ...existing,
+      materialsConfirmedAt: new Date(),
+      materialsConfirmedByUserId: confirmedByUserId,
+      updatedAt: new Date(),
+    };
+    this.quotes.set(quoteId, updated);
+    return updated;
   }
 }
 
