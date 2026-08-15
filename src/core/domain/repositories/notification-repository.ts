@@ -84,7 +84,23 @@ export type NotificationTypeValue =
   // submitting professional when the customer confirms (via
   // ConfirmMaterialsPurchasedUseCase) that every required material has
   // been purchased.
-  | "MATERIALS_PURCHASE_CONFIRMED";
+  | "MATERIALS_PURCHASE_CONFIRMED"
+  // Module 66 — Job Completion & Payment Release Protection. Recipients:
+  // the customer (JOB_COMPLETION_CONFIRMATION_REQUESTED, sent the moment
+  // the professional completes the job; JOB_COMPLETION_CONFIRMATION_
+  // REMINDER, sent once partway through the confirmation window), the
+  // professional/company side (JOB_COMPLETION_CONFIRMED, when the
+  // customer confirms), and both parties
+  // (JOB_COMPLETION_CONFIRMATION_TIMED_OUT, when the window elapses with
+  // no response and the job moves to manual review — see
+  // job-completion-confirmation-rules.ts's doc comment on why this never
+  // implies release). A customer-initiated dispute over the completed
+  // service reuses the existing DISPUTE_CREATED notification (via
+  // CreateDisputeUseCase) rather than a duplicate type.
+  | "JOB_COMPLETION_CONFIRMATION_REQUESTED"
+  | "JOB_COMPLETION_CONFIRMATION_REMINDER"
+  | "JOB_COMPLETION_CONFIRMED"
+  | "JOB_COMPLETION_CONFIRMATION_TIMED_OUT";
 
 export interface NotificationRecord {
   id: string;

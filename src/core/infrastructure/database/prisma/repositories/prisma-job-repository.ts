@@ -1,6 +1,9 @@
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { ConflictError } from "@/domain/errors/domain-error";
 import { NON_TERMINAL_STATUSES as APPOINTMENT_NON_TERMINAL_STATUSES } from "@/domain/services/appointment-state";
+import { computeConfirmationDeadline } from "@/domain/services/job-completion-confirmation-rules";
 import type {
   CancelJobData,
   CompleteJobData,
@@ -232,6 +235,17 @@ export class PrismaJobRepository implements JobRepository {
    * If any non-terminal Appointment is found, this throws and completes
    * nothing — a Job is never completed while a visit is still outstanding,
    * and Appointments are never silently auto-completed as a side effect.
+   *
+   * Module 66 — Job Completion & Payment Release Protection: this same
+   * transaction ALSO creates the Job's `JobCompletionConfirmation` row
+   * (WAITING_FOR_CUSTOMER, `confirmationDeadlineAt` computed off the exact
+   * same `completedAt` this write uses) — see JobRepository.complete's own
+   * doc comment for why this must never be a separate, later call. A
+   * `jobId` unique-constraint violation here (a second completion attempt
+   * somehow reaching this far) surfaces as the same ConflictError every
+   * other race in this method already throws, rather than a raw Prisma
+   * error — this should be unreachable in practice since `status` is
+   * already re-checked above, but the constraint is the final guarantee.
    */
   async complete(data: CompleteJobData): Promise<JobRecord> {
     return prisma.$transaction(async (tx) => {
@@ -250,11 +264,13 @@ export class PrismaJobRepository implements JobRepository {
         );
       }
 
+      const completedAt = new Date();
+
       const updated = await tx.job.updateMany({
         where: { id: data.jobId, status: { in: [...data.expectedStatuses] } },
         data: {
           status: "COMPLETED",
-          completedAt: new Date(),
+          completedAt,
           completedByUserId: data.completedByUserId,
         },
       });
@@ -262,6 +278,24 @@ export class PrismaJobRepository implements JobRepository {
         // Lost a race with a concurrent state change (cancel, another
         // completion attempt, etc.) between the read above and this write.
         throw new ConflictError("This job can no longer be completed.");
+      }
+
+      try {
+        await tx.jobCompletionConfirmation.create({
+          data: {
+            jobId: data.jobId,
+            status: "WAITING_FOR_CUSTOMER",
+            professionalCompletedAt: completedAt,
+            confirmationDeadlineAt: computeConfirmationDeadline(completedAt),
+            releaseStatus: "PENDING",
+            releaseReason: "Awaiting customer confirmation.",
+          },
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+          throw new ConflictError("This job already has a completion confirmation record.");
+        }
+        throw error;
       }
 
       const row = await tx.job.findUniqueOrThrow({ where: { id: data.jobId }, select: DETAIL_SELECT });

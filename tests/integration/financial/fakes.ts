@@ -16,6 +16,17 @@ import type {
 } from "@/domain/repositories/financial-ledger-repository";
 import type { PaymentRecord, PaymentRepository, PaymentStatusValue } from "@/domain/repositories/payment-repository";
 import { DEFAULT_COMMISSION_RATES, type CommissionRates } from "@/domain/services/commission-policy";
+import type {
+  ConfirmCompletionData,
+  CreateJobCompletionConfirmationData,
+  DisputeCompletionData,
+  JobCompletionConfirmationRecord,
+  JobCompletionConfirmationRepository,
+  TimeOutCompletionData,
+  UpdateReleaseDecisionData,
+} from "@/domain/repositories/job-completion-confirmation-repository";
+import type { PaymentReleaseStatus } from "@/domain/services/payment-release-decision";
+import { ConflictError } from "@/domain/errors/domain-error";
 
 /**
  * In-memory test doubles for Module 22 — Commission & Financial
@@ -193,6 +204,147 @@ export class FakeFinancialAdjustmentRepository implements FinancialAdjustmentRep
 
   async listForJob(jobId: string): Promise<FinancialAdjustmentRecord[]> {
     return [...this.adjustments.values()].filter((a) => a.jobId === jobId);
+  }
+}
+
+/**
+ * Module 66 — Job Completion & Payment Release Protection: the fake
+ * `JobCompletionConfirmationRepository` `RecordCommissionForPaymentUseCase`
+ * now depends on (see that use case's own doc comment on the release
+ * gate). Same in-memory, real-interface pattern as every other fake in
+ * this file. `seed`/`seedApproved`/`seedHeld` are test-only conveniences
+ * for directly placing a confirmation row at a given `releaseStatus` —
+ * financial-flows.test.ts never needs to drive the full Module 66
+ * confirm/dispute/timeout state machine to test the commission gate,
+ * only the persisted `releaseStatus` the gate actually reads.
+ */
+export class FakeJobCompletionConfirmationRepository implements JobCompletionConfirmationRepository {
+  records = new Map<string, JobCompletionConfirmationRecord>();
+
+  seed(record: JobCompletionConfirmationRecord) {
+    this.records.set(record.id, record);
+    return record;
+  }
+
+  async findById(id: string): Promise<JobCompletionConfirmationRecord | null> {
+    return this.records.get(id) ?? null;
+  }
+
+  async findByJobId(jobId: string): Promise<JobCompletionConfirmationRecord | null> {
+    return [...this.records.values()].find((r) => r.jobId === jobId) ?? null;
+  }
+
+  async create(data: CreateJobCompletionConfirmationData): Promise<JobCompletionConfirmationRecord> {
+    if (await this.findByJobId(data.jobId)) {
+      throw new ConflictError("A completion confirmation already exists for this job.");
+    }
+    const record: JobCompletionConfirmationRecord = {
+      id: nextId("fake-completion-confirmation"),
+      jobId: data.jobId,
+      status: "WAITING_FOR_CUSTOMER",
+      professionalCompletedAt: data.professionalCompletedAt,
+      confirmationDeadlineAt: data.confirmationDeadlineAt,
+      confirmedAt: null,
+      confirmedByUserId: null,
+      disputeId: null,
+      manualReviewCaseId: null,
+      reminderSentAt: null,
+      // Matches PrismaJobCompletionConfirmationRepository's own `as
+      // PaymentReleaseStatus` cast (see that file) — the persisted DB
+      // enum has a 4th value, PENDING, that the pure decision function's
+      // narrower domain type intentionally omits (PENDING is a storage
+      // default, never a value `decidePaymentReleaseStatus` itself
+      // returns). Not this fix's concern to widen; mirrored as-is.
+      releaseStatus: "PENDING" as PaymentReleaseStatus,
+      releaseReason: "Not yet evaluated.",
+      releaseDecidedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.records.set(record.id, record);
+    return record;
+  }
+
+  async confirm(data: ConfirmCompletionData): Promise<JobCompletionConfirmationRecord> {
+    const existing = this.records.get(data.id);
+    if (!existing || !data.expectedStatuses.includes(existing.status)) {
+      throw new ConflictError("This completion confirmation was already resolved.");
+    }
+    const updated: JobCompletionConfirmationRecord = {
+      ...existing,
+      status: "CONFIRMED",
+      confirmedAt: data.confirmedAt,
+      confirmedByUserId: data.confirmedByUserId,
+      updatedAt: new Date(),
+    };
+    this.records.set(updated.id, updated);
+    return updated;
+  }
+
+  async markDisputed(data: DisputeCompletionData): Promise<JobCompletionConfirmationRecord> {
+    const existing = this.records.get(data.id);
+    if (!existing || !data.expectedStatuses.includes(existing.status)) {
+      throw new ConflictError("This completion confirmation was already resolved.");
+    }
+    const updated: JobCompletionConfirmationRecord = {
+      ...existing,
+      status: "DISPUTED",
+      disputeId: data.disputeId,
+      updatedAt: new Date(),
+    };
+    this.records.set(updated.id, updated);
+    return updated;
+  }
+
+  async markTimedOut(data: TimeOutCompletionData): Promise<JobCompletionConfirmationRecord> {
+    const existing = this.records.get(data.id);
+    if (!existing || !data.expectedStatuses.includes(existing.status)) {
+      throw new ConflictError("This completion confirmation was already resolved.");
+    }
+    const updated: JobCompletionConfirmationRecord = {
+      ...existing,
+      status: "TIMED_OUT_UNDER_REVIEW",
+      manualReviewCaseId: data.manualReviewCaseId,
+      updatedAt: new Date(),
+    };
+    this.records.set(updated.id, updated);
+    return updated;
+  }
+
+  async markReminderSent(id: string, sentAt: Date): Promise<JobCompletionConfirmationRecord> {
+    const existing = this.records.get(id);
+    if (!existing) {
+      throw new ConflictError("This completion confirmation no longer exists.");
+    }
+    const updated: JobCompletionConfirmationRecord = { ...existing, reminderSentAt: sentAt, updatedAt: new Date() };
+    this.records.set(updated.id, updated);
+    return updated;
+  }
+
+  async updateReleaseDecision(data: UpdateReleaseDecisionData): Promise<JobCompletionConfirmationRecord> {
+    const existing = this.records.get(data.id);
+    if (!existing || !data.expectedReleaseStatuses.includes(existing.releaseStatus)) {
+      throw new ConflictError("This completion confirmation's release decision was already changed.");
+    }
+    const updated: JobCompletionConfirmationRecord = {
+      ...existing,
+      releaseStatus: data.releaseStatus,
+      releaseReason: data.releaseReason,
+      releaseDecidedAt: data.releaseDecidedAt,
+      updatedAt: new Date(),
+    };
+    this.records.set(updated.id, updated);
+    return updated;
+  }
+
+  async findOverdue(now: Date): Promise<JobCompletionConfirmationRecord[]> {
+    return [...this.records.values()].filter(
+      (r) => r.status === "WAITING_FOR_CUSTOMER" && r.confirmationDeadlineAt.getTime() <= now.getTime(),
+    );
+  }
+
+  async findDueForReminder(_now: Date): Promise<JobCompletionConfirmationRecord[]> {
+    return [];
   }
 }
 

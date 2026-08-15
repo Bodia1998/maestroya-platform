@@ -36,6 +36,13 @@ export const RISK_SCORE_DELTA_TABLE: Readonly<Record<TrustRiskEventReasonValue, 
   MANUAL_REVIEW_CONFIRMED: 35,
   APPEAL_APPROVED: -20,
   ADMIN_ADJUSTMENT: 0,
+  // Module 66: a confirmation timeout is unresolved evidence, not proven
+  // wrongdoing — mirrors TRUST_SCORE_DELTA_TABLE's own intentionally
+  // neutral 0 for this same reason (see that table's doc comment). The
+  // ManualReviewCase this opens can still raise risk later via
+  // MANUAL_REVIEW_CONFIRMED / FRAUD_SIGNAL_DETECTED etc. if the
+  // investigation actually finds fault.
+  JOB_COMPLETION_CONFIRMATION_TIMEOUT: 0,
 };
 
 export interface RiskScoreRecalculation {

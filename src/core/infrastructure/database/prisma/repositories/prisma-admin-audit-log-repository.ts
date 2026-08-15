@@ -108,6 +108,15 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   // eligible for bookings/payouts, the closest existing category to what
   // this action represents.
   ONBOARDING_ACTIVATED: "PAYOUT",
+  // Module 66 — Job Completion & Payment Release Protection. The timeout
+  // is a status change on the JobCompletionConfirmation record (mirrors
+  // SERVICE_REQUEST_EXPIRED above); the admin resolution maps to PAYMENT
+  // — it is the decision of whether captured funds may be released, the
+  // closest existing category (distinct from PAYOUT, which this codebase
+  // uses for professional-payout-eligibility events like
+  // ONBOARDING_ACTIVATED above).
+  JOB_COMPLETION_CONFIRMATION_TIMED_OUT: "STATUS_CHANGE",
+  PAYMENT_RELEASE_ADMIN_RESOLVED: "PAYMENT",
 };
 
 const SELECT = {

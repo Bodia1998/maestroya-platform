@@ -134,7 +134,16 @@ export type AdminAuditAction =
   // (`ActivateProfessionalUseCase`). `adminUserId` on this entry is the
   // professional themselves — not an admin — same reasoning as
   // VERIFICATION_SUBMITTED above.
-  | "ONBOARDING_ACTIVATED";
+  | "ONBOARDING_ACTIVATED"
+  // Module 66 — Job Completion & Payment Release Protection.
+  // JOB_COMPLETION_CONFIRMATION_TIMED_OUT is recorded by the workflow
+  // expiration cron itself (no admin user — `adminUserId` is null, same
+  // convention as SERVICE_REQUEST_EXPIRED etc. above) — see
+  // ProcessJobCompletionConfirmationsUseCase. PAYMENT_RELEASE_ADMIN_RESOLVED
+  // is recorded by an ADMIN/SUPER_ADMIN/SUPPORT user resolving a disputed
+  // or timed-out payment release — see AdminResolvePaymentReleaseUseCase.
+  | "JOB_COMPLETION_CONFIRMATION_TIMED_OUT"
+  | "PAYMENT_RELEASE_ADMIN_RESOLVED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved

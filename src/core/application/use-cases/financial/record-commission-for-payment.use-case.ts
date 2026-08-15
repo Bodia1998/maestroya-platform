@@ -2,6 +2,7 @@ import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { CommissionRecord, CommissionRepository } from "@/domain/repositories/commission-repository";
 import type { FinancialLedgerRepository } from "@/domain/repositories/financial-ledger-repository";
 import type { PaymentRepository } from "@/domain/repositories/payment-repository";
+import type { JobCompletionConfirmationRepository } from "@/domain/repositories/job-completion-confirmation-repository";
 import type { CalculateJobCommissionBreakdownUseCase } from "./calculate-job-commission-breakdown.use-case";
 
 /**
@@ -33,6 +34,22 @@ import type { CalculateJobCommissionBreakdownUseCase } from "./calculate-job-com
  * already-recorded Commission unchanged rather than creating a second one.
  * The underlying `Commission.paymentId` unique constraint is a second,
  * database-level backstop against the same race.
+ *
+ * ## Module 66 gate — Payment.CAPTURED alone is NOT sufficient
+ * `Payment.status === "CAPTURED"` only proves MaestroYa is holding the
+ * customer's money — it says nothing about whether the professional's
+ * work was ever confirmed, disputed, or is still sitting in the
+ * 72-hour confirmation window. Commission recognition (and, critically,
+ * the `PROFESSIONAL_NET_EARNING` ledger entry — the record of what is
+ * owed to the professional) must never happen before Module 66's single
+ * authoritative payment-release decision
+ * (`domain/services/payment-release-decision.ts`, persisted on
+ * `JobCompletionConfirmation.releaseStatus`) has reached
+ * `RELEASE_APPROVED`. This use case never re-derives or duplicates that
+ * decision — it only reads its already-persisted output via
+ * `JobCompletionConfirmationRepository.findByJobId`, the same source of
+ * truth `EvaluatePaymentReleaseUseCase`/`AdminResolvePaymentReleaseUseCase`
+ * write to. See the `RELEASE_APPROVED` check below.
  */
 export class RecordCommissionForPaymentUseCase {
   constructor(
@@ -40,6 +57,7 @@ export class RecordCommissionForPaymentUseCase {
     private readonly commissions: CommissionRepository,
     private readonly ledger: FinancialLedgerRepository,
     private readonly breakdowns: CalculateJobCommissionBreakdownUseCase,
+    private readonly completionConfirmations: JobCompletionConfirmationRepository,
   ) {}
 
   async execute(paymentId: string): Promise<CommissionRecord> {
@@ -62,6 +80,19 @@ export class RecordCommissionForPaymentUseCase {
     if (!payment.jobId) {
       throw new ValidationError(
         "This payment is not associated with an accepted job — cannot calculate a commission.",
+      );
+    }
+
+    // Module 66 gate — see this class's own doc comment. Reads the single
+    // authoritative release decision; never recomputes it. Any status
+    // other than RELEASE_APPROVED (no confirmation row at all, still
+    // WAITING_FOR_CUSTOMER, RELEASE_HELD for any reason — open dispute,
+    // confirmation timeout under manual review, payout hold, KYC not yet
+    // approved — or RELEASE_DENIED) blocks commission recognition.
+    const releaseDecision = await this.completionConfirmations.findByJobId(payment.jobId);
+    if (!releaseDecision || releaseDecision.releaseStatus !== "RELEASE_APPROVED") {
+      throw new ValidationError(
+        "This payment has not been approved for release yet — commission cannot be recognized until the Module 66 payment-release decision is RELEASE_APPROVED.",
       );
     }
 
