@@ -30,7 +30,16 @@ export type TrustRiskEventReasonValue =
   | "IDENTITY_RISK_DETECTED"
   | "MANUAL_REVIEW_CONFIRMED"
   | "APPEAL_APPROVED"
-  | "ADMIN_ADJUSTMENT";
+  | "ADMIN_ADJUSTMENT"
+  /** Module 66 — Job Completion & Payment Release Protection: the customer
+   *  confirmation window elapsed with no response. Deliberately scored 0
+   *  below (see TRUST_SCORE_DELTA_TABLE) — a non-response is not, by
+   *  itself, evidence of anything the professional or customer did wrong
+   *  (the customer may simply be travelling), so it opens a
+   *  ManualReviewCase (see ProcessJobCompletionConfirmationsUseCase) with
+   *  `skipAutomatedAction: true` rather than moving either party's score
+   *  or applying a TrustAutomatedAction automatically. */
+  | "JOB_COMPLETION_CONFIRMATION_TIMEOUT";
 
 /** The default Trust Score delta for each reason. Positive reasons raise
  *  trust, negative/abuse reasons lower it. `ADMIN_ADJUSTMENT` is 0 here —
@@ -53,6 +62,7 @@ export const TRUST_SCORE_DELTA_TABLE: Readonly<Record<TrustRiskEventReasonValue,
   MANUAL_REVIEW_CONFIRMED: -30,
   APPEAL_APPROVED: 15,
   ADMIN_ADJUSTMENT: 0,
+  JOB_COMPLETION_CONFIRMATION_TIMEOUT: 0,
 };
 
 export interface TrustScoreRecalculation {

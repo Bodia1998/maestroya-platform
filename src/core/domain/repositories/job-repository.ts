@@ -117,6 +117,16 @@ export interface JobRepository {
    * PrismaJobRepository.complete's doc comment for the concrete
    * transaction shape, mirroring PrismaAppointmentRepository.confirm's own
    * "re-check inside the transaction" pattern.
+   *
+   * Module 66 — Job Completion & Payment Release Protection: implementations
+   * MUST ALSO create the Job's `JobCompletionConfirmation` row inside this
+   * exact same transaction (WAITING_FOR_CUSTOMER, deadline computed off the
+   * same `completedAt` timestamp this write uses) — never as a separate,
+   * later call. This is what guarantees a Job can never reach COMPLETED
+   * without payment release being protected: there is no window, not even a
+   * crash-between-two-writes window, where Job.status = COMPLETED exists
+   * without a corresponding confirmation-gate row. See
+   * PrismaJobRepository.complete's doc comment for the concrete shape.
    */
   complete(data: CompleteJobData): Promise<JobRecord>;
 

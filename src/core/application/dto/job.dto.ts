@@ -46,3 +46,44 @@ export const listJobsSchema = z.object({
   filter: z.enum(["active", "completed", "cancelled"]).optional(),
 });
 export type ListJobsInput = z.infer<typeof listJobsSchema>;
+
+// --- Module 66 — Job Completion & Payment Release Protection ---
+
+export const confirmJobCompletionSchema = z.object({
+  jobId: z.string().uuid("Invalid job."),
+});
+export type ConfirmJobCompletionInput = z.infer<typeof confirmJobCompletionSchema>;
+
+export const MAX_DISPUTE_JOB_COMPLETION_DESCRIPTION_LENGTH = 5000;
+
+export const disputeJobCompletionSchema = z.object({
+  jobId: z.string().uuid("Invalid job."),
+  reason: z.enum(
+    [
+      "SERVICE_NOT_COMPLETED",
+      "SERVICE_QUALITY",
+      "PROPERTY_DAMAGE",
+      "PROFESSIONAL_NO_SHOW",
+      "CUSTOMER_NO_SHOW",
+      "PRICE_DISAGREEMENT",
+      "SCOPE_OF_WORK",
+      "COMMUNICATION_ISSUE",
+      "OTHER",
+    ],
+    { errorMap: () => ({ message: "Choose a reason." }) },
+  ),
+  title: z.string().trim().min(5, "Title must be at least 5 characters.").max(150, "Title must be 150 characters or fewer."),
+  description: z
+    .string()
+    .trim()
+    .min(20, "Please describe the problem in at least 20 characters.")
+    .max(MAX_DISPUTE_JOB_COMPLETION_DESCRIPTION_LENGTH, `Description must be ${MAX_DISPUTE_JOB_COMPLETION_DESCRIPTION_LENGTH} characters or fewer.`),
+});
+export type DisputeJobCompletionInput = z.infer<typeof disputeJobCompletionSchema>;
+
+export const adminResolvePaymentReleaseSchema = z.object({
+  jobId: z.string().uuid("Invalid job."),
+  decision: z.enum(["APPROVE", "HOLD"], { errorMap: () => ({ message: "Choose a decision." }) }),
+  note: z.string().trim().max(2000, "Note must be 2000 characters or fewer.").optional().or(z.literal("")),
+});
+export type AdminResolvePaymentReleaseInput = z.infer<typeof adminResolvePaymentReleaseSchema>;

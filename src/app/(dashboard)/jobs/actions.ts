@@ -2,10 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 
-import { cancelJobSchema, completeJobSchema, startJobSchema } from "@/application/dto/job.dto";
+import {
+  cancelJobSchema,
+  completeJobSchema,
+  confirmJobCompletionSchema,
+  disputeJobCompletionSchema,
+  startJobSchema,
+} from "@/application/dto/job.dto";
 import {
   makeCancelJobUseCase,
   makeCompleteJobUseCase,
+  makeConfirmJobCompletionUseCase,
+  makeDisputeJobCompletionUseCase,
   makeStartJobUseCase,
 } from "@/application/use-cases/job/compose";
 import { DomainError } from "@/domain/errors/domain-error";
@@ -90,5 +98,54 @@ export async function cancelJobAction(jobId: string, reason: string, note: strin
     return { success: true };
   } catch (error) {
     return fromDomainError(error, "Something went wrong cancelling this job.");
+  }
+}
+
+// --- Module 66 — Job Completion & Payment Release Protection ---
+// Customer-only actions (enforced inside the use cases via
+// resolveJobActor — see ConfirmJobCompletionUseCase/
+// DisputeJobCompletionUseCase's own doc comments). Marking a job
+// completed (above) never releases payment by itself; these are the two
+// ways the customer moves the payment-release gate forward.
+
+export async function confirmJobCompletionAction(jobId: string): Promise<ActionResult> {
+  const user = await requireAuth();
+  const parsed = confirmJobCompletionSchema.safeParse({ jobId });
+  if (!parsed.success) {
+    return { success: false, error: "Invalid job." };
+  }
+
+  try {
+    await makeConfirmJobCompletionUseCase().execute(user.id, parsed.data.jobId);
+    revalidateJobPaths(jobId);
+    return { success: true };
+  } catch (error) {
+    return fromDomainError(error, "Something went wrong confirming this job.");
+  }
+}
+
+export async function disputeJobCompletionAction(input: {
+  jobId: string;
+  reason: string;
+  title: string;
+  description: string;
+}): Promise<ActionResult> {
+  const user = await requireAuth();
+  const parsed = disputeJobCompletionSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid dispute." };
+  }
+
+  try {
+    await makeDisputeJobCompletionUseCase().execute(user.id, parsed.data.jobId, {
+      reason: parsed.data.reason,
+      title: parsed.data.title,
+      description: parsed.data.description,
+    });
+    revalidateJobPaths(input.jobId);
+    revalidatePath("/disputes");
+    return { success: true };
+  } catch (error) {
+    return fromDomainError(error, "Something went wrong disputing this job's completion.");
   }
 }

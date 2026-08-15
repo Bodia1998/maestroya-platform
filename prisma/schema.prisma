@@ -159,6 +159,8 @@ model User {
   startedJobs            Job[]                  @relation("JobStartedBy")
   completedJobs          Job[]                  @relation("JobCompletedBy")
   cancelledJobs          Job[]                  @relation("JobCancelledBy")
+  /// Module 66 — Job Completion & Payment Release Protection.
+  confirmedJobCompletions JobCompletionConfirmation[] @relation("JobCompletionConfirmedBy")
   /// Module 38 — GDPR Compliance.
   consents               Consent[]
   /// Module 60 — Referral & Marketing Attribution Platform: at most one row
@@ -682,6 +684,46 @@ enum JobCancellationReason {
   OTHER
 }
 
+/// Module 66 — Job Completion & Payment Release Protection: tracks the
+/// customer-confirmation step that sits between "professional marked the
+/// Job COMPLETED" and "payment may actually be released to the
+/// professional." Deliberately a separate table rather than new JobStatus
+/// values (see JobCompletionConfirmation's own doc comment) — Job.status
+/// keeps meaning exactly what it means today (the *work* lifecycle);
+/// this table is the *money-release* lifecycle layered on top of it.
+///
+///   WAITING_FOR_CUSTOMER   — professional completed; clock is running.
+///   CONFIRMED              — customer confirmed the service was received.
+///   DISPUTED                — customer rejected/disputed instead of
+///                             confirming (a real Dispute row always
+///                             backs this — see disputeId).
+///   TIMED_OUT_UNDER_REVIEW  — the confirmation window elapsed with no
+///                             customer response. Per product decision,
+///                             silence is never treated as confirmation —
+///                             this always opens a ManualReviewCase and
+///                             holds the release, never auto-approves it.
+enum JobCompletionConfirmationStatus {
+  WAITING_FOR_CUSTOMER
+  CONFIRMED
+  DISPUTED
+  TIMED_OUT_UNDER_REVIEW
+}
+
+/// Module 66: the single authoritative outcome of
+/// `PaymentReleaseDecisionService` — see that file's own doc comment for
+/// the full rule set. `PENDING` is the only non-terminal value; every
+/// other value can still be *re-evaluated* later (e.g. RELEASE_HELD ->
+/// RELEASE_APPROVED once a hold clears), so none of these are modeled as
+/// DB-terminal — re-evaluation is idempotent by construction (the
+/// decision is a pure function of current state), not by a status
+/// transition whitelist.
+enum PaymentReleaseStatus {
+  PENDING
+  RELEASE_APPROVED
+  RELEASE_HELD
+  RELEASE_DENIED
+}
+
 enum ConversationStatus {
   ACTIVE
   ARCHIVED
@@ -929,6 +971,12 @@ enum NotificationType {
   /// ConfirmMaterialsPurchasedUseCase) that every item on the
   /// required-materials checklist has been purchased.
   MATERIALS_PURCHASE_CONFIRMED
+  /// Module 66 — Job Completion & Payment Release Protection: see
+  /// NotificationTypeValue's own doc comment.
+  JOB_COMPLETION_CONFIRMATION_REQUESTED
+  JOB_COMPLETION_CONFIRMATION_REMINDER
+  JOB_COMPLETION_CONFIRMED
+  JOB_COMPLETION_CONFIRMATION_TIMED_OUT
 }
 
 enum VerificationDocumentType {
@@ -1848,6 +1896,12 @@ model Job {
   /// comment.
   financialAdjustments FinancialAdjustment[]
 
+  /// Module 66 — Job Completion & Payment Release Protection: at most one
+  /// per Job — see JobCompletionConfirmation.jobId's `@unique`. Created the
+  /// moment the professional completes the Job (never before); a Job that
+  /// hasn't reached COMPLETED yet has none.
+  completionConfirmation JobCompletionConfirmation?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1857,6 +1911,87 @@ model Job {
   @@index([companyProfileId, status])
   @@index([status])
   @@map("jobs")
+}
+
+/// Module 66 — Job Completion & Payment Release Protection: the
+/// customer-confirmation + payment-release-gate record layered on top of
+/// Job's own COMPLETED status (see JobCompletionConfirmationStatus's own
+/// doc comment for why this is a separate table rather than new JobStatus
+/// values). Created exactly once, atomically alongside `Job.complete()` —
+/// see `JobRepository.complete`'s doc comment — never created directly by
+/// a use case the way Dispute is.
+///
+/// `releaseStatus`/`releaseReason`/`releaseDecidedAt` are the persisted
+/// output of `PaymentReleaseDecisionService`, written by
+/// `EvaluatePaymentReleaseUseCase` — the ONE place in this codebase
+/// allowed to write these three fields. No other use case (commission
+/// recording, payout eligibility, KYC approval, etc.) may ever set
+/// `releaseStatus` directly — see that use case's own doc comment for the
+/// full rationale. `releaseStatus` starts at `PENDING` and is
+/// re-evaluated (never just once) as the underlying conditions change —
+/// customer confirms, a dispute opens/resolves, a trust payout hold is
+/// applied/lifted, KYC is approved, etc.
+model JobCompletionConfirmation {
+  id    String @id @default(uuid()) @db.Uuid
+  jobId String @unique @db.Uuid
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Restrict)
+
+  status JobCompletionConfirmationStatus @default(WAITING_FOR_CUSTOMER)
+
+  /// Denormalized off Job.completedAt/completedByUserId at creation time —
+  /// same "cheap read, no join" convention as Job's own
+  /// customerId/professionalProfileId denormalization (see Job's doc
+  /// comment) — this record's own lifecycle is entirely about what
+  /// happens *after* that instant.
+  professionalCompletedAt DateTime
+
+  /// `professionalCompletedAt` + the confirmation-window duration (see
+  /// `job-completion-confirmation-rules.ts`'s `CONFIRMATION_WINDOW_HOURS`)
+  /// — snapshotted at creation time rather than recomputed from a
+  /// possibly-changed config constant later, so a window that's already
+  /// running is never silently shortened/lengthened by a config change.
+  confirmationDeadlineAt DateTime
+
+  confirmedAt         DateTime?
+  confirmedByUserId   String?   @db.Uuid
+  confirmedBy         User?     @relation("JobCompletionConfirmedBy", fields: [confirmedByUserId], references: [id], onDelete: Restrict)
+
+  /// Set only when status = DISPUTED — the real Dispute row backing the
+  /// rejection (created via the existing Module 21 CreateDisputeUseCase,
+  /// never duplicated here). Optional so a WAITING_FOR_CUSTOMER /
+  /// TIMED_OUT_UNDER_REVIEW row (no dispute yet) has none.
+  disputeId String?  @db.Uuid
+  dispute   Dispute? @relation(fields: [disputeId], references: [id], onDelete: Restrict)
+
+  /// Set once the confirmation window elapses without a customer response
+  /// (status -> TIMED_OUT_UNDER_REVIEW) — the Module 65 ManualReviewCase
+  /// opened for an admin to investigate. Reused, not duplicated — see
+  /// `ProcessJobCompletionConfirmationsUseCase`'s own doc comment.
+  manualReviewCaseId String?           @db.Uuid
+  manualReviewCase   ManualReviewCase? @relation(fields: [manualReviewCaseId], references: [id], onDelete: SetNull)
+
+  /// Best-effort reminder tracking so the reminder batch never re-sends
+  /// the same reminder twice for the same row — not a strict idempotency
+  /// boundary (see that use case's own doc comment), just duplicate-notice
+  /// avoidance.
+  reminderSentAt DateTime?
+
+  /// The persisted output of PaymentReleaseDecisionService — see this
+  /// model's own doc comment. `releaseReason` is the human-readable
+  /// explanation shown to admins/support, never parsed back into logic.
+  releaseStatus    PaymentReleaseStatus @default(PENDING)
+  releaseReason    String               @db.Text
+  releaseDecidedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([confirmationDeadlineAt])
+  @@index([releaseStatus])
+  @@index([disputeId])
+  @@index([manualReviewCaseId])
+  @@map("job_completion_confirmations")
 }
 
 /// A scheduled (or completed) visit stemming from an accepted Quote. One
@@ -2637,6 +2772,11 @@ model Dispute {
   /// which dispute. Zero or more: NO_ACTION resolutions produce none, a
   /// PARTIAL_RESOLUTION could in principle produce several.
   financialAdjustments FinancialAdjustment[]
+
+  /// Module 66 — Job Completion & Payment Release Protection: set on the
+  /// JobCompletionConfirmation row(s) that were moved to DISPUTED because
+  /// of this Dispute — see DisputeJobCompletionUseCase.
+  jobCompletionConfirmations JobCompletionConfirmation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3789,6 +3929,9 @@ enum TrustRiskEventReason {
   MANUAL_REVIEW_CONFIRMED
   APPEAL_APPROVED
   ADMIN_ADJUSTMENT
+  /// Module 66 — Job Completion & Payment Release Protection: see
+  /// TrustRiskEventReasonValue's own doc comment.
+  JOB_COMPLETION_CONFIRMATION_TIMEOUT
 }
 
 enum TrustRiskScoreType {
@@ -4079,6 +4222,11 @@ model ManualReviewCase {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  /// Module 66 — Job Completion & Payment Release Protection: the
+  /// JobCompletionConfirmation row(s) (normally exactly one) that opened
+  /// this case via a confirmation-window timeout.
+  jobCompletionConfirmations JobCompletionConfirmation[]
 
   @@index([userId])
   @@index([state])

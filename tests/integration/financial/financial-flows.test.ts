@@ -7,6 +7,7 @@ import { GetProfessionalEarningsUseCase } from "@/application/use-cases/financia
 import { RecordCommissionForPaymentUseCase } from "@/application/use-cases/financial/record-commission-for-payment.use-case";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { ServiceRequestRecord } from "@/domain/repositories/service-request-repository";
+import type { PaymentReleaseStatus } from "@/domain/services/payment-release-decision";
 import {
   FakeCustomerProfileRepository,
   FakeJobRepository,
@@ -22,6 +23,7 @@ import {
   FakeCommissionRepository,
   FakeFinancialAdjustmentRepository,
   FakeFinancialLedgerRepository,
+  FakeJobCompletionConfirmationRepository,
   FakePaymentRepository,
 } from "./fakes";
 
@@ -49,6 +51,12 @@ function makeRepos() {
   const ledger = new FakeFinancialLedgerRepository();
   const payments = new FakePaymentRepository();
   const adjustments = new FakeFinancialAdjustmentRepository();
+  // Module 66 — Job Completion & Payment Release Protection: the source
+  // of truth RecordCommissionForPaymentUseCase's release gate reads from.
+  // See seedReleaseStatus/seedApprovedRelease below for how tests place a
+  // confirmation row at a given releaseStatus without driving the full
+  // confirm/dispute/timeout state machine.
+  const completionConfirmations = new FakeJobCompletionConfirmationRepository();
 
   const breakdowns = new CalculateJobCommissionBreakdownUseCase(jobs, quotes, rates);
 
@@ -64,8 +72,15 @@ function makeRepos() {
     ledger,
     payments,
     adjustments,
+    completionConfirmations,
     breakdowns,
-    recordCommission: new RecordCommissionForPaymentUseCase(payments, commissions, ledger, breakdowns),
+    recordCommission: new RecordCommissionForPaymentUseCase(
+      payments,
+      commissions,
+      ledger,
+      breakdowns,
+      completionConfirmations,
+    ),
     getProfessionalEarnings: new GetProfessionalEarningsUseCase(professionals, commissions, payments, breakdowns),
     getCustomerSummary: new GetCustomerFinancialSummaryUseCase(customerProfiles, jobs, payments, breakdowns),
     createAdjustment: new CreateFinancialAdjustmentUseCase(jobs, adjustments, ledger),
@@ -147,6 +162,54 @@ function seedCapturedPayment(repos: Repos, jobId: string, payerId: string, amoun
   });
 }
 
+/**
+ * Module 66 — Job Completion & Payment Release Protection: seeds a
+ * `JobCompletionConfirmation` row directly at a given `releaseStatus`
+ * (and, independently, `status`) — the exact same persisted source of
+ * truth `RecordCommissionForPaymentUseCase`'s release gate reads via
+ * `JobCompletionConfirmationRepository.findByJobId`. Deliberately bypasses
+ * the real confirm/dispute/timeout use cases (already covered by
+ * job-completion-confirmation-state.test.ts and job-flows.test.ts) — this
+ * file only needs to prove the commission gate reads the persisted
+ * outcome correctly, not re-exercise how that outcome is reached.
+ */
+function seedReleaseStatus(
+  repos: Repos,
+  jobId: string,
+  releaseStatus: "PENDING" | "RELEASE_APPROVED" | "RELEASE_HELD" | "RELEASE_DENIED",
+  status: "WAITING_FOR_CUSTOMER" | "CONFIRMED" | "DISPUTED" | "TIMED_OUT_UNDER_REVIEW" = "CONFIRMED",
+) {
+  counter += 1;
+  const now = new Date();
+  return repos.completionConfirmations.seed({
+    id: `completion-confirmation-${counter}`,
+    jobId,
+    status,
+    professionalCompletedAt: now,
+    confirmationDeadlineAt: new Date(now.getTime() + 72 * 60 * 60 * 1000),
+    confirmedAt: status === "CONFIRMED" ? now : null,
+    confirmedByUserId: status === "CONFIRMED" ? "user-confirmed-by-test" : null,
+    disputeId: status === "DISPUTED" ? "dispute-test" : null,
+    manualReviewCaseId: status === "TIMED_OUT_UNDER_REVIEW" ? "review-case-test" : null,
+    reminderSentAt: null,
+    // See fakes.ts's own `as PaymentReleaseStatus` cast for "PENDING" —
+    // mirrors PrismaJobCompletionConfirmationRepository's existing
+    // convention for the same 4-vs-3-value gap, not introduced here.
+    releaseStatus: releaseStatus as PaymentReleaseStatus,
+    releaseReason: `Test-seeded: ${releaseStatus}.`,
+    releaseDecidedAt: now,
+    createdAt: now,
+    updatedAt: now,
+  });
+}
+
+/** The only status commission recognition may ever proceed from — see
+ *  RecordCommissionForPaymentUseCase's own doc comment on the Module 66
+ *  gate. */
+function seedApprovedRelease(repos: Repos, jobId: string) {
+  return seedReleaseStatus(repos, jobId, "RELEASE_APPROVED", "CONFIRMED");
+}
+
 const CUSTOMER = "user-customer-1";
 const PROFESSIONAL = "user-professional-1";
 const OTHER_CUSTOMER = "user-customer-2";
@@ -175,42 +238,96 @@ describe("Module 22 — Commission & Financial", () => {
     await expect(repos.recordCommission.execute(payment.id)).rejects.toThrow(ValidationError);
   });
 
-  it("records the commission and full ledger trail once captured", async () => {
-    const repos = makeRepos();
-    const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
-    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+  describe("Module 66 gate — RELEASE_APPROVED is required, Payment.CAPTURED alone is never sufficient", () => {
+    it("rejects commission recognition when the job was never even completed (no JobCompletionConfirmation row at all)", async () => {
+      const repos = makeRepos();
+      // seedJobWithQuote only accepts the Quote — the Job stays CREATED,
+      // never started, never completed. No confirmation row can exist yet.
+      const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+      const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
 
-    const commission = await repos.recordCommission.execute(payment.id);
+      await expect(repos.recordCommission.execute(payment.id)).rejects.toThrow(ValidationError);
 
-    expect(commission.amount).toBe(150);
-    expect(commission.rateBps).toBe(1000);
+      expect(repos.commissions.commissions.size).toBe(0);
+      expect(repos.ledger.entries.filter((e) => e.paymentId === payment.id)).toHaveLength(0);
+    });
 
-    const entries = await repos.ledger.listForPayment(payment.id);
-    const types = entries.map((e) => e.type).sort();
-    expect(types).toEqual(
-      ["COMMISSION", "LABOR_CHARGE", "MATERIALS_CHARGE", "PLATFORM_REVENUE", "PROFESSIONAL_NET_EARNING"].sort(),
-    );
-    const platformRevenue = entries.find((e) => e.type === "PLATFORM_REVENUE");
-    expect(platformRevenue?.amount).toBe(150);
-  });
+    it("rejects commission recognition while the customer has not yet confirmed (WAITING_FOR_CUSTOMER, releaseStatus still PENDING)", async () => {
+      const repos = makeRepos();
+      const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+      const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+      seedReleaseStatus(repos, job.id, "PENDING", "WAITING_FOR_CUSTOMER");
 
-  it("is idempotent — recording a commission twice for the same payment never double-charges", async () => {
-    const repos = makeRepos();
-    const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
-    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+      await expect(repos.recordCommission.execute(payment.id)).rejects.toThrow(ValidationError);
 
-    const first = await repos.recordCommission.execute(payment.id);
-    const second = await repos.recordCommission.execute(payment.id);
+      expect(repos.commissions.commissions.size).toBe(0);
+      expect(repos.ledger.entries.filter((e) => e.type === "PROFESSIONAL_NET_EARNING")).toHaveLength(0);
+    });
 
-    expect(second.id).toBe(first.id);
-    expect(repos.commissions.commissions.size).toBe(1);
-    expect(repos.ledger.entries.filter((e) => e.paymentId === payment.id)).toHaveLength(5);
+    it("rejects commission recognition when release is held (e.g. a disputed completion)", async () => {
+      const repos = makeRepos();
+      const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+      const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+      seedReleaseStatus(repos, job.id, "RELEASE_HELD", "DISPUTED");
+
+      await expect(repos.recordCommission.execute(payment.id)).rejects.toThrow(ValidationError);
+
+      expect(repos.commissions.commissions.size).toBe(0);
+      expect(repos.ledger.entries.filter((e) => e.type === "PROFESSIONAL_NET_EARNING")).toHaveLength(0);
+    });
+
+    it("rejects commission recognition when release is held for a confirmation timeout under manual review", async () => {
+      const repos = makeRepos();
+      const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+      const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+      seedReleaseStatus(repos, job.id, "RELEASE_HELD", "TIMED_OUT_UNDER_REVIEW");
+
+      await expect(repos.recordCommission.execute(payment.id)).rejects.toThrow(ValidationError);
+
+      expect(repos.commissions.commissions.size).toBe(0);
+      expect(repos.ledger.entries.filter((e) => e.paymentId === payment.id)).toHaveLength(0);
+    });
+
+    it("records the commission and full ledger trail once RELEASE_APPROVED", async () => {
+      const repos = makeRepos();
+      const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+      const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+      seedApprovedRelease(repos, job.id);
+
+      const commission = await repos.recordCommission.execute(payment.id);
+
+      expect(commission.amount).toBe(150);
+      expect(commission.rateBps).toBe(1000);
+
+      const entries = await repos.ledger.listForPayment(payment.id);
+      const types = entries.map((e) => e.type).sort();
+      expect(types).toEqual(
+        ["COMMISSION", "LABOR_CHARGE", "MATERIALS_CHARGE", "PLATFORM_REVENUE", "PROFESSIONAL_NET_EARNING"].sort(),
+      );
+      const platformRevenue = entries.find((e) => e.type === "PLATFORM_REVENUE");
+      expect(platformRevenue?.amount).toBe(150);
+    });
+
+    it("is idempotent — recording a commission twice for the same RELEASE_APPROVED payment never double-charges", async () => {
+      const repos = makeRepos();
+      const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+      const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+      seedApprovedRelease(repos, job.id);
+
+      const first = await repos.recordCommission.execute(payment.id);
+      const second = await repos.recordCommission.execute(payment.id);
+
+      expect(second.id).toBe(first.id);
+      expect(repos.commissions.commissions.size).toBe(1);
+      expect(repos.ledger.entries.filter((e) => e.paymentId === payment.id)).toHaveLength(5);
+    });
   });
 
   it("lets a professional see only their own earnings", async () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
     const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, job.id);
     await repos.recordCommission.execute(payment.id);
 
     const earnings = await repos.getProfessionalEarnings.execute(PROFESSIONAL);
@@ -240,6 +357,7 @@ describe("Module 22 — Commission & Financial", () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
     const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, job.id);
     await repos.recordCommission.execute(payment.id);
 
     await expect(repos.getCustomerSummary.execute(OTHER_CUSTOMER, job.id)).rejects.toThrow(NotFoundError);
@@ -249,6 +367,7 @@ describe("Module 22 — Commission & Financial", () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
     const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, job.id);
     await repos.recordCommission.execute(payment.id);
 
     const summary = await repos.getCustomerSummary.execute(CUSTOMER, job.id);
@@ -267,6 +386,7 @@ describe("Module 22 — Commission & Financial", () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
     const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, job.id);
     await repos.recordCommission.execute(payment.id);
     repos.payments.seedProcessedRefund(payment.id, 200);
 
@@ -361,6 +481,7 @@ describe("Module 22 — Commission & Financial", () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
     const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, job.id);
 
     await repos.recordCommission.execute(payment.id);
     const snapshotAfterFirst = [...repos.ledger.entries];
@@ -386,6 +507,7 @@ describe("Module 22 — Commission & Financial", () => {
     const repos = makeRepos();
     const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
     const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, job.id);
     await repos.recordCommission.execute(payment.id);
 
     const entries = await repos.ledger.listForPayment(payment.id);
