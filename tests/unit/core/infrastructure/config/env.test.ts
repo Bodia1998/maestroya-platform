@@ -556,6 +556,66 @@ describe("infrastructure/config/env", () => {
     });
   });
 
+  describe("Module 70.1 — Pre-Stripe Security & Integration Hardening: PERSONA_WEBHOOK_SECRET production hardening", () => {
+    it("does not require PERSONA_WEBHOOK_SECRET outside production, even with VERIFICATION_PROVIDER=persona", async () => {
+      const { env } = await loadEnvWith({
+        VERIFICATION_PROVIDER: "persona",
+        PERSONA_API_KEY: "key",
+        PERSONA_TEMPLATE_ID: "tmpl",
+      });
+      expect(env.VERIFICATION_PROVIDER).toBe("persona");
+      expect(env.PERSONA_WEBHOOK_SECRET).toBeUndefined();
+    });
+
+    it("does not require any Persona variable in production when VERIFICATION_PROVIDER is unset (manual, the default)", async () => {
+      const { env } = await loadEnvWith({
+        NODE_ENV: "production",
+        NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+        AUTH_URL: "https://maestroya.example.com",
+        AUTH_SECRET: "a".repeat(32),
+        STRIPE_SECRET_KEY: "sk_live_realkey",
+        STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+        SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+      });
+      expect(env.VERIFICATION_PROVIDER).toBe("manual");
+    });
+
+    it("rejects a production configuration with VERIFICATION_PROVIDER=persona and no PERSONA_WEBHOOK_SECRET, even with PERSONA_API_KEY/PERSONA_TEMPLATE_ID present", async () => {
+      await expect(
+        loadEnvWith({
+          NODE_ENV: "production",
+          NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+          AUTH_URL: "https://maestroya.example.com",
+          AUTH_SECRET: "a".repeat(32),
+          STRIPE_SECRET_KEY: "sk_live_realkey",
+          STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+          SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+          VERIFICATION_PROVIDER: "persona",
+          PERSONA_API_KEY: "key",
+          PERSONA_TEMPLATE_ID: "tmpl",
+        }),
+      ).rejects.toThrow(/Invalid environment variables/);
+    });
+
+    it("accepts a production configuration with VERIFICATION_PROVIDER=persona and every required Persona credential, including PERSONA_WEBHOOK_SECRET", async () => {
+      const { env } = await loadEnvWith({
+        NODE_ENV: "production",
+        NEXT_PUBLIC_APP_URL: "https://maestroya.example.com",
+        AUTH_URL: "https://maestroya.example.com",
+        AUTH_SECRET: "a".repeat(32),
+        STRIPE_SECRET_KEY: "sk_live_realkey",
+        STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
+        SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        VERIFICATION_PROVIDER: "persona",
+        PERSONA_API_KEY: "key",
+        PERSONA_TEMPLATE_ID: "tmpl",
+        PERSONA_WEBHOOK_SECRET: "whsec_realvalue",
+      });
+      expect(env.VERIFICATION_PROVIDER).toBe("persona");
+      expect(env.PERSONA_WEBHOOK_SECRET).toBe("whsec_realvalue");
+    });
+  });
+
   it("never includes secret values in the base fixture accidentally left empty", () => {
     // Sanity check on the fixture itself, not env.ts — guards against a
     // future edit accidentally introducing an empty required field that

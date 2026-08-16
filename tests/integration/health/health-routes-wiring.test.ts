@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 describe("Module 56 — health routes wiring", () => {
   afterEach(() => {
     vi.doUnmock("@/infrastructure/database/prisma/client");
+    vi.doUnmock("@/lib/auth");
     vi.resetModules();
   });
 
@@ -49,6 +50,14 @@ describe("Module 56 — health routes wiring", () => {
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
     }));
+    // Module 70.1 — Pre-Stripe Security & Integration Hardening: this
+    // route now requires ADMIN/SUPER_ADMIN (see that route's own doc
+    // comment) — every test below that exercises it now authenticates as
+    // an ADMIN via the same vi.doMock pattern this file already uses for
+    // the Prisma client.
+    vi.doMock("@/lib/auth", () => ({
+      auth: vi.fn().mockResolvedValue({ user: { id: "admin-1", email: "admin@test.example", roles: ["ADMIN"], signupIntent: null } }),
+    }));
     vi.resetModules();
 
     const { NextRequest } = await import("next/server");
@@ -71,6 +80,9 @@ describe("Module 56 — health routes wiring", () => {
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { $queryRaw: vi.fn().mockRejectedValue(new Error("connection refused")) },
     }));
+    vi.doMock("@/lib/auth", () => ({
+      auth: vi.fn().mockResolvedValue({ user: { id: "admin-1", email: "admin@test.example", roles: ["ADMIN"], signupIntent: null } }),
+    }));
     vi.resetModules();
 
     const { NextRequest } = await import("next/server");
@@ -92,6 +104,9 @@ describe("Module 56 — health routes wiring", () => {
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
     }));
+    vi.doMock("@/lib/auth", () => ({
+      auth: vi.fn().mockResolvedValue({ user: { id: "admin-1", email: "admin@test.example", roles: ["ADMIN"], signupIntent: null } }),
+    }));
     vi.resetModules();
 
     const { NextRequest } = await import("next/server");
@@ -112,6 +127,9 @@ describe("Module 56 — health routes wiring", () => {
   it("/api/health/circuit-breakers POST resets a named breaker", async () => {
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.doMock("@/lib/auth", () => ({
+      auth: vi.fn().mockResolvedValue({ user: { id: "admin-1", email: "admin@test.example", roles: ["ADMIN"], signupIntent: null } }),
     }));
     vi.resetModules();
 
@@ -136,6 +154,9 @@ describe("Module 56 — health routes wiring", () => {
   it("/api/health/circuit-breakers POST returns 404 for an unregistered breaker name", async () => {
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]) },
+    }));
+    vi.doMock("@/lib/auth", () => ({
+      auth: vi.fn().mockResolvedValue({ user: { id: "admin-1", email: "admin@test.example", roles: ["ADMIN"], signupIntent: null } }),
     }));
     vi.resetModules();
 

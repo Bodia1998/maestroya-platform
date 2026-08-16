@@ -4385,3 +4385,41 @@ model TrustAppeal {
   @@index([state])
   @@map("trust_appeals")
 }
+
+// ============================================================================
+// Module 70.1 — Pre-Stripe Security & Integration Hardening
+// ============================================================================
+
+enum ExternalWebhookEventStatus {
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+/// The single, provider-independent external-event idempotency ledger —
+/// see `ExternalWebhookEventRepository`'s own doc comment
+/// (src/core/domain/repositories/external-webhook-event-repository.ts) for
+/// the full concurrency/retry design. `(provider, externalEventId)` is
+/// the DB-enforced uniqueness invariant: the same webhook delivery,
+/// retried by the provider or replayed by an attacker who captured a
+/// valid request, can never be processed twice. No provider-specific
+/// column exists here on purpose — `provider` is free text ("PERSONA"
+/// today, "STRIPE" later), so a future payment-provider webhook needs no
+/// schema change, only a new row shape for the same table.
+model ExternalWebhookEvent {
+  id              String                      @id @default(uuid()) @db.Uuid
+  provider        String                      @db.VarChar(40)
+  externalEventId String                      @db.VarChar(191)
+  /// The provider's own event-type/name string, kept only for
+  /// observability — never part of the uniqueness invariant and never
+  /// branched on for a security decision.
+  eventType       String?                     @db.VarChar(100)
+  status          ExternalWebhookEventStatus  @default(PROCESSING)
+  processedAt     DateTime?
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+
+  @@unique([provider, externalEventId])
+  @@index([provider, status])
+  @@map("external_webhook_events")
+}
