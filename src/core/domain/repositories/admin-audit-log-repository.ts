@@ -143,7 +143,16 @@ export type AdminAuditAction =
   // is recorded by an ADMIN/SUPER_ADMIN/SUPPORT user resolving a disputed
   // or timed-out payment release — see AdminResolvePaymentReleaseUseCase.
   | "JOB_COMPLETION_CONFIRMATION_TIMED_OUT"
-  | "PAYMENT_RELEASE_ADMIN_RESOLVED";
+  | "PAYMENT_RELEASE_ADMIN_RESOLVED"
+  // Module 68 — Dispute Resolution & Financial Protection: recorded once,
+  // by RecordDisputeFinancialOutcomeAuditLogSubscriber, every time a
+  // DisputeResolutionDecision finishes being applied (whether every
+  // financial adjustment it required succeeded, partially succeeded, or
+  // all failed — see DisputeFinancialOutcomeDetermined's own doc
+  // comment). Distinct from the pre-existing DISPUTE_RESOLVED (Module 21,
+  // the *business* resolution alone) — this is specifically the
+  // *financial* consequence of that resolution.
+  | "DISPUTE_RESOLUTION_FINANCIAL_OUTCOME_DETERMINED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved

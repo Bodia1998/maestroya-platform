@@ -21,6 +21,7 @@ const SELECT = {
   requestedByUserId: true,
   idempotencyKey: true,
   transactionId: true,
+  resolutionDecisionId: true,
   appliedAt: true,
   createdAt: true,
 } as const;
@@ -38,6 +39,7 @@ type Row = {
   requestedByUserId: string;
   idempotencyKey: string;
   transactionId: string | null;
+  resolutionDecisionId: string | null;
   appliedAt: Date | null;
   createdAt: Date;
 };
@@ -56,6 +58,7 @@ function toRecord(row: Row): FinancialAdjustmentRecord {
     requestedByUserId: row.requestedByUserId,
     idempotencyKey: row.idempotencyKey,
     transactionId: row.transactionId,
+    resolutionDecisionId: row.resolutionDecisionId,
     appliedAt: row.appliedAt,
     createdAt: row.createdAt,
   };
@@ -83,6 +86,7 @@ export class PrismaFinancialAdjustmentRepository implements FinancialAdjustmentR
         reason: data.reason,
         requestedByUserId: data.requestedByUserId,
         idempotencyKey: data.idempotencyKey,
+        resolutionDecisionId: data.resolutionDecisionId ?? null,
       },
       select: SELECT,
     });

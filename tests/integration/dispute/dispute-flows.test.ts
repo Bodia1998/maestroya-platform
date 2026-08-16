@@ -58,6 +58,7 @@ import {
   FakeDisputeRepository,
   FakeSupportTicketRepository,
 } from "./fakes";
+import { FakeDisputeResolutionDecisionRepository } from "../dispute-resolution/fakes";
 
 /**
  * Integration tests for Module 21 — Disputes & Support. Built on top of the
@@ -92,6 +93,15 @@ function makeRepos() {
   const supportTickets = new FakeSupportTicketRepository();
   const auditLog = new FakeAdminAuditLogRepository();
   const notifications = new FakeNotificationCreator();
+  // Module 68 — Dispute Resolution & Financial Protection:
+  // CloseDisputeUseCase's new settlement guard needs this dependency —
+  // empty in every test here (none of these tests resolve a dispute with
+  // a financial outcome via Module 68), so the guard's
+  // `disputeResolutionRequiresFinancialSettlementBeforeClose` check never
+  // trips for `NO_ACTION`/`PROFESSIONAL_FAVOR`/no-resolution cases this
+  // file exercises — see tests/integration/dispute-resolution/ for the
+  // guard's own dedicated coverage.
+  const resolutionDecisions = new FakeDisputeResolutionDecisionRepository();
   return {
     customerProfiles,
     professionals,
@@ -102,6 +112,7 @@ function makeRepos() {
     jobs,
     companyMembers,
     disputes,
+    resolutionDecisions,
     disputeMessages,
     disputeEvidence,
     supportTickets,
@@ -269,6 +280,7 @@ function makeUseCases(repos: Repos) {
       repos.customerProfiles,
       repos.professionals,
       repos.companyMembers,
+      repos.resolutionDecisions,
       disputeEventBus,
     ),
     createTicket: new CreateSupportTicketUseCase(repos.supportTickets, repos.auditLog),

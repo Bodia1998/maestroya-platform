@@ -178,3 +178,53 @@ export type RejectDisputeInput = z.infer<typeof rejectDisputeSchema>;
 
 export const closeDisputeSchema = z.object({ disputeId: z.string().uuid("Invalid dispute.") });
 export type CloseDisputeInput = z.infer<typeof closeDisputeSchema>;
+
+// Module 68 — Dispute Resolution & Financial Protection.
+
+const FINANCIAL_ADJUSTMENT_TYPE_VALUES = [
+  "FULL_REFUND",
+  "PARTIAL_REFUND",
+  "PROFESSIONAL_PAYOUT_REDUCTION",
+  "PROFESSIONAL_PAYOUT_RELEASE",
+  "CUSTOMER_COMPENSATION",
+  "PLATFORM_FEE_REFUND",
+  "COMMISSION_REVERSAL",
+] as const;
+
+/**
+ * Same fields as `resolveDisputeSchema` plus the two extra, resolution-
+ * dependent financial fields `decideDisputeFinancialOutcome`
+ * (`domain/services/dispute-resolution-financial-outcome.ts`) requires for
+ * `PARTIAL_RESOLUTION`/`FINANCIAL_ADJUSTMENT_REQUIRED` — validated as
+ * present/absent per-resolution here at the boundary so a malformed
+ * request never even reaches the use case. `requestedAmount` is a plain
+ * decimal — never negative, never absurdly large (the use case's own pure
+ * function separately checks it against the payment amount, which this
+ * schema has no access to).
+ */
+export const resolveDisputeWithFinancialOutcomeSchema = z
+  .object({
+    disputeId: z.string().uuid("Invalid dispute."),
+    resolution: z.enum(DISPUTE_RESOLUTION_VALUES),
+    resolutionNote: z
+      .string()
+      .trim()
+      .min(1, "Resolution note is required.")
+      .max(MAX_RESOLUTION_NOTE_LENGTH, `Resolution note must be ${MAX_RESOLUTION_NOTE_LENGTH} characters or fewer.`),
+    requestedAmount: z.coerce.number().positive("Amount must be positive.").max(1_000_000).optional(),
+    requestedAdjustmentType: z.enum(FINANCIAL_ADJUSTMENT_TYPE_VALUES).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.resolution === "PARTIAL_RESOLUTION" && data.requestedAmount === undefined) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["requestedAmount"], message: "A refund amount is required for a partial resolution." });
+    }
+    if (data.resolution === "FINANCIAL_ADJUSTMENT_REQUIRED") {
+      if (data.requestedAmount === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["requestedAmount"], message: "An amount is required for this resolution." });
+      }
+      if (data.requestedAdjustmentType === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["requestedAdjustmentType"], message: "An adjustment type is required for this resolution." });
+      }
+    }
+  });
+export type ResolveDisputeWithFinancialOutcomeInput = z.infer<typeof resolveDisputeWithFinancialOutcomeSchema>;

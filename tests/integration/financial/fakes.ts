@@ -175,6 +175,7 @@ export class FakeFinancialAdjustmentRepository implements FinancialAdjustmentRep
       requestedByUserId: data.requestedByUserId,
       idempotencyKey: data.idempotencyKey,
       transactionId: null,
+      resolutionDecisionId: data.resolutionDecisionId ?? null,
       appliedAt: null,
       createdAt: new Date(),
     };
