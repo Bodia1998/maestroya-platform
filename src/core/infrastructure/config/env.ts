@@ -787,6 +787,26 @@ const envSchema = z
           message: "PERSONA_API_KEY and PERSONA_TEMPLATE_ID are required in production when VERIFICATION_PROVIDER=persona.",
         });
       }
+
+      // Module 70.1 — Pre-Stripe Security & Integration Hardening
+      // (Objective F): the Module 70 audit found PERSONA_WEBHOOK_SECRET
+      // optional even in production with Persona enabled, which would let
+      // `/api/webhooks/persona` start up in a state where
+      // `PersonaVerificationProvider.webhookValidation` can never
+      // succeed (no secret configured -> every delivery rejected as
+      // invalid) — a silent, fail-closed-forever misconfiguration rather
+      // than a loud startup failure. Same "deliberately and validly
+      // selected persona must not silently run half-configured" reasoning
+      // as the PERSONA_API_KEY/PERSONA_TEMPLATE_ID check directly above,
+      // extended to the credential that specifically gates webhook
+      // processing rather than the one that gates starting an inquiry.
+      if (!value.PERSONA_WEBHOOK_SECRET) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["PERSONA_WEBHOOK_SECRET"],
+          message: "PERSONA_WEBHOOK_SECRET is required in production when VERIFICATION_PROVIDER=persona.",
+        });
+      }
     }
 
     // Module 51 — Distributed Tracing: a production deployment that

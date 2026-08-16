@@ -4,6 +4,8 @@ import { z } from "zod";
 
 import { env } from "@/infrastructure/config/env";
 import { getCircuitBreakerStatusUseCase, getResetCircuitBreakerUseCase } from "@/infrastructure/health/compose";
+import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
+import { toHttpErrorResponse } from "@/infrastructure/observability/http-error-response";
 import { logger } from "@/infrastructure/observability/logger";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
 
@@ -19,16 +21,33 @@ import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observabil
  * `application/services/health/dependency-status.ts`).
  *
  * `POST` is the module's "manual reset" requirement — an operator
- * forcing one named breaker (or `"all"`) back to `CLOSED`. Deliberately
- * unauthenticated at this layer, consistent with every other route under
- * `/api/health/**` in this codebase (none of them require a session);
- * a deployment that wants to restrict this in production should do so
- * at the infrastructure layer (reverse proxy / IP allowlist), the same
- * way `CRON_SECRET`-style protection is applied selectively elsewhere
- * rather than baked into every health route.
+ * forcing one named breaker (or `"all"`) back to `CLOSED`, a genuine
+ * state-mutating financial/operational action (it changes live
+ * traffic-shaping behavior), not merely a read.
+ *
+ * ## Module 70.1 — Pre-Stripe Security & Integration Hardening
+ * The Module 70 audit flagged this route as unauthenticated — both `GET`
+ * (breaker configuration/metrics/dependency topology) and `POST` (an
+ * operator-only mutation reachable by anyone). Both now require
+ * `ADMIN`/`SUPER_ADMIN` via the same existing `requireRole` RBAC seam
+ * `/api/analytics/dashboard/route.ts`/`/api/health/diagnostics/route.ts`
+ * already use — no new/separate auth mechanism. This supersedes the
+ * route's previous doc comment, which described deliberately leaving it
+ * unauthenticated "consistent with every other route under
+ * /api/health/**" — `/api/health` and `/api/health/ready` (Module 25)
+ * remain intentionally public liveness/readiness probes; this route and
+ * `/api/health/diagnostics` are the two that expose internal topology and
+ * are now both gated the same way.
  */
 export async function GET(request: NextRequest) {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
+  const route = "/api/health/circuit-breakers";
+
+  try {
+    await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
+  } catch (error) {
+    return toHttpErrorResponse(error, { requestId, route });
+  }
 
   if (env.HEALTH_CHECKS_ENABLED !== "true") {
     return NextResponse.json(
@@ -49,6 +68,13 @@ const resetRequestSchema = z.object({ name: z.string().min(1) });
 
 export async function POST(request: NextRequest) {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
+  const route = "/api/health/circuit-breakers";
+
+  try {
+    await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
+  } catch (error) {
+    return toHttpErrorResponse(error, { requestId, route });
+  }
 
   if (env.HEALTH_CHECKS_ENABLED !== "true") {
     return NextResponse.json(

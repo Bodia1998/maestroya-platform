@@ -1,4 +1,5 @@
 import { PrismaAdminAuditLogRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-audit-log-repository";
+import { PrismaExternalWebhookEventRepository } from "@/infrastructure/database/prisma/repositories/prisma-external-webhook-event-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaProfessionalVerificationRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-verification-repository";
 import { CloudinaryVerificationDocumentUploadService } from "@/infrastructure/storage/cloudinary/verification-document-upload-service";
@@ -25,6 +26,7 @@ import { SubmitProfessionalVerificationUseCase } from "@/application/use-cases/v
 import { UploadVerificationDocumentUseCase } from "@/application/use-cases/verification/upload-verification-document.use-case";
 // Module 59 — Professional Verification (Persona).
 import { CheckPayoutEligibilityUseCase } from "@/application/use-cases/verification/check-payout-eligibility.use-case";
+import { ProcessPersonaWebhookUseCase } from "@/application/use-cases/verification/process-persona-webhook.use-case";
 import { RefreshVerificationStatusUseCase } from "@/application/use-cases/verification/refresh-verification-status.use-case";
 import { StartProfessionalVerificationUseCase } from "@/application/use-cases/verification/start-professional-verification.use-case";
 import { SynchronizeVerificationUseCase } from "@/application/use-cases/verification/synchronize-verification.use-case";
@@ -43,6 +45,10 @@ const verifications = new PrismaProfessionalVerificationRepository();
 const professionals = new PrismaProfessionalRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
 const uploads = new CloudinaryVerificationDocumentUploadService();
+// Module 70.1 — Pre-Stripe Security & Integration Hardening: the
+// provider-independent external-event idempotency ledger — see
+// ExternalWebhookEventRepository's own doc comment.
+const webhookEvents = new PrismaExternalWebhookEventRepository();
 // Module 39 — Sentry + CI/CD Hardening: SentryFailureReporter in
 // production, ConsoleFailureReporter (Module 37) otherwise — see
 // failure-reporter-factory.ts's own doc comment. No use case or
@@ -143,4 +149,23 @@ export function makeCheckPayoutEligibilityUseCase() {
  *  the automated-check button without importing the factory/env directly. */
 export function getVerificationProviderName() {
   return verificationProvider.name;
+}
+
+/**
+ * Module 70.1 — Pre-Stripe Security & Integration Hardening: the same
+ * process-wide `VerificationProvider` instance every other use case in
+ * this file is wired to — exposed directly (not just its `.name`) so
+ * `/api/webhooks/persona/route.ts` can call `webhookValidation` on the
+ * real, correctly-configured provider (Persona in production, the
+ * always-invalid `NullVerificationProvider` otherwise) without
+ * constructing a second one or importing the factory/env directly. Thin
+ * Route Handler rule: this is the only verification-related dependency
+ * that route needs from this module.
+ */
+export function getVerificationProviderInstance() {
+  return verificationProvider;
+}
+
+export function makeProcessPersonaWebhookUseCase() {
+  return new ProcessPersonaWebhookUseCase(verifications, webhookEvents, makeRefreshVerificationStatusUseCase());
 }

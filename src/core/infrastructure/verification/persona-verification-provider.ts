@@ -74,6 +74,38 @@ interface PersonaInquiryResource {
   };
 }
 
+/**
+ * Module 70.1 — Pre-Stripe Security & Integration Hardening. The outer
+ * envelope Persona wraps every webhook delivery in — a `type: "event"`
+ * resource whose own `id` is the delivery's unique event id (the
+ * idempotency key), `attributes.name` is the event type (e.g.
+ * `"inquiry.completed"`), and `attributes.payload` is the embedded
+ * `Inquiry` resource (`PersonaInquiryResource` above) the rest of this
+ * file already parses. See https://docs.withpersona.com/docs/webhooks.
+ */
+interface PersonaEventEnvelope {
+  data: {
+    id: string;
+    type: string;
+    attributes: {
+      name?: string;
+      payload?: PersonaInquiryResource;
+    };
+  };
+}
+
+/**
+ * Module 70.1 — Pre-Stripe Security & Integration Hardening: replay
+ * protection tolerance for the `t=` timestamp in `Persona-Signature`. A
+ * signature is cryptographically valid forever (it never expires on its
+ * own) — without also bounding how old `t` may be, a captured, genuinely
+ * valid webhook body+signature pair could be replayed at any point in the
+ * future to re-trigger synchronization. Five minutes matches the
+ * tolerance Persona's own documentation recommends and Stripe's
+ * webhook-signing guide uses for the same HMAC-with-timestamp pattern.
+ */
+const WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS = 5 * 60;
+
 export interface PersonaVerificationProviderOptions {
   client: PersonaClient;
   templateId: string;
@@ -171,7 +203,29 @@ export class PersonaVerificationProvider implements VerificationProvider {
     const signature = parts.v1;
     if (!timestamp || !signature) return { valid: false };
 
+    // Replay protection — a timestamp that isn't a plain integer, or one
+    // that falls outside the tolerance window (too old *or* implausibly
+    // far in the future, e.g. a clock-skew/forgery attempt), is rejected
+    // before the signature is even computed. See
+    // `WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS`'s own doc comment.
+    if (!/^\d+$/.test(timestamp)) return { valid: false };
+    const timestampSeconds = Number(timestamp);
+    const nowSeconds = Date.now() / 1000;
+    if (Math.abs(nowSeconds - timestampSeconds) > WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS) {
+      return { valid: false };
+    }
+
     const expected = createHmac("sha256", this.webhookSecret).update(`${timestamp}.${rawBody}`).digest("hex");
+
+    // `Buffer.from(signature, "hex")` silently drops trailing non-hex
+    // characters instead of throwing, which would let a malformed
+    // (non-hex) signature header slip past `timingSafeEqual`'s length
+    // check with a coincidentally-matching prefix. Reject anything that
+    // isn't clean, even-length hex up front, before ever touching
+    // `timingSafeEqual`.
+    if (!/^[0-9a-f]+$/i.test(signature) || signature.length !== expected.length) {
+      return { valid: false };
+    }
 
     const expectedBuffer = Buffer.from(expected, "hex");
     const providedBuffer = Buffer.from(signature, "hex");
@@ -181,11 +235,15 @@ export class PersonaVerificationProvider implements VerificationProvider {
     if (!valid) return { valid: false };
 
     try {
-      const payload = JSON.parse(rawBody) as { data?: { attributes?: { payload?: PersonaInquiryResource } } };
-      const inquiry = payload.data?.attributes?.payload;
-      if (!inquiry) return { valid: true };
+      const envelope = JSON.parse(rawBody) as PersonaEventEnvelope;
+      const externalEventId = envelope.data?.id;
+      const eventType = envelope.data?.attributes?.name;
+      const inquiry = envelope.data?.attributes?.payload;
+      if (!inquiry) return { valid: true, externalEventId, eventType };
       return {
         valid: true,
+        externalEventId,
+        eventType,
         providerVerificationId: inquiry.data.id,
         outcome: mapPersonaStatus(inquiry.data.attributes.status),
         rawStatus: inquiry.data.attributes.status,

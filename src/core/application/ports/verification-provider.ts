@@ -77,17 +77,33 @@ export interface VerificationStatusResult {
 }
 
 export interface WebhookValidationResult {
-  /** `false` for a payload whose signature does not match — the only
+  /** `false` for a payload whose signature does not match, whose
+   *  timestamp falls outside the provider's replay-protection tolerance,
+   *  or whose secret/signature header is missing entirely — the only
    *  thing a caller needs to know before it may trust any other field on
-   *  this result. Module 59 ships this validation method so the
-   *  abstraction is webhook-ready; no route actually calls it yet (real
-   *  webhook *processing* is out of this module's scope — see
-   *  docs/MODULE_59_PROFESSIONAL_VERIFICATION_PERSONA.md, "Webhook
-   *  preparation"). */
+   *  this result. See `PersonaVerificationProvider.webhookValidation`'s
+   *  own doc comment for the exact checks performed. */
   valid: boolean;
   providerVerificationId?: string;
   outcome?: ProviderVerificationOutcome;
   rawStatus?: string;
+  /**
+   * Module 70.1 — Pre-Stripe Security & Integration Hardening: the
+   * provider's own identifier for this specific webhook delivery/event
+   * (Persona's `Event.id`, distinct from the `Inquiry.id` surfaced as
+   * `providerVerificationId`) — the value a caller uses as the
+   * provider-independent external-event idempotency key (see
+   * `ExternalWebhookEventRepository`). `undefined` when the payload's
+   * shape wasn't recognized (still `valid: true` if the signature itself
+   * checked out — see this port's own "signature valid, shape
+   * unexpected" precedent) or when validation failed.
+   */
+  externalEventId?: string;
+  /** The provider's own event-type/name string (Persona's
+   *  `data.attributes.name`, e.g. `"inquiry.completed"`), kept only for
+   *  observability/idempotency-record labeling — never branched on for a
+   *  security decision, exactly like `rawStatus`. */
+  eventType?: string;
 }
 
 export interface VerificationProvider {

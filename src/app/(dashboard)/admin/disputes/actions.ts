@@ -161,11 +161,48 @@ export async function rejectDisputeAction(disputeId: string, resolutionNote: str
  * needs a real financial consequence; `resolveDisputeAction` still exists
  * for `NO_ACTION`/`PROFESSIONAL_FAVOR`-only workflows that pre-date this
  * module and remain valid (see `disputeResolutionRequiresFinancialSettlementBeforeClose`).
+ *
+ * ## Module 70.1 — Pre-Stripe Security & Integration Hardening
+ * (Objective E — segregation of duties)
+ *
+ * The Module 70 audit found `ROLES.SUPPORT` included in this action's
+ * `requireRole` alongside `ADMIN`/`SUPER_ADMIN` — meaning a SUPPORT agent
+ * could, on their own, both resolve a dispute AND directly trigger the
+ * refund/commission-reversal financial adjustment that resolution
+ * produces (`ResolveDisputeWithFinancialOutcomeUseCase` ->
+ * `CreateFinancialAdjustmentUseCase` -> a real, signed ledger entry — see
+ * that use case's own doc comment). Every other admin-side action in this
+ * file that only *investigates or triages* a dispute (assign, add an
+ * internal note, change status, the non-financial `resolveDisputeAction`
+ * for `NO_ACTION`/`PROFESSIONAL_FAVOR`-only outcomes, close) intentionally
+ * keeps SUPPORT — this module's decision narrows only the one action that
+ * *authorizes a financial outcome*, per the module brief's explicit
+ * preference for ADMIN/SUPER_ADMIN on financial-authorization actions.
+ *
+ * Decision: **SUPPORT loses this specific authority.** Rationale:
+ *  - SUPPORT already has full triage authority — they can investigate,
+ *    assign, note, and even resolve a dispute with no financial outcome.
+ *    They lose only the ability to *also* be the one who authorizes real
+ *    money movement for their own resolution, restoring a two-role
+ *    separation between "who investigates/decides the dispute" and "who
+ *    authorizes the resulting financial adjustment" for the highest-risk
+ *    action in this file — the one Module 71 (Stripe Connect) will
+ *    eventually make trigger a real payout-affecting ledger entry.
+ *  - `ResolveDisputeWithFinancialOutcomeUseCase` already writes a full
+ *    audit trail via `DisputeResolutionDecision`/the financial ledger's
+ *    own append-only `Transaction` rows (Module 68/22) regardless of who
+ *    calls it — narrowing the caller role adds a preventive control on
+ *    top of the existing detective one, rather than replacing it.
+ *  - No use-case-level assumption changes: `ResolveDisputeWithFinancialOutcomeUseCase`
+ *    itself takes an already-authorized `adminUserId` and does not read
+ *    or care about the caller's role — this fix is entirely at the
+ *    Server Action's authorization boundary, exactly where every other
+ *    role check in this codebase already lives.
  */
 export async function resolveDisputeWithFinancialOutcomeAction(
   input: Record<string, unknown>,
 ): Promise<ActionResult<DisputeResolutionDecisionRecord>> {
-  const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPPORT);
+  const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = resolveDisputeWithFinancialOutcomeSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid resolution." };

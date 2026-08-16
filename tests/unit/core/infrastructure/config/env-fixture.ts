@@ -73,6 +73,18 @@ const ENV_KEYS = [
   "TWILIO_ACCOUNT_SID",
   "TWILIO_AUTH_TOKEN",
   "TWILIO_FROM_NUMBER",
+  // Module 59 — Professional Verification (Persona) / Module 70.1 —
+  // Pre-Stripe Security & Integration Hardening. Missing from this list
+  // previously (env-fixture.ts predates env.ts's own Persona checks) —
+  // without it, a test that sets VERIFICATION_PROVIDER/PERSONA_* via
+  // `loadEnvWith` would leak that value into every later test in this
+  // process rather than being reset between cases, since `loadEnvWith`
+  // only snapshots/restores keys listed here.
+  "VERIFICATION_PROVIDER",
+  "PERSONA_API_KEY",
+  "PERSONA_TEMPLATE_ID",
+  "PERSONA_WEBHOOK_SECRET",
+  "PERSONA_API_BASE_URL",
   // Module 50 — Analytics Dashboard (CQRS Read Model).
   "ANALYTICS_REFRESH_ENABLED",
   "ANALYTICS_CACHE_TTL_MS",

@@ -28,6 +28,13 @@ import type {
 } from "@/domain/repositories/job-completion-confirmation-repository";
 import type { PaymentReleaseStatus } from "@/domain/services/payment-release-decision";
 import { ConflictError } from "@/domain/errors/domain-error";
+import type { ProfessionalPayoutLedgerRepository } from "@/domain/repositories/professional-payout-ledger-repository";
+import type {
+  CreateTrustAutomatedActionData,
+  TrustAutomatedActionRecord,
+  TrustAutomatedActionRepository,
+  TrustAutomatedActionTypeValue,
+} from "@/domain/repositories/trust-automated-action-repository";
 
 /**
  * In-memory test doubles for Module 22 — Commission & Financial
@@ -353,6 +360,98 @@ export class FakeJobCompletionConfirmationRepository implements JobCompletionCon
 
   async findDueForReminder(_now: Date): Promise<JobCompletionConfirmationRecord[]> {
     return [];
+  }
+}
+
+/**
+ * Module 70.1 — Pre-Stripe Security & Integration Hardening (Objective D):
+ * minimal, real-interface fakes for the two dependencies
+ * `CheckPayoutReadinessUseCase` needs beyond what this file already
+ * provides — narrow, single-purpose, same in-memory pattern as every
+ * other fake here. `FakeTrustAutomatedActionRepository` only implements
+ * the two methods that use case actually calls
+ * (`listActiveForUser`/`create` for seeding); every other
+ * `TrustAutomatedActionRepository` method is out of this file's scope and
+ * intentionally omitted-then-stubbed with a clear failure rather than a
+ * silent no-op, so a test that accidentally needs one fails loudly instead
+ * of passing for the wrong reason.
+ */
+export class FakeTrustAutomatedActionRepository implements TrustAutomatedActionRepository {
+  readonly actions: TrustAutomatedActionRecord[] = [];
+  private idCounter = 0;
+
+  async create(data: CreateTrustAutomatedActionData): Promise<TrustAutomatedActionRecord> {
+    const record: TrustAutomatedActionRecord = {
+      id: `fake-trust-action-${++this.idCounter}`,
+      userId: data.userId,
+      type: data.type,
+      status: "ACTIVE",
+      reason: data.reason,
+      triggeringRiskScore: data.triggeringRiskScore,
+      detail: data.detail,
+      createdByUserId: data.createdByUserId ?? null,
+      expiresAt: data.expiresAt ?? null,
+      reversedAt: null,
+      reversedByUserId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.actions.push(record);
+    return record;
+  }
+
+  async findById(id: string): Promise<TrustAutomatedActionRecord | null> {
+    return this.actions.find((a) => a.id === id) ?? null;
+  }
+
+  async listForUser(userId: string): Promise<TrustAutomatedActionRecord[]> {
+    return this.actions.filter((a) => a.userId === userId);
+  }
+
+  async listActiveForUser(userId: string, type?: TrustAutomatedActionTypeValue): Promise<TrustAutomatedActionRecord[]> {
+    return this.actions.filter((a) => a.userId === userId && a.status === "ACTIVE" && (!type || a.type === type));
+  }
+
+  async countActiveForUser(userId: string): Promise<number> {
+    return this.actions.filter((a) => a.userId === userId && a.status === "ACTIVE").length;
+  }
+
+  async reverse(): Promise<TrustAutomatedActionRecord> {
+    throw new Error("FakeTrustAutomatedActionRepository.reverse: not needed by this fake's callers.");
+  }
+
+  async expireDue(): Promise<number> {
+    return 0;
+  }
+
+  async countAll(): Promise<number> {
+    return this.actions.length;
+  }
+
+  async countByType(type: TrustAutomatedActionTypeValue): Promise<number> {
+    return this.actions.filter((a) => a.type === type).length;
+  }
+
+  async countActive(): Promise<number> {
+    return this.actions.filter((a) => a.status === "ACTIVE").length;
+  }
+}
+
+/**
+ * Module 70.1: `ProfessionalPayoutLedgerRepository` fake — a plain
+ * `Map<professionalProfileId, number>` a test can seed directly (see
+ * `seedPaid`) to exercise `CheckPayoutReadinessUseCase`'s
+ * `amountAlreadyPaidOut` input.
+ */
+export class FakeProfessionalPayoutLedgerRepository implements ProfessionalPayoutLedgerRepository {
+  paidByProfessional = new Map<string, number>();
+
+  seedPaid(professionalProfileId: string, amount: number) {
+    this.paidByProfessional.set(professionalProfileId, (this.paidByProfessional.get(professionalProfileId) ?? 0) + amount);
+  }
+
+  async sumPaidForProfessional(professionalProfileId: string): Promise<number> {
+    return this.paidByProfessional.get(professionalProfileId) ?? 0;
   }
 }
 
