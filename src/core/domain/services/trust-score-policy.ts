@@ -39,7 +39,35 @@ export type TrustRiskEventReasonValue =
    *  ManualReviewCase (see ProcessJobCompletionConfirmationsUseCase) with
    *  `skipAutomatedAction: true` rather than moving either party's score
    *  or applying a TrustAutomatedAction automatically. */
-  | "JOB_COMPLETION_CONFIRMATION_TIMEOUT";
+  | "JOB_COMPLETION_CONFIRMATION_TIMEOUT"
+  /** Module 67 — Trust & Integrity Completion Risk Detection: a Job was
+   *  marked completed implausibly soon after work started (see
+   *  premature-completion-detection-rules.ts). Scored the same, moderate
+   *  magnitude as OFF_PLATFORM_SIGNAL_DETECTED — a real signal for human
+   *  review, not the FRAUD_SIGNAL_DETECTED/PAYMENT_ABUSE_DETECTED tier
+   *  reserved for confirmed or financially-dangerous findings (see
+   *  detect-premature-job-completion.use-case.ts's own doc comment on this
+   *  module's Trust & Integrity boundary). */
+  | "PREMATURE_JOB_COMPLETION_DETECTED"
+  /** Module 67 — Trust & Integrity Completion Risk Detection: a dispute was
+   *  opened suspiciously soon after a Job was marked completed. Scored 0,
+   *  mirroring JOB_COMPLETION_CONFIRMATION_TIMEOUT's own reasoning exactly
+   *  — fault is genuinely ambiguous (could be a rushed/defective
+   *  completion, or a customer gaming the confirmation flow; "a legitimate
+   *  customer dispute is normal platform behavior" per this module's own
+   *  brief), so this reason only ever opens a ManualReviewCase with
+   *  `skipAutomatedAction: true`, never an automatic score movement or
+   *  TrustAutomatedAction. See detect-job-completion-dispute-conflict.use-case.ts. */
+  | "JOB_COMPLETION_DISPUTE_CONFLICT_DETECTED"
+  /** Module 67 — Trust & Integrity Completion Risk Detection: a Job was
+   *  marked completed while a Dispute was already open on it. Unlike
+   *  JOB_COMPLETION_DISPUTE_CONFLICT_DETECTED above, this IS attributed to
+   *  whoever completed the Job (a clearer signal — the open dispute was
+   *  already visible platform-wide via EvaluatePaymentReleaseUseCase's own
+   *  hasBlockingDispute check), so it is scored the same moderate
+   *  magnitude as OFF_PLATFORM_SIGNAL_DETECTED / PREMATURE_JOB_COMPLETION_
+   *  DETECTED above, not 0. */
+  | "COMPLETION_DURING_ACTIVE_DISPUTE_DETECTED";
 
 /** The default Trust Score delta for each reason. Positive reasons raise
  *  trust, negative/abuse reasons lower it. `ADMIN_ADJUSTMENT` is 0 here —
@@ -63,6 +91,9 @@ export const TRUST_SCORE_DELTA_TABLE: Readonly<Record<TrustRiskEventReasonValue,
   APPEAL_APPROVED: 15,
   ADMIN_ADJUSTMENT: 0,
   JOB_COMPLETION_CONFIRMATION_TIMEOUT: 0,
+  PREMATURE_JOB_COMPLETION_DETECTED: -8,
+  JOB_COMPLETION_DISPUTE_CONFLICT_DETECTED: 0,
+  COMPLETION_DURING_ACTIVE_DISPUTE_DETECTED: -8,
 };
 
 export interface TrustScoreRecalculation {

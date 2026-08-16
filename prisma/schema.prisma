@@ -3932,6 +3932,11 @@ enum TrustRiskEventReason {
   /// Module 66 — Job Completion & Payment Release Protection: see
   /// TrustRiskEventReasonValue's own doc comment.
   JOB_COMPLETION_CONFIRMATION_TIMEOUT
+  /// Module 67 — Trust & Integrity Completion Risk Detection: see
+  /// TrustRiskEventReasonValue's own doc comment.
+  PREMATURE_JOB_COMPLETION_DETECTED
+  JOB_COMPLETION_DISPUTE_CONFLICT_DETECTED
+  COMPLETION_DURING_ACTIVE_DISPUTE_DETECTED
 }
 
 enum TrustRiskScoreType {
@@ -4078,6 +4083,10 @@ enum FraudSignalType {
   SUSPICIOUS_PRICING
   BOOKING_ABUSE
   PAYMENT_ABUSE
+  /// Module 67 — Trust & Integrity Completion Risk Detection: see
+  /// FraudSignalType's own doc comment (domain/repositories/fraud-signal-repository.ts).
+  PREMATURE_JOB_COMPLETION
+  COMPLETION_DURING_ACTIVE_DISPUTE
 }
 
 /// Mirrors `PartnerFraudFlagStatus` (Module 61) exactly — same "advisory

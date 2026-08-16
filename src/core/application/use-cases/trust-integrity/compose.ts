@@ -6,6 +6,9 @@ import { PrismaTrustAutomatedActionRepository } from "@/infrastructure/database/
 import { PrismaManualReviewCaseRepository } from "@/infrastructure/database/prisma/repositories/prisma-manual-review-case-repository";
 import { PrismaTrustAppealRepository } from "@/infrastructure/database/prisma/repositories/prisma-trust-appeal-repository";
 import { PrismaAccountRestrictionRepository } from "@/infrastructure/database/prisma/repositories/prisma-account-restriction-repository";
+import { PrismaJobRepository } from "@/infrastructure/database/prisma/repositories/prisma-job-repository";
+import { PrismaDisputeRepository } from "@/infrastructure/database/prisma/repositories/prisma-dispute-repository";
+import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { createOffPlatformDetectionProvider } from "@/infrastructure/trust-integrity/trust-integrity-provider-factory";
 
 import { RecordUserBehaviorSignalUseCase } from "@/application/use-cases/trust-integrity/record-user-behavior-signal.use-case";
@@ -24,6 +27,14 @@ import { TransitionManualReviewCaseUseCase } from "@/application/use-cases/trust
 import { SubmitAppealUseCase } from "@/application/use-cases/trust-integrity/submit-appeal.use-case";
 import { ReviewAppealUseCase } from "@/application/use-cases/trust-integrity/review-appeal.use-case";
 import { GetTrustIntegrityStatisticsUseCase } from "@/application/use-cases/trust-integrity/get-trust-integrity-statistics.use-case";
+import { DetectPrematureJobCompletionUseCase } from "@/application/use-cases/trust-integrity/detect-premature-job-completion.use-case";
+import {
+  DetectJobCompletionDisputeConflictUseCase,
+  JobCompletionDisputeConflictOnDisputeCreatedSubscriber,
+  JobCompletionDisputeConflictOnProfessionalCompletedJobSubscriber,
+} from "@/application/use-cases/trust-integrity/detect-job-completion-dispute-conflict.use-case";
+import { ProfessionalCompletedJob } from "@/domain/events/professional-completed-job";
+import { DisputeCreated } from "@/domain/events/dispute-created";
 
 /**
  * Module 65 — Trust & Integrity System: composition root, same "one
@@ -38,6 +49,17 @@ const automatedActions = new PrismaTrustAutomatedActionRepository();
 const manualReviewCases = new PrismaManualReviewCaseRepository();
 const appeals = new PrismaTrustAppealRepository();
 const accountRestrictions = new PrismaAccountRestrictionRepository();
+
+// Module 67 — Trust & Integrity Completion Risk Detection: fresh Prisma
+// repositories constructed directly here (never imported from
+// job/compose.ts or dispute/compose.ts), mirroring the exact
+// "each compose.ts constructs its own cross-module dependencies from
+// Prisma repositories directly" convention job/compose.ts's own doc
+// comment documents (avoids a compose-to-compose import cycle between
+// trust-integrity, job, and dispute).
+const jobs = new PrismaJobRepository();
+const disputes = new PrismaDisputeRepository();
+const professionals = new PrismaProfessionalRepository();
 
 export function makeRecordUserBehaviorSignalUseCase(): RecordUserBehaviorSignalUseCase {
   return new RecordUserBehaviorSignalUseCase(trustProfiles, eventBus);
@@ -114,3 +136,63 @@ export function makeGetTrustIntegrityStatisticsUseCase(): GetTrustIntegrityStati
     appeals,
   );
 }
+
+// --- Module 67 — Trust & Integrity Completion Risk Detection ---
+
+export function makeDetectPrematureJobCompletionUseCase(): DetectPrematureJobCompletionUseCase {
+  return new DetectPrematureJobCompletionUseCase(
+    professionals,
+    fraudSignals,
+    makeRecordUserBehaviorSignalUseCase(),
+    eventBus,
+  );
+}
+
+export function makeDetectJobCompletionDisputeConflictUseCase(): DetectJobCompletionDisputeConflictUseCase {
+  return new DetectJobCompletionDisputeConflictUseCase(
+    jobs,
+    disputes,
+    professionals,
+    fraudSignals,
+    manualReviewCases,
+    makeRecordUserBehaviorSignalUseCase(),
+    eventBus,
+  );
+}
+
+/**
+ * Module 37 — Domain Event Subscribers: registers Module 67's two
+ * detectors against the shared `eventBus`, at module-load time — the exact
+ * pattern `infrastructure/events/compose.ts`'s own doc comment documents
+ * and `dispute/compose.ts` already follows for its own four audit-log
+ * subscribers. `ProfessionalCompletedJob` gets TWO independent subscribers
+ * (Detector A and half of Detector B) — `EventBus.subscribe`'s own doc
+ * comment states this explicitly: "Multiple handlers may subscribe to the
+ * same event type; all of them run, in subscription order." Neither
+ * detector's failure affects the other's — `SynchronousEventBus` (see that
+ * class's own doc comment) surfaces a failing handler as an
+ * `EventDispatchError` to the *publisher* (`CompleteJobUseCase`/
+ * `CreateDisputeUseCase`, both of which already treat this as best-effort
+ * via their own `FailureReporter` — see those classes' own doc comments),
+ * never lets one handler's exception prevent a sibling handler on the same
+ * event from running.
+ *
+ * This module's own detector-registration call was previously missing from
+ * this file entirely (Module 65 registered zero subscribers of its own —
+ * every existing `Detect*UseCase` here is invoked directly, never via the
+ * event bus). This is also, correspondingly, the first time this file
+ * needs to be added to `instrumentation.ts`'s deterministic-at-boot import
+ * list — see that file's own updated comment.
+ */
+const detectPrematureJobCompletion = makeDetectPrematureJobCompletionUseCase();
+eventBus.subscribe(ProfessionalCompletedJob, detectPrematureJobCompletion);
+
+const detectJobCompletionDisputeConflict = makeDetectJobCompletionDisputeConflictUseCase();
+eventBus.subscribe(
+  ProfessionalCompletedJob,
+  new JobCompletionDisputeConflictOnProfessionalCompletedJobSubscriber(detectJobCompletionDisputeConflict),
+);
+eventBus.subscribe(
+  DisputeCreated,
+  new JobCompletionDisputeConflictOnDisputeCreatedSubscriber(detectJobCompletionDisputeConflict),
+);

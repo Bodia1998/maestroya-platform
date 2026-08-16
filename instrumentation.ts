@@ -87,6 +87,16 @@ export async function register() {
   await import("@/application/use-cases/company-invitation/compose");
   await import("@/application/use-cases/company-membership/compose");
   await import("@/application/use-cases/gdpr/compose");
+  // Module 67 — Trust & Integrity Completion Risk Detection: registers the
+  // two Detect*UseCase subscribers (premature completion,
+  // completion/dispute conflict) against `ProfessionalCompletedJob`/
+  // `DisputeCreated`. Module 65 itself never needed an entry in this list
+  // (every pre-Module-67 `Detect*UseCase` there is invoked directly, never
+  // via the event bus) — this is the first Trust & Integrity subscriber
+  // registration, so `trust-integrity/compose.ts` is added here for the
+  // same "don't depend on which route happens to be hit first" reason
+  // every other entry in this list exists.
+  await import("@/application/use-cases/trust-integrity/compose");
   // Module 48 — Real-Time System: registers the domain-event → realtime-
   // channel broadcast subscribers (dispute/service-request updates — see
   // that compose.ts's own doc comment for which events, and why not all of

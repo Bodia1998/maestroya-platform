@@ -12,6 +12,11 @@ export const FRAUD_SIGNAL_TYPE_VALUES = [
   "SUSPICIOUS_PRICING",
   "BOOKING_ABUSE",
   "PAYMENT_ABUSE",
+  // Module 67 — Trust & Integrity Completion Risk Detection: see
+  // premature-completion-detection-rules.ts / completion-dispute-conflict-
+  // detection-rules.ts for what each of these two represents.
+  "PREMATURE_JOB_COMPLETION",
+  "COMPLETION_DURING_ACTIVE_DISPUTE",
 ] as const;
 export type FraudSignalType = (typeof FRAUD_SIGNAL_TYPE_VALUES)[number];
 
