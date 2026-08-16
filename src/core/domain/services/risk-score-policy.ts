@@ -43,6 +43,14 @@ export const RISK_SCORE_DELTA_TABLE: Readonly<Record<TrustRiskEventReasonValue, 
   // MANUAL_REVIEW_CONFIRMED / FRAUD_SIGNAL_DETECTED etc. if the
   // investigation actually finds fault.
   JOB_COMPLETION_CONFIRMATION_TIMEOUT: 0,
+  // Module 67 — Trust & Integrity Completion Risk Detection: mirrors
+  // TRUST_SCORE_DELTA_TABLE's own doc comment for each of these three
+  // reasons exactly — same magnitude as OFF_PLATFORM_SIGNAL_DETECTED for
+  // the two actor-attributed findings, 0 (evidence, not proof) for the
+  // ambiguous-fault one.
+  PREMATURE_JOB_COMPLETION_DETECTED: 12,
+  JOB_COMPLETION_DISPUTE_CONFLICT_DETECTED: 0,
+  COMPLETION_DURING_ACTIVE_DISPUTE_DETECTED: 12,
 };
 
 export interface RiskScoreRecalculation {
