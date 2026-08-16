@@ -146,6 +146,10 @@ model User {
   /// customer-initiated refund request. See FinancialAdjustment's doc
   /// comment.
   requestedFinancialAdjustments FinancialAdjustment[] @relation("FinancialAdjustmentRequestedBy")
+  /// Module 68 — Dispute Resolution & Financial Protection: Dispute
+  /// resolution decisions this admin/support user has made. See
+  /// DisputeResolutionDecision's own doc comment.
+  disputeResolutionDecisions DisputeResolutionDecision[] @relation("DisputeResolutionDecisionDecidedBy")
   resolvedSupportTickets  SupportTicket[]        @relation("SupportTicketResolvedBy")
   closedSupportTickets    SupportTicket[]        @relation("SupportTicketClosedBy")
   auditLogEntries        AuditLog[]
@@ -861,6 +865,34 @@ enum FinancialAdjustmentStatus {
   PENDING
   APPLIED
   REJECTED
+  FAILED
+}
+
+/// Module 68 — Dispute Resolution & Financial Protection: the deterministic
+/// financial outcome of a Dispute's resolution — see
+/// dispute-resolution-financial-outcome.ts's own doc comment for the full
+/// mapping from DisputeResolution to this enum. Distinct from
+/// FinancialAdjustmentType (the mechanics of an individual ledger-facing
+/// adjustment) — this is the coarser, dispute-facing business-outcome
+/// summary a DisputeResolutionDecision records once.
+enum DisputeFinancialOutcome {
+  NO_FINANCIAL_ACTION
+  FULL_RELEASE
+  FULL_REFUND
+  PARTIAL_REFUND
+  HOLD_FOR_REVIEW
+}
+
+/// Module 68 — Dispute Resolution & Financial Protection: whether a
+/// DisputeResolutionDecision's required FinancialAdjustment(s) have been
+/// applied. PENDING_APPLICATION is the only non-terminal value; the other
+/// three are terminal and are never automatically retried (an admin must
+/// investigate and act — see ResolveDisputeWithFinancialOutcomeUseCase's
+/// own doc comment).
+enum DisputeResolutionDecisionStatus {
+  PENDING_APPLICATION
+  APPLIED
+  PARTIALLY_APPLIED
   FAILED
 }
 
@@ -1896,6 +1928,13 @@ model Job {
   /// comment.
   financialAdjustments FinancialAdjustment[]
 
+  /// Module 68 — Dispute Resolution & Financial Protection: dispute
+  /// resolution decisions recorded against this Job — normally at most one
+  /// per Dispute (see DisputeResolutionDecision.disputeId's `@unique`),
+  /// but a Job may have more than one Dispute over its lifetime (see
+  /// `disputes` above), so more than one decision per Job is possible.
+  disputeResolutionDecisions DisputeResolutionDecision[]
+
   /// Module 66 — Job Completion & Payment Release Protection: at most one
   /// per Job — see JobCompletionConfirmation.jobId's `@unique`. Created the
   /// moment the professional completes the Job (never before); a Job that
@@ -2316,6 +2355,9 @@ model Payment {
   /// refund, etc.) — most FinancialAdjustments are only anchored to a Job,
   /// this is set only once a Payment actually exists to adjust.
   financialAdjustments FinancialAdjustment[]
+  /// Module 68 — Dispute Resolution & Financial Protection: decisions
+  /// evaluated against this Payment, if any existed at decision time.
+  disputeResolutionDecisions DisputeResolutionDecision[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2495,13 +2537,22 @@ model FinancialAdjustment {
   /// action, a retried background job, etc.).
   idempotencyKey    String                    @unique
   transactionId     String?                   @unique @db.Uuid
+  /// Module 68 — Dispute Resolution & Financial Protection: the
+  /// DisputeResolutionDecision this adjustment was created to carry out,
+  /// if any — null for adjustments created outside Module 68's atomic
+  /// resolution flow (there are none as of Module 68; kept nullable so no
+  /// future caller of CreateFinancialAdjustmentUseCase is forced to
+  /// fabricate one). See DisputeResolutionDecision's own doc comment for
+  /// why a single decision can require more than one adjustment.
+  resolutionDecisionId String?                @db.Uuid
   appliedAt         DateTime?
 
-  job             Job          @relation(fields: [jobId], references: [id], onDelete: Restrict)
-  dispute         Dispute?     @relation(fields: [disputeId], references: [id], onDelete: Restrict)
-  payment         Payment?     @relation(fields: [paymentId], references: [id], onDelete: Restrict)
-  requestedByUser User         @relation("FinancialAdjustmentRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
-  transaction     Transaction? @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  job             Job                        @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  dispute         Dispute?                   @relation(fields: [disputeId], references: [id], onDelete: Restrict)
+  payment         Payment?                   @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  requestedByUser User                       @relation("FinancialAdjustmentRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  transaction     Transaction?               @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  resolutionDecision DisputeResolutionDecision? @relation(fields: [resolutionDecisionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2510,7 +2561,55 @@ model FinancialAdjustment {
   @@index([disputeId])
   @@index([paymentId])
   @@index([status])
+  @@index([resolutionDecisionId])
   @@map("financial_adjustments")
+}
+
+/// Module 68 — Dispute Resolution & Financial Protection: the single
+/// authoritative, immutable-once-created record of a Dispute's financial
+/// resolution — WHAT was decided (`outcome`), WHY (`reason`), WHO decided
+/// it (`decidedByUserId`), WHEN (`decidedAt`), WHICH dispute/job/payment it
+/// belongs to, and WHETHER it has already been applied (`status`/
+/// `appliedAt`). See DisputeResolutionDecisionRepository's own doc comment
+/// for why this exists as its own model rather than being folded into
+/// Dispute.resolution or FinancialAdjustment.
+///
+/// At most one row per Dispute (`disputeId` unique) — a PARTIAL_RESOLUTION
+/// that requires more than one FinancialAdjustment (e.g. a partial refund
+/// to the customer AND a payout reduction for the professional) still
+/// produces exactly one DisputeResolutionDecision; every resulting
+/// FinancialAdjustment links back to it via
+/// FinancialAdjustment.resolutionDecisionId.
+model DisputeResolutionDecision {
+  id        String  @id @default(uuid()) @db.Uuid
+  disputeId String  @unique @db.Uuid
+  jobId     String  @db.Uuid
+  paymentId String? @db.Uuid
+
+  /// Denormalized copy of Dispute.resolution at the instant this decision
+  /// was created — never re-read from Dispute afterward.
+  resolution DisputeResolution
+  outcome    DisputeFinancialOutcome
+  status     DisputeResolutionDecisionStatus @default(PENDING_APPLICATION)
+  reason     String                          @db.Text
+
+  decidedByUserId String   @db.Uuid
+  decidedAt       DateTime
+  appliedAt       DateTime?
+
+  dispute         Dispute              @relation(fields: [disputeId], references: [id], onDelete: Restrict)
+  job             Job                  @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  payment         Payment?             @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  decidedByUser   User                 @relation("DisputeResolutionDecisionDecidedBy", fields: [decidedByUserId], references: [id], onDelete: Restrict)
+  financialAdjustments FinancialAdjustment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([jobId])
+  @@index([paymentId])
+  @@index([status])
+  @@map("dispute_resolution_decisions")
 }
 
 // ============================================================================
@@ -2777,6 +2876,10 @@ model Dispute {
   /// JobCompletionConfirmation row(s) that were moved to DISPUTED because
   /// of this Dispute — see DisputeJobCompletionUseCase.
   jobCompletionConfirmations JobCompletionConfirmation[]
+
+  /// Module 68 — Dispute Resolution & Financial Protection: at most one —
+  /// see DisputeResolutionDecision.disputeId's `@unique`.
+  resolutionDecision DisputeResolutionDecision?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -4,6 +4,7 @@ import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prism
 import { PrismaDisputeEvidenceRepository } from "@/infrastructure/database/prisma/repositories/prisma-dispute-evidence-repository";
 import { PrismaDisputeMessageRepository } from "@/infrastructure/database/prisma/repositories/prisma-dispute-message-repository";
 import { PrismaDisputeRepository } from "@/infrastructure/database/prisma/repositories/prisma-dispute-repository";
+import { PrismaDisputeResolutionDecisionRepository } from "@/infrastructure/database/prisma/repositories/prisma-dispute-resolution-decision-repository";
 import { PrismaJobRepository } from "@/infrastructure/database/prisma/repositories/prisma-job-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { createFailureReporter } from "@/infrastructure/observability/failure-reporter-factory";
@@ -46,6 +47,13 @@ const customerProfiles = new PrismaCustomerProfileRepository();
 const professionals = new PrismaProfessionalRepository();
 const companyMembers = new PrismaCompanyMembershipRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
+// Module 68 — Dispute Resolution & Financial Protection: the same
+// "each compose.ts owns its own cross-module Prisma repository instances"
+// convention as financial/compose.ts's own `completionConfirmations` — see
+// that file's doc comment. CloseDisputeUseCase's Module 68 guard reads
+// from this instance; dispute-resolution/compose.ts constructs its own
+// separate instance for the same reason.
+const resolutionDecisions = new PrismaDisputeResolutionDecisionRepository();
 // Module 39 — Sentry + CI/CD Hardening: SentryFailureReporter in
 // production, ConsoleFailureReporter (Module 37) otherwise — see
 // failure-reporter-factory.ts's own doc comment. No use case or
@@ -147,5 +155,14 @@ export function makeRejectDisputeUseCase() {
 }
 
 export function makeCloseDisputeUseCase() {
-  return new CloseDisputeUseCase(disputes, jobs, customerProfiles, professionals, companyMembers, eventBus, failureReporter);
+  return new CloseDisputeUseCase(
+    disputes,
+    jobs,
+    customerProfiles,
+    professionals,
+    companyMembers,
+    resolutionDecisions,
+    eventBus,
+    failureReporter,
+  );
 }

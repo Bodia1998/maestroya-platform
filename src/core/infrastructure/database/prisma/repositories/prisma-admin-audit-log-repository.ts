@@ -117,6 +117,13 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   // ONBOARDING_ACTIVATED above).
   JOB_COMPLETION_CONFIRMATION_TIMED_OUT: "STATUS_CHANGE",
   PAYMENT_RELEASE_ADMIN_RESOLVED: "PAYMENT",
+  // Module 68 — Dispute Resolution & Financial Protection: reuses the
+  // existing PAYMENT AuditLogAction value — same reasoning as
+  // PAYMENT_RELEASE_ADMIN_RESOLVED above, since this is likewise a
+  // decision about money movement, not a plain Dispute status change
+  // (which already has its own DISPUTE_RESOLVED/DISPUTE_STATUS_CHANGED
+  // values).
+  DISPUTE_RESOLUTION_FINANCIAL_OUTCOME_DETERMINED: "PAYMENT",
 };
 
 const SELECT = {

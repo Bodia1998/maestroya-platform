@@ -30,6 +30,15 @@ export interface FinancialAdjustmentRecord {
   requestedByUserId: string;
   idempotencyKey: string;
   transactionId: string | null;
+  /** Module 68 — Dispute Resolution & Financial Protection: the
+   *  `DisputeResolutionDecision` this adjustment was created to carry out,
+   *  if any — `null` for adjustments created outside Module 68's atomic
+   *  resolution flow (there are none as of Module 68, but the field stays
+   *  optional/nullable so this interface never requires a caller outside
+   *  that flow to fabricate one). See
+   *  `dispute-resolution-decision-repository.ts`'s own doc comment for why
+   *  a single decision can require more than one adjustment. */
+  resolutionDecisionId: string | null;
   appliedAt: Date | null;
   createdAt: Date;
 }
@@ -43,6 +52,10 @@ export interface CreateFinancialAdjustmentData {
   reason: string | null;
   requestedByUserId: string;
   idempotencyKey: string;
+  /** See `FinancialAdjustmentRecord.resolutionDecisionId`'s own doc
+   *  comment. Optional — every pre-Module-68 caller of this repository
+   *  omits it, unchanged. */
+  resolutionDecisionId?: string | null;
 }
 
 export interface FinancialAdjustmentRepository {

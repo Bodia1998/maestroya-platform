@@ -56,6 +56,11 @@ export class CreateFinancialAdjustmentUseCase {
       type: FinancialAdjustmentTypeValue;
       amount: number;
       reason: string | null;
+      /** Module 68 — Dispute Resolution & Financial Protection: threaded
+       *  through unchanged to `FinancialAdjustmentRepository.create` — see
+       *  that interface's own doc comment. Optional so every pre-existing
+       *  caller of this use case is unaffected. */
+      resolutionDecisionId?: string | null;
     },
   ): Promise<FinancialAdjustmentRecord> {
     const job = await this.jobs.findById(input.jobId);
@@ -85,6 +90,7 @@ export class CreateFinancialAdjustmentUseCase {
       reason: input.reason,
       requestedByUserId,
       idempotencyKey,
+      resolutionDecisionId: input.resolutionDecisionId ?? null,
     });
 
     try {

@@ -10,6 +10,7 @@ import {
   listAdminDisputesSchema,
   rejectDisputeSchema,
   resolveDisputeSchema,
+  resolveDisputeWithFinancialOutcomeSchema,
 } from "@/application/dto/dispute.dto";
 import {
   makeAddDisputeInternalNoteUseCase,
@@ -21,8 +22,10 @@ import {
   makeRejectDisputeUseCase,
   makeResolveDisputeUseCase,
 } from "@/application/use-cases/dispute/compose";
+import { makeResolveDisputeWithFinancialOutcomeUseCase } from "@/application/use-cases/dispute-resolution/compose";
 import { DomainError } from "@/domain/errors/domain-error";
 import type { DisputeRecord } from "@/domain/repositories/dispute-repository";
+import type { DisputeResolutionDecisionRecord } from "@/domain/repositories/dispute-resolution-decision-repository";
 import type { AdminDisputeDetail } from "@/application/use-cases/dispute/get-admin-dispute.use-case";
 import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
 
@@ -146,6 +149,38 @@ export async function rejectDisputeAction(disputeId: string, resolutionNote: str
     return { success: true, data: dispute };
   } catch (error) {
     return fromDomainError(error, "Something went wrong rejecting this dispute.");
+  }
+}
+
+/**
+ * Module 68 — Dispute Resolution & Financial Protection: the one atomic
+ * admin action that resolves a Dispute AND determines/applies its
+ * financial outcome together — see
+ * `ResolveDisputeWithFinancialOutcomeUseCase`'s own doc comment. Prefer
+ * this over the plain `resolveDisputeAction` above for any resolution that
+ * needs a real financial consequence; `resolveDisputeAction` still exists
+ * for `NO_ACTION`/`PROFESSIONAL_FAVOR`-only workflows that pre-date this
+ * module and remain valid (see `disputeResolutionRequiresFinancialSettlementBeforeClose`).
+ */
+export async function resolveDisputeWithFinancialOutcomeAction(
+  input: Record<string, unknown>,
+): Promise<ActionResult<DisputeResolutionDecisionRecord>> {
+  const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPPORT);
+  const parsed = resolveDisputeWithFinancialOutcomeSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid resolution." };
+  }
+  try {
+    const decision = await makeResolveDisputeWithFinancialOutcomeUseCase().execute(admin.id, parsed.data.disputeId, {
+      resolution: parsed.data.resolution,
+      resolutionNote: parsed.data.resolutionNote,
+      requestedAmount: parsed.data.requestedAmount ?? null,
+      requestedAdjustmentType: parsed.data.requestedAdjustmentType ?? null,
+    });
+    revalidatePath(`/admin/disputes/${parsed.data.disputeId}`);
+    return { success: true, data: decision };
+  } catch (error) {
+    return fromDomainError(error, "Something went wrong resolving this dispute's financial outcome.");
   }
 }
 
