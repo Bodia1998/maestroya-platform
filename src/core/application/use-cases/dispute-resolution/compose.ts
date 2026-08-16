@@ -56,7 +56,7 @@ function makeResolveDisputeUseCase() {
 }
 
 function makeCreateFinancialAdjustmentUseCase() {
-  return new CreateFinancialAdjustmentUseCase(jobs, adjustments, ledger);
+  return new CreateFinancialAdjustmentUseCase(jobs, adjustments, ledger, payments);
 }
 
 export function makeResolveDisputeWithFinancialOutcomeUseCase() {

@@ -125,4 +125,21 @@ export class PrismaFinancialAdjustmentRepository implements FinancialAdjustmentR
     });
     return rows.map(toRecord);
   }
+
+  /** Module 69 — Financial Ledger & Payout Readiness: see
+   *  `FinancialAdjustmentRepository.sumAppliedAmountForPayment`'s own doc
+   *  comment. Backed by the application-level Invariant-8 guard in
+   *  `CreateFinancialAdjustmentUseCase` AND by the DB-level trigger in
+   *  migration `20260825000000_add_refund_boundedness_guard` — this method
+   *  itself is read-only and never the sole enforcement point. */
+  async sumAppliedAmountForPayment(
+    paymentId: string,
+    types: readonly FinancialAdjustmentTypeValue[],
+  ): Promise<number> {
+    const result = await prisma.financialAdjustment.aggregate({
+      where: { paymentId, status: "APPLIED", type: { in: [...types] } },
+      _sum: { amount: true },
+    });
+    return Number(result._sum.amount ?? 0);
+  }
 }

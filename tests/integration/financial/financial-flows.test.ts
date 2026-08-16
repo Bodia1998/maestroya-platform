@@ -4,6 +4,7 @@ import { CalculateJobCommissionBreakdownUseCase } from "@/application/use-cases/
 import { CreateFinancialAdjustmentUseCase } from "@/application/use-cases/financial/create-financial-adjustment.use-case";
 import { GetCustomerFinancialSummaryUseCase } from "@/application/use-cases/financial/get-customer-financial-summary.use-case";
 import { GetProfessionalEarningsUseCase } from "@/application/use-cases/financial/get-professional-earnings.use-case";
+import { ReconcilePaymentUseCase } from "@/application/use-cases/financial/reconcile-payment.use-case";
 import { RecordCommissionForPaymentUseCase } from "@/application/use-cases/financial/record-commission-for-payment.use-case";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { ServiceRequestRecord } from "@/domain/repositories/service-request-repository";
@@ -83,7 +84,8 @@ function makeRepos() {
     ),
     getProfessionalEarnings: new GetProfessionalEarningsUseCase(professionals, commissions, payments, breakdowns),
     getCustomerSummary: new GetCustomerFinancialSummaryUseCase(customerProfiles, jobs, payments, breakdowns),
-    createAdjustment: new CreateFinancialAdjustmentUseCase(jobs, adjustments, ledger),
+    createAdjustment: new CreateFinancialAdjustmentUseCase(jobs, adjustments, ledger, payments),
+    reconcilePayment: new ReconcilePaymentUseCase(payments, commissions, ledger, adjustments, completionConfirmations),
   };
 }
 
@@ -515,5 +517,122 @@ describe("Module 22 — Commission & Financial", () => {
     for (const entry of entries) {
       expect(entry.paymentId).toBe(payment.id);
     }
+  });
+});
+
+describe("Module 69 — Financial Ledger & Payout Readiness Audit", () => {
+  it("Invariant 8: rejects a refund-type adjustment that would push cumulative refunds past the captured amount", async () => {
+    const repos = makeRepos();
+    const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+
+    // First partial refund: 1000 of 1500 — within bounds, applied.
+    await repos.createAdjustment.execute(ADMIN, {
+      jobId: job.id,
+      disputeId: "dispute-a",
+      paymentId: payment.id,
+      type: "PARTIAL_REFUND",
+      amount: 1000,
+      reason: "First dispute.",
+    });
+
+    // A second, genuinely distinct dispute against the SAME payment tries
+    // to refund another 800 — 1000 + 800 = 1800 > 1500 captured. Must be
+    // rejected, not silently applied.
+    await expect(
+      repos.createAdjustment.execute(ADMIN, {
+        jobId: job.id,
+        disputeId: "dispute-b",
+        paymentId: payment.id,
+        type: "PARTIAL_REFUND",
+        amount: 800,
+        reason: "Second, different dispute.",
+      }),
+    ).rejects.toThrow(ValidationError);
+
+    // The rejected adjustment must not have been applied — total applied
+    // refunds must still equal exactly the first, valid refund.
+    const totalApplied = await repos.adjustments.sumAppliedAmountForPayment(payment.id, [
+      "FULL_REFUND",
+      "PARTIAL_REFUND",
+      "PLATFORM_FEE_REFUND",
+    ]);
+    expect(totalApplied).toBe(1000);
+  });
+
+  it("Invariant 8: allows a second refund-type adjustment that stays within the remaining refundable amount", async () => {
+    const repos = makeRepos();
+    const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+
+    await repos.createAdjustment.execute(ADMIN, {
+      jobId: job.id,
+      disputeId: "dispute-a",
+      paymentId: payment.id,
+      type: "PARTIAL_REFUND",
+      amount: 1000,
+      reason: "First dispute.",
+    });
+
+    const second = await repos.createAdjustment.execute(ADMIN, {
+      jobId: job.id,
+      disputeId: "dispute-b",
+      paymentId: payment.id,
+      type: "PARTIAL_REFUND",
+      amount: 500,
+      reason: "Second, different dispute — exactly exhausts the remaining refundable amount.",
+    });
+    expect(second.status).toBe("APPLIED");
+
+    const totalApplied = await repos.adjustments.sumAppliedAmountForPayment(payment.id, [
+      "FULL_REFUND",
+      "PARTIAL_REFUND",
+      "PLATFORM_FEE_REFUND",
+    ]);
+    expect(totalApplied).toBe(1500);
+  });
+
+  it("ReconcilePaymentUseCase: reports a normal recognized payment as consistent, with the correct payable amount", async () => {
+    const repos = makeRepos();
+    const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, job.id);
+    await repos.recordCommission.execute(payment.id);
+
+    const report = await repos.reconcilePayment.execute(payment.id);
+    expect(report.consistent).toBe(true);
+    expect(report.issues).toHaveLength(0);
+    expect(report.commissionAmount).toBe(150);
+    expect(report.professionalNetEarning).toBe(1350);
+    expect(report.amountPayableToProfessional).toBe(1350);
+  });
+
+  it("ReconcilePaymentUseCase: nets an applied dispute adjustment into the payable amount without flagging an inconsistency", async () => {
+    const repos = makeRepos();
+    const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, job.id);
+    await repos.recordCommission.execute(payment.id);
+
+    await repos.createAdjustment.execute(ADMIN, {
+      jobId: job.id,
+      disputeId: "dispute-a",
+      paymentId: payment.id,
+      type: "PARTIAL_REFUND",
+      amount: 300,
+      reason: "Partial refund after release.",
+    });
+
+    const report = await repos.reconcilePayment.execute(payment.id);
+    expect(report.consistent).toBe(true);
+    expect(report.totalRefunded).toBe(300);
+    // Net earning (1350) minus the signed DISPUTE_ADJUSTMENT ledger entry
+    // (-300) the refund produced.
+    expect(report.amountPayableToProfessional).toBe(1050);
+  });
+
+  it("ReconcilePaymentUseCase throws NotFoundError for an unknown payment", async () => {
+    const repos = makeRepos();
+    await expect(repos.reconcilePayment.execute("no-such-payment")).rejects.toThrow(NotFoundError);
   });
 });
