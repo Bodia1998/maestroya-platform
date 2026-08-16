@@ -171,7 +171,12 @@ function makeUseCases(repos: Repos) {
     repos.decisions,
     eventBus,
   );
-  const createFinancialAdjustment = new CreateFinancialAdjustmentUseCase(repos.jobs, repos.adjustments, repos.ledger);
+  const createFinancialAdjustment = new CreateFinancialAdjustmentUseCase(
+    repos.jobs,
+    repos.adjustments,
+    repos.ledger,
+    repos.payments,
+  );
   const resolveWithFinancialOutcome = new ResolveDisputeWithFinancialOutcomeUseCase(
     repos.disputes,
     repos.payments,

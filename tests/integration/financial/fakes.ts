@@ -8,6 +8,7 @@ import type {
   CreateFinancialAdjustmentData,
   FinancialAdjustmentRecord,
   FinancialAdjustmentRepository,
+  FinancialAdjustmentTypeValue,
 } from "@/domain/repositories/financial-adjustment-repository";
 import type {
   CreateLedgerEntryData,
@@ -205,6 +206,12 @@ export class FakeFinancialAdjustmentRepository implements FinancialAdjustmentRep
 
   async listForJob(jobId: string): Promise<FinancialAdjustmentRecord[]> {
     return [...this.adjustments.values()].filter((a) => a.jobId === jobId);
+  }
+
+  async sumAppliedAmountForPayment(paymentId: string, types: readonly FinancialAdjustmentTypeValue[]): Promise<number> {
+    return [...this.adjustments.values()]
+      .filter((a) => a.paymentId === paymentId && a.status === "APPLIED" && types.includes(a.type))
+      .reduce((sum, a) => sum + a.amount, 0);
   }
 }
 

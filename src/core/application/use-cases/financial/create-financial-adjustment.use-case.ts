@@ -1,11 +1,13 @@
-import { NotFoundError } from "@/domain/errors/domain-error";
-import type {
-  FinancialAdjustmentRecord,
-  FinancialAdjustmentRepository,
-  FinancialAdjustmentTypeValue,
+import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
+import {
+  REFUND_TYPE_ADJUSTMENTS,
+  type FinancialAdjustmentRecord,
+  type FinancialAdjustmentRepository,
+  type FinancialAdjustmentTypeValue,
 } from "@/domain/repositories/financial-adjustment-repository";
 import type { FinancialLedgerRepository } from "@/domain/repositories/financial-ledger-repository";
 import type { JobRepository } from "@/domain/repositories/job-repository";
+import type { PaymentRepository } from "@/domain/repositories/payment-repository";
 
 /**
  * Module 22 — Commission & Financial: the boundary Module 21 (Disputes &
@@ -39,12 +41,31 @@ import type { JobRepository } from "@/domain/repositories/job-repository";
  * adjustment; a genuinely distinct second adjustment of the same type
  * against the same dispute is not supported by this module and would need
  * a product decision (e.g. an explicit sequence number) if ever required.
+ *
+ * ## Module 69 — Refund boundedness (Invariant 8)
+ * The idempotency key above only prevents the *same* (job, dispute, type,
+ * payment) tuple from double-applying — it does NOT stop two genuinely
+ * distinct adjustments (e.g. two different Disputes resolved sequentially
+ * against the same Job/Payment, each with a `PARTIAL_REFUND`) from
+ * cumulatively refunding more than was ever captured. Before creating a
+ * `REFUND_TYPE_ADJUSTMENTS` adjustment (`FULL_REFUND`/`PARTIAL_REFUND`/
+ * `PLATFORM_FEE_REFUND`) against a Payment, this use case now sums every
+ * already-`APPLIED` refund-type adjustment for that same Payment
+ * (`FinancialAdjustmentRepository.sumAppliedAmountForPayment`) and rejects
+ * with `ValidationError` if `alreadyRefunded + this.amount` would exceed
+ * `Payment.amount`. This is an early, friendly rejection for the normal
+ * case; the authoritative, race-safe backstop is the Postgres trigger added
+ * by migration `20260825000000_add_refund_boundedness_guard` (see that
+ * migration's own comment) — per this module's "database-level guarantees
+ * are preferred" safety rule, this application check is never the ONLY
+ * protection.
  */
 export class CreateFinancialAdjustmentUseCase {
   constructor(
     private readonly jobs: JobRepository,
     private readonly adjustments: FinancialAdjustmentRepository,
     private readonly ledger: FinancialLedgerRepository,
+    private readonly payments: PaymentRepository,
   ) {}
 
   async execute(
@@ -79,6 +100,27 @@ export class CreateFinancialAdjustmentUseCase {
     const existing = await this.adjustments.findByIdempotencyKey(idempotencyKey);
     if (existing) {
       return existing;
+    }
+
+    // Module 69 — Invariant 8 (refund boundedness): see this class's own
+    // doc comment. Only refund-type adjustments that return captured
+    // customer funds are bounded this way, and only when a Payment is
+    // actually referenced (a pre-Payment dispute has nothing to bound
+    // against).
+    if (REFUND_TYPE_ADJUSTMENTS.includes(input.type) && input.paymentId) {
+      const payment = await this.payments.findById(input.paymentId);
+      if (!payment) {
+        throw new NotFoundError("Payment", input.paymentId);
+      }
+      const alreadyRefunded = await this.adjustments.sumAppliedAmountForPayment(
+        input.paymentId,
+        REFUND_TYPE_ADJUSTMENTS,
+      );
+      if (alreadyRefunded + input.amount > payment.amount) {
+        throw new ValidationError(
+          `This adjustment (${input.amount}) combined with already-applied refunds for this payment (${alreadyRefunded}) would exceed the captured amount (${payment.amount}) — refunds can never exceed what was captured.`,
+        );
+      }
     }
 
     const created = await this.adjustments.create({
