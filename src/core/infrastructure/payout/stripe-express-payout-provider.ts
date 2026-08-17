@@ -12,17 +12,18 @@ import type {
  * creates a real Stripe Express account — per the module brief's explicit
  * "Do NOT integrate Stripe SDK. Only prepare onboarding state" rule. This
  * class's only job is to record that the professional has *chosen* Stripe
- * Express as their payout method, so a future Module 65 (Stripe Connect)
- * can pick up exactly where this leaves off: `externalReference` is always
- * `null` here (no account exists yet) and `status` is always `PENDING`
+ * Express as their payout method, so Module 71 (Stripe Connect) can pick
+ * up exactly where this leaves off: `externalReference` is always `null`
+ * here (no account exists yet) and `status` is always `PENDING`
  * (readiness, not verification — see `ProfessionalPayoutAccountRecord
  * .stripeExpressStatus`'s own doc comment for the three-value readiness
  * vocabulary this prepares).
  *
- * `ProfessionalProfile.stripeConnectAccountId` (schema.prisma) already
- * exists as the eventual real Stripe Connect account id column — this
- * class deliberately never writes to it; that remains Module 65's job once
- * it exists.
+ * Module 71's `CreateStripeConnectedAccountUseCase` writes the real
+ * account id onto `ProfessionalPayoutAccount.stripeExpressAccountId`
+ * (schema.prisma) once it exists — the older, unused
+ * `ProfessionalProfile.stripeConnectAccountId` column is a separate,
+ * legacy field this module and Module 71 both deliberately leave alone.
  */
 export class StripeExpressPayoutProvider implements PayoutProvider {
   readonly method = "STRIPE_EXPRESS" as const;
