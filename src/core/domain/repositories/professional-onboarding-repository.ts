@@ -173,6 +173,49 @@ export interface ProfessionalOnboardingRepository {
     data: UpdateStripeConnectAccountData,
   ): Promise<ProfessionalPayoutAccountRecord>;
 
+  /**
+   * Module 72 — Stripe Webhooks (post-audit correction): the same write as
+   * `updateStripeConnectAccount`, except the write is only applied — at
+   * the database level, atomically, in a single statement — when the
+   * existing row's `stripeConnectSyncedAt` is `null` or no newer than
+   * `data.stripeConnectSyncedAt` (i.e. rejected only when the existing
+   * value is strictly *newer* — a retried delivery of the same event,
+   * whose timestamp exactly equals what an earlier attempt already
+   * persisted, is still accepted, never treated as stale). This is what
+   * makes Module 72's
+   * out-of-order-webhook guard a real guarantee under concurrent/
+   * out-of-order delivery rather than a "read, compare, then write"
+   * check with a race window between the read and the write — two
+   * concurrent callers racing to write different `stripeConnectSyncedAt`
+   * values for the same account can each only ever see the *other's*
+   * write reflected in the `WHERE` clause the database itself evaluates
+   * immediately before the `UPDATE`, never a stale in-process read from
+   * before either write committed. See `PrismaProfessionalOnboardingRepository`'s
+   * own implementation for exactly how (`updateMany` with a compound
+   * `WHERE`, still no schema change — `stripeConnectSyncedAt` already
+   * exists from Module 71).
+   *
+   * `data.stripeConnectSyncedAt` is required here (unlike the optional
+   * field on `UpdateStripeConnectAccountData`) — it is both the value
+   * being written *and* the ordering key the `WHERE` guard compares
+   * against; a caller with no ordering timestamp to guard on should call
+   * `updateStripeConnectAccount` instead (as `GetStripeAccountStatusUseCase`,
+   * Module 71's polling path, still does — a poll's "now" is always at
+   * least as fresh as any past event, so it has no need for this guard
+   * and keeps using the unconditional write).
+   *
+   * Returns `{ applied: false }` (no write performed) when the guard
+   * condition wasn't met — the row existed but its `stripeConnectSyncedAt`
+   * was already strictly newer than `data.stripeConnectSyncedAt`. Throws
+   * `NotFoundError` if no payout account row exists for
+   * `professionalProfileId` at all, the same precondition
+   * `updateStripeConnectAccount` enforces.
+   */
+  updateStripeConnectAccountIfNotStale(
+    professionalProfileId: string,
+    data: UpdateStripeConnectAccountData & { stripeConnectSyncedAt: Date },
+  ): Promise<{ applied: boolean }>;
+
   /** Every ACTIVATED onboarding record — feeds `onboarding-report-
    *  generator.ts`'s activation-rate statistics. */
   countByStatus(status: OnboardingStatusValue): Promise<number>;
