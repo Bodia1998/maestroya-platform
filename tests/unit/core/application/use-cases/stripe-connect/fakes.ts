@@ -14,6 +14,12 @@ import type {
   StripeAccountStatusResult,
   StripeConnectGateway,
 } from "@/application/ports/stripe-connect-gateway";
+import type {
+  ClaimExternalWebhookEventInput,
+  ClaimExternalWebhookEventResult,
+  ExternalWebhookEventRecord,
+  ExternalWebhookEventRepository,
+} from "@/domain/repositories/external-webhook-event-repository";
 
 /**
  * Module 71 — Stripe Connect: in-memory fakes for this module's own
@@ -130,5 +136,77 @@ export class FakeStripeConnectGateway implements StripeConnectGateway {
     if (this.nextError) throw this.nextError;
     this.createLoginLinkCalls.push(stripeAccountId);
     return { url: `https://connect.stripe.com/express/${stripeAccountId}` };
+  }
+}
+
+/**
+ * Module 72 — Stripe Webhooks: in-memory `ExternalWebhookEventRepository`
+ * implementing the exact same claim/retry state machine as
+ * `PrismaExternalWebhookEventRepository` — the same fake shape
+ * `tests/integration/verification/persona-webhook-flows.test.ts` already
+ * defines for Persona (see that file's own doc comment on why: claim-by-
+ * insert, `(provider, externalEventId)` uniqueness, a `FAILED` event is
+ * the only one a later delivery may reclaim), kept as its own copy here
+ * per this codebase's "one fakes.ts per module's own test directory"
+ * convention.
+ */
+export class FakeExternalWebhookEventRepository implements ExternalWebhookEventRepository {
+  events = new Map<string, ExternalWebhookEventRecord>();
+  private idCounter = 0;
+
+  private findExisting(provider: string, externalEventId: string): ExternalWebhookEventRecord | undefined {
+    return [...this.events.values()].find((e) => e.provider === provider && e.externalEventId === externalEventId);
+  }
+
+  async claim(input: ClaimExternalWebhookEventInput): Promise<ClaimExternalWebhookEventResult> {
+    const existing = this.findExisting(input.provider, input.externalEventId);
+    if (!existing) {
+      const record: ExternalWebhookEventRecord = {
+        id: `event-${++this.idCounter}`,
+        provider: input.provider,
+        externalEventId: input.externalEventId,
+        eventType: input.eventType ?? null,
+        status: "PROCESSING",
+        processedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.events.set(record.id, record);
+      return { claimed: true, record };
+    }
+
+    if (existing.status === "FAILED") {
+      const reclaimed: ExternalWebhookEventRecord = {
+        ...existing,
+        status: "PROCESSING",
+        eventType: input.eventType ?? existing.eventType,
+        updatedAt: new Date(),
+      };
+      this.events.set(existing.id, reclaimed);
+      return { claimed: true, record: reclaimed };
+    }
+
+    return { claimed: false, record: existing };
+  }
+
+  async markProcessed(id: string): Promise<ExternalWebhookEventRecord> {
+    const existing = this.events.get(id);
+    if (!existing) throw new Error(`No fake external webhook event with id "${id}".`);
+    const updated: ExternalWebhookEventRecord = {
+      ...existing,
+      status: "PROCESSED",
+      processedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.events.set(id, updated);
+    return updated;
+  }
+
+  async markFailed(id: string): Promise<ExternalWebhookEventRecord> {
+    const existing = this.events.get(id);
+    if (!existing) throw new Error(`No fake external webhook event with id "${id}".`);
+    const updated: ExternalWebhookEventRecord = { ...existing, status: "FAILED", updatedAt: new Date() };
+    this.events.set(id, updated);
+    return updated;
   }
 }

@@ -235,6 +235,60 @@ export class PrismaProfessionalOnboardingRepository implements ProfessionalOnboa
     return toPayoutAccountRecord(row);
   }
 
+  /**
+   * Module 72 — Stripe Webhooks (post-audit correction): a single
+   * `updateMany` whose `WHERE` clause is both the row selector *and* the
+   * out-of-order-delivery guard, evaluated atomically by Postgres in the
+   * same statement as the write — see `ProfessionalOnboardingRepository
+   * .updateStripeConnectAccountIfNotStale`'s own doc comment for why this
+   * is what makes the guard race-free where a separate "read
+   * `stripeConnectSyncedAt`, compare in application code, then call
+   * `updateStripeConnectAccount`" sequence is not. No schema change:
+   * `stripeConnectSyncedAt` is the same column Module 71 already added.
+   *
+   * `updateMany` (rather than `update`) is used deliberately — Prisma's
+   * `update` only accepts a unique-identifier `where`, which cannot also
+   * carry the `stripeConnectSyncedAt` comparison; `updateMany` accepts an
+   * arbitrary `where` and reports `count`, which is exactly the "was the
+   * guard satisfied" signal this method needs and `update` cannot give
+   * without a second round-trip (which would itself reopen the race).
+   */
+  async updateStripeConnectAccountIfNotStale(
+    professionalProfileId: string,
+    data: UpdateStripeConnectAccountData & { stripeConnectSyncedAt: Date },
+  ): Promise<{ applied: boolean }> {
+    const existing = await prisma.professionalPayoutAccount.findUnique({ where: { professionalProfileId } });
+    if (!existing) {
+      throw new NotFoundError("ProfessionalPayoutAccount", professionalProfileId);
+    }
+    const result = await prisma.professionalPayoutAccount.updateMany({
+      where: {
+        professionalProfileId,
+        // `lte`, not `lt`: a retried delivery of the SAME event (its own
+        // `createdAt` exactly equal to what an earlier, already-successful
+        // write for that same event persisted — e.g. the first write
+        // succeeded but `markProcessed` then failed, so Stripe retries)
+        // must still be accepted, never rejected as "stale" — only an
+        // event strictly OLDER than the current state is out of order.
+        // See `ProfessionalOnboardingRepository
+        // .updateStripeConnectAccountIfNotStale`'s own doc comment.
+        OR: [{ stripeConnectSyncedAt: null }, { stripeConnectSyncedAt: { lte: data.stripeConnectSyncedAt } }],
+      },
+      data: {
+        ...(data.stripeExpressAccountId !== undefined ? { stripeExpressAccountId: data.stripeExpressAccountId } : {}),
+        ...(data.stripeExpressStatus !== undefined ? { stripeExpressStatus: data.stripeExpressStatus } : {}),
+        ...(data.stripeChargesEnabled !== undefined ? { stripeChargesEnabled: data.stripeChargesEnabled } : {}),
+        ...(data.stripePayoutsEnabled !== undefined ? { stripePayoutsEnabled: data.stripePayoutsEnabled } : {}),
+        ...(data.stripeDetailsSubmitted !== undefined ? { stripeDetailsSubmitted: data.stripeDetailsSubmitted } : {}),
+        ...(data.stripeRequirementsCurrentlyDue !== undefined
+          ? { stripeRequirementsCurrentlyDue: data.stripeRequirementsCurrentlyDue }
+          : {}),
+        stripeConnectSyncedAt: data.stripeConnectSyncedAt,
+      },
+    });
+    return { applied: result.count > 0 };
+  }
+
   async countByStatus(status: OnboardingStatusValue): Promise<number> {
     return prisma.professionalOnboarding.count({ where: { status } });
   }

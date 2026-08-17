@@ -351,6 +351,38 @@ export class FakeProfessionalOnboardingRepository implements ProfessionalOnboard
     return record;
   }
 
+  /**
+   * Module 72 — Stripe Webhooks (post-audit correction): mirrors
+   * `PrismaProfessionalOnboardingRepository.updateStripeConnectAccountIfNotStale`'s
+   * own atomicity — the guard check and the write happen in the same
+   * synchronous block with no `await` between them, so (exactly like
+   * `FakeExternalWebhookEventRepository.claim`'s own reasoning, and the
+   * real Postgres `UPDATE ... WHERE ...`'s own single-statement
+   * atomicity) two calls raced via `Promise.all` in a test can never both
+   * observe the pre-write state — JS's single-threaded event loop makes
+   * this whole method body a critical section.
+   */
+  async updateStripeConnectAccountIfNotStale(
+    professionalProfileId: string,
+    data: UpdateStripeConnectAccountData & { stripeConnectSyncedAt: Date },
+  ): Promise<{ applied: boolean }> {
+    const existing = this.payoutAccounts.get(professionalProfileId);
+    if (!existing) throw new Error("not found");
+    // `<=`, not `<` — see `PrismaProfessionalOnboardingRepository
+    // .updateStripeConnectAccountIfNotStale`'s own comment: a retry of
+    // the same event (identical `stripeConnectSyncedAt`) must still be
+    // accepted, only a strictly older one is rejected.
+    const guardSatisfied = existing.stripeConnectSyncedAt === null || existing.stripeConnectSyncedAt <= data.stripeConnectSyncedAt;
+    if (!guardSatisfied) return { applied: false };
+    const record: ProfessionalPayoutAccountRecord = {
+      ...existing,
+      ...data,
+      updatedAt: new Date(),
+    };
+    this.payoutAccounts.set(professionalProfileId, record);
+    return { applied: true };
+  }
+
   async countByStatus(status: ProfessionalOnboardingRecord["status"]): Promise<number> {
     return [...this.onboardings.values()].filter((o) => o.status === status).length;
   }
