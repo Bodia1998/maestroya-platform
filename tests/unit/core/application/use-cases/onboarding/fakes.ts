@@ -12,6 +12,7 @@ import type {
   ProfessionalOnboardingRecord,
   ProfessionalOnboardingRepository,
   ProfessionalPayoutAccountRecord,
+  UpdateStripeConnectAccountData,
 } from "@/domain/repositories/professional-onboarding-repository";
 import type {
   CreateProfessionalData,
@@ -306,8 +307,13 @@ export class FakeProfessionalOnboardingRepository implements ProfessionalOnboard
     return this.payoutAccounts.get(professionalProfileId) ?? null;
   }
 
+  async findPayoutAccountByStripeAccountId(stripeAccountId: string): Promise<ProfessionalPayoutAccountRecord | null> {
+    return [...this.payoutAccounts.values()].find((a) => a.stripeExpressAccountId === stripeAccountId) ?? null;
+  }
+
   async upsertPayoutAccount(data: CreatePayoutAccountData): Promise<ProfessionalPayoutAccountRecord> {
     const existing = this.payoutAccounts.get(data.professionalProfileId);
+    const clearStripeFields = data.method !== "STRIPE_EXPRESS";
     const record: ProfessionalPayoutAccountRecord = {
       id: existing?.id ?? nextId("payout-account"),
       professionalProfileId: data.professionalProfileId,
@@ -316,12 +322,32 @@ export class FakeProfessionalOnboardingRepository implements ProfessionalOnboard
       accountHolderName: data.accountHolderName,
       ibanLast4: data.ibanLast4 ?? null,
       ibanHash: data.ibanHash ?? null,
-      stripeExpressAccountId: existing?.stripeExpressAccountId ?? null,
+      stripeExpressAccountId: clearStripeFields ? null : existing?.stripeExpressAccountId ?? null,
       stripeExpressStatus: data.stripeExpressStatus ?? "NOT_STARTED",
+      stripeChargesEnabled: clearStripeFields ? false : existing?.stripeChargesEnabled ?? false,
+      stripePayoutsEnabled: clearStripeFields ? false : existing?.stripePayoutsEnabled ?? false,
+      stripeDetailsSubmitted: clearStripeFields ? false : existing?.stripeDetailsSubmitted ?? false,
+      stripeRequirementsCurrentlyDue: clearStripeFields ? false : existing?.stripeRequirementsCurrentlyDue ?? false,
+      stripeConnectSyncedAt: clearStripeFields ? null : existing?.stripeConnectSyncedAt ?? null,
       createdAt: existing?.createdAt ?? new Date(),
       updatedAt: new Date(),
     };
     this.payoutAccounts.set(data.professionalProfileId, record);
+    return record;
+  }
+
+  async updateStripeConnectAccount(
+    professionalProfileId: string,
+    data: UpdateStripeConnectAccountData,
+  ): Promise<ProfessionalPayoutAccountRecord> {
+    const existing = this.payoutAccounts.get(professionalProfileId);
+    if (!existing) throw new Error("not found");
+    const record: ProfessionalPayoutAccountRecord = {
+      ...existing,
+      ...data,
+      updatedAt: new Date(),
+    };
+    this.payoutAccounts.set(professionalProfileId, record);
     return record;
   }
 

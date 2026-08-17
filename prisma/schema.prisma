@@ -3925,11 +3925,13 @@ enum PayoutAccountStatus {
   REJECTED
 }
 
-/// Module 65 (future) — Stripe Connect / Stripe Express. `NOT_STARTED`
-/// (default) / `PENDING` (professional chose Stripe Express; ready for
-/// Module 65's real account-creation flow) / `READY` (reserved — only
-/// Module 65 ever writes this, once a real Stripe Express account exists).
-/// This module never calls the Stripe SDK — see StripeExpressPayoutProvider's
+/// Module 71 — Stripe Connect / Stripe Express. `NOT_STARTED`
+/// (default) / `PENDING` (professional chose Stripe Express, or a real
+/// account exists but has not finished Stripe's hosted onboarding yet)
+/// / `READY` (`GetStripeAccountStatusUseCase` — Module 71 — has confirmed
+/// the account has `details_submitted`/`charges_enabled`/`payouts_enabled`
+/// all true). Module 62 (this section) never calls the Stripe SDK — see
+/// StripeExpressPayoutProvider's
 /// own doc comment.
 enum StripeExpressReadiness {
   NOT_STARTED
@@ -3981,10 +3983,37 @@ model ProfessionalPayoutAccount {
   ibanLast4 String? @db.VarChar(4)
   ibanHash  String? @unique
 
-  /// Reserved for Module 65 — never populated by this module (see
+  /// Module 71 — Stripe Connect: the real Stripe Express connected
+  /// account id, written by `CreateStripeConnectedAccountUseCase` once
+  /// the account actually exists. `null` until then — this module's own
+  /// onboarding-selection step (Step 6) never populates it (see
   /// StripeExpressPayoutProvider's own doc comment).
   stripeExpressAccountId String?                 @unique
   stripeExpressStatus    StripeExpressReadiness  @default(NOT_STARTED)
+
+  /// Module 71 — Stripe Connect: Stripe's own account capability/
+  /// onboarding flags, mirrored by `GetStripeAccountStatusUseCase`
+  /// (and, in a future Module 72, a webhook handler reconciling
+  /// `account.updated` events). Deliberately separate from
+  /// `stripeExpressStatus` — see `domain/services/stripe-connect-account-
+  /// rules.ts`'s own doc comment for why MaestroYa professional status,
+  /// Stripe account status, and payout eligibility are three distinct
+  /// concepts that never collapse into one field.
+  ///
+  /// POST-AUDIT CORRECTION: `stripeChargesEnabled` stores Stripe's
+  /// `transfers` capability-active status, NOT the literal account-level
+  /// `charges_enabled` field — MaestroYa's connected accounts only ever
+  /// request the `transfers` capability, under which `charges_enabled`
+  /// would never meaningfully become true. See
+  /// `ProfessionalPayoutAccountRecord.stripeChargesEnabled`'s own doc
+  /// comment (domain/repositories/professional-onboarding-repository.ts)
+  /// for the full rationale. Kept under this column name deliberately —
+  /// no migration needed, the existing Boolean shape already fits.
+  stripeChargesEnabled           Boolean   @default(false)
+  stripePayoutsEnabled           Boolean   @default(false)
+  stripeDetailsSubmitted         Boolean   @default(false)
+  stripeRequirementsCurrentlyDue Boolean   @default(false)
+  stripeConnectSyncedAt          DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

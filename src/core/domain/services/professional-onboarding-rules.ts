@@ -52,14 +52,14 @@ export const PAYOUT_ACCOUNT_STATUS_VALUES = ["PENDING", "VERIFIED", "REJECTED"] 
 export type PayoutAccountStatusValue = (typeof PAYOUT_ACCOUNT_STATUS_VALUES)[number];
 
 /**
- * Module 65 (future) — Stripe Connect / Stripe Express. This module
- * prepares onboarding *state* for that future integration without ever
- * calling the Stripe SDK (see the module brief's explicit "Do NOT integrate
+ * Stripe Connect / Stripe Express readiness. This module (62) prepares
+ * onboarding *state* for that integration without ever calling the
+ * Stripe SDK itself (see the module brief's explicit "Do NOT integrate
  * Stripe SDK" rule): `NOT_STARTED` (default), `PENDING` (the professional
- * has chosen Stripe Express and is ready for Module 65's real
- * account-creation flow to pick this up), `READY` (reserved for Module 65
- * to set once a real Stripe Express account has actually completed
- * onboarding — nothing in this module ever writes `READY`).
+ * has chosen Stripe Express, or Module 71 has created a real account that
+ * has not finished onboarding yet), `READY` (Module 71's
+ * `GetStripeAccountStatusUseCase` sets this once the account has actually
+ * completed onboarding — nothing in this module ever writes `READY`).
  */
 export const STRIPE_EXPRESS_READINESS_VALUES = ["NOT_STARTED", "PENDING", "READY"] as const;
 export type StripeExpressReadinessValue = (typeof STRIPE_EXPRESS_READINESS_VALUES)[number];

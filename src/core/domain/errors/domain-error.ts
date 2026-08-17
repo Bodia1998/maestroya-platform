@@ -512,3 +512,55 @@ export class DuplicateAppealError extends DomainError {
     super(`An appeal is already open against action "${automatedActionId}".`);
   }
 }
+
+/**
+ * Module 71 — Stripe Connect: the closed set of failure categories a
+ * `StripeConnectGateway` implementation (`infrastructure/payments/stripe/
+ * stripe-connect-gateway.ts`) maps every Stripe SDK error onto before it
+ * is allowed to cross into application code — mirrors
+ * `VerificationProviderError`'s own "provider SDK error MUST NOT leak
+ * past the adapter" rule, applied to Stripe Connect instead of Persona.
+ * `AUTHENTICATION`/`INVALID_REQUEST` are permanent configuration/input
+ * problems; `NOT_FOUND` is a stale/deleted connected account id;
+ * `ACCOUNT_RESTRICTED` is a Stripe-side capability/permission denial
+ * (e.g. acting on an account this platform no longer controls);
+ * `RATE_LIMITED`/`NETWORK`/`TEMPORARY` are transient and safe to retry;
+ * `UNKNOWN` is anything the adapter did not recognize.
+ */
+export type StripeConnectErrorCategory =
+  | "AUTHENTICATION"
+  | "INVALID_REQUEST"
+  | "NOT_FOUND"
+  | "ACCOUNT_RESTRICTED"
+  | "RATE_LIMITED"
+  | "NETWORK"
+  | "TEMPORARY"
+  | "UNKNOWN";
+
+/**
+ * Module 71 — Stripe Connect: thrown by `StripeConnectGatewayAdapter`
+ * (`infrastructure/payments/stripe/stripe-connect-gateway.ts`) for any
+ * failed Stripe API call — connected account creation, onboarding/login
+ * link generation, or account status retrieval. This is the one error
+ * shape every Stripe Connect use case needs to know about; the raw
+ * Stripe SDK error (its own error class, HTTP status, request id) is
+ * preserved on `cause` but never leaks a Stripe SDK type into the
+ * application or domain layers — same reasoning `VerificationProviderError`
+ * gives for keeping Persona out of the domain entirely. `retryable`
+ * distinguishes a transient failure (rate limit, network, Stripe-side
+ * 5xx — safe to retry with backoff) from a permanent one (bad request,
+ * missing resource, restricted account) so a caller doesn't have to
+ * string-match `message` to decide whether to retry.
+ */
+export class StripeConnectError extends DomainError {
+  readonly code = "STRIPE_CONNECT_ERROR";
+  readonly category: StripeConnectErrorCategory;
+  readonly retryable: boolean;
+
+  constructor(category: StripeConnectErrorCategory, message: string, retryable: boolean, options?: { cause?: unknown }) {
+    super(`[stripe_connect:${category}] ${message}`);
+    this.category = category;
+    this.retryable = retryable;
+    if (options?.cause !== undefined) this.cause = options.cause;
+  }
+}
