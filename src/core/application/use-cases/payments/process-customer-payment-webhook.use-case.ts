@@ -7,6 +7,7 @@ import type { PaymentGateway } from "@/application/ports/payment-gateway";
 import type { StripePaymentWebhookEvent } from "@/application/ports/stripe-payment-webhook-verifier";
 import type { ExternalWebhookEventRepository } from "@/domain/repositories/external-webhook-event-repository";
 import type { PaymentRecord, PaymentRepository } from "@/domain/repositories/payment-repository";
+import type { RefundRepository } from "@/domain/repositories/refund-repository";
 import { publishDomainEvent } from "@/application/services/events/publish-domain-event";
 import { logger } from "@/infrastructure/observability/logger";
 
@@ -97,6 +98,14 @@ export class ProcessCustomerPaymentWebhookUseCase {
     private readonly webhookEvents: ExternalWebhookEventRepository,
     private readonly eventBus: EventBus,
     private readonly failureReporter: FailureReporter = new NullFailureReporter(),
+    /** Module 77 — Refund & Dispute Financial Execution: optional so
+     *  every pre-existing test/caller of this class (constructed without
+     *  a 6th argument) keeps compiling and passing unchanged — a `null`
+     *  here (the default) means `handleChargeRefunded` stays exactly the
+     *  observability-only no-op it always was; production wiring
+     *  (`payments/compose.ts`) always supplies the real repository so
+     *  reconciliation actually runs. */
+    private readonly refunds: RefundRepository | null = null,
   ) {}
 
   async execute(event: StripePaymentWebhookEvent): Promise<ProcessCustomerPaymentWebhookResult> {
@@ -285,12 +294,42 @@ export class ProcessCustomerPaymentWebhookUseCase {
   }
 
   private async handleChargeRefunded(event: StripePaymentWebhookEvent): Promise<ProcessCustomerPaymentWebhookResult> {
-    // Deliberately no state mutation — see this class's own doc comment.
     logger.info("stripe_payments_webhook.charge_refunded_observed", {
       chargeId: event.chargeRefunded?.chargeId,
       paymentIntentId: event.chargeRefunded?.paymentIntentId,
       amountRefunded: event.chargeRefunded?.amountRefunded,
     });
+
+    // Module 77 — Refund & Dispute Financial Execution: reconciliation
+    // only — never a source of truth. `ExecuteRefundUseCase` is the one
+    // place that ever *decides*/creates a `Refund` row or mutates
+    // `Payment.status`; this handler only confirms an already-`PROCESSED`
+    // Refund this platform itself created (the normal case — see
+    // `ExecuteRefundUseCase`'s own doc comment) still matches what Stripe
+    // reports, and flags (via a log line, never a thrown error — this
+    // event must always be acknowledged) any refund Stripe reports that
+    // this platform has no matching row for (e.g. one issued directly from
+    // the Stripe Dashboard, outside Module 68's decision flow entirely) —
+    // exactly the "requires manual reconciliation" case this module's own
+    // safety requirement allows rather than inventing an auto-import of
+    // externally-initiated refunds.
+    const refundId = event.chargeRefunded?.refundId;
+    if (this.refunds && refundId) {
+      const existing = await this.refunds.findByStripeRefundId(refundId);
+      if (!existing) {
+        logger.warn("stripe_payments_webhook.charge_refunded_unmatched", {
+          chargeId: event.chargeRefunded?.chargeId,
+          paymentIntentId: event.chargeRefunded?.paymentIntentId,
+          stripeRefundId: refundId,
+        });
+      } else if (existing.status !== "PROCESSED") {
+        // A refund this platform initiated, whose Stripe status resolved
+        // asynchronously (e.g. was `pending`/`requires_action` when this
+        // platform's own call returned) — reconcile it now.
+        await this.refunds.markProcessed({ id: existing.id, stripeRefundId: refundId, fromStatuses: ["REQUESTED", "FAILED"] });
+      }
+    }
+
     return { outcome: "refund-observed" };
   }
 

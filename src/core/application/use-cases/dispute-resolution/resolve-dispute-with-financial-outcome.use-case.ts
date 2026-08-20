@@ -17,6 +17,8 @@ import type { EventBus } from "@/application/ports/event-bus";
 import { EventDispatchError } from "@/application/ports/event-dispatch-error";
 import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
 import { DisputeFinancialOutcomeDetermined } from "@/domain/events/dispute-financial-outcome-determined";
+import { NullRefundExecutor, type RefundExecutor } from "@/application/ports/refund-executor";
+import { REFUND_TYPE_ADJUSTMENTS } from "@/domain/repositories/financial-adjustment-repository";
 
 export interface ResolveDisputeWithFinancialOutcomeInput {
   resolution: DisputeResolutionValue;
@@ -99,6 +101,12 @@ export class ResolveDisputeWithFinancialOutcomeUseCase {
     private readonly createFinancialAdjustment: CreateFinancialAdjustmentUseCase,
     private readonly eventBus: EventBus,
     private readonly failureReporter: FailureReporter = new NullFailureReporter(),
+    /** Module 77 — Refund & Dispute Financial Execution: see
+     *  `RefundExecutor`'s own doc comment for why this defaults to a
+     *  no-op — every pre-existing test of this class keeps compiling and
+     *  passing unchanged; production wiring (`dispute-resolution/
+     *  compose.ts`) always supplies the real executor. */
+    private readonly refundExecutor: RefundExecutor = new NullRefundExecutor(),
   ) {}
 
   async execute(
@@ -218,7 +226,7 @@ export class ResolveDisputeWithFinancialOutcomeUseCase {
     let failed = 0;
     for (const adjustment of adjustments) {
       try {
-        await this.createFinancialAdjustment.execute(adminUserId, {
+        const created = await this.createFinancialAdjustment.execute(adminUserId, {
           jobId: decision.jobId,
           disputeId: decision.disputeId,
           paymentId: decision.paymentId,
@@ -228,6 +236,35 @@ export class ResolveDisputeWithFinancialOutcomeUseCase {
           resolutionDecisionId: decision.id,
         });
         succeeded += 1;
+
+        // Module 77 — Refund & Dispute Financial Execution: the ledger
+        // adjustment above only ever records the *decision* — it never
+        // itself calls Stripe (see `CreateFinancialAdjustmentUseCase`'s
+        // own doc comment). A refund-type adjustment that actually
+        // returns money to the customer must additionally trigger real
+        // Stripe execution, via the injected `RefundExecutor` port so
+        // this class never depends on Stripe/`PaymentGateway` directly.
+        // Only fires once the ledger write above succeeded (`created` is
+        // the just-`APPLIED` adjustment, unless it landed `PENDING`
+        // because `applyAdjustments` itself hasn't marked it yet — see
+        // this method's own return statement below, which always calls
+        // `markApplied`/`markPartiallyApplied` after this loop) and only
+        // for `REFUND_TYPE_ADJUSTMENTS` — `PROFESSIONAL_PAYOUT_REDUCTION`/
+        // `CUSTOMER_COMPENSATION`/`COMMISSION_REVERSAL`/
+        // `PROFESSIONAL_PAYOUT_RELEASE` never move customer-facing Stripe
+        // funds and are deliberately left untouched, exactly like
+        // `REFUND_TYPE_ADJUSTMENTS`'s own doc comment describes.
+        if (REFUND_TYPE_ADJUSTMENTS.includes(adjustment.type) && decision.paymentId) {
+          await this.refundExecutor.executeForAdjustment({
+            financialAdjustmentId: created.id,
+            paymentId: decision.paymentId,
+            jobId: decision.jobId,
+            disputeId: decision.disputeId,
+            amount: adjustment.amount,
+            requestedByUserId: adminUserId,
+            reason: decision.reason,
+          });
+        }
       } catch (error) {
         failed += 1;
         this.failureReporter.report(error instanceof Error ? error : new Error(String(error)), {

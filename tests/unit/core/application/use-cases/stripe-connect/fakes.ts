@@ -24,6 +24,8 @@ import type {
   CreatePendingPayoutData,
   MarkPayoutFailedInput,
   MarkPayoutPaidInput,
+  MarkPayoutReversalFailedInput,
+  MarkPayoutReversedInput,
   PayoutRecord,
   PayoutRepository,
   PayoutStatusValue,
@@ -260,6 +262,12 @@ export class FakePayoutRepository implements PayoutRepository {
       attemptCount: 0,
       lastAttemptedAt: null,
       processedAt: null,
+      stripeReversalId: null,
+      reversalIdempotencyKey: null,
+      reversedAmount: null,
+      reversalFailureReason: null,
+      reversalAttemptCount: 0,
+      reversedAt: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -304,6 +312,38 @@ export class FakePayoutRepository implements PayoutRepository {
     return { applied: true, record: updated };
   }
 
+  async markReversed(input: MarkPayoutReversedInput): Promise<UpdatePayoutResult> {
+    const existing = this.byId.get(input.id);
+    if (!existing) throw new Error(`No fake payout with id "${input.id}".`);
+    if (!input.fromStatuses.includes(existing.status)) return { applied: false, record: existing };
+    const updated: PayoutRecord = {
+      ...existing,
+      status: "REVERSED",
+      stripeReversalId: input.stripeReversalId,
+      reversedAmount: input.reversedAmount,
+      reversalIdempotencyKey: input.reversalIdempotencyKey,
+      reversalFailureReason: null,
+      reversedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.byId.set(input.id, updated);
+    return { applied: true, record: updated };
+  }
+
+  async markReversalFailed(input: MarkPayoutReversalFailedInput): Promise<UpdatePayoutResult> {
+    const existing = this.byId.get(input.id);
+    if (!existing) throw new Error(`No fake payout with id "${input.id}".`);
+    if (!input.fromStatuses.includes(existing.status)) return { applied: false, record: existing };
+    const updated: PayoutRecord = {
+      ...existing,
+      reversalFailureReason: input.reversalFailureReason,
+      reversalAttemptCount: existing.reversalAttemptCount + 1,
+      updatedAt: new Date(),
+    };
+    this.byId.set(input.id, updated);
+    return { applied: true, record: updated };
+  }
+
   /** Test-only helper for seeding a specific status directly. */
   seed(overrides: Partial<PayoutRecord> & { jobId: string }): PayoutRecord {
     const now = new Date();
@@ -322,6 +362,12 @@ export class FakePayoutRepository implements PayoutRepository {
       attemptCount: overrides.attemptCount ?? 0,
       lastAttemptedAt: overrides.lastAttemptedAt ?? null,
       processedAt: overrides.processedAt ?? null,
+      stripeReversalId: overrides.stripeReversalId ?? null,
+      reversalIdempotencyKey: overrides.reversalIdempotencyKey ?? null,
+      reversedAmount: overrides.reversedAmount ?? null,
+      reversalFailureReason: overrides.reversalFailureReason ?? null,
+      reversalAttemptCount: overrides.reversalAttemptCount ?? 0,
+      reversedAt: overrides.reversedAt ?? null,
       createdAt: overrides.createdAt ?? now,
       updatedAt: overrides.updatedAt ?? now,
     };

@@ -19,6 +19,9 @@ function fakeStripe(overrides: Partial<Stripe> = {}): Stripe {
       capture: vi.fn(),
       cancel: vi.fn(),
     },
+    refunds: {
+      create: vi.fn(),
+    },
     ...overrides,
   } as unknown as Stripe;
 }
@@ -183,12 +186,37 @@ describe("StripePaymentGatewayAdapter (Module 73)", () => {
   });
 
   describe("refund", () => {
-    it("throws rather than calling any Stripe refund API — Module 77's job, not this module's", async () => {
+    it("calls stripe.refunds.create against the PaymentIntent with the amount converted to integer cents", async () => {
       const stripe = fakeStripe();
+      (stripe.refunds.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "re_123", status: "succeeded" });
+      const adapter = new StripePaymentGatewayAdapter(stripe);
+
+      const result = await adapter.refund("pi_123", 19.99, { idempotencyKey: "refund:adj-1" });
+
+      expect(stripe.refunds.create).toHaveBeenCalledWith(
+        { payment_intent: "pi_123", amount: 1999 },
+        { idempotencyKey: "refund:adj-1" },
+      );
+      expect(result).toEqual({ externalRefundReference: "re_123", status: "SUCCEEDED" });
+    });
+
+    it("maps a pending/requires_action Stripe refund status to PENDING", async () => {
+      const stripe = fakeStripe();
+      (stripe.refunds.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "re_124", status: "pending" });
+      const adapter = new StripePaymentGatewayAdapter(stripe);
+
+      const result = await adapter.refund("pi_123", 10);
+      expect(result.status).toBe("PENDING");
+    });
+
+    it("maps a Stripe error onto PaymentGatewayError, never swallowing it", async () => {
+      const stripe = fakeStripe();
+      (stripe.refunds.create as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Stripe.errors.StripeInvalidRequestError({ message: "Charge already refunded.", type: "invalid_request_error" } as never),
+      );
       const adapter = new StripePaymentGatewayAdapter(stripe);
 
       await expect(adapter.refund("pi_123", 10)).rejects.toBeInstanceOf(PaymentGatewayError);
-      await expect(adapter.refund("pi_123", 10)).rejects.toMatchObject({ category: "NOT_IMPLEMENTED" });
     });
   });
 });

@@ -17,6 +17,9 @@ import { PrismaProfessionalOnboardingRepository } from "@/infrastructure/databas
 import { PrismaCompanyPayoutAccountRepository } from "@/infrastructure/database/prisma/repositories/prisma-company-payout-account-repository";
 import { PrismaPaymentRepository } from "@/infrastructure/database/prisma/repositories/prisma-payment-repository";
 import { PrismaPayoutRepository } from "@/infrastructure/database/prisma/repositories/prisma-payout-repository";
+import { PrismaRefundRepository } from "@/infrastructure/database/prisma/repositories/prisma-refund-repository";
+import { PrismaFinancialAdjustmentRepository } from "@/infrastructure/database/prisma/repositories/prisma-financial-adjustment-repository";
+import { PrismaFinancialLedgerRepository } from "@/infrastructure/database/prisma/repositories/prisma-financial-ledger-repository";
 import { PrismaQuoteRepository } from "@/infrastructure/database/prisma/repositories/prisma-quote-repository";
 import { paymentGateway } from "@/infrastructure/payments/compose";
 import { stripe } from "@/infrastructure/payments/stripe/client";
@@ -34,6 +37,20 @@ import { ProcessCustomerPaymentWebhookUseCase } from "./process-customer-payment
 import { RecordCommissionOnPaymentCapturedSubscriber } from "./record-commission-on-payment-captured.subscriber";
 import { ExecuteProfessionalPayoutUseCase } from "./execute-professional-payout.use-case";
 import { ExecutePayoutOnReleaseApprovedSubscriber } from "./execute-payout-on-release-approved.subscriber";
+import { CreateFinancialAdjustmentUseCase } from "@/application/use-cases/financial/create-financial-adjustment.use-case";
+import { ExecuteRefundUseCase } from "@/application/use-cases/refunds/execute-refund.use-case";
+import { ReverseProfessionalPayoutUseCase } from "@/application/use-cases/refunds/reverse-professional-payout.use-case";
+import {
+  RecordPaymentRefundedAuditLogSubscriber,
+  RecordRefundFailedAuditLogSubscriber,
+  RecordProfessionalPayoutReversedAuditLogSubscriber,
+  RecordPayoutReversalFailedAuditLogSubscriber,
+} from "@/application/use-cases/refunds/record-refund-audit-log.subscriber";
+import { PrismaAdminAuditLogRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-audit-log-repository";
+import { PaymentRefunded } from "@/domain/events/payment-refunded";
+import { RefundFailed } from "@/domain/events/refund-failed";
+import { ProfessionalPayoutReversed } from "@/domain/events/professional-payout-reversed";
+import { PayoutReversalFailed } from "@/domain/events/payout-reversal-failed";
 
 /**
  * Module 73 — Real Customer Payment Capture: composition root, same
@@ -74,6 +91,44 @@ const professionalOnboardings = new PrismaProfessionalOnboardingRepository();
 const companyPayoutAccounts = new PrismaCompanyPayoutAccountRepository();
 const payouts = new PrismaPayoutRepository();
 const failureReporter = createFailureReporter();
+
+// --- Module 77 — Refund & Dispute Financial Execution ---
+// Reuses the already-composed `jobs`/`commissions`/`payments` instances
+// above — no second Prisma repository instance is created for any of
+// them, matching this file's own "each compose.ts owns its own
+// cross-module Prisma repository instances, but never a second instance
+// of the same one within itself" convention.
+const refunds = new PrismaRefundRepository();
+const financialAdjustments = new PrismaFinancialAdjustmentRepository();
+const financialLedger = new PrismaFinancialLedgerRepository();
+
+function makeCreateFinancialAdjustmentUseCaseForRefunds() {
+  return new CreateFinancialAdjustmentUseCase(jobs, financialAdjustments, financialLedger, payments);
+}
+
+export function makeReverseProfessionalPayoutUseCase(): ReverseProfessionalPayoutUseCase {
+  return new ReverseProfessionalPayoutUseCase(
+    payouts,
+    stripeTransferGateway,
+    commissions,
+    makeCreateFinancialAdjustmentUseCaseForRefunds(),
+    eventBus,
+    failureReporter,
+  );
+}
+
+export function makeExecuteRefundUseCase(): ExecuteRefundUseCase {
+  return new ExecuteRefundUseCase(
+    payments,
+    refunds,
+    payouts,
+    paymentGateway,
+    makeReverseProfessionalPayoutUseCase(),
+    lock,
+    eventBus,
+    failureReporter,
+  );
+}
 const destinationResolver = new ResolvePayoutDestinationUseCase(professionalOnboardings, companyPayoutAccounts);
 
 const stripePaymentWebhookVerifier: StripePaymentWebhookVerifier = new StripePaymentWebhookVerifierAdapter(
@@ -98,7 +153,7 @@ export function makeInitiateQuotePaymentUseCase(): InitiateQuotePaymentUseCase {
 }
 
 export function makeProcessCustomerPaymentWebhookUseCase(): ProcessCustomerPaymentWebhookUseCase {
-  return new ProcessCustomerPaymentWebhookUseCase(payments, paymentGateway, webhookEvents, eventBus);
+  return new ProcessCustomerPaymentWebhookUseCase(payments, paymentGateway, webhookEvents, eventBus, failureReporter, refunds);
 }
 
 export function makeExecuteProfessionalPayoutUseCase(): ExecuteProfessionalPayoutUseCase {
@@ -133,3 +188,12 @@ eventBus.subscribe(
   PaymentReleaseApproved,
   new ExecutePayoutOnReleaseApprovedSubscriber(makeExecuteProfessionalPayoutUseCase()),
 );
+
+// Module 77 — Refund & Dispute Financial Execution: audit-log subscriber
+// registrations, same convention as `dispute-resolution/compose.ts`'s own
+// `DisputeFinancialOutcomeDetermined` registration.
+const refundAuditLog = new PrismaAdminAuditLogRepository();
+eventBus.subscribe(PaymentRefunded, new RecordPaymentRefundedAuditLogSubscriber(refundAuditLog));
+eventBus.subscribe(RefundFailed, new RecordRefundFailedAuditLogSubscriber(refundAuditLog));
+eventBus.subscribe(ProfessionalPayoutReversed, new RecordProfessionalPayoutReversedAuditLogSubscriber(refundAuditLog));
+eventBus.subscribe(PayoutReversalFailed, new RecordPayoutReversalFailedAuditLogSubscriber(refundAuditLog));

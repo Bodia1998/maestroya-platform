@@ -47,6 +47,7 @@ function fakeChargeRefundedEvent(overrides: Record<string, unknown> = {}): Strip
         object: "charge",
         payment_intent: "pi_123",
         amount_refunded: 500,
+        refunds: { data: [{ id: "re_123", status: "succeeded" }] },
         ...overrides,
       },
     },
@@ -102,7 +103,22 @@ describe("StripePaymentWebhookVerifierAdapter (Module 73)", () => {
         chargeId: "ch_123",
         paymentIntentId: "pi_123",
         amountRefunded: 5,
+        refundId: "re_123",
+        status: "succeeded",
       });
+    }
+  });
+
+  it("extracts null refundId/status when the Charge carries no refund object", () => {
+    const stripe = fakeStripe(() => fakeChargeRefundedEvent({ refunds: { data: [] } }));
+    const adapter = new StripePaymentWebhookVerifierAdapter(stripe, "whsec_payments_test");
+
+    const result = adapter.verify("{}", "t=1,v1=validsig");
+
+    expect(result.valid).toBe(true);
+    if (result.valid) {
+      expect(result.event.chargeRefunded?.refundId).toBeNull();
+      expect(result.event.chargeRefunded?.status).toBeNull();
     }
   });
 

@@ -15,6 +15,8 @@ import { RecordDisputeFinancialOutcomeAuditLogSubscriber } from "@/application/u
 import { ResolveDisputeWithFinancialOutcomeUseCase } from "@/application/use-cases/dispute-resolution/resolve-dispute-with-financial-outcome.use-case";
 import { ResolveDisputeUseCase } from "@/application/use-cases/dispute/resolve-dispute.use-case";
 import { CreateFinancialAdjustmentUseCase } from "@/application/use-cases/financial/create-financial-adjustment.use-case";
+import { makeExecuteRefundUseCase } from "@/application/use-cases/payments/compose";
+import { DisputeFinancialOutcomeRefundExecutor } from "@/application/use-cases/refunds/dispute-financial-outcome-refund-executor";
 
 /**
  * Module 68 — Dispute Resolution & Financial Protection: composition root.
@@ -68,5 +70,10 @@ export function makeResolveDisputeWithFinancialOutcomeUseCase() {
     makeCreateFinancialAdjustmentUseCase(),
     eventBus,
     failureReporter,
+    // Module 77 — Refund & Dispute Financial Execution: the real Stripe
+    // money-movement executor — see `RefundExecutor`'s own doc comment
+    // for why `ResolveDisputeWithFinancialOutcomeUseCase` depends only on
+    // this port, never on `ExecuteRefundUseCase`/Stripe directly.
+    new DisputeFinancialOutcomeRefundExecutor(makeExecuteRefundUseCase(), failureReporter),
   );
 }

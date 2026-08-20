@@ -7,6 +7,8 @@ import type {
   PaymentAuthorizationRequest,
   PaymentAuthorizationResult,
   PaymentGateway,
+  PaymentRefundOptions,
+  PaymentRefundResult,
 } from "@/application/ports/payment-gateway";
 
 /**
@@ -103,22 +105,61 @@ export class StripePaymentGatewayAdapter implements PaymentGateway {
   }
 
   /**
-   * Module 73 explicitly scopes real refund execution out — see the
-   * module brief's "Do not prematurely implement: refunds" instruction
-   * and this class's own doc comment. Calling `stripe.refunds.create`
-   * here today, ahead of Module 77's eligibility/dispute policy, would let
-   * money start moving back out of the platform with no business rule
-   * governing when that's allowed. Throws the same loud,
-   * impossible-to-miss-in-testing failure `NullPaymentGateway` uses for
-   * "this capability doesn't exist yet" — never a silent no-op.
+   * Module 77 — Refund & Dispute Financial Execution: the real
+   * `stripe.refunds.create` call this class's own doc comment always
+   * reserved for this module. `externalReference` is always a
+   * `PaymentIntent.id` (never a raw Charge id) — Stripe resolves the
+   * correct, currently-active Charge for that PaymentIntent itself.
+   * `options.idempotencyKey` is passed straight through as Stripe's own
+   * `Idempotency-Key` request header, exactly like `authorize()` above —
+   * see `PaymentRefundOptions`'s own doc comment for why this is what
+   * makes a retried/concurrent `refund()` call for the same logical
+   * refund converge on a single Stripe Refund object.
    */
-  async refund(_externalReference: string, _amount: number): Promise<void> {
-    throw new PaymentGatewayError(
-      "NOT_IMPLEMENTED",
-      "Refunds are not implemented by Module 73 — Module 77 (Refund & Dispute Financial Execution) owns the real refund flow.",
-      false,
-    );
+  async refund(externalReference: string, amount: number, options?: PaymentRefundOptions): Promise<PaymentRefundResult> {
+    try {
+      const amountMinorUnits = toStripeMinorUnits(amount, "EUR");
+
+      const refund = await this.stripe.refunds.create(
+        {
+          payment_intent: externalReference,
+          amount: amountMinorUnits,
+        },
+        options?.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : undefined,
+      );
+
+      return { externalRefundReference: refund.id, status: mapStripeRefundStatus(refund.status) };
+    } catch (error) {
+      throw mapStripeError(error);
+    }
   }
+}
+
+/**
+ * Module 77 — Refund & Dispute Financial Execution: maps Stripe's own
+ * `Refund.status` (`"pending" | "requires_action" | "succeeded" |
+ * "failed" | "canceled"`) onto this port's processor-neutral vocabulary.
+ * `requires_action` collapses into `PENDING` — a card-network-specific
+ * follow-up state this platform does not yet act on differently; a later
+ * `charge.refunded`/`refund.updated` webhook reconciles the final state
+ * regardless (see `ProcessCustomerPaymentWebhookUseCase.
+ * handleChargeRefunded`).
+ */
+/**
+ * This SDK version (`stripe@17.7.0`) does not export a literal union type
+ * for `Refund.status` — `Refunds.d.ts` types the field as plain
+ * `string | null` (see its own doc comment enumerating the actual
+ * runtime values this mapper handles below: `"pending" |
+ * "requires_action" | "succeeded" | "failed" | "canceled"`).
+ * `Stripe.Refund["status"]` (an indexed-access type, rather than the
+ * nonexistent `Stripe.Refund.Status`) is the correct, currently-exported
+ * type for this field — comparing it against string literals below is
+ * fully type-safe without narrowing or casting.
+ */
+function mapStripeRefundStatus(status: Stripe.Refund["status"]): PaymentRefundResult["status"] {
+  if (status === "succeeded") return "SUCCEEDED";
+  if (status === "failed" || status === "canceled") return "FAILED";
+  return "PENDING";
 }
 
 /**

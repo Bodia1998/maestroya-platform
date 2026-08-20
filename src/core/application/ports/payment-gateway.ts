@@ -76,6 +76,35 @@ export interface PaymentAuthorizationResult {
   clientSecret: string | null;
 }
 
+/**
+ * Module 77 — Refund & Dispute Financial Execution: `refund`'s own result
+ * shape — Stripe's own `Refund.id` (opaque, persisted as `Refund.
+ * stripeRefundId`) and its own refund status, mapped onto this port's
+ * processor-neutral vocabulary rather than leaking Stripe's own string
+ * union past this adapter.
+ */
+export interface PaymentRefundResult {
+  externalRefundReference: string;
+  status: "SUCCEEDED" | "PENDING" | "FAILED";
+}
+
+export interface PaymentRefundOptions {
+  /**
+   * Module 77 — Refund & Dispute Financial Execution: an idempotency key
+   * the caller derives deterministically from the refund decision being
+   * executed (e.g. `refund:<financialAdjustmentId>`), never from a
+   * per-attempt random value — the exact same convention
+   * `PaymentAuthorizationRequest.idempotencyKey` already establishes for
+   * `authorize()`. Passed straight through to the gateway's own
+   * idempotent-request mechanism (Stripe's `Idempotency-Key` header for
+   * `StripePaymentGatewayAdapter`) so two concurrent or retried `refund()`
+   * calls for the *same* logical refund converge on the exact same
+   * external refund, even before either caller's own database write
+   * happens.
+   */
+  idempotencyKey?: string;
+}
+
 export interface PaymentGateway {
   /** Reserves funds with the processor without capturing them. */
   authorize(request: PaymentAuthorizationRequest): Promise<PaymentAuthorizationResult>;
@@ -86,8 +115,12 @@ export interface PaymentGateway {
 
   /** Refunds `amount` against the charge identified by
    *  `externalReference`. May be called more than once for the same
-   *  charge (partial refunds). */
-  refund(externalReference: string, amount: number): Promise<void>;
+   *  charge (partial refunds) — see `Payment.refund()`'s own "never refund
+   *  more than was paid" invariant, enforced by the caller before this is
+   *  ever invoked, never by this port itself. Module 77 — Refund & Dispute
+   *  Financial Execution is the one caller: see `PaymentRefundOptions`/
+   *  `PaymentRefundResult`'s own doc comments. */
+  refund(externalReference: string, amount: number, options?: PaymentRefundOptions): Promise<PaymentRefundResult>;
 
   /** Cancels/voids an authorized-but-not-yet-captured charge. */
   cancel(externalReference: string): Promise<void>;
