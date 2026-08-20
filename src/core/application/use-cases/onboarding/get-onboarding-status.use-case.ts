@@ -60,7 +60,11 @@ export class GetOnboardingStatusUseCase {
         this.onboardings.findPayoutAccountByProfessionalProfileId(professional.id),
         this.consents.findActiveByUserAndType(userId, "TERMS_OF_SERVICE"),
         this.consents.findActiveByUserAndType(userId, "PRIVACY_POLICY"),
-        this.verifications.findActiveByProfessionalProfileId(professional.id),
+        // Module 74 — Business Registration Enforcement: needs the case's
+        // documents (not just its status) to evaluate
+        // BUSINESS_REGISTRATION_VERIFIED — same repository method the
+        // professional's own verification dashboard already uses.
+        this.verifications.findActiveWithDocumentsByProfessionalProfileId(professional.id),
         this.addresses.findPrimaryByUserId(userId),
       ]);
 
@@ -68,6 +72,7 @@ export class GetOnboardingStatusUseCase {
       termsAccepted: termsConsent !== null,
       privacyPolicyAccepted: privacyConsent !== null,
       identityVerificationStatus: activeVerification?.status ?? null,
+      verificationDocumentTypes: activeVerification?.documents.map((d) => d.type) ?? [],
       profile: {
         businessName: professional.businessName,
         bio: professional.bio,

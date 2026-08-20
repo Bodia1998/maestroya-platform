@@ -58,6 +58,8 @@ describe("GetOnboardingStatusUseCase (Module 62)", () => {
     await consents.create({ userId: "user-1", type: "TERMS_OF_SERVICE", version: "v1", grantedAt: new Date() });
     await consents.create({ userId: "user-1", type: "PRIVACY_POLICY", version: "v1", grantedAt: new Date() });
     verifications.seedApproved(professional.id);
+    // Module 74 — Business Registration Enforcement.
+    verifications.seedDocument(professional.id, "BUSINESS_REGISTRATION");
     await onboardings.create(professional.id);
     await onboardings.upsertPayoutAccount({
       professionalProfileId: professional.id,

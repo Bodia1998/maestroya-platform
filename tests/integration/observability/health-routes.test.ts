@@ -82,16 +82,24 @@ describe("GET /api/health/ready (readiness)", () => {
     process.env.REDIS_URL = "redis://127.0.0.1:1"; // reserved, never-listening port
     vi.resetModules();
 
-    const { GET } = await import("@/app/api/health/ready/route");
-    const response = await GET(makeRequest());
+    // try/finally, not a plain statement after the assertions: if any
+    // assertion below throws (or this test times out), REDIS_URL must
+    // still be cleared, otherwise it silently leaks into every later
+    // test/file sharing this worker — turning one legitimate failure
+    // here into cascading, unrelated failures elsewhere (each paying the
+    // same real-connection latency this test intentionally exercises).
+    try {
+      const { GET } = await import("@/app/api/health/ready/route");
+      const response = await GET(makeRequest());
 
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.status).toBe("ok");
-    expect(body.checks.database).toBe("ok");
-    expect(body.checks.cache).toBe("error");
-
-    delete process.env.REDIS_URL;
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.status).toBe("ok");
+      expect(body.checks.database).toBe("ok");
+      expect(body.checks.cache).toBe("error");
+    } finally {
+      delete process.env.REDIS_URL;
+    }
   });
 
   it("Module 46: reports caching-layer health without affecting readiness", async () => {
@@ -122,16 +130,21 @@ describe("GET /api/health/ready (readiness)", () => {
     process.env.CACHE_BYPASS_ENABLED = "true";
     vi.resetModules();
 
-    const { GET } = await import("@/app/api/health/ready/route");
-    const response = await GET(makeRequest());
+    // Same try/finally reasoning as the "Module 44" test above — cleanup
+    // must run even if an assertion fails, or CACHE_BYPASS_ENABLED leaks
+    // into every later test/file on this worker.
+    try {
+      const { GET } = await import("@/app/api/health/ready/route");
+      const response = await GET(makeRequest());
 
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.status).toBe("ok");
-    expect(body.checks.cachingLayer.status).toBe("bypassed");
-    expect(body.checks.cachingLayer.bypass).toBe(true);
-
-    delete process.env.CACHE_BYPASS_ENABLED;
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.status).toBe("ok");
+      expect(body.checks.cachingLayer.status).toBe("bypassed");
+      expect(body.checks.cachingLayer.bypass).toBe(true);
+    } finally {
+      delete process.env.CACHE_BYPASS_ENABLED;
+    }
   });
 
   it("Module 45: reports background-job queue status without affecting readiness", async () => {
@@ -175,15 +188,17 @@ describe("GET /api/health/ready (readiness)", () => {
     process.env.SEARCH_INDEXING_ENABLED = "false";
     vi.resetModules();
 
-    const { GET } = await import("@/app/api/health/ready/route");
-    const response = await GET(makeRequest());
+    try {
+      const { GET } = await import("@/app/api/health/ready/route");
+      const response = await GET(makeRequest());
 
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.status).toBe("ok");
-    expect(body.checks.searchEngine.status).toBe("disabled");
-
-    delete process.env.SEARCH_INDEXING_ENABLED;
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.status).toBe("ok");
+      expect(body.checks.searchEngine.status).toBe("disabled");
+    } finally {
+      delete process.env.SEARCH_INDEXING_ENABLED;
+    }
   });
 
   it("Module 50: reports analytics-dashboard health without affecting readiness", async () => {
@@ -212,15 +227,17 @@ describe("GET /api/health/ready (readiness)", () => {
     process.env.ANALYTICS_REFRESH_ENABLED = "false";
     vi.resetModules();
 
-    const { GET } = await import("@/app/api/health/ready/route");
-    const response = await GET(makeRequest());
+    try {
+      const { GET } = await import("@/app/api/health/ready/route");
+      const response = await GET(makeRequest());
 
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.status).toBe("ok");
-    expect(body.checks.analytics.status).toBe("disabled");
-
-    delete process.env.ANALYTICS_REFRESH_ENABLED;
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.status).toBe("ok");
+      expect(body.checks.analytics.status).toBe("disabled");
+    } finally {
+      delete process.env.ANALYTICS_REFRESH_ENABLED;
+    }
   });
 
   it("Module 51: reports tracing health as 'disabled' by default, without affecting readiness", async () => {
@@ -255,20 +272,22 @@ describe("GET /api/health/ready (readiness)", () => {
     process.env.TRACING_ENABLED = "true";
     vi.resetModules();
 
-    const { startTracing } = await import("@/infrastructure/tracing/compose");
-    await startTracing();
+    try {
+      const { startTracing } = await import("@/infrastructure/tracing/compose");
+      await startTracing();
 
-    const { GET } = await import("@/app/api/health/ready/route");
-    const response = await GET(makeRequest());
+      const { GET } = await import("@/app/api/health/ready/route");
+      const response = await GET(makeRequest());
 
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.checks.tracing.status).toBe("ok");
-    expect(body.checks.tracing.provider).toBe("opentelemetry");
-    expect(body.checks.tracing.exporter).toBe("console");
-
-    vi.doUnmock("@/infrastructure/tracing/otel-sdk");
-    delete process.env.TRACING_ENABLED;
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.checks.tracing.status).toBe("ok");
+      expect(body.checks.tracing.provider).toBe("opentelemetry");
+      expect(body.checks.tracing.exporter).toBe("console");
+    } finally {
+      vi.doUnmock("@/infrastructure/tracing/otel-sdk");
+      delete process.env.TRACING_ENABLED;
+    }
   });
 
   it("Module 53: reports configuration health as 'ok' for the valid baseline env, without affecting readiness", async () => {
@@ -294,16 +313,18 @@ describe("GET /api/health/ready (readiness)", () => {
     process.env.SMS_PROVIDER = "twilio";
     vi.resetModules();
 
-    const { GET } = await import("@/app/api/health/ready/route");
-    const response = await GET(makeRequest());
+    try {
+      const { GET } = await import("@/app/api/health/ready/route");
+      const response = await GET(makeRequest());
 
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.status).toBe("ok");
-    expect(body.checks.configuration.status).toBe("degraded");
-    expect(body.checks.configuration.issues.length).toBeGreaterThan(0);
-
-    delete process.env.SMS_PROVIDER;
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.status).toBe("ok");
+      expect(body.checks.configuration.status).toBe("degraded");
+      expect(body.checks.configuration.issues.length).toBeGreaterThan(0);
+    } finally {
+      delete process.env.SMS_PROVIDER;
+    }
   });
 
   it("returns 503 when the database is unreachable", async () => {

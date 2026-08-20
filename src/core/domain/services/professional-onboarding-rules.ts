@@ -15,7 +15,10 @@
  * See docs/MODULE_62_PROFESSIONAL_ONBOARDING.md for the full module brief.
  */
 
-import type { ProfessionalVerificationStatusValue } from "@/domain/services/professional-verification-rules";
+import {
+  hasBusinessRegistrationDocument,
+  type ProfessionalVerificationStatusValue,
+} from "@/domain/services/professional-verification-rules";
 
 /** The fixed, ordered set of requirements a professional must satisfy
  *  before `ActivateProfessionalUseCase` will move them to ACTIVATED. Order
@@ -26,6 +29,10 @@ export const ONBOARDING_STEP_VALUES = [
   "TERMS_ACCEPTED",
   "PRIVACY_POLICY_ACCEPTED",
   "IDENTITY_VERIFIED",
+  /** Module 74 — Business Registration Enforcement: a solo professional
+   *  must also have an APPROVED business-registration document before
+   *  activation — see isBusinessRegistrationVerified below. */
+  "BUSINESS_REGISTRATION_VERIFIED",
   "PROFILE_COMPLETE",
   "PAYOUT_CONNECTED",
 ] as const;
@@ -114,6 +121,31 @@ export function isIdentityVerified(status: ProfessionalVerificationStatusValue |
   return status === "APPROVED";
 }
 
+/**
+ * Module 74 — Business Registration Enforcement. Satisfied only when the
+ * professional's active verification case is APPROVED (this architecture
+ * approves/rejects a case as a whole — see ApproveProfessionalVerificationUseCase
+ * — there is no separate per-document review step) *and* that case's
+ * documents include at least one of the Gestor-configured
+ * BUSINESS_REGISTRATION_DOCUMENT_TYPES (professional-verification-rules.ts).
+ *
+ * This deliberately mirrors isIdentityVerified's shape (status === "APPROVED")
+ * plus one extra presence check, rather than inventing a second document
+ * lifecycle. A case that is PENDING, REJECTED, RESUBMISSION_REQUIRED, or
+ * EXPIRED never satisfies this, matching the module's required PENDING/
+ * REJECTED/EXPIRED-block, APPROVED-satisfy behavior; a RESUBMISSION_REQUIRED
+ * case clears the professional's prior decision the same way it already
+ * does for identity (see professional-verification-rules.ts's TRANSITIONS —
+ * the case must move back through PENDING/UNDER_REVIEW to a fresh APPROVED
+ * before this is true again).
+ */
+export function isBusinessRegistrationVerified(
+  status: ProfessionalVerificationStatusValue | null,
+  documentTypes: readonly string[],
+): boolean {
+  return status === "APPROVED" && hasBusinessRegistrationDocument(documentTypes);
+}
+
 /** A payout account is "connected" for activation purposes once a
  *  destination has been recorded — `PENDING` (freshly submitted IBAN,
  *  awaiting the future admin/bank-level verification step) already counts:
@@ -135,6 +167,11 @@ export interface OnboardingProgressInput {
   termsAccepted: boolean;
   privacyPolicyAccepted: boolean;
   identityVerificationStatus: ProfessionalVerificationStatusValue | null;
+  /** Module 74 — Business Registration Enforcement: the document types
+   *  present on the professional's active verification case (empty array
+   *  if there is no active case) — the same case identityVerificationStatus
+   *  is derived from. See isBusinessRegistrationVerified. */
+  verificationDocumentTypes: readonly string[];
   profile: ProfileCompletenessInput;
   payoutAccountStatus: PayoutAccountStatusValue | null;
 }
@@ -157,6 +194,10 @@ export function computeOnboardingProgress(input: OnboardingProgressInput): Onboa
     TERMS_ACCEPTED: input.termsAccepted,
     PRIVACY_POLICY_ACCEPTED: input.privacyPolicyAccepted,
     IDENTITY_VERIFIED: isIdentityVerified(input.identityVerificationStatus),
+    BUSINESS_REGISTRATION_VERIFIED: isBusinessRegistrationVerified(
+      input.identityVerificationStatus,
+      input.verificationDocumentTypes,
+    ),
     PROFILE_COMPLETE: isProfileComplete(input.profile),
     PAYOUT_CONNECTED: isPayoutAccountConnected(input.payoutAccountStatus),
   };
@@ -179,6 +220,7 @@ export const ONBOARDING_STEP_LABELS: Record<OnboardingStepValue, string> = {
   TERMS_ACCEPTED: "Accept the Terms & Conditions",
   PRIVACY_POLICY_ACCEPTED: "Accept the Privacy Policy",
   IDENTITY_VERIFIED: "Complete identity verification",
+  BUSINESS_REGISTRATION_VERIFIED: "Submit and get approval for a business-registration document",
   PROFILE_COMPLETE: "Complete your professional profile",
   PAYOUT_CONNECTED: "Add a payout destination",
 };

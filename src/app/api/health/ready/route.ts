@@ -158,24 +158,68 @@ export async function GET(request: NextRequest) {
   try {
     await prisma.$queryRaw`SELECT 1`;
 
+    // `cachingLayer` reads the shared CacheManager's own hit/miss
+    // counters — it must be sampled *before* `analytics` below performs
+    // its own cache read (via Promise.all), or its stats would reflect a
+    // miss that check itself just caused rather than this instance's
+    // actual, pre-existing cache activity. Every purely synchronous,
+    // side-effect-free read (`realtime`, `tracing`, `configuration`) is
+    // sampled alongside it — ordering among those never mattered.
+    const cachingLayer = getCacheHealth();
+    const realtime = getRealtimeHealth();
+    const tracing = getTracingHealth();
+    const configuration = getConfigHealth();
+
+    // Every check below is independent of every *other* check here (none
+    // reads another's result) — so they run concurrently rather than one
+    // `await` after another. Sequential awaiting previously meant this
+    // route's total latency was the *sum* of every optional/
+    // visibility-only check's own worst case (each individually bounded,
+    // but stacking to several seconds when more than one degraded
+    // dependency was slow at once); running them concurrently bounds the
+    // route's total latency to the single slowest check instead, which
+    // is what a readiness probe actually needs. See `checkCache`'s own
+    // doc comment for why the one check that does real network I/O
+    // (`Redis PING`) additionally has its own short timeout on top of
+    // this.
+    const [
+      cache,
+      queue,
+      searchEngine,
+      smsProvider,
+      analytics,
+      backup,
+      disasterRecovery,
+      readReplicas,
+    ] = await Promise.all([
+      checkCache(requestId),
+      getBackgroundJobsHealth(),
+      getSearchEngineHealth(),
+      getSmsProviderHealth(),
+      getAnalyticsHealth(),
+      getBackupHealth(),
+      getRecoveryHealth(),
+      getReadReplicaHealth(),
+    ]);
+
     return NextResponse.json(
       {
         status: "ok",
         timestamp: new Date().toISOString(),
         checks: {
           database: "ok",
-          cache: await checkCache(requestId),
-          queue: await getBackgroundJobsHealth(),
-          cachingLayer: getCacheHealth(),
-          searchEngine: await getSearchEngineHealth(),
-          realtime: getRealtimeHealth(),
-          smsProvider: await getSmsProviderHealth(),
-          analytics: await getAnalyticsHealth(),
-          tracing: getTracingHealth(),
-          configuration: getConfigHealth(),
-          backup: await getBackupHealth(),
-          disasterRecovery: await getRecoveryHealth(),
-          readReplicas: await getReadReplicaHealth(),
+          cache,
+          queue,
+          cachingLayer,
+          searchEngine,
+          realtime,
+          smsProvider,
+          analytics,
+          tracing,
+          configuration,
+          backup,
+          disasterRecovery,
+          readReplicas,
         },
       },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },
@@ -220,10 +264,44 @@ async function checkCache(requestId: string): Promise<"ok" | "error" | "not_conf
   if (!client) return "not_configured";
 
   try {
-    await client.command(["PING"]);
+    // Bounded independently of `RedisClient`'s own general-purpose
+    // connect/command timeouts (3000ms/2000ms — reasonable for a normal
+    // cache operation, too close to this route's own latency budget for
+    // a readiness *probe*, which must resolve quickly rather than wait
+    // out a slow/unreachable dependency). A failing `PING` already
+    // resolves to `"error"` almost immediately (the OS reports a refused
+    // connection near-instantly on a genuinely closed port) — this only
+    // guards the rarer case of a connection attempt that hangs instead of
+    // failing fast (e.g. packets silently dropped rather than refused).
+    await withTimeout(client.command(["PING"]), CACHE_CHECK_TIMEOUT_MS, "cache readiness check");
     return "ok";
   } catch (error) {
     logger.warn("readiness_cache_check_failed", { requestId, error });
     return "error";
   }
+}
+
+const CACHE_CHECK_TIMEOUT_MS = 1500;
+
+/**
+ * Races `promise` against a timer, rejecting after `ms` if `promise`
+ * hasn't settled yet. `promise` itself is still allowed to settle later
+ * (its own rejection is consumed by the `.then` below either way, so
+ * this never produces an unhandled-rejection warning) — this only stops
+ * a slow dependency from delaying this route's *response*.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
 }
