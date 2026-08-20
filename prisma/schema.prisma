@@ -1011,6 +1011,15 @@ enum NotificationType {
   JOB_COMPLETION_CONFIRMATION_TIMED_OUT
 }
 
+/// Module 74 — Business Registration Enforcement: `BUSINESS_REGISTRATION`
+/// is a generic, deliberately non-legally-specific document type — proof
+/// that a solo professional is a registered autónomo/business. The exact
+/// accepted document type(s) (e.g. a specific Spanish tax/registration
+/// form) are a pending Gestor (business/legal owner) decision, not made
+/// here — see BUSINESS_REGISTRATION_DOCUMENT_TYPES in
+/// professional-verification-rules.ts, the single place that decision is
+/// applied once made. Reused by the existing Module 17 ProfessionalVerification
+/// case/document machinery — no parallel verification system introduced.
 enum VerificationDocumentType {
   NATIONAL_ID
   PASSPORT
@@ -1020,6 +1029,7 @@ enum VerificationDocumentType {
   INSURANCE_CERTIFICATE
   PROFESSIONAL_CERTIFICATION
   PROOF_OF_ADDRESS
+  BUSINESS_REGISTRATION
   OTHER
 }
 

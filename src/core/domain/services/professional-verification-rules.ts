@@ -33,6 +33,7 @@ export const VERIFICATION_DOCUMENT_TYPE_VALUES = [
   "INSURANCE_CERTIFICATE",
   "PROFESSIONAL_CERTIFICATION",
   "PROOF_OF_ADDRESS",
+  "BUSINESS_REGISTRATION",
   "OTHER",
 ] as const;
 export type VerificationDocumentTypeValue = (typeof VERIFICATION_DOCUMENT_TYPE_VALUES)[number];
@@ -61,6 +62,56 @@ export const IDENTITY_DOCUMENT_TYPES: readonly VerificationDocumentTypeValue[] =
   "PASSPORT",
   "DRIVER_LICENSE",
 ];
+
+// ============================================================================
+// Module 74 — Business Registration Enforcement
+// ============================================================================
+//
+// A solo professional must prove they are a registered autónomo/business
+// before they can be ACTIVATED (see ActivateProfessionalUseCase /
+// professional-onboarding-rules.ts's BUSINESS_REGISTRATION_VERIFIED step).
+// This reuses the exact same case/document machinery as identity
+// verification above — no parallel verification system, no per-document
+// admin review step (this architecture reviews/approves a
+// ProfessionalVerification case as a whole; see
+// ApproveProfessionalVerificationUseCase), so "the business-registration
+// document is approved" is defined as "the case containing it is
+// APPROVED" — identical in shape to how IDENTITY_VERIFIED is already
+// derived from case status alone.
+
+/**
+ * GESTOR DECISION PENDING: the exact accepted business-registration
+ * document type(s) — e.g. a specific Spanish tax/registration form,
+ * "alta de autónomo", IAE certificate, or similar — have not been
+ * specified by the business/legal owner (Gestor) as of this module. This
+ * list defaults to the single generic `BUSINESS_REGISTRATION` document
+ * type (see VerificationDocumentType in schema.prisma) as a technically
+ * safe placeholder:
+ *   - it is not itself a legal claim about which document satisfies the
+ *     requirement — an admin still manually reviews and approves the
+ *     actual uploaded file before it counts for anything;
+ *   - narrowing/widening this list to whatever specific document type(s)
+ *     the Gestor decides on is a one-line change here; nothing else in
+ *     the codebase needs to change (see hasBusinessRegistrationDocument
+ *     below and isBusinessRegistrationVerified in
+ *     professional-onboarding-rules.ts, both of which read this list
+ *     rather than hard-coding a type).
+ * Multiple document types may be listed if the Gestor decides more than
+ * one type should satisfy the requirement (hasBusinessRegistrationDocument
+ * treats the list as "any one of these").
+ */
+export const BUSINESS_REGISTRATION_DOCUMENT_TYPES: readonly VerificationDocumentTypeValue[] = [
+  "BUSINESS_REGISTRATION",
+];
+
+/** Whether at least one of the given document types (typically the active
+ *  case's documents) is one of BUSINESS_REGISTRATION_DOCUMENT_TYPES.
+ *  Presence only — combine with the case's own APPROVED status (see
+ *  isBusinessRegistrationVerified in professional-onboarding-rules.ts) to
+ *  determine whether the requirement is actually satisfied. */
+export function hasBusinessRegistrationDocument(documentTypes: readonly string[]): boolean {
+  return documentTypes.some((t) => (BUSINESS_REGISTRATION_DOCUMENT_TYPES as readonly string[]).includes(t));
+}
 
 /**
  * The verification state machine. DRAFT is the pre-submission assembly

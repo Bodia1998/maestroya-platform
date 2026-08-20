@@ -179,6 +179,10 @@ export class FakeConsentRepository implements ConsentRepository {
  *  a path this fake wasn't built for, rather than silently no-op'ing. */
 export class FakeProfessionalVerificationRepository implements ProfessionalVerificationRepository {
   active = new Map<string, ProfessionalVerificationRecord>();
+  /** Module 74 — Business Registration Enforcement: documents on the
+   *  active case, keyed by professionalProfileId — mirrors what
+   *  `findActiveWithDocumentsByProfessionalProfileId` needs to return. */
+  documents = new Map<string, VerificationDocumentRecord[]>();
 
   seedApproved(professionalProfileId: string): void {
     this.active.set(professionalProfileId, {
@@ -198,6 +202,38 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+  }
+
+  /** Module 74 — Business Registration Enforcement: adds a document of the
+   *  given type to the professional's currently-active case (must already
+   *  have been seeded via seedApproved/seedStatus). Status defaults to
+   *  "APPROVED" — this repository/architecture reviews a case as a whole,
+   *  not per-document (see hasBusinessRegistrationDocument's doc comment),
+   *  so a document's own `status` field is not what activation gating
+   *  reads; it is only carried here for interface completeness. */
+  seedDocument(
+    professionalProfileId: string,
+    type: VerificationDocumentRecord["type"],
+    status: VerificationDocumentRecord["status"] = "APPROVED",
+  ): VerificationDocumentRecord {
+    const verification = this.active.get(professionalProfileId);
+    if (!verification) throw new Error("seedApproved/seedStatus must be called before seedDocument");
+    const document: VerificationDocumentRecord = {
+      id: nextId("document"),
+      verificationId: verification.id,
+      type,
+      status,
+      fileUrl: "https://example.com/doc.pdf",
+      originalFilename: "document.pdf",
+      mimeType: "application/pdf",
+      fileSizeBytes: 1024,
+      rejectionReason: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const existing = this.documents.get(professionalProfileId) ?? [];
+    this.documents.set(professionalProfileId, [...existing, document]);
+    return document;
   }
 
   seedStatus(professionalProfileId: string, status: ProfessionalVerificationRecord["status"]): void {
@@ -224,10 +260,15 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
     return this.active.get(professionalProfileId) ?? null;
   }
 
-  create(): Promise<ProfessionalVerificationRecord> {
-    throw new Error("not implemented in this fake");
+  async findActiveWithDocumentsByProfessionalProfileId(
+    professionalProfileId: string,
+  ): Promise<ProfessionalVerificationWithDocuments | null> {
+    const verification = this.active.get(professionalProfileId);
+    if (!verification) return null;
+    return { ...verification, documents: this.documents.get(professionalProfileId) ?? [] };
   }
-  findActiveWithDocumentsByProfessionalProfileId(): Promise<ProfessionalVerificationWithDocuments | null> {
+
+  create(): Promise<ProfessionalVerificationRecord> {
     throw new Error("not implemented in this fake");
   }
   findById(): Promise<ProfessionalVerificationRecord | null> {

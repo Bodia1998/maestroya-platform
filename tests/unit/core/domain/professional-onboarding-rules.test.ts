@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   computeOnboardingProgress,
+  isBusinessRegistrationVerified,
   isIdentityVerified,
   isPayoutAccountConnected,
   isProfileComplete,
@@ -64,6 +65,26 @@ describe("professional-onboarding-rules (Module 62)", () => {
     });
   });
 
+  describe("isBusinessRegistrationVerified (Module 74)", () => {
+    it("is true only when the case is APPROVED and a business-registration document is present", () => {
+      expect(isBusinessRegistrationVerified("APPROVED", ["BUSINESS_REGISTRATION"])).toBe(true);
+    });
+
+    it("is false when the case is APPROVED but no business-registration document is present", () => {
+      expect(isBusinessRegistrationVerified("APPROVED", ["NATIONAL_ID"])).toBe(false);
+      expect(isBusinessRegistrationVerified("APPROVED", [])).toBe(false);
+    });
+
+    it("is false when a business-registration document exists but the case is not APPROVED", () => {
+      expect(isBusinessRegistrationVerified("PENDING", ["BUSINESS_REGISTRATION"])).toBe(false);
+      expect(isBusinessRegistrationVerified("UNDER_REVIEW", ["BUSINESS_REGISTRATION"])).toBe(false);
+      expect(isBusinessRegistrationVerified("REJECTED", ["BUSINESS_REGISTRATION"])).toBe(false);
+      expect(isBusinessRegistrationVerified("RESUBMISSION_REQUIRED", ["BUSINESS_REGISTRATION"])).toBe(false);
+      expect(isBusinessRegistrationVerified("EXPIRED", ["BUSINESS_REGISTRATION"])).toBe(false);
+      expect(isBusinessRegistrationVerified(null, ["BUSINESS_REGISTRATION"])).toBe(false);
+    });
+  });
+
   describe("isPayoutAccountConnected", () => {
     it("treats PENDING and VERIFIED as connected, REJECTED and null as not", () => {
       expect(isPayoutAccountConnected("PENDING")).toBe(true);
@@ -74,18 +95,19 @@ describe("professional-onboarding-rules (Module 62)", () => {
   });
 
   describe("computeOnboardingProgress", () => {
-    it("is eligible for activation only when all five steps are complete", () => {
+    it("is eligible for activation only when all six steps are complete", () => {
       const progress = computeOnboardingProgress({
         termsAccepted: true,
         privacyPolicyAccepted: true,
         identityVerificationStatus: "APPROVED",
+        verificationDocumentTypes: ["BUSINESS_REGISTRATION"],
         profile: completeProfile(),
         payoutAccountStatus: "PENDING",
       });
 
       expect(progress.isEligibleForActivation).toBe(true);
-      expect(progress.completedStepCount).toBe(5);
-      expect(progress.totalStepCount).toBe(5);
+      expect(progress.completedStepCount).toBe(6);
+      expect(progress.totalStepCount).toBe(6);
       expect(progress.steps.every((s) => s.complete)).toBe(true);
     });
 
@@ -94,6 +116,7 @@ describe("professional-onboarding-rules (Module 62)", () => {
         termsAccepted: true,
         privacyPolicyAccepted: true,
         identityVerificationStatus: "PENDING",
+        verificationDocumentTypes: [],
         profile: completeProfile(),
         payoutAccountStatus: "PENDING",
       });
@@ -109,12 +132,28 @@ describe("professional-onboarding-rules (Module 62)", () => {
         termsAccepted: false,
         privacyPolicyAccepted: false,
         identityVerificationStatus: null,
+        verificationDocumentTypes: [],
         profile: completeProfile({ businessName: null, categoryIds: [], hasPrimaryAddress: false }),
         payoutAccountStatus: null,
       });
 
       expect(progress.completedStepCount).toBe(0);
       expect(progress.isEligibleForActivation).toBe(false);
+    });
+
+    it("is not eligible when identity is APPROVED but no business-registration document is present (Module 74)", () => {
+      const progress = computeOnboardingProgress({
+        termsAccepted: true,
+        privacyPolicyAccepted: true,
+        identityVerificationStatus: "APPROVED",
+        verificationDocumentTypes: ["NATIONAL_ID"],
+        profile: completeProfile(),
+        payoutAccountStatus: "PENDING",
+      });
+
+      expect(progress.isEligibleForActivation).toBe(false);
+      const businessRegStep = progress.steps.find((s) => s.step === "BUSINESS_REGISTRATION_VERIFIED");
+      expect(businessRegStep?.complete).toBe(false);
     });
   });
 

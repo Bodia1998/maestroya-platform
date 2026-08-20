@@ -58,6 +58,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   INSURANCE_CERTIFICATE: "Insurance certificate",
   PROFESSIONAL_CERTIFICATION: "Professional certification",
   PROOF_OF_ADDRESS: "Proof of address",
+  BUSINESS_REGISTRATION: "Business registration",
   OTHER: "Other",
 };
 

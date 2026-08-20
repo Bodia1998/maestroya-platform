@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   APPROVAL_VALIDITY_DAYS,
+  BUSINESS_REGISTRATION_DOCUMENT_TYPES,
   MAX_REVIEW_REASON_LENGTH,
   MIN_REVIEW_REASON_LENGTH,
+  VERIFICATION_DOCUMENT_TYPE_VALUES,
   canApprove,
   canModifyDocuments,
   canReject,
@@ -16,6 +18,7 @@ import {
   canSyncProviderStatus,
   canTransition,
   computeExpiresAt,
+  hasBusinessRegistrationDocument,
   hasRequiredDocuments,
   isActiveStatus,
   isValidReviewReason,
@@ -87,6 +90,28 @@ describe("professional-verification-rules (Module 17)", () => {
     it("rejects a set with no identity document", () => {
       expect(hasRequiredDocuments([])).toBe(false);
       expect(hasRequiredDocuments(["INSURANCE_CERTIFICATE", "TAX_CERTIFICATE"])).toBe(false);
+    });
+  });
+
+  describe("Module 74 — Business Registration Enforcement", () => {
+    it("VERIFICATION_DOCUMENT_TYPE_VALUES includes the new BUSINESS_REGISTRATION type", () => {
+      expect(VERIFICATION_DOCUMENT_TYPE_VALUES).toContain("BUSINESS_REGISTRATION");
+    });
+
+    it("BUSINESS_REGISTRATION_DOCUMENT_TYPES defaults to the generic BUSINESS_REGISTRATION type (Gestor decision pending)", () => {
+      expect(BUSINESS_REGISTRATION_DOCUMENT_TYPES).toEqual(["BUSINESS_REGISTRATION"]);
+    });
+
+    describe("hasBusinessRegistrationDocument", () => {
+      it("is true when a configured business-registration type is present", () => {
+        expect(hasBusinessRegistrationDocument(["BUSINESS_REGISTRATION"])).toBe(true);
+        expect(hasBusinessRegistrationDocument(["NATIONAL_ID", "BUSINESS_REGISTRATION"])).toBe(true);
+      });
+
+      it("is false when no configured business-registration type is present", () => {
+        expect(hasBusinessRegistrationDocument([])).toBe(false);
+        expect(hasBusinessRegistrationDocument(["NATIONAL_ID", "BUSINESS_LICENSE"])).toBe(false);
+      });
     });
   });
 

@@ -74,6 +74,10 @@ describe("Professional Onboarding end-to-end flow (Module 62)", () => {
 
     // 4. Persona verification (Module 59) — reused, not reimplemented.
     verifications.seedApproved(professional.id);
+    // Module 74 — Business Registration Enforcement: a solo professional
+    // must also have an approved business-registration document on the
+    // same case before activation is eligible.
+    verifications.seedDocument(professional.id, "BUSINESS_REGISTRATION");
 
     // 5. Complete the professional profile (existing Professional module).
     await professionals.update(professional.id, {
