@@ -73,9 +73,12 @@ function extractChargeRefunded(event: Stripe.Event): StripeChargeRefundedPayload
   if (event.type !== "charge.refunded") return null;
 
   const charge = event.data.object as Stripe.Charge;
+  const latestRefund = charge.refunds?.data?.[0] ?? null;
   return {
     chargeId: charge.id,
     paymentIntentId: typeof charge.payment_intent === "string" ? charge.payment_intent : (charge.payment_intent?.id ?? null),
     amountRefunded: charge.amount_refunded / 100,
+    refundId: latestRefund?.id ?? null,
+    status: latestRefund?.status ?? null,
   };
 }

@@ -74,6 +74,40 @@ export interface CreateTransferResult {
   stripeTransferId: string;
 }
 
+/**
+ * Module 77 — Refund & Dispute Financial Execution: reverses an already-
+ * created Stripe Transfer (Stripe's own `POST /v1/transfers/:id/reversals`)
+ * — the Connect-side counterpart to a customer refund when a professional
+ * has already been paid for a Job whose Payment is now being refunded.
+ * Only a *full* reversal is supported (`amount` is always the Payout's own
+ * full `amount` — see `ReverseProfessionalPayoutUseCase`'s own doc comment
+ * on why a partial reversal is out of scope for this module).
+ */
+export interface ReverseTransferRequest {
+  /** The Stripe `Transfer.id` (`tr_...`) being reversed — always
+   *  `Payout.stripeTransferId`, NEVER accepted from client input. */
+  stripeTransferId: string;
+  /** Always the Payout's own full `amount`, server-derived — NEVER
+   *  accepted from client input. */
+  amount: number;
+  currency: string;
+  /** Stripe's own `Idempotency-Key` request header — deterministically
+   *  derived by the caller from the Payout being reversed
+   *  (`payout-reversal:<payoutId>`) and reused unchanged across every
+   *  retried reversal attempt — same convention as `CreateTransferRequest.
+   *  idempotencyKey`. */
+  idempotencyKey: string;
+  metadata: {
+    payoutId: string;
+  };
+}
+
+export interface ReverseTransferResult {
+  /** Stripe's own `TransferReversal.id` (`trr_...`) — persisted as
+   *  `Payout.stripeReversalId` the moment this call returns successfully. */
+  stripeReversalId: string;
+}
+
 export interface StripeTransferGateway {
   /**
    * Creates a Stripe Transfer moving `request.amount` from the platform's
@@ -85,4 +119,13 @@ export interface StripeTransferGateway {
    * result.
    */
   createTransfer(request: CreateTransferRequest): Promise<CreateTransferResult>;
+
+  /**
+   * Module 77 — Refund & Dispute Financial Execution: reverses a
+   * previously created Transfer — see `ReverseTransferRequest`'s own doc
+   * comment. Idempotent at the Stripe API level via
+   * `request.idempotencyKey`, exactly like `createTransfer`. Throws
+   * `StripeTransferError` for every failure mode.
+   */
+  reverseTransfer(request: ReverseTransferRequest): Promise<ReverseTransferResult>;
 }

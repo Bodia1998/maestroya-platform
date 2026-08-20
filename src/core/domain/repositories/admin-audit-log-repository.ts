@@ -152,7 +152,15 @@ export type AdminAuditAction =
   // comment). Distinct from the pre-existing DISPUTE_RESOLVED (Module 21,
   // the *business* resolution alone) — this is specifically the
   // *financial* consequence of that resolution.
-  | "DISPUTE_RESOLUTION_FINANCIAL_OUTCOME_DETERMINED";
+  | "DISPUTE_RESOLUTION_FINANCIAL_OUTCOME_DETERMINED"
+  // Module 77 — Refund & Dispute Financial Execution: the real Stripe
+  // money-movement counterpart to DISPUTE_RESOLUTION_FINANCIAL_OUTCOME_DETERMINED
+  // above — that entry records WHAT was decided, these record what
+  // actually happened with Stripe as a result.
+  | "PAYMENT_REFUNDED"
+  | "REFUND_FAILED"
+  | "PROFESSIONAL_PAYOUT_REVERSED"
+  | "PAYOUT_REVERSAL_FAILED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved

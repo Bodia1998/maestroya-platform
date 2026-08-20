@@ -6,6 +6,8 @@ import { StripeTransferError, type StripeTransferErrorCategory } from "@/domain/
 import type {
   CreateTransferRequest,
   CreateTransferResult,
+  ReverseTransferRequest,
+  ReverseTransferResult,
   StripeTransferGateway,
 } from "@/application/ports/stripe-transfer-gateway";
 import { toStripeMinorUnits } from "@/infrastructure/payments/stripe/stripe-payment-gateway";
@@ -63,6 +65,33 @@ export class StripeTransferGatewayAdapter implements StripeTransferGateway {
       );
 
       return { stripeTransferId: transfer.id };
+    } catch (error) {
+      throw mapStripeError(error);
+    }
+  }
+
+  /**
+   * Module 77 — Refund & Dispute Financial Execution: reverses a
+   * previously created Transfer via `stripe.transfers.createReversal` —
+   * the one new method this module adds to this class, reusing the exact
+   * same shared `stripe` client and `mapStripeError`/`toStripeMinorUnits`
+   * helpers `createTransfer` above already uses. No second Stripe
+   * transfer/reversal implementation exists anywhere in this codebase.
+   */
+  async reverseTransfer(request: ReverseTransferRequest): Promise<ReverseTransferResult> {
+    try {
+      const amountMinorUnits = toStripeMinorUnits(request.amount, request.currency);
+
+      const reversal = await this.stripe.transfers.createReversal(
+        request.stripeTransferId,
+        {
+          amount: amountMinorUnits,
+          metadata: { payoutId: request.metadata.payoutId },
+        },
+        { idempotencyKey: request.idempotencyKey },
+      );
+
+      return { stripeReversalId: reversal.id };
     } catch (error) {
       throw mapStripeError(error);
     }

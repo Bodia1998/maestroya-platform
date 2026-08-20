@@ -846,6 +846,11 @@ enum PayoutStatus {
   PAID
   FAILED
   CANCELLED
+  /// Module 77 — Refund & Dispute Financial Execution: a previously `PAID`
+  /// Payout whose Stripe Transfer has been reversed (a post-payout refund
+  /// — see `ReverseProfessionalPayoutUseCase`). Terminal, reachable only
+  /// from `PAID`.
+  REVERSED
 }
 
 /// Module 22 — Commission & Financial: the fixed vocabulary of financial
@@ -2476,6 +2481,32 @@ model Payout {
   /// below is set only once, on the attempt that actually succeeds.
   lastAttemptedAt DateTime?
 
+  /// Module 77 — Refund & Dispute Financial Execution: Stripe's own
+  /// `Transfer Reversal.id` (`trr_...`) — set only once `status` first
+  /// reaches `REVERSED`.
+  stripeReversalId String? @unique
+
+  /// Module 77: the deterministic `payout-reversal:<payoutId>` key — this
+  /// row's own duplicate-reversal guard and the Stripe idempotency key
+  /// reused across every retried reversal attempt — same role as
+  /// `idempotencyKey` above, for the reversal operation.
+  reversalIdempotencyKey String? @unique
+
+  /// Module 77: the amount actually reversed — always equal to `amount`
+  /// today (only a full reversal is supported).
+  reversedAmount Decimal? @db.Decimal(10, 2)
+
+  /// Module 77: set only when a reversal attempt fails. Cleared back to
+  /// null once a later retry succeeds — same convention as `failureReason`.
+  reversalFailureReason String?
+
+  /// Module 77: how many times a reversal has been attempted — same
+  /// observability-only role as `attemptCount`.
+  reversalAttemptCount Int @default(0)
+
+  /// Module 77: wall-clock time this Payout was actually reversed.
+  reversedAt DateTime?
+
   professionalProfile ProfessionalProfile? @relation("PayoutToProfessional", fields: [professionalProfileId], references: [id], onDelete: Restrict)
   companyProfile      CompanyProfile?      @relation("PayoutToCompany", fields: [companyProfileId], references: [id], onDelete: Restrict)
 
@@ -2503,6 +2534,32 @@ model Refund {
   stripeRefundId    String?      @unique
   processedAt       DateTime?
   notes             String?      @db.Text
+
+  /// Module 77 — Refund & Dispute Financial Execution: the
+  /// `FinancialAdjustment` (a refund-type one) this Refund executes.
+  /// `@unique` — the database-level guarantee that at most one Stripe
+  /// refund is ever executed per already-decided adjustment (see
+  /// `RefundRepository`'s own doc comment). Deliberately a plain scalar
+  /// column with no Prisma relation object — mirrors `Payout.paymentId`'s
+  /// own precedent (Module 76) of touching only this migration's own
+  /// model, never `FinancialAdjustment`'s; the FK constraint is still
+  /// added at the database level (see this migration's own SQL).
+  financialAdjustmentId String? @unique @db.Uuid
+
+  /// Module 77: the deterministic `refund:<financialAdjustmentId>` key —
+  /// this row's own duplicate guard and the Stripe request idempotency
+  /// key reused across every retried execution attempt.
+  idempotencyKey String? @unique
+
+  /// Module 77: set only when `status === "FAILED"` — the reason
+  /// surfaced by the most recent failed attempt. Cleared back to null
+  /// once a later retry succeeds.
+  failureReason String?
+
+  /// Module 77: how many times execution of this refund has been
+  /// attempted — observability/reconciliation only, incremented on every
+  /// `FAILED` outcome.
+  attemptCount Int @default(0)
 
   payment         Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
   requestedByUser User    @relation("RefundRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)

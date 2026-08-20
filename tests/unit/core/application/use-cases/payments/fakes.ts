@@ -211,7 +211,7 @@ export class FakePaymentRepository implements PaymentRepository {
     throw new Error("not implemented in this fake");
   }
 
-  async sumProcessedRefunds(): Promise<number> {
+  async sumProcessedRefunds(_paymentId: string): Promise<number> {
     return 0;
   }
 
@@ -279,6 +279,8 @@ export class FakePaymentGateway implements PaymentGateway {
   nextError: Error | null = null;
   private byIdempotencyKey = new Map<string, string>();
   private counter = 0;
+  private refundsByIdempotencyKey = new Map<string, string>();
+  private refundCounter = 0;
 
   async authorize(request: PaymentAuthorizationRequest): Promise<PaymentAuthorizationResult> {
     if (this.nextError) throw this.nextError;
@@ -306,9 +308,22 @@ export class FakePaymentGateway implements PaymentGateway {
     this.cancelCalls.push(externalReference);
   }
 
-  async refund(externalReference: string, amount: number): Promise<void> {
+  async refund(
+    externalReference: string,
+    amount: number,
+    options?: { idempotencyKey?: string },
+  ): Promise<{ externalRefundReference: string; status: "SUCCEEDED" | "PENDING" | "FAILED" }> {
     if (this.nextError) throw this.nextError;
     this.refundCalls.push({ externalReference, amount });
+
+    const key = options?.idempotencyKey;
+    if (key && this.refundsByIdempotencyKey.has(key)) {
+      return { externalRefundReference: this.refundsByIdempotencyKey.get(key)!, status: "SUCCEEDED" };
+    }
+    this.refundCounter += 1;
+    const externalRefundReference = `re_fake_${this.refundCounter}`;
+    if (key) this.refundsByIdempotencyKey.set(key, externalRefundReference);
+    return { externalRefundReference, status: "SUCCEEDED" };
   }
 }
 
@@ -456,11 +471,19 @@ import type {
   CreatePendingPayoutData,
   MarkPayoutFailedInput,
   MarkPayoutPaidInput,
+  MarkPayoutReversalFailedInput,
+  MarkPayoutReversedInput,
   PayoutRecord,
   PayoutRepository,
   UpdatePayoutResult,
 } from "@/domain/repositories/payout-repository";
-import type { CreateTransferRequest, CreateTransferResult, StripeTransferGateway } from "@/application/ports/stripe-transfer-gateway";
+import type {
+  CreateTransferRequest,
+  CreateTransferResult,
+  ReverseTransferRequest,
+  ReverseTransferResult,
+  StripeTransferGateway,
+} from "@/application/ports/stripe-transfer-gateway";
 
 let payoutFakeIdCounter = 0;
 function payoutFakeNextId(prefix: string): string {
@@ -893,6 +916,12 @@ export class FakePayoutRepository implements PayoutRepository {
       attemptCount: 0,
       lastAttemptedAt: null,
       processedAt: null,
+      stripeReversalId: null,
+      reversalIdempotencyKey: null,
+      reversedAmount: null,
+      reversalFailureReason: null,
+      reversalAttemptCount: 0,
+      reversedAt: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -930,13 +959,49 @@ export class FakePayoutRepository implements PayoutRepository {
     this.byId.set(input.id, updated);
     return { applied: true, record: updated };
   }
+
+  async markReversed(input: MarkPayoutReversedInput): Promise<UpdatePayoutResult> {
+    const existing = this.byId.get(input.id);
+    if (!existing) throw new Error(`No fake payout with id "${input.id}".`);
+    if (!input.fromStatuses.includes(existing.status)) return { applied: false, record: existing };
+    const updated: PayoutRecord = {
+      ...existing,
+      status: "REVERSED",
+      stripeReversalId: input.stripeReversalId,
+      reversedAmount: input.reversedAmount,
+      reversalIdempotencyKey: input.reversalIdempotencyKey,
+      reversalFailureReason: null,
+      reversedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.byId.set(input.id, updated);
+    return { applied: true, record: updated };
+  }
+
+  async markReversalFailed(input: MarkPayoutReversalFailedInput): Promise<UpdatePayoutResult> {
+    const existing = this.byId.get(input.id);
+    if (!existing) throw new Error(`No fake payout with id "${input.id}".`);
+    if (!input.fromStatuses.includes(existing.status)) return { applied: false, record: existing };
+    const updated: PayoutRecord = {
+      ...existing,
+      reversalFailureReason: input.reversalFailureReason,
+      reversalAttemptCount: existing.reversalAttemptCount + 1,
+      updatedAt: new Date(),
+    };
+    this.byId.set(input.id, updated);
+    return { applied: true, record: updated };
+  }
 }
 
 export class FakeStripeTransferGateway implements StripeTransferGateway {
   calls: CreateTransferRequest[] = [];
+  reversalCalls: ReverseTransferRequest[] = [];
   nextError: Error | null = null;
+  nextReversalError: Error | null = null;
   private byIdempotencyKey = new Map<string, string>();
   private counter = 0;
+  private reversalsByIdempotencyKey = new Map<string, string>();
+  private reversalCounter = 0;
 
   async createTransfer(request: CreateTransferRequest): Promise<CreateTransferResult> {
     this.calls.push(request);
@@ -949,5 +1014,18 @@ export class FakeStripeTransferGateway implements StripeTransferGateway {
     const stripeTransferId = `tr_fake_${this.counter}`;
     this.byIdempotencyKey.set(request.idempotencyKey, stripeTransferId);
     return { stripeTransferId };
+  }
+
+  async reverseTransfer(request: ReverseTransferRequest): Promise<ReverseTransferResult> {
+    this.reversalCalls.push(request);
+    if (this.nextReversalError) throw this.nextReversalError;
+
+    const existing = this.reversalsByIdempotencyKey.get(request.idempotencyKey);
+    if (existing) return { stripeReversalId: existing };
+
+    this.reversalCounter += 1;
+    const stripeReversalId = `trr_fake_${this.reversalCounter}`;
+    this.reversalsByIdempotencyKey.set(request.idempotencyKey, stripeReversalId);
+    return { stripeReversalId };
   }
 }

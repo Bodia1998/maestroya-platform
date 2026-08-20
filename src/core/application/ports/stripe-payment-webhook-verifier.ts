@@ -46,8 +46,25 @@ export interface StripeChargeRefundedPayload {
   chargeId: string;
   paymentIntentId: string | null;
   /** Stripe's own `amount_refunded`, already converted from minor units —
-   *  logged only, never written to any Payment/ledger row by this module. */
+   *  logged only, never itself written to any Payment/ledger row (see
+   *  this module's own doc comment — the *amount* this platform records
+   *  always comes from its own already-persisted `Refund` row, never from
+   *  a webhook payload). */
   amountRefunded: number;
+  /** Module 77 — Refund & Dispute Financial Execution: the most recent
+   *  Stripe `Refund.id` on this Charge (`charge.refunds.data[0].id`) —
+   *  `null` if the Charge somehow carries no refund object (unexpected for
+   *  a `charge.refunded` event, defensively optional). Used only to
+   *  *reconcile* this platform's own `Refund` row (found by
+   *  `RefundRepository.findByStripeRefundId`) — never to create or mutate
+   *  a Refund's amount from webhook data alone; see
+   *  `ProcessCustomerPaymentWebhookUseCase.handleChargeRefunded`'s own doc
+   *  comment. */
+  refundId?: string | null;
+  /** Module 77: that same latest refund's own Stripe status
+   *  (`"succeeded" | "pending" | "failed" | "canceled"`), logged/
+   *  reconciled only. */
+  status?: string | null;
 }
 
 export interface StripePaymentWebhookEvent {

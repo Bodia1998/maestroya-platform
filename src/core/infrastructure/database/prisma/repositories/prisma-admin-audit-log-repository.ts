@@ -124,6 +124,18 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   // (which already has its own DISPUTE_RESOLVED/DISPUTE_STATUS_CHANGED
   // values).
   DISPUTE_RESOLUTION_FINANCIAL_OUTCOME_DETERMINED: "PAYMENT",
+  // Module 77 — Refund & Dispute Financial Execution: PAYMENT_REFUNDED/
+  // REFUND_FAILED record the Stripe refund call's own outcome against the
+  // Payment/Refund — the existing PAYMENT AuditLogAction value, same
+  // reasoning as PAYMENT_RELEASE_ADMIN_RESOLVED above.
+  // PROFESSIONAL_PAYOUT_REVERSED/PAYOUT_REVERSAL_FAILED record the Stripe
+  // transfer-reversal call's outcome against the Payout — the existing
+  // PAYOUT AuditLogAction value, the same category already used for every
+  // other Payout money-movement event.
+  PAYMENT_REFUNDED: "PAYMENT",
+  REFUND_FAILED: "PAYMENT",
+  PROFESSIONAL_PAYOUT_REVERSED: "PAYOUT",
+  PAYOUT_REVERSAL_FAILED: "PAYOUT",
 };
 
 const SELECT = {

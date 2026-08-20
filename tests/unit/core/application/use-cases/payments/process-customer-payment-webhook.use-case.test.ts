@@ -8,6 +8,8 @@ import {
   ProcessCustomerPaymentWebhookUseCase,
 } from "@/application/use-cases/payments/process-customer-payment-webhook.use-case";
 import { FakeEventBus, FakeExternalWebhookEventRepository, FakePaymentGateway, FakePaymentRepository } from "./fakes";
+import { NullFailureReporter } from "@/application/ports/failure-reporter";
+import { FakeRefundRepository } from "../refunds/fakes";
 
 /**
  * Module 73 — Real Customer Payment Capture: application-level tests for
@@ -168,7 +170,7 @@ describe("ProcessCustomerPaymentWebhookUseCase (Module 73)", () => {
   });
 
   describe("charge.refunded", () => {
-    it("acknowledges the event without mutating the Payment — Module 77's job", async () => {
+    it("acknowledges the event without mutating the Payment directly — ExecuteRefundUseCase (Module 77) is the one place that ever does", async () => {
       seedPendingPayment(payments, { status: "CAPTURED", capturedAt: new Date() });
 
       const result = await useCase.execute(
@@ -181,6 +183,105 @@ describe("ProcessCustomerPaymentWebhookUseCase (Module 73)", () => {
       expect(result.outcome).toBe("refund-observed");
       const stored = await payments.findById("payment-1");
       expect(stored?.status).toBe("CAPTURED");
+    });
+
+    describe("Module 77 reconciliation (RefundRepository wired)", () => {
+      let refunds: FakeRefundRepository;
+      let useCaseWithRefunds: ProcessCustomerPaymentWebhookUseCase;
+
+      beforeEach(() => {
+        refunds = new FakeRefundRepository();
+        useCaseWithRefunds = new ProcessCustomerPaymentWebhookUseCase(
+          payments,
+          gateway,
+          webhookEvents,
+          eventBus,
+          new NullFailureReporter(),
+          refunds,
+        );
+      });
+
+      it("reconciles a Refund this platform itself created — no state change when it's already PROCESSED", async () => {
+        seedPendingPayment(payments, { status: "REFUNDED", capturedAt: new Date() });
+        await refunds.createPending({
+          paymentId: "payment-1",
+          requestedByUserId: "admin-1",
+          amount: 100,
+          financialAdjustmentId: "adj-1",
+          idempotencyKey: "refund:adj-1",
+          notes: null,
+        });
+        const created = await refunds.findByFinancialAdjustmentId("adj-1");
+        await refunds.markProcessed({ id: created!.id, stripeRefundId: "re_1", fromStatuses: ["REQUESTED"] });
+
+        const result = await useCaseWithRefunds.execute(
+          paymentIntentEvent("charge.refunded", {
+            paymentIntent: null,
+            chargeRefunded: { chargeId: "ch_1", paymentIntentId: "pi_123", amountRefunded: 100, refundId: "re_1", status: "succeeded" },
+          }),
+        );
+
+        expect(result.outcome).toBe("refund-observed");
+        const refund = await refunds.findByStripeRefundId("re_1");
+        expect(refund?.status).toBe("PROCESSED");
+      });
+
+      it("reconciles a Refund whose Stripe status resolved asynchronously (REQUESTED -> PROCESSED)", async () => {
+        seedPendingPayment(payments, { status: "PARTIALLY_REFUNDED", capturedAt: new Date() });
+        await refunds.createPending({
+          paymentId: "payment-1",
+          requestedByUserId: "admin-1",
+          amount: 20,
+          financialAdjustmentId: "adj-1",
+          idempotencyKey: "refund:adj-1",
+          notes: null,
+        });
+        const created = await refunds.findByFinancialAdjustmentId("adj-1");
+        // Simulate the row already carrying the Stripe refund id (set by
+        // ExecuteRefundUseCase's own call) but not yet reconciled as
+        // PROCESSED — the fake normally sets both together, so this
+        // directly exercises the reconciliation branch.
+        refunds.byId.set(created!.id, { ...created!, stripeRefundId: "re_2" });
+
+        await useCaseWithRefunds.execute(
+          paymentIntentEvent("charge.refunded", {
+            paymentIntent: null,
+            chargeRefunded: { chargeId: "ch_1", paymentIntentId: "pi_123", amountRefunded: 20, refundId: "re_2", status: "succeeded" },
+          }),
+        );
+
+        const refund = await refunds.findByStripeRefundId("re_2");
+        expect(refund?.status).toBe("PROCESSED");
+      });
+
+      it("logs (never throws) for a Stripe refund id with no matching internal Refund row", async () => {
+        seedPendingPayment(payments, { status: "CAPTURED", capturedAt: new Date() });
+
+        const result = await useCaseWithRefunds.execute(
+          paymentIntentEvent("charge.refunded", {
+            paymentIntent: null,
+            chargeRefunded: { chargeId: "ch_1", paymentIntentId: "pi_123", amountRefunded: 20, refundId: "re_unmatched", status: "succeeded" },
+          }),
+        );
+
+        expect(result.outcome).toBe("refund-observed");
+      });
+    });
+
+    describe("duplicate charge.refunded delivery", () => {
+      it("a second delivery of the same event id is a pure no-op", async () => {
+        seedPendingPayment(payments, { status: "REFUNDED", capturedAt: new Date() });
+        const event = paymentIntentEvent("charge.refunded", {
+          paymentIntent: null,
+          chargeRefunded: { chargeId: "ch_1", paymentIntentId: "pi_123", amountRefunded: 100, refundId: "re_1", status: "succeeded" },
+        });
+
+        const first = await useCase.execute(event);
+        const second = await useCase.execute(event);
+
+        expect(first.outcome).toBe("refund-observed");
+        expect(second.outcome).toBe("duplicate");
+      });
     });
   });
 

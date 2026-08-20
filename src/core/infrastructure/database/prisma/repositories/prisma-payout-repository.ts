@@ -3,6 +3,8 @@ import type {
   CreatePendingPayoutData,
   MarkPayoutFailedInput,
   MarkPayoutPaidInput,
+  MarkPayoutReversalFailedInput,
+  MarkPayoutReversedInput,
   PayoutRecord,
   PayoutRepository,
   PayoutStatusValue,
@@ -53,6 +55,8 @@ const SELECT_COLUMNS = `
   "id", "jobId", "paymentId", "professionalProfileId", "companyProfileId",
   "amount", "currency", "status", "stripeTransferId", "idempotencyKey",
   "failureReason", "attemptCount", "lastAttemptedAt", "processedAt",
+  "stripeReversalId", "reversalIdempotencyKey", "reversedAmount",
+  "reversalFailureReason", "reversalAttemptCount", "reversedAt",
   "createdAt", "updatedAt"
 `;
 
@@ -71,6 +75,12 @@ interface Row {
   attemptCount: number;
   lastAttemptedAt: Date | null;
   processedAt: Date | null;
+  stripeReversalId: string | null;
+  reversalIdempotencyKey: string | null;
+  reversedAmount: unknown;
+  reversalFailureReason: string | null;
+  reversalAttemptCount: number;
+  reversedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -91,6 +101,12 @@ function toRecord(row: Row): PayoutRecord {
     attemptCount: row.attemptCount,
     lastAttemptedAt: row.lastAttemptedAt,
     processedAt: row.processedAt,
+    stripeReversalId: row.stripeReversalId,
+    reversalIdempotencyKey: row.reversalIdempotencyKey,
+    reversedAmount: row.reversedAmount === null ? null : Number(row.reversedAmount),
+    reversalFailureReason: row.reversalFailureReason,
+    reversalAttemptCount: row.reversalAttemptCount,
+    reversedAt: row.reversedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -186,6 +202,52 @@ export class PrismaPayoutRepository implements PayoutRepository {
     const record = applied ? toRecord(rows[0]!) : await this.findById(input.id);
     if (!record) {
       throw new Error(`Payout ${input.id} disappeared during markFailed — this should never happen.`);
+    }
+    return { applied, record };
+  }
+
+  /** Module 77 — Refund & Dispute Financial Execution. See
+   *  `PayoutRepository.markReversed`'s own doc comment. */
+  async markReversed(input: MarkPayoutReversedInput): Promise<UpdatePayoutResult> {
+    const rows = await prisma.$queryRawUnsafe<Row[]>(
+      `UPDATE "payouts"
+       SET "status" = 'REVERSED', "stripeReversalId" = $2, "reversedAmount" = $3,
+           "reversalIdempotencyKey" = $4, "reversedAt" = now(),
+           "reversalFailureReason" = NULL, "updatedAt" = now()
+       WHERE "id" = $1::uuid AND "status" = ANY($5::"PayoutStatus"[])
+       RETURNING ${SELECT_COLUMNS}`,
+      input.id,
+      input.stripeReversalId,
+      input.reversedAmount,
+      input.reversalIdempotencyKey,
+      [...input.fromStatuses],
+    );
+
+    const applied = rows.length > 0;
+    const record = applied ? toRecord(rows[0]!) : await this.findById(input.id);
+    if (!record) {
+      throw new Error(`Payout ${input.id} disappeared during markReversed — this should never happen.`);
+    }
+    return { applied, record };
+  }
+
+  /** Module 77 — Refund & Dispute Financial Execution. See
+   *  `PayoutRepository.markReversalFailed`'s own doc comment. */
+  async markReversalFailed(input: MarkPayoutReversalFailedInput): Promise<UpdatePayoutResult> {
+    const rows = await prisma.$queryRawUnsafe<Row[]>(
+      `UPDATE "payouts"
+       SET "reversalFailureReason" = $2, "reversalAttemptCount" = "reversalAttemptCount" + 1, "updatedAt" = now()
+       WHERE "id" = $1::uuid AND "status" = ANY($3::"PayoutStatus"[])
+       RETURNING ${SELECT_COLUMNS}`,
+      input.id,
+      input.reversalFailureReason,
+      [...input.fromStatuses],
+    );
+
+    const applied = rows.length > 0;
+    const record = applied ? toRecord(rows[0]!) : await this.findById(input.id);
+    if (!record) {
+      throw new Error(`Payout ${input.id} disappeared during markReversalFailed — this should never happen.`);
     }
     return { applied, record };
   }

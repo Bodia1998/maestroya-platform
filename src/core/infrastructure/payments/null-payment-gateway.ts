@@ -2,6 +2,8 @@ import type {
   PaymentAuthorizationRequest,
   PaymentAuthorizationResult,
   PaymentGateway,
+  PaymentRefundOptions,
+  PaymentRefundResult,
 } from "@/application/ports/payment-gateway";
 
 /**
@@ -48,7 +50,7 @@ export class NullPaymentGateway implements PaymentGateway {
     throw new PaymentGatewayNotConfiguredError("capture");
   }
 
-  async refund(_externalReference: string, _amount: number): Promise<void> {
+  async refund(_externalReference: string, _amount: number, _options?: PaymentRefundOptions): Promise<PaymentRefundResult> {
     throw new PaymentGatewayNotConfiguredError("refund");
   }
 
