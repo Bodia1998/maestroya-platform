@@ -77,10 +77,16 @@ describe("infrastructure/payments/null-payment-gateway", () => {
 });
 
 describe("infrastructure/payments/compose", () => {
-  it("wires a singleton NullPaymentGateway as the platform's PaymentGateway", async () => {
+  it("wires a singleton StripePaymentGatewayAdapter as the platform's PaymentGateway (Module 73)", async () => {
+    // Module 73 — Real Customer Payment Capture: as predicted by
+    // compose.ts's own original Module 35 doc comment, this is the one
+    // place that changed to swap NullPaymentGateway for the real
+    // implementation — see stripe-payment-gateway.test.ts for
+    // StripePaymentGatewayAdapter's own behavior.
+    const { StripePaymentGatewayAdapter } = await import("@/infrastructure/payments/stripe/stripe-payment-gateway");
     const { paymentGateway, makePaymentGateway } = await import("@/infrastructure/payments/compose");
 
-    expect(paymentGateway).toBeInstanceOf(NullPaymentGateway);
+    expect(paymentGateway).toBeInstanceOf(StripePaymentGatewayAdapter);
     expect(makePaymentGateway()).toBe(paymentGateway);
   });
 });

@@ -1,8 +1,10 @@
-import { NullPaymentGateway } from "@/infrastructure/payments/null-payment-gateway";
+import { stripe } from "@/infrastructure/payments/stripe/client";
+import { StripePaymentGatewayAdapter } from "@/infrastructure/payments/stripe/stripe-payment-gateway";
 import type { PaymentGateway } from "@/application/ports/payment-gateway";
 
 /**
- * Module 35 — Payment Domain Model Preparation.
+ * Module 35 — Payment Domain Model Preparation / Module 73 — Real Customer
+ * Payment Capture.
  *
  * Composition root for the platform's single `PaymentGateway` — same
  * manual-composition convention as every other `compose.ts` in this
@@ -10,16 +12,17 @@ import type { PaymentGateway } from "@/application/ports/payment-gateway";
  * the pattern this mirrors, and `application/use-cases/auth/compose.ts`
  * for the original convention).
  *
- * `new NullPaymentGateway()` is called exactly once, right here. When
- * Module 59 (Stripe Connect) lands, this is the *only* file that changes:
- * swap the line below for `new StripeConnectPaymentGateway(stripe)`. Every
- * use case that depends on `PaymentGateway` keeps importing
- * `paymentGateway`/`makePaymentGateway` from here and needs no changes,
- * because both classes implement the same `PaymentGateway` port — this is
- * the "no existing code should need to change" requirement from the
- * module brief, satisfied structurally rather than by convention alone.
+ * As predicted by this file's original Module 35 doc comment, Module 73 is
+ * the *only* file that changes to go from `NullPaymentGateway` to a real
+ * implementation: `new StripePaymentGatewayAdapter(stripe)`, backed by the
+ * same shared `stripe` SDK client singleton
+ * (`infrastructure/payments/stripe/client.ts`) `stripeConnectGateway`
+ * already uses — no second Stripe client is created anywhere. Every use
+ * case that depends on `PaymentGateway` keeps importing
+ * `paymentGateway`/`makePaymentGateway` from here and needed no changes,
+ * because both classes implement the same `PaymentGateway` port.
  */
-export const paymentGateway: PaymentGateway = new NullPaymentGateway();
+export const paymentGateway: PaymentGateway = new StripePaymentGatewayAdapter(stripe);
 
 export function makePaymentGateway(): PaymentGateway {
   return paymentGateway;

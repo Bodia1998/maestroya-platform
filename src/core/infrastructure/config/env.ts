@@ -166,7 +166,22 @@ const envSchema = z
     // only validates that the client can be constructed safely) ---
     STRIPE_SECRET_KEY: z.string().min(1, "STRIPE_SECRET_KEY is required"),
     STRIPE_PUBLISHABLE_KEY: z.string().min(1, "STRIPE_PUBLISHABLE_KEY is required"),
+    // Module 72 — Stripe Webhooks: signs `/api/webhooks/stripe`, the
+    // Connect-scoped endpoint (Stripe Dashboard "Events from: Connected
+    // accounts"). Kept required-in-every-environment, same as the other
+    // Stripe secrets above — see this schema's own "hard requirements in
+    // production... today because there is no environment-specific wiring
+    // to make them optional" comment.
     STRIPE_WEBHOOK_SECRET: z.string().min(1, "STRIPE_WEBHOOK_SECRET is required"),
+    // Module 73 — Real Customer Payment Capture: signs
+    // `/api/webhooks/stripe-payments`, a deliberately separate *platform*
+    // Stripe webhook endpoint (no `connect: true`) that only ever receives
+    // `payment_intent.*`/`charge.refunded` events for direct customer
+    // charges — see `StripePaymentWebhookVerifier`'s own doc comment for
+    // why this is a second endpoint/secret rather than an extension of the
+    // Connect one. Required in every environment, same reasoning as
+    // `STRIPE_WEBHOOK_SECRET`.
+    STRIPE_PAYMENTS_WEBHOOK_SECRET: z.string().min(1, "STRIPE_PAYMENTS_WEBHOOK_SECRET is required"),
     STRIPE_CONNECT_CLIENT_ID: z.string().optional(),
 
     // --- Cloudinary ---

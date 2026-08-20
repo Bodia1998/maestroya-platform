@@ -36,6 +36,28 @@ export const DEFAULT_FEATURE_FLAG_DEFINITIONS: readonly FeatureFlagDefinition[] 
     targeting: { roleAllowList: ["ADMIN", "SUPER_ADMIN"] },
     metadata: { owner: "platform-team" },
   },
+  // Module 73 — Real Customer Payment Capture: the required kill switch.
+  // `InitiateQuotePaymentUseCase` checks this before ever calling
+  // `PaymentGateway.authorize` (see that use case's own doc comment) — an
+  // operator can flip `enabled: false` (via a future admin UI/
+  // `FEATURE_FLAGS_CONFIG` override, same as any other flag here) to stop
+  // *new* payment initiation immediately, with zero deploy, while every
+  // already-created Stripe PaymentIntent keeps flowing through
+  // `ProcessCustomerPaymentWebhookUseCase` completely unaffected —
+  // `evaluate()` is never consulted by webhook processing, only by the
+  // initiation use case, so disabling this can never corrupt an
+  // in-flight payment or silently stop already-scheduled webhook
+  // deliveries from being processed. No rollout/targeting restriction —
+  // `enabled: true` in every environment is the normal, fully-on state;
+  // this flag exists purely as the emergency-stop lever the module brief
+  // requires, not as a staged rollout mechanism.
+  {
+    key: "customer-payment-capture",
+    description:
+      "Kill switch for new customer payment initiation (Module 73). Disabling this blocks only " +
+      "InitiateQuotePaymentUseCase — already-created Stripe PaymentIntents and webhook processing are unaffected.",
+    enabled: true,
+  },
 ];
 
 /**

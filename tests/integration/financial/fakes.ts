@@ -15,7 +15,15 @@ import type {
   FinancialLedgerRepository,
   FinancialTransactionRecord,
 } from "@/domain/repositories/financial-ledger-repository";
-import type { PaymentRecord, PaymentRepository, PaymentStatusValue } from "@/domain/repositories/payment-repository";
+import type {
+  CreatePaymentRecordData,
+  PaymentRecord,
+  PaymentRepository,
+  PaymentStatusValue,
+  UpdatePaymentStatusInput,
+  UpdatePaymentStatusResult,
+} from "@/domain/repositories/payment-repository";
+import { ACTIVE_PAYMENT_STATUSES } from "@/domain/repositories/payment-repository";
 import { DEFAULT_COMMISSION_RATES, type CommissionRates } from "@/domain/services/commission-policy";
 import type {
   ConfirmCompletionData,
@@ -60,11 +68,36 @@ export class FakeCommissionRateRepository implements CommissionRateRepository {
 
 export class FakePaymentRepository implements PaymentRepository {
   payments = new Map<string, PaymentRecord>();
+
+  /**
+   * Module 73 — mirrors `PrismaPaymentRepository`'s own "resolve `jobId`
+   * via the Payment -> Quote -> Job relation at read time, never a stored
+   * column" behavior (see that repository's own doc comment) for
+   * `create()`, which — unlike `seed()` — never receives a `jobId`
+   * directly (real `CreatePaymentRecordData` doesn't have one either).
+   * Optional and defaulting to "always null" so every pre-Module-73 test
+   * that constructs `new FakePaymentRepository()` with no arguments (this
+   * class's only other test-visible behavior) keeps compiling and
+   * behaving exactly as before; only `tests/integration/payments`
+   * (Module 73's own end-to-end test) supplies a real resolver.
+   */
+  constructor(private readonly resolveJobIdByQuoteId: (quoteId: string) => string | null = () => null) {}
   refundsByPayment = new Map<string, number>();
 
-  seed(payment: PaymentRecord) {
-    this.payments.set(payment.id, payment);
-    return payment;
+  /** Module 73 — the three new `PaymentRecord` fields
+   *  (`stripePaymentIntentId`/`method`/`failureReason`) default to safe
+   *  values here so every pre-Module-73 test that seeds a payment without
+   *  them (they only ever cared about status/amount/jobId) keeps compiling
+   *  and behaving exactly as before. */
+  seed(payment: Omit<PaymentRecord, "stripePaymentIntentId" | "method" | "failureReason"> & Partial<Pick<PaymentRecord, "stripePaymentIntentId" | "method" | "failureReason">>) {
+    const record: PaymentRecord = {
+      stripePaymentIntentId: `pi_fake_${payment.id}`,
+      method: "CARD",
+      failureReason: null,
+      ...payment,
+    };
+    this.payments.set(record.id, record);
+    return record;
   }
 
   seedProcessedRefund(paymentId: string, amount: number) {
@@ -85,6 +118,58 @@ export class FakePaymentRepository implements PaymentRepository {
 
   async sumProcessedRefunds(paymentId: string): Promise<number> {
     return this.refundsByPayment.get(paymentId) ?? 0;
+  }
+
+  async findByStripePaymentIntentId(stripePaymentIntentId: string): Promise<PaymentRecord | null> {
+    return [...this.payments.values()].find((p) => p.stripePaymentIntentId === stripePaymentIntentId) ?? null;
+  }
+
+  async findActiveByQuoteId(quoteId: string): Promise<PaymentRecord | null> {
+    return (
+      [...this.payments.values()].find(
+        (p) => p.quoteId === quoteId && (ACTIVE_PAYMENT_STATUSES as readonly string[]).includes(p.status),
+      ) ?? null
+    );
+  }
+
+  async create(data: CreatePaymentRecordData): Promise<PaymentRecord> {
+    const existing = await this.findByStripePaymentIntentId(data.stripePaymentIntentId);
+    if (existing) return existing;
+
+    const record: PaymentRecord = {
+      id: data.id,
+      serviceRequestId: data.serviceRequestId,
+      quoteId: data.quoteId,
+      jobId: this.resolveJobIdByQuoteId(data.quoteId),
+      payerId: data.payerId,
+      amount: data.amount,
+      currency: data.currency,
+      status: "PENDING",
+      capturedAt: null,
+      stripePaymentIntentId: data.stripePaymentIntentId,
+      method: data.method,
+      failureReason: null,
+    };
+    this.payments.set(record.id, record);
+    return record;
+  }
+
+  async updateStatus(input: UpdatePaymentStatusInput): Promise<UpdatePaymentStatusResult> {
+    const record = this.payments.get(input.id);
+    if (!record) {
+      throw new Error(`FakePaymentRepository.updateStatus: no payment ${input.id}`);
+    }
+    if (!input.fromStatuses.includes(record.status)) {
+      return { applied: false, record };
+    }
+    const updated: PaymentRecord = {
+      ...record,
+      status: input.toStatus,
+      capturedAt: input.capturedAt !== undefined ? input.capturedAt : record.capturedAt,
+      failureReason: input.failureReason !== undefined ? input.failureReason : record.failureReason,
+    };
+    this.payments.set(record.id, updated);
+    return { applied: true, record: updated };
   }
 }
 

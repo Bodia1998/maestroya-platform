@@ -25,6 +25,7 @@ export const VALID_BASE_ENV: Record<string, string> = {
   STRIPE_SECRET_KEY: "sk_test_placeholder",
   STRIPE_PUBLISHABLE_KEY: "pk_test_placeholder",
   STRIPE_WEBHOOK_SECRET: "whsec_placeholder",
+  STRIPE_PAYMENTS_WEBHOOK_SECRET: "whsec_payments_placeholder",
   CLOUDINARY_CLOUD_NAME: "demo",
   CLOUDINARY_API_KEY: "123456",
   CLOUDINARY_API_SECRET: "abcdef",

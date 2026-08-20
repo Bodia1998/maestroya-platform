@@ -1,5 +1,15 @@
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/infrastructure/database/prisma/client";
-import type { PaymentRecord, PaymentRepository, PaymentStatusValue } from "@/domain/repositories/payment-repository";
+import {
+  ACTIVE_PAYMENT_STATUSES,
+  type CreatePaymentRecordData,
+  type PaymentRecord,
+  type PaymentRepository,
+  type PaymentStatusValue,
+  type UpdatePaymentStatusInput,
+  type UpdatePaymentStatusResult,
+} from "@/domain/repositories/payment-repository";
 
 const SELECT = {
   id: true,
@@ -10,6 +20,9 @@ const SELECT = {
   currency: true,
   status: true,
   capturedAt: true,
+  stripePaymentIntentId: true,
+  method: true,
+  failureReason: true,
   quote: { select: { job: { select: { id: true } } } },
 } as const;
 
@@ -22,6 +35,9 @@ type Row = {
   currency: string;
   status: string;
   capturedAt: Date | null;
+  stripePaymentIntentId: string | null;
+  method: string;
+  failureReason: string | null;
   quote: { job: { id: string } | null } | null;
 };
 
@@ -34,15 +50,19 @@ function toRecord(row: Row): PaymentRecord {
     payerId: row.payerId,
     amount: Number(row.amount),
     currency: row.currency,
-    status: row.status as PaymentStatusValue,
+    status: row.status as PaymentRecord["status"],
     capturedAt: row.capturedAt,
+    stripePaymentIntentId: row.stripePaymentIntentId,
+    method: row.method as PaymentRecord["method"],
+    failureReason: row.failureReason,
   };
 }
 
 /**
- * Module 22 — Commission & Financial: read-only Prisma implementation of
- * PaymentRepository — see that interface's own doc comment on why this
- * never creates/captures a Payment (Module 12's job once implemented).
+ * Module 22 — Commission & Financial (read side) / Module 73 — Real
+ * Customer Payment Capture (write side): Prisma implementation of
+ * `PaymentRepository`. See that interface's own doc comment for why the
+ * write methods below extend, rather than duplicate, this class.
  */
 export class PrismaPaymentRepository implements PaymentRepository {
   async findById(id: string): Promise<PaymentRecord | null> {
@@ -74,5 +94,75 @@ export class PrismaPaymentRepository implements PaymentRepository {
       _sum: { amount: true },
     });
     return Number(result._sum.amount ?? 0);
+  }
+
+  async findByStripePaymentIntentId(stripePaymentIntentId: string): Promise<PaymentRecord | null> {
+    const row = await prisma.payment.findUnique({ where: { stripePaymentIntentId }, select: SELECT });
+    return row ? toRecord(row) : null;
+  }
+
+  async findActiveByQuoteId(quoteId: string): Promise<PaymentRecord | null> {
+    const row = await prisma.payment.findFirst({
+      where: { quoteId, status: { in: [...ACTIVE_PAYMENT_STATUSES] } },
+      select: SELECT,
+      orderBy: { createdAt: "desc" },
+    });
+    return row ? toRecord(row) : null;
+  }
+
+  /**
+   * Upsert keyed on `stripePaymentIntentId` — see `PaymentRepository
+   * .create`'s own doc comment for why this MUST NOT be a plain `create`.
+   * The `update: {}` branch is intentionally a no-op: if a row for this
+   * `stripePaymentIntentId` already exists (a concurrent caller won the
+   * race), this call must return that existing row untouched, never
+   * overwrite it with this caller's own (possibly different) generated
+   * `id`/payload.
+   */
+  async create(data: CreatePaymentRecordData): Promise<PaymentRecord> {
+    const row = await prisma.payment.upsert({
+      where: { stripePaymentIntentId: data.stripePaymentIntentId },
+      create: {
+        id: data.id,
+        serviceRequestId: data.serviceRequestId,
+        quoteId: data.quoteId,
+        payerId: data.payerId,
+        amount: new Prisma.Decimal(data.amount),
+        currency: data.currency,
+        method: data.method,
+        status: "PENDING",
+        stripePaymentIntentId: data.stripePaymentIntentId,
+      },
+      update: {},
+      select: SELECT,
+    });
+    return toRecord(row);
+  }
+
+  /**
+   * Compare-and-swap update — see `UpdatePaymentStatusInput`'s own doc
+   * comment for the full contract. Implemented as a single conditional
+   * `updateMany` (never a separate read-then-write) so the guard and the
+   * write happen atomically in one statement, the same pattern
+   * `ProfessionalOnboardingRepository.updateStripeConnectAccountIfNotStale`
+   * (Module 72) already establishes for this exact "no read-then-write
+   * race window" requirement.
+   */
+  async updateStatus(input: UpdatePaymentStatusInput): Promise<UpdatePaymentStatusResult> {
+    const data: Prisma.PaymentUpdateManyMutationInput = { status: input.toStatus };
+    if (input.capturedAt !== undefined) data.capturedAt = input.capturedAt;
+    if (input.failureReason !== undefined) data.failureReason = input.failureReason;
+
+    const result = await prisma.payment.updateMany({
+      where: { id: input.id, status: { in: [...input.fromStatuses] as PaymentStatusValue[] } },
+      data,
+    });
+
+    const record = await this.findById(input.id);
+    if (!record) {
+      throw new Error(`Payment ${input.id} disappeared during updateStatus — this should never happen.`);
+    }
+
+    return { applied: result.count > 0, record };
   }
 }

@@ -36,6 +36,24 @@ export interface PaymentAuthorizationRequest {
    *  external charge (e.g. a service-request id for reconciliation).
    *  Opaque to this port — never interpreted here. */
   metadata?: Record<string, string>;
+  /**
+   * Module 73 — Real Customer Payment Capture: an idempotency key the
+   * caller derives deterministically from the thing being paid (e.g.
+   * `payment-intent:quote:<quoteId>`), never from a per-attempt random
+   * value. Passed straight through to the gateway's own idempotent-request
+   * mechanism (Stripe's `Idempotency-Key` header for
+   * `StripePaymentGatewayAdapter`) so that two concurrent or retried
+   * `authorize()` calls for the *same* payable thing — a double-click, a
+   * network retry, two concurrent requests racing each other — are
+   * guaranteed by the gateway itself to resolve to the exact same external
+   * charge, even before either caller's own database write happens. See
+   * `InitiateQuotePaymentUseCase`'s own doc comment for the full
+   * concurrency story (this is the first of two independent layers of
+   * protection, the second being the database's own uniqueness constraint
+   * on the persisted external reference). Optional — omitted entirely by
+   * `NullPaymentGateway` callers/tests that don't care about idempotency.
+   */
+  idempotencyKey?: string;
 }
 
 export interface PaymentAuthorizationResult {
@@ -44,6 +62,18 @@ export interface PaymentAuthorizationResult {
    *  kept only so a later `capture`/`refund`/`cancel` call can reference
    *  the same external charge. */
   externalReference: string;
+  /**
+   * Module 73 — Real Customer Payment Capture: the gateway's own
+   * client-side confirmation secret (Stripe's PaymentIntent
+   * `client_secret`), if the gateway's authorization flow requires a
+   * separate client-side step to actually collect payment details and
+   * confirm the charge (as every real card gateway does — this port's
+   * `authorize()` only ever *creates* the charge attempt server-side; it
+   * can never itself collect card details). `null` for gateways that need
+   * no such step (e.g. a fully server-side test double). Never logged —
+   * see `StripePaymentGatewayAdapter`'s own doc comment.
+   */
+  clientSecret: string | null;
 }
 
 export interface PaymentGateway {
