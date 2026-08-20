@@ -1405,6 +1405,9 @@ model CompanyProfile {
   /// alongside the existing professional-anchored PortfolioItem rather than
   /// merging the two — see PortfolioItem.companyProfileId's own doc comment.
   portfolioItems           PortfolioItem[]
+  /// Module 75 — Company Payout Eligibility: the company's own payout
+  /// destination — see CompanyPayoutAccount's own doc comment.
+  payoutAccount            CompanyPayoutAccount?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -4031,6 +4034,53 @@ model ProfessionalPayoutAccount {
   @@index([method])
   @@index([status])
   @@map("professional_payout_accounts")
+}
+
+/// Module 75 — Company Payout Eligibility: the company-owned mirror of
+/// `ProfessionalPayoutAccount` (see that model's own doc comment for the
+/// full shape rationale — this model deliberately repeats it exactly,
+/// keyed on `companyProfileId` instead of `professionalProfileId`,
+/// reusing the same `PayoutMethod`/`PayoutAccountStatus`/
+/// `StripeExpressReadiness` enums rather than introducing parallel ones).
+/// The company's single active payout destination — insert-or-replace
+/// (`@unique` on companyProfileId), not a history table. A raw IBAN is
+/// never stored: only the last 4 digits (display only) and a keyed hash
+/// (duplicate detection only) — same convention as
+/// `ProfessionalPayoutAccount.ibanHash`.
+model CompanyPayoutAccount {
+  id               String         @id @default(uuid()) @db.Uuid
+  companyProfileId String         @unique @db.Uuid
+  companyProfile   CompanyProfile @relation(fields: [companyProfileId], references: [id], onDelete: Cascade)
+
+  method            PayoutMethod
+  status            PayoutAccountStatus @default(PENDING)
+  accountHolderName String
+
+  ibanLast4 String? @db.VarChar(4)
+  ibanHash  String? @unique
+
+  /// Module 75 — Company Payout Eligibility: mirrors
+  /// `ProfessionalPayoutAccount.stripeExpressAccountId` — the real Stripe
+  /// Express connected account id once one exists for this company. This
+  /// module never calls the Stripe SDK to create it (see this module's
+  /// own doc comment) — the field exists so the schema/architecture is
+  /// complete for a future module to populate it exactly the way Module
+  /// 71 populates the professional equivalent.
+  stripeExpressAccountId String?                @unique
+  stripeExpressStatus    StripeExpressReadiness @default(NOT_STARTED)
+
+  stripeChargesEnabled           Boolean   @default(false)
+  stripePayoutsEnabled           Boolean   @default(false)
+  stripeDetailsSubmitted         Boolean   @default(false)
+  stripeRequirementsCurrentlyDue Boolean   @default(false)
+  stripeConnectSyncedAt          DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([method])
+  @@index([status])
+  @@map("company_payout_accounts")
 }
 
 // ============================================================================
