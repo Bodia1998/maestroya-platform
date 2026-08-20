@@ -4,6 +4,7 @@ import type { JobCompletionConfirmationRecord, JobCompletionConfirmationReposito
 import type { DisputeRepository } from "@/domain/repositories/dispute-repository";
 import type { PaymentRepository } from "@/domain/repositories/payment-repository";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
+import type { CompanyRepository } from "@/domain/repositories/company-repository";
 import type { TrustAutomatedActionRepository } from "@/domain/repositories/trust-automated-action-repository";
 import { decidePaymentReleaseStatus } from "@/domain/services/payment-release-decision";
 import type { EventBus } from "@/application/ports/event-bus";
@@ -35,15 +36,22 @@ import { ConflictError } from "@/domain/errors/domain-error";
  * outcome (harmless) and does NOT re-publish an already-published
  * transition event — see the transition-detection logic below.
  *
- * ## Known limitation — company-owned jobs
- * `CheckPayoutEligibilityUseCase`/the Trust & Integrity payout-hold check
- * are both keyed off a single professional User — there is no equivalent
- * KYC/payout-hold concept yet for a `CompanyProfile`. Until that exists,
- * a company-owned Job's payout is conservatively always evaluated as NOT
- * eligible (`RELEASE_HELD`, never `RELEASE_APPROVED`) — financial safety
- * over completeness. This is called out explicitly in this module's
- * final report as a decision requiring product/eng follow-up, not
- * silently invented — see this module's own docs.
+ * ## Module 75 — Company Payout Eligibility
+ * A company-owned Job's payout eligibility is evaluated via
+ * `CheckPayoutEligibilityUseCase.executeForCompany` (Module 75) — the
+ * company mirror of the professional KYC-eligibility check above, built
+ * on Module 18's existing `CompanyVerification`/`CompanyProfile` state
+ * plus a `CompanyPayoutAccount` (never a second/parallel eligibility
+ * system). A Trust & Integrity `PAYOUT_HOLD` is checked against the
+ * company's owner `User` (`CompanyProfile.ownerUserId`) — the same
+ * `TrustAutomatedActionRepository` a professional's own hold check
+ * already uses, just keyed to the owner rather than a
+ * `ProfessionalProfile`. `companies` is optional so any composition root
+ * that never routes company-owned Jobs through this use case is
+ * unaffected; when a company-owned Job IS evaluated without `companies`
+ * configured, eligibility conservatively stays `false` (`RELEASE_HELD`)
+ * — the same "financial safety over completeness" default this module
+ * used before Module 75, never a silent bypass.
  */
 export class EvaluatePaymentReleaseUseCase {
   constructor(
@@ -56,6 +64,11 @@ export class EvaluatePaymentReleaseUseCase {
     private readonly payoutEligibility: CheckPayoutEligibilityUseCase,
     private readonly eventBus: EventBus,
     private readonly failureReporter: FailureReporter = new NullFailureReporter(),
+    /** Module 75 — Company Payout Eligibility: optional so every existing
+     *  construction of this class (before Module 75) keeps compiling
+     *  unchanged. Only needed to evaluate company-owned Jobs — see this
+     *  class's own doc comment. */
+    private readonly companies?: CompanyRepository,
   ) {}
 
   async execute(jobId: string): Promise<JobCompletionConfirmationRecord> {
@@ -99,9 +112,21 @@ export class EvaluatePaymentReleaseUseCase {
         const activeHolds = await this.trustAutomatedActions.listActiveForUser(professional.userId, "PAYOUT_HOLD");
         payoutHoldActive = activeHolds.length > 0;
       }
+    } else if (job.companyProfileId && this.companies) {
+      // Module 75 — Company Payout Eligibility: see this class's own doc
+      // comment. `this.companies` being unset (a composition root that
+      // never wired it) is treated the same as "not eligible" — the
+      // pre-Module-75 conservative default for company-owned jobs.
+      const [eligibility, company] = await Promise.all([
+        this.payoutEligibility.executeForCompany(job.companyProfileId),
+        this.companies.findById(job.companyProfileId),
+      ]);
+      payoutEligible = eligibility.eligible;
+      if (company) {
+        const activeHolds = await this.trustAutomatedActions.listActiveForUser(company.ownerUserId, "PAYOUT_HOLD");
+        payoutHoldActive = activeHolds.length > 0;
+      }
     }
-    // job.companyProfileId case: payoutEligible stays false — see this
-    // class's own doc comment, "Known limitation — company-owned jobs".
 
     const decision = decidePaymentReleaseStatus({
       jobStatus: job.status,

@@ -5,6 +5,7 @@ import type { DisputeRepository } from "@/domain/repositories/dispute-repository
 import type { ManualReviewCaseRepository } from "@/domain/repositories/manual-review-case-repository";
 import type { PaymentRepository } from "@/domain/repositories/payment-repository";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
+import type { CompanyRepository } from "@/domain/repositories/company-repository";
 import type { TrustAutomatedActionRepository } from "@/domain/repositories/trust-automated-action-repository";
 import type { AdminAuditLogRepository } from "@/domain/repositories/admin-audit-log-repository";
 import { decidePaymentReleaseStatus } from "@/domain/services/payment-release-decision";
@@ -61,6 +62,10 @@ export class AdminResolvePaymentReleaseUseCase {
     private readonly eventBus: EventBus,
     private readonly auditLog: AdminAuditLogRepository,
     private readonly failureReporter: FailureReporter = new NullFailureReporter(),
+    /** Module 75 — Company Payout Eligibility: optional, mirrors
+     *  EvaluatePaymentReleaseUseCase's own identical addition — see that
+     *  class's own doc comment. */
+    private readonly companies?: CompanyRepository,
   ) {}
 
   async execute(
@@ -138,6 +143,18 @@ export class AdminResolvePaymentReleaseUseCase {
       payoutEligible = eligibility.eligible;
       if (professional) {
         const activeHolds = await this.trustAutomatedActions.listActiveForUser(professional.userId, "PAYOUT_HOLD");
+        payoutHoldActive = activeHolds.length > 0;
+      }
+    } else if (job.companyProfileId && this.companies) {
+      // Module 75 — Company Payout Eligibility: mirrors
+      // EvaluatePaymentReleaseUseCase's own identical branch exactly.
+      const [eligibility, company] = await Promise.all([
+        this.payoutEligibility.executeForCompany(job.companyProfileId),
+        this.companies.findById(job.companyProfileId),
+      ]);
+      payoutEligible = eligibility.eligible;
+      if (company) {
+        const activeHolds = await this.trustAutomatedActions.listActiveForUser(company.ownerUserId, "PAYOUT_HOLD");
         payoutHoldActive = activeHolds.length > 0;
       }
     }

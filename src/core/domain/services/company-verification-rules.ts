@@ -68,6 +68,22 @@ export function isActiveStatus(status: VerificationCaseStatusValue): boolean {
   return status !== "EXPIRED";
 }
 
+/**
+ * Module 75 — Company Payout Eligibility: the company mirror of
+ * `professional-verification-rules.ts`'s `canReceivePayouts` — a company
+ * satisfies the verification leg of payout eligibility only when its
+ * active `CompanyVerification` case is `APPROVED`, the exact same
+ * single-status predicate the professional path uses (see that
+ * function's own doc comment for why `APPROVED` is the only status that
+ * counts, regardless of how it got there). Deliberately the only place
+ * this predicate is defined for companies — `CheckPayoutEligibilityUseCase`
+ * calls this rather than re-deriving "is this company verified" from the
+ * status value itself.
+ */
+export function canReceivePayouts(status: VerificationCaseStatusValue): boolean {
+  return status === "APPROVED";
+}
+
 export function canStartReview(status: VerificationCaseStatusValue): boolean {
   return status === "PENDING";
 }

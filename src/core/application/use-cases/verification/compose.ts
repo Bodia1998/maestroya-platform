@@ -2,6 +2,10 @@ import { PrismaAdminAuditLogRepository } from "@/infrastructure/database/prisma/
 import { PrismaExternalWebhookEventRepository } from "@/infrastructure/database/prisma/repositories/prisma-external-webhook-event-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaProfessionalVerificationRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-verification-repository";
+// Module 75 — Company Payout Eligibility.
+import { PrismaCompanyVerificationRepository } from "@/infrastructure/database/prisma/repositories/prisma-company-verification-repository";
+import { PrismaCompanyRepository } from "@/infrastructure/database/prisma/repositories/prisma-company-repository";
+import { PrismaCompanyPayoutAccountRepository } from "@/infrastructure/database/prisma/repositories/prisma-company-payout-account-repository";
 import { CloudinaryVerificationDocumentUploadService } from "@/infrastructure/storage/cloudinary/verification-document-upload-service";
 import { createFailureReporter } from "@/infrastructure/observability/failure-reporter-factory";
 import { eventBus } from "@/infrastructure/events/compose";
@@ -42,6 +46,10 @@ import { createVerificationProvider } from "@/infrastructure/verification/verifi
  */
 
 const verifications = new PrismaProfessionalVerificationRepository();
+// Module 75 — Company Payout Eligibility.
+const companyVerifications = new PrismaCompanyVerificationRepository();
+const companies = new PrismaCompanyRepository();
+const companyPayoutAccounts = new PrismaCompanyPayoutAccountRepository();
 const professionals = new PrismaProfessionalRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
 const uploads = new CloudinaryVerificationDocumentUploadService();
@@ -141,7 +149,10 @@ export function makeSynchronizeVerificationUseCase() {
 }
 
 export function makeCheckPayoutEligibilityUseCase() {
-  return new CheckPayoutEligibilityUseCase(verifications);
+  // Module 75 — Company Payout Eligibility: this instance is wired with
+  // company support too, so any caller in THIS module that also needs
+  // executeForCompany can use it — mirrors job/compose.ts's own instance.
+  return new CheckPayoutEligibilityUseCase(verifications, companyVerifications, companies, companyPayoutAccounts);
 }
 
 /** The provider name the current process is wired to (`"MANUAL"` or

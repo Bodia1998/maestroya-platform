@@ -29,6 +29,10 @@ import { AdminResolvePaymentReleaseUseCase } from "@/application/use-cases/job/a
 import { CreateDisputeUseCase } from "@/application/use-cases/dispute/create-dispute.use-case";
 import { CheckPayoutEligibilityUseCase } from "@/application/use-cases/verification/check-payout-eligibility.use-case";
 import { PrismaProfessionalVerificationRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-verification-repository";
+// Module 75 — Company Payout Eligibility.
+import { PrismaCompanyRepository } from "@/infrastructure/database/prisma/repositories/prisma-company-repository";
+import { PrismaCompanyVerificationRepository } from "@/infrastructure/database/prisma/repositories/prisma-company-verification-repository";
+import { PrismaCompanyPayoutAccountRepository } from "@/infrastructure/database/prisma/repositories/prisma-company-payout-account-repository";
 
 const jobs = new PrismaJobRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
@@ -50,6 +54,10 @@ const payments = new PrismaPaymentRepository();
 const trustAutomatedActions = new PrismaTrustAutomatedActionRepository();
 const manualReviewCases = new PrismaManualReviewCaseRepository();
 const professionalVerifications = new PrismaProfessionalVerificationRepository();
+// Module 75 — Company Payout Eligibility.
+const companies = new PrismaCompanyRepository();
+const companyVerifications = new PrismaCompanyVerificationRepository();
+const companyPayoutAccounts = new PrismaCompanyPayoutAccountRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
 const failureReporter = createFailureReporter();
 
@@ -99,7 +107,11 @@ export function makeCheckPayoutEligibilityUseCase() {
   // dispute/compose.ts already establishes (see that file's own
   // `PrismaJobRepository` import) — avoids a compose-to-compose import
   // cycle between job and verification.
-  return new CheckPayoutEligibilityUseCase(professionalVerifications);
+  //
+  // Module 75 — Company Payout Eligibility: wired with company support so
+  // makeEvaluatePaymentReleaseUseCase/makeAdminResolvePaymentReleaseUseCase
+  // below can evaluate company-owned jobs too.
+  return new CheckPayoutEligibilityUseCase(professionalVerifications, companyVerifications, companies, companyPayoutAccounts);
 }
 
 export function makeEvaluatePaymentReleaseUseCase() {
@@ -113,6 +125,8 @@ export function makeEvaluatePaymentReleaseUseCase() {
     makeCheckPayoutEligibilityUseCase(),
     eventBus,
     failureReporter,
+    // Module 75 — Company Payout Eligibility.
+    companies,
   );
 }
 
@@ -164,5 +178,7 @@ export function makeAdminResolvePaymentReleaseUseCase() {
     eventBus,
     auditLog,
     failureReporter,
+    // Module 75 — Company Payout Eligibility.
+    companies,
   );
 }
