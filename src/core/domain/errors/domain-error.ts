@@ -564,3 +564,47 @@ export class StripeConnectError extends DomainError {
     if (options?.cause !== undefined) this.cause = options.cause;
   }
 }
+
+/**
+ * Module 73 — Real Customer Payment Capture: thrown by
+ * `StripePaymentGatewayAdapter` (`infrastructure/payments/stripe/
+ * stripe-payment-gateway.ts`) for any failed Stripe API call made on
+ * behalf of a customer payment (PaymentIntent create/capture/cancel).
+ * Mirrors `StripeConnectError` exactly — same category vocabulary, same
+ * "raw Stripe SDK error preserved on `cause`, never leaked into the
+ * application/domain layers" contract, same `retryable` signal — kept as
+ * its own class (not a reuse of `StripeConnectError`) because the two
+ * adapters guard genuinely different Stripe resources (Connect account
+ * management vs. PaymentIntents) and a caller catching one must never
+ * accidentally also catch the other. `CARD_DECLINED` is the one category
+ * `StripeConnectError` has no equivalent for — a card-processing-specific
+ * failure (Stripe's own `card_error` type) that is never retryable with
+ * the same request and must surface as "try a different payment method,"
+ * not as a generic invalid-request error. `NOT_IMPLEMENTED` is used only
+ * by `StripePaymentGatewayAdapter.refund` — see that method's own doc
+ * comment on why a real refund flow is deliberately out of Module 73's
+ * scope.
+ */
+export type PaymentGatewayErrorCategory =
+  | "AUTHENTICATION"
+  | "INVALID_REQUEST"
+  | "NOT_FOUND"
+  | "CARD_DECLINED"
+  | "RATE_LIMITED"
+  | "NETWORK"
+  | "TEMPORARY"
+  | "NOT_IMPLEMENTED"
+  | "UNKNOWN";
+
+export class PaymentGatewayError extends DomainError {
+  readonly code = "PAYMENT_GATEWAY_ERROR";
+  readonly category: PaymentGatewayErrorCategory;
+  readonly retryable: boolean;
+
+  constructor(category: PaymentGatewayErrorCategory, message: string, retryable: boolean, options?: { cause?: unknown }) {
+    super(`[payment_gateway:${category}] ${message}`);
+    this.category = category;
+    this.retryable = retryable;
+    if (options?.cause !== undefined) this.cause = options.cause;
+  }
+}

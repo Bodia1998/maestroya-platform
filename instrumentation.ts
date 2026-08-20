@@ -106,6 +106,14 @@ export async function register() {
   // too keeps this module consistent with every other subscriber-
   // registering compose file in this deterministic-at-boot list.
   await import("@/application/use-cases/realtime/compose");
+  // Module 73 — Real Customer Payment Capture: registers
+  // `RecordCommissionOnPaymentCapturedSubscriber` against `PaymentCaptured`
+  // — see that module's own `compose.ts` doc comment. Deterministic-at-boot
+  // for the same reason every other entry in this list is: a Payment must
+  // never be able to reach CAPTURED (via the webhook route, which imports
+  // this same compose.ts directly too — see that route's own comment) before
+  // this subscription exists.
+  await import("@/application/use-cases/payments/compose");
   // Module 47 — CQRS Search Engine: this module's subscribers live in its
   // own composition root (`infrastructure/search/compose.ts`) rather than
   // under `application/use-cases/`, because that file also owns the

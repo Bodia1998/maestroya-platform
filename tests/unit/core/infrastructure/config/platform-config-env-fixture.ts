@@ -45,6 +45,7 @@ export function buildTestEnv(overrides: Partial<Env> = {}): Env {
     STRIPE_SECRET_KEY: "sk_test_placeholder",
     STRIPE_PUBLISHABLE_KEY: "pk_test_placeholder",
     STRIPE_WEBHOOK_SECRET: "whsec_placeholder",
+    STRIPE_PAYMENTS_WEBHOOK_SECRET: "whsec_payments_placeholder",
     STRIPE_CONNECT_CLIENT_ID: undefined,
     CLOUDINARY_CLOUD_NAME: "demo",
     CLOUDINARY_API_KEY: "123456",
