@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { ProcessStripeConnectWebhookUseCase } from "@/application/use-cases/stripe-connect/process-stripe-connect-webhook.use-case";
 import type { StripeConnectWebhookEvent } from "@/application/ports/stripe-connect-webhook-verifier";
 import { FakeProfessionalOnboardingRepository, FakeProfessionalRepository } from "../onboarding/fakes";
-import { FakeExternalWebhookEventRepository } from "./fakes";
+import { FakeExternalWebhookEventRepository, FakePayoutRepository } from "./fakes";
 
 /**
  * Module 72 — Stripe Webhooks: tests for `ProcessStripeConnectWebhookUseCase`
@@ -33,6 +33,23 @@ function accountUpdatedEvent(overrides: Partial<StripeConnectWebhookEvent> = {})
       payoutsEnabled: true,
       requirementsCurrentlyDue: [],
       disabledReason: null,
+    },
+    transferCreated: null,
+    ...overrides,
+  };
+}
+
+/** Module 76 — Professional Payout Execution. */
+function transferCreatedEvent(overrides: Partial<StripeConnectWebhookEvent> = {}): StripeConnectWebhookEvent {
+  return {
+    id: "evt_transfer_1",
+    type: "transfer.created",
+    createdAt: new Date("2026-01-01T00:00:00Z"),
+    accountUpdated: null,
+    transferCreated: {
+      stripeTransferId: "tr_1",
+      destinationStripeAccountId: "acct_1",
+      payoutId: "payout-1",
     },
     ...overrides,
   };
@@ -227,6 +244,7 @@ describe("ProcessStripeConnectWebhookUseCase (Module 72)", () => {
         type: "capability.updated",
         createdAt: new Date(),
         accountUpdated: null,
+        transferCreated: null,
       });
 
       expect(result.outcome).toBe("ignored");
@@ -460,6 +478,89 @@ describe("ProcessStripeConnectWebhookUseCase (Module 72)", () => {
       expect(afterRetry?.stripeConnectSyncedAt).toEqual(event.createdAt);
       const finalRecord = [...webhookEvents.events.values()].find((e) => e.externalEventId === "evt_markprocessed_fails");
       expect(finalRecord?.status).toBe("PROCESSED");
+    });
+  });
+
+  describe("transfer.created reconciliation (Module 76)", () => {
+    let payouts: FakePayoutRepository;
+    let useCaseWithPayouts: ProcessStripeConnectWebhookUseCase;
+
+    beforeEach(() => {
+      payouts = new FakePayoutRepository();
+      useCaseWithPayouts = new ProcessStripeConnectWebhookUseCase(onboardings, webhookEvents, payouts);
+    });
+
+    it("reconciles a PENDING payout to PAID on transfer.created", async () => {
+      const payout = payouts.seed({ jobId: "job-1", status: "PENDING" });
+
+      const result = await useCaseWithPayouts.execute(
+        transferCreatedEvent({ transferCreated: { stripeTransferId: "tr_1", destinationStripeAccountId: "acct_1", payoutId: payout.id } }),
+      );
+
+      expect(result.outcome).toBe("transfer-reconciled");
+      const updated = await payouts.findById(payout.id);
+      expect(updated?.status).toBe("PAID");
+      expect(updated?.stripeTransferId).toBe("tr_1");
+    });
+
+    it("reconciles a FAILED payout to PAID (a self-healing retry after a lost response)", async () => {
+      const payout = payouts.seed({ jobId: "job-2", status: "FAILED", failureReason: "network timeout" });
+
+      const result = await useCaseWithPayouts.execute(
+        transferCreatedEvent({ id: "evt_transfer_2", transferCreated: { stripeTransferId: "tr_2", destinationStripeAccountId: "acct_1", payoutId: payout.id } }),
+      );
+
+      expect(result.outcome).toBe("transfer-reconciled");
+      const updated = await payouts.findById(payout.id);
+      expect(updated?.status).toBe("PAID");
+      expect(updated?.failureReason).toBeNull();
+    });
+
+    it("never regresses an already-PAID payout — duplicate/out-of-order delivery is a safe no-op", async () => {
+      const payout = payouts.seed({ jobId: "job-3", status: "PAID", stripeTransferId: "tr_original" });
+
+      const result = await useCaseWithPayouts.execute(
+        transferCreatedEvent({ id: "evt_transfer_3", transferCreated: { stripeTransferId: "tr_original", destinationStripeAccountId: "acct_1", payoutId: payout.id } }),
+      );
+
+      expect(result.outcome).toBe("transfer-reconciled");
+      const updated = await payouts.findById(payout.id);
+      expect(updated?.status).toBe("PAID");
+      expect(updated?.stripeTransferId).toBe("tr_original");
+    });
+
+    it("acknowledges a transfer event with no matching payoutId as transfer-unmatched", async () => {
+      const result = await useCaseWithPayouts.execute(
+        transferCreatedEvent({ id: "evt_transfer_4", transferCreated: { stripeTransferId: "tr_4", destinationStripeAccountId: "acct_1", payoutId: "payout-does-not-exist" } }),
+      );
+
+      expect(result.outcome).toBe("transfer-unmatched");
+    });
+
+    it("acknowledges a transfer event with no payoutId metadata as transfer-unmatched", async () => {
+      const result = await useCaseWithPayouts.execute(
+        transferCreatedEvent({ id: "evt_transfer_5", transferCreated: { stripeTransferId: "tr_5", destinationStripeAccountId: "acct_1", payoutId: null } }),
+      );
+
+      expect(result.outcome).toBe("transfer-unmatched");
+    });
+
+    it("deduplicates a transfer.created event delivered twice", async () => {
+      const payout = payouts.seed({ jobId: "job-6", status: "PENDING" });
+      const event = transferCreatedEvent({ id: "evt_transfer_6", transferCreated: { stripeTransferId: "tr_6", destinationStripeAccountId: "acct_1", payoutId: payout.id } });
+
+      const first = await useCaseWithPayouts.execute(event);
+      const second = await useCaseWithPayouts.execute(event);
+
+      expect(first.outcome).toBe("transfer-reconciled");
+      expect(second.outcome).toBe("duplicate");
+    });
+
+    it("without a payouts repository configured, safely ignores a transfer.created event rather than throwing", async () => {
+      // `useCase` (module-level beforeEach) is constructed with only 2
+      // args — the pre-Module-76 composition shape.
+      const result = await useCase.execute(transferCreatedEvent({ id: "evt_transfer_7" }));
+      expect(result.outcome).toBe("transfer-unmatched");
     });
   });
 });

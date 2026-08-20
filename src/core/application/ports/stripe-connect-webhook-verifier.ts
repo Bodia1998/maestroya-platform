@@ -46,6 +46,35 @@ export interface StripeConnectAccountUpdatedPayload {
  * (validly-signed) event type this platform doesn't act on yet carries
  * `null` there so the use case can acknowledge it without processing.
  */
+/**
+ * Module 76 — Professional Payout Execution: the subset of a Stripe
+ * `transfer.created` event's `Transfer` payload this platform reasons
+ * about — populated only for `type === "transfer.created"`. Transfers
+ * this module creates (`StripeTransferGatewayAdapter.createTransfer`)
+ * always carry `metadata.payoutId`/`metadata.jobId`, written at creation
+ * time specifically so this reconciliation path can correlate the event
+ * back to the `Payout` row that requested it without trusting anything
+ * else in the payload. A `transfer.created` event for a Transfer this
+ * platform did NOT create (no recognizable metadata — should not occur in
+ * practice, but never assumed) carries `payoutId: null`, which
+ * `ProcessStripeConnectWebhookUseCase` treats as unmatched/ignored, never
+ * as a reason to guess which Payout it might belong to.
+ */
+export interface StripeConnectTransferCreatedPayload {
+  /** Stripe's own `Transfer.id` (`tr_...`). */
+  stripeTransferId: string;
+  /** `Transfer.destination` — the connected account id funds moved to.
+   *  Diagnostic/correlation only; the webhook path never re-derives or
+   *  re-validates the destination (that happened once, synchronously, in
+   *  `ExecuteProfessionalPayoutUseCase`). */
+  destinationStripeAccountId: string | null;
+  /** `Transfer.metadata.payoutId`, as written by
+   *  `StripeTransferGatewayAdapter.createTransfer` — `null` if absent
+   *  (a Transfer this platform's own metadata convention doesn't
+   *  recognize). */
+  payoutId: string | null;
+}
+
 export interface StripeConnectWebhookEvent {
   /** Stripe's own `Event.id` — the idempotency key
    *  `ExternalWebhookEventRepository.claim` uses. */
@@ -61,6 +90,11 @@ export interface StripeConnectWebhookEvent {
    *  `ProcessStripeConnectWebhookUseCase`'s own doc comment. */
   createdAt: Date;
   accountUpdated: StripeConnectAccountUpdatedPayload | null;
+  /** Module 76 — Professional Payout Execution: populated only for
+   *  `type === "transfer.created"` — see
+   *  `StripeConnectTransferCreatedPayload`'s own doc comment. `null` for
+   *  every other event type, including `account.updated`. */
+  transferCreated: StripeConnectTransferCreatedPayload | null;
 }
 
 export type StripeConnectWebhookValidationResult =

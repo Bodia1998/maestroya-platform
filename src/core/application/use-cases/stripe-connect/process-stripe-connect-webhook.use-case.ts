@@ -1,6 +1,7 @@
 import { deriveStripeExpressReadiness } from "@/domain/services/stripe-connect-account-rules";
 import type { ExternalWebhookEventRepository } from "@/domain/repositories/external-webhook-event-repository";
 import type { ProfessionalOnboardingRepository } from "@/domain/repositories/professional-onboarding-repository";
+import type { PayoutRepository } from "@/domain/repositories/payout-repository";
 import type { StripeConnectWebhookEvent } from "@/application/ports/stripe-connect-webhook-verifier";
 
 export type ProcessStripeConnectWebhookOutcome =
@@ -31,7 +32,21 @@ export type ProcessStripeConnectWebhookOutcome =
    *  platform already recorded for the account (from a later webhook or
    *  a later poll) — see this class's own "out-of-order delivery" doc
    *  comment. Acknowledged without overwriting the newer state. */
-  | "stale";
+  | "stale"
+  /** Module 76 — Professional Payout Execution: a `transfer.created`
+   *  event successfully reconciled a `Payout` row from `PENDING`/
+   *  `IN_TRANSIT`/`FAILED` to `PAID` — the self-healing path for "Stripe
+   *  accepted the transfer but this platform's own process crashed (or
+   *  its Stripe API response was lost) before persisting that" — see
+   *  this class's own "transfer reconciliation" doc comment. */
+  | "transfer-reconciled"
+  /** Module 76 — Professional Payout Execution: a validly-signed
+   *  `transfer.created` event whose `metadata.payoutId` does not match any
+   *  `Payout` this platform has (or carries no `payoutId` metadata at
+   *  all) — acknowledged, nothing to reconcile. Mirrors `"unmatched"`'s
+   *  own reasoning for `account.updated`, kept as a distinct outcome for
+   *  observability. */
+  | "transfer-unmatched";
 
 export interface ProcessStripeConnectWebhookResult {
   outcome: ProcessStripeConnectWebhookOutcome;
@@ -118,6 +133,18 @@ export class ProcessStripeConnectWebhookUseCase {
   constructor(
     private readonly onboardings: ProfessionalOnboardingRepository,
     private readonly webhookEvents: ExternalWebhookEventRepository,
+    /** Module 76 — Professional Payout Execution: optional, mirrors
+     *  `EvaluatePaymentReleaseUseCase`'s own `companies?` addition (Module
+     *  75) — every existing construction of this class (every test, and
+     *  any composition root that never wires payout reconciliation) keeps
+     *  compiling unchanged. Only needed to reconcile `transfer.created`
+     *  events — see `execute`'s own handling below. Calling this with a
+     *  `transfer.created` event and no `payouts` configured safely
+     *  acknowledges the event as `"ignored"` rather than throwing — a
+     *  composition root that hasn't opted into Module 76 must not turn a
+     *  benign, already-signature-verified webhook delivery into a 5xx
+     *  Stripe will endlessly retry. */
+    private readonly payouts?: PayoutRepository,
   ) {}
 
   async execute(event: StripeConnectWebhookEvent): Promise<ProcessStripeConnectWebhookResult> {
@@ -132,6 +159,12 @@ export class ProcessStripeConnectWebhookUseCase {
     }
 
     try {
+      if (event.transferCreated) {
+        const outcome = await this.reconcileTransferCreated(event.transferCreated);
+        await this.webhookEvents.markProcessed(claim.record.id);
+        return outcome;
+      }
+
       if (!event.accountUpdated) {
         await this.webhookEvents.markProcessed(claim.record.id);
         return { outcome: "ignored" };
@@ -194,5 +227,47 @@ export class ProcessStripeConnectWebhookUseCase {
       await this.webhookEvents.markFailed(claim.record.id);
       throw error;
     }
+  }
+
+  /**
+   * Module 76 — Professional Payout Execution: transfer reconciliation.
+   *
+   * `ExecuteProfessionalPayoutUseCase`'s own Stripe-idempotency-key
+   * defense already handles the common "network response lost, a retry
+   * follows" case by itself (the retried request converges on the same
+   * Stripe Transfer). This handler is the second, independent line of
+   * defense for the rarer case that same use case's own doc comment
+   * anticipates: the process that called Stripe crashes (or is killed)
+   * permanently after Stripe already accepted the transfer, with no
+   * in-process retry ever following. Without this, such a `Payout` would
+   * stay `PENDING`/`FAILED` forever despite the professional having
+   * actually been paid. `transfer.created` self-heals it.
+   *
+   * Never regresses an already-`PAID` row: `markPaid`'s own
+   * compare-and-swap `fromStatuses` only matches `PENDING`/`IN_TRANSIT`/
+   * `FAILED` — an out-of-order or duplicate delivery of the same event
+   * against an already-reconciled row is always a safe no-op, reported
+   * the same `"transfer-reconciled"` outcome either way (idempotent from
+   * a caller's perspective, exactly like Stripe's own retry expectations).
+   */
+  private async reconcileTransferCreated(
+    payload: NonNullable<StripeConnectWebhookEvent["transferCreated"]>,
+  ): Promise<ProcessStripeConnectWebhookResult> {
+    if (!this.payouts || !payload.payoutId) {
+      return { outcome: "transfer-unmatched" };
+    }
+
+    const payout = await this.payouts.findById(payload.payoutId);
+    if (!payout) {
+      return { outcome: "transfer-unmatched" };
+    }
+
+    await this.payouts.markPaid({
+      id: payout.id,
+      stripeTransferId: payload.stripeTransferId,
+      fromStatuses: ["PENDING", "IN_TRANSIT", "FAILED"],
+    });
+
+    return { outcome: "transfer-reconciled" };
   }
 }

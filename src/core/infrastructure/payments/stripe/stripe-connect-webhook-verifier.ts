@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 
 import type {
   StripeConnectAccountUpdatedPayload,
+  StripeConnectTransferCreatedPayload,
   StripeConnectWebhookValidationResult,
   StripeConnectWebhookVerifier,
 } from "@/application/ports/stripe-connect-webhook-verifier";
@@ -84,6 +85,7 @@ export class StripeConnectWebhookVerifierAdapter implements StripeConnectWebhook
         type: event.type,
         createdAt: new Date(event.created * 1000),
         accountUpdated: extractAccountUpdated(event),
+        transferCreated: extractTransferCreated(event),
       },
     };
   }
@@ -120,5 +122,30 @@ function extractAccountUpdated(event: Stripe.Event): StripeConnectAccountUpdated
     payoutsEnabled: Boolean(account.payouts_enabled),
     requirementsCurrentlyDue: account.requirements?.currently_due ?? [],
     disabledReason: account.requirements?.disabled_reason ?? null,
+  };
+}
+
+/**
+ * Module 76 — Professional Payout Execution: maps a verified
+ * `transfer.created` event onto `StripeConnectTransferCreatedPayload` —
+ * see that type's own doc comment. `metadata.payoutId`/`metadata.jobId`
+ * are exactly what `StripeTransferGatewayAdapter.createTransfer`
+ * (Module 76) writes onto every Transfer it creates; a Transfer without
+ * that metadata (should never occur for a Transfer this platform itself
+ * created) safely yields `payoutId: null` rather than throwing. Returns
+ * `null` for any other event type, mirroring `extractAccountUpdated`'s own
+ * convention exactly.
+ */
+function extractTransferCreated(event: Stripe.Event): StripeConnectTransferCreatedPayload | null {
+  if (event.type !== "transfer.created") return null;
+
+  const transfer = event.data.object as Stripe.Transfer;
+  const destination = transfer.destination;
+  const destinationStripeAccountId = typeof destination === "string" ? destination : (destination?.id ?? null);
+
+  return {
+    stripeTransferId: transfer.id,
+    destinationStripeAccountId,
+    payoutId: typeof transfer.metadata?.payoutId === "string" ? transfer.metadata.payoutId : null,
   };
 }

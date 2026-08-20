@@ -1,5 +1,6 @@
 import { PrismaExternalWebhookEventRepository } from "@/infrastructure/database/prisma/repositories/prisma-external-webhook-event-repository";
 import { PrismaProfessionalOnboardingRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-onboarding-repository";
+import { PrismaPayoutRepository } from "@/infrastructure/database/prisma/repositories/prisma-payout-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
 import { env } from "@/infrastructure/config/env";
@@ -23,6 +24,10 @@ const users = new PrismaUserRepository();
  *  ledger `verification/compose.ts` already wires for Persona — see
  *  `ExternalWebhookEventRepository`'s own doc comment. */
 const webhookEvents = new PrismaExternalWebhookEventRepository();
+/** Module 76 — Professional Payout Execution: reconciliation read/write
+ *  target for `transfer.created` events — see
+ *  `ProcessStripeConnectWebhookUseCase`'s own doc comment. */
+const payouts = new PrismaPayoutRepository();
 
 /**
  * Builds the refresh/return URLs Stripe's hosted onboarding flow redirects
@@ -56,7 +61,7 @@ export function makeCreateStripeLoginLinkUseCase() {
 }
 
 export function makeProcessStripeConnectWebhookUseCase() {
-  return new ProcessStripeConnectWebhookUseCase(onboardings, webhookEvents);
+  return new ProcessStripeConnectWebhookUseCase(onboardings, webhookEvents, payouts);
 }
 
 /**

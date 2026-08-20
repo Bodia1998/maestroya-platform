@@ -608,3 +608,66 @@ export class PaymentGatewayError extends DomainError {
     if (options?.cause !== undefined) this.cause = options.cause;
   }
 }
+/**
+ * Module 76 — Professional Payout Execution: the closed set of failure
+ * categories a `StripeTransferGateway` implementation
+ * (`infrastructure/payments/stripe/stripe-transfer-gateway.ts`) maps every
+ * Stripe SDK error onto before it is allowed to cross into application
+ * code — mirrors `StripeConnectError`/`PaymentGatewayError`'s own
+ * "provider SDK error MUST NOT leak past the adapter" contract, applied to
+ * `stripe.transfers.create` instead of Connect account management or
+ * PaymentIntents. `INSUFFICIENT_BALANCE` and `INVALID_DESTINATION` are the
+ * two failure modes a Transfer specifically introduces that neither sibling
+ * error type has an equivalent for: the platform's own Stripe balance
+ * cannot cover the transfer amount (Stripe's `balance_insufficient` code),
+ * and the destination connected account cannot currently receive transfers
+ * (a restricted/incomplete/deauthorized account — Stripe's
+ * `resource_missing`/`account_invalid`/permission-denied family). Both are
+ * permanent for the *same* request (retrying identically will fail
+ * identically) but may become retryable later once the underlying
+ * condition changes — see `ExecuteProfessionalPayoutUseCase`'s own
+ * "retryable vs. permanent" handling, which treats both as
+ * `retryable: false` for the immediate retry decision while still leaving
+ * the `Payout` row `FAILED` (not `CANCELLED`) so a later manual retry, once
+ * balance/destination is fixed, is still possible.
+ */
+export type StripeTransferErrorCategory =
+  | "AUTHENTICATION"
+  | "INVALID_REQUEST"
+  | "INSUFFICIENT_BALANCE"
+  | "INVALID_DESTINATION"
+  | "ACCOUNT_RESTRICTED"
+  | "RATE_LIMITED"
+  | "NETWORK"
+  | "TEMPORARY"
+  | "UNKNOWN";
+
+/**
+ * Module 76 — Professional Payout Execution: thrown by
+ * `StripeTransferGatewayAdapter`
+ * (`infrastructure/payments/stripe/stripe-transfer-gateway.ts`) for any
+ * failed `stripe.transfers.create` call. This is the one error shape
+ * `ExecuteProfessionalPayoutUseCase` needs to know about; the raw Stripe
+ * SDK error (its own error class, HTTP status, request id) is preserved on
+ * `cause` but never leaks a Stripe SDK type into the application or domain
+ * layers — same reasoning `StripeConnectError`/`PaymentGatewayError` give
+ * for keeping Stripe out of the domain entirely. `retryable` distinguishes
+ * a transient failure (rate limit, network, Stripe-side 5xx — safe to
+ * retry with backoff, possibly automatically) from a permanent one
+ * (invalid request, insufficient balance, invalid/restricted destination —
+ * requires a human or an external state change before a retry could ever
+ * succeed) so a caller doesn't have to string-match `message` to decide
+ * whether to retry.
+ */
+export class StripeTransferError extends DomainError {
+  readonly code = "STRIPE_TRANSFER_ERROR";
+  readonly category: StripeTransferErrorCategory;
+  readonly retryable: boolean;
+
+  constructor(category: StripeTransferErrorCategory, message: string, retryable: boolean, options?: { cause?: unknown }) {
+    super(`[stripe_transfer:${category}] ${message}`);
+    this.category = category;
+    this.retryable = retryable;
+    if (options?.cause !== undefined) this.cause = options.cause;
+  }
+}

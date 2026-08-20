@@ -186,4 +186,66 @@ describe("StripeConnectWebhookVerifierAdapter (Module 72)", () => {
       }
     });
   });
+
+  describe("transfer.created extraction (Module 76)", () => {
+    function fakeTransferCreatedEvent(overrides: Record<string, unknown> = {}): Stripe.Event {
+      return {
+        id: "evt_transfer_1",
+        object: "event",
+        type: "transfer.created",
+        account: "acct_1",
+        created: 1735689600,
+        data: {
+          object: {
+            id: "tr_1",
+            object: "transfer",
+            destination: "acct_1",
+            metadata: { payoutId: "payout-1", jobId: "job-1" },
+            ...overrides,
+          },
+        },
+      } as unknown as Stripe.Event;
+    }
+
+    it("extracts stripeTransferId, destination, and payoutId metadata", () => {
+      const stripe = fakeStripe(() => fakeTransferCreatedEvent());
+      const adapter = new StripeConnectWebhookVerifierAdapter(stripe, "whsec_test");
+
+      const result = adapter.verify("{}", "t=1,v1=validsig");
+
+      expect(result.valid).toBe(true);
+      if (result.valid) {
+        expect(result.event.transferCreated).toEqual({
+          stripeTransferId: "tr_1",
+          destinationStripeAccountId: "acct_1",
+          payoutId: "payout-1",
+        });
+        expect(result.event.accountUpdated).toBeNull();
+      }
+    });
+
+    it("yields payoutId: null for a transfer with no recognizable metadata", () => {
+      const stripe = fakeStripe(() => fakeTransferCreatedEvent({ metadata: {} }));
+      const adapter = new StripeConnectWebhookVerifierAdapter(stripe, "whsec_test");
+
+      const result = adapter.verify("{}", "t=1,v1=validsig");
+
+      expect(result.valid).toBe(true);
+      if (result.valid) {
+        expect(result.event.transferCreated?.payoutId).toBeNull();
+      }
+    });
+
+    it("returns transferCreated: null for a validly-signed event of a different type", () => {
+      const stripe = fakeStripe(() => fakeAccountUpdatedEvent());
+      const adapter = new StripeConnectWebhookVerifierAdapter(stripe, "whsec_test");
+
+      const result = adapter.verify("{}", "t=1,v1=validsig");
+
+      expect(result.valid).toBe(true);
+      if (result.valid) {
+        expect(result.event.transferCreated).toBeNull();
+      }
+    });
+  });
 });
