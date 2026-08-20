@@ -2433,6 +2433,49 @@ model Payout {
   processedAt            DateTime?
   failureReason          String?
 
+  /// Module 76 — Professional Payout Execution: the specific Job this
+  /// per-job payout was executed for. `@unique` (not just indexed) is the
+  /// database-level backstop against a second successful/in-flight Payout
+  /// ever being created for the same Job — see
+  /// `ExecuteProfessionalPayoutUseCase`'s own doc comment on why the
+  /// application-level idempotency check alone is not trusted. Nullable
+  /// (not required) so a future *periodic* payout batch (the
+  /// `periodStart`/`periodEnd` shape this model already has, never used by
+  /// Module 76) never collides with this constraint — Module 76 rows
+  /// always set it, a periodic batch row never does.
+  jobId String? @unique @db.Uuid
+
+  /// Module 76 — Professional Payout Execution: the captured Payment this
+  /// payout's amount was derived from (via the already-recorded
+  /// `Commission` row — see `ExecuteProfessionalPayoutUseCase`'s own doc
+  /// comment). Read-only correlation for reconciliation/observability;
+  /// never itself re-derives the amount at read time. Deliberately not a
+  /// Prisma relation object (unlike `professionalProfile`/`companyProfile`
+  /// above) — this migration only touches the `Payout` model, never
+  /// `Payment`'s, matching this module's "minimal, focused changes" rule.
+  paymentId String? @db.Uuid
+
+  /// Module 76 — Professional Payout Execution: the deterministic key
+  /// (`payout:<jobId>`) used both as this row's own duplicate-Payout guard
+  /// (`@unique`) and as the Stripe `Idempotency-Key` request header for
+  /// `stripe.transfers.create` — see `StripeTransferGatewayAdapter`'s own
+  /// doc comment for why the *same* key is reused across a retried
+  /// execution rather than a fresh one per attempt (Stripe idempotency
+  /// keys are only useful when reused).
+  idempotencyKey String? @unique
+
+  /// Module 76 — Professional Payout Execution: how many times
+  /// `ExecuteProfessionalPayoutUseCase` has attempted to move this Payout
+  /// to `PAID` — incremented on every `FAILED` outcome, never on a
+  /// duplicate/idempotent short-circuit. Observability/reconciliation only
+  /// (Module 80); never itself a business-rule input.
+  attemptCount Int @default(0)
+
+  /// Module 76 — Professional Payout Execution: wall-clock time of the
+  /// most recent execution attempt (successful or failed) — `processedAt`
+  /// below is set only once, on the attempt that actually succeeds.
+  lastAttemptedAt DateTime?
+
   professionalProfile ProfessionalProfile? @relation("PayoutToProfessional", fields: [professionalProfileId], references: [id], onDelete: Restrict)
   companyProfile      CompanyProfile?      @relation("PayoutToCompany", fields: [companyProfileId], references: [id], onDelete: Restrict)
 
@@ -2444,6 +2487,7 @@ model Payout {
   @@index([professionalProfileId])
   @@index([companyProfileId])
   @@index([status])
+  @@index([paymentId])
   @@map("payouts")
 }
 

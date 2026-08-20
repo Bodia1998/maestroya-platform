@@ -4,8 +4,10 @@ import { env } from "@/infrastructure/config/env";
 import { stripe } from "@/infrastructure/payments/stripe/client";
 import { StripeConnectGatewayAdapter } from "@/infrastructure/payments/stripe/stripe-connect-gateway";
 import { StripeConnectWebhookVerifierAdapter } from "@/infrastructure/payments/stripe/stripe-connect-webhook-verifier";
+import { StripeTransferGatewayAdapter } from "@/infrastructure/payments/stripe/stripe-transfer-gateway";
 import type { StripeConnectGateway } from "@/application/ports/stripe-connect-gateway";
 import type { StripeConnectWebhookVerifier } from "@/application/ports/stripe-connect-webhook-verifier";
+import type { StripeTransferGateway } from "@/application/ports/stripe-transfer-gateway";
 
 /**
  * Module 71 — Stripe Connect.
@@ -39,4 +41,19 @@ export const stripeConnectWebhookVerifier: StripeConnectWebhookVerifier = new St
 
 export function makeStripeConnectWebhookVerifier(): StripeConnectWebhookVerifier {
   return stripeConnectWebhookVerifier;
+}
+
+/**
+ * Module 76 — Professional Payout Execution.
+ *
+ * Composition root for the platform's single `StripeTransferGateway` —
+ * same shared-client, one-real-implementation convention as
+ * `stripeConnectGateway`/`paymentGateway` above/elsewhere. No new
+ * environment variable — uses the same `stripe` SDK client singleton
+ * already configured with `STRIPE_SECRET_KEY`.
+ */
+export const stripeTransferGateway: StripeTransferGateway = new StripeTransferGatewayAdapter(stripe);
+
+export function makeStripeTransferGateway(): StripeTransferGateway {
+  return stripeTransferGateway;
 }

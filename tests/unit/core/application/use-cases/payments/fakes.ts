@@ -203,8 +203,8 @@ export class FakePaymentRepository implements PaymentRepository {
     return this.byId.get(id) ?? null;
   }
 
-  async findByJobId(): Promise<PaymentRecord[]> {
-    throw new Error("not implemented in this fake");
+  async findByJobId(jobId: string): Promise<PaymentRecord[]> {
+    return [...this.byId.values()].filter((p) => p.jobId === jobId);
   }
 
   async listForPayer(): Promise<PaymentRecord[]> {
@@ -419,5 +419,535 @@ export class FakeEventBus implements EventBus {
     const existing = this.handlers.get(eventType.eventName) ?? [];
     existing.push(handler as EventHandler<DomainEvent>);
     this.handlers.set(eventType.eventName, existing);
+  }
+}
+// ===========================================================================
+// Module 76 — Professional Payout Execution: additional in-memory fakes.
+// ===========================================================================
+
+import type {
+  ConfirmCompletionData,
+  CreateJobCompletionConfirmationData,
+  DisputeCompletionData,
+  JobCompletionConfirmationRecord,
+  JobCompletionConfirmationRepository,
+  TimeOutCompletionData,
+  UpdateReleaseDecisionData,
+} from "@/domain/repositories/job-completion-confirmation-repository";
+import type { DisputeRecord, DisputeRepository } from "@/domain/repositories/dispute-repository";
+import type { CommissionRecord, CommissionRepository, CreateCommissionData } from "@/domain/repositories/commission-repository";
+import type { CompanyRecord, CompanyRepository, CreateCompanyData, UpdateCompanyData } from "@/domain/repositories/company-repository";
+import type {
+  CompanyVerificationRecord,
+  CompanyVerificationRepository,
+} from "@/domain/repositories/company-verification-repository";
+import type {
+  CompanyPayoutAccountRecord,
+  CompanyPayoutAccountRepository,
+  CreateCompanyPayoutAccountData,
+  UpdateCompanyStripeConnectAccountData,
+} from "@/domain/repositories/company-payout-account-repository";
+import type {
+  TrustAutomatedActionRecord,
+  TrustAutomatedActionRepository,
+  TrustAutomatedActionTypeValue,
+} from "@/domain/repositories/trust-automated-action-repository";
+import type {
+  CreatePendingPayoutData,
+  MarkPayoutFailedInput,
+  MarkPayoutPaidInput,
+  PayoutRecord,
+  PayoutRepository,
+  UpdatePayoutResult,
+} from "@/domain/repositories/payout-repository";
+import type { CreateTransferRequest, CreateTransferResult, StripeTransferGateway } from "@/application/ports/stripe-transfer-gateway";
+
+let payoutFakeIdCounter = 0;
+function payoutFakeNextId(prefix: string): string {
+  payoutFakeIdCounter += 1;
+  return `${prefix}-${payoutFakeIdCounter}`;
+}
+
+/** Only `findByJobId`/`updateReleaseDecision` are meaningfully implemented
+ *  — the only two methods `ExecuteProfessionalPayoutUseCase`'s own
+ *  dependency graph reaches. */
+export class FakeJobCompletionConfirmationRepository implements JobCompletionConfirmationRepository {
+  byJobId = new Map<string, JobCompletionConfirmationRecord>();
+
+  seed(overrides: Partial<JobCompletionConfirmationRecord> & { jobId: string }): JobCompletionConfirmationRecord {
+    const record: JobCompletionConfirmationRecord = {
+      id: overrides.id ?? payoutFakeNextId("confirmation"),
+      jobId: overrides.jobId,
+      status: overrides.status ?? "CONFIRMED",
+      professionalCompletedAt: overrides.professionalCompletedAt ?? new Date(),
+      confirmationDeadlineAt: overrides.confirmationDeadlineAt ?? new Date(),
+      confirmedAt: overrides.confirmedAt ?? new Date(),
+      confirmedByUserId: overrides.confirmedByUserId ?? "customer-user-1",
+      disputeId: overrides.disputeId ?? null,
+      manualReviewCaseId: overrides.manualReviewCaseId ?? null,
+      reminderSentAt: overrides.reminderSentAt ?? null,
+      releaseStatus: overrides.releaseStatus ?? "RELEASE_APPROVED",
+      releaseReason: overrides.releaseReason ?? "Approved.",
+      releaseDecidedAt: overrides.releaseDecidedAt ?? new Date(),
+      createdAt: overrides.createdAt ?? new Date(),
+      updatedAt: overrides.updatedAt ?? new Date(),
+    };
+    this.byJobId.set(record.jobId, record);
+    return record;
+  }
+
+  async findById(id: string): Promise<JobCompletionConfirmationRecord | null> {
+    return [...this.byJobId.values()].find((r) => r.id === id) ?? null;
+  }
+  async findByJobId(jobId: string): Promise<JobCompletionConfirmationRecord | null> {
+    return this.byJobId.get(jobId) ?? null;
+  }
+  create(_data: CreateJobCompletionConfirmationData): Promise<JobCompletionConfirmationRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  confirm(_data: ConfirmCompletionData): Promise<JobCompletionConfirmationRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  markDisputed(_data: DisputeCompletionData): Promise<JobCompletionConfirmationRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  markTimedOut(_data: TimeOutCompletionData): Promise<JobCompletionConfirmationRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  markReminderSent(): Promise<JobCompletionConfirmationRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  async updateReleaseDecision(data: UpdateReleaseDecisionData): Promise<JobCompletionConfirmationRecord> {
+    const existing = [...this.byJobId.values()].find((r) => r.id === data.id);
+    if (!existing) throw new Error("not found");
+    const updated: JobCompletionConfirmationRecord = {
+      ...existing,
+      releaseStatus: data.releaseStatus,
+      releaseReason: data.releaseReason,
+      releaseDecidedAt: data.releaseDecidedAt,
+    };
+    this.byJobId.set(updated.jobId, updated);
+    return updated;
+  }
+  findOverdue(): Promise<JobCompletionConfirmationRecord[]> {
+    throw new Error("not implemented in this fake");
+  }
+  findDueForReminder(): Promise<JobCompletionConfirmationRecord[]> {
+    throw new Error("not implemented in this fake");
+  }
+}
+
+export class FakeDisputeRepository implements DisputeRepository {
+  byJobId = new Map<string, DisputeRecord[]>();
+
+  seedOpenDispute(jobId: string, overrides: Partial<DisputeRecord> = {}): DisputeRecord {
+    const record = this.buildDispute(jobId, { status: "OPEN", ...overrides });
+    const existing = this.byJobId.get(jobId) ?? [];
+    this.byJobId.set(jobId, [...existing, record]);
+    return record;
+  }
+
+  private buildDispute(jobId: string, overrides: Partial<DisputeRecord>): DisputeRecord {
+    return {
+      id: overrides.id ?? payoutFakeNextId("dispute"),
+      caseNumber: overrides.caseNumber ?? "DSP-0001",
+      title: overrides.title ?? "Dispute",
+      jobId,
+      serviceRequestId: overrides.serviceRequestId ?? "request-1",
+      raisedByUserId: overrides.raisedByUserId ?? "customer-user-1",
+      respondentProfessionalProfileId: overrides.respondentProfessionalProfileId ?? null,
+      respondentCompanyProfileId: overrides.respondentCompanyProfileId ?? null,
+      reason: overrides.reason ?? "OTHER",
+      status: overrides.status ?? "OPEN",
+      priority: overrides.priority ?? "MEDIUM",
+      description: overrides.description ?? "Dispute description.",
+      assignedAdminUserId: overrides.assignedAdminUserId ?? null,
+      resolution: overrides.resolution ?? null,
+      resolutionNote: overrides.resolutionNote ?? null,
+      resolvedAt: overrides.resolvedAt ?? null,
+      resolvedByUserId: overrides.resolvedByUserId ?? null,
+      closedAt: overrides.closedAt ?? null,
+      closedByUserId: overrides.closedByUserId ?? null,
+      createdAt: overrides.createdAt ?? new Date(),
+    } as DisputeRecord;
+  }
+
+  async findById(id: string): Promise<DisputeRecord | null> {
+    return [...this.byJobId.values()].flat().find((d) => d.id === id) ?? null;
+  }
+  async listByJobId(jobId: string): Promise<DisputeRecord[]> {
+    return this.byJobId.get(jobId) ?? [];
+  }
+  listRaisedByUser(): Promise<DisputeRecord[]> {
+    throw new Error("not implemented in this fake");
+  }
+  listForAdmin(): Promise<DisputeRecord[]> {
+    throw new Error("not implemented in this fake");
+  }
+  create(): Promise<DisputeRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  assign(): Promise<DisputeRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  setPriority(): Promise<DisputeRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  updateStatus(): Promise<DisputeRecord> {
+    throw new Error("not implemented in this fake");
+  }
+}
+
+export class FakeCommissionRepository implements CommissionRepository {
+  byPaymentId = new Map<string, CommissionRecord>();
+
+  async findByPaymentId(paymentId: string): Promise<CommissionRecord | null> {
+    return this.byPaymentId.get(paymentId) ?? null;
+  }
+  async create(data: CreateCommissionData): Promise<CommissionRecord> {
+    const existing = this.byPaymentId.get(data.paymentId);
+    if (existing) return existing;
+    const record: CommissionRecord = {
+      id: payoutFakeNextId("commission"),
+      paymentId: data.paymentId,
+      professionalProfileId: data.professionalProfileId,
+      companyProfileId: data.companyProfileId,
+      rateBps: data.rateBps,
+      amount: data.amount,
+      status: "PENDING",
+      settledAt: null,
+      createdAt: new Date(),
+    };
+    this.byPaymentId.set(data.paymentId, record);
+    return record;
+  }
+  listForProfessional(): Promise<CommissionRecord[]> {
+    throw new Error("not implemented in this fake");
+  }
+  listForCompany(): Promise<CommissionRecord[]> {
+    throw new Error("not implemented in this fake");
+  }
+}
+
+export class FakeCompanyRepository implements CompanyRepository {
+  byId = new Map<string, CompanyRecord>();
+
+  seed(overrides: Partial<CompanyRecord> & { ownerUserId: string }): CompanyRecord {
+    const record: CompanyRecord = {
+      id: overrides.id ?? payoutFakeNextId("company"),
+      ownerUserId: overrides.ownerUserId,
+      legalName: overrides.legalName ?? "Acme S.L.",
+      tradeName: overrides.tradeName ?? null,
+      taxId: overrides.taxId ?? "B12345678",
+      description: overrides.description ?? null,
+      logoUrl: overrides.logoUrl ?? null,
+      websiteUrl: overrides.websiteUrl ?? null,
+      slug: overrides.slug ?? null,
+      contactEmail: overrides.contactEmail ?? null,
+      contactPhone: overrides.contactPhone ?? null,
+      addressLine: overrides.addressLine ?? null,
+      city: overrides.city ?? null,
+      province: overrides.province ?? null,
+      postalCode: overrides.postalCode ?? null,
+      country: overrides.country ?? null,
+      latitude: overrides.latitude ?? null,
+      longitude: overrides.longitude ?? null,
+      status: overrides.status ?? "ACTIVE",
+      suspendedAt: overrides.suspendedAt ?? null,
+      isVerified: overrides.isVerified ?? false,
+      verifiedAt: overrides.verifiedAt ?? null,
+      stripeConnectAccountId: overrides.stripeConnectAccountId ?? null,
+      averageRating: overrides.averageRating ?? null,
+      reviewCount: overrides.reviewCount ?? 0,
+      isAcceptingRequests: overrides.isAcceptingRequests ?? true,
+      categoryIds: overrides.categoryIds ?? [],
+      createdAt: overrides.createdAt ?? new Date(),
+      updatedAt: overrides.updatedAt ?? new Date(),
+    };
+    this.byId.set(record.id, record);
+    return record;
+  }
+
+  async findById(id: string): Promise<CompanyRecord | null> {
+    return this.byId.get(id) ?? null;
+  }
+  async findByOwnerUserId(ownerUserId: string): Promise<CompanyRecord | null> {
+    return [...this.byId.values()].find((c) => c.ownerUserId === ownerUserId) ?? null;
+  }
+  findBySlug(): Promise<CompanyRecord | null> {
+    throw new Error("not implemented in this fake");
+  }
+  findByTaxId(): Promise<CompanyRecord | null> {
+    throw new Error("not implemented in this fake");
+  }
+  existsBySlug(): Promise<boolean> {
+    throw new Error("not implemented in this fake");
+  }
+  create(_ownerUserId: string, _data: CreateCompanyData): Promise<CompanyRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  update(_id: string, _data: UpdateCompanyData): Promise<CompanyRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  updateStatus(): Promise<void> {
+    throw new Error("not implemented in this fake");
+  }
+  updateCategories(): Promise<CompanyRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  updateOwner(): Promise<void> {
+    throw new Error("not implemented in this fake");
+  }
+}
+
+export class FakeCompanyVerificationRepository implements CompanyVerificationRepository {
+  active = new Map<string, CompanyVerificationRecord>();
+
+  seedApproved(companyProfileId: string): void {
+    this.active.set(companyProfileId, {
+      id: payoutFakeNextId("company-verification"),
+      companyProfileId,
+      status: "APPROVED",
+      submittedAt: new Date(),
+      reviewedAt: new Date(),
+      reviewedByUserId: "admin-1",
+      rejectionReason: null,
+      resubmissionReason: null,
+      expiresAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
+
+  async findActiveByCompanyProfileId(companyProfileId: string): Promise<CompanyVerificationRecord | null> {
+    return this.active.get(companyProfileId) ?? null;
+  }
+  findActiveWithDocumentsByCompanyProfileId(): Promise<never> {
+    throw new Error("not implemented in this fake");
+  }
+  create(): Promise<CompanyVerificationRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  findById(): Promise<CompanyVerificationRecord | null> {
+    throw new Error("not implemented in this fake");
+  }
+  updateStatus(): Promise<CompanyVerificationRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  addDocument(): Promise<never> {
+    throw new Error("not implemented in this fake");
+  }
+  findDocumentById(): Promise<never> {
+    throw new Error("not implemented in this fake");
+  }
+  listDocuments(): Promise<never> {
+    throw new Error("not implemented in this fake");
+  }
+  countDocuments(): Promise<number> {
+    throw new Error("not implemented in this fake");
+  }
+  removeDocument(): Promise<void> {
+    throw new Error("not implemented in this fake");
+  }
+  setCompanyVerifiedStatus(): Promise<void> {
+    throw new Error("not implemented in this fake");
+  }
+  listForAdmin(): Promise<never> {
+    throw new Error("not implemented in this fake");
+  }
+  getDetailForAdmin(): Promise<never> {
+    throw new Error("not implemented in this fake");
+  }
+  findExpirable(): Promise<CompanyVerificationRecord[]> {
+    throw new Error("not implemented in this fake");
+  }
+}
+
+export class FakeCompanyPayoutAccountRepository implements CompanyPayoutAccountRepository {
+  byCompanyProfileId = new Map<string, CompanyPayoutAccountRecord>();
+
+  seedStripeReady(companyProfileId: string, stripeExpressAccountId = "acct_company_1"): CompanyPayoutAccountRecord {
+    const record: CompanyPayoutAccountRecord = {
+      id: payoutFakeNextId("company-payout-account"),
+      companyProfileId,
+      method: "STRIPE_EXPRESS",
+      status: "VERIFIED",
+      accountHolderName: "Acme S.L.",
+      ibanLast4: null,
+      ibanHash: null,
+      stripeExpressAccountId,
+      stripeExpressStatus: "READY",
+      stripeChargesEnabled: true,
+      stripePayoutsEnabled: true,
+      stripeDetailsSubmitted: true,
+      stripeRequirementsCurrentlyDue: false,
+      stripeConnectSyncedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.byCompanyProfileId.set(companyProfileId, record);
+    return record;
+  }
+
+  async findByCompanyProfileId(companyProfileId: string): Promise<CompanyPayoutAccountRecord | null> {
+    return this.byCompanyProfileId.get(companyProfileId) ?? null;
+  }
+  async findByStripeAccountId(stripeAccountId: string): Promise<CompanyPayoutAccountRecord | null> {
+    return [...this.byCompanyProfileId.values()].find((a) => a.stripeExpressAccountId === stripeAccountId) ?? null;
+  }
+  upsertPayoutAccount(_data: CreateCompanyPayoutAccountData): Promise<CompanyPayoutAccountRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  updateStripeConnectAccount(_companyProfileId: string, _data: UpdateCompanyStripeConnectAccountData): Promise<CompanyPayoutAccountRecord> {
+    throw new Error("not implemented in this fake");
+  }
+}
+
+export class FakeTrustAutomatedActionRepository implements TrustAutomatedActionRepository {
+  activeByUser = new Map<string, TrustAutomatedActionRecord[]>();
+
+  seedActivePayoutHold(userId: string): TrustAutomatedActionRecord {
+    const record: TrustAutomatedActionRecord = {
+      id: payoutFakeNextId("trust-action"),
+      userId,
+      type: "PAYOUT_HOLD",
+      status: "ACTIVE",
+      reason: "ADMIN_ADJUSTMENT",
+      triggeringRiskScore: 0,
+      detail: "Held for review.",
+      createdByUserId: "admin-1",
+      expiresAt: null,
+      reversedAt: null,
+      reversedByUserId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const existing = this.activeByUser.get(userId) ?? [];
+    this.activeByUser.set(userId, [...existing, record]);
+    return record;
+  }
+
+  create(): Promise<TrustAutomatedActionRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  findById(): Promise<TrustAutomatedActionRecord | null> {
+    throw new Error("not implemented in this fake");
+  }
+  listForUser(): Promise<TrustAutomatedActionRecord[]> {
+    throw new Error("not implemented in this fake");
+  }
+  async listActiveForUser(userId: string, type?: TrustAutomatedActionTypeValue): Promise<TrustAutomatedActionRecord[]> {
+    const all = this.activeByUser.get(userId) ?? [];
+    return type ? all.filter((a) => a.type === type) : all;
+  }
+  countActiveForUser(): Promise<number> {
+    throw new Error("not implemented in this fake");
+  }
+  reverse(): Promise<TrustAutomatedActionRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  expireDue(): Promise<number> {
+    throw new Error("not implemented in this fake");
+  }
+  countAll(): Promise<number> {
+    throw new Error("not implemented in this fake");
+  }
+  countByType(): Promise<number> {
+    throw new Error("not implemented in this fake");
+  }
+  countActive(): Promise<number> {
+    throw new Error("not implemented in this fake");
+  }
+}
+
+/** Same compare-and-swap semantics as `PrismaPayoutRepository` — see that
+ *  class's own doc comment. Duplicated here per this codebase's "one
+ *  fakes.ts per module's own test directory" convention (mirrors
+ *  `stripe-connect/fakes.ts`'s own `FakePayoutRepository`). */
+export class FakePayoutRepository implements PayoutRepository {
+  byId = new Map<string, PayoutRecord>();
+  private idCounter = 0;
+
+  async findById(id: string): Promise<PayoutRecord | null> {
+    return this.byId.get(id) ?? null;
+  }
+  async findByJobId(jobId: string): Promise<PayoutRecord | null> {
+    return [...this.byId.values()].find((p) => p.jobId === jobId) ?? null;
+  }
+  async createPending(data: CreatePendingPayoutData): Promise<PayoutRecord> {
+    const existing = await this.findByJobId(data.jobId);
+    if (existing) return existing;
+    const now = new Date();
+    const record: PayoutRecord = {
+      id: `payout-${++this.idCounter}`,
+      jobId: data.jobId,
+      paymentId: data.paymentId,
+      professionalProfileId: data.professionalProfileId,
+      companyProfileId: data.companyProfileId,
+      amount: data.amount,
+      currency: data.currency,
+      status: "PENDING",
+      stripeTransferId: null,
+      idempotencyKey: data.idempotencyKey,
+      failureReason: null,
+      attemptCount: 0,
+      lastAttemptedAt: null,
+      processedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.byId.set(record.id, record);
+    return record;
+  }
+  async markPaid(input: MarkPayoutPaidInput): Promise<UpdatePayoutResult> {
+    const existing = this.byId.get(input.id);
+    if (!existing) throw new Error(`No fake payout with id "${input.id}".`);
+    if (!input.fromStatuses.includes(existing.status)) return { applied: false, record: existing };
+    const updated: PayoutRecord = {
+      ...existing,
+      status: "PAID",
+      stripeTransferId: input.stripeTransferId,
+      processedAt: new Date(),
+      lastAttemptedAt: new Date(),
+      failureReason: null,
+      updatedAt: new Date(),
+    };
+    this.byId.set(input.id, updated);
+    return { applied: true, record: updated };
+  }
+  async markFailed(input: MarkPayoutFailedInput): Promise<UpdatePayoutResult> {
+    const existing = this.byId.get(input.id);
+    if (!existing) throw new Error(`No fake payout with id "${input.id}".`);
+    if (!input.fromStatuses.includes(existing.status)) return { applied: false, record: existing };
+    const updated: PayoutRecord = {
+      ...existing,
+      status: "FAILED",
+      failureReason: input.failureReason,
+      lastAttemptedAt: new Date(),
+      attemptCount: existing.attemptCount + 1,
+      updatedAt: new Date(),
+    };
+    this.byId.set(input.id, updated);
+    return { applied: true, record: updated };
+  }
+}
+
+export class FakeStripeTransferGateway implements StripeTransferGateway {
+  calls: CreateTransferRequest[] = [];
+  nextError: Error | null = null;
+  private byIdempotencyKey = new Map<string, string>();
+  private counter = 0;
+
+  async createTransfer(request: CreateTransferRequest): Promise<CreateTransferResult> {
+    this.calls.push(request);
+    if (this.nextError) throw this.nextError;
+
+    const existing = this.byIdempotencyKey.get(request.idempotencyKey);
+    if (existing) return { stripeTransferId: existing };
+
+    this.counter += 1;
+    const stripeTransferId = `tr_fake_${this.counter}`;
+    this.byIdempotencyKey.set(request.idempotencyKey, stripeTransferId);
+    return { stripeTransferId };
   }
 }

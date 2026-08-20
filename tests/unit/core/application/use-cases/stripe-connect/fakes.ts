@@ -20,6 +20,15 @@ import type {
   ExternalWebhookEventRecord,
   ExternalWebhookEventRepository,
 } from "@/domain/repositories/external-webhook-event-repository";
+import type {
+  CreatePendingPayoutData,
+  MarkPayoutFailedInput,
+  MarkPayoutPaidInput,
+  PayoutRecord,
+  PayoutRepository,
+  PayoutStatusValue,
+  UpdatePayoutResult,
+} from "@/domain/repositories/payout-repository";
 
 /**
  * Module 71 — Stripe Connect: in-memory fakes for this module's own
@@ -208,5 +217,115 @@ export class FakeExternalWebhookEventRepository implements ExternalWebhookEventR
     const updated: ExternalWebhookEventRecord = { ...existing, status: "FAILED", updatedAt: new Date() };
     this.events.set(id, updated);
     return updated;
+  }
+}
+/**
+ * Module 76 — Professional Payout Execution: in-memory `PayoutRepository`
+ * — the same compare-and-swap semantics
+ * (`PrismaPayoutRepository`/`markPaid`/`markFailed`'s own "WHERE status IN
+ * fromStatuses" guard) implemented over a plain `Map`, so tests exercising
+ * concurrent/duplicate execution observe the exact same "only one caller's
+ * write can ever apply" behavior the real Postgres-backed implementation
+ * gives.
+ */
+export class FakePayoutRepository implements PayoutRepository {
+  byId = new Map<string, PayoutRecord>();
+  private idCounter = 0;
+
+  async findById(id: string): Promise<PayoutRecord | null> {
+    return this.byId.get(id) ?? null;
+  }
+
+  async findByJobId(jobId: string): Promise<PayoutRecord | null> {
+    return [...this.byId.values()].find((p) => p.jobId === jobId) ?? null;
+  }
+
+  async createPending(data: CreatePendingPayoutData): Promise<PayoutRecord> {
+    const existing = await this.findByJobId(data.jobId);
+    if (existing) return existing;
+
+    const now = new Date();
+    const record: PayoutRecord = {
+      id: `payout-${++this.idCounter}`,
+      jobId: data.jobId,
+      paymentId: data.paymentId,
+      professionalProfileId: data.professionalProfileId,
+      companyProfileId: data.companyProfileId,
+      amount: data.amount,
+      currency: data.currency,
+      status: "PENDING",
+      stripeTransferId: null,
+      idempotencyKey: data.idempotencyKey,
+      failureReason: null,
+      attemptCount: 0,
+      lastAttemptedAt: null,
+      processedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.byId.set(record.id, record);
+    return record;
+  }
+
+  async markPaid(input: MarkPayoutPaidInput): Promise<UpdatePayoutResult> {
+    const existing = this.byId.get(input.id);
+    if (!existing) throw new Error(`No fake payout with id "${input.id}".`);
+    if (!input.fromStatuses.includes(existing.status)) {
+      return { applied: false, record: existing };
+    }
+    const updated: PayoutRecord = {
+      ...existing,
+      status: "PAID",
+      stripeTransferId: input.stripeTransferId,
+      processedAt: new Date(),
+      lastAttemptedAt: new Date(),
+      failureReason: null,
+      updatedAt: new Date(),
+    };
+    this.byId.set(input.id, updated);
+    return { applied: true, record: updated };
+  }
+
+  async markFailed(input: MarkPayoutFailedInput): Promise<UpdatePayoutResult> {
+    const existing = this.byId.get(input.id);
+    if (!existing) throw new Error(`No fake payout with id "${input.id}".`);
+    if (!input.fromStatuses.includes(existing.status)) {
+      return { applied: false, record: existing };
+    }
+    const updated: PayoutRecord = {
+      ...existing,
+      status: "FAILED",
+      failureReason: input.failureReason,
+      lastAttemptedAt: new Date(),
+      attemptCount: existing.attemptCount + 1,
+      updatedAt: new Date(),
+    };
+    this.byId.set(input.id, updated);
+    return { applied: true, record: updated };
+  }
+
+  /** Test-only helper for seeding a specific status directly. */
+  seed(overrides: Partial<PayoutRecord> & { jobId: string }): PayoutRecord {
+    const now = new Date();
+    const record: PayoutRecord = {
+      id: overrides.id ?? `payout-${++this.idCounter}`,
+      jobId: overrides.jobId,
+      paymentId: overrides.paymentId ?? "payment-1",
+      professionalProfileId: overrides.professionalProfileId ?? null,
+      companyProfileId: overrides.companyProfileId ?? null,
+      amount: overrides.amount ?? 100,
+      currency: overrides.currency ?? "EUR",
+      status: (overrides.status ?? "PENDING") as PayoutStatusValue,
+      stripeTransferId: overrides.stripeTransferId ?? null,
+      idempotencyKey: overrides.idempotencyKey ?? `payout:${overrides.jobId}`,
+      failureReason: overrides.failureReason ?? null,
+      attemptCount: overrides.attemptCount ?? 0,
+      lastAttemptedAt: overrides.lastAttemptedAt ?? null,
+      processedAt: overrides.processedAt ?? null,
+      createdAt: overrides.createdAt ?? now,
+      updatedAt: overrides.updatedAt ?? now,
+    };
+    this.byId.set(record.id, record);
+    return record;
   }
 }
