@@ -5,7 +5,11 @@ import { CreateQuoteUseCase } from "@/application/use-cases/quotes/create-quote.
 import { UpdateQuoteUseCase } from "@/application/use-cases/quotes/update-quote.use-case";
 import { StartJobUseCase } from "@/application/use-cases/job/start-job.use-case";
 import { NullJobNotifier } from "@/application/ports/job-notifier";
-import { MaterialsListRequiredError, MaterialsNotConfirmedError } from "@/domain/errors/domain-error";
+import {
+  MaterialsListRequiredError,
+  MaterialsNotConfirmedError,
+  PricedMaterialsNotAllowedError,
+} from "@/domain/errors/domain-error";
 import {
   FakeAppointmentRepository,
   FakeJobRepository,
@@ -147,6 +151,16 @@ const REQUIRED_MATERIALS = [
   { name: "Copper pipe 22mm", quantity: 12 },
 ];
 
+// Module 78 audit finding fixtures.
+const PROFESSIONAL_MATERIALS_ITEMS = [
+  { description: "Labor", quantity: 4, unitPrice: 50 },
+  { description: "Boiler unit", quantity: 1, unitPrice: 200, category: "MATERIALS" as const },
+];
+const UNPRICED_MATERIALS_ITEM = [
+  { description: "Labor", quantity: 4, unitPrice: 50 },
+  { description: "Boiler unit (customer-supplied, not billed)", quantity: 1, unitPrice: 0, category: "MATERIALS" as const },
+];
+
 describe("Module 63 — CreateQuoteUseCase materials strategy", () => {
   it("creates a PROFESSIONAL_SUPPLIED quote (default) with no materials list required", async () => {
     const repos = makeRepos();
@@ -224,6 +238,93 @@ describe("Module 63 — CreateQuoteUseCase materials strategy", () => {
   });
 });
 
+describe("Module 78 audit finding — priced MATERIALS items on a CUSTOMER_PURCHASED quote (CreateQuoteUseCase)", () => {
+  it("rejects a CUSTOMER_PURCHASED quote that also carries a priced MATERIALS QuoteItem", async () => {
+    const repos = makeRepos();
+    seedActiveProfessional(repos, "pro-1");
+    const request = seedPublishedRequest(repos, "cust-1");
+
+    await expect(
+      new CreateQuoteUseCase(
+        repos.professionals,
+        repos.professionalDiscovery,
+        repos.requestDiscovery,
+        repos.quotes,
+      ).execute("pro-1", {
+        serviceRequestId: request.id,
+        items: PROFESSIONAL_MATERIALS_ITEMS,
+        materialsStrategy: "CUSTOMER_PURCHASED",
+        materials: REQUIRED_MATERIALS,
+      }),
+    ).rejects.toThrow(PricedMaterialsNotAllowedError);
+
+    // Validation cannot be bypassed by calling the persistence path
+    // directly, because the rejection happens before any create() call —
+    // confirm nothing was persisted.
+    expect(repos.quotes.quotes.size).toBe(0);
+  });
+
+  it("accepts a CUSTOMER_PURCHASED quote whose MATERIALS item is unpriced (amount is zero)", async () => {
+    const repos = makeRepos();
+    seedActiveProfessional(repos, "pro-1");
+    const request = seedPublishedRequest(repos, "cust-1");
+
+    const quote = await new CreateQuoteUseCase(
+      repos.professionals,
+      repos.professionalDiscovery,
+      repos.requestDiscovery,
+      repos.quotes,
+    ).execute("pro-1", {
+      serviceRequestId: request.id,
+      items: UNPRICED_MATERIALS_ITEM,
+      materialsStrategy: "CUSTOMER_PURCHASED",
+      materials: REQUIRED_MATERIALS,
+    });
+
+    expect(quote.materialsStrategy).toBe("CUSTOMER_PURCHASED");
+  });
+
+  it("still accepts a PROFESSIONAL_SUPPLIED quote with a priced MATERIALS item — existing behavior unchanged", async () => {
+    const repos = makeRepos();
+    seedActiveProfessional(repos, "pro-1");
+    const request = seedPublishedRequest(repos, "cust-1");
+
+    const quote = await new CreateQuoteUseCase(
+      repos.professionals,
+      repos.professionalDiscovery,
+      repos.requestDiscovery,
+      repos.quotes,
+    ).execute("pro-1", {
+      serviceRequestId: request.id,
+      items: PROFESSIONAL_MATERIALS_ITEMS,
+      materialsStrategy: "PROFESSIONAL_SUPPLIED",
+    });
+
+    expect(quote.materialsStrategy).toBe("PROFESSIONAL_SUPPLIED");
+    expect(quote.totalAmount).toBe(400); // 4*50 labour + 1*200 materials
+  });
+
+  it("accepts a CUSTOMER_PURCHASED quote with no MATERIALS items at all", async () => {
+    const repos = makeRepos();
+    seedActiveProfessional(repos, "pro-1");
+    const request = seedPublishedRequest(repos, "cust-1");
+
+    const quote = await new CreateQuoteUseCase(
+      repos.professionals,
+      repos.professionalDiscovery,
+      repos.requestDiscovery,
+      repos.quotes,
+    ).execute("pro-1", {
+      serviceRequestId: request.id,
+      items: VALID_ITEMS,
+      materialsStrategy: "CUSTOMER_PURCHASED",
+      materials: REQUIRED_MATERIALS,
+    });
+
+    expect(quote.materialsStrategy).toBe("CUSTOMER_PURCHASED");
+  });
+});
+
 describe("Module 63 — UpdateQuoteUseCase materials strategy", () => {
   it("preserves the existing materials strategy when the update doesn't specify one", async () => {
     const repos = makeRepos();
@@ -267,6 +368,84 @@ describe("Module 63 — UpdateQuoteUseCase materials strategy", () => {
         materials: [],
       }),
     ).rejects.toThrow(MaterialsListRequiredError);
+  });
+});
+
+describe("Module 78 audit finding — priced MATERIALS items on a CUSTOMER_PURCHASED quote (UpdateQuoteUseCase)", () => {
+  it("rejects switching an existing PROFESSIONAL_SUPPLIED quote to CUSTOMER_PURCHASED while retaining priced MATERIALS items", async () => {
+    const repos = makeRepos();
+    seedActiveProfessional(repos, "pro-1");
+    const request = seedPublishedRequest(repos, "cust-1");
+    const created = await new CreateQuoteUseCase(
+      repos.professionals,
+      repos.professionalDiscovery,
+      repos.requestDiscovery,
+      repos.quotes,
+    ).execute("pro-1", {
+      serviceRequestId: request.id,
+      items: PROFESSIONAL_MATERIALS_ITEMS,
+      materialsStrategy: "PROFESSIONAL_SUPPLIED",
+    });
+
+    await expect(
+      new UpdateQuoteUseCase(repos.professionals, repos.quotes).execute("pro-1", created.id, {
+        items: PROFESSIONAL_MATERIALS_ITEMS,
+        materialsStrategy: "CUSTOMER_PURCHASED",
+        materials: REQUIRED_MATERIALS,
+      }),
+    ).rejects.toThrow(PricedMaterialsNotAllowedError);
+
+    // The rejected update must not have mutated the persisted quote.
+    const stillPersisted = repos.quotes.quotes.get(created.id);
+    expect(stillPersisted?.materialsStrategy).toBe("PROFESSIONAL_SUPPLIED");
+  });
+
+  it("rejects adding a priced MATERIALS item to an existing CUSTOMER_PURCHASED quote", async () => {
+    const repos = makeRepos();
+    seedActiveProfessional(repos, "pro-1");
+    const request = seedPublishedRequest(repos, "cust-1");
+    const created = await new CreateQuoteUseCase(
+      repos.professionals,
+      repos.professionalDiscovery,
+      repos.requestDiscovery,
+      repos.quotes,
+    ).execute("pro-1", {
+      serviceRequestId: request.id,
+      items: VALID_ITEMS,
+      materialsStrategy: "CUSTOMER_PURCHASED",
+      materials: REQUIRED_MATERIALS,
+    });
+
+    await expect(
+      new UpdateQuoteUseCase(repos.professionals, repos.quotes).execute("pro-1", created.id, {
+        items: PROFESSIONAL_MATERIALS_ITEMS,
+        materialsStrategy: "CUSTOMER_PURCHASED",
+        materials: REQUIRED_MATERIALS,
+      }),
+    ).rejects.toThrow(PricedMaterialsNotAllowedError);
+  });
+
+  it("still allows a normal PROFESSIONAL_SUPPLIED update with priced MATERIALS items — existing behavior unchanged", async () => {
+    const repos = makeRepos();
+    seedActiveProfessional(repos, "pro-1");
+    const request = seedPublishedRequest(repos, "cust-1");
+    const created = await new CreateQuoteUseCase(
+      repos.professionals,
+      repos.professionalDiscovery,
+      repos.requestDiscovery,
+      repos.quotes,
+    ).execute("pro-1", {
+      serviceRequestId: request.id,
+      items: PROFESSIONAL_MATERIALS_ITEMS,
+      materialsStrategy: "PROFESSIONAL_SUPPLIED",
+    });
+
+    const updated = await new UpdateQuoteUseCase(repos.professionals, repos.quotes).execute("pro-1", created.id, {
+      items: PROFESSIONAL_MATERIALS_ITEMS,
+    });
+
+    expect(updated.materialsStrategy).toBe("PROFESSIONAL_SUPPLIED");
+    expect(updated.totalAmount).toBe(400);
   });
 });
 

@@ -1,6 +1,31 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
+ * Test-timing note (investigated while diagnosing Module 78's `npm test`
+ * run — see MODULE_78_HEALTH_TEST_TIMEOUT_AUDIT.md for the full audit;
+ * Module 78 itself does not touch health/observability/circuit-breaker
+ * code and is not the cause of the underlying timing margin):
+ *
+ * Nearly every test below does a real `vi.resetModules()` followed by a
+ * fresh dynamic `import()` of the actual health/observability route
+ * composition root — deliberate end-to-end coverage of the real wiring,
+ * not a mock. Re-transforming and re-evaluating that module graph, plus
+ * (for the diagnostics/full-readiness-aggregation tests specifically)
+ * dependency checks bounded by `CIRCUIT_BREAKER_TIMEOUT_MS` (defaults to
+ * 5000ms — see `@/infrastructure/config/env.ts`), already measured 4.0-4.5s
+ * on an otherwise idle machine — leaving almost no margin against Vitest's
+ * own default 5000ms `testTimeout` once this file runs alongside the rest
+ * of a large, CPU-contended parallel suite. That race (two independent
+ * ~5s budgets, near-zero margin) is the actual root cause of the
+ * intermittent "Test timed out in 5000ms" failures, not a functional
+ * defect in these routes. Scoped to *this file only* — never
+ * `vitest.config.ts`'s global `testTimeout` — so every other test file's
+ * fast-failure timeout stays exactly as tight as it was before.
+ */
+vi.setConfig({ testTimeout: 20000 });
+
+
+/**
  * Module 56 — Health Checks & Circuit Breakers: end-to-end wiring
  * coverage, the same `vi.doMock` + `vi.resetModules()` pattern
  * `tests/integration/backup/backup-health-route-wiring.test.ts` uses —

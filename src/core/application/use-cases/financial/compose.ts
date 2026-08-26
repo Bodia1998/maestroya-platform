@@ -13,6 +13,7 @@ import { PrismaQuoteRepository } from "@/infrastructure/database/prisma/reposito
 import { PrismaTrustAutomatedActionRepository } from "@/infrastructure/database/prisma/repositories/prisma-trust-automated-action-repository";
 import { makeCheckPayoutEligibilityUseCase } from "@/application/use-cases/verification/compose";
 import { CalculateJobCommissionBreakdownUseCase } from "./calculate-job-commission-breakdown.use-case";
+import { CalculateJobTaxBreakdownUseCase } from "./calculate-job-tax-breakdown.use-case";
 import { CheckPayoutReadinessUseCase } from "./check-payout-readiness.use-case";
 import { CreateFinancialAdjustmentUseCase } from "./create-financial-adjustment.use-case";
 import { GetCustomerFinancialSummaryUseCase } from "./get-customer-financial-summary.use-case";
@@ -50,6 +51,14 @@ const reconcilePayment = new ReconcilePaymentUseCase(payments, commissions, ledg
 
 export function makeCalculateJobCommissionBreakdownUseCase() {
   return breakdowns;
+}
+
+// --- Module 78 — IVA / Tax Integration ---
+
+const taxBreakdowns = new CalculateJobTaxBreakdownUseCase(jobs, quotes, rates);
+
+export function makeCalculateJobTaxBreakdownUseCase() {
+  return taxBreakdowns;
 }
 
 export function makeRecordCommissionForPaymentUseCase() {

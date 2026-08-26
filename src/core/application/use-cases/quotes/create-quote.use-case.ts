@@ -7,7 +7,10 @@ import type { QuoteRecord, QuoteRepository } from "@/domain/repositories/quote-r
 import type { ServiceRequestDiscoveryRepository } from "@/domain/repositories/service-request-discovery-repository";
 import { calculateQuoteTotal } from "@/domain/services/money";
 import { isProfessionalEligibleForRequest } from "@/domain/services/quote-eligibility";
-import { assertValidMaterialsList } from "@/domain/services/materials-procurement-rules";
+import {
+  assertNoPricedMaterialsWhenCustomerPurchased,
+  assertValidMaterialsList,
+} from "@/domain/services/materials-procurement-rules";
 import { DEFAULT_MATERIALS_STRATEGY } from "@/domain/value-objects/materials-strategy";
 import type { CreateQuoteInput } from "@/application/dto/quote.dto";
 
@@ -86,6 +89,10 @@ export class CreateQuoteUseCase {
       notes: material.notes || null,
     }));
     assertValidMaterialsList(materialsStrategy, materials);
+    // Module 78 audit finding: reject a priced MATERIALS QuoteItem on a
+    // CUSTOMER_PURCHASED quote before it is ever persisted — see
+    // materials-procurement-rules.ts's own doc comment on this function.
+    assertNoPricedMaterialsWhenCustomerPurchased(materialsStrategy, input.items);
 
     const quote = await this.quotes.create({
       serviceRequestId: request.id,

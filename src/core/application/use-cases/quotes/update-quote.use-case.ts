@@ -3,7 +3,10 @@ import type { ProfessionalRepository } from "@/domain/repositories/professional-
 import type { QuoteRecord, QuoteRepository } from "@/domain/repositories/quote-repository";
 import { calculateQuoteTotal } from "@/domain/services/money";
 import { isEditableQuoteStatus } from "@/domain/services/quote-state";
-import { assertValidMaterialsList } from "@/domain/services/materials-procurement-rules";
+import {
+  assertNoPricedMaterialsWhenCustomerPurchased,
+  assertValidMaterialsList,
+} from "@/domain/services/materials-procurement-rules";
 import { DEFAULT_MATERIALS_STRATEGY } from "@/domain/value-objects/materials-strategy";
 import type { UpdateQuoteInput } from "@/application/dto/quote.dto";
 
@@ -60,6 +63,16 @@ export class UpdateQuoteUseCase {
       notes: material.notes || null,
     }));
     assertValidMaterialsList(materialsStrategy, materials);
+    // Module 78 audit finding: reject a priced MATERIALS QuoteItem on a
+    // CUSTOMER_PURCHASED quote before persisting the edit — covers both
+    // "add a priced MATERIALS item to an already-CUSTOMER_PURCHASED quote"
+    // and "switch an existing PROFESSIONAL_SUPPLIED quote's strategy to
+    // CUSTOMER_PURCHASED while keeping its priced MATERIALS items," since
+    // an update always resupplies the complete items array (see this
+    // class's own doc comment) — there is no partial-item mutation path
+    // that could bypass this check. See materials-procurement-rules.ts's
+    // own doc comment on this function.
+    assertNoPricedMaterialsWhenCustomerPurchased(materialsStrategy, input.items);
 
     return this.quotes.update(existing.id, {
       totalAmount,
