@@ -402,6 +402,30 @@ export class MaterialsListRequiredError extends DomainError {
 }
 
 /**
+ * Module 78 — IVA / Tax Integration audit finding (materials-strategy
+ * gap): thrown by `materials-procurement-rules.ts`'s
+ * `assertNoPricedMaterialsWhenCustomerPurchased`, called from
+ * `CreateQuoteUseCase`/`UpdateQuoteUseCase`, when a Quote whose
+ * `materialsStrategy` is `CUSTOMER_PURCHASED` carries a priced (`unitPrice
+ * > 0`) `MATERIALS`-category `QuoteItem`. Before this check existed,
+ * nothing prevented that combination, and Module 64's commission engine
+ * (which reads only `QuoteItem.category`, never `materialsStrategy`) would
+ * silently commission materials MaestroYa never charges for. Kept as its
+ * own class (rather than the generic `ValidationError`) for the same
+ * reason `MaterialsListRequiredError` is — a caller can distinguish "a
+ * priced materials item isn't allowed here" from a generic input error.
+ */
+export class PricedMaterialsNotAllowedError extends DomainError {
+  readonly code = "PRICED_MATERIALS_NOT_ALLOWED";
+
+  constructor(
+    message = "A priced materials item is not allowed when the customer purchases the materials directly.",
+  ) {
+    super(message);
+  }
+}
+
+/**
  * Module 63 — Materials Procurement Workflow: thrown by `StartJobUseCase`
  * when a Job's accepted Quote has `materialsStrategy` `CUSTOMER_PURCHASED`
  * and the customer has not yet confirmed (`Quote.materialsConfirmedAt` is

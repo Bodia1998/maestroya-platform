@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { MaterialsListRequiredError, ValidationError } from "@/domain/errors/domain-error";
+import { MaterialsListRequiredError, PricedMaterialsNotAllowedError, ValidationError } from "@/domain/errors/domain-error";
 import type { QuoteMaterialInput } from "@/domain/repositories/quote-repository";
 import {
+  assertNoPricedMaterialsWhenCustomerPurchased,
   assertValidMaterialsList,
   canConfirmMaterialsPurchase,
   canStartJobGivenMaterials,
@@ -112,5 +113,50 @@ describe("Module 63 — canConfirmMaterialsPurchase", () => {
 
   it("is false for CUSTOMER_PURCHASED already confirmed — no double-confirm", () => {
     expect(canConfirmMaterialsPurchase("CUSTOMER_PURCHASED", new Date())).toBe(false);
+  });
+});
+
+describe("Module 78 audit finding — assertNoPricedMaterialsWhenCustomerPurchased", () => {
+  it("does not throw for PROFESSIONAL_SUPPLIED with a priced MATERIALS item", () => {
+    expect(() =>
+      assertNoPricedMaterialsWhenCustomerPurchased("PROFESSIONAL_SUPPLIED", [
+        { category: "LABOR", unitPrice: 50 },
+        { category: "MATERIALS", unitPrice: 200 },
+      ]),
+    ).not.toThrow();
+  });
+
+  it("throws PricedMaterialsNotAllowedError for CUSTOMER_PURCHASED with a priced MATERIALS item", () => {
+    expect(() =>
+      assertNoPricedMaterialsWhenCustomerPurchased("CUSTOMER_PURCHASED", [
+        { category: "LABOR", unitPrice: 50 },
+        { category: "MATERIALS", unitPrice: 200 },
+      ]),
+    ).toThrow(PricedMaterialsNotAllowedError);
+  });
+
+  it("does not throw for CUSTOMER_PURCHASED with an unpriced (zero-amount) MATERIALS item", () => {
+    expect(() =>
+      assertNoPricedMaterialsWhenCustomerPurchased("CUSTOMER_PURCHASED", [
+        { category: "LABOR", unitPrice: 50 },
+        { category: "MATERIALS", unitPrice: 0 },
+      ]),
+    ).not.toThrow();
+  });
+
+  it("does not throw for CUSTOMER_PURCHASED with no MATERIALS items at all", () => {
+    expect(() =>
+      assertNoPricedMaterialsWhenCustomerPurchased("CUSTOMER_PURCHASED", [{ category: "LABOR", unitPrice: 50 }]),
+    ).not.toThrow();
+  });
+
+  it("does not throw for CUSTOMER_PURCHASED with an empty items list", () => {
+    expect(() => assertNoPricedMaterialsWhenCustomerPurchased("CUSTOMER_PURCHASED", [])).not.toThrow();
+  });
+
+  it("treats an item with no category as LABOR (defaults do not accidentally trigger the rule)", () => {
+    expect(() =>
+      assertNoPricedMaterialsWhenCustomerPurchased("CUSTOMER_PURCHASED", [{ unitPrice: 50 }]),
+    ).not.toThrow();
   });
 });

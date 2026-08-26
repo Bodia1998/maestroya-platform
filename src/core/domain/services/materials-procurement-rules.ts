@@ -1,4 +1,8 @@
-import { MaterialsListRequiredError, ValidationError } from "@/domain/errors/domain-error";
+import {
+  MaterialsListRequiredError,
+  PricedMaterialsNotAllowedError,
+  ValidationError,
+} from "@/domain/errors/domain-error";
 import type { QuoteMaterialInput } from "@/domain/repositories/quote-repository";
 import type { MaterialsStrategyValue } from "@/domain/value-objects/materials-strategy";
 
@@ -79,6 +83,66 @@ export function assertValidMaterialsList(
     if (!isValidMaterialInput(material)) {
       throw new ValidationError("Every material needs a name and a quantity greater than zero.");
     }
+  }
+}
+
+/**
+ * A minimal shape covering exactly what this rule needs from a QuoteItem
+ * (input or already-persisted) — deliberately not `QuoteItemInput`/
+ * `QuoteItemRecord` themselves, so this file stays dependency-free of
+ * `quote-repository.ts`'s own types the same way it already is for
+ * `MaterialsStrategyValue` alone, and so both a raw DTO item (pre-persist,
+ * no `amount` yet) and a persisted `QuoteItemRecord` satisfy it without
+ * conversion.
+ */
+export interface PricedQuoteItemInput {
+  category?: "LABOR" | "MATERIALS";
+  unitPrice: number;
+}
+
+/**
+ * Module 78 audit finding: MaestroYa's flat commission (and, downstream,
+ * Module 78's own IVA calculation) is charged on every `MATERIALS`-category
+ * `QuoteItem`'s priced amount — see `commission-calculation-service.ts`'s
+ * own doc comment, "Commissionable ... regardless of who purchased them."
+ * That is correct when the professional themselves purchased and priced
+ * the materials (`PROFESSIONAL_SUPPLIED`), but wrong when the customer
+ * purchases materials directly (`CUSTOMER_PURCHASED`): `QuoteMaterial` (the
+ * required-materials checklist for that strategy) deliberately has no
+ * price at all — see `quote-repository.ts`'s own doc comment, "exists only
+ * to tell the customer what to go buy, never to price anything" — so
+ * MaestroYa must never end up commissioning or taxing a `CUSTOMER_PURCHASED`
+ * Quote's materials. Nothing previously stopped a caller from submitting a
+ * priced `MATERIALS` `QuoteItem` on a `CUSTOMER_PURCHASED` Quote anyway.
+ *
+ * This is the upstream fix for that gap: called by
+ * `CreateQuoteUseCase`/`UpdateQuoteUseCase` alongside `assertValidMaterialsList`,
+ * so the invalid state is rejected at quote-creation/edit time and can
+ * never reach `CalculateJobCommissionBreakdownUseCase` (Module 64) or
+ * `CalculateJobTaxBreakdownUseCase` (Module 78) at all — the commission
+ * and tax engines themselves are deliberately left untouched; they simply
+ * never see this input again.
+ *
+ * - PROFESSIONAL_SUPPLIED: always passes — a priced `MATERIALS` item is
+ *   exactly what this strategy is for, unaffected by this rule.
+ * - CUSTOMER_PURCHASED: rejects if any item has `category === "MATERIALS"`
+ *   and `unitPrice > 0`. A `MATERIALS`-category item with `unitPrice === 0`
+ *   contributes nothing to any commission/taxable base (`amount` is always
+ *   `quantity * unitPrice`, see `money.ts`), so it is not "priced" and is
+ *   left alone — this rule targets the actual financial invariant, not the
+ *   category label by itself.
+ */
+export function assertNoPricedMaterialsWhenCustomerPurchased(
+  strategy: MaterialsStrategyValue,
+  items: readonly PricedQuoteItemInput[],
+): void {
+  if (!requiresCustomerPurchasedMaterials(strategy)) return;
+
+  const hasPricedMaterialsItem = items.some(
+    (item) => (item.category ?? "LABOR") === "MATERIALS" && item.unitPrice > 0,
+  );
+  if (hasPricedMaterialsItem) {
+    throw new PricedMaterialsNotAllowedError();
   }
 }
 

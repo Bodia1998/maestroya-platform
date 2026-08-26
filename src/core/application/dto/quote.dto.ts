@@ -158,17 +158,49 @@ function requireMaterialsWhenCustomerPurchased(
   }
 }
 
+/**
+ * Module 78 audit finding's DTO-layer mirror: "If purchased by the
+ * customer, no MATERIALS-category item may carry a price." Same
+ * "fast client-side feedback only" role `requireMaterialsWhenCustomerPurchased`
+ * already has — the authoritative check every use case actually trusts is
+ * `domain/services/materials-procurement-rules.ts`'s
+ * `assertNoPricedMaterialsWhenCustomerPurchased`, run again server-side
+ * after this schema parses.
+ */
+function rejectPricedMaterialsWhenCustomerPurchased(
+  data: {
+    materialsStrategy?: (typeof materialsStrategySchema)["_output"];
+    items?: QuoteItemInput[];
+  },
+  ctx: z.RefinementCtx,
+): void {
+  if (data.materialsStrategy !== "CUSTOMER_PURCHASED") return;
+  const pricedMaterialsIndex = (data.items ?? []).findIndex(
+    (item) => (item.category ?? "LABOR") === "MATERIALS" && item.unitPrice > 0,
+  );
+  if (pricedMaterialsIndex !== -1) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["items", pricedMaterialsIndex, "unitPrice"],
+      message: "Materials cannot be priced on a quote when the customer purchases them directly.",
+    });
+  }
+}
+
 export const createQuoteSchema = quoteFieldsSchema
   .extend({
     serviceRequestId: z.string().uuid("Invalid service request."),
   })
-  .superRefine(requireMaterialsWhenCustomerPurchased);
+  .superRefine(requireMaterialsWhenCustomerPurchased)
+  .superRefine(rejectPricedMaterialsWhenCustomerPurchased);
 export type CreateQuoteInput = z.infer<typeof createQuoteSchema>;
 
 // Update reuses the same field-level rules as create, but never accepts a
 // serviceRequestId — the ServiceRequest a quote belongs to can never change
 // (see UpdateQuoteFields' doc comment).
-export const updateQuoteSchema = quoteFieldsSchema.superRefine(requireMaterialsWhenCustomerPurchased);
+export const updateQuoteSchema = quoteFieldsSchema
+  .superRefine(requireMaterialsWhenCustomerPurchased)
+  .superRefine(rejectPricedMaterialsWhenCustomerPurchased);
 export type UpdateQuoteInput = z.infer<typeof updateQuoteSchema>;
 
 export const listProfessionalQuotesSchema = z.object({
