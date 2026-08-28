@@ -199,6 +199,12 @@ model User {
   invoicesAccepted                  Invoice[]                  @relation("InvoiceAcceptedBy")
   invoicesCancelled                 Invoice[]                  @relation("InvoiceCancelledBy")
   creditNotesCancelled              CreditNote[]               @relation("CreditNoteCancelledBy")
+  /// Module 80 — Financial Reconciliation & Observability: reconciliation
+  /// runs a human admin explicitly triggered (null on the row itself for a
+  /// system/scheduled trigger — see ReconciliationRun.triggeredByUserId's
+  /// own doc comment) and discrepancies this admin has manually resolved.
+  reconciliationRunsTriggered       ReconciliationRun[]         @relation("ReconciliationRunTriggeredBy")
+  reconciliationDiscrepanciesResolved ReconciliationDiscrepancy[] @relation("ReconciliationDiscrepancyResolvedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -4893,4 +4899,201 @@ model InvoiceNumberCounter {
 
   @@id([series, year])
   @@map("invoice_number_counters")
+}
+
+// ============================================================================
+// Module 80 — Financial Reconciliation & Observability
+// ============================================================================
+//
+// Additive-only: no existing table, column, or business-logic code path is
+// touched by this section. Every discrepancy-entity-reference column below
+// (jobId/paymentId/invoiceId/payoutId/refundId/creditNoteId/entityId) is
+// DELIBERATELY a plain scalar UUID column, never a Prisma relation with a
+// foreign-key constraint to the referenced table. A foreign key would make
+// it impossible to ever record the exact class of problem this module must
+// be able to record — "this Payment references a nonexistent Job" — since
+// the referenced row may legitimately not exist, or no longer exist in the
+// state the discrepancy describes. This mirrors the precedent already set
+// by Payout.paymentId (Module 76 — "deliberately not a Prisma relation
+// object... read-only correlation for reconciliation/observability").
+
+enum ReconciliationRunStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum ReconciliationScope {
+  FULL
+  PAYMENT
+  COMMISSION
+  TAX
+  INVOICE
+  PAYOUT
+  REFUND
+  CREDIT_NOTE
+  PROVIDER
+}
+
+enum DiscrepancyEntityType {
+  PAYMENT
+  COMMISSION
+  TAX_BREAKDOWN
+  INVOICE
+  PAYOUT
+  REFUND
+  CREDIT_NOTE
+  PROVIDER_EVENT
+}
+
+enum DiscrepancyCategory {
+  PAYMENT_MISSING_JOB_OR_QUOTE
+  PAYMENT_AMOUNT_MISMATCH
+  PAYMENT_SUCCESSFUL_WITHOUT_RELATIONSHIP
+  DUPLICATE_PAYMENT
+  PAYMENT_CURRENCY_MISMATCH
+  COMMISSION_RATE_MISMATCH
+  COMMISSION_AMOUNT_MISMATCH
+  COMMISSION_PROFESSIONAL_NET_MISMATCH
+  COMMISSION_ALLOCATION_MISMATCH
+  COMMISSION_LEDGER_INCONSISTENT
+  TAX_TAXABLE_BASE_MISMATCH
+  TAX_RATE_MISMATCH
+  TAX_AMOUNT_MISMATCH
+  TAX_PROFESSIONAL_SIDE_MISMATCH
+  TAX_CUSTOMER_SIDE_MISMATCH
+  TAX_IRPF_MISMATCH
+  TAX_INVOICE_TOTAL_MISMATCH
+  INVOICE_INVALID_JOB_REFERENCE
+  INVOICE_WRONG_PARTY
+  INVOICE_AMOUNT_INCONSISTENT_WITH_TAX_BREAKDOWN
+  INVOICE_TAX_AMOUNT_INCONSISTENT
+  INVOICE_COMMISSION_AMOUNT_INCONSISTENT
+  INVOICE_ISSUED_WITHOUT_PREREQUISITES
+  INVOICE_PAID_WITHOUT_PAYOUT
+  DUPLICATE_ACTIVE_INVOICE
+  INVOICE_NUMBERING_ANOMALY
+  INVOICE_MISSING_IMMUTABLE_METADATA
+  INVOICE_CREDIT_NOTE_INCONSISTENT
+  PAYOUT_MISSING_ELIGIBLE_RELATIONSHIP
+  PAYOUT_AMOUNT_MISMATCH
+  PAYOUT_EXCEEDS_PAYABLE_AMOUNT
+  PAYOUT_MISSING_REQUIRED_INVOICE_STATE
+  DUPLICATE_PAYOUT
+  PAYOUT_CURRENCY_MISMATCH
+  PAYOUT_PROVIDER_REFERENCE_MISMATCH
+  REFUND_EXCEEDS_REFUNDABLE_AMOUNT
+  DUPLICATE_REFUND
+  REFUND_AMOUNT_OR_CURRENCY_MISMATCH
+  REFUND_MISSING_PAYMENT_RELATIONSHIP
+  REFUND_STATE_INCONSISTENT_WITH_PAYMENT
+  REFUND_CREDIT_NOTE_INCONSISTENT
+  CREDIT_NOTE_INVALID_INVOICE_REFERENCE
+  CREDIT_NOTE_WRONG_PARTY
+  CREDIT_NOTE_EXCEEDS_REMAINING_CREDITABLE_AMOUNT
+  CREDIT_NOTE_TAX_REVERSAL_MISMATCH
+  CREDIT_NOTE_ISSUED_WITHOUT_REQUIRED_STATE
+  DUPLICATE_CREDIT_NOTE
+  CREDIT_NOTE_NUMBERING_ANOMALY
+  CREDIT_NOTE_AMOUNT_OR_CURRENCY_MISMATCH
+  PROVIDER_STATE_UNKNOWN
+  PROVIDER_LOCAL_STATE_MISMATCH
+  PROVIDER_AMOUNT_MISMATCH
+}
+
+enum DiscrepancySeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum DiscrepancyResolutionStatus {
+  OPEN
+  RESOLVED
+}
+
+/// One execution of the Module 80 reconciliation engine. RUNNING ->
+/// COMPLETED or RUNNING -> FAILED (see domain/services/reconciliation/lifecycle.ts) —
+/// both terminal; a re-run always creates a new row, never resumes one.
+model ReconciliationRun {
+  id                String                  @id @default(uuid()) @db.Uuid
+  scope             ReconciliationScope
+  status            ReconciliationRunStatus @default(RUNNING)
+  startedAt         DateTime
+  completedAt       DateTime?
+  durationMs        Int?
+  recordsInspected  Int                     @default(0)
+  discrepancyCount  Int                     @default(0)
+  errorMessage      String?                 @db.Text
+  /// Deterministic hash of (scope, since, limit) this run was executed
+  /// with — see ReconciliationRunRecord's own doc comment. Not a
+  /// uniqueness key: repeated runs with identical parameters are expected
+  /// and always create a new row.
+  parametersHash    String
+  /// Null for a system/scheduled trigger — set only when a human admin
+  /// explicitly started this run via the admin Server Action.
+  triggeredByUserId String?                 @db.Uuid
+
+  triggeredByUser User?                       @relation("ReconciliationRunTriggeredBy", fields: [triggeredByUserId], references: [id], onDelete: Restrict)
+  discrepanciesDetected   ReconciliationDiscrepancy[] @relation("DiscrepancyDetectedByRun")
+  discrepanciesLastSeen   ReconciliationDiscrepancy[] @relation("DiscrepancyLastSeenByRun")
+
+  createdAt DateTime @default(now())
+
+  @@index([status])
+  @@index([startedAt])
+  @@index([scope])
+  @@map("reconciliation_runs")
+}
+
+/// One detected financial inconsistency. Never deleted, never overwritten
+/// except for its resolutionStatus/resolution* fields (see
+/// domain/repositories/reconciliation-repository.ts's own doc comment on
+/// why history is preserved forever). `fingerprint` plus the partial
+/// unique index below is what makes repeated reconciliation of the same
+/// unchanged condition produce at most one OPEN row rather than unlimited
+/// duplicates.
+model ReconciliationDiscrepancy {
+  id                 String                       @id @default(uuid()) @db.Uuid
+  detectedByRunId    String                       @db.Uuid
+  lastSeenRunId      String                       @db.Uuid
+  entityType         DiscrepancyEntityType
+  /// See this section's own top-of-file doc comment: deliberately a plain
+  /// scalar, never a Prisma relation/foreign key.
+  entityId           String?                      @db.Uuid
+  jobId              String?                      @db.Uuid
+  paymentId          String?                      @db.Uuid
+  invoiceId          String?                      @db.Uuid
+  payoutId           String?                      @db.Uuid
+  refundId           String?                      @db.Uuid
+  creditNoteId       String?                      @db.Uuid
+  category           DiscrepancyCategory
+  severity           DiscrepancySeverity
+  expectedValue      Decimal?                     @db.Decimal(14, 2)
+  actualValue        Decimal?                     @db.Decimal(14, 2)
+  differenceValue    Decimal?                     @db.Decimal(14, 2)
+  currency           String?
+  explanation        String                       @db.Text
+  fingerprint        String
+  resolutionStatus   DiscrepancyResolutionStatus  @default(OPEN)
+  resolvedByUserId   String?                      @db.Uuid
+  resolvedAt         DateTime?
+  resolutionReason   String?                      @db.Text
+  resolutionMetadata Json?
+
+  detectedByRun    ReconciliationRun @relation("DiscrepancyDetectedByRun", fields: [detectedByRunId], references: [id], onDelete: Restrict)
+  lastSeenByRun    ReconciliationRun @relation("DiscrepancyLastSeenByRun", fields: [lastSeenRunId], references: [id], onDelete: Restrict)
+  resolvedByUser   User?             @relation("ReconciliationDiscrepancyResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: Restrict)
+
+  detectedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([detectedByRunId])
+  @@index([severity])
+  @@index([resolutionStatus])
+  @@index([category])
+  @@index([jobId])
+  @@index([fingerprint])
+  @@map("reconciliation_discrepancies")
 }
