@@ -35,6 +35,8 @@ import {
   FakeStripeTransferGateway,
 } from "./fakes";
 import { FakeProfessionalRepository, FakeProfessionalVerificationRepository, FakeProfessionalOnboardingRepository } from "../onboarding/fakes";
+import { CheckInvoiceRequiredForPayoutUseCase } from "@/application/use-cases/invoicing/check-invoice-required-for-payout.use-case";
+import { FakeInvoiceRepository } from "../invoicing/fakes";
 
 /**
  * Module 76 — Professional Payout Execution: tests for
@@ -81,7 +83,7 @@ class FakeFinancialLedgerRepository implements FinancialLedgerRepository {
   }
 }
 
-function buildHarness() {
+function buildHarness(options: { invoiceGate?: CheckInvoiceRequiredForPayoutUseCase; requireInvoiceForPayout?: boolean } = {}) {
   const jobs = new FakeJobRepository();
   const quotes = new FakeQuoteRepository();
   const payments = new FakePaymentRepository();
@@ -124,6 +126,14 @@ function buildHarness() {
     lock,
     eventBus,
     new NullFailureReporter(),
+    // Module 79 — Invoicing & Credit Notes: optional invoice-state gate —
+    // undefined (the default) for every pre-existing test in this file,
+    // so Module 76's own 18-test suite is byte-for-byte unaffected. Only
+    // the dedicated "Module 79 integration" describe block below passes
+    // one, proving the gate is opt-in and does not change any existing
+    // behavior when absent.
+    options.invoiceGate,
+    options.requireInvoiceForPayout,
   );
 
   return {
@@ -438,6 +448,106 @@ describe("ExecuteProfessionalPayoutUseCase (Module 76)", () => {
       expect(h.transferGateway.calls[1]!.destinationStripeAccountId).toBe("acct_company_1");
       expect(proRecord.professionalProfileId).toBe("pro-1");
       expect(companyRecord.companyProfileId).toBe("company-1");
+    });
+  });
+
+  // 22. Payout cannot bypass required invoice state (Module 79).
+  describe("Module 79 — invoice-state prerequisite (optional gate)", () => {
+    it("is unaffected when the invoice gate is never wired (Module 76's own pre-existing behavior)", async () => {
+      const h = buildHarness();
+      seedProfessionalHappyPath(h);
+      const record = await h.useCase.execute("job-1");
+      expect(record.status).toBe("PAID");
+    });
+
+    it("blocks the payout when the job's invoice is only DRAFT", async () => {
+      const invoices = new FakeInvoiceRepository();
+      const invoiceGate = new CheckInvoiceRequiredForPayoutUseCase(invoices);
+      const h = buildHarness({ invoiceGate });
+      seedProfessionalHappyPath(h);
+      await invoices.createDraft({
+        jobId: "job-1",
+        quoteId: "quote-1",
+        paymentId: "payment-1",
+        professionalProfileId: "pro-1",
+        companyProfileId: null,
+        customerId: "customer-1",
+        issuerLegalName: "MaestroYa",
+        issuerTaxId: "X",
+        recipientLegalName: "Pro",
+        recipientTaxId: null,
+        selfBillingAuthorizationId: "auth-1",
+        invoiceDate: new Date(),
+        currency: "EUR",
+        lineItems: [],
+        taxableBase: 90,
+        vatRateBps: 2100,
+        vatAmount: 18.9,
+        commissionBase: 100,
+        commissionRateBps: 1000,
+        commissionAmount: 10,
+        irpfWithholdingRateBps: 0,
+        irpfWithholdingAmount: 0,
+        totalAmount: 108.9,
+      });
+
+      await expect(h.useCase.execute("job-1")).rejects.toThrow(ValidationError);
+      expect(h.transferGateway.calls).toHaveLength(0);
+    });
+
+    it("allows the payout once the job's invoice is ISSUED", async () => {
+      const invoices = new FakeInvoiceRepository();
+      const invoiceGate = new CheckInvoiceRequiredForPayoutUseCase(invoices);
+      const h = buildHarness({ invoiceGate });
+      seedProfessionalHappyPath(h);
+      const draft = await invoices.createDraft({
+        jobId: "job-1",
+        quoteId: "quote-1",
+        paymentId: "payment-1",
+        professionalProfileId: "pro-1",
+        companyProfileId: null,
+        customerId: "customer-1",
+        issuerLegalName: "MaestroYa",
+        issuerTaxId: "X",
+        recipientLegalName: "Pro",
+        recipientTaxId: null,
+        selfBillingAuthorizationId: "auth-1",
+        invoiceDate: new Date(),
+        currency: "EUR",
+        lineItems: [],
+        taxableBase: 90,
+        vatRateBps: 2100,
+        vatAmount: 18.9,
+        commissionBase: 100,
+        commissionRateBps: 1000,
+        commissionAmount: 10,
+        irpfWithholdingRateBps: 0,
+        irpfWithholdingAmount: 0,
+        totalAmount: 108.9,
+      });
+      await invoices.submitForAcceptance(draft.id, ["DRAFT"]);
+      await invoices.accept({ id: draft.id, acceptedByUserId: "pro-user-1", acceptedAt: new Date(), acceptanceAgreementVersion: "v1", fromStatuses: ["PENDING_ACCEPTANCE"] });
+      await invoices.issue({ id: draft.id, invoiceNumber: "INV-2026-000001", issueDate: new Date(), documentHash: "hash", fromStatuses: ["ACCEPTED"] });
+
+      const record = await h.useCase.execute("job-1");
+      expect(record.status).toBe("PAID");
+    });
+
+    it("does not block the payout for a job with no invoice at all when requireInvoiceForPayout is false (the default)", async () => {
+      const invoices = new FakeInvoiceRepository();
+      const invoiceGate = new CheckInvoiceRequiredForPayoutUseCase(invoices);
+      const h = buildHarness({ invoiceGate, requireInvoiceForPayout: false });
+      seedProfessionalHappyPath(h);
+      const record = await h.useCase.execute("job-1");
+      expect(record.status).toBe("PAID");
+    });
+
+    it("blocks the payout for a job with no invoice at all when requireInvoiceForPayout is true", async () => {
+      const invoices = new FakeInvoiceRepository();
+      const invoiceGate = new CheckInvoiceRequiredForPayoutUseCase(invoices);
+      const h = buildHarness({ invoiceGate, requireInvoiceForPayout: true });
+      seedProfessionalHappyPath(h);
+      await expect(h.useCase.execute("job-1")).rejects.toThrow(ValidationError);
     });
   });
 });

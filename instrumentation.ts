@@ -114,6 +114,15 @@ export async function register() {
   // this same compose.ts directly too — see that route's own comment) before
   // this subscription exists.
   await import("@/application/use-cases/payments/compose");
+  // Module 79 — Invoicing & Credit Notes: registers this module's own
+  // `ProfessionalPayoutExecuted` (Module 76) subscriber (marks an invoice
+  // PAID) and its admin-audit-log subscribers. Imported after Module 76's
+  // own compose.ts above for readability only — dynamic `import()` is
+  // idempotent per resolved module path regardless of order, and
+  // `payments/compose.ts` also imports this module directly for the
+  // optional invoice-payout-eligibility gate — see that file's own
+  // comment.
+  await import("@/application/use-cases/invoicing/compose");
   // Module 47 — CQRS Search Engine: this module's subscribers live in its
   // own composition root (`infrastructure/search/compose.ts`) rather than
   // under `application/use-cases/`, because that file also owns the

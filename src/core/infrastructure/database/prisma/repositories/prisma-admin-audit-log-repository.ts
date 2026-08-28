@@ -136,6 +136,26 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   REFUND_FAILED: "PAYMENT",
   PROFESSIONAL_PAYOUT_REVERSED: "PAYOUT",
   PAYOUT_REVERSAL_FAILED: "PAYOUT",
+  // Module 79 — Invoicing & Credit Notes: same "map to the closest
+  // existing AuditLogAction value, preserve the concrete action name in
+  // metadata.adminAction" convention. Authorization grant/revoke has no
+  // closer existing value than OTHER (same reasoning as
+  // GDPR_CONSENT_GRANTED/WITHDRAWN above — an agreement acceptance, not a
+  // create/update/status-change of a business entity). INVOICE_PAID
+  // reuses PAYMENT (a financial-settlement event, same category as
+  // PAYMENT_REFUNDED); every other invoice/credit-note lifecycle
+  // transition maps to CREATE (first creation) or STATUS_CHANGE
+  // (everything else).
+  SELF_BILLING_AUTHORIZATION_GRANTED: "OTHER",
+  SELF_BILLING_AUTHORIZATION_REVOKED: "OTHER",
+  INVOICE_CREATED: "CREATE",
+  INVOICE_SUBMITTED_FOR_ACCEPTANCE: "STATUS_CHANGE",
+  INVOICE_ACCEPTED: "STATUS_CHANGE",
+  INVOICE_ISSUED: "STATUS_CHANGE",
+  INVOICE_PAID: "PAYMENT",
+  INVOICE_CANCELLED: "STATUS_CHANGE",
+  CREDIT_NOTE_CREATED: "CREATE",
+  CREDIT_NOTE_ISSUED: "STATUS_CHANGE",
 };
 
 const SELECT = {

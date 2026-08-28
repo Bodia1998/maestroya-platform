@@ -193,6 +193,12 @@ model User {
   manualReviewCasesResolved        ManualReviewCase[]       @relation("ManualReviewCaseResolvedBy")
   trustAppealsAsSubject            TrustAppeal[]            @relation("TrustAppealSubject")
   trustAppealsReviewed             TrustAppeal[]            @relation("TrustAppealReviewedBy")
+  /// Module 79 — Invoicing & Credit Notes.
+  selfBillingAuthorizationsAccepted SelfBillingAuthorization[] @relation("SelfBillingAuthorizationAcceptedBy")
+  selfBillingAuthorizationsRevoked  SelfBillingAuthorization[] @relation("SelfBillingAuthorizationRevokedBy")
+  invoicesAccepted                  Invoice[]                  @relation("InvoiceAcceptedBy")
+  invoicesCancelled                 Invoice[]                  @relation("InvoiceCancelledBy")
+  creditNotesCancelled              CreditNote[]               @relation("CreditNoteCancelledBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1199,6 +1205,46 @@ enum AuditLogAction {
   OTHER
 }
 
+/// Module 79 — Invoicing & Credit Notes.
+enum SelfBillingAuthorizationStatus {
+  ACTIVE
+  REVOKED
+}
+
+/// Module 79 — Invoicing & Credit Notes: see domain/services/invoice-lifecycle.ts
+/// for the authoritative transition table this enum's values participate in.
+enum InvoiceStatus {
+  DRAFT
+  PENDING_ACCEPTANCE
+  ACCEPTED
+  ISSUED
+  PAID
+  CANCELLED
+}
+
+/// Module 79 — Invoicing & Credit Notes: always PROFESSIONAL_SELF_BILLED
+/// today — see Invoice.type's own doc comment for why this is kept as an
+/// explicit enum rather than assumed.
+enum InvoiceType {
+  PROFESSIONAL_SELF_BILLED
+}
+
+/// Module 79 — Invoicing & Credit Notes: mirrors QuoteItemCategory —
+/// deliberately a separate enum (not a shared reference to
+/// QuoteItemCategory) so Invoice's own schema never depends on Quote's
+/// enum changing shape for unrelated reasons.
+enum InvoiceLineItemCategory {
+  LABOR
+  MATERIALS
+}
+
+/// Module 79 — Invoicing & Credit Notes.
+enum CreditNoteStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+}
+
 // ============================================================================
 // Identity & Profiles
 // ============================================================================
@@ -1263,6 +1309,8 @@ model CustomerProfile {
   serviceRequests ServiceRequest[]
   /// Order / Job Lifecycle module (Module 11).
   jobs            Job[]
+  /// Module 79 — Invoicing & Credit Notes.
+  invoices        Invoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1328,6 +1376,10 @@ model ProfessionalProfile {
   /// Module 62 — Professional Onboarding: at most one row per professional
   /// profile (`@unique` on ProfessionalOnboarding.professionalProfileId).
   onboarding              ProfessionalOnboarding?
+  /// Module 79 — Invoicing & Credit Notes.
+  selfBillingAuthorizations SelfBillingAuthorization[]
+  invoices                  Invoice[]
+  creditNotes               CreditNote[]
   /// Module 62 — Professional Onboarding: the professional's single active
   /// payout destination (`@unique` on ProfessionalPayoutAccount
   /// .professionalProfileId) — see that model's own doc comment for why
@@ -1413,6 +1465,10 @@ model CompanyProfile {
   /// Module 75 — Company Payout Eligibility: the company's own payout
   /// destination — see CompanyPayoutAccount's own doc comment.
   payoutAccount            CompanyPayoutAccount?
+  /// Module 79 — Invoicing & Credit Notes.
+  selfBillingAuthorizations SelfBillingAuthorization[]
+  invoices                  Invoice[]
+  creditNotes               CreditNote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1800,6 +1856,8 @@ model Quote {
   /// when this Quote is accepted (see Job.quoteId's `@unique`) — null for
   /// every Quote that was never accepted.
   job          Job?
+  /// Module 79 — Invoicing & Credit Notes.
+  invoices     Invoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1958,6 +2016,10 @@ model Job {
   /// moment the professional completes the Job (never before); a Job that
   /// hasn't reached COMPLETED yet has none.
   completionConfirmation JobCompletionConfirmation?
+  /// Module 79 — Invoicing & Credit Notes: at most one non-CANCELLED
+  /// Invoice per Job — enforced by a partial unique index in the
+  /// Module 79 migration, not representable directly in this schema.
+  invoices Invoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2376,6 +2438,8 @@ model Payment {
   /// Module 68 — Dispute Resolution & Financial Protection: decisions
   /// evaluated against this Payment, if any existed at decision time.
   disputeResolutionDecisions DisputeResolutionDecision[]
+  /// Module 79 — Invoicing & Credit Notes.
+  invoices                   Invoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -4612,4 +4676,221 @@ model ExternalWebhookEvent {
   @@unique([provider, externalEventId])
   @@index([provider, status])
   @@map("external_webhook_events")
+}
+
+// ============================================================================
+// Module 79 — Invoicing & Credit Notes
+// ============================================================================
+
+/// The professional's (or company's) explicit self-billing (facturación
+/// por el destinatario) authorization — see
+/// domain/repositories/self-billing-authorization-repository.ts's own doc
+/// comment for the full rationale. At most one ACTIVE row per
+/// professional/company at a time (enforced by a partial unique index in
+/// this module's migration, not representable directly in this schema
+/// language); history is preserved across grant/revoke/re-grant cycles.
+model SelfBillingAuthorization {
+  id                    String                         @id @default(uuid()) @db.Uuid
+  professionalProfileId String?                        @db.Uuid
+  companyProfileId      String?                        @db.Uuid
+  status                SelfBillingAuthorizationStatus @default(ACTIVE)
+  agreementVersion      String
+  acceptedByUserId      String                         @db.Uuid
+  acceptedAt            DateTime
+  acceptanceIpAddress   String?
+  acceptanceUserAgent   String?
+  revokedAt             DateTime?
+  revokedByUserId       String?                        @db.Uuid
+
+  professionalProfile ProfessionalProfile? @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
+  companyProfile      CompanyProfile?      @relation(fields: [companyProfileId], references: [id], onDelete: Restrict)
+  acceptedBy          User                 @relation("SelfBillingAuthorizationAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: Restrict)
+  revokedBy           User?                @relation("SelfBillingAuthorizationRevokedBy", fields: [revokedByUserId], references: [id], onDelete: Restrict)
+
+  invoices Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalProfileId, status])
+  @@index([companyProfileId, status])
+  @@map("self_billing_authorizations")
+}
+
+/// A professional's self-billed invoice to MaestroYa for a completed Job —
+/// see domain/repositories/invoice-repository.ts's own doc comment for
+/// the full field-by-field rationale and the immutability guarantee once
+/// `status` reaches ISSUED.
+model Invoice {
+  id            String        @id @default(uuid()) @db.Uuid
+  invoiceNumber String?       @unique
+  type          InvoiceType   @default(PROFESSIONAL_SELF_BILLED)
+  status        InvoiceStatus @default(DRAFT)
+
+  jobId     String  @db.Uuid
+  quoteId   String  @db.Uuid
+  paymentId String? @db.Uuid
+
+  professionalProfileId String? @db.Uuid
+  companyProfileId      String? @db.Uuid
+  customerId            String  @db.Uuid
+
+  issuerLegalName    String
+  issuerTaxId        String
+  recipientLegalName String
+  recipientTaxId     String?
+
+  selfBillingAuthorizationId String @db.Uuid
+
+  issueDate                  DateTime?
+  invoiceDate                DateTime
+  acceptedAt                 DateTime?
+  acceptedByUserId           String?   @db.Uuid
+  acceptanceAgreementVersion String?
+
+  currency String @default("EUR")
+
+  taxableBase            Decimal @db.Decimal(10, 2)
+  vatRateBps             Int
+  vatAmount              Decimal @db.Decimal(10, 2)
+  commissionBase         Decimal @db.Decimal(10, 2)
+  commissionRateBps      Int
+  commissionAmount       Decimal @db.Decimal(10, 2)
+  irpfWithholdingRateBps Int     @default(0)
+  irpfWithholdingAmount  Decimal @default(0) @db.Decimal(10, 2)
+  totalAmount            Decimal @db.Decimal(10, 2)
+
+  /// Tamper-evidence checksum only — see domain/services/invoice-document.ts's
+  /// own doc comment. Never a legal electronic signature.
+  documentHash String?
+  version      Int     @default(1)
+
+  cancelledAt        DateTime?
+  cancelledByUserId  String?   @db.Uuid
+  cancellationReason String?
+
+  job                      Job                      @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  quote                    Quote                    @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  payment                  Payment?                 @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  professionalProfile      ProfessionalProfile?     @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
+  companyProfile           CompanyProfile?          @relation(fields: [companyProfileId], references: [id], onDelete: Restrict)
+  customer                 CustomerProfile          @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  selfBillingAuthorization SelfBillingAuthorization @relation(fields: [selfBillingAuthorizationId], references: [id], onDelete: Restrict)
+  acceptedBy               User?                    @relation("InvoiceAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: Restrict)
+  cancelledBy              User?                    @relation("InvoiceCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: Restrict)
+
+  lineItems   InvoiceLineItem[]
+  creditNotes CreditNote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([jobId])
+  @@index([professionalProfileId, status])
+  @@index([companyProfileId, status])
+  @@index([status])
+  @@map("invoices")
+}
+
+/// Immutable financial-snapshot line items making up an Invoice's total —
+/// same "stored, not computed live" reasoning as QuoteItem's own doc
+/// comment, doubly so here since an Invoice must never re-derive its
+/// figures from a (possibly since-changed) Quote once created.
+model InvoiceLineItem {
+  id          String                  @id @default(uuid()) @db.Uuid
+  invoiceId   String                  @db.Uuid
+  description String
+  quantity    Decimal                 @db.Decimal(10, 2)
+  unitPrice   Decimal                 @db.Decimal(10, 2)
+  amount      Decimal                 @db.Decimal(10, 2)
+  sortOrder   Int                     @default(0)
+  category    InvoiceLineItemCategory @default(LABOR)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([invoiceId])
+  @@map("invoice_line_items")
+}
+
+/// A financial correction document referencing an already-ISSUED Invoice —
+/// see domain/repositories/credit-note-repository.ts's own doc comment.
+/// Never mutates the original Invoice row.
+model CreditNote {
+  id               String           @id @default(uuid()) @db.Uuid
+  creditNoteNumber String?          @unique
+  status           CreditNoteStatus @default(DRAFT)
+
+  originalInvoiceId     String  @db.Uuid
+  professionalProfileId String? @db.Uuid
+  companyProfileId      String? @db.Uuid
+
+  reason         String  @db.Text
+  /// Idempotency key supplied by the caller — unique per original
+  /// invoice's correction request, the DB-level backstop for
+  /// CreditNoteRepository.createOrGetExisting.
+  idempotencyKey String  @unique
+
+  issueDate DateTime?
+  currency  String    @default("EUR")
+
+  reversedTaxableBase           Decimal @db.Decimal(10, 2)
+  reversedVatRateBps            Int
+  reversedVatAmount             Decimal @db.Decimal(10, 2)
+  reversedCommissionAmount      Decimal @db.Decimal(10, 2)
+  reversedIrpfWithholdingAmount Decimal @default(0) @db.Decimal(10, 2)
+  totalAmount                   Decimal @db.Decimal(10, 2)
+
+  documentHash String?
+
+  cancelledAt       DateTime?
+  cancelledByUserId String?   @db.Uuid
+
+  originalInvoice     Invoice              @relation(fields: [originalInvoiceId], references: [id], onDelete: Restrict)
+  professionalProfile ProfessionalProfile? @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
+  companyProfile      CompanyProfile?      @relation(fields: [companyProfileId], references: [id], onDelete: Restrict)
+  cancelledBy         User?                @relation("CreditNoteCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: Restrict)
+
+  lineItems CreditNoteLineItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([originalInvoiceId])
+  @@index([professionalProfileId])
+  @@index([companyProfileId])
+  @@map("credit_notes")
+}
+
+model CreditNoteLineItem {
+  id           String  @id @default(uuid()) @db.Uuid
+  creditNoteId String  @db.Uuid
+  description  String
+  amount       Decimal @db.Decimal(10, 2)
+
+  creditNote CreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([creditNoteId])
+  @@map("credit_note_line_items")
+}
+
+/// Module 79 — Invoicing & Credit Notes: the concurrency-safe, per-year
+/// counter `PrismaInvoiceNumberAllocator` atomically increments to
+/// produce sequential invoice/credit-note numbers — see
+/// domain/repositories/invoice-repository.ts's `InvoiceNumberAllocator`
+/// port for why numbering is never derived from a timestamp or a row's
+/// own database id. `series` distinguishes the Invoice series ("INV")
+/// from the CreditNote series ("CN") so the two document types never
+/// share (or collide on) the same sequence.
+model InvoiceNumberCounter {
+  series      String
+  year        Int
+  lastValue   Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@id([series, year])
+  @@map("invoice_number_counters")
 }

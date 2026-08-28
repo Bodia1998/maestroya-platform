@@ -16,6 +16,7 @@ import type {
 } from "@/application/use-cases/financial/resolve-payout-destination.use-case";
 import type { RecordCommissionForPaymentUseCase } from "@/application/use-cases/financial/record-commission-for-payment.use-case";
 import type { StripeTransferGateway } from "@/application/ports/stripe-transfer-gateway";
+import type { CheckInvoiceRequiredForPayoutUseCase } from "@/application/use-cases/invoicing/check-invoice-required-for-payout.use-case";
 import type { DistributedLock } from "@/application/ports/distributed-lock";
 import type { EventBus } from "@/application/ports/event-bus";
 import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
@@ -123,6 +124,16 @@ export class ExecuteProfessionalPayoutUseCase {
     private readonly lock: DistributedLock,
     private readonly eventBus: EventBus,
     private readonly failureReporter: FailureReporter = new NullFailureReporter(),
+    // Module 79 — Invoicing & Credit Notes: OPTIONAL integration point —
+    // see `CheckInvoiceRequiredForPayoutUseCase`'s own doc comment. Left
+    // undefined, this class's behavior is byte-for-byte identical to
+    // before Module 79 existed (no invoice check is ever performed) —
+    // Module 76's own logic, tests, and every existing caller are
+    // unmodified. When wired (see `payments/compose.ts`), a payout is
+    // blocked until the job's invoice satisfies
+    // `satisfiesPayoutInvoicePrerequisite` (ISSUED or PAID).
+    private readonly invoiceGate?: CheckInvoiceRequiredForPayoutUseCase,
+    private readonly requireInvoiceForPayout = false,
   ) {}
 
   async execute(jobId: string): Promise<PayoutRecord> {
@@ -210,6 +221,18 @@ export class ExecuteProfessionalPayoutUseCase {
       const activeHolds = await this.trustAutomatedActions.listActiveForUser(ownerUserId, "PAYOUT_HOLD");
       if (activeHolds.length > 0) {
         throw new ValidationError("An active payout hold blocks this payout from being executed.");
+      }
+    }
+
+    // --- Module 79 — Invoicing & Credit Notes: optional invoice-state
+    //     prerequisite, re-checked fresh (never cached), same "gate
+    //     immediately before the transfer, not earlier" placement as
+    //     every other check above. A no-op when `invoiceGate` was never
+    //     wired — see this class's own constructor doc comment. ---
+    if (this.invoiceGate) {
+      const invoiceEligibility = await this.invoiceGate.execute(jobId, this.requireInvoiceForPayout);
+      if (!invoiceEligibility.eligible) {
+        throw new ValidationError(`Payout blocked by invoice prerequisite: ${invoiceEligibility.reason}`);
       }
     }
 

@@ -29,6 +29,7 @@ import type { StripePaymentWebhookVerifier } from "@/application/ports/stripe-pa
 import { createFailureReporter } from "@/infrastructure/observability/failure-reporter-factory";
 import { makeRecordCommissionForPaymentUseCase } from "@/application/use-cases/financial/compose";
 import { makeCheckPayoutEligibilityUseCase } from "@/application/use-cases/verification/compose";
+import { makeCheckInvoiceRequiredForPayoutUseCase } from "@/application/use-cases/invoicing/compose";
 import { ResolvePayoutDestinationUseCase } from "@/application/use-cases/financial/resolve-payout-destination.use-case";
 import { PaymentCaptured } from "@/domain/events/payment-captured";
 import { PaymentReleaseApproved } from "@/domain/events/payment-release-approved";
@@ -174,6 +175,14 @@ export function makeExecuteProfessionalPayoutUseCase(): ExecuteProfessionalPayou
     lock,
     eventBus,
     failureReporter,
+    // Module 79 — Invoicing & Credit Notes: optional invoice-state
+    // prerequisite — see ExecuteProfessionalPayoutUseCase's own updated
+    // constructor doc comment. `requireInvoiceForPayout: false` — a Job
+    // with no invoice at all is not yet blocked, matching a rollout where
+    // not every historical Job has one; a Job that DOES have an invoice
+    // is always held to the ISSUED-or-later bar regardless.
+    makeCheckInvoiceRequiredForPayoutUseCase(),
+    false,
   );
 }
 
