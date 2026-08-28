@@ -695,3 +695,54 @@ export class StripeTransferError extends DomainError {
     if (options?.cause !== undefined) this.cause = options.cause;
   }
 }
+
+/**
+ * Module 79 — Invoicing & Credit Notes: thrown whenever a caller requests
+ * an `Invoice`/`CreditNote` lifecycle transition its current status does
+ * not allow (e.g. issuing a `DRAFT` invoice directly, accepting an
+ * already-`ISSUED` invoice, editing an `ISSUED` invoice's line items).
+ * Mirrors `InvalidPaymentTransitionError`/`InvalidBackupTransitionError`
+ * exactly: the state machine lives in `domain/services/invoice-lifecycle.ts`
+ * / `credit-note-lifecycle.ts`, this error is simply what it throws — no
+ * use case or controller re-implements its own status check.
+ */
+export class InvalidInvoiceTransitionError extends DomainError {
+  readonly code = "INVALID_INVOICE_TRANSITION";
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/**
+ * Module 79 — Invoicing & Credit Notes: thrown when an invoicing operation
+ * requires the professional/company to have an active self-billing
+ * authorization (see `domain/repositories/self-billing-authorization-repository.ts`)
+ * and none exists, or the existing one has been revoked. Deliberately
+ * distinct from `UnauthorizedError` (an authentication/session concept) —
+ * this is a business precondition ("has this party agreed to self-billing
+ * at all"), not an access-control failure.
+ */
+export class SelfBillingNotAuthorizedError extends DomainError {
+  readonly code = "SELF_BILLING_NOT_AUTHORIZED";
+
+  constructor(message = "This professional has not authorized MaestroYa's self-billing process.") {
+    super(message);
+  }
+}
+
+/**
+ * Module 79 — Invoicing & Credit Notes: thrown by
+ * `domain/services/credit-note-eligibility.ts` when a requested credit
+ * note amount would exceed the original invoice's remaining creditable
+ * amount (invoice total minus every already-issued credit note against
+ * it), or when the target invoice is not in a creditable status
+ * (`ISSUED`/`PAID`).
+ */
+export class CreditNoteExceedsRemainingAmountError extends DomainError {
+  readonly code = "CREDIT_NOTE_EXCEEDS_REMAINING_AMOUNT";
+
+  constructor(message: string) {
+    super(message);
+  }
+}

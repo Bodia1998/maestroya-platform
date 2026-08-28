@@ -160,7 +160,23 @@ export type AdminAuditAction =
   | "PAYMENT_REFUNDED"
   | "REFUND_FAILED"
   | "PROFESSIONAL_PAYOUT_REVERSED"
-  | "PAYOUT_REVERSAL_FAILED";
+  | "PAYOUT_REVERSAL_FAILED"
+  // Module 79 — Invoicing & Credit Notes: self-billing authorization,
+  // invoice lifecycle, and credit-note events, all recorded on the same
+  // append-only AuditLog trail as every action above. Most are performed
+  // by the professional/company (SELF_BILLING_AUTHORIZATION_*, most
+  // INVOICE_* transitions) rather than an admin, same reasoning as
+  // VERIFICATION_SUBMITTED's own doc comment.
+  | "SELF_BILLING_AUTHORIZATION_GRANTED"
+  | "SELF_BILLING_AUTHORIZATION_REVOKED"
+  | "INVOICE_CREATED"
+  | "INVOICE_SUBMITTED_FOR_ACCEPTANCE"
+  | "INVOICE_ACCEPTED"
+  | "INVOICE_ISSUED"
+  | "INVOICE_PAID"
+  | "INVOICE_CANCELLED"
+  | "CREDIT_NOTE_CREATED"
+  | "CREDIT_NOTE_ISSUED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved
