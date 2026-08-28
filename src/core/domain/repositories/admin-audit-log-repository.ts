@@ -176,7 +176,22 @@ export type AdminAuditAction =
   | "INVOICE_PAID"
   | "INVOICE_CANCELLED"
   | "CREDIT_NOTE_CREATED"
-  | "CREDIT_NOTE_ISSUED";
+  | "CREDIT_NOTE_ISSUED"
+  // Module 80 — Financial Reconciliation & Observability: reconciliation
+  // run lifecycle and manual discrepancy resolution, recorded on this same
+  // append-only trail rather than a parallel audit system (per this
+  // module's own requirement). RECONCILIATION_RUN_STARTED/COMPLETED/FAILED
+  // are recorded with `adminUserId` set only when a human triggered the
+  // run (null for a system/scheduled trigger, same convention as
+  // WORKFLOW_EXPIRATION_RUN above). Individual discrepancy *detections*
+  // are deliberately NOT written here — see
+  // `RecordReconciliationAuditLogSubscriber`'s own doc comment for why
+  // that would flood this trail; they are fully preserved instead in
+  // `reconciliation_discrepancies` itself, Module 80's own durable record.
+  | "RECONCILIATION_RUN_STARTED"
+  | "RECONCILIATION_RUN_COMPLETED"
+  | "RECONCILIATION_RUN_FAILED"
+  | "RECONCILIATION_DISCREPANCY_RESOLVED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved
