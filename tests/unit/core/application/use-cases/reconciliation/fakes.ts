@@ -1,16 +1,21 @@
 import { randomUUID } from "node:crypto";
 
 import type {
+  CategoryCount,
   CompleteReconciliationRunData,
   CreateDiscrepancyData,
+  DiscrepancySeverityValue,
   FailReconciliationRunData,
   ListDiscrepanciesForRunOptions,
+  ListDiscrepanciesOptions,
   ListReconciliationRunsOptions,
   ListUnresolvedDiscrepanciesOptions,
+  OpenSeverityCounts,
   ReconciliationDiscrepancyRecord,
   ReconciliationDiscrepancyRepository,
   ReconciliationRunRecord,
   ReconciliationRunRepository,
+  ReconciliationRunStatusValue,
   ResolveDiscrepancyData,
   StartReconciliationRunData,
 } from "@/domain/repositories/reconciliation-repository";
@@ -111,6 +116,11 @@ export class FakeReconciliationRunRepository implements ReconciliationRunReposit
     };
     this.byId.set(data.id, updated);
     return updated;
+  }
+
+  // Module 81 — mirrors the real `PrismaReconciliationRunRepository.count`.
+  async count(status?: ReconciliationRunStatusValue): Promise<number> {
+    return [...this.byId.values()].filter((r) => !status || r.status === status).length;
   }
 }
 
@@ -221,6 +231,59 @@ export class FakeReconciliationDiscrepancyRepository implements ReconciliationDi
     };
     this.byId.set(data.id, resolved);
     return resolved;
+  }
+
+  // Module 81 — mirrors the real repository's own filtered/paginated `list`.
+  async list(options: ListDiscrepanciesOptions): Promise<ReconciliationDiscrepancyRecord[]> {
+    const rank: Record<string, number> = { INFO: 0, WARNING: 1, ERROR: 2, CRITICAL: 3 };
+    const all = [...this.byId.values()]
+      .filter((d) => !options.resolutionStatus || d.resolutionStatus === options.resolutionStatus)
+      .filter((d) => !options.severity || d.severity === options.severity)
+      .filter((d) => !options.category || d.category === options.category)
+      .filter((d) => !options.entityType || d.entityType === options.entityType)
+      .filter((d) => !options.detectedFrom || d.detectedAt >= options.detectedFrom)
+      .filter((d) => !options.detectedTo || d.detectedAt <= options.detectedTo)
+      .sort((a, b) => (rank[b.severity] ?? 0) - (rank[a.severity] ?? 0) || b.detectedAt.getTime() - a.detectedAt.getTime());
+    return all.slice(options.offset, options.offset + options.limit);
+  }
+
+  // Module 81 — mirrors the real repository's own `countByResolutionStatus`.
+  async countByResolutionStatus(): Promise<{ open: number; resolved: number }> {
+    const all = [...this.byId.values()];
+    return {
+      open: all.filter((d) => d.resolutionStatus === "OPEN").length,
+      resolved: all.filter((d) => d.resolutionStatus === "RESOLVED").length,
+    };
+  }
+
+  // Module 81 — mirrors the real repository's own `getOpenSeverityCounts`.
+  async getOpenSeverityCounts(): Promise<OpenSeverityCounts> {
+    const counts: OpenSeverityCounts = { INFO: 0, WARNING: 0, ERROR: 0, CRITICAL: 0 };
+    for (const d of this.byId.values()) {
+      if (d.resolutionStatus === "OPEN") counts[d.severity as DiscrepancySeverityValue] += 1;
+    }
+    return counts;
+  }
+
+  // Module 81 — mirrors the real repository's own `getOpenCategoryCounts`.
+  async getOpenCategoryCounts(): Promise<CategoryCount[]> {
+    const counts = new Map<string, number>();
+    for (const d of this.byId.values()) {
+      if (d.resolutionStatus !== "OPEN") continue;
+      counts.set(d.category, (counts.get(d.category) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .map(([category, count]) => ({ category: category as CategoryCount["category"], count }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  // Module 81 — mirrors the real repository's own `getSeverityCountsForRun`.
+  async getSeverityCountsForRun(runId: string): Promise<OpenSeverityCounts> {
+    const counts: OpenSeverityCounts = { INFO: 0, WARNING: 0, ERROR: 0, CRITICAL: 0 };
+    for (const d of this.byId.values()) {
+      if (d.detectedByRunId === runId) counts[d.severity as DiscrepancySeverityValue] += 1;
+    }
+    return counts;
   }
 }
 

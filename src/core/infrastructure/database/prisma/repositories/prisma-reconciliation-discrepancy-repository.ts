@@ -2,13 +2,16 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
+  CategoryCount,
   CreateDiscrepancyData,
   DiscrepancyCategoryValue,
   DiscrepancyEntityTypeValue,
   DiscrepancyResolutionStatusValue,
   DiscrepancySeverityValue,
   ListDiscrepanciesForRunOptions,
+  ListDiscrepanciesOptions,
   ListUnresolvedDiscrepanciesOptions,
+  OpenSeverityCounts,
   ReconciliationDiscrepancyRecord,
   ReconciliationDiscrepancyRepository,
   ResolveDiscrepancyData,
@@ -236,5 +239,88 @@ export class PrismaReconciliationDiscrepancyRepository implements Reconciliation
       select: SELECT,
     });
     return toRecord(row);
+  }
+
+  /**
+   * Module 81 — Reconciliation Admin Dashboard & Operations: the admin
+   * Discrepancies table's filtered/paginated query — see
+   * `ListDiscrepanciesOptions`'s own doc comment for why this exists
+   * alongside `listForRun`/`listUnresolved` rather than replacing them.
+   * Every filter is an equality (or, for the date range, a bounded range)
+   * match on an indexed column; nothing here loads more than one page.
+   */
+  async list(options: ListDiscrepanciesOptions): Promise<ReconciliationDiscrepancyRecord[]> {
+    const where: Prisma.ReconciliationDiscrepancyWhereInput = {};
+    if (options.resolutionStatus) where.resolutionStatus = options.resolutionStatus;
+    if (options.severity) where.severity = options.severity;
+    if (options.category) where.category = options.category;
+    if (options.entityType) where.entityType = options.entityType;
+    if (options.detectedFrom || options.detectedTo) {
+      where.detectedAt = {
+        ...(options.detectedFrom ? { gte: options.detectedFrom } : {}),
+        ...(options.detectedTo ? { lte: options.detectedTo } : {}),
+      };
+    }
+
+    const rows = await prisma.reconciliationDiscrepancy.findMany({
+      where,
+      select: SELECT,
+      orderBy: [{ severity: "desc" }, { detectedAt: "desc" }],
+      take: options.limit,
+      skip: options.offset,
+    });
+    return rows.map(toRecord);
+  }
+
+  /** Module 81 — see `ReconciliationDiscrepancyRepository.countByResolutionStatus`'s own doc comment. */
+  async countByResolutionStatus(): Promise<{ open: number; resolved: number }> {
+    const [open, resolved] = await Promise.all([
+      prisma.reconciliationDiscrepancy.count({ where: { resolutionStatus: "OPEN" } }),
+      prisma.reconciliationDiscrepancy.count({ where: { resolutionStatus: "RESOLVED" } }),
+    ]);
+    return { open, resolved };
+  }
+
+  /** Module 81 — see `OpenSeverityCounts`'s own doc comment. */
+  async getOpenSeverityCounts(): Promise<OpenSeverityCounts> {
+    const rows = await prisma.reconciliationDiscrepancy.groupBy({
+      by: ["severity"],
+      where: { resolutionStatus: "OPEN" },
+      _count: { _all: true },
+    });
+    const counts: OpenSeverityCounts = { INFO: 0, WARNING: 0, ERROR: 0, CRITICAL: 0 };
+    for (const row of rows) {
+      counts[row.severity as DiscrepancySeverityValue] = row._count._all;
+    }
+    return counts;
+  }
+
+  /** Module 81 — see `CategoryCount`'s own doc comment. Sorted in
+   *  application code (rather than via Prisma's `orderBy` on an
+   *  aggregated `groupBy` field) to stay independent of any
+   *  version-specific `groupBy` ordering syntax. */
+  async getOpenCategoryCounts(): Promise<CategoryCount[]> {
+    const rows = await prisma.reconciliationDiscrepancy.groupBy({
+      by: ["category"],
+      where: { resolutionStatus: "OPEN" },
+      _count: { _all: true },
+    });
+    return rows
+      .map((row) => ({ category: row.category as DiscrepancyCategoryValue, count: row._count._all }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  /** Module 81 — see `ReconciliationDiscrepancyRepository.getSeverityCountsForRun`'s own doc comment. */
+  async getSeverityCountsForRun(runId: string): Promise<OpenSeverityCounts> {
+    const rows = await prisma.reconciliationDiscrepancy.groupBy({
+      by: ["severity"],
+      where: { detectedByRunId: runId },
+      _count: { _all: true },
+    });
+    const counts: OpenSeverityCounts = { INFO: 0, WARNING: 0, ERROR: 0, CRITICAL: 0 };
+    for (const row of rows) {
+      counts[row.severity as DiscrepancySeverityValue] = row._count._all;
+    }
+    return counts;
   }
 }
