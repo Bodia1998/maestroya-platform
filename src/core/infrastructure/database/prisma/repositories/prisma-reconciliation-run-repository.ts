@@ -133,4 +133,10 @@ export class PrismaReconciliationRunRepository implements ReconciliationRunRepos
     const row = await prisma.reconciliationRun.findUniqueOrThrow({ where: { id: data.id }, select: SELECT });
     return toRecord(row);
   }
+
+  // Module 81 — Reconciliation Admin Dashboard & Operations: bounded
+  // COUNT(*), same optional-status-filter shape as `list` above.
+  async count(status?: ReconciliationRunStatusValue): Promise<number> {
+    return prisma.reconciliationRun.count({ where: status ? { status } : undefined });
+  }
 }

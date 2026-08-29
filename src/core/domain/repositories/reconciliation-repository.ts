@@ -147,6 +147,13 @@ export interface ReconciliationRunRepository {
   start(data: StartReconciliationRunData): Promise<ReconciliationRunRecord>;
   complete(data: CompleteReconciliationRunData): Promise<ReconciliationRunRecord>;
   fail(data: FailReconciliationRunData): Promise<ReconciliationRunRecord>;
+  /**
+   * Module 81 — Reconciliation Admin Dashboard & Operations: a bounded
+   * `COUNT(*)` (optionally filtered by status) for the admin overview's
+   * "total runs" tile and the runs list's pagination — never a substitute
+   * for `list`, which stays the only way rows themselves are read.
+   */
+  count(status?: ReconciliationRunStatusValue): Promise<number>;
 }
 
 export interface DiscrepancyResolutionRecord {
@@ -224,11 +231,69 @@ export interface ListUnresolvedDiscrepanciesOptions {
   minSeverity?: DiscrepancySeverityValue;
 }
 
+/**
+ * Module 81 — Reconciliation Admin Dashboard & Operations: the general
+ * discrepancy-investigation query the admin UI's filterable Discrepancies
+ * table needs — `listForRun`/`listUnresolved` above each cover one fixed
+ * shape (all discrepancies of one run; unresolved above a severity floor)
+ * and neither lets an admin filter by resolution status + severity + type
+ * + entity type + a detected-at date range at once, or list every
+ * discrepancy regardless of run/resolution/severity for a broad
+ * investigation. Server-side filtered and paginated for the same
+ * bounded-query reason every option below is optional narrowing, never a
+ * full-table scan.
+ */
+export interface ListDiscrepanciesOptions {
+  limit: number;
+  offset: number;
+  resolutionStatus?: DiscrepancyResolutionStatusValue;
+  severity?: DiscrepancySeverityValue;
+  category?: DiscrepancyCategoryValue;
+  entityType?: DiscrepancyEntityTypeValue;
+  /** Inclusive lower bound on `detectedAt`. */
+  detectedFrom?: Date;
+  /** Inclusive upper bound on `detectedAt`. */
+  detectedTo?: Date;
+}
+
+/** Module 81: per-severity counts of still-`OPEN` discrepancies — the
+ *  admin overview's critical/high/medium/low severity tiles. Every
+ *  `DiscrepancySeverityValue` is always present in the result (zero when
+ *  there are none at that severity) so the caller never has to guard a
+ *  missing key. */
+export type OpenSeverityCounts = Record<DiscrepancySeverityValue, number>;
+
+/** Module 81: `OPEN`-discrepancy counts grouped by `DiscrepancyCategoryValue`
+ *  ("discrepancies by type" on the admin overview), sorted by count
+ *  descending. Only categories with at least one open discrepancy appear. */
+export interface CategoryCount {
+  category: DiscrepancyCategoryValue;
+  count: number;
+}
+
 export interface ReconciliationDiscrepancyRepository {
   findById(id: string): Promise<ReconciliationDiscrepancyRecord | null>;
   findOpenByFingerprint(fingerprint: string): Promise<ReconciliationDiscrepancyRecord | null>;
   listForRun(options: ListDiscrepanciesForRunOptions): Promise<ReconciliationDiscrepancyRecord[]>;
   listUnresolved(options: ListUnresolvedDiscrepanciesOptions): Promise<ReconciliationDiscrepancyRecord[]>;
+  /** Module 81 — see `ListDiscrepanciesOptions`'s own doc comment. */
+  list(options: ListDiscrepanciesOptions): Promise<ReconciliationDiscrepancyRecord[]>;
   createOrTouch(data: CreateDiscrepancyData): Promise<{ record: ReconciliationDiscrepancyRecord; created: boolean }>;
   resolve(data: ResolveDiscrepancyData): Promise<ReconciliationDiscrepancyRecord>;
+  /** Module 81: total open vs. resolved counts — the admin overview's
+   *  "unresolved discrepancies"/"resolved discrepancies" tiles. Two bounded
+   *  `COUNT(*)` queries, never a row scan. */
+  countByResolutionStatus(): Promise<{ open: number; resolved: number }>;
+  /** Module 81 — see `OpenSeverityCounts`'s own doc comment. */
+  getOpenSeverityCounts(): Promise<OpenSeverityCounts>;
+  /** Module 81 — see `CategoryCount`'s own doc comment. */
+  getOpenCategoryCounts(): Promise<CategoryCount[]>;
+  /**
+   * Module 81: severity breakdown for every discrepancy *detected by* one
+   * specific run (`detectedByRunId`), regardless of current resolution
+   * status — the run detail page's own "severity breakdown" section. Every
+   * `DiscrepancySeverityValue` is always present (zero when absent), same
+   * as `getOpenSeverityCounts`.
+   */
+  getSeverityCountsForRun(runId: string): Promise<OpenSeverityCounts>;
 }
