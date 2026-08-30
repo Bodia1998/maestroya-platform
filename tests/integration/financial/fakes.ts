@@ -181,7 +181,15 @@ export class FakeCommissionRepository implements CommissionRepository {
   }
 
   async create(data: CreateCommissionData): Promise<CommissionRecord> {
-    const existing = await this.findByPaymentId(data.paymentId);
+    // Module 84 hardening: the existence check and the write must happen
+    // with no `await` between them, or two concurrent calls racing on the
+    // same paymentId can both observe "no existing row" before either one
+    // writes (a classic TOCTOU gap) — the opposite of what a real
+    // database's UNIQUE constraint on Commission.paymentId guarantees.
+    // Checking the in-memory Map directly (synchronously) rather than via
+    // `await this.findByPaymentId(...)` is what makes this fake an
+    // accurate stand-in for that atomicity.
+    const existing = [...this.commissions.values()].find((c) => c.paymentId === data.paymentId);
     if (existing) {
       throw new Error("Unique constraint violation: Commission.paymentId");
     }
@@ -213,7 +221,12 @@ export class FakeFinancialLedgerRepository implements FinancialLedgerRepository 
   entries: FinancialTransactionRecord[] = [];
 
   async create(data: CreateLedgerEntryData): Promise<FinancialTransactionRecord> {
-    if (await this.findByIdempotencyKey(data.idempotencyKey)) {
+    // Module 84 hardening — see FakeCommissionRepository.create's own
+    // comment: no `await` between the existence check and the write, so
+    // this fake actually enforces Transaction.idempotencyKey's uniqueness
+    // atomically, the same way the real database does.
+    const existing = this.entries.find((e) => e.idempotencyKey === data.idempotencyKey);
+    if (existing) {
       throw new Error("Unique constraint violation: Transaction.idempotencyKey");
     }
     const record: FinancialTransactionRecord = {

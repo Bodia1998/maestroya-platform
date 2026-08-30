@@ -1,8 +1,9 @@
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { CommissionRecord, CommissionRepository } from "@/domain/repositories/commission-repository";
-import type { FinancialLedgerRepository } from "@/domain/repositories/financial-ledger-repository";
+import type { CreateLedgerEntryData, FinancialLedgerRepository } from "@/domain/repositories/financial-ledger-repository";
 import type { PaymentRepository } from "@/domain/repositories/payment-repository";
 import type { JobCompletionConfirmationRepository } from "@/domain/repositories/job-completion-confirmation-repository";
+import { roundToCents } from "@/domain/services/money";
 import type { CalculateJobCommissionBreakdownUseCase } from "./calculate-job-commission-breakdown.use-case";
 
 /**
@@ -26,30 +27,52 @@ import type { CalculateJobCommissionBreakdownUseCase } from "./calculate-job-com
  * professional's payout, never charged to the customer on top of the
  * Quote total.
  *
- * Idempotency: keyed deterministically off `paymentId` (never a
- * caller-supplied key — trusting the caller to generate a unique key would
- * make idempotency only as strong as the caller's own discipline). A
- * webhook redelivery, a duplicate admin retry, or a double-submit all
- * resolve to the exact same key and this use case returns the
- * already-recorded Commission unchanged rather than creating a second one.
- * The underlying `Commission.paymentId` unique constraint is a second,
- * database-level backstop against the same race.
+ * ## Module 84 hardening — idempotent on BOTH the Commission row and every
+ * ledger entry, independently
+ * `execute()` is safe to call any number of times for the same
+ * `paymentId`, including after a crash that left the financial record
+ * only partially written. Two things changed from the original Module 22
+ * implementation to make that true:
  *
- * ## Module 66 gate — Payment.CAPTURED alone is NOT sufficient
- * `Payment.status === "CAPTURED"` only proves MaestroYa is holding the
- * customer's money — it says nothing about whether the professional's
- * work was ever confirmed, disputed, or is still sitting in the
- * 72-hour confirmation window. Commission recognition (and, critically,
- * the `PROFESSIONAL_NET_EARNING` ledger entry — the record of what is
- * owed to the professional) must never happen before Module 66's single
- * authoritative payment-release decision
- * (`domain/services/payment-release-decision.ts`, persisted on
- * `JobCompletionConfirmation.releaseStatus`) has reached
- * `RELEASE_APPROVED`. This use case never re-derives or duplicates that
- * decision — it only reads its already-persisted output via
- * `JobCompletionConfirmationRepository.findByJobId`, the same source of
- * truth `EvaluatePaymentReleaseUseCase`/`AdminResolvePaymentReleaseUseCase`
- * write to. See the `RELEASE_APPROVED` check below.
+ *   1. **Commission creation** is wrapped so a concurrent duplicate call
+ *      (two webhook redeliveries racing, a subscriber retry racing an
+ *      admin retry) that loses the `Commission.paymentId` unique-
+ *      constraint race converges on the winning row instead of throwing —
+ *      see the `catch` around `commissions.create` below.
+ *   2. **Ledger completeness is re-verified on every call**, not only the
+ *      first one that creates the Commission. The original implementation
+ *      returned the already-recorded Commission immediately on a repeat
+ *      call ("if (existing) return existing") without ever re-checking
+ *      whether all five ledger entries had actually been written — if an
+ *      earlier attempt crashed after `commissions.create` succeeded but
+ *      before all five `ledger.create` calls completed, that partial
+ *      ledger write was silently permanent: no future call would ever
+ *      revisit it, and `FinancialLedgerRepository.listForPayment` would
+ *      return an inconsistent, incomplete history forever. `ensureLedgerEntries`
+ *      below fixes this: every entry is looked up by its deterministic
+ *      idempotency key and only created if missing, on every call,
+ *      whether or not the Commission itself was just created.
+ *
+ * Every persisted amount is always derived from the Commission's own
+ * already-recorded, frozen `amount`/`rateBps` — never from a fresh
+ * `CalculateJobCommissionBreakdownUseCase` result's `commission`/
+ * `professionalPayout` fields on a repeat call, since those are computed
+ * from the platform's *current* commission rate and would silently drift
+ * from what this Commission actually charged if the rate changed in the
+ * meantime. Only `laborSubtotal`/`materialsSubtotal` are ever taken from a
+ * repeat breakdown call, because those are re-summed from the accepted
+ * Quote's immutable QuoteItem amounts and are not a function of the
+ * commission rate at all.
+ *
+ * ## Module 66 gate is expected, not a failure
+ * `RecordCommissionForPaymentUseCase` itself refuses to record a
+ * commission until Module 66's payment-release decision reaches
+ * `RELEASE_APPROVED` (job completion confirmed) — see that use case's own
+ * doc comment. At the moment a payment is first captured, that decision
+ * almost never exists yet (the job has usually not even started). This is
+ * only re-checked the first time a Commission is created for a given
+ * `paymentId` — once recorded, the Commission is immutable and this gate
+ * is never re-evaluated (see the doc comment above).
  */
 export class RecordCommissionForPaymentUseCase {
   constructor(
@@ -72,107 +95,165 @@ export class RecordCommissionForPaymentUseCase {
       );
     }
 
-    const existing = await this.commissions.findByPaymentId(paymentId);
-    if (existing) {
-      return existing;
+    let commission = await this.commissions.findByPaymentId(paymentId);
+
+    if (!commission) {
+      if (!payment.jobId) {
+        throw new ValidationError(
+          "This payment is not associated with an accepted job — cannot calculate a commission.",
+        );
+      }
+
+      // Module 66 gate — see this class's own doc comment. Reads the single
+      // authoritative release decision; never recomputes it. Any status
+      // other than RELEASE_APPROVED (no confirmation row at all, still
+      // WAITING_FOR_CUSTOMER, RELEASE_HELD for any reason — open dispute,
+      // confirmation timeout under manual review, payout hold, KYC not yet
+      // approved — or RELEASE_DENIED) blocks commission recognition. Only
+      // evaluated for a Commission that does not exist yet — once
+      // recorded, a Commission is immutable and this gate is never
+      // re-litigated on a later call.
+      const releaseDecision = await this.completionConfirmations.findByJobId(payment.jobId);
+      if (!releaseDecision || releaseDecision.releaseStatus !== "RELEASE_APPROVED") {
+        throw new ValidationError(
+          "This payment has not been approved for release yet — commission cannot be recognized until the Module 66 payment-release decision is RELEASE_APPROVED.",
+        );
+      }
     }
 
-    if (!payment.jobId) {
-      throw new ValidationError(
-        "This payment is not associated with an accepted job — cannot calculate a commission.",
-      );
+    // Re-summed from the accepted Quote's immutable QuoteItem amounts on
+    // every call — never a function of the commission rate, so this is
+    // always safe to recompute, including on a call that finds an
+    // already-recorded Commission (needed for the ledger-completeness
+    // backfill below).
+    const breakdown = payment.jobId ? await this.breakdowns.execute(payment.jobId) : null;
+
+    if (!commission) {
+      if (!breakdown) {
+        // Unreachable in practice — payment.jobId was required above
+        // whenever commission is null — but keeps this branch total.
+        throw new ValidationError(
+          "This payment is not associated with an accepted job — cannot calculate a commission.",
+        );
+      }
+      try {
+        commission = await this.commissions.create({
+          paymentId: payment.id,
+          professionalProfileId: breakdown.professionalProfileId,
+          companyProfileId: breakdown.companyProfileId,
+          // Snapshot the rate actually used (from CommissionRateRepository at
+          // calculation time), never re-derived from the resulting amounts —
+          // see JobCommissionBreakdownResult.rates' own doc comment.
+          rateBps: breakdown.rates.commissionRateBps,
+          amount: breakdown.commission,
+        });
+      } catch (error) {
+        // Lost a race with a concurrent call that created the Commission
+        // first — Commission.paymentId's DB-level unique constraint is the
+        // authoritative backstop (see PrismaCommissionRepository.create's
+        // own doc comment). Converge on the winning row instead of
+        // failing; if it genuinely isn't there, this was some other
+        // failure and must still propagate.
+        const raced = await this.commissions.findByPaymentId(paymentId);
+        if (!raced) {
+          throw error;
+        }
+        commission = raced;
+      }
     }
 
-    // Module 66 gate — see this class's own doc comment. Reads the single
-    // authoritative release decision; never recomputes it. Any status
-    // other than RELEASE_APPROVED (no confirmation row at all, still
-    // WAITING_FOR_CUSTOMER, RELEASE_HELD for any reason — open dispute,
-    // confirmation timeout under manual review, payout hold, KYC not yet
-    // approved — or RELEASE_DENIED) blocks commission recognition.
-    const releaseDecision = await this.completionConfirmations.findByJobId(payment.jobId);
-    if (!releaseDecision || releaseDecision.releaseStatus !== "RELEASE_APPROVED") {
-      throw new ValidationError(
-        "This payment has not been approved for release yet — commission cannot be recognized until the Module 66 payment-release decision is RELEASE_APPROVED.",
-      );
+    if (breakdown) {
+      await this.ensureLedgerEntries(payment.id, commission, breakdown.laborSubtotal, breakdown.materialsSubtotal);
     }
 
-    const breakdown = await this.breakdowns.execute(payment.jobId);
+    return commission;
+  }
 
-    const idempotencyKey = `commission:${payment.id}`;
-    const alreadyLedgered = await this.ledger.findByIdempotencyKey(idempotencyKey);
-    if (alreadyLedgered) {
-      // A previous attempt wrote the ledger entries but the process crashed
-      // before the Commission row itself was created — extremely unlikely
-      // given both writes happen in quick succession, but if it ever
-      // happens we still must not write the ledger entries a second time,
-      // and there's no Commission to return; surface this as a validation
-      // error so the caller (Module 12) knows to investigate rather than
-      // silently double-recording revenue.
-      throw new ValidationError(
-        "A financial transaction already exists for this payment but no commission was recorded — this requires manual review.",
-      );
-    }
+  /**
+   * Idempotently ensures all five ledger entries for this Commission
+   * exist. Safe to call on every `execute()` invocation — each entry is
+   * looked up by its deterministic idempotency key first, and only
+   * created if genuinely missing. `professionalPayout` here is always
+   * `laborSubtotal + materialsSubtotal - commission.amount`, using the
+   * Commission's own frozen, already-persisted `amount` — never a
+   * freshly recalculated figure — so a platform-wide rate change between
+   * the original recording and a later backfill can never change what
+   * gets ledgered.
+   */
+  private async ensureLedgerEntries(
+    paymentId: string,
+    commission: CommissionRecord,
+    laborSubtotal: number,
+    materialsSubtotal: number,
+  ): Promise<void> {
+    const idempotencyKey = `commission:${paymentId}`;
+    const professionalPayout = roundToCents(laborSubtotal + materialsSubtotal - commission.amount);
 
-    const commission = await this.commissions.create({
-      paymentId: payment.id,
-      professionalProfileId: breakdown.professionalProfileId,
-      companyProfileId: breakdown.companyProfileId,
-      // Snapshot the rate actually used (from CommissionRateRepository at
-      // calculation time), never re-derived from the resulting amounts —
-      // see JobCommissionBreakdownResult.rates' own doc comment.
-      rateBps: breakdown.rates.commissionRateBps,
-      amount: breakdown.commission,
-    });
-
-    await this.ledger.create({
+    await this.ensureLedgerEntry({
       type: "LABOR_CHARGE",
-      amount: breakdown.laborSubtotal,
-      paymentId: payment.id,
+      amount: laborSubtotal,
+      paymentId,
       commissionId: commission.id,
       description: "Labor portion of captured payment (part of the flat commission base).",
       idempotencyKey: `${idempotencyKey}:labor`,
     });
 
-    if (breakdown.materialsSubtotal > 0) {
-      await this.ledger.create({
+    if (materialsSubtotal > 0) {
+      await this.ensureLedgerEntry({
         type: "MATERIALS_CHARGE",
-        amount: breakdown.materialsSubtotal,
-        paymentId: payment.id,
+        amount: materialsSubtotal,
+        paymentId,
         commissionId: commission.id,
         description: "Materials portion of captured payment (also part of the flat commission base under Module 64).",
         idempotencyKey: `${idempotencyKey}:materials`,
       });
     }
 
-    await this.ledger.create({
+    await this.ensureLedgerEntry({
       type: "COMMISSION",
-      amount: breakdown.commission,
-      paymentId: payment.id,
+      amount: commission.amount,
+      paymentId,
       commissionId: commission.id,
-      // Rate is never hardcoded in the description — see
-      // breakdown.rates, sourced from CommissionRateRepository.
-      description: `MaestroYa flat commission (${breakdown.rates.commissionRateBps / 100}% of labour + materials).`,
+      // Rate is never hardcoded in the description — sourced from the
+      // Commission's own frozen rateBps, never a live rate lookup.
+      description: `MaestroYa flat commission (${commission.rateBps / 100}% of labour + materials).`,
       idempotencyKey: `${idempotencyKey}:commission`,
     });
 
-    await this.ledger.create({
+    await this.ensureLedgerEntry({
       type: "PROFESSIONAL_NET_EARNING",
-      amount: breakdown.professionalPayout,
-      paymentId: payment.id,
+      amount: professionalPayout,
+      paymentId,
       commissionId: commission.id,
       description: "Professional/company payout after the flat commission is deducted.",
       idempotencyKey: `${idempotencyKey}:net-earning`,
     });
 
-    await this.ledger.create({
+    await this.ensureLedgerEntry({
       type: "PLATFORM_REVENUE",
-      amount: breakdown.platformGrossRevenue,
-      paymentId: payment.id,
+      amount: commission.amount,
+      paymentId,
       commissionId: commission.id,
       description: "MaestroYa gross revenue (the flat commission).",
       idempotencyKey,
     });
+  }
 
-    return commission;
+  /** Creates one ledger entry unless it already exists (by idempotency
+   *  key), and tolerates losing a concurrent-create race the same way
+   *  Commission creation does above — see this class's own doc comment. */
+  private async ensureLedgerEntry(data: CreateLedgerEntryData): Promise<void> {
+    const existing = await this.ledger.findByIdempotencyKey(data.idempotencyKey);
+    if (existing) {
+      return;
+    }
+    try {
+      await this.ledger.create(data);
+    } catch (error) {
+      const raced = await this.ledger.findByIdempotencyKey(data.idempotencyKey);
+      if (!raced) {
+        throw error;
+      }
+    }
   }
 }

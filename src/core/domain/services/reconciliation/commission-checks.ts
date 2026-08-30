@@ -1,5 +1,6 @@
 import type { JobFinancialContext } from "@/domain/services/reconciliation/context";
 import { amountsRoughlyEqual, type DiscrepancyCandidate } from "@/domain/services/reconciliation/types";
+import { roundToCents } from "@/domain/services/money";
 
 /**
  * Module 80 — Financial Reconciliation & Observability.
@@ -73,7 +74,7 @@ export function checkCommissionConsistency(context: JobFinancialContext): Discre
 
   const payment = context.payments.find((p) => p.id === commission.paymentId);
   if (payment) {
-    const expectedProfessionalNet = Math.round((payment.amount - commission.amount) * 100) / 100;
+    const expectedProfessionalNet = roundToCents(payment.amount - commission.amount);
     if (!amountsRoughlyEqual(expectedProfessionalNet, commissionBreakdown.professionalPayout)) {
       findings.push({
         entityType: "COMMISSION",

@@ -1,5 +1,6 @@
 import type { JobFinancialContext } from "@/domain/services/reconciliation/context";
 import { amountsRoughlyEqual, type DiscrepancyCandidate } from "@/domain/services/reconciliation/types";
+import { roundToCents } from "@/domain/services/money";
 
 /**
  * Module 80 — Financial Reconciliation & Observability.
@@ -39,7 +40,7 @@ export function checkPayoutConsistency(context: JobFinancialContext): Discrepanc
 
   const payment = payments.find((p) => p.id === commission.paymentId);
   if (payment) {
-    const expectedAmount = Math.round((payment.amount - commission.amount) * 100) / 100;
+    const expectedAmount = roundToCents(payment.amount - commission.amount);
 
     if (!amountsRoughlyEqual(payout.amount, expectedAmount)) {
       const category = payout.amount > expectedAmount ? "PAYOUT_EXCEEDS_PAYABLE_AMOUNT" : "PAYOUT_AMOUNT_MISMATCH";

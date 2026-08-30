@@ -1,5 +1,6 @@
 import type { JobFinancialContext } from "@/domain/services/reconciliation/context";
 import type { DiscrepancyCandidate } from "@/domain/services/reconciliation/types";
+import { roundToCents } from "@/domain/services/money";
 
 /**
  * Module 80 — Financial Reconciliation & Observability. Refund
@@ -84,7 +85,7 @@ export function checkRefundConsistency(context: JobFinancialContext): Discrepanc
   for (const [paymentId, list] of byPayment) {
     const payment = payments.find((p) => p.id === paymentId);
     if (!payment) continue;
-    const total = Math.round(list.reduce((sum, r) => sum + r.amount, 0) * 100) / 100;
+    const total = roundToCents(list.reduce((sum, r) => sum + r.amount, 0));
     const lastRefund = list[list.length - 1];
     if (total > payment.amount + 0.01 && lastRefund) {
       findings.push({
