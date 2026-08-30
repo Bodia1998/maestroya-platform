@@ -140,6 +140,7 @@ export class CreateProfessionalInvoiceDraftUseCase {
     const breakdown = await this.taxBreakdowns.execute(jobId);
 
     const invoice = await this.invoices.createDraft({
+      type: "PROFESSIONAL_SELF_BILLED",
       jobId,
       quoteId: quote.id,
       paymentId: payment.id,

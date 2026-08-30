@@ -7,6 +7,8 @@ import type {
   CreditNoteStatusValue,
   IssueCreditNoteData,
 } from "@/domain/repositories/credit-note-repository";
+import { allocateNextDocumentSequence, type RawQueryClient } from "./prisma-document-number-allocator";
+import { formatCreditNoteNumber } from "@/domain/services/invoice-document";
 
 /**
  * Module 79 — Invoicing & Credit Notes. Same raw-SQL rationale as
@@ -56,13 +58,18 @@ function toLineItem(row: LineItemRow): CreditNoteLineItemRecord {
   return { id: row.id, description: row.description, amount: Number(row.amount) };
 }
 
-async function fetchLineItems(creditNoteId: string): Promise<CreditNoteLineItemRecord[]> {
-  const rows = await prisma.$queryRawUnsafe<LineItemRow[]>(
+async function fetchLineItems(creditNoteId: string, client: RawQueryClient = prisma): Promise<CreditNoteLineItemRecord[]> {
+  const rows = await client.$queryRawUnsafe<LineItemRow[]>(
     `SELECT "id", "description", "amount" FROM "credit_note_line_items" WHERE "creditNoteId" = $1::uuid ORDER BY "id" ASC`,
     creditNoteId,
   );
   return rows.map(toLineItem);
 }
+
+/** Private sentinel — see `PrismaInvoiceRepository`'s own
+ *  `InvoiceIssueRaceLost` (the identical fix, applied to the credit-note
+ *  series). Never escapes this file. */
+class CreditNoteIssueRaceLost extends Error {}
 
 function toRecord(row: CreditNoteRow, lineItems: CreditNoteLineItemRecord[]): CreditNoteRecord {
   return {
@@ -185,18 +192,36 @@ export class PrismaCreditNoteRepository implements CreditNoteRepository {
   }
 
   async issue(data: IssueCreditNoteData): Promise<CreditNoteRecord> {
-    const rows = await prisma.$queryRawUnsafe<CreditNoteRow[]>(
-      `UPDATE "credit_notes"
-       SET "status" = 'ISSUED', "creditNoteNumber" = $2, "issueDate" = $3, "documentHash" = $4, "updatedAt" = now()
-       WHERE "id" = $1::uuid AND "status" = 'DRAFT'
-       RETURNING ${CREDIT_NOTE_COLUMNS}`,
-      data.id,
-      data.creditNoteNumber,
-      data.issueDate,
-      data.documentHash,
-    );
-    const row = rows[0];
-    if (row) return toRecord(row, await fetchLineItems(row.id));
+    // Module 85 — Invoicing & Credit Note Activation: same numbering-gap
+    // fix as `PrismaInvoiceRepository.issue` — the credit-note number is
+    // allocated INSIDE the same transaction as the compare-and-swap
+    // status write, so a lost race rolls the counter increment back too.
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const year = data.issueDate.getUTCFullYear();
+        const sequence = await allocateNextDocumentSequence(tx, "CN", year);
+        const creditNoteNumber = formatCreditNoteNumber({ year, sequence });
+        const documentHash = data.buildDocumentHash(creditNoteNumber);
+
+        const rows = await tx.$queryRawUnsafe<CreditNoteRow[]>(
+          `UPDATE "credit_notes"
+           SET "status" = 'ISSUED', "creditNoteNumber" = $2, "issueDate" = $3, "documentHash" = $4, "updatedAt" = now()
+           WHERE "id" = $1::uuid AND "status" = 'DRAFT'
+           RETURNING ${CREDIT_NOTE_COLUMNS}`,
+          data.id,
+          creditNoteNumber,
+          data.issueDate,
+          documentHash,
+        );
+        const row = rows[0];
+        if (!row) {
+          throw new CreditNoteIssueRaceLost();
+        }
+        return toRecord(row, await fetchLineItems(row.id, tx));
+      });
+    } catch (error) {
+      if (!(error instanceof CreditNoteIssueRaceLost)) throw error;
+    }
 
     const existing = await prisma.$queryRawUnsafe<CreditNoteRow[]>(`SELECT ${CREDIT_NOTE_COLUMNS} FROM "credit_notes" WHERE "id" = $1::uuid`, data.id);
     const existingRow = existing[0];

@@ -16,6 +16,7 @@ import type {
   InvoiceRecord,
   InvoiceRepository,
   InvoiceStatusValue,
+  InvoiceTypeValue,
   IssueInvoiceData,
   UpdateInvoiceResult,
 } from "@/domain/repositories/invoice-repository";
@@ -26,6 +27,8 @@ import type {
   IssueCreditNoteData,
 } from "@/domain/repositories/credit-note-repository";
 import type { CommissionRateRepository } from "@/domain/repositories/commission-rate-repository";
+import type { CustomerProfileRecord, CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
+import type { AuthUserRecord, UserRepository } from "@/domain/repositories/user-repository";
 import { DEFAULT_COMMISSION_RATES } from "@/domain/services/commission-policy";
 import type { DomainEvent, DomainEventClass } from "@/domain/events/domain-event";
 import type { EventBus, EventHandler } from "@/application/ports/event-bus";
@@ -153,13 +156,28 @@ let invoiceIdCounter = 0;
 
 export class FakeInvoiceRepository implements InvoiceRepository {
   rows: InvoiceRecord[] = [];
+  /** Module 85: per-(series, year) counters, mirroring
+   *  `allocateNextDocumentSequence`'s real semantics closely enough for
+   *  unit tests — see `issue`'s own doc comment below for why a number
+   *  is only ever consumed from here AFTER the compare-and-swap check
+   *  passes, never before (the same ordering fix
+   *  `PrismaInvoiceRepository.issue` makes transactionally real). */
+  private invoiceNumberCounters = new Map<number, number>();
 
   async findById(id: string): Promise<InvoiceRecord | null> {
     return this.rows.find((r) => r.id === id) ?? null;
   }
 
   async findByJobId(jobId: string): Promise<InvoiceRecord | null> {
-    return this.rows.filter((r) => r.jobId === jobId && r.status !== "CANCELLED").sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null;
+    return this.findByJobIdAndType(jobId, "PROFESSIONAL_SELF_BILLED");
+  }
+
+  async findByJobIdAndType(jobId: string, type: InvoiceTypeValue): Promise<InvoiceRecord | null> {
+    return (
+      this.rows
+        .filter((r) => r.jobId === jobId && r.type === type && r.status !== "CANCELLED")
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null
+    );
   }
 
   async findByInvoiceNumber(invoiceNumber: string): Promise<InvoiceRecord | null> {
@@ -172,10 +190,11 @@ export class FakeInvoiceRepository implements InvoiceRepository {
 
   async createDraft(data: CreateInvoiceDraftData): Promise<InvoiceRecord> {
     const now = new Date();
+    const type = data.type ?? "PROFESSIONAL_SELF_BILLED";
     const record: InvoiceRecord = {
       id: `invoice-${++invoiceIdCounter}`,
       invoiceNumber: null,
-      type: "PROFESSIONAL_SELF_BILLED",
+      type,
       status: "DRAFT",
       jobId: data.jobId,
       quoteId: data.quoteId,
@@ -187,7 +206,7 @@ export class FakeInvoiceRepository implements InvoiceRepository {
       issuerTaxId: data.issuerTaxId,
       recipientLegalName: data.recipientLegalName,
       recipientTaxId: data.recipientTaxId,
-      selfBilled: true,
+      selfBilled: type === "PROFESSIONAL_SELF_BILLED",
       selfBillingAuthorizationId: data.selfBillingAuthorizationId,
       issueDate: null,
       invoiceDate: data.invoiceDate,
@@ -244,12 +263,24 @@ export class FakeInvoiceRepository implements InvoiceRepository {
   }
 
   async issue(data: IssueInvoiceData): Promise<UpdateInvoiceResult> {
-    return this.applyIfStatusMatches(data.id, data.fromStatuses, (r) => {
-      r.status = "ISSUED";
-      r.invoiceNumber = data.invoiceNumber;
-      r.issueDate = data.issueDate;
-      r.documentHash = data.documentHash;
-    });
+    const record = this.rows.find((r) => r.id === data.id);
+    if (!record) throw new Error(`Invoice ${data.id} not found.`);
+    if (!data.fromStatuses.includes(record.status)) {
+      // Lost the race — see this class's own `invoiceNumberCounters` doc
+      // comment: NO number is consumed here, mirroring
+      // `PrismaInvoiceRepository.issue`'s real transactional rollback.
+      return { applied: false, record };
+    }
+    const year = data.issueDate.getUTCFullYear();
+    const sequence = (this.invoiceNumberCounters.get(year) ?? 0) + 1;
+    this.invoiceNumberCounters.set(year, sequence);
+    const invoiceNumber = `INV-${year}-${String(sequence).padStart(6, "0")}`;
+    record.status = "ISSUED";
+    record.invoiceNumber = invoiceNumber;
+    record.issueDate = data.issueDate;
+    record.documentHash = data.buildDocumentHash(invoiceNumber);
+    record.updatedAt = new Date();
+    return { applied: true, record };
   }
 
   async markPaid(id: string, _paidAt: Date, fromStatuses: readonly InvoiceStatusValue[]): Promise<UpdateInvoiceResult> {
@@ -272,6 +303,7 @@ let creditNoteIdCounter = 0;
 
 export class FakeCreditNoteRepository implements CreditNoteRepository {
   rows: CreditNoteRecord[] = [];
+  private creditNoteNumberCounters = new Map<number, number>();
 
   async findById(id: string): Promise<CreditNoteRecord | null> {
     return this.rows.find((r) => r.id === id) ?? null;
@@ -327,10 +359,16 @@ export class FakeCreditNoteRepository implements CreditNoteRepository {
     const record = this.rows.find((r) => r.id === data.id);
     if (!record) throw new Error(`CreditNote ${data.id} not found.`);
     if (record.status !== "DRAFT") return record;
+    // Same "allocate only after the CAS check passes" ordering as
+    // `FakeInvoiceRepository.issue` — see that method's own doc comment.
+    const year = data.issueDate.getUTCFullYear();
+    const sequence = (this.creditNoteNumberCounters.get(year) ?? 0) + 1;
+    this.creditNoteNumberCounters.set(year, sequence);
+    const creditNoteNumber = `CN-${year}-${String(sequence).padStart(6, "0")}`;
     record.status = "ISSUED";
-    record.creditNoteNumber = data.creditNoteNumber;
+    record.creditNoteNumber = creditNoteNumber;
     record.issueDate = data.issueDate;
-    record.documentHash = data.documentHash;
+    record.documentHash = data.buildDocumentHash(creditNoteNumber);
     record.updatedAt = new Date();
     return record;
   }
@@ -382,5 +420,28 @@ export class FakeEventBus implements EventBus {
     const list = this.handlers.get(eventType.eventName) ?? [];
     list.push(handler as EventHandler);
     this.handlers.set(eventType.eventName, list);
+  }
+}
+
+export class FakeCustomerProfileRepository implements Pick<CustomerProfileRepository, "findById" | "findByUserId"> {
+  byId = new Map<string, CustomerProfileRecord>();
+  seed(record: CustomerProfileRecord): void {
+    this.byId.set(record.id, record);
+  }
+  async findById(id: string): Promise<CustomerProfileRecord | null> {
+    return this.byId.get(id) ?? null;
+  }
+  async findByUserId(userId: string): Promise<CustomerProfileRecord | null> {
+    return [...this.byId.values()].find((r) => r.userId === userId) ?? null;
+  }
+}
+
+export class FakeUserRepository implements Pick<UserRepository, "findById"> {
+  byId = new Map<string, AuthUserRecord>();
+  seed(record: AuthUserRecord): void {
+    this.byId.set(record.id, record);
+  }
+  async findById(id: string): Promise<AuthUserRecord | null> {
+    return this.byId.get(id) ?? null;
   }
 }

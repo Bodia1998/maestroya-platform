@@ -527,7 +527,7 @@ describe("ExecuteProfessionalPayoutUseCase (Module 76)", () => {
       });
       await invoices.submitForAcceptance(draft.id, ["DRAFT"]);
       await invoices.accept({ id: draft.id, acceptedByUserId: "pro-user-1", acceptedAt: new Date(), acceptanceAgreementVersion: "v1", fromStatuses: ["PENDING_ACCEPTANCE"] });
-      await invoices.issue({ id: draft.id, invoiceNumber: "INV-2026-000001", issueDate: new Date(), documentHash: "hash", fromStatuses: ["ACCEPTED"] });
+      await invoices.issue({ id: draft.id, issueDate: new Date(), buildDocumentHash: () => "hash", fromStatuses: ["ACCEPTED"] });
 
       const record = await h.useCase.execute("job-1");
       expect(record.status).toBe("PAID");

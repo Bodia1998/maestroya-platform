@@ -41,6 +41,15 @@ export default defineConfig({
       CLOUDINARY_CLOUD_NAME: "demo",
       CLOUDINARY_API_KEY: "123456",
       CLOUDINARY_API_SECRET: "abcdef",
+      // Module 85 — Invoicing & Credit Note Activation: a real (non-
+      // placeholder) issuer tax ID so `IssueInvoiceUseCase`'s
+      // `IssuerTaxIdNotConfiguredError` guard (see
+      // `domain/services/invoicing-issuer.ts`) doesn't fail every test
+      // that exercises the real issuance flow — same "non-secret,
+      // dev-safe placeholder value" convention as every other baseline
+      // key here, deliberately distinct from the actual unconfigured
+      // sentinel (`PENDING-CIF-CONFIRMATION`) the guard exists to catch.
+      MAESTROYA_ISSUER_TAX_ID: "B00000000",
     },
     server: {
       deps: {

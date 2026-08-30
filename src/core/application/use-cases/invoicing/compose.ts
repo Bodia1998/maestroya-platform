@@ -11,18 +11,22 @@ import { PrismaCommissionRateRepository } from "@/infrastructure/database/prisma
 import { PrismaSelfBillingAuthorizationRepository } from "@/infrastructure/database/prisma/repositories/prisma-self-billing-authorization-repository";
 import { PrismaInvoiceRepository } from "@/infrastructure/database/prisma/repositories/prisma-invoice-repository";
 import { PrismaCreditNoteRepository } from "@/infrastructure/database/prisma/repositories/prisma-credit-note-repository";
-import { PrismaDocumentNumberAllocator } from "@/infrastructure/database/prisma/repositories/prisma-document-number-allocator";
 import { PrismaAdminAuditLogRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-audit-log-repository";
+import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prisma/repositories/prisma-customer-profile-repository";
+import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
 import { CalculateJobTaxBreakdownUseCase } from "@/application/use-cases/financial/calculate-job-tax-breakdown.use-case";
 import { GrantSelfBillingAuthorizationUseCase } from "./grant-self-billing-authorization.use-case";
 import { RevokeSelfBillingAuthorizationUseCase } from "./revoke-self-billing-authorization.use-case";
 import { CreateProfessionalInvoiceDraftUseCase } from "./create-professional-invoice-draft.use-case";
+import { CreateCustomerReceiptDraftUseCase } from "./create-customer-receipt-draft.use-case";
 import { SubmitInvoiceForAcceptanceUseCase } from "./submit-invoice-for-acceptance.use-case";
 import { AcceptInvoiceUseCase } from "./accept-invoice.use-case";
 import { IssueInvoiceUseCase } from "./issue-invoice.use-case";
 import { MarkInvoicePaidUseCase } from "./mark-invoice-paid.use-case";
 import { CancelInvoiceUseCase } from "./cancel-invoice.use-case";
 import { MarkInvoicePaidOnPayoutExecutedSubscriber } from "./mark-invoice-paid-on-payout-executed.subscriber";
+import { ActivateInvoiceLifecycleOnPaymentReleaseApprovedSubscriber } from "./activate-invoice-lifecycle-on-payment-release-approved.subscriber";
+import { CreateCreditNoteOnPaymentRefundedSubscriber } from "./create-credit-note-on-payment-refunded.subscriber";
 import { CreateCreditNoteUseCase } from "./create-credit-note.use-case";
 import { CheckInvoiceRequiredForPayoutUseCase } from "./check-invoice-required-for-payout.use-case";
 import {
@@ -40,6 +44,8 @@ import { InvoiceCancelled } from "@/domain/events/invoice-cancelled";
 import { CreditNoteCreated } from "@/domain/events/credit-note-created";
 import { CreditNoteIssued } from "@/domain/events/credit-note-issued";
 import { ProfessionalPayoutExecuted } from "@/domain/events/professional-payout-executed";
+import { PaymentReleaseApproved } from "@/domain/events/payment-release-approved";
+import { PaymentRefunded } from "@/domain/events/payment-refunded";
 
 /**
  * Module 79 — Invoicing & Credit Notes: composition root, same manual-
@@ -59,7 +65,8 @@ const rates = new PrismaCommissionRateRepository();
 const selfBillingAuthorizations = new PrismaSelfBillingAuthorizationRepository();
 const invoices = new PrismaInvoiceRepository();
 const creditNotes = new PrismaCreditNoteRepository();
-const numberAllocator = new PrismaDocumentNumberAllocator();
+const customerProfiles = new PrismaCustomerProfileRepository();
+const users = new PrismaUserRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
 const failureReporter = createFailureReporter();
 
@@ -93,6 +100,20 @@ export function makeCreateProfessionalInvoiceDraftUseCase(): CreateProfessionalI
   );
 }
 
+export function makeCreateCustomerReceiptDraftUseCase(): CreateCustomerReceiptDraftUseCase {
+  return new CreateCustomerReceiptDraftUseCase(
+    jobs,
+    payments,
+    quotes,
+    customerProfiles,
+    users,
+    invoices,
+    taxBreakdowns,
+    eventBus,
+    failureReporter,
+  );
+}
+
 export function makeSubmitInvoiceForAcceptanceUseCase(): SubmitInvoiceForAcceptanceUseCase {
   return new SubmitInvoiceForAcceptanceUseCase(invoices, eventBus, failureReporter);
 }
@@ -102,7 +123,7 @@ export function makeAcceptInvoiceUseCase(): AcceptInvoiceUseCase {
 }
 
 export function makeIssueInvoiceUseCase(): IssueInvoiceUseCase {
-  return new IssueInvoiceUseCase(invoices, numberAllocator, eventBus, failureReporter);
+  return new IssueInvoiceUseCase(invoices, eventBus, failureReporter);
 }
 
 export function makeMarkInvoicePaidUseCase(): MarkInvoicePaidUseCase {
@@ -114,7 +135,7 @@ export function makeCancelInvoiceUseCase(): CancelInvoiceUseCase {
 }
 
 export function makeCreateCreditNoteUseCase(): CreateCreditNoteUseCase {
-  return new CreateCreditNoteUseCase(invoices, creditNotes, taxBreakdowns, numberAllocator, eventBus, failureReporter);
+  return new CreateCreditNoteUseCase(invoices, creditNotes, taxBreakdowns, eventBus, failureReporter);
 }
 
 /** Module 76 integration point — see
@@ -125,6 +146,37 @@ export function makeCheckInvoiceRequiredForPayoutUseCase(): CheckInvoiceRequired
 }
 
 eventBus.subscribe(ProfessionalPayoutExecuted, new MarkInvoicePaidOnPayoutExecutedSubscriber(makeMarkInvoicePaidUseCase()));
+
+// Module 85 — Invoicing & Credit Note Activation: the activation this
+// module exists to add — see
+// `ActivateInvoiceLifecycleOnPaymentReleaseApprovedSubscriber`'s own doc
+// comment for why `PaymentReleaseApproved` (Module 66) is the right
+// trigger point and why the full draft -> submit -> accept -> issue (and
+// customer-receipt draft -> issue) pipeline runs from here rather than
+// leaving any step for a manual call that, per this module's own audit,
+// nothing ever made.
+eventBus.subscribe(
+  PaymentReleaseApproved,
+  new ActivateInvoiceLifecycleOnPaymentReleaseApprovedSubscriber(
+    invoices,
+    professionals,
+    companies,
+    makeCreateProfessionalInvoiceDraftUseCase(),
+    makeSubmitInvoiceForAcceptanceUseCase(),
+    makeAcceptInvoiceUseCase(),
+    makeIssueInvoiceUseCase(),
+    makeCreateCustomerReceiptDraftUseCase(),
+    failureReporter,
+  ),
+);
+
+// Module 85 — Invoicing & Credit Note Activation: wires
+// `CreateCreditNoteUseCase` into Module 77's own `PaymentRefunded` — see
+// `CreateCreditNoteOnPaymentRefundedSubscriber`'s own doc comment.
+eventBus.subscribe(
+  PaymentRefunded,
+  new CreateCreditNoteOnPaymentRefundedSubscriber(invoices, creditNotes, taxBreakdowns, makeCreateCreditNoteUseCase(), failureReporter),
+);
 
 eventBus.subscribe(SelfBillingAuthorizationGranted, new RecordSelfBillingAuditLogSubscriber(auditLog));
 eventBus.subscribe(InvoiceCreated, new RecordInvoiceAuditLogSubscriber(auditLog));
