@@ -1,5 +1,6 @@
 import { PrismaAdminAuditLogRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-audit-log-repository";
 import { PrismaAdminRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-repository";
+import { PrismaSecurityEventRepository } from "@/infrastructure/database/prisma/repositories/prisma-security-event-repository";
 import { createFailureReporter } from "@/infrastructure/observability/failure-reporter-factory";
 import { eventBus } from "@/infrastructure/events/compose";
 // Side-effect import: registers NotifyCompanyStatusChangeSubscriber against
@@ -52,6 +53,11 @@ import { SuspendAdminUserUseCase } from "@/application/use-cases/admin/suspend-a
 
 const admins = new PrismaAdminRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
+// Module 82 — Admin RBAC & Production Auth Hardening: shared with the rest
+// of the codebase's SecurityEvent trail (see anti-abuse's own compose.ts) —
+// ChangeUserRoleUseCase records a SECURITY_POLICY_BLOCKED event here on a
+// denied privilege-escalation attempt (finding B1).
+const securityEvents = new PrismaSecurityEventRepository();
 // Module 39 — Sentry + CI/CD Hardening: SentryFailureReporter in
 // production, ConsoleFailureReporter (Module 37) otherwise — see
 // failure-reporter-factory.ts's own doc comment. No use case or
@@ -89,7 +95,7 @@ export function makeReactivateAdminUserUseCase() {
 }
 
 export function makeChangeUserRoleUseCase() {
-  return new ChangeUserRoleUseCase(admins, auditLog);
+  return new ChangeUserRoleUseCase(admins, auditLog, securityEvents);
 }
 
 export function makeListAdminProfessionalsUseCase() {

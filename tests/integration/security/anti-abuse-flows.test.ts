@@ -16,6 +16,24 @@ vi.mock("@/lib/auth", () => ({
   auth: vi.fn(),
 }));
 
+// Module 82 — Admin RBAC & Production Auth Hardening: requireRole() now
+// re-verifies status/roles fresh from the DB for admin-tier checks
+// (SUPER_ADMIN included — see rbac.ts's own doc comment), so this file's
+// direct requireRole(ROLES.SUPER_ADMIN) calls below need PrismaUserRepository
+// mocked too, same "mock one collaborator" convention as
+// tests/unit/core/infrastructure/auth/rbac.test.ts. `vi.hoisted()` because
+// this file's own static imports above transitively resolve rbac.ts first.
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    findById: vi.fn(),
+    getRoleKeys: vi.fn(),
+  },
+}));
+
+vi.mock("@/infrastructure/database/prisma/repositories/prisma-user-repository", () => ({
+  PrismaUserRepository: vi.fn().mockImplementation(() => mockUsers),
+}));
+
 const { auth } = await import("@/lib/auth");
 const { requireRole, ROLES } = await import("@/infrastructure/auth/rbac");
 const mockedAuth = vi.mocked(auth);
@@ -207,6 +225,8 @@ describe("Account restriction admin use cases", () => {
 describe("Security regression: admin-only read access", () => {
   beforeEach(() => {
     mockedAuth.mockReset();
+    mockUsers.findById.mockReset();
+    mockUsers.getRoleKeys.mockReset();
   });
 
   it("a non-admin (customer) cannot pass the SUPER_ADMIN gate used by security admin actions", async () => {
@@ -227,6 +247,8 @@ describe("Security regression: admin-only read access", () => {
     mockedAuth.mockResolvedValue({
       user: { id: "super-1", email: "s@example.com", roles: ["SUPER_ADMIN"] },
     } as never);
+    mockUsers.findById.mockResolvedValue({ id: "super-1", status: "ACTIVE" });
+    mockUsers.getRoleKeys.mockResolvedValue(["SUPER_ADMIN"]);
     const user = await requireRole(ROLES.SUPER_ADMIN);
     expect(user.id).toBe("super-1");
   });

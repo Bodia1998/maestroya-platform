@@ -38,6 +38,7 @@ describe("Module 56 — health routes wiring", () => {
   afterEach(() => {
     vi.doUnmock("@/infrastructure/database/prisma/client");
     vi.doUnmock("@/lib/auth");
+    vi.doUnmock("@/infrastructure/database/prisma/repositories/prisma-user-repository");
     vi.resetModules();
   });
 
@@ -83,6 +84,18 @@ describe("Module 56 — health routes wiring", () => {
     vi.doMock("@/lib/auth", () => ({
       auth: vi.fn().mockResolvedValue({ user: { id: "admin-1", email: "admin@test.example", roles: ["ADMIN"], signupIntent: null } }),
     }));
+    // Module 82 — Admin RBAC & Production Auth Hardening: requireRole() now
+    // re-verifies status/roles fresh from the DB for admin-tier checks (see
+    // rbac.ts's own doc comment), so the fake session above is no longer
+    // sufficient on its own — mock the one collaborator it queries, the same
+    // way tests/unit/app/api/health/diagnostics-route.test.ts and
+    // tests/unit/core/infrastructure/auth/rbac.test.ts already do.
+    vi.doMock("@/infrastructure/database/prisma/repositories/prisma-user-repository", () => ({
+      PrismaUserRepository: vi.fn().mockImplementation(() => ({
+        findById: vi.fn().mockResolvedValue({ id: "admin-1", status: "ACTIVE" }),
+        getRoleKeys: vi.fn().mockResolvedValue(["ADMIN"]),
+      })),
+    }));
     vi.resetModules();
 
     const { NextRequest } = await import("next/server");
@@ -108,6 +121,18 @@ describe("Module 56 — health routes wiring", () => {
     vi.doMock("@/lib/auth", () => ({
       auth: vi.fn().mockResolvedValue({ user: { id: "admin-1", email: "admin@test.example", roles: ["ADMIN"], signupIntent: null } }),
     }));
+    // Module 82 — Admin RBAC & Production Auth Hardening: requireRole() now
+    // re-verifies status/roles fresh from the DB for admin-tier checks (see
+    // rbac.ts's own doc comment), so the fake session above is no longer
+    // sufficient on its own — mock the one collaborator it queries, the same
+    // way tests/unit/app/api/health/diagnostics-route.test.ts and
+    // tests/unit/core/infrastructure/auth/rbac.test.ts already do.
+    vi.doMock("@/infrastructure/database/prisma/repositories/prisma-user-repository", () => ({
+      PrismaUserRepository: vi.fn().mockImplementation(() => ({
+        findById: vi.fn().mockResolvedValue({ id: "admin-1", status: "ACTIVE" }),
+        getRoleKeys: vi.fn().mockResolvedValue(["ADMIN"]),
+      })),
+    }));
     vi.resetModules();
 
     const { NextRequest } = await import("next/server");
@@ -132,6 +157,18 @@ describe("Module 56 — health routes wiring", () => {
     vi.doMock("@/lib/auth", () => ({
       auth: vi.fn().mockResolvedValue({ user: { id: "admin-1", email: "admin@test.example", roles: ["ADMIN"], signupIntent: null } }),
     }));
+    // Module 82 — Admin RBAC & Production Auth Hardening: requireRole() now
+    // re-verifies status/roles fresh from the DB for admin-tier checks (see
+    // rbac.ts's own doc comment), so the fake session above is no longer
+    // sufficient on its own — mock the one collaborator it queries, the same
+    // way tests/unit/app/api/health/diagnostics-route.test.ts and
+    // tests/unit/core/infrastructure/auth/rbac.test.ts already do.
+    vi.doMock("@/infrastructure/database/prisma/repositories/prisma-user-repository", () => ({
+      PrismaUserRepository: vi.fn().mockImplementation(() => ({
+        findById: vi.fn().mockResolvedValue({ id: "admin-1", status: "ACTIVE" }),
+        getRoleKeys: vi.fn().mockResolvedValue(["ADMIN"]),
+      })),
+    }));
     vi.resetModules();
 
     const { NextRequest } = await import("next/server");
@@ -155,6 +192,18 @@ describe("Module 56 — health routes wiring", () => {
     }));
     vi.doMock("@/lib/auth", () => ({
       auth: vi.fn().mockResolvedValue({ user: { id: "admin-1", email: "admin@test.example", roles: ["ADMIN"], signupIntent: null } }),
+    }));
+    // Module 82 — Admin RBAC & Production Auth Hardening: requireRole() now
+    // re-verifies status/roles fresh from the DB for admin-tier checks (see
+    // rbac.ts's own doc comment), so the fake session above is no longer
+    // sufficient on its own — mock the one collaborator it queries, the same
+    // way tests/unit/app/api/health/diagnostics-route.test.ts and
+    // tests/unit/core/infrastructure/auth/rbac.test.ts already do.
+    vi.doMock("@/infrastructure/database/prisma/repositories/prisma-user-repository", () => ({
+      PrismaUserRepository: vi.fn().mockImplementation(() => ({
+        findById: vi.fn().mockResolvedValue({ id: "admin-1", status: "ACTIVE" }),
+        getRoleKeys: vi.fn().mockResolvedValue(["ADMIN"]),
+      })),
     }));
     vi.resetModules();
 
@@ -182,6 +231,18 @@ describe("Module 56 — health routes wiring", () => {
     }));
     vi.doMock("@/lib/auth", () => ({
       auth: vi.fn().mockResolvedValue({ user: { id: "admin-1", email: "admin@test.example", roles: ["ADMIN"], signupIntent: null } }),
+    }));
+    // Module 82 — Admin RBAC & Production Auth Hardening: requireRole() now
+    // re-verifies status/roles fresh from the DB for admin-tier checks (see
+    // rbac.ts's own doc comment), so the fake session above is no longer
+    // sufficient on its own — mock the one collaborator it queries, the same
+    // way tests/unit/app/api/health/diagnostics-route.test.ts and
+    // tests/unit/core/infrastructure/auth/rbac.test.ts already do.
+    vi.doMock("@/infrastructure/database/prisma/repositories/prisma-user-repository", () => ({
+      PrismaUserRepository: vi.fn().mockImplementation(() => ({
+        findById: vi.fn().mockResolvedValue({ id: "admin-1", status: "ACTIVE" }),
+        getRoleKeys: vi.fn().mockResolvedValue(["ADMIN"]),
+      })),
     }));
     vi.resetModules();
 
