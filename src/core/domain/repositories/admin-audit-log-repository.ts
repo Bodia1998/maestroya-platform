@@ -26,6 +26,12 @@ export type AdminAuditAction =
   | "USER_SUSPENDED"
   | "USER_REACTIVATED"
   | "USER_ROLE_CHANGED"
+  // Module 83 — Professional Verification Enforcement: an admin
+  // individually suspending/reactivating a professional (mirrors
+  // COMPANY_SUSPENDED/COMPANY_REACTIVATED below for companies — see
+  // AdminSuspendProfessionalUseCase/AdminReactivateProfessionalUseCase).
+  | "PROFESSIONAL_SUSPENDED"
+  | "PROFESSIONAL_REACTIVATED"
   | "REVIEW_MODERATED"
   | "REVIEW_RESTORED"
   | "PORTFOLIO_ITEM_MODERATED"

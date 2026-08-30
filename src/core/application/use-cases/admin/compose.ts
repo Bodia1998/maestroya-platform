@@ -25,6 +25,8 @@ import { ReactivateCompanyUseCase } from "@/application/use-cases/admin/reactiva
 import { GetAdminDashboardOverviewUseCase } from "@/application/use-cases/admin/get-admin-dashboard-overview.use-case";
 import { GetAdminJobUseCase } from "@/application/use-cases/admin/get-admin-job.use-case";
 import { GetAdminProfessionalUseCase } from "@/application/use-cases/admin/get-admin-professional.use-case";
+import { AdminSuspendProfessionalUseCase } from "@/application/use-cases/admin/suspend-professional.use-case";
+import { AdminReactivateProfessionalUseCase } from "@/application/use-cases/admin/reactivate-professional.use-case";
 import { GetAdminQuoteUseCase } from "@/application/use-cases/admin/get-admin-quote.use-case";
 import { GetAdminServiceRequestUseCase } from "@/application/use-cases/admin/get-admin-service-request.use-case";
 import { GetAdminUserUseCase } from "@/application/use-cases/admin/get-admin-user.use-case";
@@ -104,6 +106,15 @@ export function makeListAdminProfessionalsUseCase() {
 
 export function makeGetAdminProfessionalUseCase() {
   return new GetAdminProfessionalUseCase(admins);
+}
+
+/** Module 83 — Professional Verification Enforcement. */
+export function makeSuspendProfessionalUseCase() {
+  return new AdminSuspendProfessionalUseCase(admins, auditLog, eventBus);
+}
+
+export function makeReactivateProfessionalUseCase() {
+  return new AdminReactivateProfessionalUseCase(admins, auditLog, eventBus);
 }
 
 export function makeListAdminServiceRequestsUseCase() {

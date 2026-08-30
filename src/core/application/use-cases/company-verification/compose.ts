@@ -11,6 +11,7 @@ import { eventBus } from "@/infrastructure/events/compose";
 import "@/application/use-cases/notification/compose";
 import { CompanyVerificationStatusChanged } from "@/domain/events/company-verification-status-changed";
 import { RecordCompanyVerificationAuditLogSubscriber } from "@/application/use-cases/company-verification/record-company-verification-audit-log.subscriber";
+import { ActivateCompanyOnVerificationApprovedSubscriber } from "@/application/use-cases/company-verification/activate-company-on-verification-approved.subscriber";
 import { ApproveCompanyVerificationUseCase } from "@/application/use-cases/company-verification/approve-company-verification.use-case";
 import { CreateCompanyVerificationUseCase } from "@/application/use-cases/company-verification/create-company-verification.use-case";
 import { GetAdminCompanyVerificationUseCase } from "@/application/use-cases/company-verification/get-admin-company-verification.use-case";
@@ -47,6 +48,16 @@ const failureReporter = createFailureReporter();
 eventBus.subscribe(
   CompanyVerificationStatusChanged,
   new RecordCompanyVerificationAuditLogSubscriber(auditLog),
+);
+
+/**
+ * Module 83 — Professional Verification Enforcement (H11): auto-activates
+ * a PENDING/SUSPENDED company the moment its verification is APPROVED —
+ * see ActivateCompanyOnVerificationApprovedSubscriber's own doc comment.
+ */
+eventBus.subscribe(
+  CompanyVerificationStatusChanged,
+  new ActivateCompanyOnVerificationApprovedSubscriber(companies),
 );
 
 // --- Company side ---

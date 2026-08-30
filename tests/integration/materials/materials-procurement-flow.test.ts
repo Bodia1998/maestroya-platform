@@ -68,6 +68,9 @@ function seedActiveProfessional(repos: Repos, userId: string) {
   const professional = repos.professionals.seed({
     userId,
     status: "ACTIVE",
+    // Module 83 — Professional Verification Enforcement: CreateQuoteUseCase
+    // now also requires verificationStatus === "VERIFIED".
+    verificationStatus: "VERIFIED",
     categoryIds: [PLUMBING_ID],
     serviceRadiusKm: 30,
   });

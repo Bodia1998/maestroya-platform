@@ -14,6 +14,8 @@ import { ListAdminUsersUseCase } from "@/application/use-cases/admin/list-admin-
 import { ModeratePortfolioItemUseCase } from "@/application/use-cases/admin/moderate-portfolio-item.use-case";
 import { ModerateReviewUseCase } from "@/application/use-cases/admin/moderate-review.use-case";
 import { ReactivateAdminUserUseCase } from "@/application/use-cases/admin/reactivate-admin-user.use-case";
+import { AdminReactivateProfessionalUseCase } from "@/application/use-cases/admin/reactivate-professional.use-case";
+import { AdminSuspendProfessionalUseCase } from "@/application/use-cases/admin/suspend-professional.use-case";
 import { RestorePortfolioItemUseCase } from "@/application/use-cases/admin/restore-portfolio-item.use-case";
 import { RestoreReviewUseCase } from "@/application/use-cases/admin/restore-review.use-case";
 import { SuspendAdminUserUseCase } from "@/application/use-cases/admin/suspend-admin-user.use-case";
@@ -89,6 +91,8 @@ function makeUseCases(
     reactivate: new ReactivateAdminUserUseCase(admins, auditLog),
     changeRole: new ChangeUserRoleUseCase(admins, auditLog, securityEvents),
     listProfessionals: new ListAdminProfessionalsUseCase(admins),
+    suspendProfessional: new AdminSuspendProfessionalUseCase(admins, auditLog),
+    reactivateProfessional: new AdminReactivateProfessionalUseCase(admins, auditLog),
     listServiceRequests: new ListAdminServiceRequestsUseCase(admins),
     listQuotes: new ListAdminQuotesUseCase(admins),
     listJobs: new ListAdminJobsUseCase(admins),
@@ -309,6 +313,65 @@ describe("Professional management", () => {
 
     const results = await listProfessionals.execute({ limit: 20, offset: 0, search: "acme" });
     expect(results).toHaveLength(1);
+  });
+
+  // Module 83 — Professional Verification Enforcement: before this module
+  // there was no admin-initiated suspend/reactivate path for an individual
+  // professional at all (only the company-side equivalent existed). These
+  // cover the acceptance criteria: RBAC-gated (see the Server Action
+  // boundary tests below), audit-logged, and takes effect immediately on
+  // the same status field CreateQuoteUseCase/discovery already read.
+  it("suspends an ACTIVE professional, persists the status, and records an audit log entry", async () => {
+    const { admins, auditLog } = makeRepos();
+    const professional = admins.seedProfessional({ userId: "u1", status: "ACTIVE" });
+    const { suspendProfessional } = makeUseCases(admins, auditLog);
+
+    const updated = await suspendProfessional.execute(ADMIN_ID, professional.id);
+
+    expect(updated.status).toBe("SUSPENDED");
+    expect((await admins.getProfessionalById(professional.id))?.status).toBe("SUSPENDED");
+    expect(auditLog.entries).toHaveLength(1);
+    expect(auditLog.entries[0]).toMatchObject({
+      adminUserId: ADMIN_ID,
+      action: "PROFESSIONAL_SUSPENDED",
+      targetType: "ProfessionalProfile",
+      targetId: professional.id,
+    });
+  });
+
+  it("refuses to suspend a professional that is not ACTIVE", async () => {
+    const { admins, auditLog } = makeRepos();
+    const professional = admins.seedProfessional({ userId: "u1", status: "INACTIVE" });
+    const { suspendProfessional } = makeUseCases(admins, auditLog);
+
+    await expect(suspendProfessional.execute(ADMIN_ID, professional.id)).rejects.toBeInstanceOf(ConflictError);
+    expect(auditLog.entries).toHaveLength(0);
+  });
+
+  it("404s suspending an unknown professional", async () => {
+    const { admins, auditLog } = makeRepos();
+    const { suspendProfessional } = makeUseCases(admins, auditLog);
+
+    await expect(suspendProfessional.execute(ADMIN_ID, "does-not-exist")).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("reactivates a SUSPENDED professional back to ACTIVE and records an audit log entry", async () => {
+    const { admins, auditLog } = makeRepos();
+    const professional = admins.seedProfessional({ userId: "u1", status: "SUSPENDED" });
+    const { reactivateProfessional } = makeUseCases(admins, auditLog);
+
+    const updated = await reactivateProfessional.execute(ADMIN_ID, professional.id);
+
+    expect(updated.status).toBe("ACTIVE");
+    expect(auditLog.entries[0]).toMatchObject({ action: "PROFESSIONAL_REACTIVATED", targetId: professional.id });
+  });
+
+  it("does not reactivate an INACTIVE (self-deactivated) professional — that status is the professional's own choice", async () => {
+    const { admins, auditLog } = makeRepos();
+    const professional = admins.seedProfessional({ userId: "u1", status: "INACTIVE" });
+    const { reactivateProfessional } = makeUseCases(admins, auditLog);
+
+    await expect(reactivateProfessional.execute(ADMIN_ID, professional.id)).rejects.toBeInstanceOf(ConflictError);
   });
 });
 

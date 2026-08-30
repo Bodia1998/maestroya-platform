@@ -62,7 +62,14 @@ describe("Notification failures never break the primary business operation", () 
     const requestDiscovery = new FakeServiceRequestDiscoveryRepository();
     const quotes = new FakeQuoteRepository();
 
-    const professional = professionals.seed({ userId: "pro-1", status: "ACTIVE", categoryIds: [CATEGORY_ID] });
+    // Module 83 — Professional Verification Enforcement: CreateQuoteUseCase
+    // now also requires verificationStatus === "VERIFIED".
+    const professional = professionals.seed({
+      userId: "pro-1",
+      status: "ACTIVE",
+      verificationStatus: "VERIFIED",
+      categoryIds: [CATEGORY_ID],
+    });
     professionalDiscovery.seed({
       id: professional.id,
       displayName: "Jane",

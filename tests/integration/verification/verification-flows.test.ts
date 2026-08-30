@@ -15,7 +15,8 @@ import { StartVerificationReviewUseCase } from "@/application/use-cases/verifica
 import { SubmitProfessionalVerificationUseCase } from "@/application/use-cases/verification/submit-professional-verification.use-case";
 import { UploadVerificationDocumentUseCase } from "@/application/use-cases/verification/upload-verification-document.use-case";
 import { ProfessionalVerificationStatusChanged } from "@/domain/events/professional-verification-status-changed";
-import { ConflictError, NotFoundError, ValidationError } from "@/domain/errors/domain-error";
+import type { VerificationDocumentTypeValue } from "@/domain/services/professional-verification-rules";
+import { BusinessRegistrationRequiredError, ConflictError, NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import { SynchronousEventBus } from "@/infrastructure/events/synchronous-event-bus";
 import {
   FakeAdminAuditLogRepository,
@@ -82,10 +83,25 @@ const IDENTITY_DOC = {
   fileSizeBytes: 100,
 };
 
-async function seedSubmittedCase(ctx: ReturnType<typeof makeContext>, userId = "user-pro-1") {
+async function seedSubmittedCase(
+  ctx: ReturnType<typeof makeContext>,
+  userId = "user-pro-1",
+  // Module 83 — Professional Verification Enforcement / Module 74 —
+  // Business Registration Enforcement: submission itself still only
+  // requires an identity document (canSubmit/hasRequiredDocuments are
+  // unchanged) — an empty array here reproduces every pre-Module-83 test's
+  // exact fixture. Callers that go on to approve() must additionally pass
+  // ["BUSINESS_REGISTRATION"] (or upload it themselves before calling
+  // submit), since ApproveProfessionalVerificationUseCase now also
+  // requires it.
+  extraDocumentTypes: readonly VerificationDocumentTypeValue[] = [],
+) {
   const professional = ctx.professionals.seed({ userId, status: "ACTIVE", businessName: "Bob Plumbing" });
   await ctx.create.execute(userId);
   await ctx.upload.execute(userId, IDENTITY_DOC);
+  for (const type of extraDocumentTypes) {
+    await ctx.upload.execute(userId, { ...IDENTITY_DOC, type });
+  }
   const verification = await ctx.submit.execute(userId);
   return { professional, verification };
 }
@@ -135,7 +151,7 @@ describe("Professional Verification module (Module 17)", () => {
     });
 
     it("does not let an already-approved professional open a new case", async () => {
-      const { professional, verification } = await seedSubmittedCase(ctx, "user-pro-4");
+      const { professional, verification } = await seedSubmittedCase(ctx, "user-pro-4", ["BUSINESS_REGISTRATION"]);
       await ctx.approve.execute("admin-1", verification.id);
       expect(ctx.professionals.profiles.get(professional.id)?.verificationStatus).toBe("VERIFIED");
       await expect(ctx.create.execute("user-pro-4")).rejects.toBeInstanceOf(ConflictError);
@@ -185,7 +201,7 @@ describe("Professional Verification module (Module 17)", () => {
     });
 
     it("start review → approve verifies the professional, audits and notifies", async () => {
-      const { professional, verification } = await seedSubmittedCase(ctx, "user-pro-7");
+      const { professional, verification } = await seedSubmittedCase(ctx, "user-pro-7", ["BUSINESS_REGISTRATION"]);
       const underReview = await ctx.startReview.execute("admin-1", verification.id);
       expect(underReview.status).toBe("UNDER_REVIEW");
       expect(underReview.reviewedByUserId).toBe("admin-1");
@@ -199,6 +215,23 @@ describe("Professional Verification module (Module 17)", () => {
       expect(ctx.auditLog.actions()).toContain("VERIFICATION_APPROVED");
       const approvedNote = ctx.notifications.events.find((e) => e.type === "VERIFICATION_APPROVED");
       expect(approvedNote?.userId).toBe("user-pro-7");
+    });
+
+    // Module 83 — Professional Verification Enforcement / Module 74 —
+    // Business Registration Enforcement: identity verification succeeding
+    // must not be sufficient on its own — approval must fail, and the
+    // professional's public trust signal must stay unchanged, when the
+    // case has no business-registration document.
+    it("refuses to approve a case with no business-registration document", async () => {
+      const { professional, verification } = await seedSubmittedCase(ctx, "user-pro-7b");
+      await ctx.startReview.execute("admin-1", verification.id);
+
+      await expect(ctx.approve.execute("admin-1", verification.id)).rejects.toBeInstanceOf(
+        BusinessRegistrationRequiredError,
+      );
+      // No partial mutation: still UNDER_REVIEW, professional still PENDING.
+      expect((await ctx.verifications.findById(verification.id))?.status).toBe("UNDER_REVIEW");
+      expect(ctx.professionals.profiles.get(professional.id)?.verificationStatus).toBe("PENDING");
     });
 
     it("reject requires a reason and stores it; without a valid reason it throws", async () => {

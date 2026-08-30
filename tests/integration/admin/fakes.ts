@@ -13,6 +13,7 @@ import type {
   AdminJobStatusValue,
   AdminPortfolioItemRecord,
   AdminProfessionalRecord,
+  AdminProfessionalStatusValue,
   AdminQuoteRecord,
   AdminQuoteStatusValue,
   AdminRepository,
@@ -273,6 +274,19 @@ export class FakeAdminRepository implements AdminRepository {
 
   async getProfessionalById(id: string): Promise<AdminProfessionalRecord | null> {
     return this.professionals.get(id) ?? null;
+  }
+
+  /** Module 83 — Professional Verification Enforcement. Mirrors
+   *  setCompanyStatus below exactly. */
+  async setProfessionalStatus(
+    id: string,
+    status: AdminProfessionalStatusValue,
+  ): Promise<AdminProfessionalRecord | null> {
+    const existing = this.professionals.get(id);
+    if (!existing) return null;
+    const updated = { ...existing, status };
+    this.professionals.set(id, updated);
+    return updated;
   }
 
   async listServiceRequests(options: ListAdminServiceRequestsOptions): Promise<AdminServiceRequestRecord[]> {

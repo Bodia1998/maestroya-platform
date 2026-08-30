@@ -118,6 +118,12 @@ export class PrismaProfessionalDiscoveryRepository implements ProfessionalDiscov
     const rows = await prisma.professionalProfile.findMany({
       where: {
         status: "ACTIVE",
+        // Module 83 — Professional Verification Enforcement (audit finding
+        // B2): an unverified/rejected professional's status can still be
+        // ACTIVE (verificationStatus and status are independent fields —
+        // see schema.prisma) but must never be discoverable/matchable. See
+        // findCandidateById below for the identical rule.
+        verificationStatus: "VERIFIED",
         deletedAt: null,
         categories: { some: { id: categoryId, status: "ACTIVE", deletedAt: null } },
       },
@@ -129,7 +135,13 @@ export class PrismaProfessionalDiscoveryRepository implements ProfessionalDiscov
 
   async findCandidateById(professionalId: string): Promise<ProfessionalDiscoveryCandidate | null> {
     const row = await prisma.professionalProfile.findFirst({
-      where: { id: professionalId, status: "ACTIVE", deletedAt: null },
+      // Module 83 — Professional Verification Enforcement: same
+      // ACTIVE-and-VERIFIED eligibility as findActiveCandidatesByCategory —
+      // this is the lookup CreateQuoteUseCase/GetAvailableServiceRequests
+      // ForProfessionalUseCase/GetServiceRequestForProfessionalUseCase all
+      // use to resolve "am I an eligible candidate", so gating it here
+      // closes the quote-submission bypass at its single source.
+      where: { id: professionalId, status: "ACTIVE", verificationStatus: "VERIFIED", deletedAt: null },
       select: CANDIDATE_SELECT,
     });
     return row ? toCandidate(row) : null;

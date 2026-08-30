@@ -135,14 +135,17 @@ export class FakeProfessionalDiscoveryRepository implements ProfessionalDiscover
   }
 
   async findActiveCandidatesByCategory(categoryId: string): Promise<ProfessionalDiscoveryCandidate[]> {
+    // Module 83 — Professional Verification Enforcement: mirrors
+    // PrismaProfessionalDiscoveryRepository's ACTIVE-and-VERIFIED where
+    // clause exactly.
     return [...this.candidates.values()]
-      .filter((c) => c.status === "ACTIVE" && c.categoryIds.includes(categoryId))
+      .filter((c) => c.status === "ACTIVE" && c.verificationStatus === "VERIFIED" && c.categoryIds.includes(categoryId))
       .map(({ status: _status, ...candidate }) => candidate);
   }
 
   async findCandidateById(professionalId: string): Promise<ProfessionalDiscoveryCandidate | null> {
     const candidate = this.candidates.get(professionalId);
-    if (!candidate || candidate.status !== "ACTIVE") return null;
+    if (!candidate || candidate.status !== "ACTIVE" || candidate.verificationStatus !== "VERIFIED") return null;
     const { status: _status, ...rest } = candidate;
     return rest;
   }

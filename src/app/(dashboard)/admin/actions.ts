@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import {
   adminPortfolioItemIdSchema,
+  adminProfessionalIdSchema,
   adminReviewIdSchema,
   adminUserIdSchema,
   changeUserRoleSchema,
@@ -32,9 +33,11 @@ import {
   makeModeratePortfolioItemUseCase,
   makeModerateReviewUseCase,
   makeReactivateAdminUserUseCase,
+  makeReactivateProfessionalUseCase,
   makeRestorePortfolioItemUseCase,
   makeRestoreReviewUseCase,
   makeSuspendAdminUserUseCase,
+  makeSuspendProfessionalUseCase,
 } from "@/application/use-cases/admin/compose";
 import { normalizeModerationReason } from "@/domain/services/admin-rules";
 import { DomainError } from "@/domain/errors/domain-error";
@@ -159,7 +162,7 @@ export async function changeUserRoleAction(userId: string, roles: string[]): Pro
 }
 
 // ---------------------------------------------------------------------------
-// Professionals (read-only oversight)
+// Professionals
 // ---------------------------------------------------------------------------
 
 export async function listAdminProfessionalsAction(
@@ -175,6 +178,49 @@ export async function listAdminProfessionalsAction(
     return { success: true, data: professionals };
   } catch (error) {
     return fromDomainError(error, "Something went wrong loading professionals.");
+  }
+}
+
+/**
+ * Module 83 — Professional Verification Enforcement: the individual-
+ * professional suspend/reactivate actions that didn't exist before this
+ * module (see AdminSuspendProfessionalUseCase's own doc comment). Same
+ * discipline as every other action in this file/admin/companies/actions.ts:
+ * requireRole first, session-derived admin id, never a client-supplied one.
+ */
+export async function suspendProfessionalAction(
+  professionalId: string,
+): Promise<ActionResult<AdminProfessionalRecord>> {
+  const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
+  const parsed = adminProfessionalIdSchema.safeParse({ professionalId });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid professional." };
+  }
+  try {
+    const professional = await makeSuspendProfessionalUseCase().execute(admin.id, parsed.data.professionalId);
+    revalidatePath("/admin/professionals");
+    revalidatePath(`/admin/professionals/${parsed.data.professionalId}`);
+    return { success: true, data: professional };
+  } catch (error) {
+    return fromDomainError(error, "Something went wrong suspending this professional.");
+  }
+}
+
+export async function reactivateProfessionalAction(
+  professionalId: string,
+): Promise<ActionResult<AdminProfessionalRecord>> {
+  const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
+  const parsed = adminProfessionalIdSchema.safeParse({ professionalId });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid professional." };
+  }
+  try {
+    const professional = await makeReactivateProfessionalUseCase().execute(admin.id, parsed.data.professionalId);
+    revalidatePath("/admin/professionals");
+    revalidatePath(`/admin/professionals/${parsed.data.professionalId}`);
+    return { success: true, data: professional };
+  } catch (error) {
+    return fromDomainError(error, "Something went wrong reactivating this professional.");
   }
 }
 

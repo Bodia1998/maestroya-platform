@@ -7,6 +7,7 @@ import { GetProfessionalQuotesUseCase } from "@/application/use-cases/quotes/get
 import { GetServiceRequestQuotesUseCase } from "@/application/use-cases/quotes/get-service-request-quotes.use-case";
 import { UpdateQuoteUseCase } from "@/application/use-cases/quotes/update-quote.use-case";
 import { WithdrawQuoteUseCase } from "@/application/use-cases/quotes/withdraw-quote.use-case";
+import { ProfessionalNotVerifiedError } from "@/domain/errors/domain-error";
 import {
   FakeCustomerProfileRepository,
   FakeProfessionalDiscoveryRepository,
@@ -43,6 +44,13 @@ function seedActiveProfessional(
   const professional = repos.professionals.seed({
     userId,
     status: "ACTIVE",
+    // Module 83 — Professional Verification Enforcement: VERIFIED by
+    // default so every existing test using this helper (the overwhelming
+    // majority of this file) keeps passing unchanged now that
+    // CreateQuoteUseCase also requires verificationStatus === "VERIFIED".
+    // Tests exercising the new gate itself seed a professional directly
+    // with a different verificationStatus instead of using this helper.
+    verificationStatus: "VERIFIED",
     categoryIds: overrides.categoryIds ?? [PLUMBING_ID],
     serviceRadiusKm: overrides.serviceRadiusKm === undefined ? 30 : overrides.serviceRadiusKm,
   });
@@ -252,6 +260,46 @@ describe("CreateQuoteUseCase", () => {
         repos.quotes,
       ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS }),
     ).rejects.toThrow();
+  });
+
+  // Module 83 — Professional Verification Enforcement (audit finding B2):
+  // before this module, an ACTIVE-but-unverified/rejected professional
+  // could submit a binding quote — verificationStatus was written by the
+  // verification module but never read here. These are the negative tests
+  // that gap was missing (verification-flows.test.ts covers the write
+  // side; these cover the previously-unenforced read side).
+  it.each(["UNVERIFIED", "PENDING", "REJECTED"] as const)(
+    "rejects a professional whose verificationStatus is %s with ProfessionalNotVerifiedError",
+    async (verificationStatus) => {
+      const repos = makeRepos();
+      const professional = seedActiveProfessional(repos, "pro-1");
+      repos.professionals.profiles.set(professional.id, { ...professional, verificationStatus });
+      const request = seedPublishedRequest(repos, "cust-1");
+
+      await expect(
+        new CreateQuoteUseCase(
+          repos.professionals,
+          repos.professionalDiscovery,
+          repos.requestDiscovery,
+          repos.quotes,
+        ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS }),
+      ).rejects.toBeInstanceOf(ProfessionalNotVerifiedError);
+    },
+  );
+
+  it("allows a VERIFIED professional to quote (regression: verification gate does not over-reject)", async () => {
+    const repos = makeRepos();
+    seedActiveProfessional(repos, "pro-1");
+    const request = seedPublishedRequest(repos, "cust-1");
+
+    const quote = await new CreateQuoteUseCase(
+      repos.professionals,
+      repos.professionalDiscovery,
+      repos.requestDiscovery,
+      repos.quotes,
+    ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
+
+    expect(quote.id).toBeTruthy();
   });
 
   it("rejects a professional with no ProfessionalProfile at all", async () => {

@@ -16,6 +16,10 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   USER_SUSPENDED: "STATUS_CHANGE",
   USER_REACTIVATED: "STATUS_CHANGE",
   USER_ROLE_CHANGED: "UPDATE",
+  // Module 83 — Professional Verification Enforcement: same
+  // "map to the closest existing AuditLogAction value" convention.
+  PROFESSIONAL_SUSPENDED: "STATUS_CHANGE",
+  PROFESSIONAL_REACTIVATED: "STATUS_CHANGE",
   REVIEW_MODERATED: "UPDATE",
   REVIEW_RESTORED: "UPDATE",
   PORTFOLIO_ITEM_MODERATED: "UPDATE",

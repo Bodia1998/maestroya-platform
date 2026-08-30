@@ -277,6 +277,14 @@ export interface AdminRepository {
   // Professionals
   listProfessionals(options: ListAdminProfessionalsOptions): Promise<AdminProfessionalRecord[]>;
   getProfessionalById(id: string): Promise<AdminProfessionalRecord | null>;
+  /** Module 83 — Professional Verification Enforcement: sets
+   *  ProfessionalProfile.status. Only ACTIVE <-> SUSPENDED transitions are
+   *  driven through this admin path (see admin-rules.ts's
+   *  isSuspendableProfessionalStatus/isReactivatableProfessionalStatus) —
+   *  INACTIVE is professional-driven only (DeactivateProfessionalUseCase)
+   *  and is never written here, mirroring setCompanyStatus's own PENDING/
+   *  DEACTIVATED carve-out for companies. */
+  setProfessionalStatus(id: string, status: AdminProfessionalStatusValue): Promise<AdminProfessionalRecord | null>;
 
   // Service requests
   listServiceRequests(options: ListAdminServiceRequestsOptions): Promise<AdminServiceRequestRecord[]>;
