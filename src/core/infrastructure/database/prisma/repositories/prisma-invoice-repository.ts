@@ -7,9 +7,12 @@ import type {
   InvoiceRecord,
   InvoiceRepository,
   InvoiceStatusValue,
+  InvoiceTypeValue,
   IssueInvoiceData,
   UpdateInvoiceResult,
 } from "@/domain/repositories/invoice-repository";
+import { allocateNextDocumentSequence, type RawQueryClient } from "./prisma-document-number-allocator";
+import { formatInvoiceNumber } from "@/domain/services/invoice-document";
 
 /**
  * Module 79 — Invoicing & Credit Notes.
@@ -49,7 +52,7 @@ interface InvoiceRow {
   issuerTaxId: string;
   recipientLegalName: string;
   recipientTaxId: string | null;
-  selfBillingAuthorizationId: string;
+  selfBillingAuthorizationId: string | null;
   issueDate: Date | null;
   invoiceDate: Date;
   acceptedAt: Date | null;
@@ -97,8 +100,8 @@ function toLineItem(row: LineItemRow): InvoiceLineItemRecord {
   };
 }
 
-async function fetchLineItems(invoiceId: string): Promise<InvoiceLineItemRecord[]> {
-  const rows = await prisma.$queryRawUnsafe<LineItemRow[]>(
+async function fetchLineItems(invoiceId: string, client: RawQueryClient = prisma): Promise<InvoiceLineItemRecord[]> {
+  const rows = await client.$queryRawUnsafe<LineItemRow[]>(
     `SELECT "id", "invoiceId", "description", "quantity", "unitPrice", "amount", "sortOrder", "category"
      FROM "invoice_line_items" WHERE "invoiceId" = $1::uuid ORDER BY "sortOrder" ASC`,
     invoiceId,
@@ -106,11 +109,18 @@ async function fetchLineItems(invoiceId: string): Promise<InvoiceLineItemRecord[
   return rows.map(toLineItem);
 }
 
+/** Private sentinel thrown inside `issue`'s own transaction to force a
+ *  ROLLBACK (including the number-counter increment) when the
+ *  compare-and-swap status write affects zero rows — see that method's
+ *  own doc comment. Never escapes this file. */
+class InvoiceIssueRaceLost extends Error {}
+
 function toRecord(row: InvoiceRow, lineItems: InvoiceLineItemRecord[]): InvoiceRecord {
+  const type = row.type as InvoiceRecord["type"];
   return {
     id: row.id,
     invoiceNumber: row.invoiceNumber,
-    type: row.type as InvoiceRecord["type"],
+    type,
     status: row.status as InvoiceStatusValue,
     jobId: row.jobId,
     quoteId: row.quoteId,
@@ -141,7 +151,7 @@ function toRecord(row: InvoiceRow, lineItems: InvoiceLineItemRecord[]): InvoiceR
     totalAmount: Number(row.totalAmount),
     documentHash: row.documentHash,
     version: row.version,
-    selfBilled: true,
+    selfBilled: type === "PROFESSIONAL_SELF_BILLED",
     cancelledAt: row.cancelledAt,
     cancelledByUserId: row.cancelledByUserId,
     cancellationReason: row.cancellationReason,
@@ -159,9 +169,16 @@ export class PrismaInvoiceRepository implements InvoiceRepository {
   }
 
   async findByJobId(jobId: string): Promise<InvoiceRecord | null> {
+    return this.findByJobIdAndType(jobId, "PROFESSIONAL_SELF_BILLED");
+  }
+
+  async findByJobIdAndType(jobId: string, type: InvoiceTypeValue): Promise<InvoiceRecord | null> {
     const rows = await prisma.$queryRawUnsafe<InvoiceRow[]>(
-      `SELECT ${INVOICE_COLUMNS} FROM "invoices" WHERE "jobId" = $1::uuid AND "status" <> 'CANCELLED' ORDER BY "createdAt" DESC LIMIT 1`,
+      `SELECT ${INVOICE_COLUMNS} FROM "invoices"
+       WHERE "jobId" = $1::uuid AND "type" = $2::"InvoiceType" AND "status" <> 'CANCELLED'
+       ORDER BY "createdAt" DESC LIMIT 1`,
       jobId,
+      type,
     );
     const row = rows[0];
     if (!row) return null;
@@ -200,7 +217,7 @@ export class PrismaInvoiceRepository implements InvoiceRepository {
            "createdAt", "updatedAt"
          )
          VALUES (
-           gen_random_uuid(), 'PROFESSIONAL_SELF_BILLED', 'DRAFT', $1::uuid, $2::uuid, $3::uuid,
+           gen_random_uuid(), $23::"InvoiceType", 'DRAFT', $1::uuid, $2::uuid, $3::uuid,
            $4::uuid, $5::uuid, $6::uuid,
            $7, $8, $9, $10,
            $11::uuid, $12, $13,
@@ -232,6 +249,7 @@ export class PrismaInvoiceRepository implements InvoiceRepository {
         data.irpfWithholdingRateBps,
         data.irpfWithholdingAmount,
         data.totalAmount,
+        data.type ?? "PROFESSIONAL_SELF_BILLED",
       );
 
       const invoice = inserted[0]!;
@@ -289,18 +307,47 @@ export class PrismaInvoiceRepository implements InvoiceRepository {
   }
 
   async issue(data: IssueInvoiceData): Promise<UpdateInvoiceResult> {
-    const rows = await prisma.$queryRawUnsafe<InvoiceRow[]>(
-      `UPDATE "invoices"
-       SET "status" = 'ISSUED', "invoiceNumber" = $2, "issueDate" = $3, "documentHash" = $4, "updatedAt" = now()
-       WHERE "id" = $1::uuid AND "status" = ANY($5::"InvoiceStatus"[])
-       RETURNING ${INVOICE_COLUMNS}`,
-      data.id,
-      data.invoiceNumber,
-      data.issueDate,
-      data.documentHash,
-      [...data.fromStatuses],
-    );
-    return this.resultFor(data.id, rows[0]);
+    // Module 85 — Invoicing & Credit Note Activation: the invoice number
+    // is allocated (via the shared `allocateNextDocumentSequence`) INSIDE
+    // this same transaction as the compare-and-swap status write below.
+    // If the `UPDATE ... WHERE status = ANY(fromStatuses)` affects zero
+    // rows (a lost race — the invoice was already issued/cancelled/moved
+    // on by a concurrent or duplicate call), this throws
+    // `InvoiceIssueRaceLost` to force a ROLLBACK of the whole transaction
+    // — including the counter increment — so the allocated number is
+    // never burned with no invoice attached. See `IssueInvoiceData`'s own
+    // doc comment on the invoicing-repository interface for the race this
+    // closes.
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const year = data.issueDate.getUTCFullYear();
+        const sequence = await allocateNextDocumentSequence(tx, "INV", year);
+        const invoiceNumber = formatInvoiceNumber({ year, sequence });
+        const documentHash = data.buildDocumentHash(invoiceNumber);
+
+        const rows = await tx.$queryRawUnsafe<InvoiceRow[]>(
+          `UPDATE "invoices"
+           SET "status" = 'ISSUED', "invoiceNumber" = $2, "issueDate" = $3, "documentHash" = $4, "updatedAt" = now()
+           WHERE "id" = $1::uuid AND "status" = ANY($5::"InvoiceStatus"[])
+           RETURNING ${INVOICE_COLUMNS}`,
+          data.id,
+          invoiceNumber,
+          data.issueDate,
+          documentHash,
+          [...data.fromStatuses],
+        );
+        const row = rows[0];
+        if (!row) {
+          throw new InvoiceIssueRaceLost();
+        }
+        return { applied: true as const, record: toRecord(row, await fetchLineItems(row.id, tx)) };
+      });
+    } catch (error) {
+      if (error instanceof InvoiceIssueRaceLost) {
+        return this.resultFor(data.id, undefined);
+      }
+      throw error;
+    }
   }
 
   async markPaid(id: string, paidAt: Date, fromStatuses: readonly InvoiceStatusValue[]): Promise<UpdateInvoiceResult> {

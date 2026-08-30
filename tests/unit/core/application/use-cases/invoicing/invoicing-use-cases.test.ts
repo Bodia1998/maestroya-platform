@@ -20,7 +20,6 @@ import {
   FakeCompanyRepository,
   FakeCreditNoteRepository,
   FakeEventBus,
-  FakeInvoiceNumberAllocator,
   FakeInvoiceRepository,
   FakeJobRepository,
   FakePaymentRepository,
@@ -167,7 +166,6 @@ describe("Module 79 — Invoicing & Credit Notes use cases", () => {
   let selfBillingAuthorizations: FakeSelfBillingAuthorizationRepository;
   let invoices: FakeInvoiceRepository;
   let creditNotes: FakeCreditNoteRepository;
-  let numberAllocator: FakeInvoiceNumberAllocator;
   let eventBus: FakeEventBus;
   let taxBreakdowns: CalculateJobTaxBreakdownUseCase;
 
@@ -190,7 +188,6 @@ describe("Module 79 — Invoicing & Credit Notes use cases", () => {
     selfBillingAuthorizations = new FakeSelfBillingAuthorizationRepository();
     invoices = new FakeInvoiceRepository();
     creditNotes = new FakeCreditNoteRepository();
-    numberAllocator = new FakeInvoiceNumberAllocator();
     eventBus = new FakeEventBus();
     taxBreakdowns = new CalculateJobTaxBreakdownUseCase(jobs as never, quotes as never, rates);
 
@@ -208,9 +205,9 @@ describe("Module 79 — Invoicing & Credit Notes use cases", () => {
     );
     submitForAcceptance = new SubmitInvoiceForAcceptanceUseCase(invoices, eventBus);
     acceptInvoice = new AcceptInvoiceUseCase(invoices, professionals as never, companies as never, selfBillingAuthorizations, eventBus);
-    issueInvoice = new IssueInvoiceUseCase(invoices, numberAllocator, eventBus);
+    issueInvoice = new IssueInvoiceUseCase(invoices, eventBus);
     markPaid = new MarkInvoicePaidUseCase(invoices, eventBus);
-    createCreditNote = new CreateCreditNoteUseCase(invoices, creditNotes, taxBreakdowns, numberAllocator, eventBus);
+    createCreditNote = new CreateCreditNoteUseCase(invoices, creditNotes, taxBreakdowns, eventBus);
     checkInvoiceForPayout = new CheckInvoiceRequiredForPayoutUseCase(invoices);
 
     jobs.seed(makeJob());

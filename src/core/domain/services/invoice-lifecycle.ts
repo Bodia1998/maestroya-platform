@@ -1,4 +1,4 @@
-import type { InvoiceStatusValue } from "@/domain/repositories/invoice-repository";
+import type { InvoiceStatusValue, InvoiceTypeValue } from "@/domain/repositories/invoice-repository";
 
 /**
  * Module 79 — Invoicing & Credit Notes: the ONE explicit state machine for
@@ -90,4 +90,25 @@ export function isCreditableInvoiceStatus(status: InvoiceStatusValue): boolean {
  *  requires before a payout may execute. */
 export function satisfiesPayoutInvoicePrerequisite(status: InvoiceStatusValue | null): boolean {
   return status === "ISSUED" || status === "PAID";
+}
+
+/**
+ * Module 85 — Invoicing & Credit Note Activation: which single source
+ * status may transition directly to ISSUED, for a given `InvoiceTypeValue`.
+ * Kept as its own named function — never folded into the generic
+ * `TRANSITIONS` table above — so a `PROFESSIONAL_SELF_BILLED` invoice can
+ * never accidentally skip the electronic-acceptance step: that table
+ * describes the self-billed lifecycle (`TRANSITIONS.ACCEPTED` is the only
+ * source of `ISSUED` in it), and stays exactly as Module 79 defined it.
+ * `CUSTOMER_RECEIPT` is not a self-billing document — the customer never
+ * "accepts" a receipt for a job they already paid for — so it is issued
+ * directly from DRAFT, entirely bypassing PENDING_ACCEPTANCE/ACCEPTED
+ * (a `CUSTOMER_RECEIPT` invoice never enters either status; see
+ * `CreateCustomerReceiptDraftUseCase`). `IssueInvoiceUseCase` calls this
+ * — not `canTransitionInvoiceStatus` — to decide both what to reject and
+ * which `fromStatuses` to pass to `InvoiceRepository.issue`'s
+ * compare-and-swap.
+ */
+export function issuableFromStatus(type: InvoiceTypeValue): InvoiceStatusValue {
+  return type === "CUSTOMER_RECEIPT" ? "DRAFT" : "ACCEPTED";
 }

@@ -35,16 +35,27 @@ export type InvoiceStatusValue =
   | "CANCELLED";
 
 /**
- * Always `PROFESSIONAL_SELF_BILLED` today — the professional/company ->
- * MaestroYa self-billing invoice the module brief's "PROFESSIONAL ->
- * MAESTROYA" example describes. Kept as an explicit field (rather than
- * assumed) so a future customer-facing invoice document (a genuinely
- * different economic relationship — see the brief's "IMPORTANT TAX
- * DISTINCTION" section) can be represented on the same table/repository
- * shape without a breaking schema change, without this module claiming to
- * implement one today.
+ * `PROFESSIONAL_SELF_BILLED` — the professional/company -> MaestroYa
+ * self-billing invoice the module brief's "PROFESSIONAL -> MAESTROYA"
+ * example describes; goes through the full DRAFT -> PENDING_ACCEPTANCE ->
+ * ACCEPTED -> ISSUED electronic-acceptance lifecycle (see
+ * `domain/services/invoice-lifecycle.ts`).
+ *
+ * `CUSTOMER_RECEIPT` (Module 85 — Invoicing & Credit Note Activation) —
+ * the genuinely different economic relationship the original Module 79
+ * doc comment reserved this field for: MaestroYa (the issuer of record —
+ * see `domain/services/invoicing-issuer.ts`) billing the actual paying
+ * customer for the job. A `CUSTOMER_RECEIPT` is never self-billing (there
+ * is no `SelfBillingAuthorizationRecord` — `selfBillingAuthorizationId`
+ * is `null` — and no electronic-acceptance step: the customer never
+ * "accepts" a receipt for something they already paid for). It is issued
+ * directly from DRAFT — see `domain/services/invoice-lifecycle.ts`'s own
+ * `issuableFromStatus`. It shares the same table/repository/numbering/
+ * hashing machinery as `PROFESSIONAL_SELF_BILLED` deliberately — Module 85
+ * explicitly reuses the existing Invoice engine rather than building a
+ * second one.
  */
-export type InvoiceTypeValue = "PROFESSIONAL_SELF_BILLED";
+export type InvoiceTypeValue = "PROFESSIONAL_SELF_BILLED" | "CUSTOMER_RECEIPT";
 
 export interface InvoiceLineItemRecord {
   id: string;
@@ -107,9 +118,15 @@ export interface InvoiceRecord {
   recipientLegalName: string;
   recipientTaxId: string | null;
 
-  // --- Self-billing ---
-  selfBilled: true;
-  selfBillingAuthorizationId: string;
+  // --- Self-billing (only meaningful for PROFESSIONAL_SELF_BILLED — see
+  //     InvoiceTypeValue's own doc comment) ---
+  /** `true` for `PROFESSIONAL_SELF_BILLED`, `false` for `CUSTOMER_RECEIPT` — derived from `type`, never a second source of truth. */
+  selfBilled: boolean;
+  /** `null` for `CUSTOMER_RECEIPT` — a customer receipt is not a
+   *  self-billing document and never references a
+   *  `SelfBillingAuthorizationRecord`. Always set for
+   *  `PROFESSIONAL_SELF_BILLED`. */
+  selfBillingAuthorizationId: string | null;
 
   // --- Dates ---
   issueDate: Date | null;
@@ -160,6 +177,10 @@ export interface InvoiceRecord {
 }
 
 export interface CreateInvoiceDraftData {
+  /** Defaults to `PROFESSIONAL_SELF_BILLED` at the repository level if
+   *  omitted — see `PrismaInvoiceRepository.createDraft`'s own doc
+   *  comment — but every Module 85 call site passes it explicitly. */
+  type?: InvoiceTypeValue;
   jobId: string;
   quoteId: string;
   paymentId: string | null;
@@ -170,7 +191,8 @@ export interface CreateInvoiceDraftData {
   issuerTaxId: string;
   recipientLegalName: string;
   recipientTaxId: string | null;
-  selfBillingAuthorizationId: string;
+  /** `null` for `CUSTOMER_RECEIPT` — see `InvoiceRecord.selfBillingAuthorizationId`'s own doc comment. */
+  selfBillingAuthorizationId: string | null;
   invoiceDate: Date;
   currency: string;
   lineItems: InvoiceLineItemInput[];
@@ -195,9 +217,14 @@ export interface AcceptInvoiceData {
 
 export interface IssueInvoiceData {
   id: string;
-  invoiceNumber: string;
   issueDate: Date;
-  documentHash: string;
+  /** Called by the repository, exactly once, with the number that was
+   *  just allocated INSIDE the same database transaction as the
+   *  compare-and-swap status write below — see
+   *  `PrismaInvoiceRepository.issue`'s own doc comment for why. A pure
+   *  function of `invoiceNumber` (and whatever the invoice's own
+   *  already-persisted fields already are) — never performs I/O itself. */
+  buildDocumentHash: (invoiceNumber: string) => string;
   fromStatuses: readonly InvoiceStatusValue[];
 }
 
@@ -220,10 +247,24 @@ export interface UpdateInvoiceResult {
 
 export interface InvoiceRepository {
   findById(id: string): Promise<InvoiceRecord | null>;
-  /** At most one non-CANCELLED invoice per Job — see
+  /** The Job's `PROFESSIONAL_SELF_BILLED` invoice specifically — at most
+   *  one non-CANCELLED row of that type per Job (see
    *  `CreateProfessionalInvoiceDraftUseCase`'s own idempotency check and
-   *  the migration's partial-unique-index backstop. */
+   *  the migration's partial-unique-index backstop). Every existing call
+   *  site (`CheckInvoiceRequiredForPayoutUseCase`, `MarkInvoicePaidUseCase`,
+   *  `CreateProfessionalInvoiceDraftUseCase`) means "the professional's
+   *  own invoice for this Job" when it calls this method — kept exactly
+   *  as that single-type lookup rather than widened, so none of them
+   *  need to change for Module 85's `CUSTOMER_RECEIPT` addition. Use
+   *  `findByJobIdAndType` for a type-aware lookup. */
   findByJobId(jobId: string): Promise<InvoiceRecord | null>;
+  /** Module 85 — Invoicing & Credit Note Activation: same as
+   *  `findByJobId` but scoped to a specific `InvoiceTypeValue` — a Job
+   *  now legitimately has up to one non-CANCELLED invoice of EACH type
+   *  (its `PROFESSIONAL_SELF_BILLED` self-billing invoice and its
+   *  `CUSTOMER_RECEIPT`), backed by the migration's
+   *  `(jobId, type) WHERE status <> 'CANCELLED'` partial unique index. */
+  findByJobIdAndType(jobId: string, type: InvoiceTypeValue): Promise<InvoiceRecord | null>;
   findByInvoiceNumber(invoiceNumber: string): Promise<InvoiceRecord | null>;
   listForProfessional(professionalProfileId: string, options: { limit: number; offset: number }): Promise<InvoiceRecord[]>;
 
@@ -242,10 +283,23 @@ export interface InvoiceRepository {
    *  atomically with the status write. */
   accept(data: AcceptInvoiceData): Promise<UpdateInvoiceResult>;
 
-  /** ACCEPTED -> ISSUED. `invoiceNumber` must already have been allocated
-   *  by `InvoiceNumberAllocator` (see that port) — this method only
-   *  persists it, it never allocates one itself, so numbering stays a
-   *  single, independently testable concern. */
+  /** ACCEPTED -> ISSUED for `PROFESSIONAL_SELF_BILLED`, DRAFT -> ISSUED
+   *  for `CUSTOMER_RECEIPT` (see
+   *  `domain/services/invoice-lifecycle.ts`'s own `issuableFromStatus`,
+   *  which `IssueInvoiceUseCase` uses to pick `fromStatuses`).
+   *
+   *  Module 85 — Invoicing & Credit Note Activation: allocates the
+   *  invoice number INSIDE the same database transaction as this
+   *  method's own compare-and-swap status write, so a lost race (the
+   *  invoice was already issued, cancelled, or moved on by a concurrent/
+   *  duplicate call by the time this transaction's `UPDATE ... WHERE
+   *  status = ANY(fromStatuses)` runs) rolls the number allocation back
+   *  too — never burning a number with no invoice attached. This
+   *  replaces the previous two-step "allocate via `InvoiceNumberAllocator`,
+   *  then separately call `issue()`" sequence Module 79 shipped with (see
+   *  MODULE_85_IMPLEMENTATION_REPORT.md for the race this closes); see
+   *  `PrismaInvoiceRepository.issue`'s own doc comment for the
+   *  transaction mechanics. */
   issue(data: IssueInvoiceData): Promise<UpdateInvoiceResult>;
 
   /** ISSUED -> PAID. No financial field ever changes here — this only
@@ -268,14 +322,31 @@ export interface InvoiceRepository {
  * backs both document series — see `PrismaDocumentNumberAllocator`'s own
  * doc comment for how the two series share the same atomic-increment
  * mechanism while never sharing (or colliding on) a sequence value.
+ *
+ * Module 85 — Invoicing & Credit Note Activation: this port is still used
+ * directly wherever a number is needed WITHOUT an accompanying
+ * compare-and-swap status write to couple it to (there is none such site
+ * left in this module today, but the port is kept general rather than
+ * folded entirely into `InvoiceRepository.issue`/`CreditNoteRepository.issue`).
+ * `PrismaInvoiceRepository.issue`/`PrismaCreditNoteRepository.issue`
+ * deliberately do NOT go through this port for their own allocation —
+ * they need the allocation and the status write in the SAME transaction
+ * (see `issue`'s own doc comment on the invoicing-repository interface),
+ * so they call the shared `allocateNextDocumentSequence` helper directly
+ * with their own transaction client instead. Both paths execute the
+ * identical SQL — see `allocateNextDocumentSequence`'s own doc comment —
+ * there is only ever one allocation implementation.
  */
 export interface InvoiceNumberAllocator {
   /** Atomically allocates and returns the next invoice number for the
    *  given calendar year (e.g. "INV-2026-000123"), safe under concurrent
-   *  callers. Never derived from a timestamp alone and never reused,
-   *  even if the invoice that reserved it is later cancelled before
-   *  being issued (a gap in the sequence is acceptable; a reused number
-   *  is not). */
+   *  callers. Never derived from a timestamp alone and never reused. A
+   *  gap in the sequence can still occur if a caller allocates a number
+   *  and then never persists anything against it (e.g. a crash between
+   *  this call and its own use) — callers that can instead couple
+   *  allocation to their own atomic write (as `InvoiceRepository.issue`/
+   *  `CreditNoteRepository.issue` now do) should prefer that instead of
+   *  calling this port directly, precisely to avoid that gap. */
   allocateNextInvoiceNumber(year: number): Promise<string>;
 
   /** Same guarantees as `allocateNextInvoiceNumber`, for the separate

@@ -39,7 +39,7 @@ function toInvoiceRecord(row: {
   issuerTaxId: string;
   recipientLegalName: string;
   recipientTaxId: string | null;
-  selfBillingAuthorizationId: string;
+  selfBillingAuthorizationId: string | null;
   issueDate: Date | null;
   invoiceDate: Date;
   acceptedAt: Date | null;
@@ -79,7 +79,7 @@ function toInvoiceRecord(row: {
     issuerTaxId: row.issuerTaxId,
     recipientLegalName: row.recipientLegalName,
     recipientTaxId: row.recipientTaxId,
-    selfBilled: true,
+    selfBilled: row.type === "PROFESSIONAL_SELF_BILLED",
     selfBillingAuthorizationId: row.selfBillingAuthorizationId,
     issueDate: row.issueDate,
     invoiceDate: row.invoiceDate,

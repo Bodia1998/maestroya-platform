@@ -85,9 +85,13 @@ export interface CreateCreditNoteData {
 
 export interface IssueCreditNoteData {
   id: string;
-  creditNoteNumber: string;
   issueDate: Date;
-  documentHash: string;
+  /** Module 85 — Invoicing & Credit Note Activation: same "allocate the
+   *  number inside the same transaction as the compare-and-swap write"
+   *  fix as `InvoiceRepository.issue`'s own `IssueInvoiceData.buildDocumentHash`
+   *  — see that interface's own doc comment. Called by the repository
+   *  with the number allocated inside this same transaction. */
+  buildDocumentHash: (creditNoteNumber: string) => string;
 }
 
 export interface CreditNoteRepository {
@@ -111,6 +115,9 @@ export interface CreditNoteRepository {
    *  `PayoutRepository.createPending`'s unique `jobId`). */
   createOrGetExisting(data: CreateCreditNoteData): Promise<CreditNoteRecord>;
 
-  /** DRAFT -> ISSUED. */
+  /** DRAFT -> ISSUED. Module 85: allocates the credit-note number inside
+   *  the same transaction as this compare-and-swap write — see
+   *  `InvoiceRepository.issue`'s own doc comment for why (the identical
+   *  numbering-gap fix, applied to the credit-note series). */
   issue(data: IssueCreditNoteData): Promise<CreditNoteRecord>;
 }

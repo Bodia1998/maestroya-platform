@@ -1233,6 +1233,12 @@ enum InvoiceStatus {
 /// explicit enum rather than assumed.
 enum InvoiceType {
   PROFESSIONAL_SELF_BILLED
+  /// Module 85 — Invoicing & Credit Note Activation: the genuine
+  /// customer-facing document — MaestroYa (issuer of record) billing the
+  /// actual paying customer for the job. Never self-billing (no
+  /// SelfBillingAuthorization, no electronic-acceptance step) — see
+  /// InvoiceRepository's own InvoiceTypeValue doc comment.
+  CUSTOMER_RECEIPT
 }
 
 /// Module 79 — Invoicing & Credit Notes: mirrors QuoteItemCategory —
@@ -4746,7 +4752,9 @@ model Invoice {
   recipientLegalName String
   recipientTaxId     String?
 
-  selfBillingAuthorizationId String @db.Uuid
+  /// Module 85: nullable — a CUSTOMER_RECEIPT invoice has no self-billing
+  /// authorization at all (only PROFESSIONAL_SELF_BILLED rows set this).
+  selfBillingAuthorizationId String? @db.Uuid
 
   issueDate                  DateTime?
   invoiceDate                DateTime
@@ -4781,7 +4789,7 @@ model Invoice {
   professionalProfile      ProfessionalProfile?     @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
   companyProfile           CompanyProfile?          @relation(fields: [companyProfileId], references: [id], onDelete: Restrict)
   customer                 CustomerProfile          @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  selfBillingAuthorization SelfBillingAuthorization @relation(fields: [selfBillingAuthorizationId], references: [id], onDelete: Restrict)
+  selfBillingAuthorization SelfBillingAuthorization? @relation(fields: [selfBillingAuthorizationId], references: [id], onDelete: Restrict)
   acceptedBy               User?                    @relation("InvoiceAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: Restrict)
   cancelledBy              User?                    @relation("InvoiceCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: Restrict)
 

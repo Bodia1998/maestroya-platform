@@ -1,6 +1,6 @@
 import { NotFoundError, UnauthorizedError, ValidationError } from "@/domain/errors/domain-error";
 import type { CreditNoteRecord, CreditNoteRepository } from "@/domain/repositories/credit-note-repository";
-import type { InvoiceNumberAllocator, InvoiceRepository } from "@/domain/repositories/invoice-repository";
+import type { InvoiceRepository } from "@/domain/repositories/invoice-repository";
 import { isCreditableInvoiceStatus } from "@/domain/services/invoice-lifecycle";
 import { assertCreditNoteWithinRemainingAmount, computeRemainingCreditableAmount } from "@/domain/services/credit-note-eligibility";
 import { computeDocumentHash } from "@/domain/services/invoice-document";
@@ -69,7 +69,6 @@ export class CreateCreditNoteUseCase {
     private readonly invoices: InvoiceRepository,
     private readonly creditNotes: CreditNoteRepository,
     private readonly taxBreakdowns: CalculateJobTaxBreakdownUseCase,
-    private readonly numberAllocator: InvoiceNumberAllocator,
     private readonly eventBus: EventBus,
     private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
@@ -142,19 +141,26 @@ export class CreateCreditNoteUseCase {
     }
 
     const issueDate = new Date();
-    const creditNoteNumber = await this.numberAllocator.allocateNextCreditNoteNumber(issueDate.getUTCFullYear());
-    const documentHash = computeDocumentHash({
-      creditNoteId: created.id,
-      creditNoteNumber,
-      originalInvoiceId: invoice.id,
-      totalAmount: created.totalAmount,
-      reversedTaxableBase: created.reversedTaxableBase,
-      reversedVatAmount: created.reversedVatAmount,
-      reversedCommissionAmount: created.reversedCommissionAmount,
-      reversedIrpfWithholdingAmount: created.reversedIrpfWithholdingAmount,
+    // Module 85 — Invoicing & Credit Note Activation: the number is now
+    // allocated by `CreditNoteRepository.issue` itself, inside the same
+    // transaction as its own compare-and-swap status write — see that
+    // method's own doc comment for the numbering-gap race this closes
+    // (the identical fix `IssueInvoiceUseCase` applies to invoices).
+    const issued = await this.creditNotes.issue({
+      id: created.id,
+      issueDate,
+      buildDocumentHash: (creditNoteNumber) =>
+        computeDocumentHash({
+          creditNoteId: created.id,
+          creditNoteNumber,
+          originalInvoiceId: invoice.id,
+          totalAmount: created.totalAmount,
+          reversedTaxableBase: created.reversedTaxableBase,
+          reversedVatAmount: created.reversedVatAmount,
+          reversedCommissionAmount: created.reversedCommissionAmount,
+          reversedIrpfWithholdingAmount: created.reversedIrpfWithholdingAmount,
+        }),
     });
-
-    const issued = await this.creditNotes.issue({ id: created.id, creditNoteNumber, issueDate, documentHash });
 
     await publishDomainEvent(
       this.eventBus,

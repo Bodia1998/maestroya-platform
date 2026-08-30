@@ -748,6 +748,26 @@ export class CreditNoteExceedsRemainingAmountError extends DomainError {
 }
 
 /**
+ * Module 85 — Invoicing & Credit Note Activation: thrown by
+ * `IssueInvoiceUseCase` when it is about to issue an invoice/credit note
+ * whose `issuerLegalName`/`issuerTaxId` snapshot is still MaestroYa's own
+ * unconfirmed placeholder (`invoicing-issuer.ts`'s own
+ * `MAESTROYA_ISSUER_TAX_ID` before a real registered CIF/NIF is
+ * configured). A legally invalid document must never be issued — this
+ * fails loudly instead of silently numbering/hashing/persisting one. See
+ * `domain/services/invoicing-issuer.ts`'s own doc comment.
+ */
+export class IssuerTaxIdNotConfiguredError extends DomainError {
+  readonly code = "ISSUER_TAX_ID_NOT_CONFIGURED";
+
+  constructor(
+    message = "MaestroYa's issuer tax ID is still the unconfirmed placeholder value — a real invoice cannot be issued until the platform's registered CIF/NIF is configured.",
+  ) {
+    super(message);
+  }
+}
+
+/**
  * Module 83 — Professional Verification Enforcement: thrown by
  * `CreateQuoteUseCase` (and any other operational-eligibility gate that
  * follows the same rule) when the acting professional's
