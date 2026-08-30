@@ -87,6 +87,7 @@ describe("infrastructure/config/env", () => {
           AUTH_URL: "https://maestroya.example.com",
           AUTH_SECRET: "too-short",
           SENTRY_DSN,
+          REDIS_URL: "redis://localhost:6379",
         }),
       ).rejects.toThrow(/Invalid environment variables/);
     });
@@ -99,6 +100,7 @@ describe("infrastructure/config/env", () => {
           AUTH_URL: "https://maestroya.example.com",
           AUTH_SECRET: "a".repeat(32),
           SENTRY_DSN,
+          REDIS_URL: "redis://localhost:6379",
         }),
       ).rejects.toThrow(/Invalid environment variables/);
     });
@@ -112,6 +114,7 @@ describe("infrastructure/config/env", () => {
           AUTH_SECRET: "a".repeat(32),
           STRIPE_SECRET_KEY: "sk_test_shouldnotbeallowed",
           SENTRY_DSN,
+          REDIS_URL: "redis://localhost:6379",
         }),
       ).rejects.toThrow(/Invalid environment variables/);
     });
@@ -125,6 +128,7 @@ describe("infrastructure/config/env", () => {
         STRIPE_SECRET_KEY: "sk_live_realkey",
         STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
         SENTRY_DSN,
+        REDIS_URL: "redis://localhost:6379",
       });
       expect(isProduction).toBe(true);
       expect(env.AUTH_SECRET.length).toBeGreaterThanOrEqual(32);
@@ -169,6 +173,7 @@ describe("infrastructure/config/env", () => {
         STRIPE_SECRET_KEY: "sk_live_realkey",
         STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
         SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        REDIS_URL: "redis://localhost:6379",
       });
       expect(env.SENTRY_DSN).toBe("https://examplePublicKey@o0.ingest.sentry.io/0");
     });
@@ -299,6 +304,7 @@ describe("infrastructure/config/env", () => {
           STRIPE_SECRET_KEY: "sk_live_realkey",
           STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
           SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+          REDIS_URL: "redis://localhost:6379",
           SMS_PROVIDER: "twilio",
         }),
       ).rejects.toThrow(/Invalid environment variables/);
@@ -313,6 +319,7 @@ describe("infrastructure/config/env", () => {
         STRIPE_SECRET_KEY: "sk_live_realkey",
         STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
         SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        REDIS_URL: "redis://localhost:6379",
         SMS_PROVIDER: "twilio",
         TWILIO_ACCOUNT_SID: "ACxxx",
         TWILIO_AUTH_TOKEN: "token",
@@ -330,6 +337,7 @@ describe("infrastructure/config/env", () => {
         STRIPE_SECRET_KEY: "sk_live_realkey",
         STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
         SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        REDIS_URL: "redis://localhost:6379",
       });
       expect(env.SMS_PROVIDER).toBe("mock");
     });
@@ -433,6 +441,7 @@ describe("infrastructure/config/env", () => {
         STRIPE_SECRET_KEY: "sk_live_realkey",
         STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
         SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        REDIS_URL: "redis://localhost:6379",
       });
       expect(env.TRACING_ENABLED).toBeUndefined();
     });
@@ -447,6 +456,7 @@ describe("infrastructure/config/env", () => {
           STRIPE_SECRET_KEY: "sk_live_realkey",
           STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
           SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+          REDIS_URL: "redis://localhost:6379",
           TRACING_ENABLED: "true",
           TRACING_EXPORTER: "otlp",
         }),
@@ -462,6 +472,7 @@ describe("infrastructure/config/env", () => {
         STRIPE_SECRET_KEY: "sk_live_realkey",
         STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
         SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        REDIS_URL: "redis://localhost:6379",
         TRACING_ENABLED: "true",
         TRACING_EXPORTER: "otlp",
         OTEL_EXPORTER_OTLP_ENDPOINT: "https://collector.example.com/v1/traces",
@@ -478,6 +489,7 @@ describe("infrastructure/config/env", () => {
         STRIPE_SECRET_KEY: "sk_live_realkey",
         STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
         SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        REDIS_URL: "redis://localhost:6379",
         TRACING_ENABLED: "true",
         TRACING_EXPORTER: "console",
       });
@@ -576,6 +588,7 @@ describe("infrastructure/config/env", () => {
         STRIPE_SECRET_KEY: "sk_live_realkey",
         STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
         SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        REDIS_URL: "redis://localhost:6379",
       });
       expect(env.VERIFICATION_PROVIDER).toBe("manual");
     });
@@ -590,6 +603,7 @@ describe("infrastructure/config/env", () => {
           STRIPE_SECRET_KEY: "sk_live_realkey",
           STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
           SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+          REDIS_URL: "redis://localhost:6379",
           VERIFICATION_PROVIDER: "persona",
           PERSONA_API_KEY: "key",
           PERSONA_TEMPLATE_ID: "tmpl",
@@ -606,6 +620,7 @@ describe("infrastructure/config/env", () => {
         STRIPE_SECRET_KEY: "sk_live_realkey",
         STRIPE_PUBLISHABLE_KEY: "pk_live_realkey",
         SENTRY_DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
+        REDIS_URL: "redis://localhost:6379",
         VERIFICATION_PROVIDER: "persona",
         PERSONA_API_KEY: "key",
         PERSONA_TEMPLATE_ID: "tmpl",

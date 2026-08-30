@@ -13,6 +13,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * unmodified.
  */
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
+
+// Module 82 — Admin RBAC & Production Auth Hardening: requireRole() now
+// re-verifies status/roles fresh from the DB for admin-tier checks (see
+// rbac.ts's own doc comment) — mocked the same "mock one collaborator"
+// way as tests/unit/core/infrastructure/auth/rbac.test.ts.
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    findById: vi.fn(),
+    getRoleKeys: vi.fn(),
+  },
+}));
+
+vi.mock("@/infrastructure/database/prisma/repositories/prisma-user-repository", () => ({
+  PrismaUserRepository: vi.fn().mockImplementation(() => mockUsers),
+}));
 vi.mock("@/infrastructure/health/compose", () => ({
   getPlatformHealthUseCase: () => ({
     execute: async () => ({ status: "HEALTHY", timestamp: new Date().toISOString(), checks: {} }),
@@ -34,6 +49,10 @@ function makeRequest() {
 describe("GET /api/health/diagnostics", () => {
   beforeEach(() => {
     mockedAuth.mockReset();
+    mockUsers.findById.mockReset();
+    mockUsers.getRoleKeys.mockReset();
+    mockUsers.findById.mockResolvedValue({ id: "admin-1", status: "ACTIVE" });
+    mockUsers.getRoleKeys.mockResolvedValue(["ADMIN", "SUPER_ADMIN"]);
   });
 
   it("denies an unauthenticated request (401), before any health check ever runs", async () => {

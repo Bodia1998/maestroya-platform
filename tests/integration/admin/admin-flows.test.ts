@@ -25,6 +25,12 @@ import {
 } from "@/application/dto/admin.dto";
 import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "@/domain/errors/domain-error";
 import { FakeAdminAuditLogRepository, FakeAdminRepository } from "./fakes";
+// Module 82 — Admin RBAC & Production Auth Hardening: ChangeUserRoleUseCase
+// now also records a SECURITY_POLICY_BLOCKED SecurityEvent on a denied
+// privilege-escalation attempt (finding B1) — reuses the same fake already
+// written for Security & Anti-Abuse (Module 24) integration tests rather
+// than duplicating it.
+import { FakeSecurityEventRepository } from "../security/fakes";
 
 // Module-level mock of the NextAuth wrapper, matching the established
 // convention in tests/unit/core/infrastructure/auth/rbac.test.ts. `vi.mock`
@@ -40,6 +46,25 @@ vi.mock("@/lib/auth", () => ({
   auth: vi.fn(),
 }));
 
+// Module 82 — Admin RBAC & Production Auth Hardening: requireRole() now
+// re-verifies status/roles fresh from the DB for admin-tier checks (see
+// rbac.ts's own doc comment) — mocked the same "mock one collaborator"
+// way as tests/unit/core/infrastructure/auth/rbac.test.ts. `vi.hoisted()`
+// (not a plain `const`) because this file's own static imports above
+// (e.g. admin.dto.ts) transitively resolve rbac.ts before a later
+// statement would run — same hoisting hazard `vi.mock` factories always
+// have, see cache-observability.test.ts for the same pattern.
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    findById: vi.fn(),
+    getRoleKeys: vi.fn(),
+  },
+}));
+
+vi.mock("@/infrastructure/database/prisma/repositories/prisma-user-repository", () => ({
+  PrismaUserRepository: vi.fn().mockImplementation(() => mockUsers),
+}));
+
 const { auth } = await import("@/lib/auth");
 const { requireAuth, requireRole, ROLES } = await import("@/infrastructure/auth/rbac");
 
@@ -51,14 +76,18 @@ const mockedAuth = vi.mocked(auth);
  * tests (see tests/integration/review/review-flows.test.ts).
  */
 
-function makeUseCases(admins: FakeAdminRepository, auditLog: FakeAdminAuditLogRepository) {
+function makeUseCases(
+  admins: FakeAdminRepository,
+  auditLog: FakeAdminAuditLogRepository,
+  securityEvents: FakeSecurityEventRepository = new FakeSecurityEventRepository(),
+) {
   return {
     overview: new GetAdminDashboardOverviewUseCase(admins),
     listUsers: new ListAdminUsersUseCase(admins),
     getUser: new GetAdminUserUseCase(admins),
     suspend: new SuspendAdminUserUseCase(admins, auditLog),
     reactivate: new ReactivateAdminUserUseCase(admins, auditLog),
-    changeRole: new ChangeUserRoleUseCase(admins, auditLog),
+    changeRole: new ChangeUserRoleUseCase(admins, auditLog, securityEvents),
     listProfessionals: new ListAdminProfessionalsUseCase(admins),
     listServiceRequests: new ListAdminServiceRequestsUseCase(admins),
     listQuotes: new ListAdminQuotesUseCase(admins),
@@ -84,6 +113,10 @@ const ADMIN_ID = "admin-1";
 describe("Server Action auth boundary", () => {
   beforeEach(() => {
     mockedAuth.mockReset();
+    mockUsers.findById.mockReset();
+    mockUsers.getRoleKeys.mockReset();
+    mockUsers.findById.mockResolvedValue({ id: "admin-x", status: "ACTIVE" });
+    mockUsers.getRoleKeys.mockResolvedValue(["ADMIN"]);
   });
 
   it("requireAuth throws UnauthorizedError when there is no session (unauthenticated rejected)", async () => {

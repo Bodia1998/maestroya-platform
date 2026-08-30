@@ -858,6 +858,30 @@ const envSchema = z
         message: "DATABASE_REPLICA_URLS is required in production when READ_REPLICAS_ENABLED=true.",
       });
     }
+
+    // Module 82 — Admin RBAC & Production Auth Hardening (production
+    // readiness finding H10): `REDIS_URL` stays optional at the field
+    // level above — local dev, most CI runs, and any genuinely
+    // single-instance deployment never need it — but a production
+    // deployment must never silently degrade its rate limiting to the
+    // per-instance `InMemoryRateLimitRepository` (see
+    // `rate-limit-repository-factory.ts`) just because Redis wasn't
+    // configured. A multi-instance production deployment with per-instance
+    // rate limiting effectively multiplies every configured limit by the
+    // instance count — a real security gap, not a cosmetic one. Same
+    // "deliberately and validly required, never a silent gap" reasoning as
+    // `SENTRY_DSN` above; unlike the `SMS_PROVIDER=twilio`-style checks,
+    // this one is unconditional in production (there is no "Redis
+    // disabled" opt-out for rate limiting, the same way there is no
+    // "error reporting disabled" opt-out for Sentry).
+    if (!value.REDIS_URL) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["REDIS_URL"],
+        message:
+          "REDIS_URL is required in production — rate limiting must not silently fall back to the in-memory implementation.",
+      });
+    }
   });
 
 function parseEnv() {

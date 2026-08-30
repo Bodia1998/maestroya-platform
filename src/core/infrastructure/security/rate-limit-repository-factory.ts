@@ -4,6 +4,7 @@ import type { RateLimitRepository } from "@/domain/repositories/rate-limit-repos
 import { InMemoryRateLimitRepository } from "@/infrastructure/security/in-memory-rate-limit-repository";
 import { RedisRateLimitRepository } from "@/infrastructure/security/redis-rate-limit-repository";
 import { getRedisClient } from "@/infrastructure/cache/redis-client-factory";
+import { isProduction } from "@/infrastructure/config/env";
 
 /**
  * Module 44 — Redis Infrastructure (Roadmap Module 11).
@@ -29,6 +30,24 @@ let instance: RateLimitRepository | null = null;
 export function createRateLimitRepository(): RateLimitRepository {
   if (!instance) {
     const redisClient = getRedisClient();
+
+    // Module 82 — Admin RBAC & Production Auth Hardening (H10): belt-and-
+    // suspenders alongside env.ts's own production `REDIS_URL` requirement
+    // (see that file's superRefine) — `env.ts` already refuses to let a
+    // production process start at all without a valid `REDIS_URL`, so
+    // `redisClient` below should be unreachable as `null` here in
+    // production. This check exists purely so this factory can never
+    // silently select `InMemoryRateLimitRepository` in production even if
+    // that startup guarantee is ever weakened or bypassed (e.g. a future
+    // refactor of `getRedisClient()`/`env.ts`) — it fails loudly instead of
+    // degrading rate limiting to per-instance behavior.
+    if (!redisClient && isProduction) {
+      throw new Error(
+        "Refusing to create an in-memory rate limiter in production — REDIS_URL must be configured. " +
+          "This should be unreachable: env.ts already requires REDIS_URL in production.",
+      );
+    }
+
     instance = redisClient
       ? new RedisRateLimitRepository(redisClient)
       : new InMemoryRateLimitRepository();

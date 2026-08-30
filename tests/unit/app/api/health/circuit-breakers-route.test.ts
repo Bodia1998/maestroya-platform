@@ -11,6 +11,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 
+// Module 82 — Admin RBAC & Production Auth Hardening: requireRole() now
+// re-verifies status/roles fresh from the DB for admin-tier checks (see
+// rbac.ts's own doc comment) — mocked the same "mock one collaborator"
+// way as tests/unit/core/infrastructure/auth/rbac.test.ts.
+const { mockUsers } = vi.hoisted(() => ({
+  mockUsers: {
+    findById: vi.fn(),
+    getRoleKeys: vi.fn(),
+  },
+}));
+
+vi.mock("@/infrastructure/database/prisma/repositories/prisma-user-repository", () => ({
+  PrismaUserRepository: vi.fn().mockImplementation(() => mockUsers),
+}));
+
 const mockResetExecute = vi.fn();
 vi.mock("@/infrastructure/health/compose", () => ({
   getCircuitBreakerStatusUseCase: () => ({
@@ -41,6 +56,10 @@ describe("/api/health/circuit-breakers", () => {
     mockedAuth.mockReset();
     mockResetExecute.mockReset();
     mockResetExecute.mockReturnValue({ reset: ["database"] });
+    mockUsers.findById.mockReset();
+    mockUsers.getRoleKeys.mockReset();
+    mockUsers.findById.mockResolvedValue({ id: "admin-1", status: "ACTIVE" });
+    mockUsers.getRoleKeys.mockResolvedValue(["ADMIN", "SUPER_ADMIN"]);
   });
 
   describe("GET", () => {

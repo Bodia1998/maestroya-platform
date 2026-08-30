@@ -19,6 +19,10 @@ async function loadModule(nodeEnv: "development" | "production") {
     // to the logger if the SDK fails to load, so this test's existing
     // assertions on logged/returned content are unaffected either way.
     mutableEnv.SENTRY_DSN = "https://examplePublicKey@o0.ingest.sentry.io/0";
+    // Module 82 — Admin RBAC & Production Auth Hardening: production now
+    // also requires REDIS_URL (see env.ts's superRefine) so rate limiting
+    // cannot silently fall back to the in-memory implementation.
+    mutableEnv.REDIS_URL = "redis://localhost:6379";
   }
   vi.resetModules();
   const [errorModule, domainErrorModule] = await Promise.all([
