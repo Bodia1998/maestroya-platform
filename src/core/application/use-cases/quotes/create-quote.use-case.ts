@@ -1,6 +1,6 @@
 import { NullNotificationCreator } from "@/application/ports/notification-creator";
 import type { NotificationCreator } from "@/application/ports/notification-creator";
-import { ConflictError, NotFoundError, ValidationError } from "@/domain/errors/domain-error";
+import { ConflictError, NotFoundError, ProfessionalNotVerifiedError, ValidationError } from "@/domain/errors/domain-error";
 import type { ProfessionalDiscoveryRepository } from "@/domain/repositories/professional-discovery-repository";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { QuoteRecord, QuoteRepository } from "@/domain/repositories/quote-repository";
@@ -44,6 +44,21 @@ export class CreateQuoteUseCase {
     const professional = await this.professionals.findByUserId(userId);
     if (!professional || professional.status !== "ACTIVE") {
       throw new ValidationError("You must have an active professional profile to submit quotes.");
+    }
+
+    // Module 83 — Professional Verification Enforcement (audit finding B2):
+    // an ACTIVE profile alone used to be sufficient to submit a binding
+    // quote, even for a professional who had never been verified or whose
+    // verification was rejected — verificationStatus was written by the
+    // verification module but never read here. VERIFIED is the only
+    // verificationStatus value that satisfies this — see
+    // ProfessionalVerification's own state machine
+    // (professional-verification-rules.ts's canReceivePayouts, the one
+    // other place this same "VERIFIED-only" rule was already enforced).
+    if (professional.verificationStatus !== "VERIFIED") {
+      throw new ProfessionalNotVerifiedError(
+        "Your professional profile must be verified before you can submit quotes.",
+      );
     }
 
     const candidate = await this.professionalDiscovery.findCandidateById(professional.id);

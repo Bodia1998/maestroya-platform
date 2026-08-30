@@ -190,6 +190,22 @@ export class PrismaAdminRepository implements AdminRepository {
     return row ? toProfessionalRecord(row) : null;
   }
 
+  /** Module 83 — Professional Verification Enforcement. Mirrors
+   *  setCompanyStatus below exactly. */
+  async setProfessionalStatus(
+    id: string,
+    status: AdminProfessionalStatusValue,
+  ): Promise<AdminProfessionalRecord | null> {
+    const existing = await prisma.professionalProfile.findFirst({ where: { id, deletedAt: null } });
+    if (!existing) return null;
+    const row = await prisma.professionalProfile.update({
+      where: { id },
+      data: { status },
+      select: professionalSelect,
+    });
+    return toProfessionalRecord(row);
+  }
+
   // -------------------------------------------------------------------
   // Service requests
   // -------------------------------------------------------------------

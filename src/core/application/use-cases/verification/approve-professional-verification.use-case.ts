@@ -1,11 +1,16 @@
-import { ConflictError, NotFoundError } from "@/domain/errors/domain-error";
+import { BusinessRegistrationRequiredError, ConflictError, NotFoundError } from "@/domain/errors/domain-error";
 import { ProfessionalVerificationStatusChanged } from "@/domain/events/professional-verification-status-changed";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type {
   ProfessionalVerificationRecord,
   ProfessionalVerificationRepository,
 } from "@/domain/repositories/professional-verification-repository";
-import { canApprove, canTransition, computeExpiresAt } from "@/domain/services/professional-verification-rules";
+import {
+  canApprove,
+  canTransition,
+  computeExpiresAt,
+  hasBusinessRegistrationDocument,
+} from "@/domain/services/professional-verification-rules";
 import type { EventBus } from "@/application/ports/event-bus";
 import { EventDispatchError } from "@/application/ports/event-dispatch-error";
 import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
@@ -41,6 +46,26 @@ export class ApproveProfessionalVerificationUseCase {
 
     if (!canApprove(verification.status) || !canTransition(verification.status, "APPROVED")) {
       throw new ConflictError("This verification request cannot be approved in its current state.");
+    }
+
+    // Module 83 — Professional Verification Enforcement / Module 74 —
+    // Business Registration Enforcement: identity proof alone (the only
+    // thing `canSubmit`/`hasRequiredDocuments` requires before a case can
+    // even reach PENDING) is not sufficient for a solo professional to be
+    // approved — the platform's business rule also requires proof of
+    // professional/business registration, mirroring the stronger
+    // requirement already enforced at company-verification *submission*
+    // time (company-verification-rules.ts's own hasRequiredDocuments,
+    // which requires BUSINESS_LICENSE/TAX_CERTIFICATE). This is checked
+    // here, at approval, rather than at submission, so the existing
+    // identity-only submission flow (SubmitProfessionalVerificationUseCase)
+    // is unchanged — an admin who hits this should reject or request
+    // resubmission (both already-existing actions) asking the professional
+    // to add the missing document; this method makes no changes when it
+    // throws.
+    const documents = await this.verifications.listDocuments(verificationId);
+    if (!hasBusinessRegistrationDocument(documents.map((d) => d.type))) {
+      throw new BusinessRegistrationRequiredError();
     }
 
     const now = new Date();

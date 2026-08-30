@@ -29,7 +29,14 @@ function professional(overrides: Partial<FakeDiscoverableProfessional>): FakeDis
     yearsExperience: null,
     hourlyRate: null,
     serviceRadiusKm: null,
-    verificationStatus: "UNVERIFIED",
+    // Module 83 — Professional Verification Enforcement: defaults to
+    // VERIFIED (not UNVERIFIED) so the overwhelming majority of these
+    // tests — which are about geo/category/ranking matching, not
+    // verification — keep passing unchanged now that
+    // findActiveCandidatesByCategory also requires VERIFIED. Tests that
+    // specifically exercise the verification gate override this
+    // explicitly (see the "Module 83" describe block below).
+    verificationStatus: "VERIFIED",
     profileImageUrl: null,
     categoryIds: [],
     latitude: null,
@@ -101,6 +108,60 @@ describe("SearchProfessionalsUseCase", () => {
     });
 
     expect(result.results).toHaveLength(0);
+  });
+
+  // Module 83 — Professional Verification Enforcement (audit finding B2):
+  // findActiveCandidatesByCategory must exclude an unverified/pending/
+  // rejected professional just as reliably as it excludes an inactive one
+  // above — this is the exact search-visibility gap Module 83 closes.
+  it.each(["UNVERIFIED", "PENDING", "REJECTED"] as const)(
+    "does not return a professional whose verificationStatus is %s",
+    async (verificationStatus) => {
+      discovery.seed(
+        professional({
+          id: `pro-${verificationStatus.toLowerCase()}`,
+          verificationStatus,
+          categoryIds: [ELECTRICIAN_ID],
+          latitude: NEARBY_POINT.latitude,
+          longitude: NEARBY_POINT.longitude,
+          serviceRadiusKm: 50,
+        }),
+      );
+
+      const result = await new SearchProfessionalsUseCase(discovery, categories).execute({
+        categoryId: ELECTRICIAN_ID,
+        latitude: SEARCH_POINT.latitude,
+        longitude: SEARCH_POINT.longitude,
+        page: 1,
+        pageSize: 20,
+      });
+
+      expect(result.results).toHaveLength(0);
+    },
+  );
+
+  it("returns a VERIFIED professional (regression: verification gate does not over-exclude)", async () => {
+    discovery.seed(
+      professional({
+        id: "pro-verified",
+        verificationStatus: "VERIFIED",
+        categoryIds: [ELECTRICIAN_ID],
+        latitude: NEARBY_POINT.latitude,
+        longitude: NEARBY_POINT.longitude,
+        serviceRadiusKm: 50,
+      }),
+    );
+
+    const result = await new SearchProfessionalsUseCase(discovery, categories).execute({
+      categoryId: ELECTRICIAN_ID,
+      latitude: SEARCH_POINT.latitude,
+      longitude: SEARCH_POINT.longitude,
+      page: 1,
+      pageSize: 20,
+    });
+
+    expect(result.results).toHaveLength(1);
+    expect(result.results[0]?.id).toBe("pro-verified");
   });
 
   it("does not return a professional whose distance exceeds their own service radius", async () => {

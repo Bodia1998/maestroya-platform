@@ -31,14 +31,21 @@ export class FakeProfessionalDiscoveryRepository implements ProfessionalDiscover
   }
 
   async findActiveCandidatesByCategory(categoryId: string): Promise<ProfessionalDiscoveryCandidate[]> {
+    // Module 83 — Professional Verification Enforcement: mirrors
+    // PrismaProfessionalDiscoveryRepository's ACTIVE-and-VERIFIED where
+    // clause exactly.
     return [...this.professionals.values()]
-      .filter((p) => p.status === "ACTIVE" && p.categoryIds.includes(categoryId))
+      .filter(
+        (p) => p.status === "ACTIVE" && p.verificationStatus === "VERIFIED" && p.categoryIds.includes(categoryId),
+      )
       .map(({ status: _status, bio: _bio, ...candidate }) => candidate);
   }
 
   async findCandidateById(professionalId: string): Promise<ProfessionalDiscoveryCandidate | null> {
     const professional = this.professionals.get(professionalId);
-    if (!professional || professional.status !== "ACTIVE") return null;
+    if (!professional || professional.status !== "ACTIVE" || professional.verificationStatus !== "VERIFIED") {
+      return null;
+    }
     const { status: _status, bio: _bio, ...candidate } = professional;
     return candidate;
   }

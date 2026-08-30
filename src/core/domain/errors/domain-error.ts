@@ -746,3 +746,48 @@ export class CreditNoteExceedsRemainingAmountError extends DomainError {
     super(message);
   }
 }
+
+/**
+ * Module 83 — Professional Verification Enforcement: thrown by
+ * `CreateQuoteUseCase` (and any other operational-eligibility gate that
+ * follows the same rule) when the acting professional's
+ * `ProfessionalProfile.verificationStatus` is not `"VERIFIED"` — i.e. they
+ * have never submitted verification, are still under review, or were
+ * rejected. Deliberately distinct from the generic `ValidationError` this
+ * module used to throw for "no active profile" so callers/UI can
+ * distinguish "you have no profile" from "your profile exists but isn't
+ * verified yet" without parsing message text.
+ */
+export class ProfessionalNotVerifiedError extends DomainError {
+  readonly code = "PROFESSIONAL_NOT_VERIFIED";
+
+  constructor(message = "Your professional profile must be verified before you can do this.") {
+    super(message);
+  }
+}
+
+/**
+ * Module 83 — Professional Verification Enforcement: thrown by
+ * `ApproveProfessionalVerificationUseCase` when an admin attempts to
+ * approve a solo professional's identity-verification case whose document
+ * set does not include a business-registration document (see
+ * `hasBusinessRegistrationDocument`/`BUSINESS_REGISTRATION_DOCUMENT_TYPES`
+ * in `professional-verification-rules.ts`, already introduced by Module
+ * 74). Proof of identity alone is not sufficient for a solo professional
+ * to become operational — the platform's business rule also requires
+ * proof of professional/business registration (autónomo or equivalent),
+ * mirroring the stronger requirement `company-verification-rules.ts`
+ * already enforces at company-verification submission time. An admin
+ * hitting this error should reject the case or request resubmission
+ * (both already-existing actions) asking the professional to add the
+ * missing document — this error does not itself mutate anything.
+ */
+export class BusinessRegistrationRequiredError extends DomainError {
+  readonly code = "BUSINESS_REGISTRATION_REQUIRED";
+
+  constructor(
+    message = "This professional's verification case is missing a business-registration document and cannot be approved yet.",
+  ) {
+    super(message);
+  }
+}

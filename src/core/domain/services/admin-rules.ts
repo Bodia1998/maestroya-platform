@@ -4,6 +4,8 @@
  * review-rules.ts/portfolio-rules.ts.
  */
 
+import type { ProfessionalStatusValue } from "@/domain/repositories/professional-repository";
+
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 export const MAX_SEARCH_LENGTH = 100;
@@ -49,6 +51,26 @@ export function isSuspendableStatus(status: UserStatusValue): boolean {
 
 export function isReactivatableStatus(status: UserStatusValue): boolean {
   return status === "SUSPENDED" || status === "DEACTIVATED";
+}
+
+/**
+ * Module 83 — Professional Verification Enforcement: the individual-
+ * professional analog of `isSuspendableStatus`/`isReactivatableStatus`
+ * above, reused by `AdminSuspendProfessionalUseCase`/
+ * `AdminReactivateProfessionalUseCase` — mirrors
+ * `canTransitionCompanyStatus`'s role for companies, kept as two small
+ * predicates (not a full transition table) since `ProfessionalStatus` only
+ * has three values and a suspend/reactivate admin action is the only
+ * admin-driven transition (INACTIVE is professional-driven only — see
+ * `DeactivateProfessionalUseCase` — and is deliberately never an admin
+ * suspend/reactivate target).
+ */
+export function isSuspendableProfessionalStatus(status: ProfessionalStatusValue): boolean {
+  return status === "ACTIVE";
+}
+
+export function isReactivatableProfessionalStatus(status: ProfessionalStatusValue): boolean {
+  return status === "SUSPENDED";
 }
 
 /** Normalizes an optional moderation reason: trims, collapses a
