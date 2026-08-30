@@ -4,6 +4,8 @@ import type {
   DiscrepancySeverityValue,
 } from "@/domain/repositories/reconciliation-repository";
 
+import { roundToCents } from "@/domain/services/money";
+
 /**
  * Module 80 — Financial Reconciliation & Observability.
  *
@@ -38,7 +40,7 @@ export interface DiscrepancyCandidate {
 export function withDifference(candidate: DiscrepancyCandidate): DiscrepancyCandidate & { differenceValue: number | null } {
   const differenceValue =
     candidate.expectedValue !== null && candidate.actualValue !== null
-      ? Math.round((candidate.actualValue - candidate.expectedValue) * 100) / 100
+      ? roundToCents(candidate.actualValue - candidate.expectedValue)
       : null;
   return { ...candidate, differenceValue };
 }

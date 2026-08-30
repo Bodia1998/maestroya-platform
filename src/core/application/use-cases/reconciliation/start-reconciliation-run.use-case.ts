@@ -26,7 +26,7 @@ import { checkCreditNoteConsistency } from "@/domain/services/reconciliation/cre
 import { checkProviderConsistency, type LocalProviderReference } from "@/domain/services/reconciliation/provider-checks";
 import { computeDiscrepancyFingerprint } from "@/domain/services/reconciliation/fingerprint";
 import { determineDiscrepancySeverity } from "@/domain/services/reconciliation/severity";
-import type { DiscrepancyCandidate } from "@/domain/services/reconciliation/types";
+import { withDifference, type DiscrepancyCandidate } from "@/domain/services/reconciliation/types";
 import type { JobFinancialContext } from "@/domain/services/reconciliation/context";
 import {
   recordDiscrepancyDetected,
@@ -236,10 +236,10 @@ export class StartReconciliationRunUseCase {
   private async persistCandidate(candidate: DiscrepancyCandidate, runId: string): Promise<{ created: boolean }> {
     const fingerprint = computeDiscrepancyFingerprint(candidate);
     const severity = determineDiscrepancySeverity(candidate);
-    const differenceValue =
-      candidate.expectedValue !== null && candidate.actualValue !== null
-        ? Math.round((candidate.actualValue - candidate.expectedValue) * 100) / 100
-        : null;
+    // Reuses the same single differenceValue computation every other
+    // reconciliation call site is expected to use (Module 84 hardening —
+    // this used to reimplement the identical rounding formula inline).
+    const { differenceValue } = withDifference(candidate);
 
     const { record, created } = await this.discrepancies.createOrTouch({
       id: randomUUID(),

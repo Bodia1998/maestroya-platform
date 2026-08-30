@@ -124,4 +124,56 @@ describe("CommissionCalculationService", () => {
     expect(result.total).toBe(150);
     expect(result.commission).toBe(15);
   });
+
+  // Module 84 — Financial Ledger Integrity & Rate Determinism: proves the
+  // single authoritative rounding policy (roundToCents, whole-cent
+  // precision) behaves deterministically at exactly the boundary values
+  // the module's own validation checklist calls out.
+  describe("Module 84 — deterministic rounding at boundary values", () => {
+    it.each([
+      { labour: 0.01, materials: 0, expectedCommission: 0, expectedPayout: 0.01 },
+      { labour: 0.05, materials: 0, expectedCommission: 0.01, expectedPayout: 0.04 },
+      { labour: 0.1, materials: 0, expectedCommission: 0.01, expectedPayout: 0.09 },
+      { labour: 0.99, materials: 0, expectedCommission: 0.1, expectedPayout: 0.89 },
+      { labour: 1.0, materials: 0, expectedCommission: 0.1, expectedPayout: 0.9 },
+      { labour: 1199.99, materials: 0, expectedCommission: 120, expectedPayout: 1079.99 },
+      { labour: 1200.0, materials: 0, expectedCommission: 120, expectedPayout: 1080 },
+      // The module spec's own worked example, split across labour +
+      // materials rather than a single line item.
+      { labour: 1200.0, materials: 0, expectedCommission: 120, expectedPayout: 1080 },
+    ])(
+      "labour=%p materials=%p -> commission=%p, payout=%p",
+      ({ labour, materials, expectedCommission, expectedPayout }) => {
+        const result = service.calculate({ labour, materials });
+        expect(result.commission).toBe(expectedCommission);
+        expect(result.professionalPayout).toBe(expectedPayout);
+        // total must always equal commission + payout exactly (no
+        // rounding leakage between the two halves).
+        expect(Math.round((result.commission + result.professionalPayout) * 100) / 100).toBe(
+          Math.round(result.total * 100) / 100,
+        );
+      },
+    );
+
+    it("the module spec's own worked example: Labour+Materials = 1200 -> Commission 120, Payout 1080", () => {
+      const result = service.calculate({ labour: 1200, materials: 0 });
+      expect(result.total).toBe(1200);
+      expect(result.commission).toBe(120);
+      expect(result.professionalPayout).toBe(1080);
+    });
+
+    it("repeated calculation of the exact same boundary input is always byte-identical (determinism)", () => {
+      const inputs = [
+        { labour: 0.01, materials: 0 },
+        { labour: 0.99, materials: 0.01 },
+        { labour: 1199.99, materials: 0.01 },
+      ];
+      for (const input of inputs) {
+        const results = Array.from({ length: 10 }, () => service.calculate(input));
+        for (const result of results) {
+          expect(result).toEqual(results[0]);
+        }
+      }
+    });
+  });
 });

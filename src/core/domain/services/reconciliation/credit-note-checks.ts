@@ -1,5 +1,6 @@
 import type { JobFinancialContext } from "@/domain/services/reconciliation/context";
 import { amountsRoughlyEqual, type DiscrepancyCandidate } from "@/domain/services/reconciliation/types";
+import { roundToCents } from "@/domain/services/money";
 
 /**
  * Module 80 — Financial Reconciliation & Observability. Credit-note
@@ -127,7 +128,7 @@ export function checkCreditNoteConsistency(context: JobFinancialContext): Discre
   for (const [invoiceId, notes] of byInvoice) {
     const invoice = invoices.find((inv) => inv.id === invoiceId);
     if (!invoice) continue;
-    const totalCredited = Math.round(notes.reduce((sum, n) => sum + n.totalAmount, 0) * 100) / 100;
+    const totalCredited = roundToCents(notes.reduce((sum, n) => sum + n.totalAmount, 0));
     const lastNote = notes[notes.length - 1];
     if (totalCredited > invoice.totalAmount + 0.01 && lastNote) {
       findings.push({
@@ -182,7 +183,7 @@ export function checkCreditNoteConsistency(context: JobFinancialContext): Discre
       if (!invoice) continue;
       for (const note of notes) {
         const ratio = invoice.totalAmount === 0 ? 0 : note.totalAmount / invoice.totalAmount;
-        const expectedVat = Math.round(invoice.vatAmount * ratio * 100) / 100;
+        const expectedVat = roundToCents(invoice.vatAmount * ratio);
         if (!amountsRoughlyEqual(note.reversedVatAmount, expectedVat, 0.05)) {
           findings.push({
             entityType: "CREDIT_NOTE",

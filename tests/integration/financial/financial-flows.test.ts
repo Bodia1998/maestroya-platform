@@ -520,6 +520,177 @@ describe("Module 22 — Commission & Financial", () => {
   });
 });
 
+describe("Module 84 — Financial Ledger Integrity & Rate Determinism", () => {
+  it("historical rate snapshot: a Commission already recorded at 10% keeps 10% forever, even after the platform-wide rate changes to 12%", async () => {
+    const repos = makeRepos();
+    const { job: jobA } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+    const paymentA = seedCapturedPayment(repos, jobA.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, jobA.id);
+
+    const commissionA = await repos.recordCommission.execute(paymentA.id);
+    expect(commissionA.rateBps).toBe(1000);
+    expect(commissionA.amount).toBe(150);
+
+    // The platform-wide rate changes AFTER Transaction A was recorded —
+    // via the same CommissionRateRepository seam every use case reads
+    // through, never a call-site literal.
+    repos.rates.rates = { commissionRateBps: 1200 };
+
+    // Transaction A must still read exactly what it charged at creation
+    // time — re-fetching it (never recalculating) proves nothing mutated
+    // the persisted row.
+    const reread = await repos.commissions.findByPaymentId(paymentA.id);
+    expect(reread?.rateBps).toBe(1000);
+    expect(reread?.amount).toBe(150);
+
+    // Calling execute() again for the SAME payment (a retry, a duplicate
+    // webhook) must also still return the original 10% Commission — never
+    // silently recompute it at the new 12% rate.
+    const commissionAAgain = await repos.recordCommission.execute(paymentA.id);
+    expect(commissionAAgain.rateBps).toBe(1000);
+    expect(commissionAAgain.amount).toBe(150);
+
+    // Transaction B, created strictly AFTER the configuration change, uses
+    // the new effective rate — proving the rate lookup itself still works
+    // and this isn't just a frozen constant.
+    const { job: jobB } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+    const paymentB = seedCapturedPayment(repos, jobB.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, jobB.id);
+    const commissionB = await repos.recordCommission.execute(paymentB.id);
+    expect(commissionB.rateBps).toBe(1200);
+    expect(commissionB.amount).toBe(180);
+
+    // And Transaction A is still completely unaffected by Transaction B
+    // having used the new rate.
+    const rereadAfterB = await repos.commissions.findByPaymentId(paymentA.id);
+    expect(rereadAfterB?.rateBps).toBe(1000);
+    expect(rereadAfterB?.amount).toBe(150);
+  });
+
+  it("ledger completeness is backfilled on retry: a Commission left over from a crashed prior attempt (no ledger entries written yet) gets its full 5-entry ledger trail on the next call, without creating a second Commission or changing its amount/rate", async () => {
+    const repos = makeRepos();
+    const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, job.id);
+
+    // Simulate a process that crashed after writing the Commission row
+    // but before any of the five ledger entries — bypasses
+    // RecordCommissionForPaymentUseCase entirely, writing directly to the
+    // repository the way a partially-completed prior execution would have
+    // left things.
+    const crashedCommission = await repos.commissions.create({
+      paymentId: payment.id,
+      professionalProfileId: job.professionalProfileId,
+      companyProfileId: job.companyProfileId,
+      rateBps: 1000,
+      amount: 150,
+    });
+    expect(repos.ledger.entries.filter((e) => e.paymentId === payment.id)).toHaveLength(0);
+
+    // The next call (a retry, a subscriber redelivery, a reconciliation
+    // sweep re-driving the same payment) must recover: it finds the
+    // already-recorded Commission and backfills every missing ledger
+    // entry, rather than treating "Commission already exists" as fully
+    // done and returning early.
+    const recovered = await repos.recordCommission.execute(payment.id);
+
+    expect(recovered.id).toBe(crashedCommission.id);
+    expect(recovered.amount).toBe(150);
+    expect(recovered.rateBps).toBe(1000);
+    expect(repos.commissions.commissions.size).toBe(1);
+
+    const entries = await repos.ledger.listForPayment(payment.id);
+    const types = entries.map((e) => e.type).sort();
+    expect(types).toEqual(
+      ["COMMISSION", "LABOR_CHARGE", "MATERIALS_CHARGE", "PLATFORM_REVENUE", "PROFESSIONAL_NET_EARNING"].sort(),
+    );
+    const platformRevenue = entries.find((e) => e.type === "PLATFORM_REVENUE");
+    expect(platformRevenue?.amount).toBe(150);
+    const netEarning = entries.find((e) => e.type === "PROFESSIONAL_NET_EARNING");
+    expect(netEarning?.amount).toBe(1350);
+
+    // Calling it a third time is still a pure no-op — no sixth entry, no
+    // second Commission.
+    await repos.recordCommission.execute(payment.id);
+    expect(repos.commissions.commissions.size).toBe(1);
+    expect(repos.ledger.entries.filter((e) => e.paymentId === payment.id)).toHaveLength(5);
+  });
+
+  it("ledger completeness is backfilled even after a partial crash mid-way through the five entries (e.g. only LABOR_CHARGE was written)", async () => {
+    const repos = makeRepos();
+    const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, job.id);
+
+    const commission = await repos.commissions.create({
+      paymentId: payment.id,
+      professionalProfileId: job.professionalProfileId,
+      companyProfileId: job.companyProfileId,
+      rateBps: 1000,
+      amount: 150,
+    });
+    // Only the very first of the five ledger entries survived the crash.
+    await repos.ledger.create({
+      type: "LABOR_CHARGE",
+      amount: 1000,
+      paymentId: payment.id,
+      commissionId: commission.id,
+      description: "Labor portion of captured payment (part of the flat commission base).",
+      idempotencyKey: `commission:${payment.id}:labor`,
+    });
+
+    await repos.recordCommission.execute(payment.id);
+
+    const entries = await repos.ledger.listForPayment(payment.id);
+    expect(entries).toHaveLength(5);
+    // The one entry that already existed was never duplicated or replaced.
+    const laborEntries = entries.filter((e) => e.type === "LABOR_CHARGE");
+    expect(laborEntries).toHaveLength(1);
+  });
+
+  it("concurrency: two simultaneous execute() calls for the same payment never create two Commissions or duplicate ledger entries", async () => {
+    const repos = makeRepos();
+    const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 1500);
+    seedApprovedRelease(repos, job.id);
+
+    const results = await Promise.allSettled([
+      repos.recordCommission.execute(payment.id),
+      repos.recordCommission.execute(payment.id),
+    ]);
+
+    // Both calls converge on success (the DB-level unique-constraint race
+    // is caught and resolved by re-reading the winning row — see
+    // RecordCommissionForPaymentUseCase's own doc comment) — neither call
+    // should be left throwing an unhandled duplicate-key error.
+    for (const result of results) {
+      expect(result.status).toBe("fulfilled");
+    }
+    const fulfilled = results.filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof repos.recordCommission.execute>>> => r.status === "fulfilled");
+    expect(fulfilled[0]!.value.id).toBe(fulfilled[1]!.value.id);
+
+    expect(repos.commissions.commissions.size).toBe(1);
+    expect(repos.ledger.entries.filter((e) => e.paymentId === payment.id)).toHaveLength(5);
+  });
+
+  it("Stripe / payout amount uses the same authoritative roundToCents policy as the domain — no second rounding implementation", async () => {
+    const repos = makeRepos();
+    const { job } = await seedJobWithQuote(repos, CUSTOMER, PROFESSIONAL, [
+      { description: "Labor", quantity: 1, unitPrice: 100.01, category: "LABOR" },
+      { description: "Materials", quantity: 1, unitPrice: 0.02, category: "MATERIALS" },
+    ]);
+    const payment = seedCapturedPayment(repos, job.id, CUSTOMER, 100.03);
+    seedApprovedRelease(repos, job.id);
+
+    const commission = await repos.recordCommission.execute(payment.id);
+    // total 100.03 * 10% = 10.003 -> 10.00
+    expect(commission.amount).toBe(10);
+
+    const earnings = await repos.getProfessionalEarnings.execute(PROFESSIONAL);
+    expect(earnings[0]!.professionalPayout).toBe(90.03);
+  });
+});
+
 describe("Module 69 — Financial Ledger & Payout Readiness Audit", () => {
   it("Invariant 8: rejects a refund-type adjustment that would push cumulative refunds past the captured amount", async () => {
     const repos = makeRepos();

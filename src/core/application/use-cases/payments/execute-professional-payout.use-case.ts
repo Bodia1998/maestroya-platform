@@ -1,4 +1,5 @@
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
+import { roundToCents } from "@/domain/services/money";
 import { StripeTransferError } from "@/domain/errors/domain-error";
 import type { JobRepository } from "@/domain/repositories/job-repository";
 import type { PaymentRepository } from "@/domain/repositories/payment-repository";
@@ -272,7 +273,7 @@ export class ExecuteProfessionalPayoutUseCase {
     // normal order), the case that subscriber's own doc comment defers to
     // "a later run once the job completes."
     const commission = await this.recordCommission.execute(payment.id);
-    const amount = Math.round((payment.amount - commission.amount) * 100) / 100;
+    const amount = roundToCents(payment.amount - commission.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
       throw new ValidationError(`Computed payout amount (${amount}) is not a valid positive amount.`);
     }
