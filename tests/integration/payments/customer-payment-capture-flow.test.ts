@@ -214,6 +214,7 @@ function paymentIntentSucceededEvent(paymentIntentId: string): StripePaymentWebh
     createdAt: new Date(),
     paymentIntent: { paymentIntentId, lastPaymentErrorMessage: null },
     chargeRefunded: null,
+    dispute: null,
   };
 }
 

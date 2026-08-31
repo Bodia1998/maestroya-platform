@@ -8,6 +8,7 @@ import type { StripePaymentWebhookEvent } from "@/application/ports/stripe-payme
 import type { ExternalWebhookEventRepository } from "@/domain/repositories/external-webhook-event-repository";
 import type { PaymentRecord, PaymentRepository } from "@/domain/repositories/payment-repository";
 import type { RefundRepository } from "@/domain/repositories/refund-repository";
+import type { StripeDisputeEventPayload } from "@/application/ports/stripe-payment-webhook-verifier";
 import { publishDomainEvent } from "@/application/services/events/publish-domain-event";
 import { logger } from "@/infrastructure/observability/logger";
 
@@ -27,6 +28,7 @@ export type ProcessCustomerPaymentWebhookOutcome =
   | "failed"
   | "cancelled"
   | "refund-observed"
+  | "dispute-processed"
   | "duplicate"
   | "ignored"
   | "unmatched"
@@ -91,6 +93,17 @@ export interface ProcessCustomerPaymentWebhookResult {
  * whose `UPDATE ... WHERE status IN (...)` actually matches ever proceeds
  * to call `PaymentGateway.capture`/publish `PaymentCaptured`.
  */
+/** Module 86 — Stripe Chargeback & Dispute Handling: the narrow surface
+ *  this class depends on — `ProcessStripeDisputeWebhookUseCase` (this
+ *  module's own concrete implementation, composed in `payments/compose.ts`)
+ *  is the one real implementation, injected as an interface here rather
+ *  than imported directly (this file stays a thin dispatcher, never
+ *  aware of dispute-specific concurrency/idempotency/financial details —
+ *  see that class's own doc comment for the full contract). */
+export interface StripeDisputeWebhookHandler {
+  handle(eventType: string, payload: StripeDisputeEventPayload): Promise<void>;
+}
+
 export class ProcessCustomerPaymentWebhookUseCase {
   constructor(
     private readonly payments: PaymentRepository,
@@ -106,6 +119,18 @@ export class ProcessCustomerPaymentWebhookUseCase {
      *  (`payments/compose.ts`) always supplies the real repository so
      *  reconciliation actually runs. */
     private readonly refunds: RefundRepository | null = null,
+    /** Module 86 — Stripe Chargeback & Dispute Handling: optional, same
+     *  "every pre-existing caller keeps compiling unchanged" convention as
+     *  `refunds` above — a `null` here means every `charge.dispute.*`
+     *  event is simply `ignored` (never processed, never crashes);
+     *  production wiring (`payments/compose.ts`) always supplies the real
+     *  handler. Deliberately a single injected collaborator, not this
+     *  class's own dispute-handling fields — keeps
+     *  `ProcessStripeDisputeWebhookUseCase`'s own (considerably larger)
+     *  set of dependencies from bloating this class's constructor; see
+     *  that class's own doc comment for the full dispute-handling
+     *  contract this delegates to. */
+    private readonly stripeDisputes: StripeDisputeWebhookHandler | null = null,
   ) {}
 
   async execute(event: StripePaymentWebhookEvent): Promise<ProcessCustomerPaymentWebhookResult> {
@@ -144,6 +169,10 @@ export class ProcessCustomerPaymentWebhookUseCase {
         return this.handleCanceled(event);
       case "charge.refunded":
         return this.handleChargeRefunded(event);
+      case "charge.dispute.created":
+      case "charge.dispute.updated":
+      case "charge.dispute.closed":
+        return this.handleStripeDispute(event);
       default:
         return { outcome: "ignored" };
     }
@@ -331,6 +360,20 @@ export class ProcessCustomerPaymentWebhookUseCase {
     }
 
     return { outcome: "refund-observed" };
+  }
+
+  /** Module 86 — Stripe Chargeback & Dispute Handling: delegates to the
+   *  injected `StripeDisputeWebhookHandler` — see this class's own
+   *  constructor doc comment. A `null` handler (no pre-existing caller
+   *  supplies one) means every dispute event is acknowledged but not
+   *  processed, matching this method's own `"ignored"` outcome, never a
+   *  thrown error. */
+  private async handleStripeDispute(event: StripePaymentWebhookEvent): Promise<ProcessCustomerPaymentWebhookResult> {
+    if (!this.stripeDisputes || !event.dispute) {
+      return { outcome: "ignored" };
+    }
+    await this.stripeDisputes.handle(event.type, event.dispute);
+    return { outcome: "dispute-processed" };
   }
 
   private async findPayment(event: StripePaymentWebhookEvent): Promise<PaymentRecord | null> {

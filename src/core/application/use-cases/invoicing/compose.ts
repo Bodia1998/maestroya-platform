@@ -27,6 +27,7 @@ import { CancelInvoiceUseCase } from "./cancel-invoice.use-case";
 import { MarkInvoicePaidOnPayoutExecutedSubscriber } from "./mark-invoice-paid-on-payout-executed.subscriber";
 import { ActivateInvoiceLifecycleOnPaymentReleaseApprovedSubscriber } from "./activate-invoice-lifecycle-on-payment-release-approved.subscriber";
 import { CreateCreditNoteOnPaymentRefundedSubscriber } from "./create-credit-note-on-payment-refunded.subscriber";
+import { CreateCreditNoteOnStripeDisputeLostSubscriber } from "./create-credit-note-on-stripe-dispute-lost.subscriber";
 import { CreateCreditNoteUseCase } from "./create-credit-note.use-case";
 import { CheckInvoiceRequiredForPayoutUseCase } from "./check-invoice-required-for-payout.use-case";
 import {
@@ -46,6 +47,7 @@ import { CreditNoteIssued } from "@/domain/events/credit-note-issued";
 import { ProfessionalPayoutExecuted } from "@/domain/events/professional-payout-executed";
 import { PaymentReleaseApproved } from "@/domain/events/payment-release-approved";
 import { PaymentRefunded } from "@/domain/events/payment-refunded";
+import { StripeDisputeClosed } from "@/domain/events/stripe-dispute-closed";
 
 /**
  * Module 79 — Invoicing & Credit Notes: composition root, same manual-
@@ -176,6 +178,15 @@ eventBus.subscribe(
 eventBus.subscribe(
   PaymentRefunded,
   new CreateCreditNoteOnPaymentRefundedSubscriber(invoices, creditNotes, taxBreakdowns, makeCreateCreditNoteUseCase(), failureReporter),
+);
+
+// Module 86 — Stripe Chargeback & Dispute Handling: same integration,
+// wired to `ProcessStripeDisputeWebhookUseCase`'s own `StripeDisputeClosed`
+// (LOST outcome only) instead — see
+// `CreateCreditNoteOnStripeDisputeLostSubscriber`'s own doc comment.
+eventBus.subscribe(
+  StripeDisputeClosed,
+  new CreateCreditNoteOnStripeDisputeLostSubscriber(invoices, creditNotes, taxBreakdowns, makeCreateCreditNoteUseCase(), failureReporter),
 );
 
 eventBus.subscribe(SelfBillingAuthorizationGranted, new RecordSelfBillingAuditLogSubscriber(auditLog));
