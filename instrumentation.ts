@@ -147,6 +147,17 @@ export async function register() {
   // schedules already present. A no-op when `BACKUP_ENABLED` is not
   // `"true"` (the default).
   const { registerScheduledBackups } = await import("@/infrastructure/backup/compose");
+  // Module 90 — Automated Reconciliation & Financial Alerting: registers
+  // this module's own event subscribers (the CRITICAL-discrepancy alert
+  // path plus Module 80's existing run/resolution audit-log subscribers —
+  // see `application/use-cases/reconciliation/compose.ts`'s own doc
+  // comments) as a side effect of import, exactly like every other
+  // subscriber-registering module in this list. The scheduled trigger
+  // itself is registered explicitly below, immediately before
+  // `startBackgroundJobs()`, for the same "queue/worker construction must
+  // stay lazy at import time" reason `registerScheduledAnalyticsRefresh()`/
+  // `registerScheduledBackups()` already document.
+  const { registerScheduledReconciliationRun } = await import("@/application/use-cases/reconciliation/compose");
 
   // Module 45 — Background Jobs: starts every registered worker and the
   // job scheduler. Called after the subscriber-registering imports above
@@ -164,6 +175,7 @@ export async function register() {
   // if a schedule already exists" behavior).
   registerScheduledAnalyticsRefresh();
   registerScheduledBackups();
+  registerScheduledReconciliationRun();
   startBackgroundJobs();
 
   let shuttingDown = false;
