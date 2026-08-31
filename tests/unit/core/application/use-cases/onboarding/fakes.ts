@@ -135,6 +135,9 @@ export class FakeAddressRepository implements AddressRepository {
     this.byUserId.set(userId, record);
     return record;
   }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  async eraseForUser(_userId: string) {}
 }
 
 export class FakeConsentRepository implements ConsentRepository {
@@ -310,6 +313,15 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
   findSyncable(): Promise<ProfessionalVerificationRecord[]> {
     throw new Error("not implemented in this fake");
   }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  async eraseDocumentsForProfessionalProfile(_professionalProfileId: string) {
+    return [];
+  }
+  async listDocumentsPendingStoragePurge(_professionalProfileId: string) {
+    return [];
+  }
+  async markDocumentStoragePurged(_documentId: string) {}
 }
 
 export class FakeProfessionalOnboardingRepository implements ProfessionalOnboardingRepository {

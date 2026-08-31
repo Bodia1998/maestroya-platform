@@ -53,6 +53,9 @@ class FailingAddressRepository implements AddressRepository {
   async upsertPrimaryForUser(_userId: string, _data: UpsertAddressData): Promise<never> {
     throw new Error("address database unavailable");
   }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  async eraseForUser(_userId: string) {}
 }
 
 const validInput = {

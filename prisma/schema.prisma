@@ -93,6 +93,15 @@ model User {
   notificationPreferences Json? @db.JsonB
   lastLoginAt      DateTime?
   deletedAt        DateTime? // soft delete — see docs/DOMAIN_MODEL.md "Why soft-delete users"
+  /// Module 88 — GDPR Erasure Execution & Document Retention: set once,
+  /// the moment ExecuteAccountErasureUseCase finishes anonymizing this
+  /// user's personal data. Distinct from `deletedAt` (which only marks
+  /// "account deactivated/soft-deleted" — set by the self-service Delete
+  /// Account flow too, without any GDPR anonymization happening) — this
+  /// column is the erasure use case's own idempotency guard: a second
+  /// execute call for the same user sees this already set and skips
+  /// re-anonymizing (safe to retry, never double-runs the mutation).
+  personalDataErasedAt DateTime?
 
   // --- Authentication fields (added in Authentication module) ---
   // Nullable: users who only ever sign in via OAuth (Google/Apple/Facebook)
@@ -211,6 +220,7 @@ model User {
 
   @@index([status])
   @@index([deletedAt])
+  @@index([personalDataErasedAt])
   @@index([preferredLanguageId])
   @@map("users")
 }
@@ -2989,6 +2999,28 @@ model ProfessionalVerificationDocument {
   /// Optional per-document rejection note (a reviewer may reject one
   /// document without rejecting the whole case). Never exposed publicly.
   rejectionReason  String?                    @db.Text
+  /// Module 88 — GDPR Erasure Execution & Document Retention: soft-delete
+  /// marker set the instant the owning user's account erasure hard-deletes
+  /// this document (the row itself is kept only long enough to drive the
+  /// retryable external-storage purge below — see `storagePurgedAt`'s own
+  /// doc comment). Every existing read path for this model (professional's
+  /// own dashboard, admin review queue) already goes through
+  /// `ProfessionalVerificationRepository`'s own methods, none of which are
+  /// used once a case's owner has been erased, so no other query needed a
+  /// `deletedAt: null` filter added.
+  deletedAt        DateTime?
+  /// Module 88 — GDPR Erasure Execution & Document Retention: set only
+  /// after the Cloudinary file behind `fileUrl` has actually been deleted
+  /// by `CloudinaryVerificationDocumentDeletionService`. Kept separate from
+  /// `deletedAt` on purpose — deleting the external file is a separate,
+  /// retryable, potentially-failing network call that must never be
+  /// bundled into the same DB transaction that marks the row deleted (see
+  /// ExecuteAccountErasureUseCase's own doc comment): a document can be
+  /// `deletedAt`-set with `storagePurgedAt` still null (storage delete
+  /// failed or hasn't run yet) — that row is retried on the next erasure
+  /// execution / a future retry job, never silently treated as fully
+  /// purged.
+  storagePurgedAt  DateTime?
 
   verification ProfessionalVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
 
@@ -2997,6 +3029,7 @@ model ProfessionalVerificationDocument {
 
   @@index([verificationId])
   @@index([type])
+  @@index([deletedAt])
   @@map("professional_verification_documents")
 }
 

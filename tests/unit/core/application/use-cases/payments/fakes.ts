@@ -70,6 +70,9 @@ export class FakeCustomerProfileRepository implements CustomerProfileRepository 
     this.seed(created);
     return created;
   }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  async eraseForUser(_userId: string) {}
 }
 
 export class FakeJobRepository implements JobRepository {

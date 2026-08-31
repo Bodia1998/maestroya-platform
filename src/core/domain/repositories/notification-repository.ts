@@ -172,4 +172,14 @@ export interface NotificationRepository {
    *  null. Returns the updated record, or null if it doesn't exist / isn't
    *  the caller's own. Never a hard DELETE. */
   dismiss(id: string, userId: string): Promise<NotificationRecord | null>;
+
+  /**
+   * Module 88 — GDPR Erasure Execution: hard-deletes every notification
+   * row for this user (never soft-delete here — unlike `dismiss`, this is
+   * the classification's own `NOTIFICATIONS: HARD_DELETE` decision, see
+   * gdpr-privacy-rules.ts — these rows are purely operational and have no
+   * value to any other party). Idempotent: deleting from an already-empty
+   * set is a no-op.
+   */
+  deleteAllForUser(userId: string): Promise<void>;
 }

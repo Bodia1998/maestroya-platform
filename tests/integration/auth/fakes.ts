@@ -132,6 +132,31 @@ export class FakeUserRepository implements UserRepository {
   async clearSignupIntent(userId: string) {
     this.signupIntentByUserId.delete(userId);
   }
+
+  // --- Module 88: GDPR Erasure Execution ---
+  erasedAtByUserId = new Map<string, Date>();
+
+  async getErasureState(userId: string) {
+    if (!this.users.has(userId)) return null;
+    return { personalDataErasedAt: this.erasedAtByUserId.get(userId) ?? null };
+  }
+
+  async eraseAccount(userId: string) {
+    const user = this.users.get(userId);
+    if (!user || this.erasedAtByUserId.has(userId)) return { erased: false };
+    user.name = "Deleted user";
+    user.email = `erased-${userId}@erased.maestroya.invalid`;
+    user.passwordHash = null;
+    user.emailVerified = null;
+    user.status = "DEACTIVATED";
+    this.erasedAtByUserId.set(userId, new Date());
+    return { erased: true };
+  }
+
+  invalidatedSessionsFor: string[] = [];
+  async invalidateAllSessions(userId: string) {
+    this.invalidatedSessionsFor.push(userId);
+  }
 }
 
 interface StoredToken {

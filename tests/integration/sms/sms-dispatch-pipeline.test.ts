@@ -82,6 +82,9 @@ function buildPipeline(sender: { send: (m: { to: string; body: string }) => Prom
     updateProfile: async () => {},
     updateAvatar: async () => {},
     softDeleteAccount: async () => {},
+    getErasureState: async () => null,
+    eraseAccount: async () => ({ erased: false }),
+    invalidateAllSessions: async () => {},
     getPreferredLocale: async () => "en",
     updatePreferredLocale: async () => {},
   };

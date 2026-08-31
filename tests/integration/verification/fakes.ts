@@ -307,6 +307,15 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
         (v.status === "PENDING" || v.status === "UNDER_REVIEW"),
     );
   }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  async eraseDocumentsForProfessionalProfile(_professionalProfileId: string) {
+    return [];
+  }
+  async listDocumentsPendingStoragePurge(_professionalProfileId: string) {
+    return [];
+  }
+  async markDocumentStoragePurged(_documentId: string) {}
 }
 
 export class FakeAdminAuditLogRepository implements AdminAuditLogRepository {

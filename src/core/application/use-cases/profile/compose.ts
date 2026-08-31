@@ -4,6 +4,7 @@ import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositor
 import { CloudinaryAvatarUploadService } from "@/infrastructure/storage/cloudinary/avatar-upload-service";
 import { ChangePasswordUseCase } from "@/application/use-cases/profile/change-password.use-case";
 import { DeleteAccountUseCase } from "@/application/use-cases/profile/delete-account.use-case";
+import { makeExecuteAccountErasureUseCase } from "@/application/use-cases/gdpr/compose";
 import { GetProfileUseCase } from "@/application/use-cases/profile/get-profile.use-case";
 import { UpdateProfileUseCase } from "@/application/use-cases/profile/update-profile.use-case";
 import { UploadAvatarUseCase } from "@/application/use-cases/profile/upload-avatar.use-case";
@@ -30,5 +31,5 @@ export function makeChangePasswordUseCase() {
 }
 
 export function makeDeleteAccountUseCase() {
-  return new DeleteAccountUseCase(users, tokens);
+  return new DeleteAccountUseCase(users, makeExecuteAccountErasureUseCase());
 }

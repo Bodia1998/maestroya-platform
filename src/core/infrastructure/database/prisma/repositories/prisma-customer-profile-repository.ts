@@ -25,4 +25,14 @@ export class PrismaCustomerProfileRepository implements CustomerProfileRepositor
       select: { id: true, userId: true },
     });
   }
+
+
+  // --- Module 88: GDPR Erasure Execution ---
+
+  async eraseForUser(userId: string): Promise<void> {
+    await prisma.customerProfile.updateMany({
+      where: { userId },
+      data: { notes: null },
+    });
+  }
 }

@@ -96,4 +96,7 @@ export class FakeNotificationRepository implements NotificationRepository {
     this.notifications.set(id, updated);
     return updated;
   }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  async deleteAllForUser(_userId: string) {}
 }

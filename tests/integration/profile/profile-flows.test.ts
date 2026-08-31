@@ -8,6 +8,43 @@ import { UpdateProfileUseCase } from "@/application/use-cases/profile/update-pro
 import { UploadAvatarUseCase } from "@/application/use-cases/profile/upload-avatar.use-case";
 import { FakeAuthTokenRepository, FakeUserRepository } from "../auth/fakes";
 import { FakeAddressRepository, FakeAvatarUploadService } from "./fakes";
+import {
+  FakeCustomerProfileRepository,
+  FakeNotificationRepository,
+  FakeProfessionalRepository,
+  FakeProfessionalVerificationRepository,
+} from "../gdpr/fakes";
+import { ExecuteAccountErasureUseCase } from "@/application/use-cases/gdpr/execute-account-erasure.use-case";
+import { SynchronousEventBus } from "@/infrastructure/events/synchronous-event-bus";
+import type { VerificationDocumentStorageDeleter } from "@/application/interfaces/verification-document-storage-deleter";
+
+class NoopDocumentStorageDeleter implements VerificationDocumentStorageDeleter {
+  async deleteByUrl(): Promise<void> {}
+}
+
+/**
+ * Module 88 — GDPR Erasure Execution & Document Retention: DeleteAccountUseCase
+ * now delegates its actual erasure work to ExecuteAccountErasureUseCase (see
+ * that use case's own doc comment) — this builds a real one, wired to fresh
+ * fakes, the same way `DeleteAccountUseCase` is composed in
+ * profile/compose.ts.
+ */
+function makeErasureUseCase(users: FakeUserRepository, tokens: FakeAuthTokenRepository) {
+  const erasureRepos = {
+    users,
+    addresses: new FakeAddressRepository(),
+    customerProfiles: new FakeCustomerProfileRepository(),
+    professionals: new FakeProfessionalRepository(),
+    notifications: new FakeNotificationRepository(),
+    professionalVerifications: new FakeProfessionalVerificationRepository(),
+    authTokens: tokens,
+  };
+  return new ExecuteAccountErasureUseCase(
+    erasureRepos,
+    new NoopDocumentStorageDeleter(),
+    new SynchronousEventBus(),
+  );
+}
 
 async function seedUser(users: FakeUserRepository, password = "OldPassword1") {
   const passwordHash = await hashPassword(password);
@@ -147,7 +184,7 @@ describe("DeleteAccountUseCase", () => {
   it("soft-deletes the account when the password is correct", async () => {
     const user = await seedUser(users, "OldPassword1");
 
-    await new DeleteAccountUseCase(users, tokens).execute(user.id, "OldPassword1");
+    await new DeleteAccountUseCase(users, makeErasureUseCase(users, tokens)).execute(user.id, "OldPassword1");
 
     const updated = await users.findById(user.id);
     expect(updated?.status).toBe("DEACTIVATED");
@@ -157,7 +194,7 @@ describe("DeleteAccountUseCase", () => {
     const user = await seedUser(users, "OldPassword1");
 
     await expect(
-      new DeleteAccountUseCase(users, tokens).execute(user.id, "WrongPassword"),
+      new DeleteAccountUseCase(users, makeErasureUseCase(users, tokens)).execute(user.id, "WrongPassword"),
     ).rejects.toThrow();
 
     const updated = await users.findById(user.id);
@@ -172,7 +209,7 @@ describe("DeleteAccountUseCase", () => {
       expiresAt: new Date(Date.now() + 100000),
     });
 
-    await new DeleteAccountUseCase(users, tokens).execute(user.id, "OldPassword1");
+    await new DeleteAccountUseCase(users, makeErasureUseCase(users, tokens)).execute(user.id, "OldPassword1");
 
     expect(await tokens.findValidRefreshToken("session-a")).toBeNull();
   });
@@ -187,7 +224,7 @@ describe("DeleteAccountUseCase", () => {
     // represent one: passwordHash is null, not an empty string.
     users.users.get(oauthUser.id)!.passwordHash = null;
 
-    await new DeleteAccountUseCase(users, tokens).execute(oauthUser.id);
+    await new DeleteAccountUseCase(users, makeErasureUseCase(users, tokens)).execute(oauthUser.id);
 
     const updated = await users.findById(oauthUser.id);
     expect(updated?.status).toBe("DEACTIVATED");
@@ -196,7 +233,7 @@ describe("DeleteAccountUseCase", () => {
   it("rejects a password-based account deletion attempt with no password given", async () => {
     const user = await seedUser(users, "OldPassword1");
 
-    await expect(new DeleteAccountUseCase(users, tokens).execute(user.id)).rejects.toThrow();
+    await expect(new DeleteAccountUseCase(users, makeErasureUseCase(users, tokens)).execute(user.id)).rejects.toThrow();
 
     const updated = await users.findById(user.id);
     expect(updated?.status).not.toBe("DEACTIVATED");

@@ -29,4 +29,13 @@ export interface CustomerProfileRepository {
   findByUserId(userId: string): Promise<CustomerProfileRecord | null>;
   findById(id: string): Promise<CustomerProfileRecord | null>;
   findOrCreateByUserId(userId: string): Promise<CustomerProfileRecord>;
+
+  /**
+   * Module 88 — GDPR Erasure Execution: clears the one free-text PII-
+   * capable field this narrow interface's own record type doesn't even
+   * surface (`notes` — an internal field never returned by
+   * `CustomerProfileRecord`, see the Prisma implementation). No-op if the
+   * user has no CustomerProfile.
+   */
+  eraseForUser(userId: string): Promise<void>;
 }
