@@ -221,12 +221,33 @@ export class StartReconciliationRunUseCase {
     }
 
     for (const ref of references) {
-      const providerState =
-        ref.entityType === "PAYMENT"
-          ? await this.provider.retrievePaymentState(ref.externalReference)
-          : ref.entityType === "PAYOUT"
-            ? await this.provider.retrieveTransferState(ref.externalReference)
-            : await this.provider.retrieveRefundState(ref.externalReference);
+      // Module 87 — a single provider (Stripe) call blipping (network
+      // timeout, transient 5xx) must never abort the *entire* run: every
+      // other job's checks, and every other reference already gathered
+      // for this job, are independent findings that would otherwise be
+      // silently lost (the run is instead marked FAILED as a whole by
+      // the outer try/catch, and jobs after the failing one are never
+      // even inspected). We report the failure — it must stay observable,
+      // never a silent swallow — and skip only this one reference,
+      // letting the run continue to completion.
+      let providerState;
+      try {
+        providerState =
+          ref.entityType === "PAYMENT"
+            ? await this.provider.retrievePaymentState(ref.externalReference)
+            : ref.entityType === "PAYOUT"
+              ? await this.provider.retrieveTransferState(ref.externalReference)
+              : await this.provider.retrieveRefundState(ref.externalReference);
+      } catch (error) {
+        this.failureReporter.report(error, {
+          jobId: ref.jobId,
+          entityType: ref.entityType,
+          entityId: ref.entityId,
+          externalReference: ref.externalReference,
+          reason: "provider_reconciliation_lookup_failed",
+        });
+        continue;
+      }
       findings.push(...checkProviderConsistency(ref, providerState));
     }
 

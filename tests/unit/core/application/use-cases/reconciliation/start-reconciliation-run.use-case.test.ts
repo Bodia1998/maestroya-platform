@@ -9,9 +9,10 @@ import { DiscrepancyDetected } from "@/domain/events/discrepancy-detected";
 import { DiscrepancyResolved } from "@/domain/events/discrepancy-resolved";
 import { ConflictError, NotFoundError } from "@/domain/errors/domain-error";
 import type { StartReconciliationRunInput } from "@/application/dto/reconciliation.dto";
-import { makeContext, makeCommission, makePayout } from "../../../domain/reconciliation/fixtures";
+import { makeContext, makeCommission, makePayment, makePayout } from "../../../domain/reconciliation/fixtures";
 import {
   FakeEventBus,
+  FakeFailureReporter,
   FakeProviderFinancialReconciliationPort,
   FakeReconciliationDataSource,
   FakeReconciliationDiscrepancyRepository,
@@ -28,8 +29,9 @@ function makeHarness() {
   const discrepancies = new FakeReconciliationDiscrepancyRepository();
   const provider = new FakeProviderFinancialReconciliationPort();
   const eventBus = new FakeEventBus();
-  const useCase = new StartReconciliationRunUseCase(dataSource, runs, discrepancies, provider, eventBus);
-  return { dataSource, runs, discrepancies, provider, eventBus, useCase };
+  const failureReporter = new FakeFailureReporter();
+  const useCase = new StartReconciliationRunUseCase(dataSource, runs, discrepancies, provider, eventBus, failureReporter);
+  return { dataSource, runs, discrepancies, provider, eventBus, failureReporter, useCase };
 }
 
 /** Under scope=FULL the engine also evaluates PROVIDER checks against
@@ -153,6 +155,42 @@ describe("StartReconciliationRunUseCase", () => {
     expect(runs.byId.get(summary.run.id)?.status).toBe("FAILED");
     expect(eventBus.published.some((e) => e instanceof ReconciliationRunFailed)).toBe(true);
     expect(eventBus.published.some((e) => e instanceof ReconciliationRunCompleted)).toBe(false);
+  });
+
+  it("does not abort the whole run when a single PROVIDER lookup throws: the failure is reported, that one reference is skipped, and every other job/reference is still inspected and completes", async () => {
+    const { dataSource, provider, useCase, runs, discrepancies, failureReporter } = makeHarness();
+    dataSource.seed("job-1", makeContext());
+    dataSource.seed(
+      "job-2",
+      makeContext({
+        jobId: "job-2",
+        payments: [makePayment({ id: "payment-2", jobId: "job-2", stripePaymentIntentId: "pi_test_2" })],
+        commission: makeCommission({ paymentId: "payment-2" }),
+      }),
+    );
+    provider.paymentStates.set("pi_test_2", { found: true, settled: true, amount: 1000, currency: "EUR" });
+    stubMatchingProviderState(provider);
+    // job-1's payment lookup blips (simulated Stripe timeout); job-2's
+    // references are stubbed clean and must still be inspected.
+    provider.nextErrorFor.set("pi_test_1", new Error("simulated Stripe timeout"));
+
+    const summary = await useCase.execute(makeInput(), "admin-1");
+
+    expect(summary.run.status).toBe("COMPLETED");
+    expect(runs.byId.get(summary.run.id)?.status).toBe("COMPLETED");
+    // Both jobs were inspected — the run did not stop after job-1's
+    // provider call threw.
+    expect(summary.run.recordsInspected).toBe(2);
+    // The failing reference produced no false PROVIDER_STATE_UNKNOWN (or
+    // any other) discrepancy — it was skipped, not misreported.
+    const stored = [...discrepancies.byId.values()];
+    expect(stored.filter((d) => d.entityId === "payment-1" || d.jobId === "job-1")).toHaveLength(0);
+    // But the failure itself is observable, never silently swallowed.
+    expect(failureReporter.reports).toHaveLength(1);
+    expect(failureReporter.reports[0]?.context).toMatchObject({
+      jobId: "job-1",
+      reason: "provider_reconciliation_lookup_failed",
+    });
   });
 
   it("skips a job the data source can no longer resolve to a context, without failing the run", async () => {

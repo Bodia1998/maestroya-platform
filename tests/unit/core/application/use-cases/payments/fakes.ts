@@ -232,7 +232,16 @@ export class FakePaymentRepository implements PaymentRepository {
   }
 
   async create(data: CreatePaymentRecordData): Promise<PaymentRecord> {
-    const existing = await this.findByStripePaymentIntentId(data.stripePaymentIntentId);
+    // Module 87 — synchronous check against `byStripePaymentIntentId`
+    // (no `await this.findByStripePaymentIntentId(...)` in between), so a
+    // concurrency test racing two `create()` calls on the same
+    // `stripePaymentIntentId` can actually observe the same "second
+    // caller must not create a duplicate row" guarantee the real
+    // Prisma-backed repository's unique constraint provides. Same
+    // fix/rationale as `FakeCommissionRepository.create`
+    // (`tests/integration/financial/fakes.ts`).
+    const existingId = data.stripePaymentIntentId ? this.byStripePaymentIntentId.get(data.stripePaymentIntentId) : undefined;
+    const existing = existingId ? this.byId.get(existingId) : undefined;
     if (existing) return existing;
 
     const record: PaymentRecord = {
