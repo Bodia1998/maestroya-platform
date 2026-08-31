@@ -20,6 +20,7 @@ import { PrismaPayoutRepository } from "@/infrastructure/database/prisma/reposit
 import { PrismaRefundRepository } from "@/infrastructure/database/prisma/repositories/prisma-refund-repository";
 import { PrismaFinancialAdjustmentRepository } from "@/infrastructure/database/prisma/repositories/prisma-financial-adjustment-repository";
 import { PrismaFinancialLedgerRepository } from "@/infrastructure/database/prisma/repositories/prisma-financial-ledger-repository";
+import { PrismaStripeDisputeRepository } from "@/infrastructure/database/prisma/repositories/prisma-stripe-dispute-repository";
 import { PrismaQuoteRepository } from "@/infrastructure/database/prisma/repositories/prisma-quote-repository";
 import { paymentGateway } from "@/infrastructure/payments/compose";
 import { stripe } from "@/infrastructure/payments/stripe/client";
@@ -52,6 +53,13 @@ import { PaymentRefunded } from "@/domain/events/payment-refunded";
 import { RefundFailed } from "@/domain/events/refund-failed";
 import { ProfessionalPayoutReversed } from "@/domain/events/professional-payout-reversed";
 import { PayoutReversalFailed } from "@/domain/events/payout-reversal-failed";
+import { ProcessStripeDisputeWebhookUseCase } from "@/application/use-cases/stripe-disputes/process-stripe-dispute-webhook.use-case";
+import {
+  RecordStripeDisputeOpenedAuditLogSubscriber,
+  RecordStripeDisputeClosedAuditLogSubscriber,
+} from "@/application/use-cases/stripe-disputes/record-stripe-dispute-audit-log.subscriber";
+import { StripeDisputeOpened } from "@/domain/events/stripe-dispute-opened";
+import { StripeDisputeClosed } from "@/domain/events/stripe-dispute-closed";
 
 /**
  * Module 73 — Real Customer Payment Capture: composition root, same
@@ -103,6 +111,9 @@ const refunds = new PrismaRefundRepository();
 const financialAdjustments = new PrismaFinancialAdjustmentRepository();
 const financialLedger = new PrismaFinancialLedgerRepository();
 
+// --- Module 86 — Stripe Chargeback & Dispute Handling ---
+const stripeDisputes = new PrismaStripeDisputeRepository();
+
 function makeCreateFinancialAdjustmentUseCaseForRefunds() {
   return new CreateFinancialAdjustmentUseCase(jobs, financialAdjustments, financialLedger, payments);
 }
@@ -153,8 +164,37 @@ export function makeInitiateQuotePaymentUseCase(): InitiateQuotePaymentUseCase {
   );
 }
 
+export function makeProcessStripeDisputeWebhookUseCase(): ProcessStripeDisputeWebhookUseCase {
+  return new ProcessStripeDisputeWebhookUseCase({
+    disputes: stripeDisputes,
+    payments,
+    payouts,
+    financialAdjustments,
+    createFinancialAdjustment: makeCreateFinancialAdjustmentUseCaseForRefunds(),
+    reversePayout: makeReverseProfessionalPayoutUseCase(),
+    lock,
+    eventBus,
+    // Module 86 — Stripe Chargeback & Dispute Handling: see
+    // env.STRIPE_DISPUTE_SYSTEM_USER_ID's own doc comment — `undefined`
+    // (unset) becomes `null` here, which
+    // ProcessStripeDisputeWebhookUseCase treats as "defer the financial
+    // settlement and report for manual review" rather than fabricating
+    // an actor.
+    systemActorUserId: env.STRIPE_DISPUTE_SYSTEM_USER_ID ?? null,
+    failureReporter,
+  });
+}
+
 export function makeProcessCustomerPaymentWebhookUseCase(): ProcessCustomerPaymentWebhookUseCase {
-  return new ProcessCustomerPaymentWebhookUseCase(payments, paymentGateway, webhookEvents, eventBus, failureReporter, refunds);
+  return new ProcessCustomerPaymentWebhookUseCase(
+    payments,
+    paymentGateway,
+    webhookEvents,
+    eventBus,
+    failureReporter,
+    refunds,
+    makeProcessStripeDisputeWebhookUseCase(),
+  );
 }
 
 export function makeExecuteProfessionalPayoutUseCase(): ExecuteProfessionalPayoutUseCase {
@@ -206,3 +246,9 @@ eventBus.subscribe(PaymentRefunded, new RecordPaymentRefundedAuditLogSubscriber(
 eventBus.subscribe(RefundFailed, new RecordRefundFailedAuditLogSubscriber(refundAuditLog));
 eventBus.subscribe(ProfessionalPayoutReversed, new RecordProfessionalPayoutReversedAuditLogSubscriber(refundAuditLog));
 eventBus.subscribe(PayoutReversalFailed, new RecordPayoutReversalFailedAuditLogSubscriber(refundAuditLog));
+
+// Module 86 — Stripe Chargeback & Dispute Handling: audit-log subscriber
+// registrations, same convention as this file's own Module 77
+// registrations immediately above.
+eventBus.subscribe(StripeDisputeOpened, new RecordStripeDisputeOpenedAuditLogSubscriber(refundAuditLog));
+eventBus.subscribe(StripeDisputeClosed, new RecordStripeDisputeClosedAuditLogSubscriber(refundAuditLog));

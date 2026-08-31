@@ -167,6 +167,14 @@ export type AdminAuditAction =
   | "REFUND_FAILED"
   | "PROFESSIONAL_PAYOUT_REVERSED"
   | "PAYOUT_REVERSAL_FAILED"
+  // Module 86 — Stripe Chargeback & Dispute Handling: a Stripe
+  // charge.dispute.* lifecycle event — STRIPE_DISPUTE_OPENED on
+  // charge.dispute.created, STRIPE_DISPUTE_CLOSED on
+  // charge.dispute.closed (every outcome — WON/LOST/WARNING_CLOSED — see
+  // StripeDisputeClosed's own doc comment for why all three share one
+  // audit action, disambiguated by the entry's own metadata.outcome).
+  | "STRIPE_DISPUTE_OPENED"
+  | "STRIPE_DISPUTE_CLOSED"
   // Module 79 — Invoicing & Credit Notes: self-billing authorization,
   // invoice lifecycle, and credit-note events, all recorded on the same
   // append-only AuditLog trail as every action above. Most are performed

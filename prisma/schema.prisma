@@ -5105,3 +5105,100 @@ model ReconciliationDiscrepancy {
   @@index([fingerprint])
   @@map("reconciliation_discrepancies")
 }
+
+// ============================================================================
+// Module 86 — Stripe Chargeback & Dispute Handling
+// ============================================================================
+
+/// Module 86 — Stripe Chargeback & Dispute Handling: the lifecycle of one
+/// Stripe `charge.dispute.*` webhook stream (a bank/card-network
+/// chargeback against the platform's Stripe account). Deliberately a NEW,
+/// separate model from `Dispute` (Module 21's customer/professional
+/// marketplace dispute, `@@map("disputes")` above) — the two are not the
+/// same concept and must never be conflated: `Dispute` requires a
+/// `jobId`/`serviceRequestId`/`raisedByUserId`/respondent professional and
+/// is resolved by an ADMIN choosing a `DisputeResolution`; a
+/// `StripeDispute` is raised by the CUSTOMER'S BANK against the
+/// platform's Stripe balance and is resolved by STRIPE/the card network
+/// (`WON`/`LOST`/`WARNING_CLOSED`) — no admin action in this platform
+/// ever decides its outcome. See MODULE_86_IMPLEMENTATION_REPORT.md for
+/// the full rationale.
+///
+/// `paymentId`/`jobId` are deliberately plain scalar columns with no
+/// Prisma relation object, and `financialAdjustmentId` likewise — the
+/// same "this migration only touches its own model" convention
+/// `Payout.paymentId`/`Refund.financialAdjustmentId` already establish
+/// (see either's own doc comment): a real FK constraint is still added at
+/// the database level by this model's own migration, but `Payment`/`Job`/
+/// `FinancialAdjustment` themselves are never touched by this migration.
+model StripeDispute {
+  id                    String              @id @default(uuid()) @db.Uuid
+  /// Stripe's own `Dispute.id` (`dp_...`) — the uniqueness invariant that
+  /// makes `charge.dispute.created` processing idempotent independent of
+  /// `ExternalWebhookEvent`'s own `(provider, externalEventId)` guard
+  /// (defense in depth — see `ProcessStripeDisputeWebhookUseCase`'s own
+  /// doc comment: a distinct Stripe *event* id can still refer to the
+  /// same *dispute*, e.g. a redelivered `updated`/`closed` pair).
+  stripeDisputeId       String              @unique
+  stripeChargeId        String?
+  stripePaymentIntentId String?
+  paymentId             String?             @db.Uuid
+  jobId                 String?             @db.Uuid
+  /// Stripe's own disputed amount (already converted from minor units) —
+  /// NEVER assumed equal to `Payment.amount`; a prior partial refund can
+  /// make them differ, and `CreateFinancialAdjustmentUseCase`'s own
+  /// Invariant-8 refund-boundedness guard is the authoritative backstop
+  /// either way.
+  amount                Decimal             @db.Decimal(10, 2)
+  currency              String              @default("EUR")
+  /// Stripe's own dispute reason string (`"fraudulent"`,
+  /// `"product_not_received"`, ...) — observability/reporting only, never
+  /// branched on for a financial decision (see this module's own
+  /// financial-outcome decision function, which only ever branches on
+  /// `status`).
+  reason                String?
+  status                StripeDisputeStatus @default(NEEDS_RESPONSE)
+  /// Stripe's own `evidence_details.due_by`, if present — surfaced for
+  /// admin visibility (a future evidence-submission UI); this module
+  /// never itself submits evidence to Stripe.
+  evidenceDueBy         DateTime?
+  /// Set only once a `LOST` outcome has created the corresponding
+  /// refund-type `FinancialAdjustment` (see
+  /// `ProcessStripeDisputeWebhookUseCase.handleClosed`). `@unique`: at
+  /// most one `FinancialAdjustment` is ever created per `StripeDispute` —
+  /// the same "idempotent replay" guard `DisputeResolutionDecision.id`
+  /// gives Module 68's own resolution flow, applied here to a Stripe-
+  /// driven resolution instead of an admin-driven one.
+  financialAdjustmentId String?             @unique @db.Uuid
+  closedAt              DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentId])
+  @@index([jobId])
+  @@index([status])
+  @@map("stripe_disputes")
+}
+
+/// Module 86 — Stripe Chargeback & Dispute Handling: mirrors Stripe's own
+/// `Dispute.status` values, collapsed to what this platform actually acts
+/// on. Every `"warning_*"`/`"needs_response"`/`"under_review"` value
+/// Stripe sends before a final outcome collapses to `NEEDS_RESPONSE` or
+/// `UNDER_REVIEW` here (evidence not yet submitted vs. submitted/awaiting
+/// Stripe) — this platform never branches financial behavior on the
+/// fine-grained distinction Stripe itself makes between those sub-states,
+/// only on whether the dispute is still open at all. `WON`/`LOST` are
+/// Stripe's own final `charge.dispute.closed` outcomes. `WARNING_CLOSED`
+/// is Stripe's own "closed, never became a real chargeback" terminal
+/// state (an early-warning dispute the card network dropped) — grouped
+/// with `WON` for financial purposes (no adjustment, see this module's
+/// own financial-outcome decision function) but kept as its own value so
+/// reporting/reconciliation can still tell the two apart.
+enum StripeDisputeStatus {
+  NEEDS_RESPONSE
+  UNDER_REVIEW
+  WON
+  LOST
+  WARNING_CLOSED
+}

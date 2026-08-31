@@ -2,12 +2,10 @@ import type { EventHandler } from "@/application/ports/event-bus";
 import type { PaymentRefunded } from "@/domain/events/payment-refunded";
 import type { InvoiceRepository } from "@/domain/repositories/invoice-repository";
 import type { CreditNoteRepository } from "@/domain/repositories/credit-note-repository";
-import { isCreditableInvoiceStatus } from "@/domain/services/invoice-lifecycle";
-import { computeRemainingCreditableAmount } from "@/domain/services/credit-note-eligibility";
-import { roundToCents } from "@/domain/services/money";
 import type { CalculateJobTaxBreakdownUseCase } from "@/application/use-cases/financial/calculate-job-tax-breakdown.use-case";
 import type { CreateCreditNoteUseCase } from "./create-credit-note.use-case";
 import { type FailureReporter, NullFailureReporter } from "@/application/ports/failure-reporter";
+import { createCreditNoteForRefundLikeEvent } from "./create-credit-note-for-refund-like-event";
 
 /**
  * Module 85 — Invoicing & Credit Note Activation.
@@ -72,34 +70,21 @@ export class CreateCreditNoteOnPaymentRefundedSubscriber implements EventHandler
   async handle(event: PaymentRefunded): Promise<void> {
     if (!event.jobId) return;
 
-    const invoice = await this.invoices.findByJobIdAndType(event.jobId, "PROFESSIONAL_SELF_BILLED");
-    if (!invoice || !isCreditableInvoiceStatus(invoice.status)) return;
-
-    const breakdown = await this.taxBreakdowns.execute(event.jobId);
-    if (breakdown.customerGrossTotal <= 0) return;
-
-    const professionalAmount = roundToCents(event.amount * (breakdown.professionalInvoiceGrossTotal / breakdown.customerGrossTotal));
-    if (professionalAmount <= 0) return;
-
-    const alreadyCredited = await this.creditNotes.sumCreditedAmountForInvoice(invoice.id);
-    const remaining = computeRemainingCreditableAmount(invoice.totalAmount, alreadyCredited);
-    const requestedAmount = Math.min(professionalAmount, remaining);
-    if (requestedAmount <= 0) return;
-
-    try {
-      await this.createCreditNote.execute({
-        originalInvoiceId: invoice.id,
-        requestedAmount,
-        reason: `Refund of payment ${event.paymentId} (financial adjustment ${event.financialAdjustmentId}).`,
-        idempotencyKey: `credit-note:financial-adjustment:${event.financialAdjustmentId}`,
-      });
-    } catch (error) {
-      this.failureReporter.report(error instanceof Error ? error : new Error(String(error)), {
+    await createCreditNoteForRefundLikeEvent(
+      {
+        invoices: this.invoices,
+        creditNotes: this.creditNotes,
+        taxBreakdowns: this.taxBreakdowns,
+        createCreditNote: this.createCreditNote,
+        failureReporter: this.failureReporter,
+      },
+      {
         jobId: event.jobId,
-        invoiceId: invoice.id,
+        paymentId: event.paymentId,
+        amount: event.amount,
         financialAdjustmentId: event.financialAdjustmentId,
-        note: "Automatic credit-note creation failed after a successful refund — requires manual review.",
-      });
-    }
+        reasonLabel: `Refund of payment ${event.paymentId}`,
+      },
+    );
   }
 }

@@ -61,6 +61,7 @@ describe("POST /api/webhooks/stripe-payments", () => {
       createdAt: new Date("2026-01-01T00:00:00Z"),
       paymentIntent: { paymentIntentId: "pi_123", lastPaymentErrorMessage: null },
       chargeRefunded: null,
+      dispute: null,
     };
     mockVerify.mockReturnValue({ valid: true, event: verifiedEvent });
     mockExecute.mockResolvedValue({ outcome: "captured", paymentId: "payment-1" });
@@ -76,7 +77,7 @@ describe("POST /api/webhooks/stripe-payments", () => {
   it("acknowledges (200) a duplicate delivery, never surfacing it as an error", async () => {
     mockVerify.mockReturnValue({
       valid: true,
-      event: { id: "evt_dup", type: "payment_intent.succeeded", createdAt: new Date(), paymentIntent: null, chargeRefunded: null },
+      event: { id: "evt_dup", type: "payment_intent.succeeded", createdAt: new Date(), paymentIntent: null, chargeRefunded: null, dispute: null },
     });
     mockExecute.mockResolvedValue({ outcome: "duplicate" });
 
@@ -90,7 +91,7 @@ describe("POST /api/webhooks/stripe-payments", () => {
   it("acknowledges (200) an unmatched PaymentIntent rather than leaking whether it exists via a different status code", async () => {
     mockVerify.mockReturnValue({
       valid: true,
-      event: { id: "evt_unmatched", type: "payment_intent.succeeded", createdAt: new Date(), paymentIntent: { paymentIntentId: "pi_ghost", lastPaymentErrorMessage: null }, chargeRefunded: null },
+      event: { id: "evt_unmatched", type: "payment_intent.succeeded", createdAt: new Date(), paymentIntent: { paymentIntentId: "pi_ghost", lastPaymentErrorMessage: null }, chargeRefunded: null, dispute: null },
     });
     mockExecute.mockResolvedValue({ outcome: "unmatched" });
 
@@ -107,6 +108,7 @@ describe("POST /api/webhooks/stripe-payments", () => {
         createdAt: new Date(),
         paymentIntent: null,
         chargeRefunded: { chargeId: "ch_1", paymentIntentId: "pi_123", amountRefunded: 20 },
+        dispute: null,
       },
     });
     mockExecute.mockResolvedValue({ outcome: "refund-observed" });
@@ -121,7 +123,7 @@ describe("POST /api/webhooks/stripe-payments", () => {
   it("returns 500 with the generic toHttpErrorResponse shape (never a raw stack trace) when the use case throws unexpectedly", async () => {
     mockVerify.mockReturnValue({
       valid: true,
-      event: { id: "evt_err", type: "payment_intent.succeeded", createdAt: new Date(), paymentIntent: null, chargeRefunded: null },
+      event: { id: "evt_err", type: "payment_intent.succeeded", createdAt: new Date(), paymentIntent: null, chargeRefunded: null, dispute: null },
     });
     mockExecute.mockRejectedValue(new Error("db is down"));
 
@@ -147,7 +149,7 @@ describe("POST /api/webhooks/stripe-payments", () => {
   it("does not depend on any authenticated user session — the Stripe signature is the sole authentication mechanism", async () => {
     mockVerify.mockReturnValue({
       valid: true,
-      event: { id: "evt_noauth", type: "payment_intent.canceled", createdAt: new Date(), paymentIntent: null, chargeRefunded: null },
+      event: { id: "evt_noauth", type: "payment_intent.canceled", createdAt: new Date(), paymentIntent: null, chargeRefunded: null, dispute: null },
     });
     mockExecute.mockResolvedValue({ outcome: "cancelled" });
 

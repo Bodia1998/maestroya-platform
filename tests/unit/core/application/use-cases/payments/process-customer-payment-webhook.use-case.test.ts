@@ -29,6 +29,7 @@ function paymentIntentEvent(
     createdAt: new Date("2026-01-01T00:00:00Z"),
     paymentIntent: { paymentIntentId: "pi_123", lastPaymentErrorMessage: null },
     chargeRefunded: null,
+    dispute: null,
     ...overrides,
   };
 }
@@ -340,6 +341,53 @@ describe("ProcessCustomerPaymentWebhookUseCase (Module 73)", () => {
       const retry = await useCase.execute(paymentIntentEvent("payment_intent.amount_capturable_updated"));
       expect(retry.outcome).toBe("captured");
       expect((await payments.findById(payment.id))?.status).toBe("CAPTURED");
+    });
+  });
+
+  describe("charge.dispute.* dispatch (Module 86)", () => {
+    it("is ignored (never crashes) when no StripeDisputeWebhookHandler is injected", async () => {
+      const result = await useCase.execute(
+        paymentIntentEvent("charge.dispute.created", {
+          paymentIntent: null,
+          dispute: { disputeId: "dp_1", chargeId: "ch_1", paymentIntentId: "pi_123", amount: 100, currency: "EUR", reason: null, status: "needs_response", evidenceDueBy: null },
+        }),
+      );
+      expect(result.outcome).toBe("ignored");
+    });
+
+    it("delegates each of the three handled dispute event types to the injected handler with the extracted payload", async () => {
+      const calls: Array<{ eventType: string; disputeId: string }> = [];
+      const handler = {
+        handle: async (eventType: string, payload: { disputeId: string }) => {
+          calls.push({ eventType, disputeId: payload.disputeId });
+        },
+      };
+      const useCaseWithDisputes = new ProcessCustomerPaymentWebhookUseCase(
+        payments,
+        gateway,
+        webhookEvents,
+        eventBus,
+        undefined,
+        undefined,
+        handler,
+      );
+
+      for (const type of ["charge.dispute.created", "charge.dispute.updated", "charge.dispute.closed"]) {
+        const result = await useCaseWithDisputes.execute(
+          paymentIntentEvent(type, {
+            id: `evt_${type}`,
+            paymentIntent: null,
+            dispute: { disputeId: "dp_1", chargeId: "ch_1", paymentIntentId: "pi_123", amount: 100, currency: "EUR", reason: null, status: "needs_response", evidenceDueBy: null },
+          }),
+        );
+        expect(result.outcome).toBe("dispute-processed");
+      }
+
+      expect(calls).toEqual([
+        { eventType: "charge.dispute.created", disputeId: "dp_1" },
+        { eventType: "charge.dispute.updated", disputeId: "dp_1" },
+        { eventType: "charge.dispute.closed", disputeId: "dp_1" },
+      ]);
     });
   });
 });

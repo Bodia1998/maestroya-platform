@@ -82,6 +82,18 @@ export class CreateFinancialAdjustmentUseCase {
        *  that interface's own doc comment. Optional so every pre-existing
        *  caller of this use case is unaffected. */
       resolutionDecisionId?: string | null;
+      /** Module 86 — Stripe Chargeback & Dispute Handling: an opaque,
+       *  caller-supplied reference folded into the idempotency key below
+       *  in place of `disputeId` — for a caller that has no internal
+       *  `Dispute` row to reference (a Stripe chargeback is never one,
+       *  see `StripeDispute`'s own doc comment) but still needs a
+       *  reference more specific than `"none"` so two DIFFERENT Stripe
+       *  disputes against the same Job/Payment/type can never collide on
+       *  the same idempotency key. Always the Stripe dispute id
+       *  (`dp_...`) in practice; optional so every pre-existing caller of
+       *  this use case (which always leaves this unset) is unaffected —
+       *  see this class's own idempotency-key derivation below. */
+      externalDisputeReference?: string | null;
     },
   ): Promise<FinancialAdjustmentRecord> {
     const job = await this.jobs.findById(input.jobId);
@@ -92,7 +104,7 @@ export class CreateFinancialAdjustmentUseCase {
     const idempotencyKey = [
       "adjustment",
       input.jobId,
-      input.disputeId ?? "none",
+      input.disputeId ?? input.externalDisputeReference ?? "none",
       input.type,
       input.paymentId ?? "none",
     ].join(":");

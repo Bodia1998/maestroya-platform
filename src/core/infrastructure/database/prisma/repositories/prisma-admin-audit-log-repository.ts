@@ -140,6 +140,12 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   REFUND_FAILED: "PAYMENT",
   PROFESSIONAL_PAYOUT_REVERSED: "PAYOUT",
   PAYOUT_REVERSAL_FAILED: "PAYOUT",
+  // Module 86 — Stripe Chargeback & Dispute Handling: STRIPE_DISPUTE_OPENED/
+  // STRIPE_DISPUTE_CLOSED record a Stripe-driven chargeback lifecycle
+  // event against a Payment — same PAYMENT AuditLogAction category as
+  // PAYMENT_REFUNDED immediately above, same reasoning.
+  STRIPE_DISPUTE_OPENED: "PAYMENT",
+  STRIPE_DISPUTE_CLOSED: "PAYMENT",
   // Module 79 — Invoicing & Credit Notes: same "map to the closest
   // existing AuditLogAction value, preserve the concrete action name in
   // metadata.adminAction" convention. Authorization grant/revoke has no

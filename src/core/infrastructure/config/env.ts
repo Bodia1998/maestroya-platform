@@ -184,6 +184,18 @@ const envSchema = z
     STRIPE_PAYMENTS_WEBHOOK_SECRET: z.string().min(1, "STRIPE_PAYMENTS_WEBHOOK_SECRET is required"),
     STRIPE_CONNECT_CLIENT_ID: z.string().optional(),
 
+    // Module 86 — Stripe Chargeback & Dispute Handling: the User.id every
+    // Stripe-driven (no human admin actor), webhook-triggered
+    // FinancialAdjustment/payout reversal a LOST chargeback produces is
+    // attributed to — see ProcessStripeDisputeWebhookUseCase's own doc
+    // comment on why this is a required, explicitly-configured id rather
+    // than a fabricated one. Deliberately optional at the env-schema
+    // level (never blocks boot/every other environment) — when unset, a
+    // LOST dispute is still durably recorded but its financial
+    // settlement is deferred and reported for manual review rather than
+    // silently attributed to nobody.
+    STRIPE_DISPUTE_SYSTEM_USER_ID: z.string().uuid().optional(),
+
     // --- Cloudinary ---
     CLOUDINARY_CLOUD_NAME: z.string().min(1, "CLOUDINARY_CLOUD_NAME is required"),
     CLOUDINARY_API_KEY: z.string().min(1, "CLOUDINARY_API_KEY is required"),

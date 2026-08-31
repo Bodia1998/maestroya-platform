@@ -169,4 +169,78 @@ describe("StripePaymentWebhookVerifierAdapter (Module 73)", () => {
 
     expect(result).toEqual({ valid: false });
   });
+
+  // Module 86 — Stripe Chargeback & Dispute Handling.
+  describe("charge.dispute.*", () => {
+    function fakeDisputeEvent(type: string, overrides: Record<string, unknown> = {}): Stripe.Event {
+      return {
+        id: "evt_3",
+        object: "event",
+        type,
+        created: 1735689600,
+        data: {
+          object: {
+            id: "dp_1",
+            object: "dispute",
+            charge: "ch_1",
+            payment_intent: "pi_123",
+            amount: 120000,
+            currency: "eur",
+            reason: "fraudulent",
+            status: "needs_response",
+            evidence_details: { due_by: 1735776000 },
+            ...overrides,
+          },
+        },
+      } as unknown as Stripe.Event;
+    }
+
+    it("extracts charge.dispute.created", () => {
+      const stripe = fakeStripe(() => fakeDisputeEvent("charge.dispute.created"));
+      const adapter = new StripePaymentWebhookVerifierAdapter(stripe, "whsec_payments_test");
+
+      const result = adapter.verify("{}", "t=1,v1=validsig");
+
+      expect(result.valid).toBe(true);
+      if (result.valid) {
+        expect(result.event.dispute).toEqual({
+          disputeId: "dp_1",
+          chargeId: "ch_1",
+          paymentIntentId: "pi_123",
+          amount: 1200,
+          currency: "eur",
+          reason: "fraudulent",
+          status: "needs_response",
+          evidenceDueBy: new Date(1735776000 * 1000),
+        });
+        expect(result.event.paymentIntent).toBeNull();
+        expect(result.event.chargeRefunded).toBeNull();
+      }
+    });
+
+    it("extracts charge.dispute.closed with a lost status and no evidence deadline", () => {
+      const stripe = fakeStripe(() => fakeDisputeEvent("charge.dispute.closed", { status: "lost", evidence_details: null }));
+      const adapter = new StripePaymentWebhookVerifierAdapter(stripe, "whsec_payments_test");
+
+      const result = adapter.verify("{}", "t=1,v1=validsig");
+
+      expect(result.valid).toBe(true);
+      if (result.valid) {
+        expect(result.event.dispute?.status).toBe("lost");
+        expect(result.event.dispute?.evidenceDueBy).toBeNull();
+      }
+    });
+
+    it("does not extract a dispute payload for an unrelated event type", () => {
+      const stripe = fakeStripe(() => fakePaymentIntentEvent("payment_intent.succeeded"));
+      const adapter = new StripePaymentWebhookVerifierAdapter(stripe, "whsec_payments_test");
+
+      const result = adapter.verify("{}", "t=1,v1=validsig");
+
+      expect(result.valid).toBe(true);
+      if (result.valid) {
+        expect(result.event.dispute).toBeNull();
+      }
+    });
+  });
 });

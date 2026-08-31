@@ -67,6 +67,36 @@ export interface StripeChargeRefundedPayload {
   status?: string | null;
 }
 
+/**
+ * Module 86 — Stripe Chargeback & Dispute Handling: Stripe's own
+ * `Dispute` object fields this platform actually needs — populated for
+ * `charge.dispute.created`/`charge.dispute.updated`/`charge.dispute.closed`,
+ * `null` for every other event type. `status` carries Stripe's own raw
+ * dispute status string (`"needs_response"`, `"under_review"`, `"won"`,
+ * `"lost"`, `"warning_closed"`, ...) — never interpreted here (see
+ * `StripePaymentWebhookVerifier`'s own "provider MUST NOT appear anywhere
+ * [downstream]" rule); `ProcessStripeDisputeWebhookUseCase` is the one
+ * place that maps this raw string onto this platform's own
+ * `StripeDisputeStatusValue`.
+ */
+export interface StripeDisputeEventPayload {
+  /** Stripe's own `Dispute.id` (`dp_...`). */
+  disputeId: string;
+  chargeId: string;
+  paymentIntentId: string | null;
+  /** Already converted from minor units. */
+  amount: number;
+  currency: string;
+  /** Stripe's own dispute reason string — observability only. */
+  reason: string | null;
+  /** Stripe's own raw `Dispute.status` string — see this interface's own
+   *  doc comment. */
+  status: string;
+  /** Stripe's own `evidence_details.due_by` (already converted from a
+   *  Unix timestamp), if present. */
+  evidenceDueBy: Date | null;
+}
+
 export interface StripePaymentWebhookEvent {
   id: string;
   type: string;
@@ -78,6 +108,9 @@ export interface StripePaymentWebhookEvent {
   paymentIntent: StripePaymentIntentEventPayload | null;
   /** Populated only for `charge.refunded` — `null` otherwise. */
   chargeRefunded: StripeChargeRefundedPayload | null;
+  /** Module 86: populated only for `charge.dispute.created`/
+   *  `charge.dispute.updated`/`charge.dispute.closed` — `null` otherwise. */
+  dispute: StripeDisputeEventPayload | null;
 }
 
 export type StripePaymentWebhookValidationResult =
