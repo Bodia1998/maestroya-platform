@@ -1,3 +1,6 @@
+import { randomUUID } from "node:crypto";
+
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
   AuthUserRecord,
@@ -195,5 +198,64 @@ export class PrismaUserRepository implements UserRepository {
 
   async updatePreferredLocale(userId: string, locale: string | null): Promise<void> {
     await prisma.user.update({ where: { id: userId }, data: { preferredLocale: locale } });
+  }
+
+
+  // --- Module 88: GDPR Erasure Execution ---
+
+  async getErasureState(userId: string): Promise<{ personalDataErasedAt: Date | null } | null> {
+    return prisma.user.findUnique({
+      where: { id: userId },
+      select: { personalDataErasedAt: true },
+    });
+  }
+
+  /**
+   * Anonymizes the User row in place — never a hard delete. See this
+   * method's own doc comment on the `UserRepository` interface for why
+   * anonymizing the one shared row is sufficient (every other table
+   * referencing a user does so via a Restrict/SetNull foreign key that
+   * keeps pointing at this same, now-anonymized, row).
+   *
+   * The `WHERE personalDataErasedAt IS NULL` guard makes this a single
+   * atomic compare-and-set: `updateMany` reports how many rows it actually
+   * touched, so two concurrent erasure attempts for the same user can
+   * never both anonymize (and, critically, never both mint a fresh
+   * pseudonymous email — only the winner's write happens at all).
+   */
+  async eraseAccount(userId: string): Promise<{ erased: boolean }> {
+    const pseudonymousEmail = `erased-${randomUUID()}@erased.maestroya.invalid`;
+    const now = new Date();
+
+    const result = await prisma.user.updateMany({
+      where: { id: userId, personalDataErasedAt: null },
+      data: {
+        name: "Deleted user",
+        email: pseudonymousEmail,
+        emailVerified: null,
+        image: null,
+        phone: null,
+        phoneVerifiedAt: null,
+        passwordHash: null,
+        notificationPreferences: Prisma.DbNull,
+        status: "DEACTIVATED",
+        deletedAt: now,
+        personalDataErasedAt: now,
+      },
+    });
+
+    return { erased: result.count === 1 };
+  }
+
+  /**
+   * Hard-deletes NextAuth `Session` rows and linked OAuth `Account` rows —
+   * see this method's own doc comment on the `UserRepository` interface
+   * for exactly what this does and does not invalidate.
+   */
+  async invalidateAllSessions(userId: string): Promise<void> {
+    await prisma.$transaction([
+      prisma.session.deleteMany({ where: { userId } }),
+      prisma.account.deleteMany({ where: { userId } }),
+    ]);
   }
 }

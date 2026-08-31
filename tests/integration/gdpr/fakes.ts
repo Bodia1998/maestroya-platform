@@ -191,6 +191,31 @@ export class FakeUserRepository implements UserRepository {
     return null;
   }
   async updatePreferredLocale() {}
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  erasedAtByUserId = new Map<string, Date>();
+
+  async getErasureState(userId: string) {
+    if (!this.users.has(userId)) return null;
+    return { personalDataErasedAt: this.erasedAtByUserId.get(userId) ?? null };
+  }
+
+  async eraseAccount(userId: string) {
+    const user = this.users.get(userId);
+    if (!user || this.erasedAtByUserId.has(userId)) return { erased: false };
+    user.name = "Deleted user";
+    user.email = `erased-${userId}@erased.maestroya.invalid`;
+    user.passwordHash = null;
+    user.emailVerified = null;
+    user.status = "DEACTIVATED";
+    this.erasedAtByUserId.set(userId, new Date());
+    return { erased: true };
+  }
+
+  invalidatedSessionsFor: string[] = [];
+  async invalidateAllSessions(userId: string) {
+    this.invalidatedSessionsFor.push(userId);
+  }
 }
 
 export class FakeCustomerProfileRepository implements CustomerProfileRepository {
@@ -208,6 +233,12 @@ export class FakeCustomerProfileRepository implements CustomerProfileRepository 
     const record: CustomerProfileRecord = { id: nextId("cust"), userId };
     this.profiles.set(record.id, record);
     return record;
+  }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  erasedUserIds = new Set<string>();
+  async eraseForUser(userId: string) {
+    this.erasedUserIds.add(userId);
   }
 }
 
@@ -283,6 +314,12 @@ export class FakeAddressRepository implements AddressRepository {
     };
     this.addresses.set(userId, record);
     return record;
+  }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  erasedUserIds = new Set<string>();
+  async eraseForUser(userId: string) {
+    this.erasedUserIds.add(userId);
   }
 }
 
@@ -878,6 +915,13 @@ export class FakeNotificationRepository implements NotificationRepository {
     this.notifications.set(id, updated);
     return updated;
   }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  async deleteAllForUser(userId: string) {
+    for (const [id, record] of [...this.notifications.entries()]) {
+      if (record.userId === userId) this.notifications.delete(id);
+    }
+  }
 }
 
 export class FakeReviewRepository implements ReviewRepository {
@@ -1158,6 +1202,51 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
   }
   async findSyncable() {
     return [];
+  }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  private professionalVerificationIds(professionalProfileId: string): string[] {
+    return [...this.verifications.values()]
+      .filter((v) => v.professionalProfileId === professionalProfileId)
+      .map((v) => v.id);
+  }
+
+  async eraseDocumentsForProfessionalProfile(professionalProfileId: string) {
+    const newlyDeleted: VerificationDocumentRecord[] = [];
+    for (const verificationId of this.professionalVerificationIds(professionalProfileId)) {
+      const docs = this.documents.get(verificationId) ?? [];
+      for (const doc of docs) {
+        const mutable = doc as VerificationDocumentRecord & { deletedAt?: Date };
+        if (mutable.deletedAt) continue;
+        mutable.deletedAt = new Date();
+        newlyDeleted.push(doc);
+      }
+    }
+    return newlyDeleted;
+  }
+
+  async listDocumentsPendingStoragePurge(professionalProfileId: string) {
+    const pending: VerificationDocumentRecord[] = [];
+    for (const verificationId of this.professionalVerificationIds(professionalProfileId)) {
+      const docs = this.documents.get(verificationId) ?? [];
+      for (const doc of docs) {
+        const mutable = doc as VerificationDocumentRecord & { deletedAt?: Date; storagePurgedAt?: Date };
+        if (mutable.deletedAt && !mutable.storagePurgedAt) pending.push(doc);
+      }
+    }
+    return pending;
+  }
+
+  async markDocumentStoragePurged(documentId: string) {
+    for (const docs of this.documents.values()) {
+      const found = docs.find((d) => d.id === documentId) as
+        | (VerificationDocumentRecord & { storagePurgedAt?: Date })
+        | undefined;
+      if (found) {
+        found.storagePurgedAt = new Date();
+        return;
+      }
+    }
   }
 }
 

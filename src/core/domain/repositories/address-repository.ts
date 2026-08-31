@@ -40,4 +40,14 @@ export interface UpsertAddressData {
 export interface AddressRepository {
   findPrimaryByUserId(userId: string): Promise<AddressRecord | null>;
   upsertPrimaryForUser(userId: string, data: UpsertAddressData): Promise<AddressRecord>;
+
+  /**
+   * Module 88 — GDPR Erasure Execution: clears every address line/label/
+   * geo-coordinate on every address row this user owns (not just the
+   * primary one — see the Prisma implementation) and soft-deletes them
+   * (`deletedAt`, same convention every other read on this table already
+   * filters on). Idempotent: re-running against an already-erased address
+   * is a harmless no-op (`WHERE deletedAt IS NULL`).
+   */
+  eraseForUser(userId: string): Promise<void>;
 }

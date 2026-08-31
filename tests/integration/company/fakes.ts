@@ -298,6 +298,20 @@ export class FakeUserRepository implements UserRepository {
   async updatePreferredLocale(userId: string, locale: string | null) {
     this.preferredLocaleByUserId.set(userId, locale);
   }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  async getErasureState(userId: string) {
+    const user = this.users.get(userId) as { personalDataErasedAt?: Date | null } | undefined;
+    return user ? { personalDataErasedAt: user.personalDataErasedAt ?? null } : null;
+  }
+  async eraseAccount(userId: string) {
+    const user = this.users.get(userId) as ({ personalDataErasedAt?: Date | null; status?: string } & Record<string, unknown>) | undefined;
+    if (!user || user.personalDataErasedAt) return { erased: false };
+    user.personalDataErasedAt = new Date();
+    (user as Record<string, unknown>).status = "DEACTIVATED";
+    return { erased: true };
+  }
+  async invalidateAllSessions(_userId: string) {}
 }
 
 export class FakeServiceCategoryRepository implements ServiceCategoryRepository {

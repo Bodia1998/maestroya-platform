@@ -314,4 +314,42 @@ export class PrismaProfessionalVerificationRepository implements ProfessionalVer
     });
     return rows.map(toVerificationRecord);
   }
+
+  // --- Module 88: GDPR Erasure Execution & Document Retention ---
+
+  async eraseDocumentsForProfessionalProfile(professionalProfileId: string): Promise<VerificationDocumentRecord[]> {
+    const rows = await prisma.professionalVerificationDocument.findMany({
+      where: {
+        deletedAt: null,
+        verification: { professionalProfileId },
+      },
+      select: DOCUMENT_SELECT,
+    });
+    if (rows.length === 0) return [];
+
+    await prisma.professionalVerificationDocument.updateMany({
+      where: { id: { in: rows.map((row) => row.id) } },
+      data: { deletedAt: new Date() },
+    });
+    return rows.map(toDocumentRecord);
+  }
+
+  async listDocumentsPendingStoragePurge(professionalProfileId: string): Promise<VerificationDocumentRecord[]> {
+    const rows = await prisma.professionalVerificationDocument.findMany({
+      where: {
+        deletedAt: { not: null },
+        storagePurgedAt: null,
+        verification: { professionalProfileId },
+      },
+      select: DOCUMENT_SELECT,
+    });
+    return rows.map(toDocumentRecord);
+  }
+
+  async markDocumentStoragePurged(documentId: string): Promise<void> {
+    await prisma.professionalVerificationDocument.update({
+      where: { id: documentId },
+      data: { storagePurgedAt: new Date() },
+    });
+  }
 }

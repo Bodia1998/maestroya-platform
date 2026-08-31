@@ -97,4 +97,56 @@ export interface UserRepository {
 
   /** `null` clears the preference (back to "never chosen"). */
   updatePreferredLocale(userId: string, locale: string | null): Promise<void>;
+
+  // --- Module 88: GDPR Erasure Execution ---
+
+  /**
+   * The erasure-execution idempotency guard: null while the account has
+   * never been through `eraseAccount`, set to the moment it last was.
+   * `ExecuteAccountErasureUseCase` reads this first, before doing any
+   * mutation, to decide whether this is a fresh run or a safe-to-skip
+   * retry of an already-completed erasure (see that use case's own doc
+   * comment, and `User.personalDataErasedAt`'s in schema.prisma).
+   */
+  getErasureState(userId: string): Promise<{ personalDataErasedAt: Date | null } | null>;
+
+  /**
+   * Anonymizes this User row's own personal-data fields in place —
+   * name/email/phone/image/passwordHash/notificationPreferences cleared or
+   * replaced with a pseudonymous placeholder, `status` moved to
+   * DEACTIVATED, `deletedAt`/`personalDataErasedAt` stamped. The row
+   * itself is never hard-deleted (see this method's Prisma implementation
+   * doc comment for why: every marketplace/financial/audit table that
+   * references a user does so with an `onDelete: Restrict` or `SetNull`
+   * foreign key, precisely so those records keep displaying *something*
+   * for this user after they leave — anonymizing the one shared User row
+   * anonymizes every one of those joins for free, with no need to touch
+   * Message/Review/CompanyMember/Job/etc. individually).
+   *
+   * Idempotent at the database level: implementations only apply the
+   * update `WHERE id = ? AND personalDataErasedAt IS NULL`, so two
+   * concurrent calls for the same user converge on exactly one anonymizing
+   * write — the loser sees `erased: false` and the use case treats that
+   * the same as an already-erased account.
+   *
+   * Returns `erased: false` (no fields touched) if the account was already
+   * erased or does not exist.
+   */
+  eraseAccount(userId: string): Promise<{ erased: boolean }>;
+
+  /**
+   * Hard-deletes every row that could let this user keep authenticating
+   * after erasure: NextAuth `Session` rows (server-persisted sessions —
+   * see auth-config.ts's own doc comment for why the *cookie* session
+   * strategy is `"jwt"`, which this method cannot revoke; see
+   * ExecuteAccountErasureUseCase's doc comment for the documented
+   * limitation that follows from that) and linked OAuth `Account` rows
+   * (Google/Apple/Facebook — deleting these means a future OAuth sign-in
+   * attempt can no longer silently resume this identity). Does not touch
+   * `RefreshToken`/`EmailVerificationToken`/`PasswordResetToken` — those
+   * already have their own revoke/delete methods on `AuthTokenRepository`,
+   * which `ExecuteAccountErasureUseCase` calls directly rather than this
+   * repository re-declaring them.
+   */
+  invalidateAllSessions(userId: string): Promise<void>;
 }

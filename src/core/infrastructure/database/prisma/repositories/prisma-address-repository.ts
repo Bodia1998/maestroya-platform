@@ -85,4 +85,23 @@ export class PrismaAddressRepository implements AddressRepository {
       },
     });
   }
+
+  // --- Module 88: GDPR Erasure Execution ---
+
+  async eraseForUser(userId: string): Promise<void> {
+    await prisma.address.updateMany({
+      where: { userId, deletedAt: null },
+      data: {
+        label: null,
+        line1: "Erased",
+        line2: null,
+        city: "Erased",
+        province: null,
+        postalCode: "00000",
+        latitude: null,
+        longitude: null,
+        deletedAt: new Date(),
+      },
+    });
+  }
 }

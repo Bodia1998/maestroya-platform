@@ -193,4 +193,34 @@ export interface ProfessionalVerificationRepository {
    * shape `findExpirable` above already established.
    */
   findSyncable(): Promise<ProfessionalVerificationRecord[]>;
+
+  // --- Module 88: GDPR Erasure Execution & Document Retention ---
+
+  /**
+   * Soft-deletes (sets `deletedAt`) every not-yet-deleted
+   * `ProfessionalVerificationDocument` across every verification case this
+   * professional profile has (current and historical — a professional can
+   * accumulate more than one case over time, see this file's own doc
+   * comment) and returns exactly the rows just marked, so the caller can
+   * drive the external Cloudinary purge for each `fileUrl` outside of the
+   * DB transaction this runs in. Idempotent: a document already
+   * soft-deleted is excluded, so re-running this against the same
+   * professional profile returns an empty array the second time.
+   */
+  eraseDocumentsForProfessionalProfile(professionalProfileId: string): Promise<VerificationDocumentRecord[]>;
+
+  /**
+   * Every soft-deleted document (`deletedAt` set) whose underlying storage
+   * file has not yet been confirmed purged (`storagePurgedAt` still null)
+   * — across every case for this professional profile. Feeds the retry
+   * path: a prior erasure run may have soft-deleted the DB rows but failed
+   * partway through the Cloudinary deletes (network error, provider
+   * outage); re-running the erasure use case re-selects exactly the
+   * documents still outstanding here instead of re-soft-deleting or
+   * skipping them.
+   */
+  listDocumentsPendingStoragePurge(professionalProfileId: string): Promise<VerificationDocumentRecord[]>;
+
+  /** Marks one document's underlying storage file as confirmed deleted. */
+  markDocumentStoragePurged(documentId: string): Promise<void>;
 }

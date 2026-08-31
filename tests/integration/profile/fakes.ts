@@ -29,6 +29,9 @@ export class FakeAddressRepository implements AddressRepository {
     this.addressesByUserId.set(userId, record);
     return record;
   }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  async eraseForUser(_userId: string) {}
 }
 
 export class FakeAvatarUploadService implements AvatarUploadService {

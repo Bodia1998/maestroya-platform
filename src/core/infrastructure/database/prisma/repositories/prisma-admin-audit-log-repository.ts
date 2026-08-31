@@ -93,6 +93,7 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   GDPR_EXPORT_REQUESTED: "OTHER",
   GDPR_EXPORT_PREPARED: "OTHER",
   GDPR_DELETION_REQUESTED: "OTHER",
+  GDPR_DELETION_EXECUTED: "DELETE",
   GDPR_CONSENT_GRANTED: "OTHER",
   GDPR_CONSENT_WITHDRAWN: "OTHER",
   // Module 41 — Reviews & Ratings: same "map to the closest existing

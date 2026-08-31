@@ -115,6 +115,15 @@ export type AdminAuditAction =
   | "GDPR_EXPORT_REQUESTED"
   | "GDPR_EXPORT_PREPARED"
   | "GDPR_DELETION_REQUESTED"
+  // Module 88 — GDPR Erasure Execution & Document Retention: the actual
+  // erasure/anonymization run, distinct from GDPR_DELETION_REQUESTED
+  // above (which only records that a deletion *plan* was prepared — see
+  // AccountErasureExecuted's own doc comment for the full lifecycle).
+  // Recorded on every execution, including an idempotent replay of an
+  // already-erased account (see `metadata.alreadyErased` on the entry
+  // itself) — never carries the erased user's PII, only counts/strategy
+  // names per this module's own audit-minimization requirement.
+  | "GDPR_DELETION_EXECUTED"
   | "GDPR_CONSENT_GRANTED"
   | "GDPR_CONSENT_WITHDRAWN"
   // Module 41 — Reviews & Ratings: performed by the review's own author

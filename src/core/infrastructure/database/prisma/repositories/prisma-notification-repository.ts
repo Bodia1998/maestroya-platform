@@ -150,4 +150,10 @@ export class PrismaNotificationRepository implements NotificationRepository {
     });
     return toRecord(row);
   }
+
+  // --- Module 88: GDPR Erasure Execution ---
+
+  async deleteAllForUser(userId: string): Promise<void> {
+    await prisma.notification.deleteMany({ where: { userId } });
+  }
 }

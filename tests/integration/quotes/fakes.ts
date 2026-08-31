@@ -388,6 +388,9 @@ export class FakeCustomerProfileRepository implements CustomerProfileRepository 
     this.profiles.set(record.id, record);
     return record;
   }
+
+  // --- Module 88: GDPR Erasure Execution (test stub) ---
+  async eraseForUser(_userId: string) {}
 }
 
 export class FakeServiceRequestRepository implements ServiceRequestRepository {
