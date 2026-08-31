@@ -568,6 +568,46 @@ const envSchema = z
     // platform's target market (Spain, UTC+1/+2).
     BACKUP_SCHEDULE_CRON: z.string().min(1).catch("0 2 * * *"),
 
+    // --- Module 90 — Automated Reconciliation & Financial Alerting ---
+    //
+    // Master switch for the scheduled reconciliation trigger this module
+    // adds on top of Module 80/81's existing, already-safe-to-run
+    // reconciliation engine — see
+    // `application/use-cases/reconciliation/compose.ts`'s own
+    // `registerScheduledReconciliationRun()`. Opt-out (default enabled),
+    // same category as `ANALYTICS_REFRESH_ENABLED`/`SEARCH_INDEXING_ENABLED`:
+    // this only ever *schedules* the existing `StartReconciliationRunUseCase`
+    // (see that use case's own "safe to invoke concurrently" doc comment)
+    // on a timer — it adds no new financial-write path of its own, so a
+    // deployment should not have to opt in just to get periodic financial
+    // drift detection. Uses the same `emptyStringToUndefined` preprocessing
+    // as `EVENT_QUEUE_ENABLED`/`ANALYTICS_REFRESH_ENABLED`, for the same
+    // `.env`-file convention reason.
+    RECONCILIATION_AUTOMATION_ENABLED: z.preprocess(emptyStringToUndefined, z.enum(["true", "false"]).optional()),
+    // The scheduled cadence, `JobScheduler`'s own 5-field cron grammar
+    // (evaluated in UTC — see `cron-expression.ts`). Every 6 hours by
+    // default: frequent enough that a financial discrepancy is caught
+    // same-day, infrequent enough that the bounded per-run scan
+    // (`RECONCILIATION_SCHEDULE_LIMIT` Jobs per run) never becomes the
+    // dominant load on the shared database connection pool. `.catch()` —
+    // an operational tuning knob, same reasoning as `BACKUP_SCHEDULE_CRON`.
+    RECONCILIATION_SCHEDULE_CRON: z.string().min(1).catch("0 */6 * * *"),
+    // Which `ReconciliationScopeValue` the scheduled run inspects — see
+    // `reconciliation.dto.ts`'s own `SCOPE_VALUES`. Defaults to `FULL`
+    // (every check), matching `startReconciliationRunSchema`'s own default
+    // for a manually-triggered run.
+    RECONCILIATION_SCHEDULE_SCOPE: z
+      .enum(["FULL", "PAYMENT", "COMMISSION", "TAX", "INVOICE", "PAYOUT", "REFUND", "CREDIT_NOTE", "PROVIDER"])
+      .catch("FULL"),
+    // Bounds a single scheduled run's cost exactly like
+    // `startReconciliationRunSchema`'s own `limit` field — see
+    // `ReconciliationDataSource`'s doc comment on why a run is a bounded
+    // scan, not an unbounded full-history sweep. Same default (500) and
+    // ceiling (2000) as the manually-triggered path, so the scheduled
+    // run's cost profile never silently diverges from what an admin sees
+    // when triggering one by hand.
+    RECONCILIATION_SCHEDULE_LIMIT: z.coerce.number().int().min(1).max(2000).catch(500),
+
     // --- Module 55 — Read Replicas ---
     //
     // Opt-in, like TRACING_ENABLED/BACKUP_ENABLED — a process that never

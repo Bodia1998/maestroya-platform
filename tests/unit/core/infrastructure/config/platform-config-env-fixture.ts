@@ -94,6 +94,10 @@ export function buildTestEnv(overrides: Partial<Env> = {}): Env {
     BACKUP_MIN_RETAINED_BACKUPS: 3,
     BACKUP_FULL_INTERVAL_DAYS: 7,
     BACKUP_SCHEDULE_CRON: "0 2 * * *",
+    // Module 90 — Automated Reconciliation & Financial Alerting.
+    RECONCILIATION_SCHEDULE_CRON: "0 */6 * * *",
+    RECONCILIATION_SCHEDULE_SCOPE: "FULL",
+    RECONCILIATION_SCHEDULE_LIMIT: 500,
     READ_REPLICAS_ENABLED: "false",
     DATABASE_REPLICA_URLS: "",
     READ_REPLICA_SELECTION_STRATEGY: "ROUND_ROBIN",

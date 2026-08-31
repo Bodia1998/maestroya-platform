@@ -214,7 +214,17 @@ export type AdminAuditAction =
   | "RECONCILIATION_RUN_STARTED"
   | "RECONCILIATION_RUN_COMPLETED"
   | "RECONCILIATION_RUN_FAILED"
-  | "RECONCILIATION_DISCREPANCY_RESOLVED";
+  | "RECONCILIATION_DISCREPANCY_RESOLVED"
+  // Module 90 — Automated Reconciliation & Financial Alerting: a newly-
+  // detected CRITICAL discrepancy was reported through the operational
+  // alerting path (Sentry/ErrorReporter) — see
+  // `AlertOnCriticalDiscrepancySubscriber`'s own doc comment. Recorded
+  // once per discrepancy (that subscriber only reacts to
+  // `DiscrepancyDetected`, which itself only fires on first detection —
+  // see that event's own doc comment), giving admins an auditable,
+  // queryable record of every alert distinct from the underlying
+  // `ReconciliationDiscrepancy` row itself.
+  | "RECONCILIATION_CRITICAL_DISCREPANCY_ALERTED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved

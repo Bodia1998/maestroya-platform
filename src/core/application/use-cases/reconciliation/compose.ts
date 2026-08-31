@@ -27,6 +27,24 @@ import { ReconciliationRunStarted } from "@/domain/events/reconciliation-run-sta
 import { ReconciliationRunCompleted } from "@/domain/events/reconciliation-run-completed";
 import { ReconciliationRunFailed } from "@/domain/events/reconciliation-run-failed";
 import { DiscrepancyResolved } from "@/domain/events/discrepancy-resolved";
+// Module 90 — Automated Reconciliation & Financial Alerting.
+import { AlertOnCriticalDiscrepancySubscriber } from "./alert-on-critical-discrepancy.subscriber";
+import { DiscrepancyDetected } from "@/domain/events/discrepancy-detected";
+import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
+import { env } from "@/infrastructure/config/env";
+import { createManagedQueue, getBackgroundJobRuntime, getJobObserver, jobDefaults } from "@/infrastructure/jobs/compose";
+import { createJobIdempotencyStore } from "@/infrastructure/jobs/job-idempotency-store";
+import { createJobStore } from "@/infrastructure/jobs/job-store-factory";
+import type { Queue } from "@/infrastructure/jobs/queue";
+import type { DeadLetterJobData } from "@/infrastructure/jobs/worker";
+import { Worker } from "@/infrastructure/jobs/worker";
+import { createReconciliationRunJobProcessor } from "@/infrastructure/reconciliation/reconciliation-job-processor";
+import {
+  RECONCILIATION_RUN_DEAD_LETTER_QUEUE_NAME,
+  RECONCILIATION_RUN_QUEUE_NAME,
+  reconciliationRunJobIdempotencyKey,
+  type ReconciliationRunJobData,
+} from "@/infrastructure/reconciliation/reconciliation-jobs";
 
 /**
  * Module 80 — Financial Reconciliation & Observability.
@@ -55,6 +73,10 @@ const dataSource = new PrismaReconciliationDataSource();
 const auditLog = new PrismaAdminAuditLogRepository();
 const provider = new NullProviderReconciliationAdapter();
 const failureReporter = createFailureReporter();
+// Module 90 — the general-purpose Sentry/console error reporter used by
+// the critical-discrepancy alert path (see that subscriber's own doc
+// comment on why this is `ErrorReporter`, not `FailureReporter`).
+const errorReporter = createErrorReporter();
 
 export function makeStartReconciliationRunUseCase(): StartReconciliationRunUseCase {
   return new StartReconciliationRunUseCase(dataSource, runs, discrepancies, provider, eventBus, failureReporter);
@@ -126,3 +148,123 @@ eventBus.subscribe(ReconciliationRunStarted, runAuditLogSubscriber);
 eventBus.subscribe(ReconciliationRunCompleted, runAuditLogSubscriber);
 eventBus.subscribe(ReconciliationRunFailed, runAuditLogSubscriber);
 eventBus.subscribe(DiscrepancyResolved, new RecordDiscrepancyResolutionAuditLogSubscriber(auditLog));
+// Module 90 — Automated Reconciliation & Financial Alerting: turns a
+// newly-detected CRITICAL discrepancy into an operational alert — see
+// `AlertOnCriticalDiscrepancySubscriber`'s own doc comment for the full
+// dedup/failure-isolation contract.
+eventBus.subscribe(DiscrepancyDetected, new AlertOnCriticalDiscrepancySubscriber(errorReporter, auditLog));
+
+// ============================================================================
+// Module 90 — Scheduled reconciliation trigger
+// ============================================================================
+//
+// The automated counterpart to the admin-triggered
+// `StartReconciliationRunUseCase` above: a periodic `JobScheduler`
+// occurrence (Module 45) that calls the exact same use case with no new
+// engine, no second reconciliation implementation, and no new financial
+// write path — see `reconciliation-job-processor.ts`'s own doc comment.
+//
+// Lazy by design, mirroring `infrastructure/analytics/compose.ts`'s
+// `getAnalyticsRefreshQueue()`/`registerScheduledAnalyticsRefresh()`
+// split exactly: importing this module (including transitively, during
+// `next build`'s module analysis) must never open a queue or start a
+// worker, and `JobScheduler.register()` needs an actual `Queue` object
+// synchronously, so the schedule itself is only registered by an explicit
+// call from `instrumentation.ts`, immediately before `startBackgroundJobs()`.
+
+function reconciliationAutomationEnabled(): boolean {
+  return env.RECONCILIATION_AUTOMATION_ENABLED !== "false";
+}
+
+let reconciliationRunQueue: Queue<ReconciliationRunJobData> | null = null;
+let reconciliationRunDeadLetterQueue: Queue<DeadLetterJobData> | null = null;
+let reconciliationRunWorker: Worker<ReconciliationRunJobData> | null = null;
+let reconciliationScheduled = false;
+
+/**
+ * The queue the scheduler enqueues into, plus — on first call — the
+ * worker that drains it. `attempts`/`backoff` from `jobDefaults`
+ * (exponential from 1s, 20% jitter — absorbs a transient DB blip without
+ * every scheduled occurrence retrying in lockstep), a dead-letter queue
+ * for a persistently failing engine, and
+ * `reconciliationRunJobIdempotencyKey` opting every job out of
+ * execution-time de-duplication (see that function's own doc comment for
+ * why that is safe here).
+ */
+function getReconciliationRunQueue(): Queue<ReconciliationRunJobData> {
+  if (!reconciliationRunQueue) {
+    reconciliationRunQueue = createManagedQueue<ReconciliationRunJobData>(RECONCILIATION_RUN_QUEUE_NAME);
+    reconciliationRunDeadLetterQueue = createManagedQueue<DeadLetterJobData>(RECONCILIATION_RUN_DEAD_LETTER_QUEUE_NAME);
+
+    reconciliationRunWorker = new Worker<ReconciliationRunJobData>(
+      RECONCILIATION_RUN_QUEUE_NAME,
+      createReconciliationRunJobProcessor(makeStartReconciliationRunUseCase()),
+      {
+        store: createJobStore(),
+        // One reconciliation run at a time — the engine itself is safe to
+        // run concurrently (see `StartReconciliationRunUseCase`'s own doc
+        // comment), but there is no benefit to two scheduled scans racing
+        // each other against the same bounded Job window, only wasted
+        // database load.
+        concurrency: 1,
+        deadLetterQueue: reconciliationRunDeadLetterQueue,
+        observer: getJobObserver(),
+        idempotency: {
+          store: createJobIdempotencyStore(),
+          keyFor: (job) => reconciliationRunJobIdempotencyKey(job as never),
+        },
+      },
+    );
+
+    getBackgroundJobRuntime().registerWorker(reconciliationRunWorker);
+  }
+  return reconciliationRunQueue;
+}
+
+/**
+ * Registers the periodic reconciliation run against the shared
+ * `JobScheduler`. Duplicate/concurrent scheduling across multiple
+ * application instances is handled entirely by that scheduler's own
+ * deterministic occurrence id (`repeat:<name>:<occurrenceMs>` — see
+ * `job-scheduler.ts`'s own doc comment): two instances that both decide
+ * "the 6-hour mark is due" enqueue the *same* job id, and the underlying
+ * `JobStore`'s de-duplication means exactly one job — and therefore
+ * exactly one `ReconciliationRun` — is created for that occurrence. No
+ * additional `DistributedLock` is layered on top, for the same reason
+ * `JobScheduler` itself already documents.
+ *
+ * Called explicitly from `instrumentation.ts`, never as a side effect of
+ * import — see this section's own top-of-block doc comment.
+ */
+export function registerScheduledReconciliationRun(): void {
+  if (reconciliationScheduled || !reconciliationAutomationEnabled()) return;
+  reconciliationScheduled = true;
+
+  const queue = getReconciliationRunQueue();
+
+  getBackgroundJobRuntime().scheduler.register<ReconciliationRunJobData>({
+    name: "financial-reconciliation-run",
+    queue,
+    jobName: "reconciliation.run",
+    data: {
+      scope: env.RECONCILIATION_SCHEDULE_SCOPE,
+      limit: env.RECONCILIATION_SCHEDULE_LIMIT,
+      reason: "scheduled",
+    },
+    repeat: { pattern: env.RECONCILIATION_SCHEDULE_CRON },
+    jobOptions: { attempts: jobDefaults.maxAttempts, backoff: { type: "exponential", delay: 5000, jitter: 0.2 } },
+  });
+}
+
+/** Exposed for tests only — drops every scheduling singleton so the next call rebuilds. */
+export const __testing = {
+  reset(): void {
+    reconciliationRunQueue = null;
+    reconciliationRunDeadLetterQueue = null;
+    reconciliationRunWorker = null;
+    reconciliationScheduled = false;
+  },
+  get worker(): Worker<ReconciliationRunJobData> | null {
+    return reconciliationRunWorker;
+  },
+};

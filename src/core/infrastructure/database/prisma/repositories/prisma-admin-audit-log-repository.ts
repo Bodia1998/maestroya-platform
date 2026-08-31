@@ -172,6 +172,10 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   RECONCILIATION_RUN_COMPLETED: "STATUS_CHANGE",
   RECONCILIATION_RUN_FAILED: "STATUS_CHANGE",
   RECONCILIATION_DISCREPANCY_RESOLVED: "STATUS_CHANGE",
+  // Module 90 — Automated Reconciliation & Financial Alerting: this action
+  // raises an alert, it never changes the discrepancy's own status, so
+  // it maps to the generic OTHER bucket rather than STATUS_CHANGE.
+  RECONCILIATION_CRITICAL_DISCREPANCY_ALERTED: "OTHER",
 };
 
 const SELECT = {
