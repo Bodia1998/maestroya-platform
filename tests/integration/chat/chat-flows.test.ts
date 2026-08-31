@@ -12,10 +12,12 @@ import type { QuoteStatusValue } from "@/domain/repositories/quote-repository";
 import {
   FakeConversationRepository,
   FakeCustomerProfileRepository,
+  FakeDetectOffPlatformCommunicationUseCase,
   FakeMessageRepository,
   FakeProfessionalRepository,
   FakeQuoteRepository,
   FakeServiceRequestRepository,
+  FakeTrustAutomatedActionRepository,
 } from "./fakes";
 
 /**
@@ -297,6 +299,82 @@ describe("SendMessageUseCase — authorization and IDOR protection", () => {
 
     const message = await useCases(repos).sendMessage.execute("pro-1", conversation.id, "Sorry, had to withdraw.");
     expect(message.senderId).toBe("pro-1");
+  });
+});
+
+describe("SendMessageUseCase — Module 89 trust signal activation", () => {
+  it("blocks sending when the sender has an ACTIVE MESSAGING_RESTRICTION", async () => {
+    const repos = makeRepos();
+    const request = await seedRequest(repos, "cust-1");
+    const { professional } = await seedProfessionalWithQuote(repos, request.id, "pro-1");
+    const conversation = await useCases(repos).openConversation.execute("cust-1", request.id, professional.id);
+    const trustAutomatedActions = new FakeTrustAutomatedActionRepository();
+    trustAutomatedActions.seedActive("cust-1", "MESSAGING_RESTRICTION");
+    const sendMessage = new SendMessageUseCase(repos.conversations, repos.messages, undefined, trustAutomatedActions);
+
+    await expect(sendMessage.execute("cust-1", conversation.id, "call me at 555-0100")).rejects.toThrow(
+      /messaging restriction/i,
+    );
+
+    // No message was persisted — the restriction blocks the write itself.
+    expect(await repos.messages.listByConversation(conversation.id, { limit: 10 })).toHaveLength(0);
+  });
+
+  it("does not block a restriction of a different type (e.g. BOOKING_RESTRICTION)", async () => {
+    const repos = makeRepos();
+    const request = await seedRequest(repos, "cust-1");
+    const { professional } = await seedProfessionalWithQuote(repos, request.id, "pro-1");
+    const conversation = await useCases(repos).openConversation.execute("cust-1", request.id, professional.id);
+    const trustAutomatedActions = new FakeTrustAutomatedActionRepository();
+    trustAutomatedActions.seedActive("cust-1", "BOOKING_RESTRICTION");
+    const sendMessage = new SendMessageUseCase(repos.conversations, repos.messages, undefined, trustAutomatedActions);
+
+    const message = await sendMessage.execute("cust-1", conversation.id, "still there?");
+    expect(message.senderId).toBe("cust-1");
+  });
+
+  it("runs off-platform detection on every sent message", async () => {
+    const repos = makeRepos();
+    const request = await seedRequest(repos, "cust-1");
+    const { professional } = await seedProfessionalWithQuote(repos, request.id, "pro-1");
+    const conversation = await useCases(repos).openConversation.execute("cust-1", request.id, professional.id);
+    const offPlatformDetection = new FakeDetectOffPlatformCommunicationUseCase();
+    const sendMessage = new SendMessageUseCase(repos.conversations, repos.messages, undefined, undefined, offPlatformDetection);
+
+    const message = await sendMessage.execute("cust-1", conversation.id, "call me at 555-0100");
+
+    expect(offPlatformDetection.calls).toHaveLength(1);
+    expect(offPlatformDetection.calls[0]).toMatchObject({
+      userId: "cust-1",
+      text: "call me at 555-0100",
+      sourceType: "MESSAGE",
+      sourceId: message.id,
+    });
+  });
+
+  it("a detection failure never fails or undoes the send (best-effort)", async () => {
+    const repos = makeRepos();
+    const request = await seedRequest(repos, "cust-1");
+    const { professional } = await seedProfessionalWithQuote(repos, request.id, "pro-1");
+    const conversation = await useCases(repos).openConversation.execute("cust-1", request.id, professional.id);
+    const offPlatformDetection = new FakeDetectOffPlatformCommunicationUseCase();
+    offPlatformDetection.shouldThrow = true;
+    const sendMessage = new SendMessageUseCase(repos.conversations, repos.messages, undefined, undefined, offPlatformDetection);
+
+    const message = await sendMessage.execute("cust-1", conversation.id, "hello there");
+
+    expect(message.body).toBe("hello there");
+    expect(await repos.messages.listByConversation(conversation.id, { limit: 10 })).toHaveLength(1);
+  });
+
+  it("still works when neither trustAutomatedActions nor offPlatformDetection is supplied (backward compatible)", async () => {
+    const repos = makeRepos();
+    const request = await seedRequest(repos, "cust-1");
+    const { professional } = await seedProfessionalWithQuote(repos, request.id, "pro-1");
+    const conversation = await useCases(repos).openConversation.execute("cust-1", request.id, professional.id);
+
+    const message = await useCases(repos).sendMessage.execute("cust-1", conversation.id, "hi there");
+    expect(message.body).toBe("hi there");
   });
 });
 

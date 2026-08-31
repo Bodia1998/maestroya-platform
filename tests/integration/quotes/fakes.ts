@@ -35,6 +35,20 @@ import type {
 } from "@/domain/repositories/service-request-repository";
 import { OPEN_QUOTE_STATUSES } from "@/domain/services/quote-state";
 import { DEFAULT_MATERIALS_STRATEGY } from "@/domain/value-objects/materials-strategy";
+import type {
+  AcceptQuoteJobRecord,
+  AcceptQuoteResult,
+  AppointmentRecord,
+  QuoteAcceptanceRepository,
+} from "@/domain/repositories/quote-acceptance-repository";
+import type {
+  TrustAutomatedActionRecord,
+  TrustAutomatedActionRepository,
+  TrustAutomatedActionTypeValue,
+} from "@/domain/repositories/trust-automated-action-repository";
+import { ConflictError } from "@/domain/errors/domain-error";
+import { isAcceptableQuoteStatus } from "@/domain/services/quote-state";
+import { isAcceptableStatus } from "@/domain/services/service-request-state";
 
 /**
  * In-memory test doubles for the Offers/Quotes module integration tests,
@@ -446,5 +460,146 @@ export class FakeServiceRequestRepository implements ServiceRequestRepository {
         r.expiresAt != null &&
         r.expiresAt.getTime() <= now.getTime(),
     );
+  }
+}
+
+/**
+ * Module 89 — Fraud & Trust Signal Activation: minimal in-memory double for
+ * the atomic "accept a Quote" transaction, just enough to exercise
+ * AcceptQuoteUseCase's own pre-checks and its new BOOKING_RESTRICTION gate
+ * (see that class's own doc comment) — mirrors the real
+ * PrismaQuoteAcceptanceRepository's status re-checks and side effects
+ * (Quote -> ACCEPTED, competing Quotes -> REJECTED, ServiceRequest ->
+ * ACCEPTED, one Job + one Appointment created), without a real transaction.
+ */
+export class FakeQuoteAcceptanceRepository implements QuoteAcceptanceRepository {
+  private jobIdCounter = 0;
+  private appointmentIdCounter = 0;
+
+  constructor(
+    private readonly quotes: FakeQuoteRepository,
+    private readonly serviceRequests: FakeServiceRequestRepository,
+  ) {}
+
+  async acceptQuote(params: { quoteId: string; serviceRequestId: string }): Promise<AcceptQuoteResult> {
+    const quote = this.quotes.quotes.get(params.quoteId);
+    const request = this.serviceRequests.requests.get(params.serviceRequestId);
+    if (!quote || !request || quote.serviceRequestId !== params.serviceRequestId) {
+      throw new ConflictError("Quote or ServiceRequest no longer exists.");
+    }
+    if (!isAcceptableQuoteStatus(quote.status)) {
+      throw new ConflictError("This quote can no longer be accepted.");
+    }
+    if (!isAcceptableStatus(request.status)) {
+      throw new ConflictError("This request can no longer accept a quote.");
+    }
+
+    await this.quotes.updateStatus(quote.id, "ACCEPTED");
+    const siblings = await this.quotes.findManyByServiceRequestId(request.id);
+    for (const sibling of siblings) {
+      if (sibling.id !== quote.id && OPEN_QUOTE_STATUSES.includes(sibling.status)) {
+        await this.quotes.updateStatus(sibling.id, "REJECTED");
+      }
+    }
+    await this.serviceRequests.updateStatus(request.id, "ACCEPTED");
+
+    this.jobIdCounter += 1;
+    const job: AcceptQuoteJobRecord = {
+      id: `fake-job-${this.jobIdCounter}`,
+      serviceRequestId: request.id,
+      quoteId: quote.id,
+      customerId: request.customerId,
+      professionalProfileId: quote.professionalProfileId,
+      companyProfileId: null,
+      status: "CREATED",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.appointmentIdCounter += 1;
+    const appointment: AppointmentRecord = {
+      id: `fake-appointment-${this.appointmentIdCounter}`,
+      jobId: job.id,
+      quoteId: quote.id,
+      serviceRequestId: request.id,
+      addressId: `fake-address-${request.id}`,
+      professionalProfileId: quote.professionalProfileId,
+      companyProfileId: null,
+      status: "PENDING_SCHEDULE",
+      scheduledStart: null,
+      scheduledEnd: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    return { serviceRequestId: request.id, acceptedQuoteId: quote.id, job, appointment };
+  }
+}
+
+/**
+ * Module 89 — Fraud & Trust Signal Activation: same in-memory double as
+ * tests/unit/core/application/use-cases/payments/fakes.ts's own
+ * FakeTrustAutomatedActionRepository (the existing PAYOUT_HOLD test
+ * pattern) — only `listActiveForUser` (and a `seedActive` helper covering
+ * any TrustAutomatedActionTypeValue, not just PAYOUT_HOLD) are
+ * meaningfully implemented, the only method AcceptQuoteUseCase's new
+ * BOOKING_RESTRICTION gate reaches.
+ */
+export class FakeTrustAutomatedActionRepository implements TrustAutomatedActionRepository {
+  activeByUser = new Map<string, TrustAutomatedActionRecord[]>();
+  private actionIdCounter = 0;
+
+  seedActive(userId: string, type: TrustAutomatedActionTypeValue): TrustAutomatedActionRecord {
+    this.actionIdCounter += 1;
+    const record: TrustAutomatedActionRecord = {
+      id: `fake-trust-action-${this.actionIdCounter}`,
+      userId,
+      type,
+      status: "ACTIVE",
+      reason: "ADMIN_ADJUSTMENT",
+      triggeringRiskScore: 0,
+      detail: "Test-seeded restriction.",
+      createdByUserId: "admin-1",
+      expiresAt: null,
+      reversedAt: null,
+      reversedByUserId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const existing = this.activeByUser.get(userId) ?? [];
+    this.activeByUser.set(userId, [...existing, record]);
+    return record;
+  }
+
+  create(): Promise<TrustAutomatedActionRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  findById(): Promise<TrustAutomatedActionRecord | null> {
+    throw new Error("not implemented in this fake");
+  }
+  listForUser(): Promise<TrustAutomatedActionRecord[]> {
+    throw new Error("not implemented in this fake");
+  }
+  async listActiveForUser(userId: string, type?: TrustAutomatedActionTypeValue): Promise<TrustAutomatedActionRecord[]> {
+    const all = this.activeByUser.get(userId) ?? [];
+    return type ? all.filter((a) => a.type === type) : all;
+  }
+  countActiveForUser(): Promise<number> {
+    throw new Error("not implemented in this fake");
+  }
+  reverse(): Promise<TrustAutomatedActionRecord> {
+    throw new Error("not implemented in this fake");
+  }
+  expireDue(): Promise<number> {
+    throw new Error("not implemented in this fake");
+  }
+  countAll(): Promise<number> {
+    throw new Error("not implemented in this fake");
+  }
+  countByType(): Promise<number> {
+    throw new Error("not implemented in this fake");
+  }
+  countActive(): Promise<number> {
+    throw new Error("not implemented in this fake");
   }
 }

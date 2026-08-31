@@ -6,6 +6,7 @@ import type { ProfessionalRepository } from "@/domain/repositories/professional-
 import type { AcceptQuoteResult, QuoteAcceptanceRepository } from "@/domain/repositories/quote-acceptance-repository";
 import type { QuoteRepository } from "@/domain/repositories/quote-repository";
 import type { ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
+import type { TrustAutomatedActionRepository } from "@/domain/repositories/trust-automated-action-repository";
 import { isAcceptableQuoteStatus } from "@/domain/services/quote-state";
 import { isAcceptableStatus } from "@/domain/services/service-request-state";
 
@@ -37,6 +38,22 @@ export type { AcceptQuoteResult } from "@/domain/repositories/quote-acceptance-r
  * statuses — happens inside QuoteAcceptanceRepository.acceptQuote (see its
  * doc comment). Losing a race with a concurrent acceptance attempt surfaces
  * as that repository's own ConflictError, not a silent partial success.
+ *
+ * Module 89 — Fraud & Trust Signal Activation: immediately before the
+ * atomic acceptance write, re-checks (fresh, never cached) that neither
+ * side of the booking about to be created currently carries an ACTIVE
+ * BOOKING_RESTRICTION TrustAutomatedAction (Module 65) — the exact
+ * "Booking/messaging modules should consult
+ * TrustAutomatedActionRepository.listActiveForUser(...) before allowing
+ * the corresponding action" gap that repository's own doc comment calls
+ * out. `trustAutomatedActions` is optional and defaults to skipping the
+ * check entirely, so every pre-existing direct construction of this use
+ * case (this codebase's own tests) keeps compiling and behaving exactly
+ * as before; production's own compose root always supplies it. This
+ * never creates, reverses, or otherwise mutates a TrustAutomatedAction —
+ * enforcement only, read-only against the existing ledger, identical in
+ * spirit to the PAYOUT_HOLD check ExecuteProfessionalPayoutUseCase
+ * already performs.
  */
 export class AcceptQuoteUseCase {
   constructor(
@@ -50,6 +67,9 @@ export class AcceptQuoteUseCase {
     // exactly as before — see NullNotificationCreator's own doc comment.
     private readonly professionals?: ProfessionalRepository,
     private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    // Module 89 — Fraud & Trust Signal Activation: optional, see this
+    // class's own doc comment above.
+    private readonly trustAutomatedActions?: TrustAutomatedActionRepository,
   ) {}
 
   async execute(userId: string, serviceRequestId: string, quoteId: string): Promise<AcceptQuoteResult> {
@@ -74,6 +94,30 @@ export class AcceptQuoteUseCase {
 
     if (!isAcceptableStatus(request.status)) {
       throw new ValidationError("This request can no longer accept a quote.");
+    }
+
+    // Module 89 — Fraud & Trust Signal Activation: see this class's own
+    // doc comment. Re-checked fresh, immediately before the write that
+    // creates the booking — never trusted from an earlier point in the
+    // request.
+    if (this.trustAutomatedActions) {
+      const customerHolds = await this.trustAutomatedActions.listActiveForUser(userId, "BOOKING_RESTRICTION");
+      if (customerHolds.length > 0) {
+        throw new ValidationError("An active booking restriction on your account blocks accepting quotes right now.");
+      }
+
+      if (this.professionals) {
+        const professional = await this.professionals.findById(quote.professionalProfileId);
+        if (professional) {
+          const professionalHolds = await this.trustAutomatedActions.listActiveForUser(
+            professional.userId,
+            "BOOKING_RESTRICTION",
+          );
+          if (professionalHolds.length > 0) {
+            throw new ValidationError("This professional currently has a booking restriction and cannot accept new bookings.");
+          }
+        }
+      }
     }
 
     const result = await this.quoteAcceptance.acceptQuote({ quoteId: quote.id, serviceRequestId: request.id });
