@@ -5,6 +5,7 @@ import { PrismaQuoteAcceptanceRepository } from "@/infrastructure/database/prism
 import { PrismaQuoteRepository } from "@/infrastructure/database/prisma/repositories/prisma-quote-repository";
 import { PrismaServiceRequestDiscoveryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-discovery-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
+import { PrismaTrustAutomatedActionRepository } from "@/infrastructure/database/prisma/repositories/prisma-trust-automated-action-repository";
 import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
 import { AcceptQuoteUseCase } from "@/application/use-cases/quotes/accept-quote.use-case";
 import { ConfirmMaterialsPurchasedUseCase } from "@/application/use-cases/quotes/confirm-materials-purchased.use-case";
@@ -25,6 +26,9 @@ const serviceRequests = new PrismaServiceRequestRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
 const quoteAcceptance = new PrismaQuoteAcceptanceRepository();
 const notifications = new NotificationServiceCreator();
+// Module 89 — Fraud & Trust Signal Activation: read-only BOOKING_RESTRICTION
+// enforcement in AcceptQuoteUseCase — see that class's own doc comment.
+const trustAutomatedActions = new PrismaTrustAutomatedActionRepository();
 
 export function makeGetAvailableServiceRequestsForProfessionalUseCase() {
   return new GetAvailableServiceRequestsForProfessionalUseCase(
@@ -63,7 +67,15 @@ export function makeGetServiceRequestQuotesUseCase() {
 }
 
 export function makeAcceptQuoteUseCase() {
-  return new AcceptQuoteUseCase(customerProfiles, serviceRequests, quotes, quoteAcceptance, professionals, notifications);
+  return new AcceptQuoteUseCase(
+    customerProfiles,
+    serviceRequests,
+    quotes,
+    quoteAcceptance,
+    professionals,
+    notifications,
+    trustAutomatedActions,
+  );
 }
 
 // Module 63 — Materials Procurement Workflow.

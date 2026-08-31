@@ -7,14 +7,17 @@ import { GetProfessionalQuotesUseCase } from "@/application/use-cases/quotes/get
 import { GetServiceRequestQuotesUseCase } from "@/application/use-cases/quotes/get-service-request-quotes.use-case";
 import { UpdateQuoteUseCase } from "@/application/use-cases/quotes/update-quote.use-case";
 import { WithdrawQuoteUseCase } from "@/application/use-cases/quotes/withdraw-quote.use-case";
+import { AcceptQuoteUseCase } from "@/application/use-cases/quotes/accept-quote.use-case";
 import { ProfessionalNotVerifiedError } from "@/domain/errors/domain-error";
 import {
   FakeCustomerProfileRepository,
   FakeProfessionalDiscoveryRepository,
   FakeProfessionalRepository,
+  FakeQuoteAcceptanceRepository,
   FakeQuoteRepository,
   FakeServiceRequestDiscoveryRepository,
   FakeServiceRequestRepository,
+  FakeTrustAutomatedActionRepository,
 } from "./fakes";
 
 const PLUMBING_ID = "cat-plumbing";
@@ -597,6 +600,123 @@ describe("WithdrawQuoteUseCase", () => {
     await expect(
       new WithdrawQuoteUseCase(repos.professionals, repos.quotes).execute("pro-1", quote.id),
     ).rejects.toThrow();
+  });
+});
+
+describe("AcceptQuoteUseCase — Module 89 BOOKING_RESTRICTION enforcement", () => {
+  async function seedAcceptableQuote(repos: ReturnType<typeof makeRepos>) {
+    seedActiveProfessional(repos, "pro-1");
+    const request = seedPublishedRequest(repos, "cust-1");
+    const quote = await new CreateQuoteUseCase(
+      repos.professionals,
+      repos.professionalDiscovery,
+      repos.requestDiscovery,
+      repos.quotes,
+    ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
+    return { request, quote };
+  }
+
+  it("lets a legitimate customer accept a quote and creates the Job/Appointment", async () => {
+    const repos = makeRepos();
+    const { request, quote } = await seedAcceptableQuote(repos);
+    const quoteAcceptance = new FakeQuoteAcceptanceRepository(repos.quotes, repos.serviceRequests);
+    const trustAutomatedActions = new FakeTrustAutomatedActionRepository();
+
+    const result = await new AcceptQuoteUseCase(
+      repos.customerProfiles,
+      repos.serviceRequests,
+      repos.quotes,
+      quoteAcceptance,
+      repos.professionals,
+      undefined,
+      trustAutomatedActions,
+    ).execute("cust-1", request.id, quote.id);
+
+    expect(result.acceptedQuoteId).toBe(quote.id);
+    expect(result.job.professionalProfileId).toBeTruthy();
+    expect((await repos.quotes.findById(quote.id))?.status).toBe("ACCEPTED");
+  });
+
+  it("still works when trustAutomatedActions is not supplied (backward compatible)", async () => {
+    const repos = makeRepos();
+    const { request, quote } = await seedAcceptableQuote(repos);
+    const quoteAcceptance = new FakeQuoteAcceptanceRepository(repos.quotes, repos.serviceRequests);
+
+    const result = await new AcceptQuoteUseCase(
+      repos.customerProfiles,
+      repos.serviceRequests,
+      repos.quotes,
+      quoteAcceptance,
+      repos.professionals,
+    ).execute("cust-1", request.id, quote.id);
+
+    expect(result.acceptedQuoteId).toBe(quote.id);
+  });
+
+  it("blocks acceptance when the customer has an ACTIVE BOOKING_RESTRICTION", async () => {
+    const repos = makeRepos();
+    const { request, quote } = await seedAcceptableQuote(repos);
+    const quoteAcceptance = new FakeQuoteAcceptanceRepository(repos.quotes, repos.serviceRequests);
+    const trustAutomatedActions = new FakeTrustAutomatedActionRepository();
+    trustAutomatedActions.seedActive("cust-1", "BOOKING_RESTRICTION");
+
+    await expect(
+      new AcceptQuoteUseCase(
+        repos.customerProfiles,
+        repos.serviceRequests,
+        repos.quotes,
+        quoteAcceptance,
+        repos.professionals,
+        undefined,
+        trustAutomatedActions,
+      ).execute("cust-1", request.id, quote.id),
+    ).rejects.toThrow(/booking restriction/i);
+
+    // No partial mutation — the quote must remain exactly as it was.
+    expect((await repos.quotes.findById(quote.id))?.status).toBe("SENT");
+  });
+
+  it("blocks acceptance when the professional has an ACTIVE BOOKING_RESTRICTION", async () => {
+    const repos = makeRepos();
+    const { request, quote } = await seedAcceptableQuote(repos);
+    const quoteAcceptance = new FakeQuoteAcceptanceRepository(repos.quotes, repos.serviceRequests);
+    const trustAutomatedActions = new FakeTrustAutomatedActionRepository();
+    const professional = await repos.professionals.findById(quote.professionalProfileId);
+    trustAutomatedActions.seedActive(professional!.userId, "BOOKING_RESTRICTION");
+
+    await expect(
+      new AcceptQuoteUseCase(
+        repos.customerProfiles,
+        repos.serviceRequests,
+        repos.quotes,
+        quoteAcceptance,
+        repos.professionals,
+        undefined,
+        trustAutomatedActions,
+      ).execute("cust-1", request.id, quote.id),
+    ).rejects.toThrow(/booking restriction/i);
+
+    expect((await repos.quotes.findById(quote.id))?.status).toBe("SENT");
+  });
+
+  it("does not block on a restriction of a different type (e.g. PAYOUT_HOLD)", async () => {
+    const repos = makeRepos();
+    const { request, quote } = await seedAcceptableQuote(repos);
+    const quoteAcceptance = new FakeQuoteAcceptanceRepository(repos.quotes, repos.serviceRequests);
+    const trustAutomatedActions = new FakeTrustAutomatedActionRepository();
+    trustAutomatedActions.seedActive("cust-1", "PAYOUT_HOLD");
+
+    const result = await new AcceptQuoteUseCase(
+      repos.customerProfiles,
+      repos.serviceRequests,
+      repos.quotes,
+      quoteAcceptance,
+      repos.professionals,
+      undefined,
+      trustAutomatedActions,
+    ).execute("cust-1", request.id, quote.id);
+
+    expect(result.acceptedQuoteId).toBe(quote.id);
   });
 });
 

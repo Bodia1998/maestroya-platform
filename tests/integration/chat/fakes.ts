@@ -17,7 +17,9 @@ import {
   FakeProfessionalRepository,
   FakeQuoteRepository,
   FakeServiceRequestRepository,
+  FakeTrustAutomatedActionRepository,
 } from "../quotes/fakes";
+import type { DetectOffPlatformCommunicationUseCase } from "@/application/use-cases/trust-integrity/detect-off-platform-communication.use-case";
 
 /**
  * In-memory test doubles for the Chat module, following the same pattern as
@@ -25,9 +27,37 @@ import {
  * implement the real interfaces so the use cases under test run their
  * genuine orchestration/authorization logic, with only storage swapped out.
  * Reuses the exact same Fake{CustomerProfile,Professional,Quote,
- * ServiceRequest}Repository the Offers/Quotes module's own tests use.
+ * ServiceRequest,TrustAutomatedAction}Repository the Offers/Quotes module's
+ * own tests use.
  */
-export { FakeCustomerProfileRepository, FakeProfessionalRepository, FakeQuoteRepository, FakeServiceRequestRepository };
+export {
+  FakeCustomerProfileRepository,
+  FakeProfessionalRepository,
+  FakeQuoteRepository,
+  FakeServiceRequestRepository,
+  FakeTrustAutomatedActionRepository,
+};
+
+/**
+ * Module 89 — Fraud & Trust Signal Activation: a spy-like double for
+ * DetectOffPlatformCommunicationUseCase — SendMessageUseCase only ever
+ * calls `.execute(...)`, so this records every call for assertions and lets
+ * a test opt into throwing (to exercise the "detection failure never fails
+ * the send" best-effort behavior documented on SendMessageUseCase itself)
+ * without depending on Module 65's own rule engine or Prisma.
+ */
+export class FakeDetectOffPlatformCommunicationUseCase implements Pick<DetectOffPlatformCommunicationUseCase, "execute"> {
+  calls: Array<{ userId: string; text: string; sourceType: string; sourceId: string }> = [];
+  shouldThrow = false;
+
+  async execute(input: { userId: string; text: string; sourceType: string; sourceId: string }) {
+    this.calls.push(input);
+    if (this.shouldThrow) {
+      throw new Error("simulated off-platform detection failure");
+    }
+    return { signalsDetected: 0, highConfidence: false };
+  }
+}
 
 let idCounter = 0;
 function nextId(prefix: string) {
