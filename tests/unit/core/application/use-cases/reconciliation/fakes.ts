@@ -291,14 +291,31 @@ export class FakeProviderFinancialReconciliationPort implements ProviderFinancia
   paymentStates = new Map<string, ProviderState | null>();
   transferStates = new Map<string, ProviderState | null>();
   refundStates = new Map<string, ProviderState | null>();
+  /** Module 87 — failure injection, mirroring `FakePaymentGateway.nextError`
+   *  (`tests/unit/.../payments/fakes.ts`): lets a test simulate a Stripe
+   *  API failure (timeout, 5xx) during reconciliation's PROVIDER checks,
+   *  which the plain state maps above cannot express. Keyed by external
+   *  reference so a test can fail one reference and not others; a bare
+   *  `nextError` (no key) fails every call. */
+  nextError: Error | null = null;
+  nextErrorFor = new Map<string, Error>();
+
+  private maybeThrow(id: string): void {
+    const specific = this.nextErrorFor.get(id);
+    if (specific) throw specific;
+    if (this.nextError) throw this.nextError;
+  }
 
   async retrievePaymentState(id: string): Promise<ProviderState | null> {
+    this.maybeThrow(id);
     return this.paymentStates.has(id) ? (this.paymentStates.get(id) ?? null) : null;
   }
   async retrieveTransferState(id: string): Promise<ProviderState | null> {
+    this.maybeThrow(id);
     return this.transferStates.has(id) ? (this.transferStates.get(id) ?? null) : null;
   }
   async retrieveRefundState(id: string): Promise<ProviderState | null> {
+    this.maybeThrow(id);
     return this.refundStates.has(id) ? (this.refundStates.get(id) ?? null) : null;
   }
 }
@@ -323,6 +340,19 @@ export class FakeEventBus implements EventBus {
     const list = this.handlers.get(eventType.eventName) ?? [];
     list.push(handler as EventHandler);
     this.handlers.set(eventType.eventName, list);
+  }
+}
+
+/** Module 87 — captures every `FailureReporter.report()` call so a test
+ *  can assert a failure was surfaced (never silently swallowed) without
+ *  having to inspect console/Sentry output. Mirrors
+ *  `application/ports/failure-reporter.ts`'s own `NullFailureReporter`
+ *  role, but records instead of discarding. */
+export class FakeFailureReporter {
+  reports: { error: unknown; context?: Record<string, unknown> }[] = [];
+
+  report(error: unknown, context?: Record<string, unknown>): void {
+    this.reports.push({ error, context });
   }
 }
 

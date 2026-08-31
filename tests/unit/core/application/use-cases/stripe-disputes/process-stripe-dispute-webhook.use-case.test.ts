@@ -165,6 +165,16 @@ describe("ProcessStripeDisputeWebhookUseCase (Module 86)", () => {
       expect(opened).toHaveLength(1);
     });
 
+    it("stays safe under a concurrent duplicate delivery: two Promise.all-raced calls for the same Stripe dispute id still converge to exactly one row and one event", async () => {
+      seedPayment(setup.payments);
+
+      await Promise.all([setup.useCase.handleCreated(disputePayload()), setup.useCase.handleCreated(disputePayload())]);
+
+      expect(setup.disputes.byId.size).toBe(1);
+      const opened = setup.eventBus.published.filter((e) => e instanceof StripeDisputeOpened);
+      expect(opened).toHaveLength(1);
+    });
+
     it("still records the dispute (unmatched) when no Payment can be found for the PaymentIntent", async () => {
       await setup.useCase.handleCreated(disputePayload());
 

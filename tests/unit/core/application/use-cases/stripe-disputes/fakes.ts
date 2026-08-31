@@ -37,8 +37,21 @@ export class FakeStripeDisputeRepository implements StripeDisputeRepository {
   }
 
   async createIfNotExists(data: UpsertStripeDisputeData): Promise<{ created: boolean; record: StripeDisputeRecord }> {
-    const existing = await this.findByStripeDisputeId(data.stripeDisputeId);
-    if (existing) return { created: false, record: existing };
+    // Module 87 — the existence check and the write must happen with no
+    // `await` between them (checking `byStripeDisputeId` directly rather
+    // than via `await this.findByStripeDisputeId(...)`), or two
+    // concurrent webhook deliveries racing on the same `stripeDisputeId`
+    // can both observe "no existing row" before either writes — the
+    // opposite of what `PrismaStripeDisputeRepository.createIfNotExists`'s
+    // real `INSERT ... ON CONFLICT ("stripeDisputeId") DO NOTHING
+    // RETURNING` guarantees atomically. Same fix/rationale as
+    // `FakeCommissionRepository.create`
+    // (`tests/integration/financial/fakes.ts`).
+    const existingId = this.byStripeDisputeId.get(data.stripeDisputeId);
+    if (existingId) {
+      const existing = this.byId.get(existingId);
+      if (existing) return { created: false, record: existing };
+    }
 
     const now = new Date();
     const record: StripeDisputeRecord = {

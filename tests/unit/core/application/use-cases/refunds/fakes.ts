@@ -70,7 +70,16 @@ export class FakeRefundRepository implements RefundRepository {
   }
 
   async createPending(data: CreatePendingRefundData): Promise<RefundRecord> {
-    const existing = await this.findByFinancialAdjustmentId(data.financialAdjustmentId);
+    // Module 87 — synchronous scan over `this.byId` (no
+    // `await this.findByFinancialAdjustmentId(...)` in between check and
+    // write), matching `FakeCommissionRepository.create`'s documented
+    // rationale (`tests/integration/financial/fakes.ts`): a concurrency
+    // test racing two `createPending()` calls for the same
+    // `financialAdjustmentId` must actually be able to observe a
+    // duplicate if production's lock/unique-constraint protection were
+    // ever removed, not be masked by an `await`-introduced TOCTOU gap in
+    // the fake itself.
+    const existing = [...this.byId.values()].find((r) => r.financialAdjustmentId === data.financialAdjustmentId);
     if (existing) return existing;
 
     const now = new Date();

@@ -73,6 +73,51 @@ describe("infrastructure/locking/redis-lock-service", () => {
     expect(server.store.get("lock:job:1")?.value).toBe("a-different-holders-token");
   });
 
+  it("fails closed (rejects, never runs fn) when Redis is unreachable during acquisition — a lock outage must never be treated as 'lock acquired'", async () => {
+    // Module 87 — start a real fake server so we get a genuine free port,
+    // then close it immediately: the port is real but nothing is
+    // listening, giving a real ECONNREFUSED rather than a DNS/hostname
+    // failure. `RedisLockService` must propagate this as a rejection
+    // (fail-closed) rather than ever returning as if the lock were free
+    // or held — a caller wrapping a financial operation in `withLock`
+    // must never proceed unprotected just because Redis happened to be
+    // down.
+    const doomedServer = await startFakeRedisServer();
+    const unreachablePort = doomedServer.port;
+    await doomedServer.close();
+
+    const lock = new RedisLockService(new RedisClient({ url: `redis://127.0.0.1:${unreachablePort}`, connectTimeoutMs: 500 }));
+    const fnSpy = vi.fn(async () => "should never run");
+
+    await expect(lock.withLock("job:1", 5000, fnSpy)).rejects.toBeTruthy();
+    expect(fnSpy).not.toHaveBeenCalled();
+  });
+
+  it("surfaces a release-time Redis failure as a rejection even when fn itself already succeeded — the caller must not silently believe release cleanly happened", async () => {
+    // Module 87 — Redis becomes unreachable *after* fn has already run
+    // and returned successfully, but before the release EVAL completes.
+    // This documents `RedisLockService`'s actual current behavior: the
+    // `finally` block's failed release rejects the whole `withLock` call,
+    // discarding fn's successful result. Financial use cases built on
+    // this port are themselves idempotent (a retry converges rather than
+    // double-executing — see e.g. `execute-refund.use-case.test.ts`'s own
+    // concurrency test), which is what makes this fail-loud-on-release
+    // behavior safe rather than silently masking a stuck lock.
+    let fnRan = false;
+    server = await startFakeRedisServer();
+    const lock = new RedisLockService(new RedisClient({ url: server.url }));
+
+    await expect(
+      lock.withLock("job:1", 5000, async () => {
+        fnRan = true;
+        await server.close();
+        return "fn succeeded";
+      }),
+    ).rejects.toBeTruthy();
+
+    expect(fnRan).toBe(true);
+  });
+
   it("rejects a non-positive ttlMs without contacting Redis", async () => {
     server = await startFakeRedisServer();
     const lock = new RedisLockService(new RedisClient({ url: server.url }));
