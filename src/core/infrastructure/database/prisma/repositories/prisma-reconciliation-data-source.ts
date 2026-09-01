@@ -9,8 +9,10 @@ import {
   makeCalculateJobTaxBreakdownUseCase,
 } from "@/application/use-cases/financial/compose";
 import type {
+  ListJobsForReconciliationCursorOptions,
   ListJobsForReconciliationOptions,
   ReconciliationDataSource,
+  ReconciliationJobCursorBatch,
 } from "@/application/ports/reconciliation-data-source";
 import type { JobFinancialContext } from "@/domain/services/reconciliation/context";
 import type { CreditNoteRecord } from "@/domain/repositories/credit-note-repository";
@@ -264,19 +266,26 @@ function toCreditNoteRecord(row: {
  * constructs a second instance or re-implements their query logic.
  *
  * ## Why a bounded scan, not an unbounded full-history sweep
- * A single reconciliation run inspects at most `limit` Jobs (default 500
- * — see `startReconciliationRunSchema`), most-recently-active first. This
- * is a deliberate scoping decision, not an oversight: MaestroYa's
- * financial history only grows, and an unbounded scan would make a single
- * run's cost unpredictable and its `durationMs` meaningless for
- * operational alerting. A daily/hourly scheduled run (Module 80's
- * scheduling itself is an operational decision left to the platform's
- * existing job/cron infrastructure, not implemented by this class) can
- * cover the full ledger over time by moving its own `since` window
- * forward; a full backfill is a matter of running with a wide `since` and
- * a high `limit` (or several runs in sequence) — see
- * MODULE_80_IMPLEMENTATION_REPORT.md, "Remaining risks," for this
- * documented as an operational (not implemented-here) concern.
+ * A single reconciliation run inspects at most `limit` Jobs — either via
+ * `listJobIdsToInspect` (most-recently-active first, for an admin's own
+ * manually-scoped `since`/`limit` run) or via
+ * `listJobIdsToInspectFromCursor` (deterministic keyset order, for the
+ * *scheduled* sweep). This is a deliberate scoping decision, not an
+ * oversight: MaestroYa's financial history only grows, and an unbounded
+ * scan would make a single run's cost unpredictable and its `durationMs`
+ * meaningless for operational alerting.
+ *
+ * Module 92 — Reconciliation Full-Ledger Coverage & Advancing Cursor —
+ * is what makes the *scheduled* path actually cover the full ledger over
+ * time despite each individual call being bounded: see
+ * `listJobIdsToInspectFromCursor`'s own doc comment for the cursor
+ * mechanics, and `RunScheduledReconciliationSweepUseCase` for how the
+ * durable checkpoint advances (only after a batch is successfully
+ * reconciled) across repeated scheduled invocations. This superseded the
+ * previous operational-only backfill note in
+ * MODULE_80_IMPLEMENTATION_REPORT.md's "Remaining risks" — the platform
+ * no longer relies on an operator manually running wide `since`/`limit`
+ * sweeps to reach older Jobs.
  */
 export class PrismaReconciliationDataSource implements ReconciliationDataSource {
   async listJobIdsToInspect(options: ListJobsForReconciliationOptions): Promise<string[]> {
@@ -290,6 +299,84 @@ export class PrismaReconciliationDataSource implements ReconciliationDataSource 
       take: options.limit,
     });
     return rows.map((r) => r.id);
+  }
+
+  /**
+   * Module 92 — Reconciliation Full-Ledger Coverage & Advancing Cursor.
+   *
+   * Keyset pagination over the same "Job has at least one Payment"
+   * eligibility filter `listJobIdsToInspect` uses above, but ordered
+   * ascending by `(createdAt, id)` and resumed exactly at
+   * `options.after` — the query the *scheduled* sweep uses instead of
+   * `listJobIdsToInspect`'s "most-recently-active window" so that
+   * repeated bounded calls, over time, cover every eligible Job rather
+   * than only ever the most recent `limit`.
+   *
+   * ## Why `(createdAt, id)` ascending, not `updatedAt` or `id` alone
+   *  - **Not `updatedAt`**: confirmed by inspecting every write path that
+   *    touches the `jobs` table (`PrismaJobRepository`'s own
+   *    `updateMany` calls) — `Job.updatedAt` is only bumped by Job's own
+   *    status-transition methods (start/complete/cancel). No
+   *    Payment/Invoice/Payout/Refund/CreditNote write anywhere in this
+   *    codebase touches the Job row itself, so `Job.updatedAt` does NOT
+   *    reliably reflect "financial activity happened on this Job" — a
+   *    previous module's doc comment asserted otherwise; this comment
+   *    corrects that after checking the actual source. A cursor built on
+   *    an unreliable "last activity" signal could silently stop
+   *    advancing past Jobs whose *related* financial rows keep changing
+   *    while the Job row itself never does.
+   *  - **`createdAt`, not `id` alone**: `createdAt` is immutable,
+   *    assigned once at insert time by the single database server clock,
+   *    and therefore guaranteed monotonically non-decreasing across every
+   *    Job ever created — the one column on this table with that
+   *    property. That is exactly what a full-ledger sweep cursor needs:
+   *    every newly-created Job is necessarily appended *after* wherever
+   *    the cursor currently sits, so it is naturally swept within the
+   *    sweep's current cycle rather than only being reachable after a
+   *    full wraparound. A raw UUID `id` alone has no such ordering
+   *    relationship to insertion time and would work for "eventually
+   *    covers everything" but not for "new Jobs are covered promptly."
+   *  - **`id` as tie-breaker**: two Jobs can share an identical
+   *    `createdAt` millisecond (bulk seeding/backfills, or simply high
+   *    write throughput) — `id` (globally unique) makes the pair
+   *    `(createdAt, id)` a total order with no ties, so the `>` keyset
+   *    predicate below never has to guess which of two same-timestamp
+   *    rows comes "next" and can never silently skip one.
+   *
+   * ## Query shape
+   * Fetches `limit + 1` rows so the caller can tell "there are no more
+   * rows after this batch" (`cycleCompleted`) from "there happen to be
+   * exactly `limit` more rows" without a second round-trip — the extra
+   * row, if present, is trimmed before returning and never included in
+   * `jobIds`.
+   */
+  async listJobIdsToInspectFromCursor(options: ListJobsForReconciliationCursorOptions): Promise<ReconciliationJobCursorBatch> {
+    const rows = await prisma.job.findMany({
+      where: {
+        quote: { payments: { some: {} } },
+        ...(options.after
+          ? {
+              OR: [
+                { createdAt: { gt: options.after.createdAt } },
+                { createdAt: options.after.createdAt, id: { gt: options.after.id } },
+              ],
+            }
+          : {}),
+      },
+      select: { id: true, createdAt: true },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      take: options.limit + 1,
+    });
+
+    const cycleCompleted = rows.length <= options.limit;
+    const page = cycleCompleted ? rows : rows.slice(0, options.limit);
+    const last = page.length > 0 ? page[page.length - 1] : null;
+
+    return {
+      jobIds: page.map((r) => r.id),
+      nextCursor: last ? { createdAt: last.createdAt, id: last.id } : null,
+      cycleCompleted,
+    };
   }
 
   async getJobFinancialContext(jobId: string): Promise<JobFinancialContext | null> {

@@ -5,7 +5,7 @@ import { env } from "@/infrastructure/config/env";
 import { logger } from "@/infrastructure/observability/logger";
 import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
-import { makeStartReconciliationRunUseCase } from "@/application/use-cases/reconciliation/compose";
+import { makeRunScheduledReconciliationSweepUseCase } from "@/application/use-cases/reconciliation/compose";
 import { withApiTracing } from "@/infrastructure/tracing/http-tracing";
 
 /**
@@ -27,16 +27,27 @@ import { withApiTracing } from "@/infrastructure/tracing/http-tracing";
  * is only ever one reconciliation engine; this route adds no second one.
  *
  * ## Concurrency / idempotency
- * No extra locking here, deliberately — `StartReconciliationRunUseCase`
- * is already safe to invoke concurrently (a fresh `ReconciliationRun` row
- * every call; every discrepancy it finds is deduplicated one level down
- * by `ReconciliationDiscrepancyRepository.createOrTouch`'s fingerprint +
+ * As of Module 92 — Reconciliation Full-Ledger Coverage & Advancing
+ * Cursor — this route calls `makeRunScheduledReconciliationSweepUseCase()`,
+ * not `StartReconciliationRunUseCase` directly. That use case wraps its
+ * entire read-cursor / select-batch / reconcile / advance-cursor sequence
+ * in the existing `DistributedLock` (Module 44), so a duplicate or
+ * overlapping invocation of this route (a scheduler retry, or this route
+ * and the in-process `JobScheduler` occurrence both firing around the
+ * same time) either waits for no one — the loser returns immediately with
+ * `outcome: "skipped_locked"`, still a 200, never blocking or retrying —
+ * or, if it does acquire the lock, operates on whatever batch the cursor
+ * currently points at, which by construction cannot be the same batch a
+ * concurrent holder is still reconciling. The inner engine
+ * (`StartReconciliationRunUseCase`) remains safe to invoke concurrently
+ * in its own right on top of that (a fresh `ReconciliationRun` row every
+ * call; every discrepancy it finds is deduplicated one level down by
+ * `ReconciliationDiscrepancyRepository.createOrTouch`'s fingerprint +
  * database-level partial unique index — see that use case's own doc
- * comment). A duplicate or overlapping invocation of this route (a
- * scheduler retry, or this route and the in-process scheduler both firing
- * around the same time) produces at most a second, redundant
- * `ReconciliationRun` row scanning the same window — never a duplicated
- * discrepancy, never conflicting financial state.
+ * comment) — never a duplicated discrepancy, never conflicting financial
+ * state, never a skipped or double-processed cursor batch. See
+ * `RunScheduledReconciliationSweepUseCase`'s own doc comment for the full
+ * failure-safety/concurrency/full-cycle contract.
  *
  * Authorization: shared-secret bearer token, identical to
  * `expire-workflows/route.ts` — see that route's own doc comment for the
@@ -79,46 +90,62 @@ export const GET = withApiTracing("/api/cron/reconciliation-run", async function
   }
 
   try {
-    const startReconciliationRun = makeStartReconciliationRunUseCase();
-    const summary = await startReconciliationRun.execute(
-      { scope: env.RECONCILIATION_SCHEDULE_SCOPE, limit: env.RECONCILIATION_SCHEDULE_LIMIT },
-      null,
-    );
+    const runScheduledReconciliationSweep = makeRunScheduledReconciliationSweepUseCase();
+    const sweep = await runScheduledReconciliationSweep.execute({
+      scope: env.RECONCILIATION_SCHEDULE_SCOPE,
+      batchSize: env.RECONCILIATION_SCHEDULE_LIMIT,
+    });
 
     logger.info("reconciliation_run_cron_completed", {
       requestId,
       route: "/api/cron/reconciliation-run",
-      runId: summary.run.id,
-      status: summary.run.status,
-      discrepanciesCreated: summary.discrepanciesCreated,
-      discrepanciesReconfirmed: summary.discrepanciesReconfirmed,
+      outcome: sweep.outcome,
+      runId: sweep.run?.run.id ?? null,
+      runStatus: sweep.run?.run.status ?? null,
+      recordsSelected: sweep.recordsSelected,
+      cursorBefore: sweep.cursorBefore,
+      cursorAfter: sweep.cursorAfter,
+      cycleNumber: sweep.cycleNumber,
+      cycleCompleted: sweep.cycleCompleted,
+      discrepanciesCreated: sweep.run?.discrepanciesCreated ?? 0,
+      discrepanciesReconfirmed: sweep.run?.discrepanciesReconfirmed ?? 0,
     });
 
-    // The engine catches its own failures internally and persists a
-    // FAILED ReconciliationRun rather than throwing (see
-    // `StartReconciliationRunUseCase.execute`'s own doc comment) — this
-    // route surfaces that as a 500 anyway (rather than a "successful"
-    // 200) so an external scheduler's own failure/alerting treats a
-    // failed engine run as the operational problem it is, without this
-    // route ever having to re-decide what "failed" means.
-    const status = summary.run.status === "FAILED" ? 500 : 200;
+    // Module 92 — Reconciliation Full-Ledger Coverage & Advancing
+    // Cursor: `RunScheduledReconciliationSweepUseCase` never throws for
+    // a failed batch (see its own doc comment) — the same "surface an
+    // engine failure as a 500, not a silent 200" contract this route
+    // already had is preserved here by checking `outcome === "run_failed"`
+    // instead of `summary.run.status === "FAILED"` directly.
+    // `"skipped_locked"` (an overlapping invocation) and `"skipped_empty"`
+    // (nothing eligible after the cursor right now — a genuine cycle
+    // boundary or an empty ledger) are both expected, healthy outcomes,
+    // never a 500.
+    const status = sweep.outcome === "run_failed" ? 500 : 200;
     if (status === 500) {
       createErrorReporter().reportMessage("Scheduled reconciliation run failed", {
         tags: { route: "/api/cron/reconciliation-run", source: "background-job" },
-        extra: { requestId, runId: summary.run.id, errorMessage: summary.run.errorMessage },
+        extra: { requestId, runId: sweep.run?.run.id ?? null, errorMessage: sweep.run?.run.errorMessage ?? null },
       });
     }
 
     return NextResponse.json(
       {
-        status: summary.run.status === "FAILED" ? "error" : "ok",
+        status: sweep.outcome === "run_failed" ? "error" : "ok",
         timestamp: new Date().toISOString(),
         result: {
-          runId: summary.run.id,
-          runStatus: summary.run.status,
-          recordsInspected: summary.run.recordsInspected,
-          discrepanciesCreated: summary.discrepanciesCreated,
-          discrepanciesReconfirmed: summary.discrepanciesReconfirmed,
+          outcome: sweep.outcome,
+          runId: sweep.run?.run.id ?? null,
+          runStatus: sweep.run?.run.status ?? null,
+          recordsInspected: sweep.run?.run.recordsInspected ?? 0,
+          discrepanciesCreated: sweep.run?.discrepanciesCreated ?? 0,
+          discrepanciesReconfirmed: sweep.run?.discrepanciesReconfirmed ?? 0,
+          cursor: {
+            before: { createdAt: sweep.cursorBefore.createdAt?.toISOString() ?? null, jobId: sweep.cursorBefore.jobId },
+            after: { createdAt: sweep.cursorAfter.createdAt?.toISOString() ?? null, jobId: sweep.cursorAfter.jobId },
+            cycleNumber: sweep.cycleNumber,
+            cycleCompleted: sweep.cycleCompleted,
+          },
         },
       },
       { status, headers: { [REQUEST_ID_HEADER]: requestId } },

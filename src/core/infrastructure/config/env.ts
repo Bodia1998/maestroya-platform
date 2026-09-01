@@ -599,13 +599,31 @@ const envSchema = z
     RECONCILIATION_SCHEDULE_SCOPE: z
       .enum(["FULL", "PAYMENT", "COMMISSION", "TAX", "INVOICE", "PAYOUT", "REFUND", "CREDIT_NOTE", "PROVIDER"])
       .catch("FULL"),
-    // Bounds a single scheduled run's cost exactly like
-    // `startReconciliationRunSchema`'s own `limit` field — see
-    // `ReconciliationDataSource`'s doc comment on why a run is a bounded
-    // scan, not an unbounded full-history sweep. Same default (500) and
-    // ceiling (2000) as the manually-triggered path, so the scheduled
-    // run's cost profile never silently diverges from what an admin sees
-    // when triggering one by hand.
+    // Module 92 — Reconciliation Full-Ledger Coverage & Advancing
+    // Cursor: this is now the *batch size* the cursor-advancing scheduled
+    // sweep (`RunScheduledReconciliationSweepUseCase`) inspects per
+    // invocation — NOT "the N most-recently-active Jobs," which was the
+    // pre-Module-92 meaning. Repeated invocations advance a durable
+    // cursor (`ReconciliationScheduleCursor`) forward through the entire
+    // eligible Job ledger in `(createdAt, id)` order, wrapping around to
+    // the start once every eligible Job has been swept — see that use
+    // case's and `PrismaReconciliationDataSource.listJobIdsToInspectFromCursor`'s
+    // own doc comments. Still bounds a single invocation's cost exactly
+    // like `startReconciliationRunSchema`'s own `limit` field for a
+    // manually-triggered run — same default (500) and ceiling (2000).
+    //
+    // Safe range / production recommendation: 200-1000. Too low means
+    // more scheduled invocations are needed to complete one full cycle
+    // over the ledger (each invocation's fixed overhead — lock
+    // acquisition, cursor read/write, ReconciliationRun bookkeeping —
+    // becomes a larger fraction of total work); too high risks a single
+    // invocation's `durationMs` becoming large enough to threaten a
+    // serverless function's execution time limit on the Vercel Cron path.
+    // 500 (the default) at the default 6-hour cadence covers roughly
+    // 2,000 Jobs/day; size this against your own eligible-Job growth
+    // rate so a full cycle completes in an operationally acceptable
+    // number of days — see MODULE_92_IMPLEMENTATION_REPORT.md,
+    // "Operational considerations."
     RECONCILIATION_SCHEDULE_LIMIT: z.coerce.number().int().min(1).max(2000).catch(500),
 
     // --- Module 55 — Read Replicas ---

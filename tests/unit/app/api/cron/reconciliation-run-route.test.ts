@@ -32,7 +32,7 @@ const envMock: { CRON_SECRET: string | undefined; RECONCILIATION_SCHEDULE_SCOPE:
 vi.mock("@/infrastructure/config/env", () => ({ env: envMock }));
 
 vi.mock("@/application/use-cases/reconciliation/compose", () => ({
-  makeStartReconciliationRunUseCase: () => ({ execute: mockExecute }),
+  makeRunScheduledReconciliationSweepUseCase: () => ({ execute: mockExecute }),
 }));
 
 vi.mock("@/infrastructure/observability/error-reporter-factory", () => ({
@@ -47,16 +47,25 @@ function makeRequest(authHeader: string | null): NextRequest {
   return new NextRequest("http://localhost:3000/api/cron/reconciliation-run", { method: "GET", headers });
 }
 
-function makeRunSummary(overrides: Partial<{ status: string; errorMessage: string | null }> = {}) {
+function makeSweepResult(overrides: Partial<{ outcome: string; status: string; errorMessage: string | null }> = {}) {
   return {
+    outcome: overrides.outcome ?? "completed",
+    cursorKey: "scheduled-job-ledger",
     run: {
-      id: "run-1",
-      status: overrides.status ?? "COMPLETED",
-      recordsInspected: 3,
-      errorMessage: overrides.errorMessage ?? null,
+      run: {
+        id: "run-1",
+        status: overrides.status ?? "COMPLETED",
+        recordsInspected: 3,
+        errorMessage: overrides.errorMessage ?? null,
+      },
+      discrepanciesCreated: 1,
+      discrepanciesReconfirmed: 0,
     },
-    discrepanciesCreated: 1,
-    discrepanciesReconfirmed: 0,
+    recordsSelected: 3,
+    cursorBefore: { createdAt: null, jobId: null },
+    cursorAfter: { createdAt: new Date("2026-08-31T00:00:00Z"), jobId: "job-3" },
+    cycleNumber: 1,
+    cycleCompleted: false,
   };
 }
 
@@ -104,9 +113,9 @@ describe("GET /api/cron/reconciliation-run", () => {
     expect(mockExecute).not.toHaveBeenCalled();
   });
 
-  it("invokes the reconciliation engine and returns 200 on a valid bearer token", async () => {
+  it("invokes the reconciliation sweep and returns 200 on a valid bearer token", async () => {
     envMock.CRON_SECRET = "correct-secret";
-    mockExecute.mockResolvedValue(makeRunSummary({ status: "COMPLETED" }));
+    mockExecute.mockResolvedValue(makeSweepResult({ outcome: "completed", status: "COMPLETED" }));
 
     const response = await GET(makeRequest("Bearer correct-secret"));
     const body = await response.json();
@@ -115,12 +124,54 @@ describe("GET /api/cron/reconciliation-run", () => {
     expect(body.status).toBe("ok");
     expect(body.result.runId).toBe("run-1");
     expect(mockExecute).toHaveBeenCalledTimes(1);
-    expect(mockExecute).toHaveBeenCalledWith({ scope: "FULL", limit: 500 }, null);
+    expect(mockExecute).toHaveBeenCalledWith({ scope: "FULL", batchSize: 500 });
   });
 
-  it("surfaces an engine-level FAILED run as a 500 and reports it, without throwing", async () => {
+  it("returns 200 when the sweep is skipped because another scheduler holds the lock — not a failure", async () => {
     envMock.CRON_SECRET = "correct-secret";
-    mockExecute.mockResolvedValue(makeRunSummary({ status: "FAILED", errorMessage: "simulated provider outage" }));
+    mockExecute.mockResolvedValue({
+      outcome: "skipped_locked",
+      cursorKey: "scheduled-job-ledger",
+      run: null,
+      recordsSelected: 0,
+      cursorBefore: { createdAt: null, jobId: null },
+      cursorAfter: { createdAt: null, jobId: null },
+      cycleNumber: 1,
+      cycleCompleted: false,
+    });
+
+    const response = await GET(makeRequest("Bearer correct-secret"));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("ok");
+    expect(body.result.outcome).toBe("skipped_locked");
+  });
+
+  it("returns 200 when the sweep is skipped because the ledger is empty/the cycle just completed — not a failure", async () => {
+    envMock.CRON_SECRET = "correct-secret";
+    mockExecute.mockResolvedValue({
+      outcome: "skipped_empty",
+      cursorKey: "scheduled-job-ledger",
+      run: null,
+      recordsSelected: 0,
+      cursorBefore: { createdAt: null, jobId: null },
+      cursorAfter: { createdAt: null, jobId: null },
+      cycleNumber: 2,
+      cycleCompleted: true,
+    });
+
+    const response = await GET(makeRequest("Bearer correct-secret"));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("ok");
+    expect(body.result.outcome).toBe("skipped_empty");
+  });
+
+  it("surfaces a run_failed batch outcome as a 500 and reports it, without throwing", async () => {
+    envMock.CRON_SECRET = "correct-secret";
+    mockExecute.mockResolvedValue(makeSweepResult({ outcome: "run_failed", status: "FAILED", errorMessage: "simulated provider outage" }));
 
     const response = await GET(makeRequest("Bearer correct-secret"));
     const body = await response.json();
