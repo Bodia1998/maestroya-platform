@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { createReconciliationRunJobProcessor } from "@/infrastructure/reconciliation/reconciliation-job-processor";
-import type { StartReconciliationRunUseCase, ReconciliationRunSummary } from "@/application/use-cases/reconciliation/start-reconciliation-run.use-case";
+import type {
+  RunScheduledReconciliationSweepUseCase,
+  ScheduledSweepResult,
+} from "@/application/use-cases/reconciliation/run-scheduled-reconciliation-sweep.use-case";
+import type { ReconciliationRunSummary } from "@/application/use-cases/reconciliation/start-reconciliation-run.use-case";
 import type { ActiveJob } from "@/infrastructure/jobs/job-types";
 import type { ReconciliationRunJobData } from "@/infrastructure/reconciliation/reconciliation-jobs";
 import type { ReconciliationRunRecord } from "@/domain/repositories/reconciliation-repository";
@@ -24,6 +28,20 @@ function baseRun(overrides: Partial<ReconciliationRunRecord> = {}): Reconciliati
   };
 }
 
+function baseSweepResult(overrides: Partial<ScheduledSweepResult> = {}): ScheduledSweepResult {
+  return {
+    outcome: "completed",
+    cursorKey: "scheduled-job-ledger",
+    run: { run: baseRun(), discrepanciesCreated: 0, discrepanciesReconfirmed: 0 } satisfies ReconciliationRunSummary,
+    recordsSelected: 10,
+    cursorBefore: { createdAt: null, jobId: null },
+    cursorAfter: { createdAt: new Date("2026-08-31T00:00:05Z"), jobId: "job-10" },
+    cycleNumber: 1,
+    cycleCompleted: false,
+    ...overrides,
+  };
+}
+
 function makeJob(): ActiveJob<ReconciliationRunJobData> {
   return {
     id: "job-1",
@@ -36,45 +54,65 @@ function makeJob(): ActiveJob<ReconciliationRunJobData> {
 }
 
 describe("infrastructure/reconciliation/reconciliation-job-processor", () => {
-  it("resolves without throwing when the run completes (with or without discrepancies)", async () => {
-    const execute = vi.fn(
-      async (): Promise<ReconciliationRunSummary> => ({
-        run: baseRun({ discrepancyCount: 2 }),
-        discrepanciesCreated: 1,
-        discrepanciesReconfirmed: 1,
-      }),
-    );
-    const useCase = { execute } as unknown as StartReconciliationRunUseCase;
-    const processor = createReconciliationRunJobProcessor(useCase);
+  it("resolves without throwing when the sweep completes (with or without discrepancies)", async () => {
+    const execute = vi.fn(async (): Promise<ScheduledSweepResult> => baseSweepResult());
+    const sweepUseCase = { execute } as unknown as RunScheduledReconciliationSweepUseCase;
+    const processor = createReconciliationRunJobProcessor(sweepUseCase);
 
     await expect(processor(makeJob())).resolves.toBeUndefined();
-    expect(execute).toHaveBeenCalledWith({ scope: "FULL", limit: 500 }, null);
+    expect(execute).toHaveBeenCalledWith({ scope: "FULL", batchSize: 500 });
   });
 
-  it("throws when the reconciliation run itself is FAILED, so the job layer retries/dead-letters it", async () => {
+  it("resolves without throwing when the sweep is skipped (locked by a concurrent invocation)", async () => {
     const execute = vi.fn(
-      async (): Promise<ReconciliationRunSummary> => ({
-        run: baseRun({ status: "FAILED", errorMessage: "data source unavailable", completedAt: new Date() }),
-        discrepanciesCreated: 0,
-        discrepanciesReconfirmed: 0,
-      }),
+      async (): Promise<ScheduledSweepResult> =>
+        baseSweepResult({ outcome: "skipped_locked", run: null, recordsSelected: 0 }),
     );
-    const useCase = { execute } as unknown as StartReconciliationRunUseCase;
-    const processor = createReconciliationRunJobProcessor(useCase);
+    const sweepUseCase = { execute } as unknown as RunScheduledReconciliationSweepUseCase;
+    const processor = createReconciliationRunJobProcessor(sweepUseCase);
+
+    await expect(processor(makeJob())).resolves.toBeUndefined();
+  });
+
+  it("resolves without throwing when the sweep is skipped (empty ledger / cycle boundary)", async () => {
+    const execute = vi.fn(
+      async (): Promise<ScheduledSweepResult> =>
+        baseSweepResult({ outcome: "skipped_empty", run: null, recordsSelected: 0, cycleCompleted: true }),
+    );
+    const sweepUseCase = { execute } as unknown as RunScheduledReconciliationSweepUseCase;
+    const processor = createReconciliationRunJobProcessor(sweepUseCase);
+
+    await expect(processor(makeJob())).resolves.toBeUndefined();
+  });
+
+  it("throws when the batch's reconciliation run itself FAILED, so the job layer retries/dead-letters it", async () => {
+    const execute = vi.fn(
+      async (): Promise<ScheduledSweepResult> =>
+        baseSweepResult({
+          outcome: "run_failed",
+          run: {
+            run: baseRun({ status: "FAILED", errorMessage: "data source unavailable", completedAt: new Date() }),
+            discrepanciesCreated: 0,
+            discrepanciesReconfirmed: 0,
+          },
+        }),
+    );
+    const sweepUseCase = { execute } as unknown as RunScheduledReconciliationSweepUseCase;
+    const processor = createReconciliationRunJobProcessor(sweepUseCase);
 
     await expect(processor(makeJob())).rejects.toThrow(/data source unavailable/);
   });
 
-  it("calls the use case exactly once per attempt — this processor is not a second reconciliation engine", async () => {
+  it("calls the sweep use case exactly once per attempt — this processor is not a second reconciliation engine", async () => {
     const execute = vi.fn(
-      async (): Promise<ReconciliationRunSummary> => ({
-        run: baseRun({ status: "FAILED", errorMessage: "boom" }),
-        discrepanciesCreated: 0,
-        discrepanciesReconfirmed: 0,
-      }),
+      async (): Promise<ScheduledSweepResult> =>
+        baseSweepResult({
+          outcome: "run_failed",
+          run: { run: baseRun({ status: "FAILED", errorMessage: "boom" }), discrepanciesCreated: 0, discrepanciesReconfirmed: 0 },
+        }),
     );
-    const useCase = { execute } as unknown as StartReconciliationRunUseCase;
-    const processor = createReconciliationRunJobProcessor(useCase);
+    const sweepUseCase = { execute } as unknown as RunScheduledReconciliationSweepUseCase;
+    const processor = createReconciliationRunJobProcessor(sweepUseCase);
 
     await expect(processor(makeJob())).rejects.toThrow();
     expect(execute).toHaveBeenCalledTimes(1);

@@ -5,10 +5,13 @@ import { createFailureReporter } from "@/infrastructure/observability/failure-re
 import { PrismaReconciliationRunRepository } from "@/infrastructure/database/prisma/repositories/prisma-reconciliation-run-repository";
 import { PrismaReconciliationDiscrepancyRepository } from "@/infrastructure/database/prisma/repositories/prisma-reconciliation-discrepancy-repository";
 import { PrismaReconciliationDataSource } from "@/infrastructure/database/prisma/repositories/prisma-reconciliation-data-source";
+import { PrismaReconciliationScheduleCursorRepository } from "@/infrastructure/database/prisma/repositories/prisma-reconciliation-schedule-cursor-repository";
 import { PrismaAdminAuditLogRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-audit-log-repository";
 import { NullProviderReconciliationAdapter } from "@/infrastructure/payments/null-provider-reconciliation-adapter";
 import { StripeProviderReconciliationAdapter } from "@/infrastructure/payments/stripe/stripe-provider-reconciliation-adapter";
+import { createDistributedLock } from "@/infrastructure/locking/lock-service-factory";
 import { StartReconciliationRunUseCase } from "./start-reconciliation-run.use-case";
+import { RunScheduledReconciliationSweepUseCase } from "./run-scheduled-reconciliation-sweep.use-case";
 import { GetReconciliationRunUseCase } from "./get-reconciliation-run.use-case";
 import { ListDiscrepanciesForRunUseCase } from "./list-discrepancies-for-run.use-case";
 import { ListUnresolvedHighSeverityDiscrepanciesUseCase } from "./list-unresolved-high-severity-discrepancies.use-case";
@@ -70,6 +73,8 @@ import {
 const runs = new PrismaReconciliationRunRepository();
 const discrepancies = new PrismaReconciliationDiscrepancyRepository();
 const dataSource = new PrismaReconciliationDataSource();
+// Module 92 — Reconciliation Full-Ledger Coverage & Advancing Cursor.
+const scheduleCursor = new PrismaReconciliationScheduleCursorRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
 const provider = new NullProviderReconciliationAdapter();
 const failureReporter = createFailureReporter();
@@ -80,6 +85,27 @@ const errorReporter = createErrorReporter();
 
 export function makeStartReconciliationRunUseCase(): StartReconciliationRunUseCase {
   return new StartReconciliationRunUseCase(dataSource, runs, discrepancies, provider, eventBus, failureReporter);
+}
+
+/**
+ * Module 92 — Reconciliation Full-Ledger Coverage & Advancing Cursor.
+ *
+ * The composed use case both the Vercel Cron route
+ * (`api/cron/reconciliation-run/route.ts`) and the in-process
+ * `JobScheduler` occurrence (`createReconciliationRunJobProcessor` below)
+ * call — replacing their previous direct call to
+ * `makeStartReconciliationRunUseCase()` with `since: null` (see that
+ * function's own doc comment for why the old call was bounded to only
+ * the most-recently-active window). Reuses `createDistributedLock()` —
+ * the same Module 44 lock factory `payments/compose.ts` already uses for
+ * `ExecuteProfessionalPayoutUseCase` — no second locking mechanism.
+ *
+ * Admin-triggered manual runs (`admin/reconciliation/actions.ts`) keep
+ * calling `makeStartReconciliationRunUseCase()` directly with their own
+ * `since`/`limit` — untouched by this module.
+ */
+export function makeRunScheduledReconciliationSweepUseCase(): RunScheduledReconciliationSweepUseCase {
+  return new RunScheduledReconciliationSweepUseCase(dataSource, scheduleCursor, makeStartReconciliationRunUseCase(), createDistributedLock());
 }
 
 export function makeGetReconciliationRunUseCase(): GetReconciliationRunUseCase {
@@ -198,7 +224,7 @@ function getReconciliationRunQueue(): Queue<ReconciliationRunJobData> {
 
     reconciliationRunWorker = new Worker<ReconciliationRunJobData>(
       RECONCILIATION_RUN_QUEUE_NAME,
-      createReconciliationRunJobProcessor(makeStartReconciliationRunUseCase()),
+      createReconciliationRunJobProcessor(makeRunScheduledReconciliationSweepUseCase()),
       {
         store: createJobStore(),
         // One reconciliation run at a time — the engine itself is safe to

@@ -28,13 +28,74 @@ export interface ListJobsForReconciliationOptions {
   cursor?: string;
 }
 
+/**
+ * Module 92 — Reconciliation Full-Ledger Coverage & Advancing Cursor.
+ *
+ * An opaque, composite keyset-pagination position for
+ * `listJobIdsToInspectFromCursor` — see that method's own doc comment for
+ * why (createdAt, id), not a single scalar.
+ */
+export interface ReconciliationJobCursor {
+  createdAt: Date;
+  id: string;
+}
+
+export interface ListJobsForReconciliationCursorOptions {
+  /** Strictly-after position in (createdAt, id) order — null starts from
+   *  the very first eligible Job. */
+  after: ReconciliationJobCursor | null;
+  limit: number;
+}
+
+export interface ReconciliationJobCursorBatch {
+  /** Job ids in this batch, in the same (createdAt, id) ascending order
+   *  the query used — never re-sorted by the caller. */
+  jobIds: string[];
+  /** The cursor position of the last Job in `jobIds` — the value the next
+   *  call's `after` should use to continue from exactly where this batch
+   *  left off. Null when `jobIds` is empty. */
+  nextCursor: ReconciliationJobCursor | null;
+  /** True when this batch reached the end of the eligible dataset (fewer
+   *  rows existed after `after` than `limit`) — the caller's signal to
+   *  reset the cursor to the start of a new cycle once this batch is
+   *  successfully reconciled, rather than waiting for a subsequent,
+   *  separately-detected empty batch. */
+  cycleCompleted: boolean;
+}
+
 export interface ReconciliationDataSource {
   /** Job ids with at least one Payment, ordered by most-recently-relevant
    *  financial activity first. The unit `StartReconciliationRunUseCase`
    *  iterates over — see `JobFinancialContext`'s own doc comment for why
    *  a single per-job read gathers the entire lifecycle chain in one
-   *  shot. */
+   *  shot.
+   *
+   *  Used only by admin/manually-triggered runs (which choose their own
+   *  `since`/`limit` window on purpose — see `startReconciliationRunSchema`).
+   *  The *scheduled* sweep does not call this method at all — see
+   *  `listJobIdsToInspectFromCursor` below. */
   listJobIdsToInspect(options: ListJobsForReconciliationOptions): Promise<string[]>;
+
+  /**
+   * Module 92 — Reconciliation Full-Ledger Coverage & Advancing Cursor.
+   *
+   * The bulk read the *scheduled* reconciliation sweep uses instead of
+   * `listJobIdsToInspect` above: a bounded, deterministically-ordered
+   * keyset page of eligible Job ids strictly after `options.after`,
+   * ordered by `(createdAt ASC, id ASC)`.
+   *
+   * `(createdAt, id)`, not `updatedAt` or `id` alone, and not descending:
+   * see `PrismaReconciliationDataSource`'s own doc comment on this method
+   * for the full reasoning (in short — `Job.updatedAt` is not a reliable
+   * proxy for "financial activity happened," `createdAt` is immutable and
+   * monotonic so newly-created Jobs are always appended ahead of wherever
+   * the cursor currently sits, and ascending order combined with resuming
+   * exactly at `options.after` is what makes repeated bounded calls
+   * eventually cover every eligible Job — including ones created after
+   * the sweep began — without ever re-scanning the whole table in one
+   * call).
+   */
+  listJobIdsToInspectFromCursor(options: ListJobsForReconciliationCursorOptions): Promise<ReconciliationJobCursorBatch>;
 
   /** Gathers every Module 73-79 record relevant to one Job — the input
    *  every check module in `domain/services/reconciliation/*` consumes. */

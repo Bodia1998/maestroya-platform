@@ -122,7 +122,7 @@ export async function createQuote(
 export async function createJob(
   prisma: PrismaClient,
   input: { serviceRequestId: string; quoteId: string; customerId: string; professionalProfileId: string },
-  overrides: Partial<{ id: string; status: "CREATED" | "IN_PROGRESS" | "COMPLETED" }> = {},
+  overrides: Partial<{ id: string; status: "CREATED" | "IN_PROGRESS" | "COMPLETED"; createdAt: Date }> = {},
 ) {
   return prisma.job.create({
     data: {
@@ -132,6 +132,11 @@ export async function createJob(
       customerId: input.customerId,
       professionalProfileId: input.professionalProfileId,
       status: overrides.status ?? "COMPLETED",
+      // Module 92 — Reconciliation Full-Ledger Coverage & Advancing
+      // Cursor: lets a test control the (createdAt, id) keyset-pagination
+      // ordering the scheduled reconciliation sweep's cursor sorts by,
+      // including deliberately colliding two Jobs on the same instant.
+      ...(overrides.createdAt ? { createdAt: overrides.createdAt } : {}),
     },
   });
 }
@@ -147,7 +152,7 @@ export async function createJob(
  * own `Payment` row(s) against `serviceRequestId`/`quoteId`/`payerId`
  * from this return value.
  */
-export async function createFinancialGraph(prisma: PrismaClient) {
+export async function createFinancialGraph(prisma: PrismaClient, overrides: Partial<{ jobCreatedAt: Date }> = {}) {
   const customerUser = await createUser(prisma, { name: "Module 91 Customer" });
   const address = await createAddress(prisma, customerUser.id);
   const customerProfile = await createCustomerProfile(prisma, customerUser.id);
@@ -169,12 +174,16 @@ export async function createFinancialGraph(prisma: PrismaClient) {
     submittedByUserId: professionalUser.id,
   });
 
-  const job = await createJob(prisma, {
-    serviceRequestId: serviceRequest.id,
-    quoteId: quote.id,
-    customerId: customerProfile.id,
-    professionalProfileId: professionalProfile.id,
-  });
+  const job = await createJob(
+    prisma,
+    {
+      serviceRequestId: serviceRequest.id,
+      quoteId: quote.id,
+      customerId: customerProfile.id,
+      professionalProfileId: professionalProfile.id,
+    },
+    overrides.jobCreatedAt ? { createdAt: overrides.jobCreatedAt } : {},
+  );
 
   return {
     payerUserId: customerUser.id,

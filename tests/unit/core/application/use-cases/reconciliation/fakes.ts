@@ -20,9 +20,17 @@ import type {
   StartReconciliationRunData,
 } from "@/domain/repositories/reconciliation-repository";
 import type {
+  ListJobsForReconciliationCursorOptions,
   ListJobsForReconciliationOptions,
   ReconciliationDataSource,
+  ReconciliationJobCursorBatch,
 } from "@/application/ports/reconciliation-data-source";
+import type { DistributedLock } from "@/application/ports/distributed-lock";
+import type {
+  AdvanceReconciliationScheduleCursorData,
+  ReconciliationScheduleCursorRecord,
+  ReconciliationScheduleCursorRepository,
+} from "@/domain/repositories/reconciliation-schedule-cursor-repository";
 import type { ProviderFinancialReconciliationPort } from "@/application/ports/provider-financial-reconciliation";
 import type { ProviderState } from "@/domain/services/reconciliation/provider-checks";
 import type { JobFinancialContext } from "@/domain/services/reconciliation/context";
@@ -40,18 +48,127 @@ import type { EventBus, EventHandler } from "@/application/ports/event-bus";
 export class FakeReconciliationDataSource implements ReconciliationDataSource {
   private jobIds: string[] = [];
   private contexts = new Map<string, JobFinancialContext>();
+  /** Module 92 — the `(createdAt, id)` this fake's
+   *  `listJobIdsToInspectFromCursor` orders/pages by, mirroring the real
+   *  `PrismaReconciliationDataSource`'s keyset query. Defaults to
+   *  insertion order with one-millisecond-apart synthetic timestamps
+   *  (see `seed`) so a test that doesn't care about ordering still gets a
+   *  strict, collision-free order by default; a test asserting the
+   *  timestamp-collision tie-break passes an explicit `createdAt`. */
+  private jobCursorFields = new Map<string, { createdAt: Date; id: string }>();
+  private nextSyntheticCreatedAtMs = Date.parse("2026-01-01T00:00:00.000Z");
 
-  seed(jobId: string, context: JobFinancialContext): void {
+  seed(jobId: string, context: JobFinancialContext, overrides: Partial<{ createdAt: Date }> = {}): void {
     if (!this.jobIds.includes(jobId)) this.jobIds.push(jobId);
     this.contexts.set(jobId, context);
+    const createdAt = overrides.createdAt ?? new Date(this.nextSyntheticCreatedAtMs++);
+    this.jobCursorFields.set(jobId, { createdAt, id: jobId });
   }
 
   async listJobIdsToInspect(options: ListJobsForReconciliationOptions): Promise<string[]> {
     return this.jobIds.slice(0, options.limit);
   }
 
+  /** Module 92 — mirrors the real `PrismaReconciliationDataSource.listJobIdsToInspectFromCursor`:
+   *  ascending `(createdAt, id)` keyset order, strictly-after `options.after`,
+   *  bounded by `options.limit`, with `cycleCompleted` true iff no more
+   *  eligible rows remain after this page. */
+  async listJobIdsToInspectFromCursor(options: ListJobsForReconciliationCursorOptions): Promise<ReconciliationJobCursorBatch> {
+    const ordered = [...this.jobCursorFields.values()].sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id),
+    );
+    const after = options.after;
+    const remaining = after
+      ? ordered.filter(
+          (row) =>
+            row.createdAt.getTime() > after.createdAt.getTime() ||
+            (row.createdAt.getTime() === after.createdAt.getTime() && row.id > after.id),
+        )
+      : ordered;
+
+    const page = remaining.slice(0, options.limit);
+    const cycleCompleted = remaining.length <= options.limit;
+    const last = page.length > 0 ? page[page.length - 1] : null;
+
+    return {
+      jobIds: page.map((r) => r.id),
+      nextCursor: last ? { createdAt: last.createdAt, id: last.id } : null,
+      cycleCompleted,
+    };
+  }
+
   async getJobFinancialContext(jobId: string): Promise<JobFinancialContext | null> {
     return this.contexts.get(jobId) ?? null;
+  }
+}
+
+/** Module 92 — in-memory `ReconciliationScheduleCursorRepository`, mirroring
+ *  the real Prisma repository's "conditional update, returns null on a
+ *  version mismatch" contract (see that class's own doc comment) without
+ *  a database. */
+export class FakeReconciliationScheduleCursorRepository implements ReconciliationScheduleCursorRepository {
+  byCursorKey = new Map<string, ReconciliationScheduleCursorRecord>();
+
+  async getOrCreate(cursorKey: string): Promise<ReconciliationScheduleCursorRecord> {
+    const existing = this.byCursorKey.get(cursorKey);
+    if (existing) return existing;
+    const now = new Date();
+    const record: ReconciliationScheduleCursorRecord = {
+      id: randomUUID(),
+      cursorKey,
+      lastCreatedAt: null,
+      lastJobId: null,
+      cycleNumber: 1,
+      cycleStartedAt: now,
+      lastAdvancedAt: null,
+      version: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.byCursorKey.set(cursorKey, record);
+    return record;
+  }
+
+  async advance(data: AdvanceReconciliationScheduleCursorData): Promise<ReconciliationScheduleCursorRecord | null> {
+    const existing = this.byCursorKey.get(data.cursorKey);
+    if (!existing || existing.version !== data.expectedVersion) return null;
+    const now = new Date();
+    const updated: ReconciliationScheduleCursorRecord = {
+      ...existing,
+      lastCreatedAt: data.lastCreatedAt,
+      lastJobId: data.lastJobId,
+      cycleNumber: data.cycleNumber,
+      cycleStartedAt: data.cycleStartedAt,
+      lastAdvancedAt: now,
+      version: existing.version + 1,
+      updatedAt: now,
+    };
+    this.byCursorKey.set(data.cursorKey, updated);
+    return updated;
+  }
+}
+
+/** Module 92 — in-memory `DistributedLock`, mirroring the real
+ *  `InMemoryLockService`'s "second concurrent acquire on the same key
+ *  returns null instead of blocking" contract, for tests that don't need
+ *  a real TTL/timer (`withLock` here never self-expires — tests that
+ *  need that use the real `InMemoryLockService` directly instead). Also
+ *  exposes `nextAcquireFails` so a test can force a "someone else holds
+ *  it" outcome without a real second caller. */
+export class FakeDistributedLock implements DistributedLock {
+  private held = new Set<string>();
+  nextAcquireFails = false;
+  calls: { key: string; ttlMs: number }[] = [];
+
+  async withLock<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T | null> {
+    this.calls.push({ key, ttlMs });
+    if (this.nextAcquireFails || this.held.has(key)) return null;
+    this.held.add(key);
+    try {
+      return await fn();
+    } finally {
+      this.held.delete(key);
+    }
   }
 }
 

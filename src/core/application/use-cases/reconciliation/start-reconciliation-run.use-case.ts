@@ -42,6 +42,28 @@ export interface ReconciliationRunSummary {
 }
 
 /**
+ * Module 92 — Reconciliation Full-Ledger Coverage & Advancing Cursor.
+ *
+ * Widens `StartReconciliationRunInput` with an internal-only `jobIds`
+ * escape hatch: when provided, `execute()` reconciles exactly this list
+ * instead of calling `dataSource.listJobIdsToInspect(since, limit)`.
+ *
+ * This is how `RunScheduledReconciliationSweepUseCase` drives the engine
+ * over a cursor-selected batch (`dataSource.listJobIdsToInspectFromCursor`)
+ * while still going through the one and only reconciliation engine — no
+ * second engine, no duplicated discrepancy-detection/persistence logic.
+ * `jobIds` is never accepted from `startReconciliationRunSchema` (the Zod
+ * schema validating the admin Server Action boundary in
+ * `admin/reconciliation/actions.ts`), so an admin-triggered manual run can
+ * never pass it — this field only ever originates from
+ * `RunScheduledReconciliationSweepUseCase` itself, entirely inside the
+ * application layer.
+ */
+export interface StartReconciliationRunEngineInput extends StartReconciliationRunInput {
+  jobIds?: string[];
+}
+
+/**
  * Module 80 — Financial Reconciliation & Observability.
  *
  * The orchestrator: creates a RUNNING `ReconciliationRun`, scans the Jobs
@@ -80,11 +102,24 @@ export class StartReconciliationRunUseCase {
     private readonly failureReporter: FailureReporter = new NullFailureReporter(),
   ) {}
 
-  async execute(input: StartReconciliationRunInput, triggeredByUserId: string | null): Promise<ReconciliationRunSummary> {
+  async execute(input: StartReconciliationRunEngineInput, triggeredByUserId: string | null): Promise<ReconciliationRunSummary> {
     const runId = randomUUID();
     const startedAt = new Date();
     const parametersHash = createHash("sha256")
-      .update(JSON.stringify({ scope: input.scope, since: input.since?.toISOString() ?? null, limit: input.limit }))
+      .update(
+        JSON.stringify({
+          scope: input.scope,
+          since: input.since?.toISOString() ?? null,
+          limit: input.limit,
+          // Module 92: distinguishes a cursor-driven scheduled batch from
+          // an equivalently-scoped manual since/limit run in the audit
+          // trail (ReconciliationRun.parametersHash), without changing
+          // the hash's meaning for every existing caller that never sets
+          // jobIds (jobIds undefined hashes identically to before this
+          // module).
+          jobIdsCount: input.jobIds?.length,
+        }),
+      )
       .digest("hex")
       .slice(0, 16);
 
@@ -104,7 +139,7 @@ export class StartReconciliationRunUseCase {
     let reconfirmed = 0;
 
     try {
-      const jobIds = await this.dataSource.listJobIdsToInspect({ since: input.since, limit: input.limit });
+      const jobIds = input.jobIds ?? (await this.dataSource.listJobIdsToInspect({ since: input.since, limit: input.limit }));
 
       for (const jobId of jobIds) {
         const context = await this.dataSource.getJobFinancialContext(jobId);

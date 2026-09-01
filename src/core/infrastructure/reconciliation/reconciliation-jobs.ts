@@ -16,6 +16,11 @@ export const RECONCILIATION_RUN_DEAD_LETTER_QUEUE_NAME = "reconciliation-run-dea
 
 export interface ReconciliationRunJobData {
   scope: ReconciliationScopeValue;
+  /** Module 92: this is now the *batch size* the cursor-advancing
+   *  scheduled sweep (`RunScheduledReconciliationSweepUseCase`) inspects
+   *  per invocation, not "how many of the most-recently-active Jobs to
+   *  rescan" — see that use case's own doc comment. Same
+   *  `RECONCILIATION_SCHEDULE_LIMIT` config value, new meaning. */
   limit: number;
   reason: "scheduled" | "manual";
 }

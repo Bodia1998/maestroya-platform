@@ -2051,6 +2051,12 @@ model Job {
   @@index([professionalProfileId, status])
   @@index([companyProfileId, status])
   @@index([status])
+  /// Module 92 — Reconciliation Full-Ledger Coverage & Advancing Cursor:
+  /// supports the scheduled reconciliation sweep's keyset-pagination query
+  /// (`PrismaReconciliationDataSource.listJobIdsToInspectFromCursor`),
+  /// which orders/filters by (createdAt, id) ascending — see that method's
+  /// own doc comment for why this pair, not `updatedAt`, is the cursor.
+  @@index([createdAt, id])
   @@map("jobs")
 }
 
@@ -5137,6 +5143,77 @@ model ReconciliationDiscrepancy {
   @@index([jobId])
   @@index([fingerprint])
   @@map("reconciliation_discrepancies")
+}
+
+/// Module 92 — Reconciliation Full-Ledger Coverage & Advancing Cursor.
+///
+/// Durable checkpoint for the *scheduled* reconciliation sweep — the
+/// automated counterpart to an admin's manually-triggered
+/// `StartReconciliationRunUseCase` invocation (which keeps its existing
+/// `since`/`limit` behavior, untouched by this module). A single row per
+/// `cursorKey` (one key today — `"scheduled-job-ledger"`, see
+/// `RunScheduledReconciliationSweepUseCase`'s own doc comment — the
+/// column exists so a future independently-cursored sweep, e.g. a
+/// provider-only or a different-scope schedule, never has to share this
+/// row or migrate the schema again).
+///
+/// ## Why (createdAt, id), not (updatedAt, id) or id alone
+/// See `PrismaReconciliationDataSource.listJobIdsToInspectFromCursor`'s
+/// own doc comment for the full reasoning — in short: `Job.updatedAt` is
+/// only touched by `JobRepository`'s own status-transition methods
+/// (start/complete/cancel), never by a Payment/Invoice/Payout/Refund/
+/// CreditNote write elsewhere, so it is not a reliable proxy for
+/// "financial activity happened on this Job" (a previous module's own
+/// doc comment asserted otherwise — this module corrects that after
+/// confirming the actual write paths in source). `Job.createdAt` is
+/// immutable and assigned once, at insert time, by the single database
+/// server clock — the one column on this table that is guaranteed
+/// monotonically non-decreasing across every Job ever created, which is
+/// exactly the property a full-ledger sweep cursor needs: every new Job
+/// is necessarily appended *after* wherever the cursor currently sits,
+/// so it is swept within the current cycle rather than requiring a
+/// wraparound to be reached. `id` is the tie-breaker for Jobs that share
+/// an identical `createdAt` millisecond (a real possibility under bulk
+/// seeding/backfills) — without it, two same-timestamp rows are
+/// indistinguishable to a `>` comparison and one could be silently
+/// skipped forever.
+///
+/// ## Persistence & concurrency model
+/// - `lastCreatedAt`/`lastJobId` together are the cursor position: null/
+///   null means "start of a cycle." Advanced only by
+///   `ReconciliationScheduleCursorRepository.advance`, and only ever
+///   called by `RunScheduledReconciliationSweepUseCase` *after*
+///   `StartReconciliationRunUseCase.execute()` has returned a
+///   non-`FAILED` run for the exact batch this cursor position bounds —
+///   see that use case's own doc comment for the full read-batch-
+///   reconcile-then-persist sequence and why a failed batch is retried,
+///   never skipped.
+/// - `version` is optimistic-concurrency belt-and-suspenders underneath
+///   the `DistributedLock` (Module 44) the use case already holds for the
+///   entire read-batch-persist sequence: `advance()` issues a conditional
+///   `UPDATE ... WHERE "cursorKey" = ? AND "version" = ?`, so even a
+///   hypothetical second writer that somehow bypassed the lock (a second
+///   lock backend misconfigured differently per instance, say) cannot
+///   silently clobber a concurrent advance — the losing writer's
+///   conditional update affects zero rows and is detected, never applied
+///   blindly.
+/// - `cycleNumber`/`cycleStartedAt` are observability only (how many full
+///   passes over the ledger have completed, how long the current one has
+///   been running) — never read by the cursor-advancement logic itself.
+model ReconciliationScheduleCursor {
+  id             String    @id @default(uuid()) @db.Uuid
+  cursorKey      String    @unique
+  lastCreatedAt  DateTime?
+  lastJobId      String?   @db.Uuid
+  cycleNumber    Int       @default(1)
+  cycleStartedAt DateTime  @default(now())
+  lastAdvancedAt DateTime?
+  version        Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("reconciliation_schedule_cursors")
 }
 
 // ============================================================================

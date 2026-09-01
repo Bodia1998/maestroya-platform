@@ -67,6 +67,7 @@ import { prisma } from "@/infrastructure/database/prisma/client";
 const TABLES_TO_RESET = [
   "reconciliation_discrepancies",
   "reconciliation_runs",
+  "reconciliation_schedule_cursors",
   "stripe_disputes",
   "external_webhook_events",
   "transactions",

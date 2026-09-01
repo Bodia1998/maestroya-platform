@@ -228,6 +228,40 @@ describe("StartReconciliationRunUseCase", () => {
     const summary = await useCase.execute(makeInput(), "admin-42");
     expect(summary.run.triggeredByUserId).toBe("admin-42");
   });
+
+  // Module 92 — Reconciliation Full-Ledger Coverage & Advancing Cursor:
+  // the internal-only `jobIds` escape hatch `RunScheduledReconciliationSweepUseCase`
+  // uses to drive this engine over a cursor-selected batch.
+  it("jobIds, when provided, is reconciled exactly instead of calling dataSource.listJobIdsToInspect", async () => {
+    const { dataSource, useCase } = makeHarness();
+    dataSource.seed("job-1", makeContext());
+    dataSource.seed("job-2", makeContext());
+    dataSource.seed("job-3", makeContext());
+
+    const summary = await useCase.execute({ ...makeInput(), jobIds: ["job-2"] }, null);
+
+    expect(summary.run.recordsInspected).toBe(1);
+  });
+
+  it("jobIds=[] reconciles zero Jobs (a legitimate empty batch), not the dataSource's full default list", async () => {
+    const { dataSource, useCase } = makeHarness();
+    dataSource.seed("job-1", makeContext());
+
+    const summary = await useCase.execute({ ...makeInput(), jobIds: [] }, null);
+
+    expect(summary.run.recordsInspected).toBe(0);
+    expect(summary.run.status).toBe("COMPLETED");
+  });
+
+  it("omitting jobIds preserves the existing since/limit dataSource.listJobIdsToInspect behavior", async () => {
+    const { dataSource, useCase } = makeHarness();
+    dataSource.seed("job-1", makeContext());
+    dataSource.seed("job-2", makeContext());
+
+    const summary = await useCase.execute(makeInput({ limit: 1 }), "admin-1");
+
+    expect(summary.run.recordsInspected).toBe(1);
+  });
 });
 
 describe("ResolveDiscrepancyUseCase (manual-only resolution)", () => {
