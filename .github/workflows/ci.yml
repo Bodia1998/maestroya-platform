@@ -84,5 +84,19 @@ jobs:
       - name: Integration tests
         run: npm run test:integration
 
+      - name: Real-DB integration tests (Module 91)
+        # Module 91 — Real-Database Integration Test Harness: runs the
+        # focused real-PostgreSQL suite (tests/integration-db/**) against
+        # the SAME `postgres:16-alpine` service this job already
+        # provisions and already migrated above (`Prisma migrate (test
+        # DB)`) — no second Postgres service, no second schema. Uses
+        # TEST_DATABASE_URL explicitly (rather than relying on the
+        # job-level DATABASE_URL fallback) so this step's own safety
+        # check (see tests/test-utils/db/test-database-url.ts) is
+        # exercised the same way a local developer run exercises it.
+        env:
+          TEST_DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/maestroya_test?schema=public"
+        run: npm run test:integration:db
+
       - name: Build
         run: npm run build
