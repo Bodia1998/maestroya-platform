@@ -1,4 +1,9 @@
 import { NotFoundError, UnauthorizedError } from "@/domain/errors/domain-error";
+import { decidePurgeRetry, type CloudinaryPurgeRetryConfig } from "@/domain/services/gdpr-cloudinary-purge-policy";
+import {
+  classifyStorageDeletionError,
+  describeCloudinaryPurgeError,
+} from "@/infrastructure/storage/cloudinary/cloudinary-purge-error-classifier";
 import { AccountErasureExecuted } from "@/domain/events/account-erasure-executed";
 import type { DeletionStrategyValue, GdprDataCategoryValue } from "@/domain/services/gdpr-privacy-rules";
 import type { EventBus } from "@/application/ports/event-bus";
@@ -139,6 +144,16 @@ export class ExecuteAccountErasureUseCase {
     private readonly documentStorage: VerificationDocumentStorageDeleter,
     private readonly eventBus: EventBus,
     private readonly failureReporter: FailureReporter = new NullFailureReporter(),
+    // Module 94 — GDPR Cloudinary Purge Retry & Durable Erasure
+    // Completion. Defaulted so every pre-existing caller/test keeps
+    // compiling unchanged (same convention as `fraudTrustSignalChecks`
+    // above). A conservative default (1 attempt, 60s base delay) is safe
+    // even for a caller that never overrides it: this inline attempt is
+    // always attempt 1 of whatever `RetryPendingCloudinaryPurgesUseCase`
+    // ultimately enforces via its own, separately-configured
+    // `GDPR_CLOUDINARY_PURGE_MAX_ATTEMPTS` — see `compose.ts`'s wiring,
+    // which passes the real `env`-derived config to both.
+    private readonly purgeRetryConfig: CloudinaryPurgeRetryConfig = { maxAttempts: 8, baseDelayMs: 60_000 },
   ) {}
 
   async execute(userId: string, actor: AccountErasureActor): Promise<AccountErasureResult> {
@@ -226,15 +241,38 @@ export class ExecuteAccountErasureUseCase {
         professional.id,
       );
       for (const document of pendingPurge) {
+        const attemptCount = document.storagePurgeAttemptCount + 1;
         try {
           await this.documentStorage.deleteByUrl(document.fileUrl);
           await this.repos.professionalVerifications.markDocumentStoragePurged(document.id);
           documentsStoragePurged += 1;
         } catch (error) {
           documentsStoragePurgeFailures += 1;
+          // Module 94: persist durable retry state the instant this
+          // first attempt fails — never only the in-memory
+          // `documentsStoragePurgeFailures` counter below, which this
+          // call's own caller never sees again once this method returns.
+          // A scheduled `RetryPendingCloudinaryPurgesUseCase` invocation
+          // (or, for a document still soft-deleted-but-unpurged from a
+          // *prior* run, a future call to *this* method — see
+          // `listDocumentsPendingStoragePurge`'s own doc comment) is what
+          // eventually retries it — this call never blocks on Cloudinary
+          // recovering, and never rolls back the database erasure that
+          // already committed in step 1 (see this class's own doc
+          // comment, "Transaction boundaries").
+          const category = classifyStorageDeletionError(error);
+          const decision = decidePurgeRetry(attemptCount, category, this.purgeRetryConfig);
+          await this.repos.professionalVerifications.recordDocumentStoragePurgeFailure(document.id, {
+            attemptCount,
+            nextAttemptAt: decision.nextAttemptAt,
+            deadLetter: decision.deadLetter,
+            errorMessage: describeCloudinaryPurgeError(category, error),
+          });
           this.failureReporter.report(error instanceof Error ? error : new Error(String(error)), {
             documentId: document.id,
             professionalProfileId: professional.id,
+            errorCategory: category,
+            deadLetter: decision.deadLetter,
           });
         }
       }

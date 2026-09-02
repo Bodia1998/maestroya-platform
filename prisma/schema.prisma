@@ -3029,6 +3029,49 @@ model ProfessionalVerificationDocument {
   /// purged.
   storagePurgedAt  DateTime?
 
+  /// Module 94 — GDPR Cloudinary Purge Retry & Durable Erasure Completion.
+  ///
+  /// Durable retry state for the Cloudinary purge, living on the same row
+  /// `deletedAt`/`storagePurgedAt` already track rather than a parallel
+  /// shadow table — this row already IS the minimal durable record of
+  /// "this document's storage file needs deleting" (see those two
+  /// fields' own doc comments), and it survives the owning User row being
+  /// anonymized (never hard-deleted — see `ExecuteAccountErasureUseCase`'s
+  /// own doc comment), so a scheduled retry never depends on the User row
+  /// existing. `PENDING` is eligible for another attempt (immediately, if
+  /// `storagePurgeNextAttemptAt` is null — the very first attempt already
+  /// failed inside `ExecuteAccountErasureUseCase` itself — or once
+  /// `storagePurgeNextAttemptAt` elapses); `DEAD_LETTER` means
+  /// `GDPR_CLOUDINARY_PURGE_MAX_ATTEMPTS` was reached (or the provider
+  /// returned a permanent/non-retryable error) and this document now
+  /// requires manual operator review — see
+  /// `RetryPendingCloudinaryPurgesUseCase`'s own doc comment for the full
+  /// state machine. Never set for a row whose `storagePurgedAt` is
+  /// already non-null (a completed purge has nothing left to retry).
+  storagePurgeStatus       DocumentStoragePurgeStatus @default(PENDING)
+  /// Number of Cloudinary deletion attempts made so far (the initial
+  /// attempt inside `ExecuteAccountErasureUseCase` counts as attempt 1).
+  /// Compared against `GDPR_CLOUDINARY_PURGE_MAX_ATTEMPTS` to decide
+  /// whether the next failure moves this row to `DEAD_LETTER`.
+  storagePurgeAttemptCount Int                         @default(0)
+  /// Earliest time the next retry attempt may run — bounded exponential
+  /// backoff (`computeBackoffDelayMs`, the same helper Module 45's job
+  /// queue already uses). Null means "eligible immediately" (never yet
+  /// retried, or a fresh failure recorded with no computed delay).
+  storagePurgeNextAttemptAt DateTime?
+  /// The most recent purge failure's classified, redacted message — never
+  /// raw Cloudinary SDK payloads, credentials, or full private URLs (see
+  /// `classifyCloudinaryPurgeError`'s own doc comment). Surfaced to
+  /// operators reviewing `DEAD_LETTER` rows; not personal data about the
+  /// erased user beyond what `fileUrl` itself already is.
+  storagePurgeLastError     String?                    @db.Text
+  /// When the most recent purge attempt (successful or not) ran. Doubles
+  /// as the atomic claim's "already being worked" signal alongside
+  /// `storagePurgeNextAttemptAt` — see
+  /// `PrismaProfessionalVerificationRepository.claimPendingStoragePurgeBatch`'s
+  /// own doc comment.
+  storagePurgeLastAttemptedAt DateTime?
+
   verification ProfessionalVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -3037,7 +3080,18 @@ model ProfessionalVerificationDocument {
   @@index([verificationId])
   @@index([type])
   @@index([deletedAt])
+  /// Module 94: the exact predicate `claimPendingStoragePurgeBatch` filters
+  /// and orders by — see that method's own doc comment for the full query.
+  @@index([storagePurgeStatus, storagePurgeNextAttemptAt, id])
   @@map("professional_verification_documents")
+}
+
+/// Module 94 — GDPR Cloudinary Purge Retry & Durable Erasure Completion.
+/// See `ProfessionalVerificationDocument.storagePurgeStatus`'s own doc
+/// comment.
+enum DocumentStoragePurgeStatus {
+  PENDING
+  DEAD_LETTER
 }
 
 /// A dispute raised over an Order/Job (Module 21 — Disputes & Support).

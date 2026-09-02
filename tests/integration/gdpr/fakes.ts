@@ -1163,6 +1163,14 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
       rejectionReason: null,
       createdAt: new Date(),
       updatedAt: new Date(),
+      // --- Module 94: GDPR Cloudinary Purge Retry & Durable Erasure Completion ---
+      deletedAt: null,
+      storagePurgedAt: null,
+      storagePurgeStatus: "PENDING",
+      storagePurgeAttemptCount: 0,
+      storagePurgeNextAttemptAt: null,
+      storagePurgeLastError: null,
+      storagePurgeLastAttemptedAt: null,
     };
     const list = this.documents.get(data.verificationId) ?? [];
     list.push(doc);
@@ -1216,9 +1224,8 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
     for (const verificationId of this.professionalVerificationIds(professionalProfileId)) {
       const docs = this.documents.get(verificationId) ?? [];
       for (const doc of docs) {
-        const mutable = doc as VerificationDocumentRecord & { deletedAt?: Date };
-        if (mutable.deletedAt) continue;
-        mutable.deletedAt = new Date();
+        if (doc.deletedAt) continue;
+        doc.deletedAt = new Date();
         newlyDeleted.push(doc);
       }
     }
@@ -1230,23 +1237,69 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
     for (const verificationId of this.professionalVerificationIds(professionalProfileId)) {
       const docs = this.documents.get(verificationId) ?? [];
       for (const doc of docs) {
-        const mutable = doc as VerificationDocumentRecord & { deletedAt?: Date; storagePurgedAt?: Date };
-        if (mutable.deletedAt && !mutable.storagePurgedAt) pending.push(doc);
+        if (doc.deletedAt && !doc.storagePurgedAt && doc.storagePurgeStatus === "PENDING") pending.push(doc);
       }
     }
     return pending;
   }
 
   async markDocumentStoragePurged(documentId: string) {
+    const found = this.findDocumentMutable(documentId);
+    if (found) {
+      found.storagePurgedAt = new Date();
+      found.storagePurgeStatus = "PENDING";
+      found.storagePurgeAttemptCount = 0;
+      found.storagePurgeNextAttemptAt = null;
+      found.storagePurgeLastError = null;
+    }
+  }
+
+  // --- Module 94: GDPR Cloudinary Purge Retry & Durable Erasure Completion ---
+
+  private findDocumentMutable(documentId: string): VerificationDocumentRecord | undefined {
     for (const docs of this.documents.values()) {
-      const found = docs.find((d) => d.id === documentId) as
-        | (VerificationDocumentRecord & { storagePurgedAt?: Date })
-        | undefined;
-      if (found) {
-        found.storagePurgedAt = new Date();
-        return;
+      const found = docs.find((d) => d.id === documentId);
+      if (found) return found;
+    }
+    return undefined;
+  }
+
+  async recordDocumentStoragePurgeFailure(
+    documentId: string,
+    data: { attemptCount: number; nextAttemptAt: Date | null; deadLetter: boolean; errorMessage: string },
+  ) {
+    const found = this.findDocumentMutable(documentId);
+    if (!found) return;
+    found.storagePurgeStatus = data.deadLetter ? "DEAD_LETTER" : "PENDING";
+    found.storagePurgeAttemptCount = data.attemptCount;
+    found.storagePurgeNextAttemptAt = data.nextAttemptAt;
+    found.storagePurgeLastError = data.errorMessage;
+    found.storagePurgeLastAttemptedAt = new Date();
+  }
+
+  async claimPendingStoragePurgeBatch(now: Date, batchSize: number) {
+    const claimable: VerificationDocumentRecord[] = [];
+    for (const docs of this.documents.values()) {
+      for (const doc of docs) {
+        if (
+          doc.deletedAt &&
+          !doc.storagePurgedAt &&
+          doc.storagePurgeStatus === "PENDING" &&
+          (doc.storagePurgeNextAttemptAt === null || doc.storagePurgeNextAttemptAt <= now)
+        ) {
+          claimable.push(doc);
+        }
       }
     }
+    claimable.sort((a, b) => {
+      const aTime = a.storagePurgeNextAttemptAt?.getTime() ?? -Infinity;
+      const bTime = b.storagePurgeNextAttemptAt?.getTime() ?? -Infinity;
+      if (aTime !== bTime) return aTime - bTime;
+      return a.id.localeCompare(b.id);
+    });
+    const batch = claimable.slice(0, batchSize);
+    for (const doc of batch) doc.storagePurgeLastAttemptedAt = now;
+    return batch;
   }
 }
 

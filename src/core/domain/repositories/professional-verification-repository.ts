@@ -56,7 +56,32 @@ export interface VerificationDocumentRecord {
   rejectionReason: string | null;
   createdAt: Date;
   updatedAt: Date;
+  // --- Module 88 / Module 94: GDPR erasure + Cloudinary purge retry ---
+  /** Set the instant erasure soft-deletes this document. Null for a
+   *  document that has not been through GDPR erasure at all. */
+  deletedAt: Date | null;
+  /** Set only once the Cloudinary file behind `fileUrl` is confirmed
+   *  deleted. See schema.prisma's own doc comment. */
+  storagePurgedAt: Date | null;
+  /** Module 94 — see `DocumentStoragePurgeStatusValue`'s own doc comment. */
+  storagePurgeStatus: DocumentStoragePurgeStatusValue;
+  storagePurgeAttemptCount: number;
+  storagePurgeNextAttemptAt: Date | null;
+  storagePurgeLastError: string | null;
+  storagePurgeLastAttemptedAt: Date | null;
 }
+
+/**
+ * Module 94 — GDPR Cloudinary Purge Retry & Durable Erasure Completion.
+ * Mirrors the Postgres enum `DocumentStoragePurgeStatus` (schema.prisma).
+ * `PENDING`: eligible for another retry attempt (immediately, or once
+ * `storagePurgeNextAttemptAt` elapses). `DEAD_LETTER`: retries exhausted
+ * (`GDPR_CLOUDINARY_PURGE_MAX_ATTEMPTS`) or the provider returned a
+ * permanent/non-retryable error — requires manual operator review, never
+ * silently discarded (see `RetryPendingCloudinaryPurgesUseCase`'s own doc
+ * comment).
+ */
+export type DocumentStoragePurgeStatusValue = "PENDING" | "DEAD_LETTER";
 
 export interface ProfessionalVerificationWithDocuments extends ProfessionalVerificationRecord {
   documents: VerificationDocumentRecord[];
@@ -221,6 +246,77 @@ export interface ProfessionalVerificationRepository {
    */
   listDocumentsPendingStoragePurge(professionalProfileId: string): Promise<VerificationDocumentRecord[]>;
 
-  /** Marks one document's underlying storage file as confirmed deleted. */
+  /**
+   * Marks one document's underlying storage file as confirmed deleted —
+   * sets `storagePurgedAt` and clears any outstanding Module 94 retry
+   * state (`storagePurgeStatus` back to `PENDING`'s default meaning
+   * "nothing owed," `storagePurgeAttemptCount`/`storagePurgeNextAttemptAt`/
+   * `storagePurgeLastError` reset). Shared by both the inline purge
+   * attempt inside `ExecuteAccountErasureUseCase` and
+   * `RetryPendingCloudinaryPurgesUseCase` — one "purge succeeded" write
+   * path, not two.
+   */
   markDocumentStoragePurged(documentId: string): Promise<void>;
+
+  // --- Module 94: GDPR Cloudinary Purge Retry & Durable Erasure Completion ---
+
+  /**
+   * Records a failed purge attempt for one document — called inline by
+   * `ExecuteAccountErasureUseCase` the moment its own first attempt fails
+   * (so a durable retry record exists immediately, before the erasure
+   * call even returns; see that use case's own doc comment) and by
+   * `RetryPendingCloudinaryPurgesUseCase` for every subsequent attempt.
+   * `nextAttemptAt: null` together with `deadLetter: true` moves the row
+   * to `DocumentStoragePurgeStatus.DEAD_LETTER` (retries exhausted, or the
+   * provider error was classified permanent — see
+   * `classifyCloudinaryPurgeError`) instead of scheduling another
+   * attempt. `errorMessage` must already be the classified, redacted
+   * message — never a raw provider payload (see `storagePurgeLastError`'s
+   * own doc comment).
+   */
+  recordDocumentStoragePurgeFailure(
+    documentId: string,
+    data: { attemptCount: number; nextAttemptAt: Date | null; deadLetter: boolean; errorMessage: string },
+  ): Promise<void>;
+
+  /**
+   * Atomically claims up to `batchSize` documents due for a Cloudinary
+   * purge retry — `deletedAt IS NOT NULL AND storagePurgedAt IS NULL AND
+   * storagePurgeStatus = 'PENDING' AND (storagePurgeNextAttemptAt IS NULL
+   * OR storagePurgeNextAttemptAt <= now)`, ordered
+   * `storagePurgeNextAttemptAt ASC NULLS FIRST, id ASC` (the exact keyset
+   * order the composite index on those columns serves — never `OFFSET`
+   * pagination, see `RetryPendingCloudinaryPurgesUseCase`'s own doc
+   * comment).
+   *
+   * The claim itself is the concurrency-safety mechanism: implemented as
+   * one atomic `SELECT ... FOR UPDATE SKIP LOCKED` + `UPDATE ... RETURNING`
+   * statement (see the Prisma implementation), so two overlapping cron
+   * invocations (this platform's serverless deployment target can and
+   * does run duplicate/overlapping invocations of the same scheduled
+   * route) can never both claim the same row — the loser's `SKIP LOCKED`
+   * simply excludes rows the winner already has a row lock on, no
+   * separate `lockedAt`/`lockOwner` column or distributed lock required
+   * for row-level correctness (a coarser `DistributedLock` is layered on
+   * top by `RetryPendingCloudinaryPurgesUseCase` purely to avoid wasted,
+   * fully-redundant work when invocations overlap — not for correctness,
+   * which this claim already guarantees on its own).
+   *
+   * Sets `storagePurgeLastAttemptedAt = now` on every claimed row as part
+   * of the same atomic statement — this doubles as the in-flight lease:
+   * a process that crashes mid-purge after claiming a row leaves it with
+   * a stale `storagePurgeLastAttemptedAt` and an unchanged
+   * `storagePurgeNextAttemptAt`, which is only re-claimable once that
+   * `storagePurgeNextAttemptAt` (still whatever it was before this claim,
+   * i.e. immediately, since a genuinely fresh row has it null) elapses
+   * again on the *next* scheduled invocation — never stuck forever, and
+   * never double-processed concurrently with the crashed attempt still
+   * technically "in flight" (Cloudinary's own `destroy` is idempotent —
+   * see `CloudinaryVerificationDocumentDeletionService`'s own doc
+   * comment — so even the rare case of the crashed attempt's network call
+   * actually completing server-side after this method re-claims the row
+   * is safe: the next real attempt just gets Cloudinary's "not found"
+   * response, treated as success).
+   */
+  claimPendingStoragePurgeBatch(now: Date, batchSize: number): Promise<VerificationDocumentRecord[]>;
 }
