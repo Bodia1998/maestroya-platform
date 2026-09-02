@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { env } from "@/infrastructure/config/env";
+import { isValidCronAuthHeader } from "@/infrastructure/auth/cron-auth";
 import { logger } from "@/infrastructure/observability/logger";
 import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
@@ -49,7 +50,7 @@ export const GET = withApiTracing("/api/cron/expire-workflows", async function G
   }
 
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
+  if (!isValidCronAuthHeader(authHeader, env.CRON_SECRET)) {
     logger.warn("workflow_expiration_cron_unauthorized", {
       requestId,
       route: "/api/cron/expire-workflows",
