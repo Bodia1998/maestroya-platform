@@ -16,6 +16,7 @@ import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/r
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
 import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
 import { CompleteProfessionalOnboardingUseCase } from "@/application/use-cases/professional/complete-professional-onboarding.use-case";
+import { makeCollectFraudTrustSignalsUseCase } from "@/application/use-cases/trust-integrity/compose";
 import { CreateProfessionalUseCase } from "@/application/use-cases/professional/create-professional.use-case";
 import { DeactivateProfessionalUseCase } from "@/application/use-cases/professional/deactivate-professional.use-case";
 import { GetProfessionalByUserIdUseCase } from "@/application/use-cases/professional/get-professional-by-user-id.use-case";
@@ -49,6 +50,9 @@ export function makeCompleteProfessionalOnboardingUseCase() {
     addresses,
     geocoding,
     makeCreateProfessionalUseCase(),
+    // Module 93 — Real Fraud & Trust Signal Providers: see that use
+    // case's own doc comment on this optional constructor argument.
+    makeCollectFraudTrustSignalsUseCase(),
   );
 }
 

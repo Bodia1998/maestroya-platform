@@ -14,7 +14,9 @@ import {
   makeVerifyEmailUseCase,
 } from "@/application/use-cases/auth/compose";
 import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
-import { getClientIpHash } from "@/infrastructure/auth/request-context";
+import { makeCollectFraudTrustSignalsUseCase } from "@/application/use-cases/trust-integrity/compose";
+import { getClientIp, getClientIpHash } from "@/infrastructure/auth/request-context";
+import { logger } from "@/infrastructure/observability/logger";
 
 export type ActionResult =
   | { success: true }
@@ -63,9 +65,38 @@ export async function registerAction(formData: unknown): Promise<ActionResult> {
   try {
     const { userId } = await makeRegisterUserUseCase().execute(parsed.data);
     await antiAbuse.recordEvent({ type: "ACCOUNT_CREATED", userId, ipHash });
+
+    // Module 93 — Real Fraud & Trust Signal Providers: best-effort,
+    // never blocks the response above (registration has already
+    // succeeded by this point) — see CollectFraudTrustSignalsUseCase's
+    // own "never blocks the caller" section. Raw `ip` is resolved here,
+    // right before use, and never stored on `parsed.data`/`ipHash`/
+    // anywhere else — see getClientIp's own doc comment.
+    void collectRegistrationFraudTrustSignals(userId, ipHash, parsed.data.deviceSignal);
+
     return { success: true };
   } catch (error) {
     return fromDomainError(error, "Something went wrong creating your account.");
+  }
+}
+
+async function collectRegistrationFraudTrustSignals(
+  userId: string,
+  ipHash: string | null,
+  deviceSignal: Record<string, unknown> | undefined,
+): Promise<void> {
+  try {
+    const ip = await getClientIp();
+    await makeCollectFraudTrustSignalsUseCase().execute({
+      userId,
+      deviceSignal: deviceSignal ? { rawSignal: deviceSignal } : undefined,
+      vpnProxySignal: ipHash && ip ? { ipHash, ip } : undefined,
+    });
+  } catch (error) {
+    logger.warn("fraud_signal_collection_unexpected_error", {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 

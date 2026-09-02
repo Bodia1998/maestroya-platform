@@ -193,6 +193,7 @@ model User {
   trustProfile                    TrustProfile?
   fraudSignalsAsSubject            FraudSignal[]            @relation("FraudSignalSubject")
   fraudSignalsResolved             FraudSignal[]            @relation("FraudSignalResolvedBy")
+  fraudTrustSignalChecks          FraudTrustSignalCheck[]
   offPlatformDetectionEvents       OffPlatformDetectionEvent[]
   trustAutomatedActionsAsSubject   TrustAutomatedAction[]   @relation("TrustAutomatedActionSubject")
   trustAutomatedActionsCreated     TrustAutomatedAction[]   @relation("TrustAutomatedActionCreatedBy")
@@ -4495,6 +4496,9 @@ enum FraudSignalType {
   /// FraudSignalType's own doc comment (domain/repositories/fraud-signal-repository.ts).
   PREMATURE_JOB_COMPLETION
   COMPLETION_DURING_ACTIVE_DISPUTE
+  /// Module 93 — Real Fraud & Trust Signal Providers: see
+  /// fraud-detection-rules.ts's detectHighRiskVpnProxyAccess.
+  SUSPICIOUS_VPN_PROXY_ACCESS
 }
 
 /// Mirrors `PartnerFraudFlagStatus` (Module 61) exactly — same "advisory
@@ -4539,6 +4543,84 @@ model FraudSignal {
   @@index([type])
   @@index([status])
   @@map("fraud_signals")
+}
+
+/// Module 93 — Real Fraud & Trust Signal Providers: append-only record of
+/// every real device-fingerprint/VPN-proxy/phone-reputation provider call
+/// `CollectFraudTrustSignalsUseCase` makes, and what it found — the
+/// persistence Module 65's original ports never had (those three
+/// providers were never called from any real execution path — see the
+/// Module 93 implementation report §2 for the investigation that found
+/// this). Deliberately its own small table rather than folding these
+/// fields onto `FraudSignal`: a signal *check* (a provider was called,
+/// here is what it returned) is a different fact from a `FraudSignal`
+/// (a detector concluded this user is suspicious) — this table records
+/// every check whether or not it ever produces a `FraudSignal`, matching
+/// `SecurityEvent`'s own "every attempt, not just the ones that trip a
+/// rule" convention.
+///
+/// GDPR / data minimization (module brief requirement #14): every field
+/// here is either a hash, a coarse classification, or a small integer —
+/// never a raw device fingerprint, never a raw IP, never a raw phone
+/// number. `deviceIdHash`/`ipHash` are one-way SHA-256 (`ipHash` reuses
+/// the exact `hashIp` keyed-hash `SecurityEvent.ipHash` already uses —
+/// see `security-key.ts`); a masked phone number is never stored at all,
+/// only the coarse `phoneLineType`/`phoneRiskScore`/`phoneValid`
+/// findings. Retention: rows are provider-call telemetry, not part of
+/// this platform's core marketplace/financial/dispute record — kept for
+/// a short operational window (recommended 90 days; no automated purge
+/// job ships with this module, see the implementation report's "Known
+/// limitations") and explicitly deleted for a user by
+/// `PrismaFraudTrustSignalCheckRepository.deleteForUser`, called from
+/// `ExecuteAccountErasureUseCase` alongside every other per-user
+/// erasure step. Never surfaced in any user-facing UI; admin access is
+/// the same admin-only Trust & Integrity surface every other
+/// `FraudSignal`/`TrustProfile` row already requires.
+model FraudTrustSignalCheck {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  checkType FraudTrustSignalCheckType
+  provider  String
+  success   Boolean
+  latencyMs Int?
+
+  /// Set only when checkType = DEVICE_FINGERPRINT.
+  deviceIdHash     String?
+  deviceConfidence Int?
+
+  /// Set only when checkType = VPN_PROXY_DETECTION. `ipHash` is the same
+  /// keyed hash `SecurityEvent.ipHash` uses — never a raw IP.
+  ipHash            String?
+  vpnClassification String?
+  vpnRiskLevel      String?
+  vpnConfidence     Int?
+  isVpn             Boolean?
+  isProxy           Boolean?
+  isTor             Boolean?
+  isHosting         Boolean?
+
+  /// Set only when checkType = PHONE_REPUTATION. Never the phone number
+  /// itself, not even masked — only the provider's findings about it.
+  phoneValid     Boolean?
+  phoneLineType  String?
+  phoneRiskScore Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([checkType])
+  @@index([deviceIdHash])
+  @@index([ipHash])
+  @@index([createdAt])
+  @@map("fraud_trust_signal_checks")
+}
+
+enum FraudTrustSignalCheckType {
+  DEVICE_FINGERPRINT
+  VPN_PROXY_DETECTION
+  PHONE_REPUTATION
 }
 
 enum TrustAutomatedActionType {

@@ -12,6 +12,7 @@ import type { NotificationRepository } from "@/domain/repositories/notification-
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { ProfessionalVerificationRepository } from "@/domain/repositories/professional-verification-repository";
 import type { UserRepository } from "@/domain/repositories/user-repository";
+import type { FraudTrustSignalCheckRepository } from "@/domain/repositories/fraud-trust-signal-check-repository";
 
 /**
  * Module 88 — GDPR Erasure Execution & Document Retention.
@@ -34,6 +35,15 @@ export interface GdprErasureRepos {
   notifications: NotificationRepository;
   professionalVerifications: ProfessionalVerificationRepository;
   authTokens: AuthTokenRepository;
+  // Module 93 — Real Fraud & Trust Signal Providers: optional so every
+  // pre-existing caller/test that builds GdprErasureRepos without it keeps
+  // compiling unchanged. When present, FraudTrustSignalCheck rows for this
+  // user are hard-deleted alongside every other per-user erasure step —
+  // see that model's own doc comment (module brief requirement #14: these
+  // rows are provider-call telemetry, not part of the RETAIN-classified
+  // audit/financial/dispute record, so hard-delete is appropriate and
+  // does not need a new formal GdprDataCategoryValue).
+  fraudTrustSignalChecks?: FraudTrustSignalCheckRepository;
 }
 
 /**
@@ -170,6 +180,11 @@ export class ExecuteAccountErasureUseCase {
       await this.repos.authTokens.deletePasswordResetTokensForUser(userId);
       await this.repos.authTokens.revokeAllRefreshTokensForUser(userId);
       await this.repos.users.invalidateAllSessions(userId);
+
+      // Module 93 — Real Fraud & Trust Signal Providers.
+      if (this.repos.fraudTrustSignalChecks) {
+        await this.repos.fraudTrustSignalChecks.deleteForUser(userId);
+      }
 
       categoriesProcessed = {
         AUTH_CREDENTIALS: "HARD_DELETE",

@@ -322,6 +322,49 @@ export class VerificationProviderError extends DomainError {
 }
 
 /**
+ * Module 93 — Real Fraud & Trust Signal Providers: the shared error every
+ * real device-fingerprint/VPN-proxy/phone-reputation adapter throws for a
+ * genuine provider-side failure (timeout, network error, non-2xx HTTP
+ * response, malformed body) — same "vendor SDK/HTTP error MUST NOT leak
+ * past the adapter as a raw fetch/SDK exception" rule
+ * `VerificationProviderError` establishes for Persona, generalized across
+ * this module's three provider kinds via `kind`.
+ *
+ * `CollectFraudTrustSignalsUseCase` — the only caller of any of these
+ * three adapters — always catches this (never lets it propagate to the
+ * Server Action that triggered signal collection) and degrades to
+ * "signal unavailable" for that one provider, exactly per this module's
+ * "provider failure must never automatically mean fraud = true" rule.
+ * `retryable` is carried through only for observability (the structured
+ * log line `CollectFraudTrustSignalsUseCase` emits) — this module does
+ * not itself retry at the use-case layer; each adapter already retries
+ * transient failures internally (matching `PersonaClient`'s own retry
+ * policy) before ever throwing this.
+ */
+export type FraudTrustProviderKind = "DEVICE_FINGERPRINT" | "VPN_PROXY_DETECTION" | "PHONE_REPUTATION";
+
+export class FraudTrustProviderError extends DomainError {
+  readonly code = "FRAUD_TRUST_PROVIDER_ERROR";
+  readonly kind: FraudTrustProviderKind;
+  readonly provider: string;
+  readonly retryable: boolean;
+
+  constructor(
+    kind: FraudTrustProviderKind,
+    provider: string,
+    message: string,
+    retryable: boolean,
+    options?: { cause?: unknown },
+  ) {
+    super(`[${kind}:${provider}] ${message}`);
+    this.kind = kind;
+    this.provider = provider;
+    this.retryable = retryable;
+    if (options?.cause !== undefined) this.cause = options.cause;
+  }
+}
+
+/**
  * Module 60 — Referral & Marketing Attribution Platform: thrown by
  * `domain/services/referral-code-rules.ts`'s `assertValidReferralCode` when
  * a candidate referral code violates its format rules (length outside

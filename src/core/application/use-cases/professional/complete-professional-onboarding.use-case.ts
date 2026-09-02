@@ -4,6 +4,9 @@ import type { ProfessionalRecord } from "@/domain/repositories/professional-repo
 import type { UserRepository } from "@/domain/repositories/user-repository";
 import type { ProfessionalOnboardingInput } from "@/application/dto/professional.dto";
 import type { CreateProfessionalUseCase } from "@/application/use-cases/professional/create-professional.use-case";
+import type { CollectFraudTrustSignalsUseCase } from "@/application/use-cases/trust-integrity/collect-fraud-trust-signals.use-case";
+import { toE164 } from "@/domain/services/phone-normalization";
+import { logger } from "@/infrastructure/observability/logger";
 
 /**
  * Professional Onboarding — the single orchestration point for "a user who
@@ -41,6 +44,11 @@ export class CompleteProfessionalOnboardingUseCase {
     private readonly addresses: AddressRepository,
     private readonly geocoding: GeocodingProvider,
     private readonly createProfessional: CreateProfessionalUseCase,
+    // Module 93 — Real Fraud & Trust Signal Providers: optional so every
+    // pre-existing caller/test that constructs this use case with four
+    // arguments keeps compiling unchanged — same convention
+    // RegisterUserUseCase's own `attributionLinker` follows for Module 60.
+    private readonly collectFraudTrustSignals?: CollectFraudTrustSignalsUseCase,
   ) {}
 
   async execute(userId: string, input: ProfessionalOnboardingInput): Promise<ProfessionalRecord> {
@@ -68,6 +76,26 @@ export class CompleteProfessionalOnboardingUseCase {
     });
 
     await this.users.clearSignupIntent(userId);
+
+    // Module 93 — Real Fraud & Trust Signal Providers: best-effort phone
+    // reputation check at this checkpoint — the first point in this
+    // platform's flows where a phone number is collected. Never allowed to
+    // affect onboarding itself — same "swallowed, never rethrown" pattern
+    // RegisterUserUseCase's own attributionLinker call uses for Module 60.
+    if (this.collectFraudTrustSignals) {
+      const phoneE164 = toE164(input.contactPhone);
+      if (phoneE164) {
+        try {
+          await this.collectFraudTrustSignals.execute({ userId, phoneSignal: { phoneE164 } });
+        } catch (error) {
+          logger.warn("fraud_signal_collection_unexpected_error", {
+            userId,
+            checkType: "PHONE_REPUTATION",
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+    }
 
     return professional;
   }

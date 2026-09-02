@@ -42,6 +42,17 @@ export const registerSchema = z
     // anything else in this schema — a missing/unknown visitorId simply
     // means the registration goes unattributed, never a validation error.
     visitorId: z.string().trim().min(1).max(100).optional(),
+    // Module 93 — Real Fraud & Trust Signal Providers: opaque
+    // client-collected device signal, if any (e.g. `{ requestId }` from a
+    // FingerprintJS Pro JS agent, when one is present in a future frontend
+    // change — see FingerprintJsDeviceFingerprintProvider's own doc comment;
+    // no such agent exists in this codebase's frontend today, so this is
+    // always absent until that follow-up ships). Never validated against a
+    // fixed shape here — `DeviceFingerprintProvider.fingerprint` already
+    // treats its `rawSignal` argument as fully opaque (see that port's own
+    // doc comment) and degrades gracefully for any shape, including this
+    // field's total absence.
+    deviceSignal: z.record(z.string(), z.unknown()).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match.",
