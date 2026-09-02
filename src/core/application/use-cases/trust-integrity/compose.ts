@@ -9,13 +9,20 @@ import { PrismaAccountRestrictionRepository } from "@/infrastructure/database/pr
 import { PrismaJobRepository } from "@/infrastructure/database/prisma/repositories/prisma-job-repository";
 import { PrismaDisputeRepository } from "@/infrastructure/database/prisma/repositories/prisma-dispute-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
-import { createOffPlatformDetectionProvider } from "@/infrastructure/trust-integrity/trust-integrity-provider-factory";
+import {
+  createOffPlatformDetectionProvider,
+  createDeviceFingerprintProvider,
+  createVpnProxyDetectionProvider,
+  createPhoneReputationProvider,
+} from "@/infrastructure/trust-integrity/trust-integrity-provider-factory";
+import { PrismaFraudTrustSignalCheckRepository } from "@/infrastructure/database/prisma/repositories/prisma-fraud-trust-signal-check-repository";
 
 import { RecordUserBehaviorSignalUseCase } from "@/application/use-cases/trust-integrity/record-user-behavior-signal.use-case";
 import { GetUserTrustProfileUseCase } from "@/application/use-cases/trust-integrity/get-user-trust-profile.use-case";
 import { ApplyAutomatedActionUseCase } from "@/application/use-cases/trust-integrity/apply-automated-action.use-case";
 import { DetectOffPlatformCommunicationUseCase } from "@/application/use-cases/trust-integrity/detect-off-platform-communication.use-case";
 import { DetectFraudSignalsUseCase } from "@/application/use-cases/trust-integrity/detect-fraud-signals.use-case";
+import { CollectFraudTrustSignalsUseCase } from "@/application/use-cases/trust-integrity/collect-fraud-trust-signals.use-case";
 import { DetectFakeReviewPatternsUseCase } from "@/application/use-cases/trust-integrity/detect-fake-review-patterns.use-case";
 import { DetectSpamActivityUseCase } from "@/application/use-cases/trust-integrity/detect-spam-activity.use-case";
 import { DetectSuspiciousPricingUseCase } from "@/application/use-cases/trust-integrity/detect-suspicious-pricing.use-case";
@@ -60,6 +67,7 @@ const accountRestrictions = new PrismaAccountRestrictionRepository();
 const jobs = new PrismaJobRepository();
 const disputes = new PrismaDisputeRepository();
 const professionals = new PrismaProfessionalRepository();
+const fraudTrustSignalChecks = new PrismaFraudTrustSignalCheckRepository();
 
 export function makeRecordUserBehaviorSignalUseCase(): RecordUserBehaviorSignalUseCase {
   return new RecordUserBehaviorSignalUseCase(trustProfiles, eventBus);
@@ -84,6 +92,18 @@ export function makeDetectOffPlatformCommunicationUseCase(): DetectOffPlatformCo
 
 export function makeDetectFraudSignalsUseCase(): DetectFraudSignalsUseCase {
   return new DetectFraudSignalsUseCase(fraudSignals, makeRecordUserBehaviorSignalUseCase(), eventBus);
+}
+
+// --- Module 93 — Real Fraud & Trust Signal Providers ---
+
+export function makeCollectFraudTrustSignalsUseCase(): CollectFraudTrustSignalsUseCase {
+  return new CollectFraudTrustSignalsUseCase(
+    createDeviceFingerprintProvider(),
+    createVpnProxyDetectionProvider(),
+    createPhoneReputationProvider(),
+    fraudTrustSignalChecks,
+    makeDetectFraudSignalsUseCase(),
+  );
 }
 
 export function makeDetectFakeReviewPatternsUseCase(): DetectFakeReviewPatternsUseCase {

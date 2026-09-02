@@ -9,6 +9,12 @@ import {
 } from "@/application/use-cases/gdpr/execute-account-erasure.use-case";
 import { RecordAccountErasureExecutedAuditLogSubscriber } from "@/application/use-cases/gdpr/record-account-erasure-executed-audit-log.subscriber";
 import type { VerificationDocumentStorageDeleter } from "@/application/interfaces/verification-document-storage-deleter";
+import type {
+  FraudTrustSignalCheckRepository,
+  CreateFraudTrustSignalCheckData,
+  FraudTrustSignalCheckRecord,
+  FraudTrustSignalCheckType,
+} from "@/domain/repositories/fraud-trust-signal-check-repository";
 import { FakeAuthTokenRepository } from "../auth/fakes";
 import {
   FakeAddressRepository,
@@ -27,6 +33,29 @@ import {
  * subscriber, fake repositories swapped in for storage — same convention
  * as gdpr-flows.test.ts (Module 38).
  */
+
+class FakeFraudTrustSignalCheckRepository implements FraudTrustSignalCheckRepository {
+  private readonly rowsByUser = new Map<string, number>();
+
+  async create(data: CreateFraudTrustSignalCheckData): Promise<FraudTrustSignalCheckRecord> {
+    this.rowsByUser.set(data.userId, (this.rowsByUser.get(data.userId) ?? 0) + 1);
+    return { id: "check-1", createdAt: new Date(), ...data };
+  }
+  async findRecentForUser(_userId: string, _checkType: FraudTrustSignalCheckType): Promise<FraudTrustSignalCheckRecord | null> {
+    return null;
+  }
+  async listUserIdsForDeviceIdHash(): Promise<string[]> {
+    return [];
+  }
+  async deleteForUser(userId: string): Promise<number> {
+    const count = this.rowsByUser.get(userId) ?? 0;
+    this.rowsByUser.delete(userId);
+    return count;
+  }
+  countForUser(userId: string): number {
+    return this.rowsByUser.get(userId) ?? 0;
+  }
+}
 
 class RecordingDocumentStorageDeleter implements VerificationDocumentStorageDeleter {
   deletedUrls: string[] = [];
@@ -48,6 +77,8 @@ function setup() {
   const notifications = new FakeNotificationRepository();
   const professionalVerifications = new FakeProfessionalVerificationRepository();
   const authTokens = new FakeAuthTokenRepository();
+  // Module 93 — Real Fraud & Trust Signal Providers.
+  const fraudTrustSignalChecks = new FakeFraudTrustSignalCheckRepository();
   const auditLog = new FakeAdminAuditLogRepository();
   const jobs = new FakeJobRepository();
   const documentStorage = new RecordingDocumentStorageDeleter();
@@ -63,6 +94,7 @@ function setup() {
     notifications,
     professionalVerifications,
     authTokens,
+    fraudTrustSignalChecks,
   };
 
   const useCase = new ExecuteAccountErasureUseCase(repos, documentStorage, eventBus);
@@ -86,6 +118,7 @@ function setup() {
     notifications,
     professionalVerifications,
     authTokens,
+    fraudTrustSignalChecks,
     auditLog,
     jobs,
     documentStorage,
@@ -123,6 +156,22 @@ describe("Module 88 — ExecuteAccountErasureUseCase", () => {
     expect(updated?.email).not.toBe("person@example.com");
     expect(updated?.passwordHash).toBeNull();
     expect(updated?.status).toBe("DEACTIVATED");
+  });
+
+  it("hard-deletes FraudTrustSignalCheck rows for the erased user (Module 93)", async () => {
+    const { useCase, fraudTrustSignalChecks, user } = setup();
+    await fraudTrustSignalChecks.create({
+      userId: user.id,
+      checkType: "DEVICE_FINGERPRINT",
+      provider: "FINGERPRINTJS",
+      success: true,
+      deviceIdHash: "hash-1",
+    });
+    expect(fraudTrustSignalChecks.countForUser(user.id)).toBe(1);
+
+    await useCase.execute(user.id, { userId: user.id, isAdmin: false });
+
+    expect(fraudTrustSignalChecks.countForUser(user.id)).toBe(0);
   });
 
   it("erases address and customer-profile PII and revokes auth tokens/sessions", async () => {

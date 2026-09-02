@@ -140,6 +140,42 @@ const envSchema = z
     PERSONA_WEBHOOK_SECRET: z.string().optional(),
     PERSONA_API_BASE_URL: z.preprocess(emptyStringToUndefined, z.string().url().optional()),
 
+    // --- Module 93 — Real Fraud & Trust Signal Providers ---
+    // Selects which concrete adapter each of Module 65's three provider
+    // ports (`DeviceFingerprintProvider`/`VpnProxyDetectionProvider`/
+    // `PhoneReputationProvider`) gets from
+    // `trust-integrity-provider-factory.ts`. Same `.catch("null")`
+    // "a typo in a swappable-backend selector must degrade to the safe
+    // local option, never fail startup" reasoning as `SMS_PROVIDER`/
+    // `VERIFICATION_PROVIDER` above. `null` (the default) is the Module 65
+    // baseline — no real signal, never a hard dependency any use case
+    // requires — never a broken deployment.
+    FRAUD_DEVICE_FINGERPRINT_PROVIDER: z.enum(["null", "fingerprintjs"]).catch("null"),
+    // FingerprintJS Pro Server API credential/region. Optional in every
+    // environment, including production, for the identical reason
+    // `PERSONA_API_KEY` is: a provider that isn't selected must never be a
+    // startup requirement. When `FRAUD_DEVICE_FINGERPRINT_PROVIDER=
+    // fingerprintjs`, `createDeviceFingerprintProvider()` itself — not
+    // this schema — is the one place that falls back with a warning for a
+    // missing key outside production; the `.superRefine` below fails fast
+    // in production only.
+    FINGERPRINTJS_SECRET_API_KEY: z.string().optional(),
+    // EU region by default — this platform is Spain/EU-facing; see
+    // `FingerprintJsDeviceFingerprintProvider`'s own doc comment.
+    FINGERPRINTJS_REGION: z.enum(["us", "eu", "ap"]).catch("eu"),
+    FINGERPRINTJS_TIMEOUT_MS: z.coerce.number().int().positive().catch(5_000),
+
+    FRAUD_VPN_PROXY_PROVIDER: z.enum(["null", "ipqs"]).catch("null"),
+    IPQS_API_KEY: z.string().optional(),
+    IPQS_TIMEOUT_MS: z.coerce.number().int().positive().catch(4_000),
+
+    // Reuses `TWILIO_ACCOUNT_SID`/`TWILIO_AUTH_TOKEN` above (the same
+    // Twilio account already used for SMS, Module 49) rather than a
+    // second credential pair — see
+    // `TwilioLookupPhoneReputationProvider`'s own doc comment for why.
+    FRAUD_PHONE_REPUTATION_PROVIDER: z.enum(["null", "twilio_lookup"]).catch("null"),
+    TWILIO_LOOKUP_TIMEOUT_MS: z.coerce.number().int().positive().catch(5_000),
+
     // --- Auth.js ---
     AUTH_SECRET: z.string().min(1, "AUTH_SECRET is required"),
     AUTH_URL: z.string().url(),
@@ -890,6 +926,48 @@ const envSchema = z
           code: z.ZodIssueCode.custom,
           path: ["PERSONA_WEBHOOK_SECRET"],
           message: "PERSONA_WEBHOOK_SECRET is required in production when VERIFICATION_PROVIDER=persona.",
+        });
+      }
+    }
+
+    // Module 93 — Real Fraud & Trust Signal Providers: a production
+    // deployment that deliberately opted into a real fraud/trust signal
+    // provider must not silently fall back to the Null provider for
+    // missing credentials — identical "deliberately and validly selected
+    // must not silently run half-configured" reasoning as
+    // `SMS_PROVIDER=twilio`/`VERIFICATION_PROVIDER=persona` above. Each
+    // selector itself stays `.catch("null")` at the field level (a typo
+    // must degrade to the safe, always-available Null provider); these
+    // only fire once a real provider was genuinely and validly selected.
+    // This is also the guard against requirement #23's "no accidental
+    // path where production silently uses Null* without an explicit
+    // reason": an explicit `null` selection is the only way production
+    // ever runs without a real signal, and that choice is visible in
+    // deployment config, never a silent default.
+    if (value.FRAUD_DEVICE_FINGERPRINT_PROVIDER === "fingerprintjs" && !value.FINGERPRINTJS_SECRET_API_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["FRAUD_DEVICE_FINGERPRINT_PROVIDER"],
+        message:
+          "FINGERPRINTJS_SECRET_API_KEY is required in production when FRAUD_DEVICE_FINGERPRINT_PROVIDER=fingerprintjs.",
+      });
+    }
+
+    if (value.FRAUD_VPN_PROXY_PROVIDER === "ipqs" && !value.IPQS_API_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["FRAUD_VPN_PROXY_PROVIDER"],
+        message: "IPQS_API_KEY is required in production when FRAUD_VPN_PROXY_PROVIDER=ipqs.",
+      });
+    }
+
+    if (value.FRAUD_PHONE_REPUTATION_PROVIDER === "twilio_lookup") {
+      if (!value.TWILIO_ACCOUNT_SID || !value.TWILIO_AUTH_TOKEN) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["FRAUD_PHONE_REPUTATION_PROVIDER"],
+          message:
+            "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN are required in production when FRAUD_PHONE_REPUTATION_PROVIDER=twilio_lookup.",
         });
       }
     }

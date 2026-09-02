@@ -9,8 +9,10 @@ import {
   detectSameDeviceClusters,
   detectSuspiciousRegistrationPattern,
   detectRepeatedFailedVerification,
+  detectHighRiskVpnProxyAccess,
   type IdentifierCluster,
   type RegistrationPatternInput,
+  type VpnProxyRiskInput,
 } from "@/domain/services/fraud-detection-rules";
 
 /**
@@ -29,6 +31,11 @@ export interface DetectFraudSignalsInput {
   deviceClusters?: IdentifierCluster[];
   registrationPatterns?: RegistrationPatternInput[];
   repeatedFailedVerifications?: { userId: string; rejectionCount: number }[];
+  // Module 93 — Real Fraud & Trust Signal Providers: fed by
+  // CollectFraudTrustSignalsUseCase whenever a real VpnProxyDetectionProvider
+  // call comes back high-risk — see detectHighRiskVpnProxyAccess's own doc
+  // comment for exactly what qualifies.
+  vpnProxyRiskFindings?: VpnProxyRiskInput[];
 }
 
 export class DetectFraudSignalsUseCase {
@@ -48,6 +55,7 @@ export class DetectFraudSignalsUseCase {
       ...(input.repeatedFailedVerifications ?? [])
         .map((v) => detectRepeatedFailedVerification(v.userId, v.rejectionCount))
         .filter((f) => f !== null),
+      ...(input.vpnProxyRiskFindings ?? []).map(detectHighRiskVpnProxyAccess).filter((f) => f !== null),
     ];
 
     for (const finding of findings) {

@@ -113,6 +113,46 @@ export function detectSuspiciousRegistrationPattern(input: RegistrationPatternIn
   };
 }
 
+/**
+ * Module 93 — Real Fraud & Trust Signal Providers: requirement #11
+ * ("real signals actually reach detectors") — a high-risk VPN/proxy/Tor/
+ * hosting-provider signal from `VpnProxyDetectionProvider`
+ * (`CollectFraudTrustSignalsUseCase` is the only caller) at registration
+ * or another business-critical checkpoint. Deliberately narrow: a bare
+ * VPN alone is common, legitimate traffic (privacy-conscious users,
+ * corporate VPNs) and is never enough on its own — this only fires for
+ * Tor, a datacenter/hosting-provider connection (the strongest signal of
+ * automated/non-human traffic), or a HIGH/CRITICAL `riskLevel` from the
+ * provider's own scoring. "Signal unavailable" (riskLevel "UNKNOWN") is
+ * never treated as a finding — the module brief's "provider failure must
+ * not automatically mean fraud = true" rule.
+ */
+export interface VpnProxyRiskInput {
+  userId: string;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | "UNKNOWN";
+  isTor: boolean | null;
+  isHosting: boolean | null;
+}
+
+export function detectHighRiskVpnProxyAccess(input: VpnProxyRiskInput): FraudDetectionResult | null {
+  const highRisk = input.riskLevel === "HIGH" || input.riskLevel === "CRITICAL";
+  const tor = input.isTor === true;
+  const hosting = input.isHosting === true;
+  if (!highRisk && !tor && !hosting) return null;
+
+  const reasons = [
+    tor ? "connection routed through Tor" : null,
+    hosting ? "connection originates from a datacenter/hosting provider, not a residential ISP" : null,
+    highRisk && !tor && !hosting ? `IP-intelligence provider classified this connection as ${input.riskLevel} risk` : null,
+  ].filter((r): r is string => r !== null);
+
+  return {
+    type: "SUSPICIOUS_VPN_PROXY_ACCESS",
+    userIds: [input.userId],
+    detail: reasons.join("; "),
+  };
+}
+
 export const REPEATED_FAILED_VERIFICATION_THRESHOLD = 3;
 
 /** Requirement #4 — "repeated failed verification": reads a count the

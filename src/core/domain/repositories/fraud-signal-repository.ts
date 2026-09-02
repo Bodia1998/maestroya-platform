@@ -17,6 +17,9 @@ export const FRAUD_SIGNAL_TYPE_VALUES = [
   // detection-rules.ts for what each of these two represents.
   "PREMATURE_JOB_COMPLETION",
   "COMPLETION_DURING_ACTIVE_DISPUTE",
+  // Module 93 — Real Fraud & Trust Signal Providers: see
+  // fraud-detection-rules.ts's detectHighRiskVpnProxyAccess.
+  "SUSPICIOUS_VPN_PROXY_ACCESS",
 ] as const;
 export type FraudSignalType = (typeof FRAUD_SIGNAL_TYPE_VALUES)[number];
 

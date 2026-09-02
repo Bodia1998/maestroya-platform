@@ -39,6 +39,7 @@ import { ExecuteAccountErasureUseCase, type GdprErasureRepos } from "@/applicati
 import { GrantConsentUseCase } from "@/application/use-cases/gdpr/grant-consent.use-case";
 import { WithdrawConsentUseCase } from "@/application/use-cases/gdpr/withdraw-consent.use-case";
 import type { GdprInventoryRepos } from "@/application/use-cases/gdpr/gdpr-data-inventory";
+import { PrismaFraudTrustSignalCheckRepository } from "@/infrastructure/database/prisma/repositories/prisma-fraud-trust-signal-check-repository";
 
 const users = new PrismaUserRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
@@ -110,6 +111,8 @@ export function makePrepareAccountDeletionUseCase() {
   return new PrepareAccountDeletionUseCase(inventoryRepos, eventBus, failureReporter);
 }
 
+const fraudTrustSignalChecks = new PrismaFraudTrustSignalCheckRepository();
+
 const erasureRepos: GdprErasureRepos = {
   users,
   addresses,
@@ -118,6 +121,7 @@ const erasureRepos: GdprErasureRepos = {
   notifications,
   professionalVerifications,
   authTokens,
+  fraudTrustSignalChecks,
 };
 
 export function makeExecuteAccountErasureUseCase() {
