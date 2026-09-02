@@ -662,6 +662,45 @@ const envSchema = z
     // "Operational considerations."
     RECONCILIATION_SCHEDULE_LIMIT: z.coerce.number().int().min(1).max(2000).catch(500),
 
+    // --- Module 94 — GDPR Cloudinary Purge Retry & Durable Erasure Completion ---
+    //
+    // Bounds how many outstanding Cloudinary-purge retry rows one
+    // invocation of `RetryPendingCloudinaryPurgesUseCase` claims — module
+    // brief rule 7 ("Never process an unbounded number of failed purge
+    // records in one invocation"). A GDPR document-purge queue is
+    // expected to be small and rare (a document only lands here after a
+    // Cloudinary failure during account erasure — not a normal-volume
+    // operation), so the default is deliberately much smaller than
+    // `RECONCILIATION_SCHEDULE_LIMIT`.
+    GDPR_CLOUDINARY_PURGE_RETRY_BATCH_SIZE: z.coerce.number().int().min(1).max(500).catch(50),
+    // Retries exhausted after this many attempts (the inline attempt
+    // inside `ExecuteAccountErasureUseCase` counts as attempt 1) move a
+    // document to `DocumentStoragePurgeStatus.DEAD_LETTER` — requires
+    // manual operator review, never retried automatically again (module
+    // brief rule 5).
+    GDPR_CLOUDINARY_PURGE_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(20).catch(8),
+    // Base delay for `decidePurgeRetry`'s bounded exponential backoff
+    // (`gdpr-cloudinary-purge-policy.ts`, reusing Module 45's
+    // `computeBackoffDelayMs`: `delay * 2 ** (attemptsMade - 1)`, capped
+    // at `MAX_BACKOFF_MS` = 1 hour). At the default (60s), attempts land
+    // roughly 1m, 2m, 4m, 8m, 16m, 32m, 1h, 1h after the previous one —
+    // full exhaustion of the default 8 attempts takes a few hours, giving
+    // a transient Cloudinary outage room to recover before a document
+    // dead-letters.
+    GDPR_CLOUDINARY_PURGE_BASE_DELAY_SECONDS: z.coerce.number().int().min(1).max(3600).catch(60),
+    // The scheduled cadence, `JobScheduler`'s own 5-field cron grammar
+    // (evaluated in UTC — see `cron-expression.ts`). Every 30 minutes by
+    // default: frequent enough that a transient Cloudinary failure is
+    // retried same-hour, infrequent enough that the bounded per-run batch
+    // (`GDPR_CLOUDINARY_PURGE_RETRY_BATCH_SIZE`) is never the dominant
+    // load on the shared connection pool. Read by `vercel.json`'s own
+    // cron entry only as documentation today (Vercel Cron schedules are
+    // static JSON, not env-driven) — kept here anyway for the same
+    // "operational tuning knob, one source of truth" reasoning as
+    // `RECONCILIATION_SCHEDULE_CRON`/`BACKUP_SCHEDULE_CRON`, and for a
+    // future in-process `JobScheduler` registration of this same sweep.
+    GDPR_CLOUDINARY_PURGE_SCHEDULE_CRON: z.string().min(1).catch("*/30 * * * *"),
+
     // --- Module 55 — Read Replicas ---
     //
     // Opt-in, like TRACING_ENABLED/BACKUP_ENABLED — a process that never

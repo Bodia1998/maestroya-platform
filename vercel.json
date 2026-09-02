@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/reconciliation-run",
       "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/gdpr-cloudinary-purge",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

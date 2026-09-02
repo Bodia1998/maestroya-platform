@@ -233,6 +233,13 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
       rejectionReason: null,
       createdAt: new Date(),
       updatedAt: new Date(),
+      deletedAt: null,
+      storagePurgedAt: null,
+      storagePurgeStatus: "PENDING",
+      storagePurgeAttemptCount: 0,
+      storagePurgeNextAttemptAt: null,
+      storagePurgeLastError: null,
+      storagePurgeLastAttemptedAt: null,
     };
     const existing = this.documents.get(professionalProfileId) ?? [];
     this.documents.set(professionalProfileId, [...existing, document]);
@@ -322,6 +329,11 @@ export class FakeProfessionalVerificationRepository implements ProfessionalVerif
     return [];
   }
   async markDocumentStoragePurged(_documentId: string) {}
+  // --- Module 94: GDPR Cloudinary Purge Retry (test stub) ---
+  async recordDocumentStoragePurgeFailure() {}
+  async claimPendingStoragePurgeBatch() {
+    return [];
+  }
 }
 
 export class FakeProfessionalOnboardingRepository implements ProfessionalOnboardingRepository {

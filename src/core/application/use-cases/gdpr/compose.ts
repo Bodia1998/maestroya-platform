@@ -36,6 +36,9 @@ import { RecordConsentWithdrawnAuditLogSubscriber } from "@/application/use-case
 import { ExportPersonalDataUseCase } from "@/application/use-cases/gdpr/export-personal-data.use-case";
 import { PrepareAccountDeletionUseCase } from "@/application/use-cases/gdpr/prepare-account-deletion.use-case";
 import { ExecuteAccountErasureUseCase, type GdprErasureRepos } from "@/application/use-cases/gdpr/execute-account-erasure.use-case";
+import { RetryPendingCloudinaryPurgesUseCase } from "@/application/use-cases/gdpr/retry-pending-cloudinary-purges.use-case";
+import { createDistributedLock } from "@/infrastructure/locking/lock-service-factory";
+import { env } from "@/infrastructure/config/env";
 import { GrantConsentUseCase } from "@/application/use-cases/gdpr/grant-consent.use-case";
 import { WithdrawConsentUseCase } from "@/application/use-cases/gdpr/withdraw-consent.use-case";
 import type { GdprInventoryRepos } from "@/application/use-cases/gdpr/gdpr-data-inventory";
@@ -124,8 +127,44 @@ const erasureRepos: GdprErasureRepos = {
   fraudTrustSignalChecks,
 };
 
+// Module 94 — GDPR Cloudinary Purge Retry & Durable Erasure Completion:
+// one shared retry-policy config, `env`-derived, used identically by the
+// inline first attempt (`ExecuteAccountErasureUseCase`) and every
+// subsequent scheduled attempt (`RetryPendingCloudinaryPurgesUseCase`) —
+// so "attempt 1" always means the same thing regardless of which of the
+// two call sites made it.
+const cloudinaryPurgeRetryConfig = {
+  maxAttempts: env.GDPR_CLOUDINARY_PURGE_MAX_ATTEMPTS,
+  baseDelayMs: env.GDPR_CLOUDINARY_PURGE_BASE_DELAY_SECONDS * 1000,
+};
+
 export function makeExecuteAccountErasureUseCase() {
-  return new ExecuteAccountErasureUseCase(erasureRepos, verificationDocumentStorageDeleter, eventBus, failureReporter);
+  return new ExecuteAccountErasureUseCase(
+    erasureRepos,
+    verificationDocumentStorageDeleter,
+    eventBus,
+    failureReporter,
+    cloudinaryPurgeRetryConfig,
+  );
+}
+
+/**
+ * Module 94 — the scheduled retry use case
+ * `api/cron/gdpr-cloudinary-purge/route.ts` calls. Reuses
+ * `createDistributedLock()` — the same Module 44 lock factory
+ * `reconciliation/compose.ts` already uses for
+ * `RunScheduledReconciliationSweepUseCase` — no second locking
+ * mechanism (module brief rule 8: "Inspect existing distributed locking
+ * infrastructure. Reuse it if appropriate").
+ */
+export function makeRetryPendingCloudinaryPurgesUseCase() {
+  return new RetryPendingCloudinaryPurgesUseCase(
+    professionalVerifications,
+    verificationDocumentStorageDeleter,
+    cloudinaryPurgeRetryConfig,
+    createDistributedLock(),
+    failureReporter,
+  );
 }
 
 export function makeGrantConsentUseCase() {

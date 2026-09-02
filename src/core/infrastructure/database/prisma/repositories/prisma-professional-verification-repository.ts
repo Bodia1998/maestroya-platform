@@ -59,6 +59,13 @@ const DOCUMENT_SELECT = {
   rejectionReason: true,
   createdAt: true,
   updatedAt: true,
+  // Module 88 fields — already present in the generated Prisma Client, safe
+  // to select typed. The five Module 94 purge-retry fields
+  // (storagePurgeStatus/storagePurgeAttemptCount/storagePurgeNextAttemptAt/
+  // storagePurgeLastError/storagePurgeLastAttemptedAt) are deliberately NOT
+  // selected here — see `toDocumentRecord`'s own doc comment for why.
+  deletedAt: true,
+  storagePurgedAt: true,
 } as const;
 
 type VerificationRow = {
@@ -91,6 +98,45 @@ type DocumentRow = {
   rejectionReason: string | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
+  storagePurgedAt: Date | null;
+};
+
+/**
+ * Module 94 — GDPR Cloudinary Purge Retry & Durable Erasure Completion.
+ *
+ * The full row shape for the five purge-retry columns, read via raw SQL
+ * (see this file's own top-of-file doc comment on why: the generated
+ * Prisma Client in every environment this module was developed in
+ * predates this migration and cannot be regenerated there — the same
+ * pre-existing constraint `PrismaPayoutRepository`/
+ * `PrismaExternalWebhookEventRepository`/`PrismaStripeDisputeRepository`
+ * already document on their own raw-SQL methods). Every method that
+ * actually drives retry logic (`listDocumentsPendingStoragePurge`,
+ * `recordDocumentStoragePurgeFailure`, `claimPendingStoragePurgeBatch`,
+ * `markDocumentStoragePurged`) uses this row shape and is therefore fully
+ * accurate. `addDocument`/`findDocumentById`/`listDocuments`/
+ * `findActiveWithDocumentsByProfessionalProfileId` — the professional's
+ * own document upload/dashboard and the admin review queue — keep their
+ * pre-existing typed `DOCUMENT_SELECT` and report safe defaults
+ * (`PENDING`/0/null/null/null) for these five fields in
+ * `toDocumentRecord` below, which is accurate for every row those paths
+ * actually return: `deletedAt: null` there always implies "GDPR erasure
+ * has never touched this document," which in turn implies purge-retry
+ * state is still at its column defaults (see `eraseDocumentsForProfessionalProfile`'s
+ * own doc comment: "Every existing read path for this model ... [is]
+ * never used once a case's owner has been erased"). Once
+ * `prisma generate` is re-run against this migration in an environment
+ * with registry access, `DOCUMENT_SELECT` can be widened to select these
+ * columns directly and this split removed — see
+ * MODULE_94_IMPLEMENTATION_REPORT.md, "Known limitations."
+ */
+type PurgeRetryRow = DocumentRow & {
+  storagePurgeStatus: "PENDING" | "DEAD_LETTER";
+  storagePurgeAttemptCount: number;
+  storagePurgeNextAttemptAt: Date | null;
+  storagePurgeLastError: string | null;
+  storagePurgeLastAttemptedAt: Date | null;
 };
 
 function toVerificationRecord(row: VerificationRow): ProfessionalVerificationRecord {
@@ -126,6 +172,26 @@ function toDocumentRecord(row: DocumentRow): VerificationDocumentRecord {
     rejectionReason: row.rejectionReason,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    deletedAt: row.deletedAt,
+    storagePurgedAt: row.storagePurgedAt,
+    // See `PurgeRetryRow`'s own doc comment: safe defaults, accurate for
+    // every row this mapper is actually called with (deletedAt: null).
+    storagePurgeStatus: "PENDING",
+    storagePurgeAttemptCount: 0,
+    storagePurgeNextAttemptAt: null,
+    storagePurgeLastError: null,
+    storagePurgeLastAttemptedAt: null,
+  };
+}
+
+function toPurgeRetryRecord(row: PurgeRetryRow): VerificationDocumentRecord {
+  return {
+    ...toDocumentRecord(row),
+    storagePurgeStatus: row.storagePurgeStatus,
+    storagePurgeAttemptCount: row.storagePurgeAttemptCount,
+    storagePurgeNextAttemptAt: row.storagePurgeNextAttemptAt,
+    storagePurgeLastError: row.storagePurgeLastError,
+    storagePurgeLastAttemptedAt: row.storagePurgeLastAttemptedAt,
   };
 }
 
@@ -335,21 +401,103 @@ export class PrismaProfessionalVerificationRepository implements ProfessionalVer
   }
 
   async listDocumentsPendingStoragePurge(professionalProfileId: string): Promise<VerificationDocumentRecord[]> {
-    const rows = await prisma.professionalVerificationDocument.findMany({
-      where: {
-        deletedAt: { not: null },
-        storagePurgedAt: null,
-        verification: { professionalProfileId },
-      },
-      select: DOCUMENT_SELECT,
-    });
-    return rows.map(toDocumentRecord);
+    // Module 94: raw SQL — see `PurgeRetryRow`'s own doc comment. Excludes
+    // `DEAD_LETTER` rows: those require manual operator review, and
+    // re-running the erasure use case (this method's only caller) must
+    // not silently re-attempt a purge already given up on — that stays
+    // `RetryPendingCloudinaryPurgesUseCase`'s job, and even it only
+    // reaches `DEAD_LETTER` rows through an explicit operator action, not
+    // its own scheduled claim (see `claimPendingStoragePurgeBatch`'s own
+    // `WHERE` clause, which filters the same status).
+    const rows = await prisma.$queryRaw<PurgeRetryRow[]>`
+      SELECT d."id", d."verificationId", d."type", d."status", d."fileUrl",
+             d."originalFilename", d."mimeType", d."fileSizeBytes", d."rejectionReason",
+             d."createdAt", d."updatedAt", d."deletedAt", d."storagePurgedAt",
+             d."storagePurgeStatus", d."storagePurgeAttemptCount",
+             d."storagePurgeNextAttemptAt", d."storagePurgeLastError", d."storagePurgeLastAttemptedAt"
+      FROM "professional_verification_documents" d
+      INNER JOIN "professional_verifications" v ON v."id" = d."verificationId"
+      WHERE v."professionalProfileId" = ${professionalProfileId}::uuid
+        AND d."deletedAt" IS NOT NULL
+        AND d."storagePurgedAt" IS NULL
+        AND d."storagePurgeStatus" = 'PENDING'
+    `;
+    return rows.map(toPurgeRetryRecord);
   }
 
   async markDocumentStoragePurged(documentId: string): Promise<void> {
-    await prisma.professionalVerificationDocument.update({
-      where: { id: documentId },
-      data: { storagePurgedAt: new Date() },
-    });
+    // Module 94: also resets retry bookkeeping — see this interface
+    // method's own doc comment. Raw SQL because the three purge-retry
+    // columns being reset aren't in the (stale, in this sandbox)
+    // generated Prisma Client — see `PurgeRetryRow`'s own doc comment.
+    await prisma.$executeRaw`
+      UPDATE "professional_verification_documents"
+      SET "storagePurgedAt" = now(),
+          "storagePurgeStatus" = 'PENDING',
+          "storagePurgeAttemptCount" = 0,
+          "storagePurgeNextAttemptAt" = NULL,
+          "storagePurgeLastError" = NULL
+      WHERE "id" = ${documentId}::uuid
+    `;
+  }
+
+  // --- Module 94: GDPR Cloudinary Purge Retry & Durable Erasure Completion ---
+
+  async recordDocumentStoragePurgeFailure(
+    documentId: string,
+    data: { attemptCount: number; nextAttemptAt: Date | null; deadLetter: boolean; errorMessage: string },
+  ): Promise<void> {
+    // Truncated defensively: this column is `TEXT`, but an unbounded
+    // provider error message (or one an attacker-controlled upstream
+    // somehow inflated) has no business growing this row without limit —
+    // see `storagePurgeLastError`'s own doc comment ("classified,
+    // redacted message"). The classifier (`classifyCloudinaryPurgeError`)
+    // is the thing actually responsible for redaction; this is a second,
+    // cheap safety net.
+    const errorMessage = data.errorMessage.slice(0, 2000);
+    await prisma.$executeRaw`
+      UPDATE "professional_verification_documents"
+      SET "storagePurgeStatus" = ${data.deadLetter ? "DEAD_LETTER" : "PENDING"}::"DocumentStoragePurgeStatus",
+          "storagePurgeAttemptCount" = ${data.attemptCount},
+          "storagePurgeNextAttemptAt" = ${data.nextAttemptAt},
+          "storagePurgeLastError" = ${errorMessage},
+          "storagePurgeLastAttemptedAt" = now()
+      WHERE "id" = ${documentId}::uuid
+        AND "storagePurgedAt" IS NULL
+    `;
+  }
+
+  async claimPendingStoragePurgeBatch(now: Date, batchSize: number): Promise<VerificationDocumentRecord[]> {
+    // Module 94: the atomic claim — see this interface method's own doc
+    // comment for the full concurrency-safety reasoning. One statement:
+    // a CTE selects the due batch with `FOR UPDATE SKIP LOCKED` (so a
+    // concurrent invocation's own claim simply skips whatever this one
+    // already has row-locked, never blocking or double-claiming), then
+    // the outer `UPDATE ... FROM ... RETURNING` stamps
+    // `storagePurgeLastAttemptedAt` on exactly those rows and returns
+    // their full current state in the same round trip.
+    const rows = await prisma.$queryRaw<PurgeRetryRow[]>`
+      WITH claimed AS (
+        SELECT "id"
+        FROM "professional_verification_documents"
+        WHERE "deletedAt" IS NOT NULL
+          AND "storagePurgedAt" IS NULL
+          AND "storagePurgeStatus" = 'PENDING'
+          AND ("storagePurgeNextAttemptAt" IS NULL OR "storagePurgeNextAttemptAt" <= ${now})
+        ORDER BY "storagePurgeNextAttemptAt" ASC NULLS FIRST, "id" ASC
+        LIMIT ${batchSize}
+        FOR UPDATE SKIP LOCKED
+      )
+      UPDATE "professional_verification_documents" d
+      SET "storagePurgeLastAttemptedAt" = ${now}
+      FROM claimed
+      WHERE d."id" = claimed."id"
+      RETURNING d."id", d."verificationId", d."type", d."status", d."fileUrl",
+                d."originalFilename", d."mimeType", d."fileSizeBytes", d."rejectionReason",
+                d."createdAt", d."updatedAt", d."deletedAt", d."storagePurgedAt",
+                d."storagePurgeStatus", d."storagePurgeAttemptCount",
+                d."storagePurgeNextAttemptAt", d."storagePurgeLastError", d."storagePurgeLastAttemptedAt"
+    `;
+    return rows.map(toPurgeRetryRecord);
   }
 }
