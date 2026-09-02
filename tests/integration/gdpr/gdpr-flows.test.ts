@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ConflictError, NotFoundError } from "@/domain/errors/domain-error";
+import { ConflictError, NotFoundError, UnauthorizedError } from "@/domain/errors/domain-error";
 import { AccountDeletionRequested } from "@/domain/events/account-deletion-requested";
 import { ConsentGranted } from "@/domain/events/consent-granted";
 import { ConsentWithdrawn } from "@/domain/events/consent-withdrawn";
@@ -118,6 +118,7 @@ function setup() {
     auditLog,
     consents,
     user,
+    users,
     customerProfiles,
     serviceRequests,
     jobs,
@@ -201,6 +202,44 @@ describe("Module 38 — GDPR Compliance: ExportPersonalDataUseCase", () => {
     expect(result.jobsAsCustomer).toEqual([]);
     expect(result.customerProfile).toBeNull();
     expect(result.professionalProfile).toBeNull();
+  });
+
+  // Module 95 — API Security Hardening (IDOR regression). Before this
+  // module, `execute()` took an unchecked `actorUserId` string and never
+  // verified it against `userId` — any caller could export any other
+  // user's full GDPR inventory by supplying a mismatched actor. These
+  // pin the fix: a non-admin actor requesting someone else's export is
+  // rejected, an admin actor is allowed, and self-export (the single-arg
+  // call every existing caller uses) keeps working unchanged.
+  it("rejects exporting another user's data when the actor is not that user and not an admin", async () => {
+    const { repos, eventBus, user, users } = setup();
+    const attackerId = "user-attacker";
+    users.users.set(attackerId, { ...user, id: attackerId, email: "attacker@example.com" });
+    const useCase = new ExportPersonalDataUseCase(repos, eventBus);
+
+    await expect(
+      useCase.execute(user.id, { userId: attackerId, isAdmin: false }),
+    ).rejects.toThrow(UnauthorizedError);
+  });
+
+  it("allows an admin actor to export another user's data", async () => {
+    const { repos, eventBus, user, users } = setup();
+    const adminId = "user-admin";
+    users.users.set(adminId, { ...user, id: adminId, email: "admin@example.com" });
+    const useCase = new ExportPersonalDataUseCase(repos, eventBus);
+
+    const result = await useCase.execute(user.id, { userId: adminId, isAdmin: true });
+
+    expect(result.userId).toBe(user.id);
+  });
+
+  it("allows self-export via the default single-argument call", async () => {
+    const { repos, eventBus, user } = setup();
+    const useCase = new ExportPersonalDataUseCase(repos, eventBus);
+
+    const result = await useCase.execute(user.id);
+
+    expect(result.userId).toBe(user.id);
   });
 });
 
