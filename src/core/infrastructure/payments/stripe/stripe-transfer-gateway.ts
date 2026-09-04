@@ -56,10 +56,10 @@ export class StripeTransferGatewayAdapter implements StripeTransferGateway {
           amount: amountMinorUnits,
           currency: request.currency.toLowerCase(),
           destination: request.destinationStripeAccountId,
-          metadata: {
-            payoutId: request.metadata.payoutId,
-            jobId: request.metadata.jobId,
-          },
+          metadata:
+            request.metadata.jobId !== undefined
+              ? { payoutId: request.metadata.payoutId, jobId: request.metadata.jobId }
+              : { payoutId: request.metadata.payoutId },
         },
         { idempotencyKey: request.idempotencyKey },
       );

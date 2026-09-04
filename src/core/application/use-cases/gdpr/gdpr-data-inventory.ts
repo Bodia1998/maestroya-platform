@@ -18,6 +18,10 @@ import type { ServiceRequestRepository } from "@/domain/repositories/service-req
 import type { SupportTicketRepository } from "@/domain/repositories/support-ticket-repository";
 import type { UserRepository } from "@/domain/repositories/user-repository";
 import type { GdprDataCategoryValue } from "@/domain/services/gdpr-privacy-rules";
+import type { MarketingAttributionRepository } from "@/domain/repositories/marketing-attribution-repository";
+import type { PartnerRepository } from "@/domain/repositories/partner-repository";
+import type { ReferralCodeRepository } from "@/domain/repositories/referral-code-repository";
+import type { AffiliateCommissionRepository } from "@/domain/repositories/affiliate-commission-repository";
 import type { PersonalDataExport } from "@/application/use-cases/gdpr/personal-data-export.dto";
 
 /**
@@ -80,6 +84,11 @@ export interface GdprInventoryRepos {
   professionalVerifications: ProfessionalVerificationRepository;
   consents: ConsentRepository;
   auditLog: AdminAuditLogRepository;
+  // Module 96 — Referral & Affiliate Production Wiring.
+  marketingAttributions: MarketingAttributionRepository;
+  partners: PartnerRepository;
+  referralCodes: ReferralCodeRepository;
+  affiliateCommissions: AffiliateCommissionRepository;
 }
 
 export async function collectUserDataInventory(
@@ -149,6 +158,14 @@ export async function collectUserDataInventory(
   const auditLogPage = await repos.auditLog.list({ limit: AUDIT_LOG_SCAN_LIMIT, offset: 0 });
   const auditLogEntries = auditLogPage.filter((entry) => entry.adminUserId === userId);
 
+  // Module 96 — Referral & Affiliate Production Wiring.
+  const marketingAttribution = await repos.marketingAttributions.findByUserId(userId);
+  const partnerAccount = await repos.partners.findByUserId(userId);
+  const referralCodesOwned = await repos.referralCodes.findByOwnerUserId(userId);
+  const affiliateCommissionsEarned = partnerAccount
+    ? await repos.affiliateCommissions.listForPartner(partnerAccount.id)
+    : [];
+
   return {
     userId,
     exportedAt: new Date(),
@@ -183,6 +200,10 @@ export async function collectUserDataInventory(
     disputesRaised,
     consents,
     auditLogEntries,
+    marketingAttribution,
+    partnerAccount,
+    referralCodesOwned,
+    affiliateCommissionsEarned,
   };
 }
 
@@ -208,6 +229,10 @@ export function computeCategoryCounts(inventory: PersonalDataExport): Record<str
     disputesRaised: inventory.disputesRaised.length,
     consents: inventory.consents.length,
     auditLogEntries: inventory.auditLogEntries.length,
+    marketingAttribution: inventory.marketingAttribution ? 1 : 0,
+    partnerAccount: inventory.partnerAccount ? 1 : 0,
+    referralCodesOwned: inventory.referralCodesOwned.length,
+    affiliateCommissionsEarned: inventory.affiliateCommissionsEarned.length,
   };
 }
 
@@ -241,5 +266,8 @@ export function groupIntoGdprCategories(inventory: PersonalDataExport): Record<G
     AUDIT_LOG: inventory.auditLogEntries.length,
     CONSENT_RECORDS: inventory.consents.length,
     COMPANY_MEMBERSHIP: inventory.companyMemberships.length + inventory.companyInvitations.length,
+    REFERRAL_ATTRIBUTION:
+      (inventory.marketingAttribution ? 1 : 0) + (inventory.partnerAccount ? 1 : 0) + inventory.referralCodesOwned.length,
+    AFFILIATE_FINANCIAL: inventory.affiliateCommissionsEarned.length,
   };
 }

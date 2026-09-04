@@ -215,6 +215,7 @@ function paymentIntentSucceededEvent(paymentIntentId: string): StripePaymentWebh
     paymentIntent: { paymentIntentId, lastPaymentErrorMessage: null },
     chargeRefunded: null,
     dispute: null,
+    chargeUpdated: null,
   };
 }
 

@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 
 import type {
   StripeChargeRefundedPayload,
+  StripeChargeUpdatedPayload,
   StripeDisputeEventPayload,
   StripePaymentIntentEventPayload,
   StripePaymentWebhookValidationResult,
@@ -68,6 +69,7 @@ export class StripePaymentWebhookVerifierAdapter implements StripePaymentWebhook
         paymentIntent: extractPaymentIntent(event),
         chargeRefunded: extractChargeRefunded(event),
         dispute: extractDispute(event),
+        chargeUpdated: extractChargeUpdated(event),
       },
     };
   }
@@ -80,6 +82,29 @@ function extractPaymentIntent(event: Stripe.Event): StripePaymentIntentEventPayl
   return {
     paymentIntentId: intent.id,
     lastPaymentErrorMessage: intent.last_payment_error?.message ?? null,
+  };
+}
+
+/** Module 96 — Referral & Affiliate Production Wiring: see
+ *  `StripeChargeUpdatedPayload`'s own doc comment
+ *  (`application/ports/stripe-payment-webhook-verifier.ts`) for why
+ *  `charge.updated` — not `charge.succeeded`/`payment_intent.succeeded` —
+ *  is the correct event to observe for the balance transaction attaching.
+ *  `balance_transaction` on a webhook payload is always a plain string id
+ *  (webhooks are never expanded), or `null` before Stripe has computed
+ *  it. */
+function extractChargeUpdated(event: Stripe.Event): StripeChargeUpdatedPayload | null {
+  if (event.type !== "charge.updated") return null;
+
+  const charge = event.data.object as Stripe.Charge;
+  const balanceTransactionId =
+    typeof charge.balance_transaction === "string"
+      ? charge.balance_transaction
+      : (charge.balance_transaction?.id ?? null);
+  return {
+    chargeId: charge.id,
+    paymentIntentId: typeof charge.payment_intent === "string" ? charge.payment_intent : (charge.payment_intent?.id ?? null),
+    balanceTransactionId,
   };
 }
 

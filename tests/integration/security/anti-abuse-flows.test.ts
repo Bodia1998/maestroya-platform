@@ -110,6 +110,59 @@ describe("AntiAbuseService.enforceRateLimit", () => {
   });
 });
 
+describe("Module 96 — Referral & Affiliate rate-limit policies", () => {
+  it("REFERRAL_CLICK_BY_IP: allows normal click volume, blocks a scripted flood from one IP, never bleeds to a different IP", async () => {
+    const { service, securityEvents } = makeService();
+    for (let i = 0; i < 120; i++) {
+      await expect(
+        service.enforceRateLimit("REFERRAL_CLICK_BY_IP", { ipHash: "ip-hash-a" }, "RATE_LIMIT_TRIGGERED"),
+      ).resolves.toBeUndefined();
+    }
+    await expect(
+      service.enforceRateLimit("REFERRAL_CLICK_BY_IP", { ipHash: "ip-hash-a" }, "RATE_LIMIT_TRIGGERED"),
+    ).rejects.toThrow(RateLimitedError);
+    expect(securityEvents.events).toHaveLength(1);
+
+    // A different IP (an unauthenticated visitor clicking a different
+    // referral link) is completely unaffected by the flood above.
+    await expect(
+      service.enforceRateLimit("REFERRAL_CLICK_BY_IP", { ipHash: "ip-hash-b" }, "RATE_LIMIT_TRIGGERED"),
+    ).resolves.toBeUndefined();
+  });
+
+  it("ADMIN_PARTNER_MUTATION_BY_USER and PARTNER_PAYOUT_CREATE_BY_USER are independent budgets for the same admin", async () => {
+    const { service } = makeService();
+    for (let i = 0; i < 10; i++) {
+      await service.enforceRateLimit("PARTNER_PAYOUT_CREATE_BY_USER", { userId: "admin-1" }, "RATE_LIMIT_TRIGGERED");
+    }
+    await expect(
+      service.enforceRateLimit("PARTNER_PAYOUT_CREATE_BY_USER", { userId: "admin-1" }, "RATE_LIMIT_TRIGGERED"),
+    ).rejects.toThrow(RateLimitedError);
+
+    // Exhausting the payout-specific budget must never block this same
+    // admin's ordinary partner/commission/fraud-flag mutations — the two
+    // policies are deliberately separate budgets (see
+    // PARTNER_PAYOUT_CREATE_BY_USER's own doc comment, rate-limit-policies.ts).
+    await expect(
+      service.enforceRateLimit("ADMIN_PARTNER_MUTATION_BY_USER", { userId: "admin-1" }, "RATE_LIMIT_TRIGGERED"),
+    ).resolves.toBeUndefined();
+  });
+
+  it("REFERRAL_LINK_CREATE_BY_USER is keyed per authenticated partner (no cross-partner bleed)", async () => {
+    const { service } = makeService();
+    for (let i = 0; i < 20; i++) {
+      await service.enforceRateLimit("REFERRAL_LINK_CREATE_BY_USER", { userId: "partner-a" }, "RATE_LIMIT_TRIGGERED");
+    }
+    await expect(
+      service.enforceRateLimit("REFERRAL_LINK_CREATE_BY_USER", { userId: "partner-a" }, "RATE_LIMIT_TRIGGERED"),
+    ).rejects.toThrow(RateLimitedError);
+
+    await expect(
+      service.enforceRateLimit("REFERRAL_LINK_CREATE_BY_USER", { userId: "partner-b" }, "RATE_LIMIT_TRIGGERED"),
+    ).resolves.toBeUndefined();
+  });
+});
+
 describe("AntiAbuseService.escalateToTemporaryBlock", () => {
   it("creates an auto-expiring TEMPORARILY_BLOCKED restriction with no admin actor", async () => {
     const { service, restrictions } = makeService();

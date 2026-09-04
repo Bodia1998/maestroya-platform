@@ -39,6 +39,9 @@ import {
   FakeSupportTicketRepository,
   FakeUserRepository,
 } from "./fakes";
+import { FakeMarketingAttributionRepository } from "../referral/fakes";
+import { FakePartnerRepository, FakeAffiliateCommissionRepository } from "../affiliate/fakes";
+import { FakeReferralCodeRepository } from "../referral/fakes";
 
 /**
  * Integration tests for Module 38 — GDPR Compliance. Real use cases + the
@@ -67,6 +70,10 @@ function setup() {
   const professionalVerifications = new FakeProfessionalVerificationRepository();
   const consents = new FakeConsentRepository();
   const auditLog = new FakeAdminAuditLogRepository();
+  const marketingAttributions = new FakeMarketingAttributionRepository();
+  const partners = new FakePartnerRepository();
+  const referralCodes = new FakeReferralCodeRepository();
+  const affiliateCommissions = new FakeAffiliateCommissionRepository();
   const eventBus = new SynchronousEventBus();
 
   const repos: GdprInventoryRepos = {
@@ -88,6 +95,10 @@ function setup() {
     disputes,
     professionalVerifications,
     consents,
+    marketingAttributions,
+    partners,
+    referralCodes,
+    affiliateCommissions,
     auditLog,
   };
 

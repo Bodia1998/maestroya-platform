@@ -64,6 +64,17 @@ export class PrismaMarketingAttributionRepository implements MarketingAttributio
     return row ? toAttributionRecord(row) : null;
   }
 
+  async findByUserId(userId: string): Promise<MarketingAttributionRecord | null> {
+    // Module 96: at most one attribution row is ever linked to a given
+    // userId in practice — `linkUser` only ever sets `userId` once, the
+    // first time (see that method's own `!existing.userId` guard) — but
+    // the schema itself does not enforce a unique constraint on `userId`
+    // (only `visitorId` is unique), so `findFirst` (not `findUnique`) is
+    // the correct Prisma call here.
+    const row = await prisma.marketingAttribution.findFirst({ where: { userId }, select: ATTRIBUTION_SELECT });
+    return row ? toAttributionRecord(row) : null;
+  }
+
   async upsertTouchState(visitorId: string, state: AttributionTouchState): Promise<MarketingAttributionRecord> {
     // `firstVisitAt` is required (NOT NULL) at the schema level — the
     // caller (TrackVisitUseCase) always supplies a real touch when calling
@@ -128,5 +139,9 @@ export class PrismaMarketingAttributionRepository implements MarketingAttributio
       select: ATTRIBUTION_SELECT,
     });
     return rows.map(toAttributionRecord);
+  }
+
+  async eraseForUser(userId: string): Promise<void> {
+    await prisma.marketingAttribution.updateMany({ where: { userId }, data: { userId: null } });
   }
 }

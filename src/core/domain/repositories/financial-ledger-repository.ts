@@ -29,7 +29,18 @@ export type TransactionTypeValue =
   | "PLATFORM_REVENUE"
   | "COMMISSION_REVERSAL"
   | "DISPUTE_ADJUSTMENT"
-  | "PAYOUT_REVERSAL";
+  | "PAYOUT_REVERSAL"
+  /** Module 96 — Referral & Affiliate Production Wiring: the actual
+   *  Stripe processing fee for a captured Payment (`balance_transaction.
+   *  fee`, retrieved via `PaymentGateway.retrieveBalanceTransactionFee`
+   *  once Stripe attaches it — see `ProcessCustomerPaymentWebhookUseCase.
+   *  handleChargeUpdated`'s own doc comment). Always a negative `amount`
+   *  (an outflow from the platform's Stripe balance), exactly one row per
+   *  `paymentId` (enforced by this row's own `idempotencyKey`,
+   *  `stripe-fee:<paymentId>`) — the sole real source of
+   *  `RecordAffiliateCommissionUseCase`'s `attributableCostAmount` input,
+   *  replacing the previous always-`0` default. */
+  | "STRIPE_FEE";
 
 export type TransactionStatusValue = "PENDING" | "COMPLETED" | "FAILED" | "REVERSED";
 

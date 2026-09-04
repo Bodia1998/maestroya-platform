@@ -845,6 +845,11 @@ enum TransactionType {
   /// A financial consequence of a resolved Dispute — see
   /// FinancialAdjustment.
   DISPUTE_ADJUSTMENT
+  /// Module 96 — Referral & Affiliate Production Wiring: the actual
+  /// Stripe processing fee for a captured Payment, captured once Stripe
+  /// attaches balance_transaction data to the Charge (via charge.updated).
+  /// Always negative (an outflow). Exactly one row per paymentId.
+  STRIPE_FEE
   /// A previously recorded Payout being reversed/clawed back.
   PAYOUT_REVERSAL
 }
@@ -3789,6 +3794,18 @@ model ReferralCode {
   ownerUserId String? @db.Uuid
   owner       User?   @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
   label       String? @db.VarChar(120)
+  /// Module 96 — Referral & Affiliate Production Wiring: a free-text
+  /// campaign-source label for the partner's own reference (Telegram,
+  /// Instagram, TikTok, YouTube, Blog, Website, ...) — display only, no
+  /// integration with any actual channel. See
+  /// `referral-campaign-source-rules.ts`.
+  source String? @db.VarChar(40)
+  /// Module 96 — a partner-deactivated link stops generating new
+  /// affiliate commissions (see `RecordAffiliateCommissionUseCase`) but a
+  /// visit through it still redirects and is still recorded for
+  /// reporting — deactivating a link is a forward-looking earnings
+  /// control, never a retroactive rewrite of history.
+  isActive Boolean @default(true)
 
   createdAt DateTime @default(now())
 
@@ -3911,6 +3928,15 @@ model ConversionEvent {
 
   @@index([attributionId])
   @@index([type])
+  /// Module 96 — Referral & Affiliate Production Wiring: DB-level
+  /// idempotency guard for a conversion tied to an external reference
+  /// (e.g. a Commission.id for COMMISSION_GENERATED) — the ultimate
+  /// backstop under a duplicate/redelivered domain event, never only an
+  /// application-level pre-check. Multiple NULL referenceId rows remain
+  /// allowed (Postgres treats NULL as distinct in a unique index), so
+  /// this never constrains a conversion type that doesn't use
+  /// referenceId at all.
+  @@unique([type, referenceId])
   @@map("conversion_events")
 }
 
@@ -4033,6 +4059,14 @@ enum AffiliateCommissionStatus {
   PAID
   CANCELLED
   EXPIRED
+  /// Module 96 — every euro of this commission has been reversed
+  /// (a full refund, or partial refunds summing to the whole amount) —
+  /// net payable balance is 0. Only reachable from PENDING/APPROVED; a
+  /// commission that had already reached PAID stays PAID (the money
+  /// already left the platform) — its cumulative reversedAmount still
+  /// reflects the clawback owed against a future payout/reconciliation
+  /// (see AffiliateCommission.reversedAmount's own doc comment).
+  REVERSED
 }
 
 /// One ledger row per booking whose MaestroYa platform commission (Module
@@ -4063,8 +4097,30 @@ model AffiliateCommission {
   platformCommissionRefId String  @db.VarChar(191)
   platformCommissionAmount Decimal @db.Decimal(10, 2)
 
+  /// Module 96 — Referral & Affiliate Production Wiring: directly
+  /// attributable transaction cost (Stripe processing fee, refund/
+  /// dispute loss) subtracted from platformCommissionAmount to reach
+  /// profitBaseAmount. Defaults to 0 (no such cost known/modeled yet —
+  /// see affiliate-commission-policy.ts's own doc comment) so this is a
+  /// purely additive, non-destructive column for the existing (empty,
+  /// no live writer as of Module 96) table.
+  attributableCostAmount Decimal @default(0) @db.Decimal(10, 2)
+
+  /// Module 96: platformCommissionAmount - attributableCostAmount,
+  /// floored at 0 — the actual base affiliateAmount was computed from.
+  /// Persisted (not re-derived) for auditability.
+  profitBaseAmount Decimal @default(0) @db.Decimal(10, 2)
+
   affiliateRateBps Int
   affiliateAmount  Decimal @db.Decimal(10, 2)
+
+  /// Module 96 — cumulative sum of every AffiliateCommissionReversal ever
+  /// applied against this row. NEVER derived by mutating affiliateAmount
+  /// itself (see AffiliateCommissionReversal's own doc comment on "never
+  /// delete/overwrite the original") — net payable balance is always
+  /// `affiliateAmount - reversedAmount`, computed by the reader, not
+  /// stored as its own field.
+  reversedAmount Decimal @default(0) @db.Decimal(10, 2)
 
   status AffiliateCommissionStatus @default(PENDING)
 
@@ -4077,14 +4133,72 @@ model AffiliateCommission {
   payoutId     String?   @db.Uuid
   payout       PartnerPayout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
 
+  /// Module 96 Financial Integrity Hardening Pass — Risk 3: set once
+  /// this commission's attributableCostAmount has stayed 0 (fee never
+  /// arrived) past the bounded finalization window (see
+  /// FinalizeOverdueAffiliateCommissionFeesUseCase's own doc comment for
+  /// the exact window and reasoning). Purely additive, non-destructive —
+  /// null for every commission whose cost was resolved (or is still
+  /// within the window). NEVER cleared automatically: a late
+  /// reconciliation that finds a real fee still corrects the row via the
+  /// normal reversal path, but this flag itself is only ever cleared by
+  /// deliberate admin action once reviewed, so a payout is never silently
+  /// re-permitted without a human confirming the commission was actually
+  /// resolved correctly.
+  costFinalizationFailedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  reversals AffiliateCommissionReversal[]
 
   @@index([partnerId])
   @@index([status])
   @@index([expiresAt])
   @@index([payoutId])
   @@map("affiliate_commissions")
+}
+
+/// Module 96 — Referral & Affiliate Production Wiring: append-only ledger
+/// of every refund/chargeback-driven reversal applied against an
+/// AffiliateCommission — mirrors Module 22's own Transaction ledger
+/// convention ("a correction is always a new, separate row, never an edit
+/// of the original") applied to the affiliate domain. Never updated or
+/// deleted once created; AffiliateCommission.affiliateAmount/
+/// profitBaseAmount are themselves never mutated by a reversal either —
+/// only AffiliateCommission.reversedAmount (a cumulative running total)
+/// and .status change.
+model AffiliateCommissionReversal {
+  id                   String               @id @default(uuid()) @db.Uuid
+  affiliateCommissionId String              @db.Uuid
+  affiliateCommission  AffiliateCommission  @relation(fields: [affiliateCommissionId], references: [id], onDelete: Restrict)
+
+  amount Decimal @db.Decimal(10, 2)
+  /// FULL: this reversal (possibly combined with an earlier partial one)
+  /// brought the commission's net balance to 0. PARTIAL: balance remains
+  /// > 0 after this reversal.
+  type   AffiliateCommissionReversalType
+
+  /// Module 77 FinancialAdjustment.id (a refund-type adjustment) this
+  /// reversal was derived from — plain string reference, no FK, the same
+  /// "reference another bounded context's id without a cross-module FK"
+  /// convention AffiliateCommission.platformCommissionRefId already
+  /// establishes. Unique: the idempotency guard under a
+  /// duplicate/redelivered PaymentRefunded event — the database-level
+  /// backstop, never only an application-level pre-check.
+  financialAdjustmentId String @unique @db.VarChar(191)
+
+  reason String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([affiliateCommissionId])
+  @@map("affiliate_commission_reversals")
+}
+
+enum AffiliateCommissionReversalType {
+  FULL
+  PARTIAL
 }
 
 /// The states a PartnerPayout moves through. See
@@ -4127,6 +4241,14 @@ model PartnerPayout {
 
   @@index([partnerId])
   @@index([status])
+  /// Module 96 Financial Fix Pass — partial unique index (see the
+  /// migration's raw SQL; Prisma's schema DSL has no native "partial
+  /// unique index" construct, so this is declared as a plain @@index
+  /// here for introspection/documentation and the actual UNIQUE
+  /// constraint lives in the migration file) preventing more than one
+  /// PENDING/PROCESSING payout per partner at the database level — the
+  /// fix for CreatePartnerPayoutUseCase's former check-then-create race.
+  /// See PartnerPayoutRepository.createBatch's own doc comment.
   @@map("partner_payouts")
 }
 

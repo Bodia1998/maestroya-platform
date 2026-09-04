@@ -4,6 +4,7 @@ import Stripe from "stripe";
 
 import { PaymentGatewayError, type PaymentGatewayErrorCategory } from "@/domain/errors/domain-error";
 import type {
+  BalanceTransactionFeeResult,
   PaymentAuthorizationRequest,
   PaymentAuthorizationResult,
   PaymentGateway,
@@ -129,6 +130,27 @@ export class StripePaymentGatewayAdapter implements PaymentGateway {
       );
 
       return { externalRefundReference: refund.id, status: mapStripeRefundStatus(refund.status) };
+    } catch (error) {
+      throw mapStripeError(error);
+    }
+  }
+
+  /**
+   * Module 96 — Referral & Affiliate Production Wiring: the one real
+   * source of a captured Payment's actual Stripe processing fee — see
+   * `BalanceTransactionFeeResult`'s own doc comment
+   * (`application/ports/payment-gateway.ts`) for why this follow-up call
+   * (rather than something already present on a webhook payload) is the
+   * correct mechanism. `balance_transaction.fee` is always a non-negative
+   * integer in minor units on Stripe's side; converted to this codebase's
+   * plain-decimal convention the same way every other amount crossing
+   * this adapter's boundary is (divide by 100 — the exact inverse of
+   * `toStripeMinorUnits`).
+   */
+  async retrieveBalanceTransactionFee(balanceTransactionId: string): Promise<BalanceTransactionFeeResult> {
+    try {
+      const balanceTransaction = await this.stripe.balanceTransactions.retrieve(balanceTransactionId);
+      return { feeAmount: balanceTransaction.fee / 100, currency: balanceTransaction.currency.toUpperCase() };
     } catch (error) {
       throw mapStripeError(error);
     }

@@ -5,6 +5,7 @@ import {
   getStripePaymentWebhookVerifierInstance,
   makeProcessCustomerPaymentWebhookUseCase,
 } from "@/application/use-cases/payments/compose";
+import { reconcileAffiliateCommissionStripeFeeForPayment } from "@/application/use-cases/affiliate/compose";
 import { toHttpErrorResponse } from "@/infrastructure/observability/http-error-response";
 import { logger } from "@/infrastructure/observability/logger";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/infrastructure/observability/request-id";
@@ -89,6 +90,19 @@ export const POST = withApiTracing("/api/webhooks/stripe-payments", async functi
       eventType: validation.event.type,
       paymentId: result.paymentId,
     });
+
+    // Module 96 Financial Fix Pass — a STRIPE_FEE ledger row now exists
+    // (freshly captured, or re-confirmed on a duplicate delivery) for
+    // this payment; give any already-created AffiliateCommission that
+    // was forced to default attributableCostAmount to 0 a chance to be
+    // corrected. Fire-and-forget from this route's perspective — never
+    // allowed to affect the 200 Stripe sees, never allowed to make
+    // Stripe retry a webhook that otherwise processed successfully; see
+    // `reconcileAffiliateCommissionStripeFeeForPayment`'s own doc
+    // comment for why it never throws.
+    if (validation.event.type === "charge.updated" && result.paymentId) {
+      await reconcileAffiliateCommissionStripeFeeForPayment(result.paymentId);
+    }
 
     return NextResponse.json(
       { status: result.outcome, requestId },

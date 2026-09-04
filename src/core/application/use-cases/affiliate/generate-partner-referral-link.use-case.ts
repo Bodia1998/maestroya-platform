@@ -1,5 +1,6 @@
-import { NotFoundError, PartnerNotActiveError } from "@/domain/errors/domain-error";
+import { NotFoundError, PartnerNotActiveError, ValidationError } from "@/domain/errors/domain-error";
 import { isPartnerActiveForAffiliateActivity } from "@/domain/services/partner-approval-rules";
+import { isValidReferralCampaignSource } from "@/domain/services/referral-campaign-source-rules";
 import type { PartnerRepository } from "@/domain/repositories/partner-repository";
 import type { ReferralCodeRecord } from "@/domain/repositories/referral-code-repository";
 import type { CreateReferralCodeUseCase } from "@/application/use-cases/referral/create-referral-code.use-case";
@@ -28,7 +29,7 @@ export class GeneratePartnerReferralLinkUseCase {
     private readonly createReferralCode: CreateReferralCodeUseCase,
   ) {}
 
-  async execute(input: { partnerId: string; code: string; label?: string }): Promise<ReferralCodeRecord> {
+  async execute(input: { partnerId: string; code: string; label?: string; source?: string | null }): Promise<ReferralCodeRecord> {
     const partner = await this.partners.findById(input.partnerId);
     if (!partner) {
       throw new NotFoundError("Partner", input.partnerId);
@@ -36,11 +37,15 @@ export class GeneratePartnerReferralLinkUseCase {
     if (!isPartnerActiveForAffiliateActivity(partner.status)) {
       throw new PartnerNotActiveError(partner.status);
     }
+    if (input.source && !isValidReferralCampaignSource(input.source)) {
+      throw new ValidationError(`Unknown campaign source "${input.source}".`);
+    }
 
     return this.createReferralCode.execute({
       code: input.code,
       ownerUserId: partner.userId,
       label: input.label ?? partner.displayName,
+      source: input.source ?? null,
     });
   }
 }

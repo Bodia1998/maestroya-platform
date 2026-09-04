@@ -7,7 +7,13 @@ import {
   STRIPE_PAYMENTS_WEBHOOK_PROVIDER,
   ProcessCustomerPaymentWebhookUseCase,
 } from "@/application/use-cases/payments/process-customer-payment-webhook.use-case";
-import { FakeEventBus, FakeExternalWebhookEventRepository, FakePaymentGateway, FakePaymentRepository } from "./fakes";
+import {
+  FakeEventBus,
+  FakeExternalWebhookEventRepository,
+  FakeFinancialLedgerRepository,
+  FakePaymentGateway,
+  FakePaymentRepository,
+} from "./fakes";
 import { NullFailureReporter } from "@/application/ports/failure-reporter";
 import { FakeRefundRepository } from "../refunds/fakes";
 
@@ -30,6 +36,7 @@ function paymentIntentEvent(
     paymentIntent: { paymentIntentId: "pi_123", lastPaymentErrorMessage: null },
     chargeRefunded: null,
     dispute: null,
+    chargeUpdated: null,
     ...overrides,
   };
 }
@@ -283,6 +290,129 @@ describe("ProcessCustomerPaymentWebhookUseCase (Module 73)", () => {
         expect(first.outcome).toBe("refund-observed");
         expect(second.outcome).toBe("duplicate");
       });
+    });
+  });
+
+  describe("charge.updated — Module 96 Stripe fee capture", () => {
+    function chargeUpdatedEvent(
+      overrides: { balanceTransactionId?: string | null; paymentIntentId?: string | null; id?: string } = {},
+    ) {
+      return {
+        id: overrides.id ?? "evt_charge_updated_1",
+        type: "charge.updated",
+        createdAt: new Date("2026-01-01T00:00:00Z"),
+        paymentIntent: null,
+        chargeRefunded: null,
+        dispute: null,
+        chargeUpdated: {
+          chargeId: "ch_1",
+          paymentIntentId: overrides.paymentIntentId === undefined ? "pi_123" : overrides.paymentIntentId,
+          balanceTransactionId: overrides.balanceTransactionId === undefined ? "txn_1" : overrides.balanceTransactionId,
+        },
+      };
+    }
+
+    it("captures the real Stripe fee and records it as a negative STRIPE_FEE ledger entry", async () => {
+      const payment = seedPendingPayment(payments, { status: "CAPTURED" });
+      const ledger = new FakeFinancialLedgerRepository();
+      gateway.balanceTransactionFees.set("txn_1", { feeAmount: 15, currency: "EUR" });
+      const useCaseWithLedger = new ProcessCustomerPaymentWebhookUseCase(
+        payments,
+        gateway,
+        webhookEvents,
+        eventBus,
+        undefined,
+        null,
+        null,
+        ledger,
+      );
+
+      const result = await useCaseWithLedger.execute(chargeUpdatedEvent());
+
+      expect(result.outcome).toBe("fee-captured");
+      expect(result.paymentId).toBe(payment.id);
+      expect(ledger.entries).toHaveLength(1);
+      expect(ledger.entries[0]!.type).toBe("STRIPE_FEE");
+      expect(ledger.entries[0]!.amount).toBe(-15);
+      expect(ledger.entries[0]!.paymentId).toBe(payment.id);
+      expect(ledger.entries[0]!.idempotencyKey).toBe(`stripe-fee:${payment.id}`);
+    });
+
+    it("is a no-op without a wired ledger (null feeLedger — pre-Module-96 callers keep compiling/behaving unchanged)", async () => {
+      seedPendingPayment(payments, { status: "CAPTURED" });
+      const result = await useCase.execute(chargeUpdatedEvent());
+      expect(result.outcome).toBe("ignored");
+    });
+
+    it("ignores a charge.updated delivery with no balance_transaction yet", async () => {
+      const ledger = new FakeFinancialLedgerRepository();
+      const useCaseWithLedger = new ProcessCustomerPaymentWebhookUseCase(
+        payments,
+        gateway,
+        webhookEvents,
+        eventBus,
+        undefined,
+        null,
+        null,
+        ledger,
+      );
+      seedPendingPayment(payments, { status: "CAPTURED" });
+
+      const result = await useCaseWithLedger.execute(chargeUpdatedEvent({ balanceTransactionId: null }));
+
+      expect(result.outcome).toBe("ignored");
+      expect(ledger.entries).toHaveLength(0);
+    });
+
+    it("never records the fee twice — a second charge.updated for an already-recorded payment is a pure no-op", async () => {
+      const payment = seedPendingPayment(payments, { status: "CAPTURED" });
+      const ledger = new FakeFinancialLedgerRepository();
+      gateway.balanceTransactionFees.set("txn_1", { feeAmount: 15, currency: "EUR" });
+      const useCaseWithLedger = new ProcessCustomerPaymentWebhookUseCase(
+        payments,
+        gateway,
+        webhookEvents,
+        eventBus,
+        undefined,
+        null,
+        null,
+        ledger,
+      );
+
+      const first = await useCaseWithLedger.execute(chargeUpdatedEvent());
+      expect(first.outcome).toBe("fee-captured");
+
+      // A second, independently-delivered charge.updated event (a
+      // DIFFERENT Stripe event id, so webhookEvents.claim()'s per-event-id
+      // dedupe does not catch this — Stripe's own docs note
+      // charge.updated can fire more than once as fields settle) for the
+      // same payment must still never create a second STRIPE_FEE row —
+      // this is the handler's own idempotencyKey pre-check being
+      // exercised, not the outer claim() layer (covered separately).
+      const second = await useCaseWithLedger.execute(chargeUpdatedEvent({ id: "evt_charge_updated_2" }));
+
+      expect(second.outcome).toBe("already-settled");
+      expect(second.paymentId).toBe(payment.id);
+      expect(ledger.entries).toHaveLength(1);
+    });
+
+    it("reports unmatched for a paymentIntentId with no corresponding Payment", async () => {
+      const ledger = new FakeFinancialLedgerRepository();
+      const useCaseWithLedger = new ProcessCustomerPaymentWebhookUseCase(
+        payments,
+        gateway,
+        webhookEvents,
+        eventBus,
+        undefined,
+        null,
+        null,
+        ledger,
+      );
+
+      const result = await useCaseWithLedger.execute(chargeUpdatedEvent({ paymentIntentId: "pi_unknown" }));
+
+      expect(result.outcome).toBe("unmatched");
+      expect(ledger.entries).toHaveLength(0);
     });
   });
 

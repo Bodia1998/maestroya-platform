@@ -25,6 +25,19 @@ export interface MarketingAttributionRepository {
   findByVisitorId(visitorId: string): Promise<MarketingAttributionRecord | null>;
 
   /**
+   * Module 96 — Referral & Affiliate Production Wiring: the reverse
+   * lookup of `linkUser` — resolves a registered `User.id` back to their
+   * (frozen, write-once via `linkUser`) attribution row, if any. Added so
+   * a real booking/payment lifecycle caller that only knows the paying
+   * `User.id` (e.g. `Payment.payerId`) can still reach the visitor-keyed
+   * attribution/conversion/affiliate-commission machinery without ever
+   * needing to thread a `visitorId` through the entire booking/payment
+   * flow. Returns `null` for a user who registered without ever being
+   * tracked (direct signup, no cookie) — expected, not an error.
+   */
+  findByUserId(userId: string): Promise<MarketingAttributionRecord | null>;
+
+  /**
    * Persists `state` for `visitorId` — creates the row if this is the
    * visitor's first-ever touch, otherwise updates it. The caller
    * (`TrackVisitUseCase`) is responsible for computing `state` via
@@ -58,4 +71,18 @@ export interface MarketingAttributionRepository {
    * empty `codes` array.
    */
   listByReferralCodes(codes: string[]): Promise<MarketingAttributionRecord[]>;
+
+  /**
+   * Module 96 — Referral & Affiliate Production Wiring / GDPR erasure:
+   * nulls `userId` on every attribution row currently linked to this
+   * user — the one personal identifier this model carries. `visitorId`,
+   * the referral codes, and every touch timestamp are deliberately left
+   * untouched: they remain the referring partner's own aggregate
+   * attribution/conversion history (see `REFERRAL_ATTRIBUTION`'s own
+   * classification, `gdpr-privacy-rules.ts`) and carry no PII of their
+   * own once unlinked from a `User`. Idempotent — a user with no linked
+   * attribution row is a no-op, and a repeat call after the link is
+   * already null does nothing further.
+   */
+  eraseForUser(userId: string): Promise<void>;
 }

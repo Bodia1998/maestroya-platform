@@ -1,5 +1,10 @@
 import type { CustomerProfileRecord, CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
 import type {
+  CreateLedgerEntryData,
+  FinancialLedgerRepository,
+  FinancialTransactionRecord,
+} from "@/domain/repositories/financial-ledger-repository";
+import type {
   CancelJobData,
   CompleteJobData,
   JobRecord,
@@ -282,7 +287,48 @@ export class FakePaymentRepository implements PaymentRepository {
 /** Records every `authorize` call and returns a deterministic PaymentIntent
  *  id derived from the idempotency key — mirrors real Stripe idempotency
  *  behavior closely enough for the concurrency tests: two calls with the
- *  same `idempotencyKey` resolve to the same `externalReference`. */
+ *  same `idempotencyKey` resolve to the same `externalReference`. *//** Module 96 — minimal in-memory `FinancialLedgerRepository` for
+ *  `ProcessCustomerPaymentWebhookUseCase`'s Stripe-fee-capture tests —
+ *  enforces `idempotencyKey` uniqueness synchronously (no `await` between
+ *  the check and the write), same "actually enforce it, not just assume
+ *  it" convention `FakeFinancialLedgerRepository`
+ *  (tests/integration/financial/fakes.ts) already establishes. */
+export class FakeFinancialLedgerRepository implements FinancialLedgerRepository {
+  entries: FinancialTransactionRecord[] = [];
+  private counter = 0;
+
+  async create(data: CreateLedgerEntryData): Promise<FinancialTransactionRecord> {
+    if (this.entries.some((e) => e.idempotencyKey === data.idempotencyKey)) {
+      throw new Error("Unique constraint violation: Transaction.idempotencyKey");
+    }
+    this.counter += 1;
+    const record: FinancialTransactionRecord = {
+      id: `fake-transaction-${this.counter}`,
+      paymentId: data.paymentId ?? null,
+      payoutId: data.payoutId ?? null,
+      refundId: data.refundId ?? null,
+      commissionId: data.commissionId ?? null,
+      type: data.type,
+      status: data.status ?? "COMPLETED",
+      amount: data.amount,
+      currency: data.currency ?? "EUR",
+      description: data.description ?? null,
+      idempotencyKey: data.idempotencyKey,
+      createdAt: new Date(),
+    };
+    this.entries.push(record);
+    return record;
+  }
+
+  async findByIdempotencyKey(idempotencyKey: string): Promise<FinancialTransactionRecord | null> {
+    return this.entries.find((e) => e.idempotencyKey === idempotencyKey) ?? null;
+  }
+
+  async listForPayment(paymentId: string): Promise<FinancialTransactionRecord[]> {
+    return this.entries.filter((e) => e.paymentId === paymentId);
+  }
+}
+
 export class FakePaymentGateway implements PaymentGateway {
   authorizeCalls: PaymentAuthorizationRequest[] = [];
   captureCalls: string[] = [];
@@ -336,6 +382,13 @@ export class FakePaymentGateway implements PaymentGateway {
     const externalRefundReference = `re_fake_${this.refundCounter}`;
     if (key) this.refundsByIdempotencyKey.set(key, externalRefundReference);
     return { externalRefundReference, status: "SUCCEEDED" };
+  }
+
+  balanceTransactionFees = new Map<string, { feeAmount: number; currency: string }>();
+
+  async retrieveBalanceTransactionFee(balanceTransactionId: string): Promise<{ feeAmount: number; currency: string }> {
+    if (this.nextError) throw this.nextError;
+    return this.balanceTransactionFees.get(balanceTransactionId) ?? { feeAmount: 0, currency: "EUR" };
   }
 }
 
@@ -638,6 +691,10 @@ export class FakeCommissionRepository implements CommissionRepository {
 
   async findByPaymentId(paymentId: string): Promise<CommissionRecord | null> {
     return this.byPaymentId.get(paymentId) ?? null;
+  }
+
+  async findById(id: string): Promise<CommissionRecord | null> {
+    return [...this.byPaymentId.values()].find((c) => c.id === id) ?? null;
   }
   async create(data: CreateCommissionData): Promise<CommissionRecord> {
     const existing = this.byPaymentId.get(data.paymentId);

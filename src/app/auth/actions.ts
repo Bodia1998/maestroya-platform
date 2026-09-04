@@ -1,5 +1,7 @@
 "use server";
 
+import { cookies } from "next/headers";
+
 import { DomainError, RateLimitedError } from "@/domain/errors/domain-error";
 import {
   forgotPasswordSchema,
@@ -62,8 +64,20 @@ export async function registerAction(formData: unknown): Promise<ActionResult> {
     }
   }
 
+  // Module 96 — Referral & Affiliate Production Wiring: `visitorId`
+  // is resolved from the server-side `mv_visitor` cookie set by the
+  // `/r/<code>` referral redirect (see that route's doc comment), never
+  // trusted from client-submitted form data — a client could otherwise
+  // submit an arbitrary visitorId to try to graft an unrelated
+  // attribution/click history onto their own registration. Any
+  // `visitorId` that slipped through `registerSchema` from the request
+  // body is deliberately overwritten here.
+  const cookieStore = await cookies();
+  const visitorId = cookieStore.get("mv_visitor")?.value;
+  const registerInput = { ...parsed.data, visitorId: visitorId || undefined };
+
   try {
-    const { userId } = await makeRegisterUserUseCase().execute(parsed.data);
+    const { userId } = await makeRegisterUserUseCase().execute(registerInput);
     await antiAbuse.recordEvent({ type: "ACCOUNT_CREATED", userId, ipHash });
 
     // Module 93 — Real Fraud & Trust Signal Providers: best-effort,

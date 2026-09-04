@@ -26,6 +26,8 @@ import {
   FakeProfessionalVerificationRepository,
   FakeUserRepository,
 } from "./fakes";
+import { FakeMarketingAttributionRepository } from "../referral/fakes";
+import { FakePartnerRepository } from "../affiliate/fakes";
 
 /**
  * Integration tests for Module 88 — GDPR Erasure Execution & Document
@@ -86,6 +88,9 @@ function setup() {
 
   eventBus.subscribe(AccountErasureExecuted, new RecordAccountErasureExecutedAuditLogSubscriber(auditLog));
 
+  const marketingAttributions = new FakeMarketingAttributionRepository();
+  const partners = new FakePartnerRepository();
+
   const repos: GdprErasureRepos = {
     users,
     addresses,
@@ -95,6 +100,8 @@ function setup() {
     professionalVerifications,
     authTokens,
     fraudTrustSignalChecks,
+    marketingAttributions,
+    partners,
   };
 
   const useCase = new ExecuteAccountErasureUseCase(repos, documentStorage, eventBus);
@@ -123,6 +130,8 @@ function setup() {
     jobs,
     documentStorage,
     user,
+    marketingAttributions,
+    partners,
   };
 }
 
@@ -326,5 +335,59 @@ describe("Module 88 — ExecuteAccountErasureUseCase", () => {
     const serialized = JSON.stringify(entry?.metadata ?? {});
     expect(serialized).not.toContain("person@example.com");
     expect(serialized).not.toContain("Ana");
+  });
+
+  describe("Module 96 — referral/affiliate erasure", () => {
+    it("anonymizes the user's own MarketingAttribution link (userId nulled, visitorId/referral codes preserved)", async () => {
+      const { useCase, marketingAttributions, user } = setup();
+      await marketingAttributions.upsertTouchState("visitor-1", {
+        firstSource: "TELEGRAM",
+        firstCampaign: null,
+        firstReferralCode: "telegram_valencia",
+        firstVisitAt: new Date(),
+        lastSource: "TELEGRAM",
+        lastCampaign: null,
+        lastReferralCode: "telegram_valencia",
+        lastVisitAt: new Date(),
+      });
+      await marketingAttributions.linkUser("visitor-1", user.id);
+
+      await useCase.execute(user.id, { userId: user.id, isAdmin: false });
+
+      const attribution = await marketingAttributions.findByVisitorId("visitor-1");
+      expect(attribution?.userId).toBeNull();
+      expect(attribution?.visitorId).toBe("visitor-1");
+      expect(attribution?.firstReferralCode).toBe("telegram_valencia");
+    });
+
+    it("anonymizes the user's own Partner PII (displayName/contactEmail/payoutDetails/notes) while preserving status and financial thresholds", async () => {
+      const { useCase, partners, user } = setup();
+      const partner = await partners.create({
+        userId: user.id,
+        type: "TELEGRAM_CHANNEL",
+        displayName: "Ana's Channel",
+        contactEmail: "ana@example.com",
+        payoutMethod: "STRIPE",
+        payoutDetails: { stripeConnectAccountId: "acct_ana" },
+        minimumPayoutThreshold: 50,
+      });
+      await partners.updateStatus(partner.id, { status: "APPROVED", approvedAt: new Date(), approvedByUserId: "admin-1" });
+
+      await useCase.execute(user.id, { userId: user.id, isAdmin: false });
+
+      const erased = await partners.findById(partner.id);
+      expect(erased?.displayName).not.toContain("Ana");
+      expect(erased?.contactEmail).not.toBe("ana@example.com");
+      expect(erased?.payoutDetails).toBeNull();
+      // Never touched — status/threshold are neither PII nor financial
+      // history, and stay intact so admin reporting is unaffected.
+      expect(erased?.status).toBe("APPROVED");
+      expect(erased?.minimumPayoutThreshold).toBe(50);
+    });
+
+    it("is a no-op for a user with no referral/affiliate data at all", async () => {
+      const { useCase, user } = setup();
+      await expect(useCase.execute(user.id, { userId: user.id, isAdmin: false })).resolves.toBeDefined();
+    });
   });
 });

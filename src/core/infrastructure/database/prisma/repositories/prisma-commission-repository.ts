@@ -50,6 +50,11 @@ export class PrismaCommissionRepository implements CommissionRepository {
     return row ? toRecord(row) : null;
   }
 
+  async findById(id: string): Promise<CommissionRecord | null> {
+    const row = await prisma.commission.findUnique({ where: { id }, select: SELECT });
+    return row ? toRecord(row) : null;
+  }
+
   async create(data: CreateCommissionData): Promise<CommissionRecord> {
     // Relies on Commission.paymentId's DB-level unique constraint as the
     // authoritative "never two commissions for one payment" guard — a

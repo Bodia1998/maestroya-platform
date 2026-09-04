@@ -43,6 +43,10 @@ import { GrantConsentUseCase } from "@/application/use-cases/gdpr/grant-consent.
 import { WithdrawConsentUseCase } from "@/application/use-cases/gdpr/withdraw-consent.use-case";
 import type { GdprInventoryRepos } from "@/application/use-cases/gdpr/gdpr-data-inventory";
 import { PrismaFraudTrustSignalCheckRepository } from "@/infrastructure/database/prisma/repositories/prisma-fraud-trust-signal-check-repository";
+import { PrismaMarketingAttributionRepository } from "@/infrastructure/database/prisma/repositories/prisma-marketing-attribution-repository";
+import { PrismaPartnerRepository } from "@/infrastructure/database/prisma/repositories/prisma-partner-repository";
+import { PrismaReferralCodeRepository } from "@/infrastructure/database/prisma/repositories/prisma-referral-code-repository";
+import { PrismaAffiliateCommissionRepository } from "@/infrastructure/database/prisma/repositories/prisma-affiliate-commission-repository";
 
 const users = new PrismaUserRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
@@ -64,6 +68,11 @@ const professionalVerifications = new PrismaProfessionalVerificationRepository()
 const consents = new PrismaConsentRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
 const authTokens = new PrismaAuthTokenRepository();
+// Module 96 — Referral & Affiliate Production Wiring.
+const referralCodes = new PrismaReferralCodeRepository();
+const affiliateCommissions = new PrismaAffiliateCommissionRepository();
+const marketingAttributions = new PrismaMarketingAttributionRepository();
+const partners = new PrismaPartnerRepository();
 const verificationDocumentStorageDeleter = new CloudinaryVerificationDocumentDeletionService();
 // Module 39 — Sentry + CI/CD Hardening: SentryFailureReporter in
 // production, ConsoleFailureReporter (Module 37) otherwise — see
@@ -91,6 +100,10 @@ const inventoryRepos: GdprInventoryRepos = {
   professionalVerifications,
   consents,
   auditLog,
+  marketingAttributions,
+  partners,
+  referralCodes,
+  affiliateCommissions,
 };
 
 /**
@@ -125,6 +138,8 @@ const erasureRepos: GdprErasureRepos = {
   professionalVerifications,
   authTokens,
   fraudTrustSignalChecks,
+  marketingAttributions,
+  partners,
 };
 
 // Module 94 — GDPR Cloudinary Purge Retry & Durable Erasure Completion:

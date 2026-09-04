@@ -2,7 +2,28 @@ import path from "node:path";
 
 import { defineConfig } from "vitest/config";
 
+import { loadLocalTestEnv } from "./tests/test-utils/db/local-test-env";
 import { resolveTestDatabaseUrl } from "./tests/test-utils/db/test-database-url";
+
+/**
+ * Loads a git-ignored `.env.test.local` (see `.gitignore`) into
+ * `process.env`, IF it exists, before `resolveTestDatabaseUrl()` reads
+ * `TEST_DATABASE_URL` below. This is the only env file this config ever
+ * reads — `.env`/`.env.local` (this repo's real, Supabase-backed
+ * `DATABASE_URL`) are deliberately never loaded here. `.env.test.local`
+ * is where a developer puts their own local/CI-only
+ * `TEST_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/maestroya_test?schema=public"`
+ * — it still passes through the same `UnsafeTestDatabaseUrlError` guard
+ * below, so this loader grants no exemption from that check.
+ *
+ * Uses `loadLocalTestEnv()` (see `tests/test-utils/db/local-test-env.ts`)
+ * rather than Node's built-in `process.loadEnvFile()` — the latter
+ * silently refuses to override a `TEST_DATABASE_URL` that is already
+ * present (even empty) in `process.env`, which produced exactly the
+ * "TEST_DATABASE_URL is set in .env.test.local but still reported as
+ * unset" bug that module's doc comment explains in full.
+ */
+loadLocalTestEnv(__dirname);
 
 /**
  * Module 91 — Real-Database Integration Test Harness.

@@ -64,7 +64,10 @@ export interface CreateTransferRequest {
    *  requested it. */
   metadata: {
     payoutId: string;
-    jobId: string;
+    /** Omitted for a payout with no associated Job — e.g. a Module 96
+     *  partner/affiliate payout, which settles a batch of commissions
+     *  rather than a single Job. */
+    jobId?: string;
   };
 }
 

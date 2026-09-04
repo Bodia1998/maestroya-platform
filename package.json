@@ -19,6 +19,7 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:integration:db": "vitest run --config vitest.config.integration-db.ts",
+    "db:migrate:test": "tsx scripts/migrate-test-db.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "realtime:gateway": "tsx --conditions=react-server scripts/realtime-gateway.ts",

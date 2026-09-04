@@ -35,6 +35,11 @@ export interface CreateCommissionData {
 
 export interface CommissionRepository {
   findByPaymentId(paymentId: string): Promise<CommissionRecord | null>;
+  /** Module 96 Financial Fix Pass — resolves a Commission by its own id.
+   *  Added for `ReconcileAffiliateCommissionStripeFeeUseCase`, which only
+   *  ever knows a `platformCommissionRefId` (this Commission's `id`) from
+   *  an `AffiliateCommission` row, never a `paymentId` directly. */
+  findById(id: string): Promise<CommissionRecord | null>;
   create(data: CreateCommissionData): Promise<CommissionRecord>;
   /** Professional/company-facing earnings listing — see
    *  GetProfessionalEarningsUseCase. Scoped to exactly one
