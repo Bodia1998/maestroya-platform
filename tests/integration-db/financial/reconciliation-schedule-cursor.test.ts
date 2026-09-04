@@ -244,8 +244,9 @@ describe("Module 92 — reconciliation scheduled sweep cursor (real PostgreSQL)"
 
   it("Scenario 10 — restart safety: a lost optimistic-concurrency race is detected and never silently corrupts the cursor", async () => {
     const t0 = new Date("2026-01-01T00:00:00.000Z");
+    const jobIds: string[] = [];
     for (let i = 0; i < 5; i++) {
-      await createEligibleJob(new Date(t0.getTime() + i * 1000));
+      jobIds.push(await createEligibleJob(new Date(t0.getTime() + i * 1000)));
     }
     const { sweep, cursorRepo } = makeSweep();
 
@@ -253,12 +254,20 @@ describe("Module 92 — reconciliation scheduled sweep cursor (real PostgreSQL)"
 
     // Simulate a second process advancing the cursor between this run's
     // read and its own write (bypassing the lock entirely — the
-    // belt-and-suspenders path, independent of DistributedLock).
+    // belt-and-suspenders path, independent of DistributedLock) — to a
+    // position genuinely MID-LEDGER (right after the 2nd of 5 real
+    // Jobs), the same way a real concurrent sweep actually leaves the
+    // cursor: having made real progress, with real remaining Jobs still
+    // after it. A stolen-advance position past the END of the ledger
+    // (e.g. a far-future timestamp/nonexistent Job id) would make the
+    // very next sweep correctly see nothing left to do — proving
+    // nothing about restart safety, since there would be nothing to
+    // "restart."
     const stolenAdvance = await cursorRepo.advance({
       cursorKey: "scheduled-job-ledger",
       expectedVersion: cursor.version,
-      lastCreatedAt: new Date("2026-06-01T00:00:00.000Z"),
-      lastJobId: randomUUID(),
+      lastCreatedAt: new Date(t0.getTime() + 1_000), // the 2nd Job's createdAt
+      lastJobId: jobIds[1]!,
       cycleNumber: cursor.cycleNumber,
       cycleStartedAt: cursor.cycleStartedAt,
     });
@@ -277,8 +286,12 @@ describe("Module 92 — reconciliation scheduled sweep cursor (real PostgreSQL)"
     expect(conflicting).toBeNull();
 
     // The system remains fully usable afterward — a fresh sweep reads
-    // the current (stolen-advanced) cursor and proceeds normally.
+    // the current (stolen-advanced) cursor and proceeds normally,
+    // picking up exactly the 3 real Jobs still after that position
+    // (index 2, 3, 4) rather than re-processing anything already covered
+    // by the stolen advance or missing anything genuinely remaining.
     const result = await sweep.execute({ scope: "FULL", batchSize: 3 });
     expect(result.outcome).toBe("completed");
+    expect(result.recordsSelected).toBe(3);
   });
 });

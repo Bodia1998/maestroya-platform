@@ -2,6 +2,8 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
   AdvanceReconciliationScheduleCursorData,
@@ -19,31 +21,60 @@ import type {
  */
 export class PrismaReconciliationScheduleCursorRepository implements ReconciliationScheduleCursorRepository {
   /**
-   * `upsert` on the unique `cursorKey` column: if two callers somehow
-   * race to create the same not-yet-existing cursor (should not happen
-   * in practice — the scheduled sweep always holds a `DistributedLock`
-   * before ever reaching this call, see
-   * `RunScheduledReconciliationSweepUseCase`), Postgres resolves the
-   * unique-constraint conflict itself and `upsert` returns the row
-   * exactly once either way — never throws, never creates a duplicate
-   * cursor row for the same key.
+   * `upsert` on the unique `cursorKey` column, for the common case where
+   * no concurrent caller is racing to create the same not-yet-existing
+   * cursor.
+   *
+   * Two DIFFERENT callers reach this method without holding
+   * `RunScheduledReconciliationSweepUseCase`'s lock: the lock HOLDER
+   * (inside `runLocked`) and, independently, a caller that just FAILED
+   * to acquire the lock (it still calls `getOrCreate` afterward, purely
+   * to read the current cursor for its `skipped_locked` result — see
+   * that use case's `execute()`). On a cold start (cursor row does not
+   * exist yet), both of these can genuinely race to be the one that
+   * creates it, entirely outside the lock's protection.
+   *
+   * `upsert` alone is not a sufficient guard against that: this
+   * repository previously assumed Postgres/Prisma would always resolve a
+   * concurrent create-vs-create race inside `upsert` silently, but a real
+   * concurrent run of this exact scenario threw an unhandled unique-
+   * constraint violation (Prisma P2002) on `cursorKey` instead. The fix
+   * is the standard "create, and on a concurrent-insert conflict, read
+   * instead" pattern already used elsewhere in this codebase (see e.g.
+   * `PrismaPartnerPayoutRepository`, `PrismaDisputeRepository`): catch
+   * P2002 specifically (never any other error), and re-read the row that
+   * the OTHER concurrent caller just won the race to create. Never
+   * retries blindly, never loosens the unique constraint — the row this
+   * returns is always the one single row that constraint guarantees
+   * exists.
    */
   async getOrCreate(cursorKey: string): Promise<ReconciliationScheduleCursorRecord> {
-    const row = await prisma.reconciliationScheduleCursor.upsert({
-      where: { cursorKey },
-      update: {},
-      create: {
-        id: randomUUID(),
-        cursorKey,
-        lastCreatedAt: null,
-        lastJobId: null,
-        cycleNumber: 1,
-        cycleStartedAt: new Date(),
-        lastAdvancedAt: null,
-        version: 0,
-      },
-    });
-    return row;
+    try {
+      const row = await prisma.reconciliationScheduleCursor.upsert({
+        where: { cursorKey },
+        update: {},
+        create: {
+          id: randomUUID(),
+          cursorKey,
+          lastCreatedAt: null,
+          lastJobId: null,
+          cycleNumber: 1,
+          cycleStartedAt: new Date(),
+          lastAdvancedAt: null,
+          version: 0,
+        },
+      });
+      return row;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        // Lost the concurrent-create race — the other caller's insert
+        // already committed the row this `cursorKey` constraint allows
+        // exactly one of. Read it back rather than treating this as a
+        // failure.
+        return prisma.reconciliationScheduleCursor.findUniqueOrThrow({ where: { cursorKey } });
+      }
+      throw error;
+    }
   }
 
   /**

@@ -31,6 +31,7 @@ export class CreateReferralCodeUseCase {
       code,
       ownerUserId: input.ownerUserId ?? null,
       label: input.label ?? null,
+      source: input.source ?? null,
     });
   }
 }

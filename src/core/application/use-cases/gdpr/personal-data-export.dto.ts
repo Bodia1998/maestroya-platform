@@ -17,6 +17,10 @@ import type { ServiceRequestRecord } from "@/domain/repositories/service-request
 import type { SupportTicketRecord } from "@/domain/repositories/support-ticket-repository";
 import type { CustomerProfileRecord } from "@/domain/repositories/customer-profile-repository";
 import type { UserProfileRecord } from "@/domain/repositories/user-repository";
+import type { MarketingAttributionRecord } from "@/domain/repositories/marketing-attribution-repository";
+import type { PartnerRecord } from "@/domain/repositories/partner-repository";
+import type { ReferralCodeRecord } from "@/domain/repositories/referral-code-repository";
+import type { AffiliateCommissionRecord } from "@/domain/repositories/affiliate-commission-repository";
 
 /**
  * Module 38 — GDPR Compliance.
@@ -81,4 +85,20 @@ export interface PersonalDataExport {
    *  this is scanned rather than queried directly (`AdminAuditLogRepository`
    *  has no `findByActorUserId`). */
   auditLogEntries: AdminAuditLogRecord[];
+
+  /** Module 96 — Referral & Affiliate Production Wiring: this user's own
+   *  visitor-attribution link (`null` for a user who registered without
+   *  ever being tracked via `/r/<code>`, or whose attribution was already
+   *  erased on a prior deletion request). */
+  marketingAttribution: MarketingAttributionRecord | null;
+  /** Module 96: this user's own partner/affiliate account, if any. */
+  partnerAccount: PartnerRecord | null;
+  /** Module 96: every referral link this user (as a partner) owns. */
+  referralCodesOwned: ReferralCodeRecord[];
+  /** Module 96: every affiliate commission this user (as a partner) has
+   *  earned — part of their own GDPR Article 15 access right, even though
+   *  these specific rows are never deleted/anonymized on erasure (see
+   *  AFFILIATE_FINANCIAL's RETAIN classification, gdpr-privacy-rules.ts —
+   *  export and erasure are governed by different, independent rights). */
+  affiliateCommissionsEarned: AffiliateCommissionRecord[];
 }

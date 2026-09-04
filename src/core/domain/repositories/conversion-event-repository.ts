@@ -49,4 +49,15 @@ export interface ConversionEventRepository {
   listByAttributionId(attributionId: string): Promise<ConversionEventRecord[]>;
   countByType(type: ConversionTypeValue): Promise<number>;
   sumRevenueByType(type: ConversionTypeValue): Promise<number>;
+  /**
+   * Module 96 — Referral & Affiliate Production Wiring: idempotency
+   * lookup for a conversion tied to an already-known external reference
+   * (e.g. a Module 22 `Commission.id` for a `COMMISSION_GENERATED`
+   * conversion) — a caller MUST check this before `create` to stay safe
+   * under a duplicate/redelivered domain event, backed by the
+   * `(type, referenceId)` unique constraint at the database level (see
+   * schema.prisma's own doc comment on `ConversionEvent`), never only an
+   * application-level pre-check.
+   */
+  findByReferenceId(type: ConversionTypeValue, referenceId: string): Promise<ConversionEventRecord | null>;
 }

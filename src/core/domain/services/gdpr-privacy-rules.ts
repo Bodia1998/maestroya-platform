@@ -38,6 +38,18 @@ export const GDPR_DATA_CATEGORIES = [
   "AUDIT_LOG",
   "CONSENT_RECORDS",
   "COMPANY_MEMBERSHIP",
+  /** Module 96 — Referral & Affiliate Production Wiring: the visitor
+   *  attribution and partner-profile identifiers a referred/referring
+   *  user leaves behind (`MarketingAttribution.userId`, `Partner.
+   *  displayName`/`contactEmail`/`payoutDetails`/`notes`) — anonymized on
+   *  erasure, same rationale as PROFILE_DATA. */
+  "REFERRAL_ATTRIBUTION",
+  /** Module 96: `AffiliateCommission`/`AffiliateCommissionReversal`/
+   *  `PartnerPayout` rows — retained, same rationale/legal basis as
+   *  MARKETPLACE_FINANCIAL, applied to the affiliate/commission domain
+   *  specifically (a real payout already moved real money; the ledger
+   *  trail must survive the partner's own account being erased). */
+  "AFFILIATE_FINANCIAL",
 ] as const;
 
 export type GdprDataCategoryValue = (typeof GDPR_DATA_CATEGORIES)[number];
@@ -111,6 +123,20 @@ const CATEGORY_CLASSIFICATION: Record<GdprDataCategoryValue, CategoryClassificat
   COMPANY_MEMBERSHIP: {
     strategy: "ANONYMIZE",
     reason: "Company membership history (who held which role, and when) is kept for the company's own record; the member's identity is anonymized.",
+  },
+  REFERRAL_ATTRIBUTION: {
+    strategy: "ANONYMIZE",
+    reason:
+      "A referral click/attribution's aggregate value (which campaign drove a conversion) is kept for the " +
+      "referring partner's own record; the referred user's identity (MarketingAttribution.userId) and, if the " +
+      "erased user is themselves a partner, their own contact/payout details are anonymized.",
+  },
+  AFFILIATE_FINANCIAL: {
+    strategy: "RETAIN",
+    reason:
+      "Affiliate commissions, reversals, and payouts must be retained for tax, accounting, and dispute-defense " +
+      "purposes (GDPR Art. 17(3)(b)/(e)) — a payout already moved real money and can never be deleted or " +
+      "anonymized while a legal retention period applies.",
   },
 };
 

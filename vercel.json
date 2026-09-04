@@ -12,6 +12,10 @@
     {
       "path": "/api/cron/gdpr-cloudinary-purge",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/referral-affiliate-maintenance",
+      "schedule": "0 4 * * *"
     }
   ]
 }

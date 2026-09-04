@@ -8,6 +8,7 @@ import type { StripePaymentWebhookEvent } from "@/application/ports/stripe-payme
 import type { ExternalWebhookEventRepository } from "@/domain/repositories/external-webhook-event-repository";
 import type { PaymentRecord, PaymentRepository } from "@/domain/repositories/payment-repository";
 import type { RefundRepository } from "@/domain/repositories/refund-repository";
+import type { FinancialLedgerRepository } from "@/domain/repositories/financial-ledger-repository";
 import type { StripeDisputeEventPayload } from "@/application/ports/stripe-payment-webhook-verifier";
 import { publishDomainEvent } from "@/application/services/events/publish-domain-event";
 import { logger } from "@/infrastructure/observability/logger";
@@ -29,6 +30,7 @@ export type ProcessCustomerPaymentWebhookOutcome =
   | "cancelled"
   | "refund-observed"
   | "dispute-processed"
+  | "fee-captured"
   | "duplicate"
   | "ignored"
   | "unmatched"
@@ -131,6 +133,15 @@ export class ProcessCustomerPaymentWebhookUseCase {
      *  that class's own doc comment for the full dispute-handling
      *  contract this delegates to. */
     private readonly stripeDisputes: StripeDisputeWebhookHandler | null = null,
+    /** Module 96 — Referral & Affiliate Production Wiring: optional,
+     *  same "every pre-existing caller keeps compiling unchanged"
+     *  convention as `refunds`/`stripeDisputes` above — a `null` here
+     *  means every `charge.updated` event is simply `ignored` (never
+     *  crashes, never records a fee); production wiring
+     *  (`payments/compose.ts`) always supplies the real ledger so the
+     *  actual Stripe fee is genuinely captured. See
+     *  `handleChargeUpdated`'s own doc comment for the full mechanism. */
+    private readonly feeLedger: FinancialLedgerRepository | null = null,
   ) {}
 
   async execute(event: StripePaymentWebhookEvent): Promise<ProcessCustomerPaymentWebhookResult> {
@@ -173,6 +184,8 @@ export class ProcessCustomerPaymentWebhookUseCase {
       case "charge.dispute.updated":
       case "charge.dispute.closed":
         return this.handleStripeDispute(event);
+      case "charge.updated":
+        return this.handleChargeUpdated(event);
       default:
         return { outcome: "ignored" };
     }
@@ -374,6 +387,74 @@ export class ProcessCustomerPaymentWebhookUseCase {
     }
     await this.stripeDisputes.handle(event.type, event.dispute);
     return { outcome: "dispute-processed" };
+  }
+
+  /**
+   * Module 96 — Referral & Affiliate Production Wiring: the real Stripe
+   * processing-fee capture path — see `StripeChargeUpdatedPayload`'s own
+   * doc comment for why `charge.updated` (not `succeeded`) is the
+   * correct trigger, and `PaymentGateway.retrieveBalanceTransactionFee`'s
+   * own doc comment for the follow-up call this makes.
+   *
+   * ## Idempotent under both duplicate delivery and a late-arriving fee
+   * `ExternalWebhookEventRepository.claim()` (this class's own `execute`)
+   * already guards duplicate *delivery* of the same Stripe event id.
+   * Independently, this method itself guards the case Stripe's own docs
+   * warn about — `charge.updated` can fire more than once as a Charge's
+   * `balance_transaction` (and other fields) settle — via a pre-check
+   * against `FinancialLedgerRepository.findByIdempotencyKey`
+   * (`stripe-fee:<paymentId>`, matching Module 22's own "caller checks
+   * first" convention): a second `charge.updated` for a payment whose fee
+   * is already recorded is a pure no-op, never a second ledger row, never
+   * a second `retrieveBalanceTransactionFee` call. A `charge.updated`
+   * that arrives with no `balance_transaction` yet (the very common
+   * "some other field changed first" case) is silently ignored — nothing
+   * to record yet; a later delivery once the fee actually attaches is
+   * exactly what this method is built to eventually catch.
+   */
+  private async handleChargeUpdated(event: StripePaymentWebhookEvent): Promise<ProcessCustomerPaymentWebhookResult> {
+    const balanceTransactionId = event.chargeUpdated?.balanceTransactionId ?? null;
+    const paymentIntentId = event.chargeUpdated?.paymentIntentId ?? null;
+    if (!this.feeLedger || !balanceTransactionId || !paymentIntentId) {
+      return { outcome: "ignored" };
+    }
+
+    const payment = await this.payments.findByStripePaymentIntentId(paymentIntentId);
+    if (!payment) return { outcome: "unmatched" };
+
+    const idempotencyKey = `stripe-fee:${payment.id}`;
+    const existing = await this.feeLedger.findByIdempotencyKey(idempotencyKey);
+    if (existing) {
+      return { outcome: "already-settled", paymentId: payment.id };
+    }
+
+    const fee = await this.paymentGateway.retrieveBalanceTransactionFee(balanceTransactionId);
+
+    // Same "check-then-create, tolerate losing a concurrent-create race"
+    // convention `RecordCommissionForPaymentUseCase.ensureLedgerEntry`
+    // already establishes for this exact ledger — two independent
+    // `charge.updated` deliveries (different Stripe event ids, so not
+    // caught by this class's own `webhookEvents.claim()`) racing each
+    // other here converge on the single row `idempotencyKey`'s DB-unique
+    // constraint permits, never a duplicate STRIPE_FEE row.
+    try {
+      await this.feeLedger.create({
+        type: "STRIPE_FEE",
+        status: "COMPLETED",
+        amount: -fee.feeAmount,
+        currency: fee.currency,
+        paymentId: payment.id,
+        description: `Stripe processing fee for payment ${payment.id}`,
+        idempotencyKey,
+      });
+    } catch (error) {
+      const raced = await this.feeLedger.findByIdempotencyKey(idempotencyKey);
+      if (!raced) throw error;
+      return { outcome: "already-settled", paymentId: payment.id };
+    }
+
+    logger.info("stripe_payments_webhook.fee_captured", { paymentId: payment.id, feeAmount: fee.feeAmount, currency: fee.currency });
+    return { outcome: "fee-captured", paymentId: payment.id };
   }
 
   private async findPayment(event: StripePaymentWebhookEvent): Promise<PaymentRecord | null> {

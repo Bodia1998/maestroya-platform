@@ -17,6 +17,15 @@ export interface ReferralCodeRecord {
   /** Free-text description for an admin's own reference — never shown to
    *  a visitor. */
   label: string | null;
+  /** Module 96 — a partner's own campaign-source label (see
+   *  `referral-campaign-source-rules.ts`) — never shown to a visitor. */
+  source: string | null;
+  /** Module 96 — `false` means the owning partner has deactivated this
+   *  link: `RecordAffiliateCommissionUseCase` stops creating new
+   *  commissions for it, but the code still redirects (see `/r/[code]`'s
+   *  own doc comment) and its historical visits/commissions are
+   *  untouched. */
+  isActive: boolean;
   createdAt: Date;
 }
 
@@ -24,6 +33,7 @@ export interface CreateReferralCodeData {
   code: string;
   ownerUserId?: string | null;
   label?: string | null;
+  source?: string | null;
 }
 
 export interface ReferralCodeRepository {
@@ -44,4 +54,12 @@ export interface ReferralCodeRepository {
    * See docs/MODULE_61's "Referral Attribution" section.
    */
   findByOwnerUserId(ownerUserId: string): Promise<ReferralCodeRecord[]>;
+  /**
+   * Module 96 — Referral & Affiliate Production Wiring: flips
+   * `isActive`. No-op (resolves normally) if `id` doesn't exist — callers
+   * (`SetReferralCodeActiveUseCase`) are expected to have already
+   * resolved and ownership-checked the record via `findById` first, so
+   * this is never the caller's only existence check.
+   */
+  setActive(id: string, isActive: boolean): Promise<void>;
 }

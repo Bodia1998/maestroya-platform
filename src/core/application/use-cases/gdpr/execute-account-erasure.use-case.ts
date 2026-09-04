@@ -18,6 +18,8 @@ import type { ProfessionalRepository } from "@/domain/repositories/professional-
 import type { ProfessionalVerificationRepository } from "@/domain/repositories/professional-verification-repository";
 import type { UserRepository } from "@/domain/repositories/user-repository";
 import type { FraudTrustSignalCheckRepository } from "@/domain/repositories/fraud-trust-signal-check-repository";
+import type { MarketingAttributionRepository } from "@/domain/repositories/marketing-attribution-repository";
+import type { PartnerRepository } from "@/domain/repositories/partner-repository";
 
 /**
  * Module 88 — GDPR Erasure Execution & Document Retention.
@@ -49,6 +51,18 @@ export interface GdprErasureRepos {
   // audit/financial/dispute record, so hard-delete is appropriate and
   // does not need a new formal GdprDataCategoryValue).
   fraudTrustSignalChecks?: FraudTrustSignalCheckRepository;
+  // Module 96 — Referral & Affiliate Production Wiring: optional, same
+  // "every pre-existing caller/test keeps compiling unchanged" convention
+  // as `fraudTrustSignalChecks` above. When present, this user's
+  // MarketingAttribution link and (if they are themselves a partner)
+  // their Partner row's own PII are anonymized alongside every other
+  // per-user erasure step — see `MarketingAttributionRepository.
+  // eraseForUser`/`PartnerRepository.eraseForUser`'s own doc comments.
+  // AffiliateCommission/PartnerPayout/AffiliateCommissionReversal rows
+  // are never touched here — see AFFILIATE_FINANCIAL's own RETAIN
+  // classification (gdpr-privacy-rules.ts).
+  marketingAttributions?: MarketingAttributionRepository;
+  partners?: PartnerRepository;
 }
 
 /**
@@ -201,6 +215,14 @@ export class ExecuteAccountErasureUseCase {
         await this.repos.fraudTrustSignalChecks.deleteForUser(userId);
       }
 
+      // Module 96 — Referral & Affiliate Production Wiring.
+      if (this.repos.marketingAttributions) {
+        await this.repos.marketingAttributions.eraseForUser(userId);
+      }
+      if (this.repos.partners) {
+        await this.repos.partners.eraseForUser(userId);
+      }
+
       categoriesProcessed = {
         AUTH_CREDENTIALS: "HARD_DELETE",
         PROFILE_DATA: "ANONYMIZE",
@@ -214,6 +236,8 @@ export class ExecuteAccountErasureUseCase {
         AUDIT_LOG: "RETAIN",
         CONSENT_RECORDS: "RETAIN",
         COMPANY_MEMBERSHIP: "ANONYMIZE",
+        REFERRAL_ATTRIBUTION: "ANONYMIZE",
+        AFFILIATE_FINANCIAL: "RETAIN",
       };
     }
 

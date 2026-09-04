@@ -100,4 +100,18 @@ export interface PartnerRepository {
    *  that assumption stops holding. */
   list(filter?: { status?: PartnerStatusValue }): Promise<PartnerRecord[]>;
   countByStatus(status: PartnerStatusValue): Promise<number>;
+
+  /**
+   * Module 96 — Referral & Affiliate Production Wiring / GDPR erasure:
+   * anonymizes this user's own `Partner` row (if they have one) —
+   * `displayName`/`contactEmail`/`payoutDetails`/`notes` cleared, same
+   * "clear PII, keep the row for referential integrity" treatment
+   * `ProfessionalRepository.update`'s own erasure call already applies to
+   * `ProfessionalProfile`. Never touches `status`, `minimumPayoutThreshold`,
+   * or any `AffiliateCommission`/`PartnerPayout`/
+   * `AffiliateCommissionReversal` row — those stay exactly as classified
+   * `AFFILIATE_FINANCIAL`/RETAIN (`gdpr-privacy-rules.ts`). A user with no
+   * partner account is a no-op, not an error.
+   */
+  eraseForUser(userId: string): Promise<void>;
 }

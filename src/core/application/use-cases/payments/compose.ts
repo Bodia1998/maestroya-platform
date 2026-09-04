@@ -31,6 +31,14 @@ import { createFailureReporter } from "@/infrastructure/observability/failure-re
 import { makeRecordCommissionForPaymentUseCase } from "@/application/use-cases/financial/compose";
 import { makeCheckPayoutEligibilityUseCase } from "@/application/use-cases/verification/compose";
 import { makeCheckInvoiceRequiredForPayoutUseCase } from "@/application/use-cases/invoicing/compose";
+// Module 96 — Referral & Affiliate Production Wiring: side-effect import
+// only — registers RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber
+// against the same PaymentReleaseApproved event this file's own
+// ExecutePayoutOnReleaseApprovedSubscriber already subscribes to. Mirrors
+// `makeCheckInvoiceRequiredForPayoutUseCase`'s import of
+// `invoicing/compose` immediately above, which pulls in that module's own
+// PaymentReleaseApproved subscriber registration the identical way.
+import "@/application/use-cases/affiliate/compose";
 import { ResolvePayoutDestinationUseCase } from "@/application/use-cases/financial/resolve-payout-destination.use-case";
 import { PaymentCaptured } from "@/domain/events/payment-captured";
 import { PaymentReleaseApproved } from "@/domain/events/payment-release-approved";
@@ -194,6 +202,7 @@ export function makeProcessCustomerPaymentWebhookUseCase(): ProcessCustomerPayme
     failureReporter,
     refunds,
     makeProcessStripeDisputeWebhookUseCase(),
+    financialLedger,
   );
 }
 

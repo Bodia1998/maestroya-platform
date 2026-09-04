@@ -67,6 +67,33 @@ export const RATE_LIMIT_POLICIES = {
   // dozens of adjustment requests a minute", e.g. a compromised admin
   // session) on top of that per-request idempotency guarantee.
   FINANCIAL_ADJUSTMENT_CREATE_BY_USER: { limit: 20, windowMs: HOUR },
+
+  // --- Module 96 — Referral & Affiliate Production Wiring (G) ---
+  // `/r/[code]` is public and unauthenticated by design (a shared
+  // marketing link) — IP is the only signal available, same trade-off
+  // REGISTRATION_BY_IP already makes. Generous enough that a real,
+  // organically-shared link posted somewhere popular is never throttled
+  // (302 redirects are cheap; this budget governs the TrackVisitUseCase
+  // *write*, not the redirect itself — see that route's own doc comment
+  // on why the redirect is never blocked).
+  REFERRAL_CLICK_BY_IP: { limit: 120, windowMs: MINUTE },
+  // A partner creating their own referral link — mirrors
+  // QUOTE_CREATE_BY_USER's budget shape (a legitimate partner running
+  // several campaigns needs headroom; a scripted flood does not).
+  REFERRAL_LINK_CREATE_BY_USER: { limit: 20, windowMs: HOUR },
+  // Every admin partner/commission/fraud-flag mutation shares one budget
+  // — same "one shared per-resource-class policy, not one per action"
+  // convention FILE_UPLOAD_BY_USER already establishes — generous for a
+  // human admin working through a queue, tight enough to blunt a
+  // compromised admin session scripting mass mutations.
+  ADMIN_PARTNER_MUTATION_BY_USER: { limit: 60, windowMs: HOUR },
+  // Payout creation specifically gets its own, tighter budget — the one
+  // action in this module that actually moves real money via a Stripe
+  // Connect transfer (see CreatePartnerPayoutUseCase) — separate from the
+  // broader admin-mutation budget above so a legitimate morning of
+  // partner reviews/approvals never eats into the payout-specific budget,
+  // and vice versa.
+  PARTNER_PAYOUT_CREATE_BY_USER: { limit: 10, windowMs: HOUR },
 } as const;
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES;

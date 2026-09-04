@@ -97,6 +97,31 @@ export interface StripeDisputeEventPayload {
   evidenceDueBy: Date | null;
 }
 
+/**
+ * Module 96 — Referral & Affiliate Production Wiring: real Stripe
+ * processing-fee capture. Stripe does NOT attach `balance_transaction` to
+ * a Charge at `charge.succeeded`/`payment_intent.succeeded` time — it is
+ * computed asynchronously, shortly after, and Stripe's own documented
+ * pattern for observing that is `charge.updated`, the one event Stripe
+ * fires specifically when a Charge's `balance_transaction` transitions
+ * from unset to populated. This payload therefore only ever carries the
+ * *id* of that balance transaction (all a webhook payload — unexpanded —
+ * ever contains); `ProcessCustomerPaymentWebhookUseCase.handleChargeUpdated`
+ * makes the one necessary follow-up call
+ * (`PaymentGateway.retrieveBalanceTransactionFee`) to actually read the
+ * fee amount off it. Never invented, never approximated as a percentage,
+ * never accepted from any client input.
+ */
+export interface StripeChargeUpdatedPayload {
+  chargeId: string;
+  paymentIntentId: string | null;
+  /** Stripe's own `BalanceTransaction.id` (`txn_...`) — `null` on a
+   *  `charge.updated` delivery that isn't about `balance_transaction`
+   *  attaching (e.g. a metadata edit), in which case this event carries
+   *  nothing this module cares about. */
+  balanceTransactionId: string | null;
+}
+
 export interface StripePaymentWebhookEvent {
   id: string;
   type: string;
@@ -111,6 +136,8 @@ export interface StripePaymentWebhookEvent {
   /** Module 86: populated only for `charge.dispute.created`/
    *  `charge.dispute.updated`/`charge.dispute.closed` — `null` otherwise. */
   dispute: StripeDisputeEventPayload | null;
+  /** Module 96: populated only for `charge.updated` — `null` otherwise. */
+  chargeUpdated: StripeChargeUpdatedPayload | null;
 }
 
 export type StripePaymentWebhookValidationResult =

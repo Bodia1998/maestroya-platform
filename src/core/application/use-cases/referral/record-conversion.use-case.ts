@@ -34,6 +34,22 @@ export class RecordConversionUseCase {
   ) {}
 
   async execute(input: RecordConversionInput): Promise<ConversionEventRecord> {
+    // Module 96 — idempotency: a caller supplying `referenceId` (e.g. a
+    // Module 22 Commission.id for COMMISSION_GENERATED) may be invoked
+    // more than once for the same underlying event — a redelivered
+    // domain event, a retried webhook. Check-then-create here is the
+    // application-level half of the guard; the DB-level
+    // `@@unique([type, referenceId])` constraint (see schema.prisma) is
+    // the authoritative backstop under real concurrency, matching
+    // `RecordAffiliateCommissionUseCase`'s own
+    // `findByConversionEventId`-first convention exactly.
+    if (input.referenceId) {
+      const existing = await this.conversions.findByReferenceId(input.type, input.referenceId);
+      if (existing) {
+        return existing;
+      }
+    }
+
     const attribution = await this.attributions.findByVisitorId(input.visitorId);
     if (!attribution) {
       throw new NotFoundError("MarketingAttribution", input.visitorId);

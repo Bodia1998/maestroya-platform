@@ -1,4 +1,5 @@
 import type {
+  BalanceTransactionFeeResult,
   PaymentAuthorizationRequest,
   PaymentAuthorizationResult,
   PaymentGateway,
@@ -56,5 +57,9 @@ export class NullPaymentGateway implements PaymentGateway {
 
   async cancel(_externalReference: string): Promise<void> {
     throw new PaymentGatewayNotConfiguredError("cancel");
+  }
+
+  async retrieveBalanceTransactionFee(_balanceTransactionId: string): Promise<BalanceTransactionFeeResult> {
+    throw new PaymentGatewayNotConfiguredError("retrieveBalanceTransactionFee");
   }
 }

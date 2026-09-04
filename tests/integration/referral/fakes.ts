@@ -37,6 +37,8 @@ export class FakeReferralCodeRepository implements ReferralCodeRepository {
       code: data.code,
       ownerUserId: data.ownerUserId ?? null,
       label: data.label ?? null,
+      source: data.source ?? null,
+      isActive: true,
       createdAt: new Date(),
     };
     this.codes.set(record.id, record);
@@ -57,6 +59,11 @@ export class FakeReferralCodeRepository implements ReferralCodeRepository {
 
   async findByOwnerUserId(ownerUserId: string): Promise<ReferralCodeRecord[]> {
     return [...this.codes.values()].filter((c) => c.ownerUserId === ownerUserId);
+  }
+
+  async setActive(id: string, isActive: boolean): Promise<void> {
+    const existing = this.codes.get(id);
+    if (existing) this.codes.set(id, { ...existing, isActive });
   }
 }
 
@@ -114,6 +121,10 @@ export class FakeMarketingAttributionRepository implements MarketingAttributionR
     return [...this.attributions.values()].find((a) => a.visitorId === visitorId) ?? null;
   }
 
+  async findByUserId(userId: string): Promise<MarketingAttributionRecord | null> {
+    return [...this.attributions.values()].find((a) => a.userId === userId) ?? null;
+  }
+
   async upsertTouchState(visitorId: string, state: AttributionTouchState): Promise<MarketingAttributionRecord> {
     const existing = await this.findByVisitorId(visitorId);
     const now = new Date();
@@ -144,6 +155,14 @@ export class FakeMarketingAttributionRepository implements MarketingAttributionR
       (a) => (a.firstReferralCode && codes.includes(a.firstReferralCode)) || (a.lastReferralCode && codes.includes(a.lastReferralCode)),
     );
   }
+
+  async eraseForUser(userId: string): Promise<void> {
+    for (const attribution of this.attributions.values()) {
+      if (attribution.userId === userId) {
+        this.attributions.set(attribution.id, { ...attribution, userId: null, updatedAt: new Date() });
+      }
+    }
+  }
 }
 
 export class FakeConversionEventRepository implements ConversionEventRepository {
@@ -161,6 +180,10 @@ export class FakeConversionEventRepository implements ConversionEventRepository 
     };
     this.events.push(record);
     return record;
+  }
+
+  async findByReferenceId(type: ConversionTypeValue, referenceId: string): Promise<ConversionEventRecord | null> {
+    return this.events.find((e) => e.type === type && e.referenceId === referenceId) ?? null;
   }
 
   async listByAttributionId(attributionId: string): Promise<ConversionEventRecord[]> {

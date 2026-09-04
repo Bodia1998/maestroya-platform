@@ -118,25 +118,53 @@ export class PrismaPaymentRepository implements PaymentRepository {
    * race), this call must return that existing row untouched, never
    * overwrite it with this caller's own (possibly different) generated
    * `id`/payload.
+   *
+   * `upsert` alone is not a sufficient guard against a GENUINELY
+   * concurrent duplicate create: two callers racing to create the first
+   * row for the same not-yet-existing `stripePaymentIntentId` can both
+   * reach the "no existing row" branch of `upsert`'s own internal
+   * check-then-write before either commits, and the loser gets an
+   * unhandled Prisma P2002 on the unique constraint instead of quietly
+   * converging on the winner's row — a real concurrent run of exactly
+   * this scenario reproduced it. Fixed the same way this repository's
+   * own sibling repositories already handle a lost concurrent-create race
+   * (see e.g. `PrismaAffiliateCommissionReversalRepository.create`,
+   * `PrismaReconciliationScheduleCursorRepository.getOrCreate`): catch
+   * P2002 specifically (nothing else), re-read the row by the exact
+   * unique key that just lost the race, and return it. The `stripePaymentIntentId`
+   * unique constraint itself remains the sole authority for "exactly one
+   * row" — this only makes losing that race a normal, handled outcome
+   * instead of an unhandled exception. If no row is found on re-read
+   * (should be unreachable — P2002 on this constraint means some row
+   * committed), the original error is rethrown rather than silently
+   * inventing a result.
    */
   async create(data: CreatePaymentRecordData): Promise<PaymentRecord> {
-    const row = await prisma.payment.upsert({
-      where: { stripePaymentIntentId: data.stripePaymentIntentId },
-      create: {
-        id: data.id,
-        serviceRequestId: data.serviceRequestId,
-        quoteId: data.quoteId,
-        payerId: data.payerId,
-        amount: new Prisma.Decimal(data.amount),
-        currency: data.currency,
-        method: data.method,
-        status: "PENDING",
-        stripePaymentIntentId: data.stripePaymentIntentId,
-      },
-      update: {},
-      select: SELECT,
-    });
-    return toRecord(row);
+    try {
+      const row = await prisma.payment.upsert({
+        where: { stripePaymentIntentId: data.stripePaymentIntentId },
+        create: {
+          id: data.id,
+          serviceRequestId: data.serviceRequestId,
+          quoteId: data.quoteId,
+          payerId: data.payerId,
+          amount: new Prisma.Decimal(data.amount),
+          currency: data.currency,
+          method: data.method,
+          status: "PENDING",
+          stripePaymentIntentId: data.stripePaymentIntentId,
+        },
+        update: {},
+        select: SELECT,
+      });
+      return toRecord(row);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        const existing = await this.findByStripePaymentIntentId(data.stripePaymentIntentId);
+        if (existing) return existing;
+      }
+      throw error;
+    }
   }
 
   /**

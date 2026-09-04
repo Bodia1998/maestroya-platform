@@ -78,15 +78,30 @@ class ScriptedDeleter implements VerificationDocumentStorageDeleter {
   }
 }
 
-async function seedSoftDeletedDocument(professionalProfileId: string): Promise<string> {
+/**
+ * `ProfessionalVerification` allows only ONE row per
+ * `professionalProfileId` (see the model's own unique constraint — never
+ * weakened for this test file). A test that needs several documents to
+ * purge for the same profile must attach them all to that ONE
+ * verification, not create a fresh verification per document —
+ * `ProfessionalVerificationDocument.verificationId` carries no such
+ * uniqueness, so many documents per verification is the correct, schema-
+ * respecting shape for "one professional has several rejected upload
+ * documents pending purge."
+ */
+async function seedVerification(professionalProfileId: string): Promise<string> {
   const verification = await prisma.professionalVerification.create({
     data: { professionalProfileId, status: "REJECTED" },
   });
+  return verification.id;
+}
+
+async function seedSoftDeletedDocumentOnVerification(verificationId: string): Promise<string> {
   const document = await prisma.professionalVerificationDocument.create({
     data: {
-      verificationId: verification.id,
+      verificationId,
       type: "NATIONAL_ID",
-      fileUrl: `https://res.cloudinary.com/test/image/private/s--sig--/v1/maestroya/verifications/${verification.id}/${randomUUID()}.jpg`,
+      fileUrl: `https://res.cloudinary.com/test/image/private/s--sig--/v1/maestroya/verifications/${verificationId}/${randomUUID()}.jpg`,
       originalFilename: "id.jpg",
       mimeType: "image/jpeg",
       fileSizeBytes: 1024,
@@ -94,6 +109,16 @@ async function seedSoftDeletedDocument(professionalProfileId: string): Promise<s
     },
   });
   return document.id;
+}
+
+/** Convenience for every scenario that only ever needs exactly one
+ *  verification and one document for a profile — creates both. Scenarios
+ *  that need SEVERAL documents for the same profile must instead call
+ *  `seedVerification` once and `seedSoftDeletedDocumentOnVerification`
+ *  per document — see "batch limit" and "concurrency" below. */
+async function seedSoftDeletedDocument(professionalProfileId: string): Promise<string> {
+  const verificationId = await seedVerification(professionalProfileId);
+  return seedSoftDeletedDocumentOnVerification(verificationId);
 }
 
 /**
@@ -284,9 +309,13 @@ describe("Module 94 — GDPR Cloudinary purge retry (real PostgreSQL)", () => {
   it("batch limit: the worker never claims more than the configured batch size", async () => {
     const repo = new PrismaProfessionalVerificationRepository();
     const { profile } = await seedUserAndProfile();
+    // One verification (professionalProfileId is unique on it), five
+    // documents on that same verification — not five verifications,
+    // which would violate that uniqueness.
+    const verificationId = await seedVerification(profile.id);
     const ids: string[] = [];
     for (let i = 0; i < 5; i += 1) {
-      const id = await seedSoftDeletedDocument(profile.id);
+      const id = await seedSoftDeletedDocumentOnVerification(verificationId);
       await repo.recordDocumentStoragePurgeFailure(id, {
         attemptCount: 1,
         nextAttemptAt: new Date(Date.now() - 1000),
@@ -307,9 +336,12 @@ describe("Module 94 — GDPR Cloudinary purge retry (real PostgreSQL)", () => {
   it("concurrency: two overlapping claims for the same due batch never claim the same document twice", async () => {
     const repo = new PrismaProfessionalVerificationRepository();
     const { profile } = await seedUserAndProfile();
+    // Same reasoning as "batch limit" above: one verification, eight
+    // documents on it.
+    const verificationId = await seedVerification(profile.id);
     const ids: string[] = [];
     for (let i = 0; i < 8; i += 1) {
-      const id = await seedSoftDeletedDocument(profile.id);
+      const id = await seedSoftDeletedDocumentOnVerification(verificationId);
       await repo.recordDocumentStoragePurgeFailure(id, {
         attemptCount: 1,
         nextAttemptAt: new Date(Date.now() - 1000),

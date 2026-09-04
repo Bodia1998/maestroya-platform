@@ -61,6 +61,15 @@ export class PrismaConversionEventRepository implements ConversionEventRepositor
     return toConversionEventRecord(row);
   }
 
+  async findByReferenceId(type: ConversionTypeValue, referenceId: string): Promise<ConversionEventRecord | null> {
+    // Uses findFirst (not findUnique) because Prisma only generates a
+    // compound-unique findUnique helper named after the constraint;
+    // functionally equivalent given the DB-level @@unique([type,
+    // referenceId]) — see schema.prisma's own doc comment.
+    const row = await prisma.conversionEvent.findFirst({ where: { type, referenceId }, select: CONVERSION_EVENT_SELECT });
+    return row ? toConversionEventRecord(row) : null;
+  }
+
   async listByAttributionId(attributionId: string): Promise<ConversionEventRecord[]> {
     const rows = await prisma.conversionEvent.findMany({
       where: { attributionId },

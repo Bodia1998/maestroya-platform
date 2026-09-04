@@ -105,6 +105,21 @@ export interface PaymentRefundOptions {
   idempotencyKey?: string;
 }
 
+/**
+ * Module 96 — Referral & Affiliate Production Wiring: the real source of
+ * a captured Payment's actual processing-fee cost — Stripe's own
+ * `BalanceTransaction.fee`, never an invented/hardcoded percentage, never
+ * accepted from a client. See `StripeChargeUpdatedPayload`'s own doc
+ * comment (`stripe-payment-webhook-verifier.ts`) for why this is a
+ * necessary follow-up call rather than something already present on a
+ * webhook payload.
+ */
+export interface BalanceTransactionFeeResult {
+  /** Already converted from minor units, always non-negative. */
+  feeAmount: number;
+  currency: string;
+}
+
 export interface PaymentGateway {
   /** Reserves funds with the processor without capturing them. */
   authorize(request: PaymentAuthorizationRequest): Promise<PaymentAuthorizationResult>;
@@ -124,4 +139,13 @@ export interface PaymentGateway {
 
   /** Cancels/voids an authorized-but-not-yet-captured charge. */
   cancel(externalReference: string): Promise<void>;
+
+  /** Module 96 — Referral & Affiliate Production Wiring: reads the actual
+   *  processing fee off an already-computed Stripe `BalanceTransaction`
+   *  (`stripe.balanceTransactions.retrieve`) — see
+   *  `BalanceTransactionFeeResult`'s own doc comment. Called exactly once
+   *  per Payment, from `ProcessCustomerPaymentWebhookUseCase.
+   *  handleChargeUpdated`, in response to `charge.updated` reporting the
+   *  balance transaction id. */
+  retrieveBalanceTransactionFee(balanceTransactionId: string): Promise<BalanceTransactionFeeResult>;
 }

@@ -12,6 +12,8 @@ const REFERRAL_CODE_SELECT = {
   code: true,
   ownerUserId: true,
   label: true,
+  source: true,
+  isActive: true,
   createdAt: true,
 } as const;
 
@@ -20,11 +22,21 @@ type ReferralCodeRow = {
   code: string;
   ownerUserId: string | null;
   label: string | null;
+  source: string | null;
+  isActive: boolean;
   createdAt: Date;
 };
 
 function toReferralCodeRecord(row: ReferralCodeRow): ReferralCodeRecord {
-  return { id: row.id, code: row.code, ownerUserId: row.ownerUserId, label: row.label, createdAt: row.createdAt };
+  return {
+    id: row.id,
+    code: row.code,
+    ownerUserId: row.ownerUserId,
+    label: row.label,
+    source: row.source,
+    isActive: row.isActive,
+    createdAt: row.createdAt,
+  };
 }
 
 export class PrismaReferralCodeRepository implements ReferralCodeRepository {
@@ -34,6 +46,7 @@ export class PrismaReferralCodeRepository implements ReferralCodeRepository {
         code: data.code,
         ownerUserId: data.ownerUserId ?? null,
         label: data.label ?? null,
+        source: data.source ?? null,
       },
       select: REFERRAL_CODE_SELECT,
     });
@@ -62,5 +75,9 @@ export class PrismaReferralCodeRepository implements ReferralCodeRepository {
       select: REFERRAL_CODE_SELECT,
     });
     return rows.map(toReferralCodeRecord);
+  }
+
+  async setActive(id: string, isActive: boolean): Promise<void> {
+    await prisma.referralCode.updateMany({ where: { id }, data: { isActive } });
   }
 }

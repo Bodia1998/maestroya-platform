@@ -187,6 +187,10 @@ export class FakeCommissionRepository implements CommissionRepository {
     return [...this.commissions.values()].find((c) => c.paymentId === paymentId) ?? null;
   }
 
+  async findById(id: string): Promise<CommissionRecord | null> {
+    return this.commissions.get(id) ?? null;
+  }
+
   async create(data: CreateCommissionData): Promise<CommissionRecord> {
     // Module 84 hardening: the existence check and the write must happen
     // with no `await` between them, or two concurrent calls racing on the

@@ -40,7 +40,49 @@ export interface CreatePartnerPayoutData {
 
 export interface PartnerPayoutRepository {
   create(data: CreatePartnerPayoutData): Promise<PartnerPayoutRecord>;
+  /**
+   * Module 96 Financial Fix Pass — the database-level fix for
+   * `CreatePartnerPayoutUseCase`'s former check-then-create race: inserts
+   * the `PartnerPayout` row AND atomically claims (`payoutId = <new
+   * payout's id>`) exactly `commissionIds` in the SAME transaction.
+   *
+   * Two DB-level guarantees, not application logic:
+   *  1. A partial unique index on `partner_payouts(partnerId)` (rows with
+   *     `status IN ('PENDING','PROCESSING')` only — see the migration)
+   *     means a second concurrent call for a partner that already has an
+   *     in-flight payout fails the INSERT itself with a Postgres unique-
+   *     violation (P2002) — translated to `ConflictError` here.
+   *  2. The commission claim is a conditional `updateMany` — `WHERE id
+   *     IN (commissionIds) AND payoutId IS NULL AND status = 'APPROVED'`
+   *     — whose affected-row count is checked against
+   *     `commissionIds.length`; any mismatch (a commission another
+   *     concurrent payout already claimed, or one that changed status
+   *     between selection and claim) throws `ConflictError` and the
+   *     whole transaction — including the just-inserted payout row —
+   *     rolls back. A commission can therefore never end up claimed by
+   *     two payouts, and a payout is never created for a batch it failed
+   *     to fully claim.
+   *
+   * Throws `ConflictError` on either failure — `CreatePartnerPayoutUseCase`
+   * translates that into the same partner-facing `ValidationError`
+   * message the old check-then-create path used, so callers observe no
+   * behavior change on the happy path, only on the race it now closes.
+   */
+  createBatch(data: CreatePartnerPayoutData, commissionIds: string[]): Promise<PartnerPayoutRecord>;
   findById(id: string): Promise<PartnerPayoutRecord | null>;
+  /**
+   * Module 96 Financial Integrity Hardening Pass — Risk 2 recovery: every
+   * payout still `PROCESSING` whose `updatedAt` is older than
+   * `olderThan`, oldest first, capped at `limit`. Feeds the maintenance
+   * sweep's crash-recovery backstop for "Stripe transfer succeeded but
+   * the process died before the DB was updated to PAID" — see
+   * `ReconcileStuckPartnerPayoutUseCase`'s own doc comment. A payout
+   * genuinely still mid-flight (a slow-but-live Stripe call) is
+   * indistinguishable from a crashed one from the DB's point of view,
+   * which is exactly why the recovery path re-uses the SAME Stripe
+   * idempotency key rather than assuming failure.
+   */
+  listStuckProcessing(olderThan: Date, limit: number): Promise<PartnerPayoutRecord[]>;
   listForPartner(partnerId: string): Promise<PartnerPayoutRecord[]>;
   updateStatus(
     id: string,

@@ -195,6 +195,38 @@ function toPurgeRetryRecord(row: PurgeRetryRow): VerificationDocumentRecord {
   };
 }
 
+/**
+ * Module 94 — GDPR Cloudinary Purge Retry & Durable Erasure Completion.
+ *
+ * How long a document claimed by `claimPendingStoragePurgeBatch` stays
+ * excluded from a SUBSEQUENT claim, independent of `FOR UPDATE SKIP
+ * LOCKED`. Row locks from that clause are only held for the duration of
+ * the claim statement itself (a single, auto-committing round trip) —
+ * they do NOT cover the time the caller then spends actually calling
+ * Cloudinary and recording an outcome (`recordDocumentStoragePurgeFailure`/
+ * `markDocumentStoragePurged`, both called synchronously afterward, see
+ * `RetryPendingCloudinaryPurgesUseCase.runBatch`). Without this lease, a
+ * second claim landing in exactly that gap — genuinely concurrent, or
+ * simply running moments after the first claim statement already
+ * committed and released its locks — sees the row as still
+ * `storagePurgeStatus = 'PENDING'` with its `storagePurgeNextAttemptAt`
+ * unchanged, and claims it again: a real concurrent run of this exact
+ * scenario reproduced a full double-claim.
+ *
+ * Comfortably longer than one document's Cloudinary `destroy` call is
+ * expected to take, matching every other lease/lock TTL already used in
+ * this codebase for the same reason (`RunScheduledReconciliationSweepUseCase.LOCK_TTL_MS`,
+ * `RetryPendingCloudinaryPurgesUseCase.LOCK_TTL_MS`) — a safety net for a
+ * crashed/stalled worker, never a scheduling mechanism. Always
+ * overwritten with the REAL outcome (a computed backoff time, or
+ * cleared to null) by `recordDocumentStoragePurgeFailure`/
+ * `markDocumentStoragePurged`, called synchronously right after the
+ * claim under normal operation — so this lease value is only ever
+ * actually observed by another claim in the crash/stall case it exists
+ * for.
+ */
+const STORAGE_PURGE_CLAIM_LEASE_MS = 5 * 60 * 1000;
+
 export class PrismaProfessionalVerificationRepository implements ProfessionalVerificationRepository {
   async create(professionalProfileId: string): Promise<ProfessionalVerificationRecord> {
     const row = await prisma.professionalVerification.create({
@@ -469,13 +501,32 @@ export class PrismaProfessionalVerificationRepository implements ProfessionalVer
 
   async claimPendingStoragePurgeBatch(now: Date, batchSize: number): Promise<VerificationDocumentRecord[]> {
     // Module 94: the atomic claim — see this interface method's own doc
-    // comment for the full concurrency-safety reasoning. One statement:
+    // comment, and `STORAGE_PURGE_CLAIM_LEASE_MS`'s own doc comment
+    // above, for the full concurrency-safety reasoning. One statement:
     // a CTE selects the due batch with `FOR UPDATE SKIP LOCKED` (so a
     // concurrent invocation's own claim simply skips whatever this one
     // already has row-locked, never blocking or double-claiming), then
     // the outer `UPDATE ... FROM ... RETURNING` stamps
-    // `storagePurgeLastAttemptedAt` on exactly those rows and returns
+    // `storagePurgeLastAttemptedAt` AND advances `storagePurgeNextAttemptAt`
+    // to a short-lived claim lease on exactly those rows, and returns
     // their full current state in the same round trip.
+    //
+    // The lease (`storagePurgeNextAttemptAt` set forward, not just
+    // `storagePurgeLastAttemptedAt`) is what actually closes the race:
+    // `FOR UPDATE SKIP LOCKED` only protects rows for the duration of
+    // THIS statement's own transaction — it says nothing about a second
+    // claim statement that starts moments after this one has already
+    // committed and released its locks, while the caller is still busy
+    // calling Cloudinary for each claimed document. Without advancing
+    // `storagePurgeNextAttemptAt` here, that second claim's WHERE clause
+    // would still see these rows as due and claim them again. Bumping it
+    // forward here is always overwritten with the real outcome
+    // (`recordDocumentStoragePurgeFailure`'s computed backoff, or
+    // `markDocumentStoragePurged`'s NULL) moments later under normal
+    // operation — see those methods' own `WHERE "storagePurgedAt" IS
+    // NULL` / unconditional overwrite, neither of which is gated on the
+    // lease value this sets.
+    const leaseExpiresAt = new Date(now.getTime() + STORAGE_PURGE_CLAIM_LEASE_MS);
     const rows = await prisma.$queryRaw<PurgeRetryRow[]>`
       WITH claimed AS (
         SELECT "id"
@@ -489,7 +540,8 @@ export class PrismaProfessionalVerificationRepository implements ProfessionalVer
         FOR UPDATE SKIP LOCKED
       )
       UPDATE "professional_verification_documents" d
-      SET "storagePurgeLastAttemptedAt" = ${now}
+      SET "storagePurgeLastAttemptedAt" = ${now},
+          "storagePurgeNextAttemptAt" = ${leaseExpiresAt}
       FROM claimed
       WHERE d."id" = claimed."id"
       RETURNING d."id", d."verificationId", d."type", d."status", d."fileUrl",

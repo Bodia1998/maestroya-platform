@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
@@ -145,5 +145,23 @@ export class PrismaPartnerRepository implements PartnerRepository {
 
   async countByStatus(status: PartnerStatusValue): Promise<number> {
     return prisma.partner.count({ where: { status } });
+  }
+
+  async eraseForUser(userId: string): Promise<void> {
+    // `contactEmail` is a required (non-null) column — a placeholder,
+    // non-reachable address is written rather than null, mirroring the
+    // same "clear PII, keep the row satisfiable" treatment
+    // `UserRepository.eraseAccount` already uses for User.email
+    // elsewhere in this codebase (never leaves a NOT NULL PII column
+    // literally null).
+    await prisma.partner.updateMany({
+      where: { userId },
+      data: {
+        displayName: "Erased Partner",
+        contactEmail: `erased-partner-${userId}@erased.invalid`,
+        payoutDetails: Prisma.JsonNull,
+        notes: null,
+      },
+    });
   }
 }

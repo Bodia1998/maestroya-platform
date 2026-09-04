@@ -1,3 +1,6 @@
+import { Prisma } from "@prisma/client";
+
+import { ConflictError } from "@/domain/errors/domain-error";
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
   CreatePartnerPayoutData,
@@ -77,9 +80,71 @@ export class PrismaPartnerPayoutRepository implements PartnerPayoutRepository {
     return toRecord(row);
   }
 
+  async createBatch(data: CreatePartnerPayoutData, commissionIds: string[]): Promise<PartnerPayoutRecord> {
+    try {
+      const row = await prisma.$transaction(async (tx) => {
+        const payout = await tx.partnerPayout.create({
+          data: {
+            partnerId: data.partnerId,
+            amount: data.amount,
+            currency: data.currency ?? "EUR",
+            method: data.method,
+            periodStart: data.periodStart,
+            periodEnd: data.periodEnd,
+          },
+          select: PARTNER_PAYOUT_SELECT,
+        });
+
+        // Module 96 Financial Fix Pass — the atomic claim: only rows
+        // still APPROVED and not already claimed by another payout are
+        // affected. The row-count check below is what actually detects
+        // a lost race against a concurrent payout attempt for one of the
+        // same commissions (never possible in practice today, since this
+        // whole batch was selected from one partner's own
+        // `listApprovedForPartner` moments earlier — but this is the
+        // real, DB-level guarantee, not an assumption about caller
+        // behavior).
+        const claimed = await tx.affiliateCommission.updateMany({
+          where: { id: { in: commissionIds }, payoutId: null, status: "APPROVED" },
+          data: { payoutId: payout.id },
+        });
+
+        if (claimed.count !== commissionIds.length) {
+          throw new ConflictError(
+            `Could not claim all ${commissionIds.length} commission(s) for this payout — ${claimed.count} were claimable. ` +
+              `Another payout may already be in progress for one of them.`,
+          );
+        }
+
+        return payout;
+      });
+
+      return toRecord(row);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        // Lost the race at the partial-unique-index level — another
+        // in-flight (PENDING/PROCESSING) payout already exists for this
+        // partner. Same ConflictError shape as the commission-claim
+        // failure above, so the use case has one error type to handle.
+        throw new ConflictError(`Partner "${data.partnerId}" already has a payout in progress.`);
+      }
+      throw error;
+    }
+  }
+
   async findById(id: string): Promise<PartnerPayoutRecord | null> {
     const row = await prisma.partnerPayout.findUnique({ where: { id }, select: PARTNER_PAYOUT_SELECT });
     return row ? toRecord(row) : null;
+  }
+
+  async listStuckProcessing(olderThan: Date, limit: number): Promise<PartnerPayoutRecord[]> {
+    const rows = await prisma.partnerPayout.findMany({
+      where: { status: "PROCESSING", updatedAt: { lt: olderThan } },
+      orderBy: { updatedAt: "asc" },
+      take: limit,
+      select: PARTNER_PAYOUT_SELECT,
+    });
+    return rows.map(toRecord);
   }
 
   async listForPartner(partnerId: string): Promise<PartnerPayoutRecord[]> {
