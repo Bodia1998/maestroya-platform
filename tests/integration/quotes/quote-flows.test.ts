@@ -89,7 +89,7 @@ function seedPublishedRequest(
 ) {
   const customer = repos.customerProfiles.profiles.get(customerUserId)
     ? repos.customerProfiles.profiles.get(customerUserId)!
-    : { id: `customer-of-${customerUserId}`, userId: customerUserId };
+    : { id: `customer-of-${customerUserId}`, userId: customerUserId, customerType: "PRIVATE_CUSTOMER" as const };
   repos.customerProfiles.profiles.set(customer.id, customer);
 
   const request = repos.serviceRequests.seed({

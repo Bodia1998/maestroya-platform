@@ -95,6 +95,7 @@ export function makeTaxBreakdown(overrides: Partial<JobTaxBreakdownResult> = {})
     professionalProfileId: "professional-1",
     companyProfileId: null,
     customerId: "customer-1",
+    usedQuoteTaxSnapshotRate: false,
     ...overrides,
   };
 }

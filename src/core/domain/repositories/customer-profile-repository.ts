@@ -1,6 +1,11 @@
+import type { CustomerTypeValue } from "@/domain/value-objects/customer-type";
+
 export interface CustomerProfileRecord {
   id: string;
   userId: string;
+  /** Module 97 — Tax & IVA Production Integration. See
+   *  domain/value-objects/customer-type.ts's own doc comment. */
+  customerType: CustomerTypeValue;
 }
 
 /**
@@ -38,4 +43,34 @@ export interface CustomerProfileRepository {
    * user has no CustomerProfile.
    */
   eraseForUser(userId: string): Promise<void>;
+}
+
+/**
+ * Module 97 — Tax & IVA Production Integration: safe default for every
+ * pre-existing `CreateQuoteUseCase` caller (including ~40 direct,
+ * positional test constructions across tests/integration/quotes,
+ * tests/integration/materials, etc.) that never had a reason to know this
+ * dependency exists. Always resolves "no CustomerProfile known" — which
+ * `computeQuoteTaxSnapshot`'s caller then treats as
+ * `DEFAULT_CUSTOMER_TYPE` (PRIVATE_CUSTOMER), i.e. exactly the general-IVA
+ * behavior every one of those pre-Module-97 tests already exercises today.
+ * Never used by `compose.ts`, which always wires the real
+ * `PrismaCustomerProfileRepository`.
+ */
+export class NullCustomerProfileRepository implements CustomerProfileRepository {
+  async findByUserId(): Promise<CustomerProfileRecord | null> {
+    return null;
+  }
+
+  async findById(): Promise<CustomerProfileRecord | null> {
+    return null;
+  }
+
+  async findOrCreateByUserId(userId: string): Promise<CustomerProfileRecord> {
+    return { id: userId, userId, customerType: "PRIVATE_CUSTOMER" };
+  }
+
+  async eraseForUser(): Promise<void> {
+    // Intentionally does nothing — see this class's own doc comment.
+  }
 }

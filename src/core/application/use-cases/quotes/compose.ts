@@ -43,7 +43,7 @@ export function makeGetServiceRequestForProfessionalUseCase() {
 }
 
 export function makeCreateQuoteUseCase() {
-  return new CreateQuoteUseCase(professionals, professionalDiscovery, requestDiscovery, quotes, notifications);
+  return new CreateQuoteUseCase(professionals, professionalDiscovery, requestDiscovery, quotes, notifications, customerProfiles);
 }
 
 export function makeUpdateQuoteUseCase() {

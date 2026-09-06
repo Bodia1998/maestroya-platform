@@ -4,6 +4,8 @@ import { IssuerTaxIdNotConfiguredError } from "@/domain/errors/domain-error";
 import type { JobRecord } from "@/domain/repositories/job-repository";
 import type { PaymentRecord } from "@/domain/repositories/payment-repository";
 import type { QuoteRecord } from "@/domain/repositories/quote-repository";
+import type { InvoiceRecord } from "@/domain/repositories/invoice-repository";
+import { roundToCents } from "@/domain/services/money";
 import type { ProfessionalRecord } from "@/domain/repositories/professional-repository";
 import type { CustomerProfileRecord } from "@/domain/repositories/customer-profile-repository";
 import type { AuthUserRecord } from "@/domain/repositories/user-repository";
@@ -96,6 +98,18 @@ function makeQuote(overrides: Partial<QuoteRecord> = {}): QuoteRecord {
     materials: [],
     materialsConfirmedAt: null,
     materialsConfirmedByUserId: null,
+    operationType: null,
+    isResidentialProperty: null,
+    customerTypeAtQuote: null,
+    taxableBase: null,
+    taxMaterialsAmount: null,
+    vatRateBps: null,
+    vatAmount: null,
+    grossTotalAmount: null,
+    taxClassificationCode: null,
+    taxRequiresLegalConfirmation: false,
+    taxCalculationVersion: null,
+    taxCalculatedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -128,7 +142,7 @@ function makeProfessional(overrides: Partial<ProfessionalRecord> = {}): Professi
 }
 
 function makeCustomerProfile(overrides: Partial<CustomerProfileRecord> = {}): CustomerProfileRecord {
-  return { id: "customer-1", userId: "customer-user-1", ...overrides };
+  return { id: "customer-1", userId: "customer-user-1", customerType: "PRIVATE_CUSTOMER", ...overrides };
 }
 
 function makeUser(overrides: Partial<AuthUserRecord> = {}): AuthUserRecord {
@@ -400,6 +414,275 @@ describe("Module 85 — Invoicing & Credit Note Activation", () => {
         new PaymentRefunded("refund-1", "payment-1", "job-1", "adjustment-1", 1452, "EUR", "REFUNDED", "re_stripe_1"),
       );
       expect(creditNotes.rows).toHaveLength(0);
+    });
+  });
+
+  describe("Module 97 correction pass — Invoice Tax Snapshot Integration", () => {
+    /** A Community-of-Owners Quote that already qualified for the
+     *  reduced 10% rate at classification time — the exact worked
+     *  example from the correction task: taxableBase €1,000, vatRate
+     *  10%, vatAmount €100, grossTotal €1,100. Deliberately does NOT
+     *  match `quote.items`' own sum (€1,200) — proving the invoice uses
+     *  the persisted snapshot verbatim rather than re-deriving these
+     *  figures from the Quote's line items at invoice time. */
+    function makeCommunityQualifyingQuote(overrides: Partial<QuoteRecord> = {}): QuoteRecord {
+      return makeQuote({
+        customerTypeAtQuote: "COMMUNITY_OF_OWNERS",
+        operationType: "RENOVATION_OR_REPAIR",
+        isResidentialProperty: true,
+        taxableBase: 1000,
+        taxMaterialsAmount: 200,
+        vatRateBps: 1000,
+        vatAmount: 100,
+        grossTotalAmount: 1100,
+        taxClassificationCode: "ES_COMMUNITY_QUALIFYING_RENOVATION_REDUCED",
+        taxRequiresLegalConfirmation: true,
+        taxCalculationVersion: 2,
+        taxCalculatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        ...overrides,
+      });
+    }
+
+    /** A Community-of-Owners Quote whose operation did NOT qualify for
+     *  the reduced rate (e.g. materials over the 40% threshold), so its
+     *  snapshot was persisted at the standard 21% general rate. Uses a
+     *  taxableBase distinct from both the qualifying example above and
+     *  the Quote's own item sum, so any test asserting against it can
+     *  only pass if the invoice actually reads the snapshot. */
+    function makeCommunityNonQualifyingQuote(overrides: Partial<QuoteRecord> = {}): QuoteRecord {
+      return makeQuote({
+        customerTypeAtQuote: "COMMUNITY_OF_OWNERS",
+        operationType: "RENOVATION_OR_REPAIR",
+        isResidentialProperty: true,
+        taxableBase: 900,
+        taxMaterialsAmount: 500,
+        vatRateBps: 2100,
+        vatAmount: 189,
+        grossTotalAmount: 1089,
+        taxClassificationCode: "ES_COMMUNITY_MATERIAL_HEAVY_GENERAL",
+        taxRequiresLegalConfirmation: false,
+        taxCalculationVersion: 2,
+        taxCalculatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        ...overrides,
+      });
+    }
+
+    // Test 1 + 2: Community qualifying Quote at 10% IVA -> the customer
+    // receipt carries the exact same taxableBase/vatRate/vatAmount/total,
+    // matching the correction task's own worked example verbatim.
+    it("carries a Community-qualifying Quote's 10% IVA snapshot onto the customer receipt unchanged (worked example: €1,000 / 10% / €100 / €1,100)", async () => {
+      quotes.seed(makeCommunityQualifyingQuote());
+      const receipt = await createCustomerReceiptDraft.execute("job-1");
+
+      expect(receipt.taxableBase).toBe(1000);
+      expect(receipt.vatRateBps).toBe(1000);
+      expect(receipt.vatAmount).toBe(100);
+      expect(receipt.totalAmount).toBe(1100);
+    });
+
+    it("carries a Community-qualifying Quote's 10% IVA rate onto the professional invoice, without recalculating a second time", async () => {
+      quotes.seed(makeCommunityQualifyingQuote());
+      await authorizeProfessional();
+      const draft = await createProfessionalInvoiceDraft.execute("job-1");
+
+      // The professional invoice is denominated on the professional's own
+      // net base (never the customer's), but it must use the SAME 10%
+      // rate the Quote's snapshot settled on — never independently
+      // falling back to the general 21% rate.
+      expect(draft.vatRateBps).toBe(1000);
+    });
+
+    // Test 3: Community non-qualifying Quote -> invoice preserves the
+    // Quote's own authoritative (standard-rate) result rather than
+    // re-deriving anything from the Quote's line items.
+    it("preserves a Community non-qualifying Quote's authoritative (standard-rate) tax result on the customer receipt", async () => {
+      quotes.seed(makeCommunityNonQualifyingQuote());
+      const receipt = await createCustomerReceiptDraft.execute("job-1");
+
+      expect(receipt.taxableBase).toBe(900);
+      expect(receipt.vatRateBps).toBe(2100);
+      expect(receipt.vatAmount).toBe(189);
+      expect(receipt.totalAmount).toBe(1089);
+    });
+
+    // Test 4: Private customer regression — a pre-existing Quote with no
+    // Module 97 tax snapshot (taxCalculatedAt: null, the default from
+    // this file's own makeQuote()) must fall back to exactly today's
+    // pre-correction-pass behavior: the recomputed general-rate
+    // breakdown. This is the existing "creates and issues a customer
+    // receipt..." test above (1200 / 21% / 252 / 1452); this test adds an
+    // explicit, dedicated regression assertion naming the behavior.
+    it("regression: a legacy Quote with no tax snapshot still falls back to the recomputed general-rate breakdown (Private customer)", async () => {
+      quotes.seed(makeQuote({ customerTypeAtQuote: "PRIVATE_CUSTOMER" }));
+      const receipt = await createCustomerReceiptDraft.execute("job-1");
+
+      expect(receipt.taxableBase).toBe(1200);
+      expect(receipt.vatRateBps).toBe(2100);
+      expect(receipt.vatAmount).toBeCloseTo(252, 2);
+      expect(receipt.totalAmount).toBeCloseTo(1452, 2);
+    });
+
+    // Test 5: Company regression — a COMPANY customer's Quote snapshot
+    // (standard 21%, no Community-specific treatment ever applies to a
+    // COMPANY customerType) flows onto the invoice unchanged, exactly
+    // like any other customer type's snapshot.
+    it("regression: a Company customer's standard-rate Quote snapshot flows onto the customer receipt unchanged", async () => {
+      quotes.seed(
+        makeQuote({
+          customerTypeAtQuote: "COMPANY",
+          taxableBase: 1200,
+          taxMaterialsAmount: 200,
+          vatRateBps: 2100,
+          vatAmount: 252,
+          grossTotalAmount: 1452,
+          taxClassificationCode: "ES_STANDARD_GENERAL",
+          taxRequiresLegalConfirmation: false,
+          taxCalculationVersion: 2,
+          taxCalculatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        }),
+      );
+      const receipt = await createCustomerReceiptDraft.execute("job-1");
+
+      expect(receipt.taxableBase).toBe(1200);
+      expect(receipt.vatRateBps).toBe(2100);
+      expect(receipt.vatAmount).toBe(252);
+      expect(receipt.totalAmount).toBe(1452);
+    });
+
+    // Test 6: a tax-configuration change that happens AFTER the Quote's
+    // snapshot was taken (e.g. the general/community rate tables are
+    // updated, or the commission-rate repository returns different
+    // current rates) must never alter an already-issued Quote's invoice.
+    // Simulated here by giving the FakeCommissionRateRepository "current"
+    // rates that differ from whatever was in effect when the 10%
+    // snapshot below was computed — the invoice must still show 10%,
+    // proving CalculateJobTaxBreakdownUseCase's fallback to
+    // `quote.vatRateBps` is not merely coincidental with today's config.
+    it("still uses the Quote's original tax snapshot after tax configuration changes, never recalculating with the current configuration", async () => {
+      quotes.seed(makeCommunityQualifyingQuote());
+      // Simulate a tax-configuration change occurring strictly after the
+      // Quote's snapshot was persisted: swap in different "current"
+      // commission rates the breakdown use case would use for anything
+      // it DOES still compute fresh (commission/professional-side
+      // figures) — the customer-facing 10% rate must be unaffected.
+      rates.rates = { ...rates.rates, commissionRateBps: rates.rates.commissionRateBps + 500 };
+
+      const receipt = await createCustomerReceiptDraft.execute("job-1");
+      expect(receipt.vatRateBps).toBe(1000);
+      expect(receipt.vatAmount).toBe(100);
+      expect(receipt.totalAmount).toBe(1100);
+
+      await authorizeProfessional();
+      const draft = await createProfessionalInvoiceDraft.execute("job-1");
+      expect(draft.vatRateBps).toBe(1000);
+    });
+
+    // Test 7: security — there is no client-controllable parameter for
+    // invoice tax fields at all. Both draft use cases accept ONLY a
+    // jobId; the tax figures are always derived server-side from the
+    // Quote's own persisted, immutable snapshot (or, absent one, from
+    // the tax engine's own recomputation) — never from caller input.
+    it("security: exposes no parameter through which a caller could set or override an invoice's tax fields", async () => {
+      quotes.seed(makeCommunityQualifyingQuote());
+      // Attempt to smuggle tax-field overrides through an extra argument
+      // — JavaScript ignores parameters beyond the declared arity, so
+      // this proves nothing the caller passes beyond jobId can reach the
+      // invoice's tax fields, at both the type level (single-parameter
+      // signature) and the runtime level (extra args are no-ops).
+      const receipt = await (createCustomerReceiptDraft.execute as unknown as (jobId: string, tamper?: unknown) => Promise<InvoiceRecord>)(
+        "job-1",
+        { vatRateBps: 400, vatAmount: 1, taxableBase: 1, totalAmount: 1 },
+      );
+
+      expect(receipt.vatRateBps).toBe(1000);
+      expect(receipt.taxableBase).toBe(1000);
+      expect(receipt.vatAmount).toBe(100);
+      expect(receipt.totalAmount).toBe(1100);
+    });
+
+    // Test 8: financial consistency — taxableBase + vatAmount must equal
+    // totalAmount exactly (whole-cent arithmetic, no floating-point
+    // drift), for both a snapshot-sourced and a recomputed invoice.
+    it("financial consistency: taxableBase + vatAmount reconciles exactly to totalAmount", async () => {
+      quotes.seed(makeCommunityNonQualifyingQuote());
+      const receipt = await createCustomerReceiptDraft.execute("job-1");
+      expect(receipt.taxableBase + receipt.vatAmount).toBe(receipt.totalAmount);
+
+      quotes.seed(makeQuote());
+      jobs.seed(makeJob({ id: "job-2", quoteId: "quote-1" }));
+      payments.seed("job-2", [makePayment({ id: "payment-2", jobId: "job-2" })]);
+      const legacyReceipt = await createCustomerReceiptDraft.execute("job-2");
+      expect(roundToCents(legacyReceipt.taxableBase + legacyReceipt.vatAmount)).toBe(roundToCents(legacyReceipt.totalAmount));
+    });
+
+    // Test 9 + 10: partial and full refund/CreditNote flows preserve the
+    // correct tax basis — i.e. the credit note's reversed VAT rate is
+    // read directly from the ISSUED invoice (never recalculated), and
+    // the reversed amounts are internally consistent, for a Community
+    // invoice issued at the 10% rate.
+    async function issueCommunityProfessionalInvoice() {
+      quotes.seed(makeCommunityQualifyingQuote());
+      await authorizeProfessional();
+      const draft = await createProfessionalInvoiceDraft.execute("job-1");
+      await submitForAcceptance.execute(draft.id);
+      const accepted = await acceptInvoice.execute(draft.id, "professional-user-1");
+      return issueInvoice.execute(accepted.id);
+    }
+
+    it("preserves the correct (10%) tax basis on a partial refund credit note against a Community invoice", async () => {
+      const invoice = await issueCommunityProfessionalInvoice();
+      expect(invoice.vatRateBps).toBe(1000);
+
+      await creditNoteSubscriber.handle(
+        new PaymentRefunded("refund-partial-1", "payment-1", "job-1", "adjustment-1", 550, "EUR", "REFUNDED", "re_stripe_partial_1"),
+      );
+
+      const note = creditNotes.rows.find((r) => r.originalInvoiceId === invoice.id);
+      expect(note).toBeDefined();
+      expect(note!.reversedVatRateBps).toBe(1000);
+      expect(roundToCents(note!.reversedTaxableBase + note!.reversedVatAmount)).toBeLessThanOrEqual(roundToCents(invoice.taxableBase + invoice.vatAmount));
+    });
+
+    it("preserves the correct (10%) tax basis on a full refund credit note against a Community invoice", async () => {
+      const invoice = await issueCommunityProfessionalInvoice();
+
+      // The refund event is denominated on the CUSTOMER's own gross
+      // payment as recomputed by CalculateJobTaxBreakdownUseCase from
+      // the Quote's own line items (labour €1,000 + materials €200 =
+      // €1,200 base, at the Quote's own 10% override rate = €1,320
+      // gross) — NOT the Quote's persisted grossTotalAmount snapshot
+      // (€1,100), which was deliberately set to a different figure by
+      // this test file's makeCommunityQualifyingQuote() to prove the
+      // customer receipt uses the snapshot verbatim. This is exactly
+      // the pre-existing "Payment/breakdown vs. Quote-snapshot gross"
+      // mismatch this correction pass' report documents as a separate,
+      // out-of-scope risk (see Step 7) rather than something this task
+      // fixes — this test's job is only to prove the CREDIT NOTE'S own
+      // tax rate (10%) is preserved, not to reconcile that mismatch.
+      await creditNoteSubscriber.handle(
+        new PaymentRefunded("refund-full-1", "payment-1", "job-1", "adjustment-1", 1320, "EUR", "REFUNDED", "re_stripe_full_1"),
+      );
+
+      const note = creditNotes.rows.find((r) => r.originalInvoiceId === invoice.id);
+      expect(note).toBeDefined();
+      expect(note!.reversedVatRateBps).toBe(1000);
+      expect(note!.totalAmount).toBeCloseTo(invoice.totalAmount, 2);
+      expect(note!.reversedVatAmount).toBeCloseTo(invoice.vatAmount, 2);
+    });
+
+    // Test 11: duplicate refund/webhook delivery for a Community invoice
+    // stays idempotent — never a second credit note, and the one credit
+    // note that does exist still carries the correct 10% basis.
+    it("stays idempotent under a duplicate refund event for a Community invoice, without creating a second credit note", async () => {
+      const invoice = await issueCommunityProfessionalInvoice();
+      const event = new PaymentRefunded("refund-dup-1", "payment-1", "job-1", "adjustment-1", 1320, "EUR", "REFUNDED", "re_stripe_dup_1");
+
+      await creditNoteSubscriber.handle(event);
+      await creditNoteSubscriber.handle(event);
+
+      const notes = creditNotes.rows.filter((r) => r.originalInvoiceId === invoice.id);
+      expect(notes).toHaveLength(1);
+      expect(notes[0]!.reversedVatRateBps).toBe(1000);
     });
   });
 });

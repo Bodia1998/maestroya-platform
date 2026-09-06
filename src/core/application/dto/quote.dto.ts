@@ -114,12 +114,26 @@ export type QuoteItemInput = z.infer<typeof quoteItemSchema>;
  * uses it rather than a single freeform amount), and its total is always
  * derived from those items, never accepted directly (see money.ts).
  */
+/**
+ * Module 97 — Tax & IVA Production Integration, Phase 4: explicit,
+ * never-inferred operation facts the community IVA classification policy
+ * needs (see domain/services/spain-community-iva-classification-policy.ts).
+ * Both optional — most quotes never need them; omitting either is a
+ * perfectly valid "insufficient data" state the policy safely defaults to
+ * the general rate for, it never guesses a reduced rate from a missing
+ * field.
+ */
+export const quoteOperationTypeSchema = z.enum(["RENOVATION_OR_REPAIR", "MAINTENANCE", "OTHER"]).optional();
+
 const quoteFieldsSchema = z.object({
   items: z
     .array(quoteItemSchema)
     .min(1, "Add at least one item to your quote.")
     .max(MAX_QUOTE_ITEMS, `A quote can have at most ${MAX_QUOTE_ITEMS} items.`),
   notes: z.string().trim().max(MAX_QUOTE_NOTES_LENGTH).optional().or(z.literal("")),
+  // Module 97 — Tax & IVA Production Integration.
+  operationType: quoteOperationTypeSchema,
+  isResidentialProperty: z.boolean().optional(),
   validUntil: z.coerce
     .date({ invalid_type_error: "Enter a valid date." })
     .optional()

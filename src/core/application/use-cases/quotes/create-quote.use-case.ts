@@ -1,12 +1,18 @@
 import { NullNotificationCreator } from "@/application/ports/notification-creator";
 import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { ConflictError, NotFoundError, ProfessionalNotVerifiedError, ValidationError } from "@/domain/errors/domain-error";
+import {
+  NullCustomerProfileRepository,
+  type CustomerProfileRepository,
+} from "@/domain/repositories/customer-profile-repository";
 import type { ProfessionalDiscoveryRepository } from "@/domain/repositories/professional-discovery-repository";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { QuoteRecord, QuoteRepository } from "@/domain/repositories/quote-repository";
 import type { ServiceRequestDiscoveryRepository } from "@/domain/repositories/service-request-discovery-repository";
 import { calculateQuoteTotal } from "@/domain/services/money";
 import { isProfessionalEligibleForRequest } from "@/domain/services/quote-eligibility";
+import { computeQuoteTaxSnapshot } from "@/application/services/quote-tax-snapshot";
+import { DEFAULT_CUSTOMER_TYPE } from "@/domain/value-objects/customer-type";
 import {
   assertNoPricedMaterialsWhenCustomerPurchased,
   assertValidMaterialsList,
@@ -38,6 +44,14 @@ export class CreateQuoteUseCase {
     // Notifications module (Module 15): optional, defaults to a no-op —
     // see NullNotificationCreator's own doc comment.
     private readonly notifications: NotificationCreator = new NullNotificationCreator(),
+    // Module 97 — Tax & IVA Production Integration: resolves the
+    // requesting customer's tax classification (see
+    // domain/value-objects/customer-type.ts). Optional, defaulting to
+    // NullCustomerProfileRepository's own doc comment — every pre-Module-97
+    // caller (including every existing direct-construction test) that
+    // never had a reason to know this dependency exists keeps compiling
+    // and behaving exactly as before (general IVA rate).
+    private readonly customerProfiles: CustomerProfileRepository = new NullCustomerProfileRepository(),
   ) {}
 
   async execute(userId: string, input: CreateQuoteInput): Promise<QuoteRecord> {
@@ -89,6 +103,22 @@ export class CreateQuoteUseCase {
 
     const totalAmount = calculateQuoteTotal(input.items);
 
+    // Module 97 — Tax & IVA Production Integration: the requesting
+    // customer's tax classification drives WHICH IVA rate applies (see
+    // spain-community-iva-classification-policy.ts) — resolved
+    // server-side from the customer's own CustomerProfile, never trusted
+    // from the request. A customer with no CustomerProfile row yet (would
+    // be unusual — they already published a ServiceRequest) is treated as
+    // PRIVATE_CUSTOMER, the conservative default, rather than blocking
+    // quote creation.
+    const requestingCustomerProfile = await this.customerProfiles.findByUserId(request.customerUserId);
+    const taxSnapshot = computeQuoteTaxSnapshot({
+      items: input.items,
+      customerType: requestingCustomerProfile?.customerType ?? DEFAULT_CUSTOMER_TYPE,
+      operationType: input.operationType ?? null,
+      isResidentialProperty: input.isResidentialProperty ?? null,
+    });
+
     // Module 63 — Materials Procurement Workflow: defaults to
     // PROFESSIONAL_SUPPLIED when the caller doesn't specify (see
     // quote.dto.ts's own comment on why this stays optional at the DTO
@@ -131,6 +161,22 @@ export class CreateQuoteUseCase {
       // one were somehow supplied — see assertValidMaterialsList's own
       // "ignored entirely" doc comment.
       materials: materialsStrategy === "CUSTOMER_PURCHASED" ? materials : [],
+      // Module 97 — Tax & IVA Production Integration: persisted once at
+      // creation, never recalculated later (see quote-tax-snapshot.ts's
+      // own doc comment on why a tax-configuration change must never
+      // mutate an already-quoted price).
+      operationType: input.operationType ?? null,
+      isResidentialProperty: input.isResidentialProperty ?? null,
+      customerTypeAtQuote: taxSnapshot.customerTypeAtQuote,
+      taxableBase: taxSnapshot.taxableBase,
+      taxMaterialsAmount: taxSnapshot.taxMaterialsAmount,
+      vatRateBps: taxSnapshot.vatRateBps,
+      vatAmount: taxSnapshot.vatAmount,
+      grossTotalAmount: taxSnapshot.grossTotalAmount,
+      taxClassificationCode: taxSnapshot.taxClassificationCode,
+      taxRequiresLegalConfirmation: taxSnapshot.taxRequiresLegalConfirmation,
+      taxCalculationVersion: taxSnapshot.taxCalculationVersion,
+      taxCalculatedAt: taxSnapshot.taxCalculatedAt,
     });
 
     // Best-effort — mirrors ChatAppointmentNotifier/ChatJobNotifier's own
