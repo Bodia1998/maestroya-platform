@@ -50,6 +50,26 @@ function activeProfessional(ctx: ReturnType<typeof makeContext>) {
   return ctx.professionals.seed({ userId: "user-1", status: "ACTIVE" });
 }
 
+/**
+ * Module 98 — Professional Tax & Business Verification: adds an accepted
+ * business-registration document to a Persona-driven case the same way a
+ * professional would from their own dashboard (Module 17's
+ * UploadVerificationDocumentUseCase) — used to satisfy
+ * hasBusinessRegistrationDocument before an automated APPROVED outcome is
+ * expected to actually verify the profile. See refresh-verification-
+ * status.use-case.ts's own doc comment for why this is required.
+ */
+async function addBusinessRegistrationDocument(ctx: ReturnType<typeof makeContext>, verificationId: string) {
+  await ctx.verifications.addDocument({
+    verificationId,
+    type: "BUSINESS_REGISTRATION",
+    fileUrl: "https://example.com/business-registration.pdf",
+    originalFilename: "business-registration.pdf",
+    mimeType: "application/pdf",
+    fileSizeBytes: 1024,
+  });
+}
+
 describe("Module 59 — StartProfessionalVerificationUseCase", () => {
   let ctx: ReturnType<typeof makeContext>;
   beforeEach(() => {
@@ -109,9 +129,10 @@ describe("Module 59 — RefreshVerificationStatusUseCase", () => {
     ctx = makeContext();
   });
 
-  it("applies an APPROVED transition when the provider reports VERIFIED", async () => {
+  it("applies an APPROVED transition when the provider reports VERIFIED and a business-registration document is present", async () => {
     activeProfessional(ctx);
     const { verification } = await ctx.start.execute({ userId: "user-1", fullName: "Ana García", countryCode: "ES" });
+    await addBusinessRegistrationDocument(ctx, verification.id);
 
     ctx.provider.nextOutcome = "VERIFIED";
     ctx.provider.nextRawStatus = "completed";
@@ -125,6 +146,60 @@ describe("Module 59 — RefreshVerificationStatusUseCase", () => {
     expect(profile?.verificationStatus).toBe("VERIFIED");
     expect(ctx.auditLog.actions()).toContain("VERIFICATION_APPROVED");
     expect(ctx.notifications.events.some((e) => e.type === "VERIFICATION_APPROVED")).toBe(true);
+  });
+
+  // Module 98 — Professional Tax & Business Verification: the exact bypass
+  // the audit identified — Persona's identity-only VERIFIED outcome must
+  // never, by itself, grant the profile's VERIFIED trust badge. This is the
+  // mandatory regression test: Persona identity verification alone must NOT
+  // equal professional eligibility.
+  it("Module 98: does NOT approve — downgrades to RESUBMISSION_REQUIRED and keeps the profile PENDING — when Persona verifies identity but no business-registration document exists", async () => {
+    activeProfessional(ctx);
+    const { verification } = await ctx.start.execute({ userId: "user-1", fullName: "Ana García", countryCode: "ES" });
+
+    ctx.provider.nextOutcome = "VERIFIED";
+    ctx.provider.nextRawStatus = "completed";
+    const result = await ctx.refresh.execute(verification.id);
+
+    expect(result.changed).toBe(true);
+    expect(result.verification.status).toBe("RESUBMISSION_REQUIRED");
+    expect(result.verification.resubmissionReason).toMatch(/business registration/i);
+    // Never a payout-eligible/marketplace-visible APPROVED state.
+    expect(result.verification.status).not.toBe("APPROVED");
+
+    const profile = await ctx.professionals.findByUserId("user-1");
+    expect(profile?.verificationStatus).not.toBe("VERIFIED");
+    expect(profile?.verificationStatus).toBe("PENDING");
+    expect(ctx.auditLog.actions()).toContain("VERIFICATION_RESUBMISSION_REQUESTED");
+    expect(ctx.auditLog.actions()).not.toContain("VERIFICATION_APPROVED");
+    expect(ctx.notifications.events.some((e) => e.type === "VERIFICATION_RESUBMISSION_REQUIRED")).toBe(true);
+
+    // A subsequent refresh (e.g. after the professional uploads the
+    // document and Persona is checked again) is still possible: the case
+    // is not stuck, because RESUBMISSION_REQUIRED remains a syncable state
+    // once the professional resubmits it back to PENDING/UNDER_REVIEW.
+    expect(ctx.provider.refreshCalls).toHaveLength(1);
+  });
+
+  it("Module 98: after RESUBMISSION_REQUIRED for a missing business document, uploading the document and resubmitting allows a later refresh to reach APPROVED", async () => {
+    activeProfessional(ctx);
+    const { verification } = await ctx.start.execute({ userId: "user-1", fullName: "Ana García", countryCode: "ES" });
+
+    ctx.provider.nextOutcome = "VERIFIED";
+    const first = await ctx.refresh.execute(verification.id);
+    expect(first.verification.status).toBe("RESUBMISSION_REQUIRED");
+
+    // Professional uploads the missing document and resubmits — case moves
+    // back to PENDING (canResubmit/canModifyDocuments already allow this
+    // from RESUBMISSION_REQUIRED; this test only re-confirms the refresh
+    // path converges once the document is present).
+    await addBusinessRegistrationDocument(ctx, verification.id);
+    await ctx.verifications.updateStatus(verification.id, { status: "PENDING" });
+
+    const second = await ctx.refresh.execute(verification.id);
+    expect(second.verification.status).toBe("APPROVED");
+    const profile = await ctx.professionals.findByUserId("user-1");
+    expect(profile?.verificationStatus).toBe("VERIFIED");
   });
 
   it("applies a REJECTED transition when the provider reports REJECTED", async () => {
@@ -169,6 +244,7 @@ describe("Module 59 — SynchronizeVerificationUseCase", () => {
     const ctx = makeContext();
     activeProfessional(ctx);
     const { verification } = await ctx.start.execute({ userId: "user-1", fullName: "Ana García", countryCode: "ES" });
+    await addBusinessRegistrationDocument(ctx, verification.id);
 
     ctx.provider.nextOutcome = "VERIFIED";
     const summary = await ctx.synchronize.execute();
@@ -207,10 +283,11 @@ describe("Module 59 — CheckPayoutEligibilityUseCase", () => {
     expect(result.status).toBe("NOT_STARTED");
   });
 
-  it("blocks payouts while PENDING and allows them once APPROVED", async () => {
+  it("blocks payouts while PENDING and allows them once APPROVED with a business-registration document", async () => {
     const ctx = makeContext();
     activeProfessional(ctx);
     const { verification } = await ctx.start.execute({ userId: "user-1", fullName: "Ana García", countryCode: "ES" });
+    await addBusinessRegistrationDocument(ctx, verification.id);
     const professional = (await ctx.professionals.findByUserId("user-1"))!;
 
     let eligibility = await ctx.payoutEligibility.execute(professional.id);
@@ -223,5 +300,20 @@ describe("Module 59 — CheckPayoutEligibilityUseCase", () => {
     eligibility = await ctx.payoutEligibility.execute(professional.id);
     expect(eligibility.eligible).toBe(true);
     expect(eligibility.status).toBe("APPROVED");
+  });
+
+  // Module 98 — Professional Tax & Business Verification.
+  it("Module 98: never grants payout eligibility from Persona identity verification alone", async () => {
+    const ctx = makeContext();
+    activeProfessional(ctx);
+    const { verification } = await ctx.start.execute({ userId: "user-1", fullName: "Ana García", countryCode: "ES" });
+    const professional = (await ctx.professionals.findByUserId("user-1"))!;
+
+    ctx.provider.nextOutcome = "VERIFIED";
+    await ctx.refresh.execute(verification.id);
+
+    const eligibility = await ctx.payoutEligibility.execute(professional.id);
+    expect(eligibility.eligible).toBe(false);
+    expect(eligibility.status).not.toBe("APPROVED");
   });
 });
