@@ -14,6 +14,12 @@ export interface JobTaxBreakdownResult extends MaestroYaTaxCalculationResult {
   professionalProfileId: string | null;
   companyProfileId: string | null;
   customerId: string;
+  /** Module 97 correction pass: true when this breakdown's tax rate came
+   *  from the Quote's own persisted classification snapshot
+   *  (`Quote.vatRateBps`) rather than an explicit caller override or the
+   *  tax calculator's bare general-rate default. Observability/testing
+   *  signal only — never itself a financial decision. */
+  usedQuoteTaxSnapshotRate: boolean;
 }
 
 export interface CalculateJobTaxBreakdownOptions {
@@ -52,6 +58,42 @@ export interface CalculateJobTaxBreakdownOptions {
  * MODULE_78_IMPLEMENTATION_REPORT.md, "Problems found," for the full
  * writeup of why this is flagged as a contradiction rather than silently
  * patched into Module 64's own engine.
+ *
+ * ## Module 97 correction pass — "Invoice Tax Snapshot Integration"
+ * Before this pass, `execute()` only ever used `options.taxRateBps` (an
+ * explicit caller override) or, when omitted, silently fell through to
+ * `calculateMaestroYaTaxBreakdown`'s own default: the resolved
+ * calculator's general rate (Spain: 21%). Neither `CreateProfessionalInvoiceDraftUseCase`
+ * nor `CreateCustomerReceiptDraftUseCase` ever supplied an override, so
+ * EVERY invoice — including one for a Comunidad de Propietarios Job whose
+ * Quote was correctly classified at 10% by
+ * `classifyCommunityIvaRate`/`computeQuoteTaxSnapshot` (Module 97) — was
+ * silently re-decided at 21% here, independently of the Quote's own
+ * authoritative, persisted classification. This is the exact "Invoice
+ * ignores the Quote tax snapshot" gap the correction pass's own report
+ * identifies.
+ *
+ * The fix is the single line in `execute()` below: when the caller
+ * doesn't explicitly override the rate, this use case now defaults to
+ * `quote.vatRateBps` — the Quote's own persisted, immutable snapshot
+ * field — before ever falling through to the calculator's own general
+ * default. This is a REUSE of the override parameter
+ * `calculateMaestroYaTaxBreakdown`/`SpainIvaCalculator.calculate` have
+ * always had (see `tax-calculator.ts`'s own doc comment on
+ * `TaxCalculationInput.rateBps`), not a second classification decision —
+ * this file still never calls `classifyCommunityIvaRate` itself, and
+ * still never reads "the current tax configuration" for this purpose.
+ * Because this is the one place every invoice/credit-note code path
+ * already goes through (`CreateProfessionalInvoiceDraftUseCase`,
+ * `CreateCustomerReceiptDraftUseCase`, and — via its own call to this
+ * same `execute()` — `CreateCreditNoteUseCase.deriveReversal`), fixing it
+ * here fixes all three without touching any of them.
+ *
+ * A Quote created before Module 97 (or one whose classification is still
+ * `null` for any other reason) has `vatRateBps: null` — `?? undefined`
+ * below preserves EXACTLY today's fallback behavior for that quote
+ * (general rate), so this is purely additive: no existing invoice
+ * generation path for a non-classified Quote changes at all.
  */
 export class CalculateJobTaxBreakdownUseCase {
   constructor(
@@ -89,6 +131,13 @@ export class CalculateJobTaxBreakdownUseCase {
     }
 
     const rates = await this.rates.getCurrentRates();
+    // Module 97 correction pass: an explicit caller override always wins
+    // (existing behavior, unchanged); otherwise default to the Quote's
+    // own persisted, immutable classification — never the calculator's
+    // bare general-rate default — so this use case never independently
+    // re-decides a rate the Quote already authoritatively settled. See
+    // this class's own doc comment.
+    const taxRateBps = options.taxRateBps ?? quote.vatRateBps ?? undefined;
     const breakdown = calculateMaestroYaTaxBreakdown({
       labourAmount,
       professionalMaterialsAmount,
@@ -100,7 +149,7 @@ export class CalculateJobTaxBreakdownUseCase {
       customerMaterialsAmount: 0,
       countryCode: options.countryCode ?? "ES",
       commissionRates: rates,
-      taxRateBps: options.taxRateBps,
+      taxRateBps,
       taxCalculators: options.taxCalculators,
     });
 
@@ -111,6 +160,12 @@ export class CalculateJobTaxBreakdownUseCase {
       professionalProfileId: job.professionalProfileId,
       companyProfileId: job.companyProfileId,
       customerId: job.customerId,
+      // Module 97 correction pass: observability/testability signal —
+      // true whenever this breakdown's rate came from the Quote's own
+      // persisted classification rather than an explicit caller override
+      // or the calculator's bare default. Never used for any financial
+      // decision itself.
+      usedQuoteTaxSnapshotRate: options.taxRateBps === undefined && quote.vatRateBps != null,
     };
   }
 }

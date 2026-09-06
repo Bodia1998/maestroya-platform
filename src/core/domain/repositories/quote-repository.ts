@@ -18,6 +18,8 @@
  */
 
 import type { MaterialsStrategyValue } from "@/domain/value-objects/materials-strategy";
+import type { CustomerTypeValue } from "@/domain/value-objects/customer-type";
+import type { QuoteOperationTypeValue } from "@/domain/value-objects/quote-operation-type";
 
 export type QuoteStatusValue =
   | "PENDING"
@@ -119,6 +121,31 @@ export interface QuoteRecord {
    *  Quote.materialsConfirmedByUserId's own "plain scalar, no relation
    *  needed" doc comment in schema.prisma. */
   materialsConfirmedByUserId: string | null;
+  /** Module 97 — Tax & IVA Production Integration: legally-relevant
+   *  operation characteristics, explicitly supplied — see
+   *  domain/services/spain-community-iva-classification-policy.ts. Null
+   *  for every Quote that never needed them. */
+  operationType: QuoteOperationTypeValue | null;
+  isResidentialProperty: boolean | null;
+  /** Module 97 — persisted tax snapshot (Phase 5). Null only for a Quote
+   *  created before this module existed — every Quote created going
+   *  forward always has these populated by
+   *  application/services/quote-tax-snapshot.ts. */
+  /** Module 97 correction pass (Step 6): the customer classification AS
+   *  OF the moment the snapshot was computed — never re-derived from a
+   *  live CustomerProfile lookup, which can change afterwards. */
+  customerTypeAtQuote: CustomerTypeValue | null;
+  taxableBase: number | null;
+  /** Module 97 correction pass (Step 6): the MATERIALS-category portion
+   *  of taxableBase that fed the materials-ratio classification test. */
+  taxMaterialsAmount: number | null;
+  vatRateBps: number | null;
+  vatAmount: number | null;
+  grossTotalAmount: number | null;
+  taxClassificationCode: string | null;
+  taxRequiresLegalConfirmation: boolean;
+  taxCalculationVersion: number | null;
+  taxCalculatedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -144,6 +171,27 @@ export interface CreateQuoteData {
    *  caller of this method must run first. Omitted or empty for
    *  PROFESSIONAL_SUPPLIED. */
   materials?: QuoteMaterialInput[];
+  /** Module 97 — see QuoteRecord's own doc comment. Optional — every
+   *  pre-Module-97 caller (including existing tests) that omits these
+   *  keeps compiling; the repository implementation persists them as
+   *  null exactly like it already does for other optional Quote-level
+   *  fields. */
+  operationType?: QuoteOperationTypeValue | null;
+  isResidentialProperty?: boolean | null;
+  /** Module 97 — the persisted tax snapshot. Optional for the same
+   *  backward-compatibility reason as the fields above, but every real
+   *  caller (CreateQuoteUseCase) always supplies the full snapshot
+   *  computed by application/services/quote-tax-snapshot.ts. */
+  customerTypeAtQuote?: CustomerTypeValue | null;
+  taxableBase?: number | null;
+  taxMaterialsAmount?: number | null;
+  vatRateBps?: number | null;
+  vatAmount?: number | null;
+  grossTotalAmount?: number | null;
+  taxClassificationCode?: string | null;
+  taxRequiresLegalConfirmation?: boolean;
+  taxCalculationVersion?: number | null;
+  taxCalculatedAt?: Date | null;
 }
 
 /**
@@ -160,6 +208,21 @@ export interface UpdateQuoteFields {
   validUntil: Date | null;
   notes: string | null;
   items: QuoteItemInput[];
+  /** Module 97 — same optional convention as CreateQuoteData; an edit
+   *  always recomputes and resupplies the full snapshot (see
+   *  UpdateQuoteUseCase), so this is never a partial-merge field either. */
+  operationType?: QuoteOperationTypeValue | null;
+  isResidentialProperty?: boolean | null;
+  customerTypeAtQuote?: CustomerTypeValue | null;
+  taxableBase?: number | null;
+  taxMaterialsAmount?: number | null;
+  vatRateBps?: number | null;
+  vatAmount?: number | null;
+  grossTotalAmount?: number | null;
+  taxClassificationCode?: string | null;
+  taxRequiresLegalConfirmation?: boolean;
+  taxCalculationVersion?: number | null;
+  taxCalculatedAt?: Date | null;
   /** Same optional/defaulting convention as CreateQuoteData — see its own
    *  doc comment. An update always resubmits the complete materials
    *  strategy/list, same as it does for `items`, so there is no

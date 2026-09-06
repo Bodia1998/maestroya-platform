@@ -644,6 +644,27 @@ enum MaterialsStrategy {
   CUSTOMER_PURCHASED
 }
 
+/// Module 97 — Tax & IVA Production Integration: the legally-relevant
+/// "what kind of work is this" characteristic the community IVA
+/// classification policy needs (see
+/// domain/services/spain-community-iva-classification-policy.ts). Kept
+/// deliberately coarse (three values) and deliberately NOT inferred from
+/// ServiceCategory — Spain's reduced-rate renovation/repair rules turn on
+/// facts about the specific operation (Ley 37/1992 art. 91.Uno.2.10),
+/// not on a marketplace category taxonomy that was never designed to
+/// track them. RENOVATION_OR_REPAIR/MAINTENANCE mirror the Module 97
+/// spec's own Phase 4 vocabulary; OTHER is the explicit fallback for
+/// everything the policy cannot treat as a community-qualifying
+/// operation (used together with materials-ratio and property-use facts
+/// — see that policy file for the exact decision table, and
+/// MODULE_97_TAX_IVA_PRODUCTION_INTEGRATION_REPORT.md for the legal
+/// assumptions that still require asesor fiscal confirmation).
+enum QuoteOperationType {
+  RENOVATION_OR_REPAIR
+  MAINTENANCE
+  OTHER
+}
+
 enum AppointmentStatus {
   /// Booking/Appointments module (MVP): the Appointment row created the
   /// moment a Quote is accepted, before any actual scheduling has happened.
@@ -1323,11 +1344,29 @@ model Address {
 /// Customer-specific extension of User. Deliberately thin — most identity
 /// data lives on User itself; this only holds fields meaningful to the
 /// "requests services" side of the marketplace.
+/// Module 97 — Tax & IVA Production Integration: the customer
+/// classification the Spain IVA tax engine needs to even consider a
+/// reduced rate. Defaults to PRIVATE_CUSTOMER — the conservative default
+/// matching every CustomerProfile created before this module existed
+/// (an ordinary consumer, general 21% IVA, no special treatment) — see
+/// domain/value-objects/customer-type.ts. Deliberately three values only,
+/// matching the module spec's Phase 3 minimum; COMMUNITY_OF_OWNERS is
+/// necessary-but-not-sufficient for the 10% rate — see
+/// domain/services/spain-community-iva-classification-policy.ts for what
+/// else must be true.
+enum CustomerType {
+  PRIVATE_CUSTOMER
+  COMMUNITY_OF_OWNERS
+  COMPANY
+}
+
 model CustomerProfile {
   id               String  @id @default(uuid()) @db.Uuid
   userId           String  @unique @db.Uuid
   defaultAddressId String? @db.Uuid
   marketingOptIn   Boolean @default(false)
+  /// Module 97 — Tax & IVA Production Integration. See CustomerType's own doc comment.
+  customerType     CustomerType @default(PRIVATE_CUSTOMER)
   notes            String? @db.Text
   deletedAt        DateTime?
 
@@ -1867,6 +1906,57 @@ model Quote {
   /// Appointment.proposedByUserId — since this module never needs to
   /// query "every quote a given user confirmed materials for".
   materialsConfirmedByUserId String? @db.Uuid
+
+  /// Module 97 — Tax & IVA Production Integration: legally-relevant
+  /// characteristics of the operation, explicitly supplied (never
+  /// inferred) so the tax classification policy
+  /// (domain/services/spain-community-iva-classification-policy.ts) never
+  /// guesses. Both null is a perfectly valid state (most quotes never
+  /// need them — see that policy's own doc comment on how it treats
+  /// missing data as "insufficient data," never as MAINTENANCE/OTHER by
+  /// assumption).
+  operationType         QuoteOperationType?
+  isResidentialProperty Boolean?
+
+  /// Module 97 — persisted tax snapshot (Phase 5 of the module spec).
+  /// Computed once, at Quote creation, from the Spain IVA Tax Engine
+  /// (Module 36/78) plus the Module 97 community classification policy —
+  /// never recalculated later, so a subsequent tax-configuration change
+  /// can never mutate an already-quoted price. All nullable: every Quote
+  /// created before this module has no snapshot at all
+  /// (`taxCalculatedAt: null` is how a caller distinguishes "never
+  /// computed" from "computed a 0% rate").
+  /// Module 97 correction pass (Step 6): the customer classification
+  /// AS OF the moment this snapshot was computed — see
+  /// application/services/quote-tax-snapshot.ts's own doc comment on why
+  /// this must never be re-derived from CustomerProfile.customerType at
+  /// read time (that value can change after the Quote was created).
+  customerTypeAtQuote          CustomerType?
+  taxableBase                  Decimal?            @db.Decimal(10, 2)
+  /// Module 97 correction pass (Step 6): the MATERIALS-category portion
+  /// of taxableBase that fed the materials-ratio classification test —
+  /// see QuoteTaxSnapshot.taxMaterialsAmount's own doc comment.
+  taxMaterialsAmount           Decimal?            @db.Decimal(10, 2)
+  vatRateBps                   Int?
+  vatAmount                    Decimal?            @db.Decimal(10, 2)
+  /// `taxableBase + vatAmount` (Phase 6: "Quote total = net + tax").
+  /// Deliberately a NEW field, not a redefinition of the pre-existing
+  /// `totalAmount` (which keeps meaning exactly what it always meant: the
+  /// net sum of `items[]`, the figure Payment.amount/Stripe currently
+  /// charge) — see the Module 97 report's "Remaining risks" for why
+  /// cutting Payment.amount over to this figure is left as a deliberate
+  /// follow-up business/legal decision, not something changed here.
+  grossTotalAmount             Decimal?            @db.Decimal(10, 2)
+  taxClassificationCode        String?
+  /// True whenever the classification policy could not reach a
+  /// legally-certain answer on its own — missing operation/property data,
+  /// or a community case that matched the reduced-rate conditions this
+  /// codebase encodes but that a human still must confirm against Ley
+  /// 37/1992 before being relied on in production (see Phase 20 of the
+  /// module spec). Never left implicit in a comment — always queryable.
+  taxRequiresLegalConfirmation Boolean             @default(false)
+  taxCalculationVersion        Int?
+  taxCalculatedAt              DateTime?
 
   serviceRequest      ServiceRequest       @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
   professionalProfile ProfessionalProfile? @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)

@@ -5,14 +5,14 @@ export class PrismaCustomerProfileRepository implements CustomerProfileRepositor
   async findByUserId(userId: string): Promise<CustomerProfileRecord | null> {
     return prisma.customerProfile.findFirst({
       where: { userId, deletedAt: null },
-      select: { id: true, userId: true },
+      select: { id: true, userId: true, customerType: true },
     });
   }
 
   async findById(id: string): Promise<CustomerProfileRecord | null> {
     return prisma.customerProfile.findFirst({
       where: { id, deletedAt: null },
-      select: { id: true, userId: true },
+      select: { id: true, userId: true, customerType: true },
     });
   }
 
@@ -22,7 +22,7 @@ export class PrismaCustomerProfileRepository implements CustomerProfileRepositor
 
     return prisma.customerProfile.create({
       data: { userId },
-      select: { id: true, userId: true },
+      select: { id: true, userId: true, customerType: true },
     });
   }
 

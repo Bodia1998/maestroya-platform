@@ -71,7 +71,7 @@ export class FakeCustomerProfileRepository implements CustomerProfileRepository 
   async findOrCreateByUserId(userId: string): Promise<CustomerProfileRecord> {
     const existing = this.byUserId.get(userId);
     if (existing) return existing;
-    const created: CustomerProfileRecord = { id: `customer-${userId}`, userId };
+    const created: CustomerProfileRecord = { id: `customer-${userId}`, userId, customerType: "PRIVATE_CUSTOMER" };
     this.seed(created);
     return created;
   }
@@ -164,6 +164,18 @@ export function fakeQuoteRecord(overrides: Partial<QuoteRecord> = {}): QuoteReco
     materials: [] as QuoteMaterialInput[] as QuoteRecord["materials"],
     materialsConfirmedAt: null,
     materialsConfirmedByUserId: null,
+    operationType: null,
+    isResidentialProperty: null,
+    customerTypeAtQuote: null,
+    taxableBase: null,
+    taxMaterialsAmount: null,
+    vatRateBps: null,
+    vatAmount: null,
+    grossTotalAmount: null,
+    taxClassificationCode: null,
+    taxRequiresLegalConfirmation: false,
+    taxCalculationVersion: null,
+    taxCalculatedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

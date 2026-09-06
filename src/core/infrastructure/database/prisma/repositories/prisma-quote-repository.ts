@@ -29,6 +29,19 @@ const SELECT = {
   materialsStrategy: true,
   materialsConfirmedAt: true,
   materialsConfirmedByUserId: true,
+  // Module 97 — Tax & IVA Production Integration.
+  operationType: true,
+  isResidentialProperty: true,
+  customerTypeAtQuote: true,
+  taxableBase: true,
+  taxMaterialsAmount: true,
+  vatRateBps: true,
+  vatAmount: true,
+  grossTotalAmount: true,
+  taxClassificationCode: true,
+  taxRequiresLegalConfirmation: true,
+  taxCalculationVersion: true,
+  taxCalculatedAt: true,
   createdAt: true,
   updatedAt: true,
   items: {
@@ -70,6 +83,18 @@ type PrismaQuoteRow = {
   materialsStrategy: string;
   materialsConfirmedAt: Date | null;
   materialsConfirmedByUserId: string | null;
+  operationType: string | null;
+  isResidentialProperty: boolean | null;
+  customerTypeAtQuote: string | null;
+  taxableBase: unknown;
+  taxMaterialsAmount: unknown;
+  vatRateBps: number | null;
+  vatAmount: unknown;
+  grossTotalAmount: unknown;
+  taxClassificationCode: string | null;
+  taxRequiresLegalConfirmation: boolean;
+  taxCalculationVersion: number | null;
+  taxCalculatedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   items: {
@@ -135,6 +160,18 @@ function toRecord(row: PrismaQuoteRow): QuoteRecord {
     materials: row.materials.map(toMaterialRecord),
     materialsConfirmedAt: row.materialsConfirmedAt,
     materialsConfirmedByUserId: row.materialsConfirmedByUserId,
+    operationType: row.operationType as QuoteRecord["operationType"],
+    isResidentialProperty: row.isResidentialProperty,
+    customerTypeAtQuote: row.customerTypeAtQuote as QuoteRecord["customerTypeAtQuote"],
+    taxableBase: row.taxableBase == null ? null : Number(row.taxableBase),
+    taxMaterialsAmount: row.taxMaterialsAmount == null ? null : Number(row.taxMaterialsAmount),
+    vatRateBps: row.vatRateBps,
+    vatAmount: row.vatAmount == null ? null : Number(row.vatAmount),
+    grossTotalAmount: row.grossTotalAmount == null ? null : Number(row.grossTotalAmount),
+    taxClassificationCode: row.taxClassificationCode,
+    taxRequiresLegalConfirmation: row.taxRequiresLegalConfirmation,
+    taxCalculationVersion: row.taxCalculationVersion,
+    taxCalculatedAt: row.taxCalculatedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -242,6 +279,19 @@ export class PrismaQuoteRepository implements QuoteRepository {
         items: { create: toItemCreateData(data.items) },
         materialsStrategy,
         materials: { create: toMaterialCreateData(data.materials ?? []) },
+        // Module 97 — Tax & IVA Production Integration.
+        operationType: data.operationType ?? null,
+        isResidentialProperty: data.isResidentialProperty ?? null,
+        customerTypeAtQuote: data.customerTypeAtQuote ?? null,
+        taxableBase: data.taxableBase ?? null,
+        taxMaterialsAmount: data.taxMaterialsAmount ?? null,
+        vatRateBps: data.vatRateBps ?? null,
+        vatAmount: data.vatAmount ?? null,
+        grossTotalAmount: data.grossTotalAmount ?? null,
+        taxClassificationCode: data.taxClassificationCode ?? null,
+        taxRequiresLegalConfirmation: data.taxRequiresLegalConfirmation ?? false,
+        taxCalculationVersion: data.taxCalculationVersion ?? null,
+        taxCalculatedAt: data.taxCalculatedAt ?? null,
       },
       select: SELECT,
     });
@@ -266,6 +316,23 @@ export class PrismaQuoteRepository implements QuoteRepository {
       ...(data.materials !== undefined
         ? { materials: { deleteMany: {}, create: toMaterialCreateData(data.materials) } }
         : {}),
+      // Module 97 — Tax & IVA Production Integration: an edit always
+      // resupplies the complete snapshot (see UpdateQuoteFields' own doc
+      // comment) — never a partial merge.
+      ...(data.operationType !== undefined ? { operationType: data.operationType } : {}),
+      ...(data.isResidentialProperty !== undefined ? { isResidentialProperty: data.isResidentialProperty } : {}),
+      ...(data.customerTypeAtQuote !== undefined ? { customerTypeAtQuote: data.customerTypeAtQuote } : {}),
+      ...(data.taxableBase !== undefined ? { taxableBase: data.taxableBase } : {}),
+      ...(data.taxMaterialsAmount !== undefined ? { taxMaterialsAmount: data.taxMaterialsAmount } : {}),
+      ...(data.vatRateBps !== undefined ? { vatRateBps: data.vatRateBps } : {}),
+      ...(data.vatAmount !== undefined ? { vatAmount: data.vatAmount } : {}),
+      ...(data.grossTotalAmount !== undefined ? { grossTotalAmount: data.grossTotalAmount } : {}),
+      ...(data.taxClassificationCode !== undefined ? { taxClassificationCode: data.taxClassificationCode } : {}),
+      ...(data.taxRequiresLegalConfirmation !== undefined
+        ? { taxRequiresLegalConfirmation: data.taxRequiresLegalConfirmation }
+        : {}),
+      ...(data.taxCalculationVersion !== undefined ? { taxCalculationVersion: data.taxCalculationVersion } : {}),
+      ...(data.taxCalculatedAt !== undefined ? { taxCalculatedAt: data.taxCalculatedAt } : {}),
     };
     const row = await prisma.quote.update({
       where: { id },

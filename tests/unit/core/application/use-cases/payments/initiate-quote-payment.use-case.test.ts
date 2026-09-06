@@ -48,7 +48,7 @@ describe("InitiateQuotePaymentUseCase (Module 73)", () => {
       fakeFeatureFlags(true),
     );
 
-    customerProfiles.seed({ id: "customer-1", userId: USER_ID });
+    customerProfiles.seed({ id: "customer-1", userId: USER_ID, customerType: "PRIVATE_CUSTOMER" });
     jobs.seed(fakeJobRecord());
     quotes.seed(fakeQuoteRecord());
   });

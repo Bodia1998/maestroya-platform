@@ -306,6 +306,18 @@ export class FakeQuoteRepository implements QuoteRepository {
       materials: this.toMaterials(data.materials),
       materialsConfirmedAt: null,
       materialsConfirmedByUserId: null,
+      operationType: null,
+      isResidentialProperty: null,
+      customerTypeAtQuote: null,
+      taxableBase: null,
+      taxMaterialsAmount: null,
+      vatRateBps: null,
+      vatAmount: null,
+      grossTotalAmount: null,
+      taxClassificationCode: null,
+      taxRequiresLegalConfirmation: false,
+      taxCalculationVersion: null,
+      taxCalculatedAt: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -356,6 +368,18 @@ export class FakeQuoteRepository implements QuoteRepository {
       ...existing,
       materialsConfirmedAt: new Date(),
       materialsConfirmedByUserId: confirmedByUserId,
+      operationType: null,
+      isResidentialProperty: null,
+      customerTypeAtQuote: null,
+      taxableBase: null,
+      taxMaterialsAmount: null,
+      vatRateBps: null,
+      vatAmount: null,
+      grossTotalAmount: null,
+      taxClassificationCode: null,
+      taxRequiresLegalConfirmation: false,
+      taxCalculationVersion: null,
+      taxCalculatedAt: null,
       updatedAt: new Date(),
     };
     this.quotes.set(quoteId, updated);
@@ -384,7 +408,7 @@ export class FakeCustomerProfileRepository implements CustomerProfileRepository 
   async findOrCreateByUserId(userId: string) {
     const existing = await this.findByUserId(userId);
     if (existing) return existing;
-    const record: CustomerProfileRecord = { id: nextId("fake-customer"), userId };
+    const record: CustomerProfileRecord = { id: nextId("fake-customer"), userId, customerType: "PRIVATE_CUSTOMER" };
     this.profiles.set(record.id, record);
     return record;
   }

@@ -108,6 +108,28 @@ export class CreateCustomerReceiptDraftUseCase {
 
     const breakdown = await this.taxBreakdowns.execute(jobId);
 
+    // Module 97 correction pass ("Invoice Tax Snapshot Integration"):
+    // when the Quote carries an authoritative persisted tax snapshot
+    // (every Quote created since Module 97 shipped), the customer
+    // receipt's own tax figures come from that snapshot VERBATIM — never
+    // recomputed here, even though `breakdown` (via
+    // CalculateJobTaxBreakdownUseCase's own Module 97 fix) would now
+    // recompute to the same numbers whenever the Quote's items haven't
+    // drifted since the snapshot was taken. Sourcing directly from the
+    // snapshot removes even that "would recompute to the same thing"
+    // dependency — this is what Step 5 of the correction task ("do not
+    // recalculate tax at invoice time; must continue using the original
+    // snapshot") asks for literally, not just arithmetically. A Quote
+    // that predates Module 97 (`taxCalculatedAt: null`) has no snapshot
+    // to prefer, so it falls back to exactly today's pre-Module-97
+    // behavior: `breakdown`'s own (general-rate) customer-side figures.
+    const hasQuoteTaxSnapshot =
+      quote.taxCalculatedAt != null &&
+      quote.taxableBase != null &&
+      quote.vatRateBps != null &&
+      quote.vatAmount != null &&
+      quote.grossTotalAmount != null;
+
     const invoice = await this.invoices.createDraft({
       type: "CUSTOMER_RECEIPT",
       jobId,
@@ -124,9 +146,9 @@ export class CreateCustomerReceiptDraftUseCase {
       invoiceDate: new Date(),
       currency: payment.currency,
       lineItems,
-      taxableBase: breakdown.customerTaxableBase,
-      vatRateBps: breakdown.customerVatRateBps,
-      vatAmount: breakdown.customerVatAmount,
+      taxableBase: hasQuoteTaxSnapshot ? (quote.taxableBase as number) : breakdown.customerTaxableBase,
+      vatRateBps: hasQuoteTaxSnapshot ? (quote.vatRateBps as number) : breakdown.customerVatRateBps,
+      vatAmount: hasQuoteTaxSnapshot ? (quote.vatAmount as number) : breakdown.customerVatAmount,
       // A customer receipt bills the customer's own gross total — never
       // MaestroYa's commission or the professional's IRPF withholding,
       // both of which are internal-to-the-platform figures the customer
@@ -139,7 +161,7 @@ export class CreateCustomerReceiptDraftUseCase {
       commissionAmount: 0,
       irpfWithholdingRateBps: 0,
       irpfWithholdingAmount: 0,
-      totalAmount: breakdown.customerGrossTotal,
+      totalAmount: hasQuoteTaxSnapshot ? (quote.grossTotalAmount as number) : breakdown.customerGrossTotal,
     });
 
     await publishDomainEvent(
