@@ -116,14 +116,30 @@ async function seedActiveCase(ctx: ReturnType<typeof makeContext>) {
   return verification;
 }
 
+/**
+ * Module 98 — Professional Tax & Business Verification: see the identical
+ * helper in provider-verification-flows.test.ts's own doc comment.
+ */
+async function addBusinessRegistrationDocument(ctx: ReturnType<typeof makeContext>, verificationId: string) {
+  await ctx.verifications.addDocument({
+    verificationId,
+    type: "BUSINESS_REGISTRATION",
+    fileUrl: "https://example.com/business-registration.pdf",
+    originalFilename: "business-registration.pdf",
+    mimeType: "application/pdf",
+    fileSizeBytes: 1024,
+  });
+}
+
 describe("Module 70.1 — ProcessPersonaWebhookUseCase", () => {
   let ctx: ReturnType<typeof makeContext>;
   beforeEach(() => {
     ctx = makeContext();
   });
 
-  it("VERIFIED: resolves the inquiry id to the internal case (never trusting a client-supplied id) and applies an APPROVED transition via a fresh provider read, not the webhook body", async () => {
+  it("VERIFIED: resolves the inquiry id to the internal case (never trusting a client-supplied id) and applies an APPROVED transition via a fresh provider read, not the webhook body, when a business-registration document is present", async () => {
     const verification = await seedActiveCase(ctx);
+    await addBusinessRegistrationDocument(ctx, verification.id);
 
     ctx.provider.nextOutcome = "VERIFIED";
     ctx.provider.nextRawStatus = "completed";
@@ -141,6 +157,31 @@ describe("Module 70.1 — ProcessPersonaWebhookUseCase", () => {
     // The re-fetch really happened — this is what makes the webhook body's
     // own embedded status irrelevant to the actual state transition.
     expect(ctx.provider.refreshCalls).toContain(verification.providerVerificationId);
+  });
+
+  // Module 98 — Professional Tax & Business Verification: the mandatory
+  // regression test at the webhook boundary — Persona identity verification
+  // must NOT equal professional eligibility, whether reached via a manual
+  // status check or (as here) the Persona webhook itself.
+  it("Module 98: VERIFIED via webhook does NOT approve — and does not verify the profile — without a business-registration document", async () => {
+    const verification = await seedActiveCase(ctx);
+
+    ctx.provider.nextOutcome = "VERIFIED";
+    ctx.provider.nextRawStatus = "completed";
+
+    const result = await ctx.processWebhook.execute({
+      externalEventId: "evt-1-no-business-doc",
+      eventType: "inquiry.completed",
+      providerVerificationId: verification.providerVerificationId,
+    });
+
+    expect(result.outcome).toBe("processed");
+    const updated = await ctx.verifications.findById(verification.id);
+    expect(updated?.status).toBe("RESUBMISSION_REQUIRED");
+    expect(updated?.status).not.toBe("APPROVED");
+
+    const professional = await ctx.professionals.findByUserId("user-1");
+    expect(professional?.verificationStatus).not.toBe("VERIFIED");
   });
 
   it("REJECTED: applies a REJECTED transition the same way", async () => {
@@ -267,6 +308,7 @@ describe("Module 70.1 — ProcessPersonaWebhookUseCase", () => {
 
   it("a failed processing attempt is re-claimable by a later retry delivery of the same event", async () => {
     const verification = await seedActiveCase(ctx);
+    await addBusinessRegistrationDocument(ctx, verification.id);
     ctx.provider.refreshStatus = async () => {
       throw new Error("Persona is temporarily down");
     };

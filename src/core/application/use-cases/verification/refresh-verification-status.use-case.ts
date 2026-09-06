@@ -5,7 +5,11 @@ import type {
   ProfessionalVerificationRecord,
   ProfessionalVerificationRepository,
 } from "@/domain/repositories/professional-verification-repository";
-import { canSyncProviderStatus, computeExpiresAt } from "@/domain/services/professional-verification-rules";
+import {
+  canSyncProviderStatus,
+  computeExpiresAt,
+  hasBusinessRegistrationDocument,
+} from "@/domain/services/professional-verification-rules";
 import { resolveProviderStatusTransition } from "@/domain/services/verification-provider-outcome";
 import { NullNotificationCreator, type NotificationCreator } from "@/application/ports/notification-creator";
 import type { VerificationProvider } from "@/application/ports/verification-provider";
@@ -33,6 +37,25 @@ export interface RefreshVerificationStatusResult {
  * case; an EXPIRED provider outcome (Persona's own inquiry TTL) is handled
  * here for symmetry, following that use case's exact same "no profile
  * trust-badge change on expiry" scope boundary — see its own doc comment.
+ *
+ * Module 98 — Professional Tax & Business Verification: Persona is an
+ * *identity*-only provider (see the module 59 doc comment above — it never
+ * evaluates business/tax evidence). A provider outcome of `VERIFIED` is
+ * therefore never enough, by itself, to grant the profile's `VERIFIED`
+ * trust badge (and everything gated on it — marketplace visibility,
+ * quote submission, payout eligibility): the case's documents must also
+ * satisfy the exact same business-registration-document requirement
+ * `ApproveProfessionalVerificationUseCase` already enforces for a human
+ * admin's decision. This reuses that use case's own predicate
+ * (`hasBusinessRegistrationDocument`) verbatim — no new document/eligibility
+ * concept is introduced — and, when the document is missing, reuses the
+ * existing `RESUBMISSION_REQUIRED` case status and profile-`PENDING` signal
+ * (see `RequestVerificationResubmissionUseCase`) rather than inventing a
+ * new state: an automated "identity passed, business document still
+ * needed" outcome is handled exactly like an admin asking the professional
+ * to resubmit for the same reason. The professional can then upload the
+ * missing document (`canModifyDocuments`/`canResubmit` already allow this
+ * from `RESUBMISSION_REQUIRED`) and trigger a fresh check.
  *
  * Deliberately does not raise `ProfessionalVerificationStatusChanged` — a
  * provider-driven transition has no human actor (Persona is not a
@@ -71,15 +94,29 @@ export class RefreshVerificationStatusUseCase {
 
     const result = await this.provider.refreshStatus(verification.providerVerificationId);
     const now = new Date();
-    const nextStatus = resolveProviderStatusTransition(verification.status, result.outcome);
+    const mappedStatus = resolveProviderStatusTransition(verification.status, result.outcome);
 
-    if (!nextStatus) {
+    if (!mappedStatus) {
       const synced = await this.verifications.updateStatus(verification.id, {
         status: verification.status,
         providerStatus: result.rawStatus,
         providerSyncedAt: now,
       });
       return { verification: synced, changed: false };
+    }
+
+    // Module 98: an identity-`APPROVED` outcome from the provider is
+    // downgraded to `RESUBMISSION_REQUIRED` (not applied as-is) when the
+    // case's documents don't yet include an accepted business-registration
+    // document — see this class's doc comment.
+    let nextStatus = mappedStatus;
+    let businessRegistrationMissing = false;
+    if (nextStatus === "APPROVED") {
+      const documents = await this.verifications.listDocuments(verification.id);
+      if (!hasBusinessRegistrationDocument(documents.map((d) => d.type))) {
+        nextStatus = "RESUBMISSION_REQUIRED";
+        businessRegistrationMissing = true;
+      }
     }
 
     const updated = await this.verifications.updateStatus(verification.id, {
@@ -92,12 +129,23 @@ export class RefreshVerificationStatusUseCase {
       ...(nextStatus === "REJECTED"
         ? { reviewedAt: now, rejectionReason: result.failureReason ?? "Automated identity verification was not successful." }
         : {}),
+      ...(businessRegistrationMissing
+        ? {
+            reviewedAt: now,
+            resubmissionReason:
+              "Automated identity verification passed. A business registration document is required before your professional profile can be verified. Please upload it to continue.",
+          }
+        : {}),
     });
 
     if (nextStatus === "APPROVED") {
       await this.verifications.setProfileVerificationStatus(verification.professionalProfileId, "VERIFIED", now);
     } else if (nextStatus === "REJECTED") {
       await this.verifications.setProfileVerificationStatus(verification.professionalProfileId, "REJECTED", null);
+    } else if (businessRegistrationMissing) {
+      // Still mid-verification — keep the public signal PENDING, the same
+      // as RequestVerificationResubmissionUseCase's identical case.
+      await this.verifications.setProfileVerificationStatus(verification.professionalProfileId, "PENDING", null);
     }
     // UNDER_REVIEW / EXPIRED: no public trust-badge change — same boundary
     // ExpireProfessionalVerificationsUseCase documents for expiry, extended
@@ -107,8 +155,9 @@ export class RefreshVerificationStatusUseCase {
     try {
       await this.auditLog.record({
         adminUserId: null,
-        action:
-          nextStatus === "APPROVED"
+        action: businessRegistrationMissing
+          ? "VERIFICATION_RESUBMISSION_REQUESTED"
+          : nextStatus === "APPROVED"
             ? "VERIFICATION_APPROVED"
             : nextStatus === "REJECTED"
               ? "VERIFICATION_REJECTED"
@@ -122,25 +171,32 @@ export class RefreshVerificationStatusUseCase {
           providerVerificationId: verification.providerVerificationId,
           outcome: result.outcome,
           rawStatus: result.rawStatus,
+          ...(businessRegistrationMissing ? { businessRegistrationMissing: true } : {}),
         },
       });
     } catch (error) {
       console.error("Failed to record provider-verification-synced audit log", error);
     }
 
-    if (nextStatus === "APPROVED" || nextStatus === "REJECTED") {
+    if (nextStatus === "APPROVED" || nextStatus === "REJECTED" || businessRegistrationMissing) {
       try {
         const professional = await this.professionals.findById(verification.professionalProfileId);
         if (professional) {
           await this.notifications.notify({
             userId: professional.userId,
-            type: nextStatus === "APPROVED" ? "VERIFICATION_APPROVED" : "VERIFICATION_REJECTED",
-            title:
-              nextStatus === "APPROVED"
+            type: businessRegistrationMissing
+              ? "VERIFICATION_RESUBMISSION_REQUIRED"
+              : nextStatus === "APPROVED"
+                ? "VERIFICATION_APPROVED"
+                : "VERIFICATION_REJECTED",
+            title: businessRegistrationMissing
+              ? "Business registration document required"
+              : nextStatus === "APPROVED"
                 ? "You are now a verified professional"
                 : "Verification request rejected",
-            message:
-              nextStatus === "APPROVED"
+            message: businessRegistrationMissing
+              ? "Your automated identity verification passed. Upload a business registration document to complete your professional verification."
+              : nextStatus === "APPROVED"
                 ? "Your automated identity verification passed. A verified badge now appears on your public profile."
                 : "Your automated identity verification was not successful. Open your verification page to see why and try again.",
             resourceType: "PROFESSIONAL_VERIFICATION",
