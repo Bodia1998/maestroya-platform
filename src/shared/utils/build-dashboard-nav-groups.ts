@@ -44,6 +44,7 @@ const BASE_NAV_GROUP: DashboardNavGroup = {
     { href: "/requests", label: "Service requests", icon: "requests" },
     { href: "/appointments", label: "Appointments", icon: "appointments" },
     { href: "/jobs", label: "Jobs", icon: "jobs" },
+    { href: "/receipts", label: "My receipts", icon: "receipts" },
     { href: "/messages", label: "Messages", icon: "messages" },
     { href: "/disputes", label: "Disputes", icon: "disputes" },
     { href: "/support-tickets", label: "Support", icon: "support" },
@@ -80,6 +81,7 @@ const PROFESSIONAL_NAV_GROUP: DashboardNavGroup = {
     { href: "/dashboard/professional/quotes", label: "My quotes", icon: "quotes" },
     { href: "/dashboard/professional/appointments", label: "My appointments", icon: "appointments" },
     { href: "/dashboard/professional/jobs", label: "My jobs", icon: "jobs" },
+    { href: "/dashboard/professional/self-billing", label: "Self-billing & invoices", icon: "invoices" },
     { href: "/dashboard/company", label: "Companies", icon: "companies" },
   ],
 };

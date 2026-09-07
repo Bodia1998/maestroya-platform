@@ -21,6 +21,7 @@ describe("buildDashboardNavGroups", () => {
       "/requests",
       "/appointments",
       "/jobs",
+      "/receipts",
       "/messages",
       "/disputes",
       "/support-tickets",
@@ -46,6 +47,7 @@ describe("buildDashboardNavGroups", () => {
       "/dashboard/professional/quotes",
       "/dashboard/professional/appointments",
       "/dashboard/professional/jobs",
+      "/dashboard/professional/self-billing",
       "/dashboard/company",
     ]);
     // "Professional profile" must never appear here — it lives solely in

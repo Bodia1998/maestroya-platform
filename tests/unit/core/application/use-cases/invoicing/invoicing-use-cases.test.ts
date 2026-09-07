@@ -596,6 +596,138 @@ describe("Module 79 — Invoicing & Credit Notes use cases", () => {
         }),
       ).rejects.toBeInstanceOf(CreditNoteExceedsRemainingAmountError);
     });
+
+    // --- Module 99, Workstream E — DRAFT-stuck-on-crash retry recovery ---
+    // Regression coverage for the exact bug the brief describes:
+    // `createOrGetExisting` succeeding but the process crashing (or the
+    // subsequent `issue()` call failing) before the credit note reaches
+    // ISSUED, followed by an idempotent retry with the SAME key.
+
+    it("issues a brand-new credit note on the very first call (no pre-existing DRAFT)", async () => {
+      const invoice = await issueInvoiceForCreditNoteTests();
+      const creditNote = await createCreditNote.execute({
+        originalInvoiceId: invoice.id,
+        reason: "Fresh credit note",
+        idempotencyKey: "cn-recovery-fresh",
+        requestedByProfessionalProfileId: "professional-1",
+      });
+      expect(creditNote.status).toBe("ISSUED");
+      expect(creditNote.creditNoteNumber).toMatch(/^CN-\d{4}-\d{6}$/);
+    });
+
+    it("is a pure no-op retry once the credit note has already reached ISSUED", async () => {
+      const invoice = await issueInvoiceForCreditNoteTests();
+      const first = await createCreditNote.execute({
+        originalInvoiceId: invoice.id,
+        reason: "Already issued",
+        idempotencyKey: "cn-recovery-already-issued",
+        requestedByProfessionalProfileId: "professional-1",
+      });
+      expect(first.status).toBe("ISSUED");
+
+      const retry = await createCreditNote.execute({
+        originalInvoiceId: invoice.id,
+        reason: "Already issued",
+        idempotencyKey: "cn-recovery-already-issued",
+        requestedByProfessionalProfileId: "professional-1",
+      });
+      expect(retry.id).toBe(first.id);
+      expect(retry.creditNoteNumber).toBe(first.creditNoteNumber);
+      expect(retry.status).toBe("ISSUED");
+    });
+
+    // The actual bug: a DRAFT row already exists under this idempotency key
+    // (simulating createOrGetExisting having succeeded on a prior call that
+    // then crashed before issue()). Before the Module 99 fix, the retry
+    // returned this DRAFT unchanged forever — permanently orphaned, never
+    // reaching ISSUED, and with no invoiceNumber ever allocated.
+    it("completes issuance on retry when a prior call left the credit note stuck in DRAFT", async () => {
+      const invoice = await issueInvoiceForCreditNoteTests();
+
+      const stuckDraft = await creditNotes.createOrGetExisting({
+        originalInvoiceId: invoice.id,
+        professionalProfileId: invoice.professionalProfileId,
+        companyProfileId: invoice.companyProfileId,
+        reason: "Crashed before issuance",
+        idempotencyKey: "cn-recovery-stuck-draft",
+        currency: invoice.currency,
+        lineItems: [{ description: "Credit note (recovery test)", amount: 10 }],
+        reversedTaxableBase: 8.26,
+        reversedVatRateBps: invoice.vatRateBps,
+        reversedVatAmount: 1.74,
+        reversedCommissionAmount: 0,
+        reversedIrpfWithholdingAmount: 0,
+        totalAmount: 10,
+      });
+      expect(stuckDraft.status).toBe("DRAFT");
+      expect(stuckDraft.creditNoteNumber).toBeNull();
+
+      const recovered = await createCreditNote.execute({
+        originalInvoiceId: invoice.id,
+        reason: "Crashed before issuance",
+        idempotencyKey: "cn-recovery-stuck-draft",
+        requestedByProfessionalProfileId: "professional-1",
+      });
+
+      // Same row — never a second credit note created for the same key.
+      expect(recovered.id).toBe(stuckDraft.id);
+      expect(recovered.status).toBe("ISSUED");
+      expect(recovered.creditNoteNumber).toMatch(/^CN-\d{4}-\d{6}$/);
+      expect(recovered.documentHash).not.toBeNull();
+
+      // A second retry against the now-ISSUED row is a pure no-op.
+      const secondRetry = await createCreditNote.execute({
+        originalInvoiceId: invoice.id,
+        reason: "Crashed before issuance",
+        idempotencyKey: "cn-recovery-stuck-draft",
+        requestedByProfessionalProfileId: "professional-1",
+      });
+      expect(secondRetry.id).toBe(recovered.id);
+      expect(secondRetry.creditNoteNumber).toBe(recovered.creditNoteNumber);
+    });
+
+    // Concurrent retries against the same stuck DRAFT must converge on one
+    // issuance — no double-numbering, no duplicate row. The in-memory fake
+    // is synchronous per awaited call, so this exercises the "both retries
+    // see the same DRAFT row and both call issueDraft" interleaving that a
+    // real DB serializes via the CAS `issue()` write.
+    it("converges concurrent retries of a stuck DRAFT on a single issued credit note", async () => {
+      const invoice = await issueInvoiceForCreditNoteTests();
+
+      const stuckDraft = await creditNotes.createOrGetExisting({
+        originalInvoiceId: invoice.id,
+        professionalProfileId: invoice.professionalProfileId,
+        companyProfileId: invoice.companyProfileId,
+        reason: "Concurrent retry",
+        idempotencyKey: "cn-recovery-concurrent",
+        currency: invoice.currency,
+        lineItems: [{ description: "Credit note (concurrent recovery test)", amount: 10 }],
+        reversedTaxableBase: 8.26,
+        reversedVatRateBps: invoice.vatRateBps,
+        reversedVatAmount: 1.74,
+        reversedCommissionAmount: 0,
+        reversedIrpfWithholdingAmount: 0,
+        totalAmount: 10,
+      });
+
+      const input = {
+        originalInvoiceId: invoice.id,
+        reason: "Concurrent retry",
+        idempotencyKey: "cn-recovery-concurrent",
+        requestedByProfessionalProfileId: "professional-1",
+      } as const;
+
+      const [a, b] = await Promise.all([createCreditNote.execute(input), createCreditNote.execute(input)]);
+
+      expect(a.id).toBe(stuckDraft.id);
+      expect(b.id).toBe(stuckDraft.id);
+      expect(a.status).toBe("ISSUED");
+      expect(b.status).toBe("ISSUED");
+      expect(a.creditNoteNumber).toBe(b.creditNoteNumber);
+
+      const allForInvoice = await creditNotes.listByOriginalInvoiceId(invoice.id);
+      expect(allForInvoice.filter((cn) => cn.idempotencyKey === "cn-recovery-concurrent")).toHaveLength(1);
+    });
   });
 
   // 23. Important invoice transitions generate the expected domain events.

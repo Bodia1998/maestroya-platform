@@ -11,6 +11,7 @@ import {
   Building2,
   CalendarDays,
   FileSignature,
+  FileStack,
   FileText,
   LayoutDashboard,
   LifeBuoy,
@@ -53,6 +54,8 @@ const ICONS = {
   quotes: FileSignature,
   companies: Building2,
   admin: Shield,
+  invoices: FileStack,
+  receipts: FileText,
 } as const;
 
 export type DashboardNavIcon = keyof typeof ICONS;
@@ -122,7 +125,7 @@ const PROFESSIONAL_CONTEXT_PREFIX = "/dashboard/professional";
  * PROVIDER account, exactly like the shared `/dashboard` overview) — never
  * a silent switch away from Professional.
  */
-const CUSTOMER_CONTEXT_PREFIXES = ["/requests", "/appointments", "/jobs"];
+const CUSTOMER_CONTEXT_PREFIXES = ["/requests", "/appointments", "/jobs", "/receipts"];
 
 /**
  * Root cause this fixes: the sidebar previously rendered *every* nav group

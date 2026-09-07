@@ -193,10 +193,49 @@ export class PrismaInvoiceRepository implements InvoiceRepository {
   }
 
   async listForProfessional(professionalProfileId: string, options: { limit: number; offset: number }): Promise<InvoiceRecord[]> {
+    // Module 99 fix: scoped to PROFESSIONAL_SELF_BILLED — a CUSTOMER_RECEIPT
+    // for the same Job also denormalizes this professional's own id (see
+    // CreateCustomerReceiptDraftUseCase), so an unscoped query here would
+    // hand the professional a document addressed to their customer, not to
+    // them. This method had no production caller before Module 99 (verified
+    // by repo-wide search), so this is a pure correctness fix, not a
+    // behavior change any existing caller depends on.
     const rows = await prisma.$queryRawUnsafe<InvoiceRow[]>(
-      `SELECT ${INVOICE_COLUMNS} FROM "invoices" WHERE "professionalProfileId" = $1::uuid
+      `SELECT ${INVOICE_COLUMNS} FROM "invoices"
+       WHERE "professionalProfileId" = $1::uuid AND "type" = 'PROFESSIONAL_SELF_BILLED'
        ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
       professionalProfileId,
+      options.limit,
+      options.offset,
+    );
+    return Promise.all(rows.map(async (row) => toRecord(row, await fetchLineItems(row.id))));
+  }
+
+  async listForCompany(companyProfileId: string, options: { limit: number; offset: number }): Promise<InvoiceRecord[]> {
+    // Module 99 — same type-scoping rationale as listForProfessional above.
+    const rows = await prisma.$queryRawUnsafe<InvoiceRow[]>(
+      `SELECT ${INVOICE_COLUMNS} FROM "invoices"
+       WHERE "companyProfileId" = $1::uuid AND "type" = 'PROFESSIONAL_SELF_BILLED'
+       ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
+      companyProfileId,
+      options.limit,
+      options.offset,
+    );
+    return Promise.all(rows.map(async (row) => toRecord(row, await fetchLineItems(row.id))));
+  }
+
+  async listForCustomer(customerId: string, options: { limit: number; offset: number }): Promise<InvoiceRecord[]> {
+    // Module 99 — scoped to CUSTOMER_RECEIPT: the professional's own
+    // PROFESSIONAL_SELF_BILLED invoice for the same Job also denormalizes
+    // this customer's id (see CreateProfessionalInvoiceDraftUseCase's own
+    // `customerId: job.customerId`) and must never be handed to the
+    // customer through this method — see this interface method's own doc
+    // comment on invoice-repository.ts.
+    const rows = await prisma.$queryRawUnsafe<InvoiceRow[]>(
+      `SELECT ${INVOICE_COLUMNS} FROM "invoices"
+       WHERE "customerId" = $1::uuid AND "type" = 'CUSTOMER_RECEIPT'
+       ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
+      customerId,
       options.limit,
       options.offset,
     );
