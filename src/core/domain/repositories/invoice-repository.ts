@@ -267,6 +267,21 @@ export interface InvoiceRepository {
   findByJobIdAndType(jobId: string, type: InvoiceTypeValue): Promise<InvoiceRecord | null>;
   findByInvoiceNumber(invoiceNumber: string): Promise<InvoiceRecord | null>;
   listForProfessional(professionalProfileId: string, options: { limit: number; offset: number }): Promise<InvoiceRecord[]>;
+  /** Module 99 — Self-Billing Authorization Entry Point & Financial
+   *  Document Access: the customer's own `CUSTOMER_RECEIPT` documents —
+   *  deliberately type-scoped in the implementation (never a bare
+   *  `customerId` match), since `customerId` is also set, denormalized,
+   *  on that same Job's `PROFESSIONAL_SELF_BILLED` invoice (see
+   *  `CreateProfessionalInvoiceDraftUseCase`'s own `customerId: job.customerId`)
+   *  — a customer must never be handed the professional's own
+   *  commission-bearing invoice through this method. */
+  listForCustomer(customerId: string, options: { limit: number; offset: number }): Promise<InvoiceRecord[]>;
+  /** Module 99: the company's own `PROFESSIONAL_SELF_BILLED` invoices —
+   *  same type-scoping rationale as `listForCustomer` (a `CUSTOMER_RECEIPT`
+   *  also denormalizes `companyProfileId` from its Job — see
+   *  `CreateCustomerReceiptDraftUseCase` — and must never be returned
+   *  here either). */
+  listForCompany(companyProfileId: string, options: { limit: number; offset: number }): Promise<InvoiceRecord[]>;
 
   /** Always inserts a new DRAFT — callers are responsible for the
    *  "one non-cancelled invoice per Job" idempotency check via

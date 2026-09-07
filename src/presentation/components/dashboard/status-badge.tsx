@@ -38,6 +38,11 @@ const STATUS_VARIANT: Record<string, BadgeProps["variant"]> = {
   PROPOSED: "accent",
   QUOTED: "accent",
   SUBMITTED: "accent",
+  // Module 99 — Self-Billing Authorization Entry Point & Financial
+  // Document Access: Invoice/CreditNote statuses (invoice-lifecycle.ts /
+  // credit-note-lifecycle.ts) join this shared vocabulary rather than
+  // getting a module-specific badge.
+  PENDING_ACCEPTANCE: "accent",
 
   // In progress / scheduled
   IN_PROGRESS: "warning",
@@ -52,6 +57,8 @@ const STATUS_VARIANT: Record<string, BadgeProps["variant"]> = {
   COMPLETED: "success",
   VERIFIED: "success",
   APPROVED: "success",
+  ISSUED: "success",
+  PAID: "success",
 
   // Negative / terminal-with-friction
   REJECTED: "danger",
@@ -70,6 +77,7 @@ const STATUS_LABEL: Record<string, string> = {
   PENDING_REVIEW: "Pending review",
   UNDER_REVIEW: "Under review",
   UNVERIFIED: "Not verified",
+  PENDING_ACCEPTANCE: "Pending acceptance",
 };
 
 function toTitleCase(status: string): string {

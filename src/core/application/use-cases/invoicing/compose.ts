@@ -14,9 +14,19 @@ import { PrismaCreditNoteRepository } from "@/infrastructure/database/prisma/rep
 import { PrismaAdminAuditLogRepository } from "@/infrastructure/database/prisma/repositories/prisma-admin-audit-log-repository";
 import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prisma/repositories/prisma-customer-profile-repository";
 import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
+import { PrismaCompanyMembershipRepository } from "@/infrastructure/database/prisma/repositories/prisma-company-membership-repository";
 import { CalculateJobTaxBreakdownUseCase } from "@/application/use-cases/financial/calculate-job-tax-breakdown.use-case";
 import { GrantSelfBillingAuthorizationUseCase } from "./grant-self-billing-authorization.use-case";
 import { RevokeSelfBillingAuthorizationUseCase } from "./revoke-self-billing-authorization.use-case";
+// Module 99 — Self-Billing Authorization Entry Point & Financial Document Access.
+import { GrantMySelfBillingAuthorizationUseCase } from "./grant-my-self-billing-authorization.use-case";
+import { RevokeMySelfBillingAuthorizationUseCase } from "./revoke-my-self-billing-authorization.use-case";
+import { GetMySelfBillingAuthorizationUseCase } from "./get-my-self-billing-authorization.use-case";
+import { ListInvoicesForCustomerUseCase } from "./list-invoices-for-customer.use-case";
+import { ListInvoicesForProfessionalUseCase } from "./list-invoices-for-professional.use-case";
+import { ListInvoicesForCompanyUseCase } from "./list-invoices-for-company.use-case";
+import { GetCustomerReceiptUseCase } from "./get-customer-receipt.use-case";
+import { GetProfessionalInvoiceUseCase } from "./get-professional-invoice.use-case";
 import { CreateProfessionalInvoiceDraftUseCase } from "./create-professional-invoice-draft.use-case";
 import { CreateCustomerReceiptDraftUseCase } from "./create-customer-receipt-draft.use-case";
 import { SubmitInvoiceForAcceptanceUseCase } from "./submit-invoice-for-acceptance.use-case";
@@ -69,6 +79,7 @@ const invoices = new PrismaInvoiceRepository();
 const creditNotes = new PrismaCreditNoteRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
 const users = new PrismaUserRepository();
+const companyMembers = new PrismaCompanyMembershipRepository();
 const auditLog = new PrismaAdminAuditLogRepository();
 const failureReporter = createFailureReporter();
 
@@ -85,6 +96,41 @@ export function makeGrantSelfBillingAuthorizationUseCase(): GrantSelfBillingAuth
 
 export function makeRevokeSelfBillingAuthorizationUseCase(): RevokeSelfBillingAuthorizationUseCase {
   return new RevokeSelfBillingAuthorizationUseCase(selfBillingAuthorizations);
+}
+
+// Module 99 — Self-Billing Authorization Entry Point & Financial Document
+// Access: the production entry points nothing previously called — see
+// each use case's own doc comment.
+export function makeGrantMySelfBillingAuthorizationUseCase(): GrantMySelfBillingAuthorizationUseCase {
+  return new GrantMySelfBillingAuthorizationUseCase(professionals, companyMembers, makeGrantSelfBillingAuthorizationUseCase());
+}
+
+export function makeRevokeMySelfBillingAuthorizationUseCase(): RevokeMySelfBillingAuthorizationUseCase {
+  return new RevokeMySelfBillingAuthorizationUseCase(professionals, companyMembers, selfBillingAuthorizations, makeRevokeSelfBillingAuthorizationUseCase());
+}
+
+export function makeGetMySelfBillingAuthorizationUseCase(): GetMySelfBillingAuthorizationUseCase {
+  return new GetMySelfBillingAuthorizationUseCase(professionals, companyMembers, selfBillingAuthorizations);
+}
+
+export function makeListInvoicesForCustomerUseCase(): ListInvoicesForCustomerUseCase {
+  return new ListInvoicesForCustomerUseCase(invoices, customerProfiles);
+}
+
+export function makeListInvoicesForProfessionalUseCase(): ListInvoicesForProfessionalUseCase {
+  return new ListInvoicesForProfessionalUseCase(invoices, professionals);
+}
+
+export function makeListInvoicesForCompanyUseCase(): ListInvoicesForCompanyUseCase {
+  return new ListInvoicesForCompanyUseCase(invoices, companyMembers);
+}
+
+export function makeGetCustomerReceiptUseCase(): GetCustomerReceiptUseCase {
+  return new GetCustomerReceiptUseCase(invoices, creditNotes, customerProfiles);
+}
+
+export function makeGetProfessionalInvoiceUseCase(): GetProfessionalInvoiceUseCase {
+  return new GetProfessionalInvoiceUseCase(invoices, creditNotes, professionals, companyMembers);
 }
 
 export function makeCreateProfessionalInvoiceDraftUseCase(): CreateProfessionalInvoiceDraftUseCase {

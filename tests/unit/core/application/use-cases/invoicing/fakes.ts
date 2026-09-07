@@ -3,6 +3,7 @@ import type { PaymentRecord, PaymentRepository } from "@/domain/repositories/pay
 import type { QuoteRecord, QuoteRepository } from "@/domain/repositories/quote-repository";
 import type { ProfessionalRecord, ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { CompanyRecord, CompanyRepository } from "@/domain/repositories/company-repository";
+import type { CompanyMemberRecord, CompanyMembershipRepository } from "@/domain/repositories/company-membership-repository";
 import type {
   GrantSelfBillingAuthorizationData,
   SelfBillingAuthorizationRecord,
@@ -70,13 +71,16 @@ export class FakeQuoteRepository implements Pick<QuoteRepository, "findById"> {
   }
 }
 
-export class FakeProfessionalRepository implements Pick<ProfessionalRepository, "findById"> {
+export class FakeProfessionalRepository implements Pick<ProfessionalRepository, "findById" | "findByUserId"> {
   byId = new Map<string, ProfessionalRecord>();
   seed(record: ProfessionalRecord): void {
     this.byId.set(record.id, record);
   }
   async findById(id: string): Promise<ProfessionalRecord | null> {
     return this.byId.get(id) ?? null;
+  }
+  async findByUserId(userId: string): Promise<ProfessionalRecord | null> {
+    return [...this.byId.values()].find((r) => r.userId === userId) ?? null;
   }
 }
 
@@ -87,6 +91,41 @@ export class FakeCompanyRepository implements Pick<CompanyRepository, "findById"
   }
   async findById(id: string): Promise<CompanyRecord | null> {
     return this.byId.get(id) ?? null;
+  }
+}
+
+let membershipIdCounter = 0;
+
+/**
+ * Module 99 — minimal fake covering only what `resolveCompanyActor`
+ * (the shared ownership-resolution helper every company-scoped Module 99
+ * use case goes through) actually calls: `findByCompanyAndUser`. Seeded
+ * rows are ACTIVE (joined, not removed) by default — matching
+ * `deriveMembershipStatus`'s own "joined + not removed" rule — so tests
+ * can seed a single ACTIVE row per (companyId, userId, role) under test.
+ */
+export class FakeCompanyMembershipRepository implements Pick<CompanyMembershipRepository, "findByCompanyAndUser"> {
+  rows: CompanyMemberRecord[] = [];
+
+  seedActiveMember(companyId: string, userId: string, role: CompanyMemberRecord["role"]): CompanyMemberRecord {
+    const now = new Date();
+    const record: CompanyMemberRecord = {
+      id: `member-${++membershipIdCounter}`,
+      companyId,
+      userId,
+      role,
+      invitedAt: now,
+      joinedAt: now,
+      removedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.rows.push(record);
+    return record;
+  }
+
+  async findByCompanyAndUser(companyId: string, userId: string): Promise<CompanyMemberRecord | null> {
+    return this.rows.find((r) => r.companyId === companyId && r.userId === userId) ?? null;
   }
 }
 
@@ -185,7 +224,19 @@ export class FakeInvoiceRepository implements InvoiceRepository {
   }
 
   async listForProfessional(professionalProfileId: string): Promise<InvoiceRecord[]> {
-    return this.rows.filter((r) => r.professionalProfileId === professionalProfileId);
+    return this.rows.filter(
+      (r) => r.professionalProfileId === professionalProfileId && r.type === "PROFESSIONAL_SELF_BILLED",
+    );
+  }
+
+  async listForCustomer(customerId: string): Promise<InvoiceRecord[]> {
+    return this.rows.filter((r) => r.customerId === customerId && r.type === "CUSTOMER_RECEIPT");
+  }
+
+  async listForCompany(companyProfileId: string): Promise<InvoiceRecord[]> {
+    return this.rows.filter(
+      (r) => r.companyProfileId === companyProfileId && r.type === "PROFESSIONAL_SELF_BILLED",
+    );
   }
 
   async createDraft(data: CreateInvoiceDraftData): Promise<InvoiceRecord> {

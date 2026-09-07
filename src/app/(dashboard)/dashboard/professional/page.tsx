@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { FileText, ShieldCheck } from "lucide-react";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -52,13 +52,22 @@ export default async function ProfessionalDashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>Status</CardTitle>
-              <Link
-                href="/dashboard/professional/verification"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-              >
-                <ShieldCheck className="h-4 w-4" aria-hidden />
-                Manage identity verification
-              </Link>
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/dashboard/professional/self-billing"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  <FileText className="h-4 w-4" aria-hidden />
+                  Self-billing & invoices
+                </Link>
+                <Link
+                  href="/dashboard/professional/verification"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  <ShieldCheck className="h-4 w-4" aria-hidden />
+                  Manage identity verification
+                </Link>
+              </div>
             </CardHeader>
             <CardContent>
               <StatusBadges status={professional.status} verificationStatus={professional.verificationStatus} />

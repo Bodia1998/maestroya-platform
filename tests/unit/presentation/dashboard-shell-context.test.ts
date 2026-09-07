@@ -169,6 +169,7 @@ describe("resolveVisibleNavGroups", () => {
       "/dashboard/professional/quotes",
       "/dashboard/professional/appointments",
       "/dashboard/professional/jobs",
+      "/dashboard/professional/self-billing",
       "/dashboard/company",
       "/messages",
       "/disputes",

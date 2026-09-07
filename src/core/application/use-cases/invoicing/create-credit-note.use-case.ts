@@ -76,7 +76,26 @@ export class CreateCreditNoteUseCase {
   async execute(input: CreateCreditNoteInput): Promise<CreditNoteRecord> {
     const existingByKey = await this.creditNotes.findByIdempotencyKey(input.idempotencyKey);
     if (existingByKey) {
-      return existingByKey;
+      if (existingByKey.status === "ISSUED" || existingByKey.status === "CANCELLED") {
+        // Already reached a terminal state — nothing left to do. Same
+        // idempotent-no-op convention as every other retried financial
+        // operation in this codebase.
+        return existingByKey;
+      }
+      // Module 99 fix: a credit note found here in DRAFT means a prior
+      // call created it (createOrGetExisting succeeded) but crashed or
+      // failed before this same method's own subsequent `issue()` call
+      // completed — see this class's own doc comment below on why
+      // creation and issuance are not paused/reviewed steps. Before this
+      // fix, returning `existingByKey` here left that DRAFT permanently
+      // unissued: nothing else in the codebase ever calls
+      // `CreditNoteRepository.issue()`. The smallest safe correction is
+      // to fall through to the exact same issuance step a brand-new
+      // credit note already goes through below, using the already-
+      // persisted DRAFT row's own id — never creating a second row, never
+      // re-deriving the reversal amounts (they were already computed and
+      // written by the earlier, successful `createOrGetExisting` call).
+      return this.issueDraft(existingByKey);
     }
 
     const invoice = await this.invoices.findById(input.originalInvoiceId);
@@ -134,37 +153,53 @@ export class CreateCreditNoteUseCase {
       this.failureReporter,
     );
 
-    if (created.status === "ISSUED") {
-      // Already issued by a concurrent/earlier call that won the
-      // idempotency race — nothing further to do.
-      return created;
+    return this.issueDraft(created);
+  }
+
+  /**
+   * Module 99 fix: extracted so both the brand-new-credit-note path above
+   * and the DRAFT-recovery path at the top of `execute()` share the exact
+   * same issuance step — never a second issuance implementation. Safe to
+   * call with a record already in ISSUED/CANCELLED (returns it unchanged)
+   * or DRAFT (attempts the same transactional numbering + compare-and-
+   * swap `CreditNoteRepository.issue` call `execute()` always used to
+   * call inline) — see `IssueInvoiceUseCase`'s own doc comment for the
+   * identical numbering-race protection this shares via
+   * `CreditNoteRepository.issue`'s own transaction.
+   */
+  private async issueDraft(draft: CreditNoteRecord): Promise<CreditNoteRecord> {
+    if (draft.status !== "DRAFT") {
+      // Already ISSUED (a concurrent/earlier call won the race) or
+      // CANCELLED — nothing further to do, same as `execute()`'s own
+      // pre-existing "already issued" short-circuit.
+      return draft;
     }
 
     const issueDate = new Date();
-    // Module 85 — Invoicing & Credit Note Activation: the number is now
+    // Module 85 — Invoicing & Credit Note Activation: the number is
     // allocated by `CreditNoteRepository.issue` itself, inside the same
     // transaction as its own compare-and-swap status write — see that
     // method's own doc comment for the numbering-gap race this closes
     // (the identical fix `IssueInvoiceUseCase` applies to invoices).
     const issued = await this.creditNotes.issue({
-      id: created.id,
+      id: draft.id,
       issueDate,
       buildDocumentHash: (creditNoteNumber) =>
         computeDocumentHash({
-          creditNoteId: created.id,
+          creditNoteId: draft.id,
           creditNoteNumber,
-          originalInvoiceId: invoice.id,
-          totalAmount: created.totalAmount,
-          reversedTaxableBase: created.reversedTaxableBase,
-          reversedVatAmount: created.reversedVatAmount,
-          reversedCommissionAmount: created.reversedCommissionAmount,
-          reversedIrpfWithholdingAmount: created.reversedIrpfWithholdingAmount,
+          originalInvoiceId: draft.originalInvoiceId,
+          totalAmount: draft.totalAmount,
+          reversedTaxableBase: draft.reversedTaxableBase,
+          reversedVatAmount: draft.reversedVatAmount,
+          reversedCommissionAmount: draft.reversedCommissionAmount,
+          reversedIrpfWithholdingAmount: draft.reversedIrpfWithholdingAmount,
         }),
     });
 
     await publishDomainEvent(
       this.eventBus,
-      new CreditNoteIssued(issued.id, issued.creditNoteNumber as string, invoice.id, issued.totalAmount),
+      new CreditNoteIssued(issued.id, issued.creditNoteNumber as string, draft.originalInvoiceId, issued.totalAmount),
       this.failureReporter,
     );
 

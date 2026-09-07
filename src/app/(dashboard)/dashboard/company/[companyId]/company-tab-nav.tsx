@@ -7,6 +7,7 @@ const TABS = [
   { segment: "members", label: "Members" },
   { segment: "invitations", label: "Invitations" },
   { segment: "verification", label: "Verification" },
+  { segment: "self-billing", label: "Self-billing" },
 ] as const;
 
 export type CompanyTabSegment = (typeof TABS)[number]["segment"];
