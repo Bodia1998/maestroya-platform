@@ -2,11 +2,14 @@ import { Handshake } from "lucide-react";
 
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import {
+  makeGetAffiliateBalanceUseCase,
   makeGetPartnerByUserIdUseCase,
   makeGetPartnerDashboardStatisticsUseCase,
+  makeListAffiliatePayoutsUseCase,
   makeListPartnerReferralCodesUseCase,
 } from "@/application/use-cases/affiliate/compose";
 import { CampaignManager } from "./campaign-manager";
+import { PayoutPanel } from "./payout-panel";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PageContainer } from "@/components/layout/page-container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,6 +69,9 @@ export default async function PartnerDashboardPage() {
 
   const stats = await makeGetPartnerDashboardStatisticsUseCase().execute(partner.id);
   const campaignLinks = await makeListPartnerReferralCodesUseCase().execute(partner.id);
+  // Module 100 — Affiliate Accumulated Balance & €50 Payout.
+  const balance = await makeGetAffiliateBalanceUseCase().execute(partner.id);
+  const payoutHistory = await makeListAffiliatePayoutsUseCase().execute(partner.id);
 
   return (
     <PageContainer maxWidth="6xl">
@@ -134,6 +140,10 @@ export default async function PartnerDashboardPage() {
             )}
           </CardContent>
         </Card>
+      </section>
+
+      <section className="mt-8">
+        <PayoutPanel balance={balance} payoutHistory={payoutHistory} />
       </section>
 
       <section className="mt-8">

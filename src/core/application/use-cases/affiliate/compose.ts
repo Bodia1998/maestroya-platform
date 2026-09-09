@@ -35,6 +35,9 @@ import { GetAdminPartnerAuditUseCase } from "@/application/use-cases/affiliate/g
 import { GetAffiliateSummaryStatisticsUseCase } from "@/application/use-cases/affiliate/get-affiliate-summary-statistics.use-case";
 import { GetPartnerByUserIdUseCase } from "@/application/use-cases/affiliate/get-partner-by-user-id.use-case";
 import { RunReferralAffiliateMaintenanceSweepUseCase } from "@/application/use-cases/affiliate/run-referral-affiliate-maintenance-sweep.use-case";
+import { GetAffiliateBalanceUseCase } from "@/application/use-cases/affiliate/get-affiliate-balance.use-case";
+import { RequestAffiliatePayoutUseCase } from "@/application/use-cases/affiliate/request-affiliate-payout.use-case";
+import { ListAffiliatePayoutsUseCase } from "@/application/use-cases/affiliate/list-affiliate-payouts.use-case";
 import { createDistributedLock } from "@/infrastructure/locking/lock-service-factory";
 import { RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber } from "@/application/use-cases/affiliate/record-affiliate-conversion-on-payment-release-approved.subscriber";
 import { ReverseAffiliateCommissionUseCase } from "@/application/use-cases/affiliate/reverse-affiliate-commission.use-case";
@@ -126,6 +129,31 @@ export function makeExpireAffiliateCommissionsUseCase() {
 
 export function makeCreatePartnerPayoutUseCase() {
   return new CreatePartnerPayoutUseCase(partners, affiliateCommissions, partnerPayouts, stripeTransferGateway);
+}
+
+/**
+ * Module 100 — Affiliate Accumulated Balance & €50 Payout: the
+ * partner-facing balance/eligibility read model — see
+ * `GetAffiliateBalanceUseCase`'s own doc comment.
+ */
+export function makeGetAffiliateBalanceUseCase() {
+  return new GetAffiliateBalanceUseCase(partners, affiliateCommissions);
+}
+
+/**
+ * Module 100 — Affiliate Accumulated Balance & €50 Payout: the
+ * self-service payout-request use case. Deliberately reuses this SAME
+ * `CreatePartnerPayoutUseCase` instance the admin flow uses — one
+ * execution path, one Stripe transfer gateway wiring, one place the
+ * atomic-claim/concurrency guarantee lives.
+ */
+export function makeRequestAffiliatePayoutUseCase() {
+  return new RequestAffiliatePayoutUseCase(partners, affiliateCommissions, makeCreatePartnerPayoutUseCase());
+}
+
+/** Module 100 — the partner dashboard's own payout-history list. */
+export function makeListAffiliatePayoutsUseCase() {
+  return new ListAffiliatePayoutsUseCase(partners, partnerPayouts);
 }
 
 export function makeReconcileAffiliateCommissionStripeFeeUseCase() {

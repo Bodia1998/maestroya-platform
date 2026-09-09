@@ -5,10 +5,12 @@ import { revalidatePath } from "next/cache";
 import {
   makeGeneratePartnerReferralLinkUseCase,
   makeGetPartnerByUserIdUseCase,
+  makeRequestAffiliatePayoutUseCase,
   makeSetReferralCodeActiveUseCase,
 } from "@/application/use-cases/affiliate/compose";
 import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 import { DomainError, NotFoundError, UnauthorizedError } from "@/domain/errors/domain-error";
+import type { PartnerPayoutRecord } from "@/domain/repositories/partner-payout-repository";
 import type { ReferralCodeRecord } from "@/domain/repositories/referral-code-repository";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 
@@ -78,5 +80,38 @@ export async function setReferralLinkActiveAction(referralCodeId: string, isActi
       return { success: false, error: "Something went wrong updating this referral link." };
     }
     return fromDomainError(error, "Something went wrong updating this referral link.");
+  }
+}
+
+/**
+ * Module 100 — Affiliate Accumulated Balance & €50 Payout: the
+ * partner-facing "Request payout" button's Server Action.
+ *
+ * `partnerId` is resolved the exact same way every other action in this
+ * file resolves it — `requireOwnPartnerId()`, from the authenticated
+ * session's own userId — never from anything the client sends. There is
+ * no `partnerId` parameter on this action at all, so there is no field a
+ * malicious client could tamper with to request a payout for a different
+ * partner. Eligibility (>= the partner's own `minimumPayoutThreshold`,
+ * itself never a client-supplied value), the payout amount, and the
+ * concurrency-safe claim are all computed and enforced entirely inside
+ * `RequestAffiliatePayoutUseCase` -> `CreatePartnerPayoutUseCase`, never
+ * here.
+ *
+ * Reuses the SAME `PARTNER_PAYOUT_CREATE_BY_USER` rate-limit budget the
+ * admin payout action already uses (10/hour) — keyed by this partner's
+ * own userId here rather than an admin's, so one affiliate spamming the
+ * button can never affect another's budget.
+ */
+export async function requestAffiliatePayoutAction(): Promise<ActionResult<PartnerPayoutRecord>> {
+  try {
+    const user = await requireAuth();
+    const partnerId = await requireOwnPartnerId();
+    await makeAntiAbuseService().enforceRateLimit("PARTNER_PAYOUT_CREATE_BY_USER", { userId: user.id }, "RATE_LIMIT_TRIGGERED");
+    const payout = await makeRequestAffiliatePayoutUseCase().execute({ partnerId });
+    revalidatePath("/dashboard/partner");
+    return { success: true, data: payout };
+  } catch (error) {
+    return fromDomainError(error, "Something went wrong requesting this payout.");
   }
 }
