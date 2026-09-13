@@ -37,6 +37,13 @@ const DOC_TYPE_LABELS: Record<string, string> = {
  * links here are only reachable inside this ADMIN/SUPER_ADMIN tree — they are
  * never exposed on any public/professional-profile response. Reject and
  * request-resubmission require a reason, enforced server-side.
+ *
+ * Module 106 — Secure Cloudinary Document Delivery: document links point
+ * at the authenticated `/api/documents/verification/[documentId]` proxy,
+ * never at `doc.fileUrl` directly — see that route's own doc comment.
+ * This page's own admin-only guard is defense-in-depth alongside the
+ * route's own independent `requireRole` check; the route never trusts
+ * having been reached only from here.
  */
 export default async function AdminVerificationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -110,7 +117,7 @@ export default async function AdminVerificationDetailPage({ params }: { params: 
                   </p>
                 </div>
                 <a
-                  href={doc.fileUrl}
+                  href={`/api/documents/verification/${doc.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="shrink-0 self-start rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:self-auto"

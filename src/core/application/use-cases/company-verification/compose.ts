@@ -16,6 +16,7 @@ import { ApproveCompanyVerificationUseCase } from "@/application/use-cases/compa
 import { CreateCompanyVerificationUseCase } from "@/application/use-cases/company-verification/create-company-verification.use-case";
 import { GetAdminCompanyVerificationUseCase } from "@/application/use-cases/company-verification/get-admin-company-verification.use-case";
 import { GetCompanyVerificationUseCase } from "@/application/use-cases/company-verification/get-company-verification.use-case";
+import { GetCompanyVerificationDocumentUseCase } from "@/application/use-cases/company-verification/get-company-verification-document.use-case";
 import { ListAdminCompanyVerificationsUseCase } from "@/application/use-cases/company-verification/list-admin-company-verifications.use-case";
 import { RejectCompanyVerificationUseCase } from "@/application/use-cases/company-verification/reject-company-verification.use-case";
 import { RemoveCompanyVerificationDocumentUseCase } from "@/application/use-cases/company-verification/remove-company-verification-document.use-case";
@@ -64,6 +65,12 @@ eventBus.subscribe(
 
 export function makeGetCompanyVerificationUseCase() {
   return new GetCompanyVerificationUseCase(verifications, memberships);
+}
+
+/** Module 106 — Secure Cloudinary Document Delivery: authorization gate
+ *  for the authenticated document-download proxy. */
+export function makeGetCompanyVerificationDocumentUseCase() {
+  return new GetCompanyVerificationDocumentUseCase(verifications, memberships);
 }
 
 export function makeCreateCompanyVerificationUseCase() {

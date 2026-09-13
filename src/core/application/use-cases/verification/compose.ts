@@ -20,6 +20,7 @@ import { ApproveProfessionalVerificationUseCase } from "@/application/use-cases/
 import { CreateProfessionalVerificationUseCase } from "@/application/use-cases/verification/create-professional-verification.use-case";
 import { GetAdminVerificationUseCase } from "@/application/use-cases/verification/get-admin-verification.use-case";
 import { GetProfessionalVerificationUseCase } from "@/application/use-cases/verification/get-professional-verification.use-case";
+import { GetVerificationDocumentUseCase } from "@/application/use-cases/verification/get-verification-document.use-case";
 import { ListAdminVerificationsUseCase } from "@/application/use-cases/verification/list-admin-verifications.use-case";
 import { RejectProfessionalVerificationUseCase } from "@/application/use-cases/verification/reject-professional-verification.use-case";
 import { RemoveVerificationDocumentUseCase } from "@/application/use-cases/verification/remove-verification-document.use-case";
@@ -86,6 +87,12 @@ eventBus.subscribe(
 
 export function makeGetProfessionalVerificationUseCase() {
   return new GetProfessionalVerificationUseCase(verifications, professionals);
+}
+
+/** Module 106 — Secure Cloudinary Document Delivery: authorization gate
+ *  for the authenticated document-download proxy. */
+export function makeGetVerificationDocumentUseCase() {
+  return new GetVerificationDocumentUseCase(verifications, professionals);
 }
 
 export function makeCreateProfessionalVerificationUseCase() {
