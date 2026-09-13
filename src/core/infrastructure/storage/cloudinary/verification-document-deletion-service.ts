@@ -1,7 +1,6 @@
 import { cloudinary } from "@/infrastructure/storage/cloudinary/client";
 import type { VerificationDocumentStorageDeleter } from "@/application/interfaces/verification-document-storage-deleter";
-
-const RAW_EXTENSIONS = new Set(["pdf"]);
+import { parseCloudinaryPrivateAssetUrl } from "@/infrastructure/storage/cloudinary/private-asset-locator";
 
 /**
  * Module 88 — GDPR Erasure Execution & Document Retention.
@@ -19,10 +18,15 @@ const RAW_EXTENSIONS = new Set(["pdf"]);
  * `resource_type: "auto"` (Cloudinary itself resolves "auto" to "image"
  * for JPEG/PNG/WebP and "raw" for PDF at upload time — the delivery URL's
  * own path segment then tells us which one it picked).
+ *
+ * Module 106 — Secure Cloudinary Document Delivery: the URL-parsing logic
+ * itself now lives in `private-asset-locator.ts`, shared with
+ * `CloudinaryPrivateDocumentDeliveryService` (the new authenticated
+ * download proxy) — this class's own behavior is unchanged.
  */
 export class CloudinaryVerificationDocumentDeletionService implements VerificationDocumentStorageDeleter {
   async deleteByUrl(fileUrl: string): Promise<void> {
-    const parsed = parseCloudinaryUrl(fileUrl);
+    const parsed = parseCloudinaryPrivateAssetUrl(fileUrl);
     if (!parsed) {
       // A URL that doesn't match this adapter's own upload convention
       // (e.g. already hand-edited data, or a future non-Cloudinary
@@ -69,37 +73,4 @@ export class StorageDeletionFailedError extends Error {
     super(`Cloudinary deletion failed for URL: ${fileUrl}`);
     this.name = "StorageDeletionFailedError";
   }
-}
-
-function parseCloudinaryUrl(fileUrl: string): { publicId: string; resourceType: "image" | "raw" } | null {
-  let path: string;
-  try {
-    path = new URL(fileUrl).pathname;
-  } catch {
-    return null;
-  }
-
-  const segments = path.split("/").filter(Boolean);
-  // Expected shape: /<cloud_name>/<resource_type>/private/s--<sig>--/v<version>/<public_id...>.<ext>
-  // or, for some private-delivery URLs, without the signature segment:
-  // /<cloud_name>/<resource_type>/private/v<version>/<public_id...>.<ext>
-  const versionIndex = segments.findIndex((segment) => /^v\d+$/.test(segment));
-  if (versionIndex === -1 || versionIndex === segments.length - 1) return null;
-
-  const resourceTypeSegment = segments[1];
-  const resourceType: "image" | "raw" = resourceTypeSegment === "raw" ? "raw" : "image";
-
-  const publicIdWithExtension = segments.slice(versionIndex + 1).join("/");
-  const lastDot = publicIdWithExtension.lastIndexOf(".");
-  const extension = lastDot === -1 ? "" : publicIdWithExtension.slice(lastDot + 1).toLowerCase();
-  const publicId = lastDot === -1 ? publicIdWithExtension : publicIdWithExtension.slice(0, lastDot);
-  if (!publicId) return null;
-
-  // Belt-and-braces cross-check against the file extension, in case the
-  // URL's own resource_type segment is ever "auto" rather than the
-  // resolved "image"/"raw" (Cloudinary's actual delivery URLs always
-  // resolve it, but this keeps the parser correct if that ever changes).
-  const inferredType: "image" | "raw" = RAW_EXTENSIONS.has(extension) ? "raw" : resourceType;
-
-  return { publicId, resourceType: inferredType };
 }

@@ -31,7 +31,12 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 };
 
 /** Module 18 — Company Professional: admin company-verification case
- *  detail + review actions — mirrors admin/verifications/[id]/page.tsx. */
+ *  detail + review actions — mirrors admin/verifications/[id]/page.tsx.
+ *
+ *  Module 106 — Secure Cloudinary Document Delivery: document links point
+ *  at the authenticated `/api/documents/company-verification/[documentId]`
+ *  proxy, never at `doc.fileUrl` directly — see that route's own doc
+ *  comment. */
 export default async function AdminCompanyVerificationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -105,7 +110,7 @@ export default async function AdminCompanyVerificationDetailPage({ params }: { p
                   </p>
                 </div>
                 <a
-                  href={doc.fileUrl}
+                  href={`/api/documents/company-verification/${doc.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="shrink-0 self-start rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:self-auto"
