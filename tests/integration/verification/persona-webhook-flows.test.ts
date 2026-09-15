@@ -339,4 +339,65 @@ describe("Module 70.1 — ProcessPersonaWebhookUseCase", () => {
     const updated = await ctx.verifications.findById(verification.id);
     expect(updated?.status).toBe("APPROVED");
   });
+
+  // ==========================================================================
+  // Module 114 — Fix Persona Business Verification Bypass
+  // ==========================================================================
+  // Webhook-boundary equivalent of the same invariant confirmed in
+  // provider-verification-flows.test.ts's "Module 114" block — a business
+  // document alone, delivered while Persona has not yet reported VERIFIED
+  // for the inquiry, must never grant VERIFIED via the webhook path either.
+  it("Module 114: a business-registration document alone does not verify the profile via the webhook path while Persona has not reported VERIFIED", async () => {
+    const verification = await seedActiveCase(ctx);
+    await addBusinessRegistrationDocument(ctx, verification.id);
+
+    ctx.provider.nextOutcome = "PENDING";
+    ctx.provider.nextRawStatus = "pending";
+
+    const result = await ctx.processWebhook.execute({
+      externalEventId: "evt-114-pending",
+      eventType: "inquiry.created",
+      providerVerificationId: verification.providerVerificationId,
+    });
+
+    expect(result.outcome).toBe("processed");
+    const updated = await ctx.verifications.findById(verification.id);
+    expect(updated?.status).toBe("PENDING");
+    const professional = await ctx.professionals.findByUserId("user-1");
+    expect(professional?.verificationStatus).not.toBe("VERIFIED");
+  });
+
+  // Module 114: repeated webhook delivery after the case is already
+  // APPROVED must stay a pure no-op (canSyncProviderStatus(APPROVED) is
+  // false) — re-confirms idempotency holds specifically once the
+  // three-component invariant has already been satisfied, not just before.
+  it("Module 114: a further webhook delivery after APPROVED is idempotent and does not re-run the business-document check", async () => {
+    const verification = await seedActiveCase(ctx);
+    await addBusinessRegistrationDocument(ctx, verification.id);
+    ctx.provider.nextOutcome = "VERIFIED";
+
+    const first = await ctx.processWebhook.execute({
+      externalEventId: "evt-114-approved",
+      eventType: "inquiry.completed",
+      providerVerificationId: verification.providerVerificationId,
+    });
+    expect(first.outcome).toBe("processed");
+    expect((await ctx.verifications.findById(verification.id))?.status).toBe("APPROVED");
+
+    // A distinct event id (a second, genuine delivery — e.g. Persona
+    // re-sending "inquiry.completed" for the same inquiry) still reaches
+    // RefreshVerificationStatusUseCase, which short-circuits before ever
+    // calling the provider again: canSyncProviderStatus(APPROVED) is
+    // false, so an already-decided case is not even re-read from Persona
+    // — the strongest form of "no-op", not merely "re-read but ignored".
+    const refreshCallsBefore = ctx.provider.refreshCalls.length;
+    const second = await ctx.processWebhook.execute({
+      externalEventId: "evt-114-approved-resend",
+      eventType: "inquiry.completed",
+      providerVerificationId: verification.providerVerificationId,
+    });
+    expect(second.outcome).toBe("processed");
+    expect((await ctx.verifications.findById(verification.id))?.status).toBe("APPROVED");
+    expect(ctx.provider.refreshCalls.length).toBe(refreshCallsBefore); // not even re-read — canSyncProviderStatus(APPROVED) is false
+  });
 });
