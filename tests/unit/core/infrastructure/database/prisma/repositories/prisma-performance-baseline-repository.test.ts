@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/infrastructure/database/prisma/client", () => ({
   prisma: {
@@ -10,6 +10,24 @@ vi.mock("@/infrastructure/database/prisma/client", () => ({
     },
   },
 }));
+
+/**
+ * Module 110 — Capacity Tool Safety & Environment Isolation: `save()` now
+ * goes through the same `assertCapacityPersistenceAllowed()` guard as
+ * `PrismaLoadTestResultRepository.save()` (baselines are auto-captured
+ * from the same synthetic capacity/load-test runs) — see that guard's
+ * own test file for full coverage of the classification/opt-in policy.
+ * The Vitest baseline `DATABASE_URL` (see `vitest.config.ts`) already
+ * classifies as safe (local host, "test" in the database name), so only
+ * the opt-in flag needs stubbing here.
+ */
+beforeEach(() => {
+  vi.stubEnv("ALLOW_CAPACITY_REPORT_PERSISTENCE", "true");
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 const capturedAt = new Date("2026-06-01T00:00:00.000Z");
 const row = {
@@ -95,6 +113,39 @@ describe("infrastructure/database/prisma/repositories/prisma-performance-baselin
     expect(firstCall[0].where).toEqual({ scenarioId_label: { scenarioId: "authentication", label: "pre-release" } });
     expect(firstCall[0].create.sourceRunId).toBe("run-1");
     expect(firstCall[0].create.sampleCount).toBe(5);
+  });
+
+  it("Module 110: save() is blocked by default (ALLOW_CAPACITY_REPORT_PERSISTENCE unset) even against the safe baseline DATABASE_URL", async () => {
+    vi.unstubAllEnvs();
+    const { prisma } = await import("@/infrastructure/database/prisma/client");
+    const upsert = vi.fn().mockResolvedValue(row);
+    (prisma as unknown as { performanceBaseline: { upsert: ReturnType<typeof vi.fn> } }).performanceBaseline.upsert = upsert;
+
+    const { PrismaPerformanceBaselineRepository } = await import("@/infrastructure/database/prisma/repositories/prisma-performance-baseline-repository");
+    const { CapacityPersistenceBlockedError } = await import("@/infrastructure/database/capacity-persistence-guard");
+    const { LoadTestResult } = await import("@/domain/entities/load-test-result");
+    const { PerformanceBaseline } = await import("@/domain/entities/performance-baseline");
+    const { LatencyStatistics } = await import("@/domain/value-objects/latency-distribution");
+
+    const t0 = new Date("2026-06-01T00:00:00.000Z");
+    const result = LoadTestResult.schedule("run-9", "authentication", null, t0);
+    result.markRunning(t0);
+    result.markCompleted(
+      {
+        latency: LatencyStatistics.fromSamples([10, 20, 30, 40, 50]),
+        throughput: { requestsPerSecond: 40, transactionsPerSecond: 39 },
+        resourceEstimate: { cpuPercent: 5, memoryMB: 200, dbConnectionPoolUtilizationPercent: 5, cacheHitRatioPercent: 50 },
+        totalRequests: 5,
+        failedRequests: 0,
+        timedOutRequests: 0,
+        retriedRequests: 0,
+      },
+      t0,
+    );
+    const baseline = PerformanceBaseline.capture("baseline-9", result, "auto-captured", t0);
+
+    await expect(new PrismaPerformanceBaselineRepository().save(baseline)).rejects.toThrow(CapacityPersistenceBlockedError);
+    expect(upsert).not.toHaveBeenCalled();
   });
 
   it("list() orders by capturedAt desc", async () => {

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/infrastructure/database/prisma/client", () => ({
   prisma: {
@@ -10,6 +10,26 @@ vi.mock("@/infrastructure/database/prisma/client", () => ({
     },
   },
 }));
+
+/**
+ * Module 110 — Capacity Tool Safety & Environment Isolation: `save()` now
+ * goes through `assertCapacityPersistenceAllowed()` (Finding F1 fix), so
+ * every `save()`-exercising test below needs an explicit opt-in against a
+ * DATABASE_URL that independently classifies as safe. The Vitest
+ * baseline `DATABASE_URL` (see `vitest.config.ts`) is already
+ * "postgresql://postgres:postgres@localhost:5432/maestroya_test?schema=public"
+ * — a local host with a disposable-looking ("test") database name — so
+ * only the opt-in flag needs stubbing here. Read-only methods
+ * (`findById`/`findRecentByScenario`/`findLatestByScenario`) are
+ * unaffected by the guard and need no stubbing.
+ */
+beforeEach(() => {
+  vi.stubEnv("ALLOW_CAPACITY_REPORT_PERSISTENCE", "true");
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 const executedAt = new Date("2026-06-01T00:10:00.000Z");
 const row = {
@@ -171,6 +191,68 @@ describe("infrastructure/database/prisma/repositories/prisma-load-test-result-re
     const result = LoadTestResult.schedule("run-4", "authentication", null, t0);
 
     await expect(new PrismaLoadTestResultRepository().save(result, "Authentication")).rejects.toThrow();
+  });
+
+  it("Module 110: save() is blocked by default (ALLOW_CAPACITY_REPORT_PERSISTENCE unset) even against the safe baseline DATABASE_URL", async () => {
+    vi.unstubAllEnvs();
+    const { prisma } = await import("@/infrastructure/database/prisma/client");
+    const upsert = vi.fn().mockResolvedValue(row);
+    (prisma as unknown as { loadTestRun: { upsert: ReturnType<typeof vi.fn> } }).loadTestRun.upsert = upsert;
+
+    const { PrismaLoadTestResultRepository } = await import("@/infrastructure/database/prisma/repositories/prisma-load-test-result-repository");
+    const { CapacityPersistenceBlockedError } = await import("@/infrastructure/database/capacity-persistence-guard");
+    const { LoadTestResult } = await import("@/domain/entities/load-test-result");
+    const { LatencyStatistics } = await import("@/domain/value-objects/latency-distribution");
+
+    const t0 = new Date("2026-06-01T00:00:00.000Z");
+    const result = LoadTestResult.schedule("run-5", "authentication", 7, t0);
+    result.markRunning(t0);
+    result.markCompleted(
+      {
+        latency: LatencyStatistics.fromSamples([10, 20, 30, 40, 50]),
+        throughput: { requestsPerSecond: 40, transactionsPerSecond: 39 },
+        resourceEstimate: { cpuPercent: 5, memoryMB: 200, dbConnectionPoolUtilizationPercent: 5, cacheHitRatioPercent: 50 },
+        totalRequests: 5,
+        failedRequests: 0,
+        timedOutRequests: 0,
+        retriedRequests: 0,
+      },
+      executedAt,
+    );
+
+    await expect(new PrismaLoadTestResultRepository().save(result, "Authentication")).rejects.toThrow(CapacityPersistenceBlockedError);
+    expect(upsert).not.toHaveBeenCalled();
+  });
+
+  it("Module 110: save() is blocked when DATABASE_URL is a managed-provider host, even with the opt-in flag set", async () => {
+    vi.stubEnv("DATABASE_URL", "postgresql://user:pass@aws-0-eu-west-1.pooler.supabase.com:5432/postgres");
+    const { prisma } = await import("@/infrastructure/database/prisma/client");
+    const upsert = vi.fn().mockResolvedValue(row);
+    (prisma as unknown as { loadTestRun: { upsert: ReturnType<typeof vi.fn> } }).loadTestRun.upsert = upsert;
+
+    const { PrismaLoadTestResultRepository } = await import("@/infrastructure/database/prisma/repositories/prisma-load-test-result-repository");
+    const { CapacityPersistenceBlockedError } = await import("@/infrastructure/database/capacity-persistence-guard");
+    const { LoadTestResult } = await import("@/domain/entities/load-test-result");
+    const { LatencyStatistics } = await import("@/domain/value-objects/latency-distribution");
+
+    const t0 = new Date("2026-06-01T00:00:00.000Z");
+    const result = LoadTestResult.schedule("run-6", "authentication", 7, t0);
+    result.markRunning(t0);
+    result.markCompleted(
+      {
+        latency: LatencyStatistics.fromSamples([10, 20, 30, 40, 50]),
+        throughput: { requestsPerSecond: 40, transactionsPerSecond: 39 },
+        resourceEstimate: { cpuPercent: 5, memoryMB: 200, dbConnectionPoolUtilizationPercent: 5, cacheHitRatioPercent: 50 },
+        totalRequests: 5,
+        failedRequests: 0,
+        timedOutRequests: 0,
+        retriedRequests: 0,
+      },
+      executedAt,
+    );
+
+    await expect(new PrismaLoadTestResultRepository().save(result, "Authentication")).rejects.toThrow(CapacityPersistenceBlockedError);
+    expect(upsert).not.toHaveBeenCalled();
   });
 
   it("findLatestByScenario orders by executedAt desc", async () => {
