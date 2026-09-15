@@ -8,6 +8,7 @@ import type {
   LoadTestRunReportSnapshot,
 } from "@/domain/repositories/load-test-result-repository";
 import { LatencyStatistics } from "@/domain/value-objects/latency-distribution";
+import { assertCapacityPersistenceAllowed } from "@/infrastructure/database/capacity-persistence-guard";
 import { prisma } from "@/infrastructure/database/prisma/client";
 
 /**
@@ -32,6 +33,18 @@ export class PrismaLoadTestResultRepository implements LoadTestResultRepository 
     reportSnapshot: LoadTestRunReportSnapshot = {},
     metadata: LoadTestRunMetadata = {},
   ): Promise<void> {
+    // Module 110 — Capacity Tool Safety & Environment Isolation (Finding
+    // F1 fix): the single choke point for both of this tool's write
+    // paths — GenerateCapacityReportUseCase's per-scenario save and
+    // PersistCapacityReportUseCase's summary row both call this method,
+    // so gating here (rather than in each use case) closes both without
+    // any caller-side change. Throws CapacityPersistenceBlockedError,
+    // which every existing caller already catches and logs as a
+    // non-fatal warning (see those use cases' own doc comments) — this
+    // never changes the "persistence is optional, never fatal to the
+    // report" contract.
+    assertCapacityPersistenceAllowed();
+
     if (result.status !== "COMPLETED" || !result.latency || !result.throughput || !result.resourceEstimate || !result.startedAt || !result.completedAt) {
       throw new Error(
         `PrismaLoadTestResultRepository.save requires a COMPLETED LoadTestResult with full metrics and timestamps; result ${result.id} is ${result.status}.`,

@@ -3,6 +3,7 @@ import type { PerformanceBaseline as PrismaPerformanceBaselineRow } from "@prism
 import { PerformanceBaseline } from "@/domain/entities/performance-baseline";
 import type { PerformanceBaselineRepository } from "@/domain/repositories/performance-baseline-repository";
 import { LatencyStatistics } from "@/domain/value-objects/latency-distribution";
+import { assertCapacityPersistenceAllowed } from "@/infrastructure/database/capacity-persistence-guard";
 import { prisma } from "@/infrastructure/database/prisma/client";
 
 /**
@@ -17,6 +18,14 @@ import { prisma } from "@/infrastructure/database/prisma/client";
  */
 export class PrismaPerformanceBaselineRepository implements PerformanceBaselineRepository {
   async save(baseline: PerformanceBaseline): Promise<void> {
+    // Module 110 — Capacity Tool Safety & Environment Isolation (Finding
+    // F1 fix): baselines are auto-captured by GenerateCapacityReportUseCase
+    // from the same synthetic capacity/load-test runs LoadTestRun rows
+    // come from (see that use case's resolveBaseline()) — the identical
+    // "must never land in a shared/production database by accident"
+    // risk applies here, so this write path goes through the same guard.
+    assertCapacityPersistenceAllowed();
+
     const data = {
       scenarioId: baseline.scenarioId,
       label: baseline.label,
