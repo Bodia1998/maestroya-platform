@@ -317,3 +317,117 @@ describe("Module 59 — CheckPayoutEligibilityUseCase", () => {
     expect(eligibility.status).not.toBe("APPROVED");
   });
 });
+
+// ============================================================================
+// Module 114 — Fix Persona Business Verification Bypass
+// ============================================================================
+//
+// Phase 2 of Module 114 reproduced the exact scenario the module brief
+// describes (Persona reports success + identity is valid + business
+// verification is missing -> professional becomes VERIFIED) against the
+// CURRENT code and found it already closed by Module 98 (see the two
+// "Module 98" tests above, and
+// MaestroYa_Module_114_Persona_Business_Verification_Fix_Report.md for the
+// full reproduction). No production code changed for Module 114 — these
+// tests pin down, in the module's own three-component vocabulary, that the
+// invariant holds:
+//
+//   Identity verification + Selfie/Photo verification + Business
+//   verification (Autónomo or S.L.) = VERIFIED
+//
+// Architectural note (see the report for the full analysis): Persona's
+// hosted inquiry flow performs the identity-document check and the
+// selfie/liveness match together, as one step, before it ever reports an
+// outcome back to this platform — see verification-provider.ts's own doc
+// comment ("complete the identity/selfie/liveness checks") and
+// persona-verification-provider.ts's data-minimization note that "selfie
+// images live only in Persona's own systems". `VerificationStatusResult`
+// carries exactly one `ProviderVerificationOutcome` per inquiry — there is
+// no separate "identity approved, selfie not yet approved" signal Persona
+// can report, by construction of this integration and Persona's own
+// Inquiry API. So for the Persona/automated path,
+// `ProviderVerificationOutcome === "VERIFIED"` already *is* "Identity +
+// Selfie/Photo approved" — the tests below exercise the realizable
+// combinations (provider verified vs. not, business document present vs.
+// not) rather than a decomposition the current architecture has no way to
+// produce. The manual (non-Persona) path's equivalent coverage already
+// lives in verification-flows.test.ts ("refuses to approve a case with no
+// business-registration document", "start review → approve verifies the
+// professional...").
+describe("Module 114 — three-component verification invariant (Identity + Selfie/Photo + Business)", () => {
+  let ctx: ReturnType<typeof makeContext>;
+  beforeEach(() => {
+    ctx = makeContext();
+  });
+
+  it("Identity+Selfie approved (Persona VERIFIED) + Business approved -> professional becomes VERIFIED", async () => {
+    activeProfessional(ctx);
+    const { verification } = await ctx.start.execute({ userId: "user-1", fullName: "Ana García", countryCode: "ES" });
+    await addBusinessRegistrationDocument(ctx, verification.id);
+
+    ctx.provider.nextOutcome = "VERIFIED";
+    const result = await ctx.refresh.execute(verification.id);
+
+    expect(result.verification.status).toBe("APPROVED");
+    expect((await ctx.professionals.findByUserId("user-1"))?.verificationStatus).toBe("VERIFIED");
+  });
+
+  it("Identity+Selfie approved (Persona VERIFIED) + Business missing -> professional does NOT become VERIFIED", async () => {
+    activeProfessional(ctx);
+    const { verification } = await ctx.start.execute({ userId: "user-1", fullName: "Ana García", countryCode: "ES" });
+
+    ctx.provider.nextOutcome = "VERIFIED";
+    const result = await ctx.refresh.execute(verification.id);
+
+    expect(result.verification.status).not.toBe("APPROVED");
+    expect((await ctx.professionals.findByUserId("user-1"))?.verificationStatus).not.toBe("VERIFIED");
+  });
+
+  it("Business approved alone, with Persona not yet reporting VERIFIED (identity/selfie still pending) -> professional does NOT become VERIFIED", async () => {
+    activeProfessional(ctx);
+    const { verification } = await ctx.start.execute({ userId: "user-1", fullName: "Ana García", countryCode: "ES" });
+    await addBusinessRegistrationDocument(ctx, verification.id);
+
+    // A business document being present must never, by itself, grant
+    // VERIFIED while identity+selfie has not yet been confirmed.
+    ctx.provider.nextOutcome = "PENDING";
+    const result = await ctx.refresh.execute(verification.id);
+
+    expect(result.verification.status).toBe("PENDING");
+    expect((await ctx.professionals.findByUserId("user-1"))?.verificationStatus).not.toBe("VERIFIED");
+  });
+
+  it("Identity/Selfie rejected by Persona + Business approved -> professional does NOT become VERIFIED", async () => {
+    activeProfessional(ctx);
+    const { verification } = await ctx.start.execute({ userId: "user-1", fullName: "Ana García", countryCode: "ES" });
+    await addBusinessRegistrationDocument(ctx, verification.id);
+
+    ctx.provider.nextOutcome = "REJECTED";
+    const result = await ctx.refresh.execute(verification.id);
+
+    expect(result.verification.status).toBe("REJECTED");
+    expect((await ctx.professionals.findByUserId("user-1"))?.verificationStatus).toBe("REJECTED");
+  });
+
+  it("repeated Persona refresh calls on an already-APPROVED case are idempotent and never re-derive eligibility from a stale/duplicate observation", async () => {
+    activeProfessional(ctx);
+    const { verification } = await ctx.start.execute({ userId: "user-1", fullName: "Ana García", countryCode: "ES" });
+    await addBusinessRegistrationDocument(ctx, verification.id);
+
+    ctx.provider.nextOutcome = "VERIFIED";
+    const first = await ctx.refresh.execute(verification.id);
+    expect(first.changed).toBe(true);
+    expect(first.verification.status).toBe("APPROVED");
+
+    // A second refresh call (e.g. a duplicate cron tick, or a professional
+    // re-clicking "check status") observes the same VERIFIED outcome
+    // again. canSyncProviderStatus(APPROVED) is false, so this is a pure
+    // no-op — it must not re-run the business-document check, re-notify,
+    // or otherwise change state.
+    const notificationsBefore = ctx.notifications.events.length;
+    const second = await ctx.refresh.execute(verification.id);
+    expect(second.changed).toBe(false);
+    expect(second.verification.status).toBe("APPROVED");
+    expect(ctx.notifications.events.length).toBe(notificationsBefore);
+  });
+});
