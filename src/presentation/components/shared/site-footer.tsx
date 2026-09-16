@@ -6,6 +6,9 @@ const COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string
     links: [
       { href: "/search", label: "Buscar profesionales" },
       { href: "/professionals", label: "Directorio de profesionales" },
+      // Module 118 — AI-Readable Service & Location Knowledge.
+      { href: "/servicios", label: "Servicios" },
+      { href: "/ubicaciones", label: "Ubicaciones" },
       { href: "/auth/register", label: "Crear cuenta" },
       { href: "/#como-funciona", label: "Cómo funciona" },
     ],

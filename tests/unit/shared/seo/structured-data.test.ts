@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
   buildLocalBusinessJsonLd,
   buildOrganizationJsonLd,
   buildProfessionalServiceJsonLd,
@@ -144,5 +145,28 @@ describe("buildLocalBusinessJsonLd", () => {
     expect(jsonLd["@type"]).toBe("LocalBusiness");
     expect(jsonLd.address).toMatchObject({ addressLocality: "Madrid", addressCountry: "ES" });
     expect(jsonLd.image).toBeUndefined();
+  });
+});
+
+describe("buildFaqJsonLd", () => {
+  it("emits a schema.org FAQPage with one Question/Answer pair per item", () => {
+    const jsonLd = buildFaqJsonLd([
+      { question: "¿Qué es MaestroYa?", answer: "Un marketplace de servicios para el hogar." },
+      { question: "¿Cómo funciona?", answer: "Publicas una solicitud y recibes presupuestos." },
+    ]);
+
+    expect(jsonLd["@context"]).toBe("https://schema.org");
+    expect(jsonLd["@type"]).toBe("FAQPage");
+    expect(jsonLd.mainEntity).toHaveLength(2);
+    expect(jsonLd.mainEntity[0]).toMatchObject({
+      "@type": "Question",
+      name: "¿Qué es MaestroYa?",
+      acceptedAnswer: { "@type": "Answer", text: "Un marketplace de servicios para el hogar." },
+    });
+  });
+
+  it("returns an empty mainEntity for no items, never a fabricated placeholder question", () => {
+    const jsonLd = buildFaqJsonLd([]);
+    expect(jsonLd.mainEntity).toEqual([]);
   });
 });

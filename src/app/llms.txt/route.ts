@@ -28,13 +28,16 @@ function buildLlmsTxt(): string {
     "",
     `> ${SITE_DESCRIPTION}`,
     "",
-    `${SITE_NAME} is a Spanish home-services marketplace that connects customers with independent professionals and companies for services such as plumbing, electrical work, air conditioning, painting, furniture assembly, repairs, and renovation. Customers describe what they need; professionals and companies respond with quotes through the platform.`,
+    `${SITE_NAME} is a home-services marketplace intended to operate across Spain, connecting customers with independent professionals and companies. It currently publishes six service categories: plumbing, electrical work, air conditioning, painting, renovation, and furniture assembly. Customers describe what they need; professionals and companies who cover that category and area respond with quotes through the platform. National platform scope is distinct from verified local availability, which depends on which professionals are actually active in a given area at a given time — see the locations page below.`,
     "",
     "## Primary pages",
     "",
     `- [Home](${SITE_URL}/): platform overview and service categories.`,
     `- [Find a professional](${SITE_URL}/professionals): browse and search verified professionals by category and location.`,
     `- [Search directory](${SITE_URL}/search): filter professionals and companies by category, city, rating, and verification status.`,
+    `- [Services](${SITE_URL}/servicios): the service categories MaestroYa currently publishes public pages for.`,
+    `- [Locations](${SITE_URL}/ubicaciones): platform-wide (Spain) scope and the individual localities with confirmed coverage.`,
+    `- [Spain-wide coverage](${SITE_URL}/ubicaciones/espana): what national platform scope means and how local availability works.`,
     "",
     "## Machine-readable references",
     "",
@@ -44,7 +47,8 @@ function buildLlmsTxt(): string {
     "## Notes",
     "",
     "- Individual professional and company profiles are published at stable, canonical URLs (see the sitemap) and are publicly readable without authentication.",
-    "- Dedicated per-service and per-location pages do not exist yet; service and geographic coverage today are represented only through the profiles and categories reachable from the pages above.",
+    "- Module 118 added dedicated per-service pages (`/servicios/{slug}`), per-location pages (`/ubicaciones/{slug}`), a Spain-wide coverage page (`/ubicaciones/espana`), and combined service+location pages (`/servicios/{slug}/{location}`) — each one only exists where MaestroYa's own data verifies the service/location/country is real; see the sitemap for the current list.",
+    "- MaestroYa's platform scope is Spain-wide, but this does not mean every service is currently available in every municipality. Only the localities listed on the locations page have confirmed local coverage; local availability elsewhere depends on which professionals are actually active there.",
   ];
 
   return lines.join("\n") + "\n";

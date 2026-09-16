@@ -17,6 +17,11 @@ import { UserMenu } from "./user-menu";
 const NAV_LINKS = [
   { href: "/search", labelKey: "search" },
   { href: "/professionals", labelKey: "professionals" },
+  // Module 118 — AI-Readable Service & Location Knowledge: the public
+  // knowledge pages must be reachable from normal site navigation, not
+  // only via search-engine discovery (Phase 13 of the module brief).
+  { href: "/servicios", labelKey: "services" },
+  { href: "/ubicaciones", labelKey: "locations" },
   { href: "/#como-funciona", labelKey: "howItWorks" },
 ] as const;
 
