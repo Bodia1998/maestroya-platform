@@ -22,7 +22,20 @@ export type JsonLdObject = Record<string, any>;
  *  `LocalBusiness`-adjacent detail (address, opening hours) intentionally
  *  omitted: MaestroYa is the marketplace operator, not a local business
  *  with its own storefront — individual professionals/companies are the
- *  `LocalBusiness`/`ProfessionalService` entities (see below). */
+ *  `LocalBusiness`/`ProfessionalService` entities (see below).
+ *
+ *  Module 117 — AI Search & Recommendation Visibility Foundation:
+ *  `sameAs` (schema.org's property for linking an entity to its official
+ *  external profiles — social accounts, official business directories,
+ *  etc.) is deliberately omitted here, not merely forgotten. As of this
+ *  module, MaestroYa has no confirmed, official external profile to
+ *  link to; inventing or guessing one (a placeholder social handle, a
+ *  competitor's profile, an unclaimed directory listing) would be a
+ *  false, verifiable-as-wrong claim in structured data, which this
+ *  module's brief explicitly forbids. Add `sameAs: [...]` here — the
+ *  array schema.org expects — the moment real, verified official URLs
+ *  exist; no other change is needed. See the Module 117 report,
+ *  "sameAs / External Identity". */
 export function buildOrganizationJsonLd(): JsonLdObject {
   return {
     "@context": "https://schema.org",
@@ -162,5 +175,60 @@ export function buildLocalBusinessJsonLd(profile: LocalBusinessLike): JsonLdObje
           },
         }
       : {}),
+  };
+}
+
+/**
+ * Module 117 — AI Search & Recommendation Visibility Foundation: `Service`
+ * structured-data foundation.
+ *
+ * Deliberately UNUSED today — no page calls this yet. There is no
+ * dedicated public page per service/category (see
+ * `docs/MODULE_43_SEO_INFRASTRUCTURE.md` §3 and the Module 117 report's
+ * "Service Structured Data Foundation" section for why building one is
+ * out of this module's scope), so emitting this on, say, the homepage
+ * would describe content that page doesn't actually render — exactly the
+ * "structured data must accurately describe the visible page content"
+ * rule this module's brief forbids violating. This builder exists only
+ * so Module 118, when it adds real per-service (and per-service+location)
+ * pages, has a ready, reviewed shape to call rather than inventing one
+ * under deadline pressure. `provider` intentionally reuses the same
+ * `Organization`/`LocalBusiness` shapes `buildOrganizationJsonLd`/
+ * `buildLocalBusinessJsonLd` already emit — a `Service` should point back
+ * at the same provider identity those builders establish, not a third,
+ * divergent representation.
+ */
+export interface ServiceJsonLdInput {
+  /** The category name as MaestroYa actually names it, e.g. "Fontanería" —
+   *  never an invented or translated variant. */
+  name: string;
+  /** Canonical site-relative path of the page this Service is embedded
+   *  in, once one exists (e.g. `/servicios/fontaneria`). */
+  path: string;
+  description?: string | null;
+  /** `areaServed` is a plain place name (city/province), matching the
+   *  same city/province granularity `buildProfessionalServiceJsonLd`/
+   *  `buildLocalBusinessJsonLd` already use — never a fabricated service
+   *  radius or coordinate. */
+  areaServed?: string | null;
+  /** Defaults to MaestroYa's own Organization identity; pass a specific
+   *  professional/company `LocalBusinessLike` `@id` when this Service is
+   *  scoped to one provider rather than the platform as a whole. */
+  providerId?: string;
+}
+
+export function buildServiceJsonLd(input: ServiceJsonLdInput): JsonLdObject {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: input.name,
+    url: absoluteUrl(input.path),
+    ...(input.description ? { description: input.description } : {}),
+    ...(input.areaServed ? { areaServed: { "@type": "Place", name: input.areaServed } } : {}),
+    provider: {
+      "@type": "Organization",
+      "@id": input.providerId ?? SITE_URL,
+      name: SITE_NAME,
+    },
   };
 }
