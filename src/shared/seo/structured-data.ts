@@ -232,3 +232,33 @@ export function buildServiceJsonLd(input: ServiceJsonLdInput): JsonLdObject {
     },
   };
 }
+
+/**
+ * Module 118 — AI-Readable Service & Location Knowledge: `FAQPage`
+ * structured data for a service/location page's on-page FAQ section.
+ *
+ * Only ever built from the exact question/answer pairs a page already
+ * renders visibly (see `shared/content/services.ts` / `locations.ts`) —
+ * never a superset invented for search visibility. Phase 8 of this
+ * module's brief is explicit: "Do not create FAQ schema for questions
+ * that are not visibly answered on the page."
+ */
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+export function buildFaqJsonLd(items: FaqItem[]): JsonLdObject {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+}

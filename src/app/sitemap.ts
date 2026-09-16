@@ -2,6 +2,14 @@ import type { MetadataRoute } from "next";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { SITE_URL } from "@/shared/seo/site";
+import { listVerifiedTopLevelServiceCategories } from "@/shared/content/verified-service-category";
+import { findVerifiedCity } from "@/shared/content/verified-location";
+import { LOCATION_CONTENT } from "@/shared/content/locations";
+import { JUSTIFIED_SERVICE_LOCATION_PAIRS } from "@/shared/content/service-location-pairs";
+import { getServiceContentBySlug } from "@/shared/content/services";
+import { getLocationContentBySlug } from "@/shared/content/locations";
+import { findVerifiedCountry } from "@/shared/content/verified-country";
+import { NATIONAL_COVERAGE_CONTENT } from "@/shared/content/national-coverage";
 
 /**
  * Module 43 — SEO Infrastructure: `sitemap.xml`, served at `/sitemap.xml`
@@ -27,11 +35,11 @@ import { SITE_URL } from "@/shared/seo/site";
  *
  * Explicitly NOT included, and why:
  *
- *  - Service categories and cities have no dedicated public landing page
- *    of their own yet (discovery is entirely via `/professionals` and
- *    `/search`'s query-string filters) — adding one is a new feature, out
- *    of this module's scope (see `docs/MODULE_43_SEO_INFRASTRUCTURE.md`,
- *    "Local SEO"). Nothing here should be read as those pages existing.
+ *  - Module 118 — AI-Readable Service & Location Knowledge added real
+ *    `/servicios`, `/ubicaciones`, and `/servicios/[slug]/[location]`
+ *    pages — see below for how their entries are built (verified live
+ *    against the database, same discipline the pages themselves use, so
+ *    this sitemap never lists a page that would 404).
  *  - `/professionals`/`/search` query-string variants (e.g.
  *    `?categoryId=…&city=…`): thin/duplicate content over the same base
  *    page with no stable canonical identity of their own — the base path
@@ -77,7 +85,63 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/professionals`, changeFrequency: "hourly", priority: 0.9 },
     { url: `${SITE_URL}/search`, changeFrequency: "hourly", priority: 0.9 },
+    { url: `${SITE_URL}/servicios`, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${SITE_URL}/ubicaciones`, changeFrequency: "weekly", priority: 0.7 },
   ];
+
+  // Module 118 — AI-Readable Service & Location Knowledge: only ever adds
+  // a URL that the corresponding page would itself render (never 404) —
+  // each entry is re-verified live here rather than trusted from the
+  // static content catalogs alone, matching the pages' own discipline.
+  const verifiedCategories = await listVerifiedTopLevelServiceCategories();
+  const verifiedCategorySlugs = new Set(verifiedCategories.map((category) => category.slug));
+
+  const verifiedCities = new Map<string, boolean>();
+  await Promise.all(
+    LOCATION_CONTENT.map(async (location) => {
+      const verified = await findVerifiedCity(location.cityName, location.provinceName, location.countryCode);
+      verifiedCities.set(location.slug, Boolean(verified));
+    }),
+  );
+
+  // Module 118 (continuation) — Spain-wide geographic coverage:
+  // `/ubicaciones/espana` is listed only when the seeded `Country` row it
+  // describes actually verifies live — same discipline as every other
+  // entry in this function.
+  const verifiedCountry = await findVerifiedCountry(NATIONAL_COVERAGE_CONTENT.countryCode);
+  const nationalCoverageEntries: MetadataRoute.Sitemap = verifiedCountry
+    ? [
+        {
+          url: `${SITE_URL}/ubicaciones/${NATIONAL_COVERAGE_CONTENT.slug}`,
+          changeFrequency: "monthly",
+          priority: 0.65,
+        },
+      ]
+    : [];
+
+  const serviceEntries: MetadataRoute.Sitemap = verifiedCategories
+    .filter((category) => getServiceContentBySlug(category.slug))
+    .map((category) => ({
+      url: `${SITE_URL}/servicios/${category.slug}`,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    }));
+
+  const locationEntries: MetadataRoute.Sitemap = LOCATION_CONTENT.filter(
+    (location) => verifiedCities.get(location.slug) && getLocationContentBySlug(location.slug),
+  ).map((location) => ({
+    url: `${SITE_URL}/ubicaciones/${location.slug}`,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  const serviceLocationEntries: MetadataRoute.Sitemap = JUSTIFIED_SERVICE_LOCATION_PAIRS.filter(
+    (pair) => verifiedCategorySlugs.has(pair.serviceSlug) && verifiedCities.get(pair.locationSlug),
+  ).map((pair) => ({
+    url: `${SITE_URL}/servicios/${pair.serviceSlug}/${pair.locationSlug}`,
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
 
   const professionalEntries: MetadataRoute.Sitemap = professionals.map((professional) => ({
     url: `${SITE_URL}/professionals/${professional.id}`,
@@ -93,5 +157,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticEntries, ...professionalEntries, ...companyEntries];
+  return [
+    ...staticEntries,
+    ...professionalEntries,
+    ...companyEntries,
+    ...serviceEntries,
+    ...locationEntries,
+    ...nationalCoverageEntries,
+    ...serviceLocationEntries,
+  ];
 }

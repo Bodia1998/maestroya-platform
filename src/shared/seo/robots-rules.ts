@@ -45,4 +45,12 @@ export const DISALLOWED_PATHS = [
  *  here (even though "allow" is robots.txt's default) so the intent is
  *  visible next to what's disallowed above, and so tests can assert both
  *  sides of the same policy. */
-export const ALLOWED_PATHS = ["/", "/professionals", "/companies/", "/search"] as const;
+export const ALLOWED_PATHS = [
+  "/",
+  "/professionals",
+  "/companies/",
+  "/search",
+  // Module 118 — AI-Readable Service & Location Knowledge.
+  "/servicios",
+  "/ubicaciones",
+] as const;
