@@ -5,6 +5,7 @@ import {
   buildLocalBusinessJsonLd,
   buildOrganizationJsonLd,
   buildProfessionalServiceJsonLd,
+  buildServiceJsonLd,
   buildWebSiteJsonLd,
 } from "@/shared/seo/structured-data";
 
@@ -15,6 +16,37 @@ describe("buildOrganizationJsonLd", () => {
     expect(jsonLd["@type"]).toBe("Organization");
     expect(jsonLd.name).toBe("MaestroYa");
     expect(typeof jsonLd.url).toBe("string");
+  });
+});
+
+describe("buildServiceJsonLd", () => {
+  it("returns a schema.org Service pointing back at the MaestroYa Organization by default", () => {
+    const jsonLd = buildServiceJsonLd({ name: "Fontanería", path: "/servicios/fontaneria" });
+    expect(jsonLd["@context"]).toBe("https://schema.org");
+    expect(jsonLd["@type"]).toBe("Service");
+    expect(jsonLd.name).toBe("Fontanería");
+    expect(jsonLd.provider).toMatchObject({ "@type": "Organization", name: "MaestroYa" });
+  });
+
+  it("includes areaServed only when given a place name", () => {
+    const withArea = buildServiceJsonLd({
+      name: "Fontanería",
+      path: "/servicios/fontaneria",
+      areaServed: "Gandia",
+    });
+    expect(withArea.areaServed).toMatchObject({ "@type": "Place", name: "Gandia" });
+
+    const withoutArea = buildServiceJsonLd({ name: "Fontanería", path: "/servicios/fontaneria" });
+    expect(withoutArea.areaServed).toBeUndefined();
+  });
+
+  it("scopes the provider to a specific business when providerId is given", () => {
+    const jsonLd = buildServiceJsonLd({
+      name: "Fontanería",
+      path: "/professionals/prof-1",
+      providerId: "https://maestroya.es/professionals/prof-1",
+    });
+    expect(jsonLd.provider["@id"]).toBe("https://maestroya.es/professionals/prof-1");
   });
 });
 
