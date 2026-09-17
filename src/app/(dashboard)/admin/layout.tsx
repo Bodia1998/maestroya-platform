@@ -29,6 +29,7 @@ const NAV_ITEMS = [
   { href: "/admin/reviews", label: "Reviews" },
   { href: "/admin/portfolio", label: "Portfolio" },
   { href: "/admin/audit-logs", label: "Audit log" },
+  { href: "/admin/ai-visibility", label: "AI visibility" },
   { href: "/admin/reconciliation", label: "Reconciliation" },
   { href: "/admin/partners", label: "Partners" },
 ];
