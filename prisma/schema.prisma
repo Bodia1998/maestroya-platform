@@ -162,6 +162,10 @@ model User {
   resolvedSupportTickets  SupportTicket[]        @relation("SupportTicketResolvedBy")
   closedSupportTickets    SupportTicket[]        @relation("SupportTicketClosedBy")
   auditLogEntries        AuditLog[]
+  /// Module 119 — AI Recommendation Monitoring: observations this
+  /// admin/evaluator manually recorded or reviewed. See
+  /// AiVisibilityObservation's own doc comment.
+  aiVisibilityObservationsRecorded AiVisibilityObservation[]
   /// Module 24 — Security & Anti-Abuse.
   securityEvents             SecurityEvent[]
   accountRestrictions        AccountRestriction[]   @relation("AccountRestrictionSubject")
@@ -5659,4 +5663,221 @@ enum StripeDisputeStatus {
   WON
   LOST
   WARNING_CLOSED
+}
+
+
+// ============================================================================
+// AI Recommendation Monitoring (Module 119)
+// ============================================================================
+//
+// Module 117 built the crawlability/structured-data foundation. Module 118
+// built the AI-readable service/location knowledge surface (/servicios,
+// /ubicaciones, Spain-wide coverage). Module 119 adds a MEASUREMENT layer
+// on top of both: a durable, append-only record of individual, timestamped
+// observations of how an external AI/search system responded to a specific,
+// versioned query — never a claim about a stable "ranking," never a
+// mechanism that contacts or automates any consumer AI product itself (see
+// AiVisibilityProvider below — MANUAL is the only provider this module's
+// own code ever writes; every "*_API" value exists purely as a label for
+// data captured through that provider's own official, documented API by a
+// human/process outside this codebase, per this module's own non-negotiable
+// rules).
+//
+// Deliberately append-only, same discipline as AuditLog: no `updatedAt`,
+// no soft-delete flag, no repository `update`/`delete` method (see
+// AiVisibilityObservationRepository in
+// src/core/domain/repositories/ai-visibility-observation-repository.ts). A
+// correction is recorded as a NEW observation, never an edit of history —
+// AI outputs are inherently variable, so overwriting a prior observation
+// would destroy the very time-series this module exists to preserve.
+//
+// `queryId` intentionally has no foreign key: the query dataset itself
+// lives in code (src/shared/content/ai-visibility-queries.ts), the same
+// "small, curated, versioned content catalog, not a new operational table"
+// choice Module 118 already made for services/locations — a query's
+// wording is editorial content a person writes and reviews, not runtime
+// data. `queryId` is validated against that catalog at the use-case layer
+// (RecordAiVisibilityObservationUseCase), not by the database.
+//
+// Raw AI responses are never persisted here. `evidenceExcerpt` is an
+// optional, short, human-curated excerpt (bounded length, enforced at the
+// application layer — see ai-visibility-evaluation.ts) — never a full
+// captured transcript. `evidenceReference` is a pointer (URL, filename, or
+// short description of where fuller evidence is kept, e.g. an internal
+// screenshot store) rather than the evidence itself. This is a deliberate
+// storage/privacy/reproducibility choice — see the Module 119 report's
+// "Evidence Model" section for the full reasoning; whether longer-term raw
+// transcript retention is ever appropriate is a legal/licensing question
+// this module does not decide (documented as REQUIRES LEGAL CONFIRMATION).
+model AiVisibilityObservation {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Stable identifier from the code-defined query catalog (see
+  /// AI_VISIBILITY_QUERIES in ai-visibility-queries.ts) — e.g.
+  /// "svc-fontaneria-find-es". Not a foreign key (see this model's own
+  /// doc comment); validated at the application layer.
+  queryId String
+
+  provider      AiVisibilityProvider
+  /// Free-text model/version label when known (e.g. "gpt-4o-2024-08-06"),
+  /// null when not disclosed by the provider or not applicable to a
+  /// manual capture where the exact version isn't visible to the
+  /// evaluator. Never inferred/guessed — see this module's own
+  /// non-negotiable rule against treating AI output as reproducible.
+  providerModel String?
+
+  /// When the AI response itself was produced/captured — distinct from
+  /// `createdAt` (when this row was written), which can lag behind a
+  /// manual capture recorded after the fact.
+  observedAt DateTime
+
+  /// The authenticated admin/evaluator who recorded this observation.
+  /// Null only for a system-recorded entry with no human evaluator (none
+  /// exists yet in this module — reserved for a future automated
+  /// ingestion path that this module does not implement — see the
+  /// Module 119 report's "Automation" section).
+  recordedByUserId String? @db.Uuid
+  recordedBy       User?   @relation(fields: [recordedByUserId], references: [id], onDelete: SetNull)
+
+  /// Version tag of the evaluation ruleset applied when classifying this
+  /// observation's mentioned/identity/geographic/service/url/citation
+  /// fields (see EVALUATION_RULES_VERSION in
+  /// ai-visibility-evaluation.ts) — lets a future rules change be
+  /// distinguished from an actual change in AI behavior when comparing
+  /// observations over time.
+  evaluationRulesVersion String
+
+  /// A. Was MaestroYa mentioned at all in the response?
+  mentioned Boolean
+  /// B. Did the response correctly identify MaestroYa as a home-services
+  /// marketplace/platform? NOT_APPLICABLE when `mentioned` is false.
+  identityAccuracy AiVisibilityAccuracy
+  /// C. Did the response correctly understand Spain-wide marketplace
+  /// coverage (not confined to one city)? NOT_APPLICABLE when not
+  /// mentioned or when the query has no geographic dimension.
+  geographicAccuracy AiVisibilityAccuracy
+  /// D. Did the response correctly identify the relevant service
+  /// category? NOT_APPLICABLE when not mentioned or the query is
+  /// general-intent (no specific service).
+  serviceAccuracy AiVisibilityAccuracy
+  /// E. Did the response provide the correct official MaestroYa URL?
+  /// NOT_PROVIDED when no URL was given at all (distinct from
+  /// INCORRECT — a wrong/unofficial URL).
+  urlAccuracy AiVisibilityUrlAccuracy
+  /// F. Did the response cite/link to a MaestroYa source at all (any
+  /// URL, footnote, or explicit source reference)?
+  citationPresent Boolean
+  /// G. If a citation exists, does it point to a legitimate MaestroYa
+  /// source (maestroya.es or a real subpath)? Null when
+  /// `citationPresent` is false — there is nothing to judge correct or
+  /// incorrect.
+  citationCorrect Boolean?
+  /// H. Recommendation language classification — deliberately an
+  /// ordered but non-numeric set of buckets (see
+  /// AiVisibilityRecommendationClassification's own doc comment): never
+  /// treated as a score, only ever counted per-bucket in reporting.
+  recommendationClassification AiVisibilityRecommendationClassification
+
+  /// Other marketplaces/platforms the response actually named alongside
+  /// or instead of MaestroYa. A plain JSON string array — purely
+  /// observational (see ai-visibility-evaluation.ts's own doc comment:
+  /// this module never ranks or scores competitors, only records who was
+  /// named in a specific captured response).
+  detectedCompetitors Json?
+  /// Concrete factual errors observed in the response (e.g. "claimed
+  /// MaestroYa only serves Gandia", "invented a phone number") — a plain
+  /// JSON string array, evaluator-written, never auto-generated.
+  factualIssues Json?
+  /// Free-text notes from the evaluator — context a fixed field
+  /// wouldn't capture. Never required.
+  evaluatorNotes String? @db.Text
+
+  evidenceType AiVisibilityEvidenceType
+  /// Pointer to fuller evidence held elsewhere (a URL, filename, or short
+  /// description) — never the evidence itself. See this model's own doc
+  /// comment for why raw responses are not persisted here.
+  evidenceReference String? @db.Text
+  /// Optional short, human-curated excerpt (bounded length — see
+  /// MAX_EVIDENCE_EXCERPT_LENGTH in ai-visibility-evaluation.ts). Never a
+  /// full captured transcript.
+  evidenceExcerpt String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([queryId])
+  @@index([provider])
+  @@index([observedAt])
+  @@index([createdAt])
+  @@map("ai_visibility_observations")
+}
+
+/// Module 119 — AI Recommendation Monitoring. MANUAL is the only value
+/// this codebase's own code ever writes an observation through — a human
+/// evaluator captured an AI response outside this application and logged
+/// the result here. The "*_API" values exist purely as labels for
+/// observations captured elsewhere through that provider's own official,
+/// documented API (should one ever be integrated and approved — see the
+/// Module 119 report's "Provider Abstraction" section for exactly why none
+/// is wired up today). Deliberately does NOT list every consumer AI
+/// product by name (e.g. no bare "CHATGPT"/"CLAUDE_WEB" value) — this
+/// module never automates or scrapes a consumer chat interface (see this
+/// module's own non-negotiable rules); OTHER covers a manually-captured
+/// response from a provider not otherwise listed, with the concrete
+/// product name recorded in `evaluatorNotes`.
+enum AiVisibilityProvider {
+  MANUAL
+  OPENAI_API
+  ANTHROPIC_API
+  GOOGLE_API
+  PERPLEXITY_API
+  OTHER
+}
+
+/// Shared three-way accuracy classification for identity/geographic/
+/// service accuracy (Phase 3, B/C/D) — CORRECT, INCORRECT, or
+/// NOT_APPLICABLE (the response didn't mention MaestroYa at all, or the
+/// query has no dimension for this axis, e.g. a query with no specific
+/// service has no meaningful `serviceAccuracy`). Deliberately not a
+/// boolean — collapsing "not applicable" into "false" would misrepresent
+/// silence as an error.
+enum AiVisibilityAccuracy {
+  CORRECT
+  INCORRECT
+  NOT_APPLICABLE
+}
+
+/// URL accuracy (Phase 3, E) gets its own three-way enum rather than
+/// reusing AiVisibilityAccuracy — "no URL was given" (NOT_PROVIDED) and
+/// "a wrong URL was given" (INCORRECT) are different, both objectively
+/// measurable facts worth reporting separately (Phase 9's own metric
+/// list: "how often was the official URL provided").
+enum AiVisibilityUrlAccuracy {
+  CORRECT
+  INCORRECT
+  NOT_PROVIDED
+}
+
+/// Phase 3H / Phase 9's own explicit warning: "do not describe AI output
+/// as a stable ranking position." This is an ordered set of observed
+/// language patterns, not a score — reporting only ever counts
+/// observations per bucket (e.g. "recommended in 3 of 40 observations
+/// this month"), never averages or weights these values numerically.
+/// NOT_MENTIONED is included (rather than relying on `mentioned: false`
+/// alone) so this single field always has a value describing the
+/// response's stance toward MaestroYa, even when not mentioned.
+enum AiVisibilityRecommendationClassification {
+  NOT_MENTIONED
+  MENTIONED_ONLY
+  LISTED_AMONG_OPTIONS
+  RECOMMENDED
+}
+
+/// What kind of evidence backs an observation — never "full raw
+/// response" (see AiVisibilityObservation's own doc comment on why raw
+/// transcripts are not persisted).
+enum AiVisibilityEvidenceType {
+  MANUAL_TRANSCRIPT_EXCERPT
+  MANUAL_SCREENSHOT_REFERENCE
+  API_RESPONSE_REFERENCE
+  EXTERNAL_ARTICLE_REFERENCE
 }
