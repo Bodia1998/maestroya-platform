@@ -22,7 +22,7 @@ const SELECT = {
   expiresAt: true,
   createdAt: true,
   updatedAt: true,
-  category: { select: { name: true } },
+  category: { select: { name: true, slug: true } },
   address: {
     select: {
       line1: true,
@@ -54,7 +54,7 @@ type PrismaServiceRequestRow = {
   expiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  category: { name: string };
+  category: { name: string; slug: string };
   address: {
     line1: string;
     line2: string | null;
@@ -74,6 +74,7 @@ function toRecord(row: PrismaServiceRequestRow): ServiceRequestRecord {
     customerId: row.customerId,
     categoryId: row.categoryId,
     categoryName: row.category.name,
+    categorySlug: row.category.slug,
     title: row.title,
     description: row.description,
     status: row.status as ServiceRequestStatusValue,

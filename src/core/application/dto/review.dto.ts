@@ -19,23 +19,23 @@ import { MAX_COMMENT_LENGTH, MAX_RATING, MAX_RESPONSE_LENGTH, MIN_RATING } from 
  */
 
 export const createReviewSchema = z.object({
-  jobId: z.string().uuid("Invalid job."),
+  jobId: z.string().uuid("dto.ids.job"),
   rating: z.coerce
     .number()
-    .int("Rating must be a whole number.")
-    .min(MIN_RATING, `Rating must be at least ${MIN_RATING}.`)
-    .max(MAX_RATING, `Rating must be at most ${MAX_RATING}.`),
+    .int("dto.review.ratingInteger")
+    .min(MIN_RATING, "tooSmall")
+    .max(MAX_RATING, "tooBig"),
   comment: z
     .string()
     .trim()
-    .max(MAX_COMMENT_LENGTH, `Comment must be ${MAX_COMMENT_LENGTH} characters or fewer.`)
+    .max(MAX_COMMENT_LENGTH, "maxLength")
     .optional()
     .or(z.literal("")),
 });
 export type CreateReviewInput = z.infer<typeof createReviewSchema>;
 
 export const listProfessionalReviewsSchema = z.object({
-  professionalProfileId: z.string().uuid("Invalid professional."),
+  professionalProfileId: z.string().uuid("dto.ids.professional"),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),
   // Module 41 — Reviews & Ratings: optional exact-rating filter (e.g. "show
@@ -56,23 +56,23 @@ export type ListProfessionalReviewsInput = z.infer<typeof listProfessionalReview
  * ownership" convention as `jobId` above.
  */
 export const updateReviewSchema = z.object({
-  reviewId: z.string().uuid("Invalid review."),
+  reviewId: z.string().uuid("dto.ids.review"),
   rating: z.coerce
     .number()
-    .int("Rating must be a whole number.")
-    .min(MIN_RATING, `Rating must be at least ${MIN_RATING}.`)
-    .max(MAX_RATING, `Rating must be at most ${MAX_RATING}.`),
+    .int("dto.review.ratingInteger")
+    .min(MIN_RATING, "tooSmall")
+    .max(MAX_RATING, "tooBig"),
   comment: z
     .string()
     .trim()
-    .max(MAX_COMMENT_LENGTH, `Comment must be ${MAX_COMMENT_LENGTH} characters or fewer.`)
+    .max(MAX_COMMENT_LENGTH, "maxLength")
     .optional()
     .or(z.literal("")),
 });
 export type UpdateReviewInput = z.infer<typeof updateReviewSchema>;
 
 export const deleteReviewSchema = z.object({
-  reviewId: z.string().uuid("Invalid review."),
+  reviewId: z.string().uuid("dto.ids.review"),
 });
 export type DeleteReviewInput = z.infer<typeof deleteReviewSchema>;
 
@@ -86,11 +86,11 @@ export type DeleteReviewInput = z.infer<typeof deleteReviewSchema>;
  * comment describes for the reviewee.
  */
 export const respondToReviewSchema = z.object({
-  reviewId: z.string().uuid("Invalid review."),
+  reviewId: z.string().uuid("dto.ids.review"),
   response: z
     .string()
     .trim()
-    .min(1, "A response cannot be empty.")
-    .max(MAX_RESPONSE_LENGTH, `Response must be ${MAX_RESPONSE_LENGTH} characters or fewer.`),
+    .min(1, "dto.review.responseEmpty")
+    .max(MAX_RESPONSE_LENGTH, "maxLength"),
 });
 export type RespondToReviewInput = z.infer<typeof respondToReviewSchema>;

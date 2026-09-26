@@ -1,0 +1,30 @@
+{
+  "site": {
+    "defaultTitle": "MaestroYa — Znajdź zaufanych specjalistów do swojego domu",
+    "description": "Skontaktuj się z zaufanymi specjalistami do swojego domu: hydraulika, elektryka, remonty, sprzątanie i wiele więcej."
+  },
+  "servicesIndex": {
+    "title": "Usługi domowe w MaestroYa",
+    "description": "Zobacz kategorie usług domowych dostępne w MaestroYa: hydraulika, elektryka, klimatyzacja, malowanie, remonty i montaż mebli."
+  },
+  "servicePage": {
+    "title": "{service} — MaestroYa",
+    "descriptionFallback": "Zamów specjalistę w kategorii „{service}” przez MaestroYa i porównaj wyceny."
+  },
+  "serviceLocationPage": {
+    "title": "{service} w miejscowości {city} — MaestroYa",
+    "description": "Zamów usługę w kategorii „{service}” w miejscowości {city} ({province}) przez MaestroYa i porównaj wyceny."
+  },
+  "locationsIndex": {
+    "title": "Lokalizacje — MaestroYa w Hiszpanii",
+    "description": "MaestroYa to platforma usług domowych zaprojektowana do działania w całej Hiszpanii. Poznaj zasięg platformy i miejscowości z potwierdzonym zasięgiem."
+  },
+  "locationPage": {
+    "title": "Specjaliści w miejscowości {city} — MaestroYa",
+    "description": "Usługi domowe dostępne w miejscowości {city} ({province}) przez MaestroYa."
+  },
+  "nationalCoverage": {
+    "title": "MaestroYa w Hiszpanii — zasięg ogólnokrajowy",
+    "description": "MaestroYa to platforma usług domowych zaprojektowana do działania w całej Hiszpanii. Faktyczna dostępność specjalistów zależy od obszaru."
+  }
+}

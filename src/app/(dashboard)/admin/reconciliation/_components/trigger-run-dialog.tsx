@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Label } from "@/components/ui/label";
@@ -27,18 +28,19 @@ const SCOPES = ["FULL", "PAYMENT", "COMMISSION", "TAX", "INVOICE", "PAYOUT", "RE
  */
 export function TriggerRunDialog() {
   const router = useRouter();
+  const t = useTranslations("admin.reconciliation");
   const [scope, setScope] = React.useState<(typeof SCOPES)[number]>("FULL");
   const [limit, setLimit] = React.useState(500);
   const [since, setSince] = React.useState("");
 
   return (
     <ConfirmDialog
-      triggerLabel="Run reconciliation now"
+      triggerLabel={t("trigger.triggerLabel")}
       triggerVariant="default"
-      title="Start a reconciliation run"
-      description="Scans recent jobs' financial records for discrepancies. This never changes any financial record — it only detects and records inconsistencies for review. A run can take a while for a large scope/limit; you can navigate away and check its status from the runs list."
-      confirmLabel="Start run"
-      pendingLabel="Starting…"
+      title={t("trigger.title")}
+      description={t("trigger.description")}
+      confirmLabel={t("trigger.confirm")}
+      pendingLabel={t("trigger.pending")}
       onOpenChange={(open) => {
         if (!open) {
           setScope("FULL");
@@ -53,19 +55,22 @@ export function TriggerRunDialog() {
           since: since ? new Date(since).toISOString() : undefined,
         });
         if (result.success) {
-          toast.success("Reconciliation run started", {
-            description: `${result.data.discrepanciesCreated} new, ${result.data.discrepanciesReconfirmed} reconfirmed discrepancies so far.`,
+          toast.success(t("trigger.started"), {
+            description: t("trigger.startedDescription", {
+              created: result.data.discrepanciesCreated,
+              reconfirmed: result.data.discrepanciesReconfirmed,
+            }),
           });
           router.refresh();
           return { success: true };
         }
-        toast.error("Could not start the reconciliation run", { description: result.error });
+        toast.error(t("trigger.failed"), { description: result.error });
         return { success: false, error: result.error };
       }}
     >
       <div className="flex flex-col gap-3 py-2">
         <div className="flex flex-col gap-1">
-          <Label htmlFor="run-scope">Scope</Label>
+          <Label htmlFor="run-scope">{t("trigger.scope")}</Label>
           <Select
             id="run-scope"
             value={scope}
@@ -73,17 +78,17 @@ export function TriggerRunDialog() {
           >
             {SCOPES.map((s) => (
               <option key={s} value={s}>
-                {s}
+                {t(`scope.${s}`)}
               </option>
             ))}
           </Select>
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="run-since">Only jobs with activity since (optional)</Label>
+          <Label htmlFor="run-since">{t("trigger.since")}</Label>
           <Input id="run-since" type="date" value={since} onChange={(e) => setSince(e.target.value)} />
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="run-limit">Job limit (1–2000)</Label>
+          <Label htmlFor="run-limit">{t("trigger.limit")}</Label>
           <Input
             id="run-limit"
             type="number"

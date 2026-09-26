@@ -3,17 +3,20 @@
     "greeting": "Salut, {name},",
     "signature": "Echipa MaestroYa",
     "footer": "Ai primit acest e-mail pentru că ai un cont MaestroYa.",
-    "ignoreNotice": "Dacă nu ai solicitat tu acest lucru, poți ignora acest e-mail."
+    "ignoreNotice": "Dacă nu ai solicitat tu acest lucru, poți ignora acest e-mail.",
+    "linkFallback": "Dacă butonul nu funcționează, copiază și lipește acest link în browser:"
   },
   "verifyEmail": {
     "subject": "Verifică-ți adresa de e-mail",
     "body": "Confirmă-ți adresa de e-mail pentru a-ți activa contul MaestroYa.",
-    "cta": "Verifică e-mailul"
+    "cta": "Verifică e-mailul",
+    "expiresIn": "Acest link expiră în {hours, plural, one {# oră} few {# ore} other {# de ore}}."
   },
   "resetPassword": {
     "subject": "Resetează-ți parola",
     "body": "Am primit o solicitare de resetare a parolei contului tău.",
     "cta": "Setează o parolă nouă",
-    "expiry": "Acest link expiră pe {date, date, medium} la {date, time, short}."
+    "expiry": "Acest link expiră pe {date, date, medium} la {date, time, short}.",
+    "expiresIn": "Acest link expiră în {hours, plural, one {# oră} few {# ore} other {# de ore}}."
   }
 }

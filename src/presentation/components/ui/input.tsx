@@ -27,4 +27,4 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     );
   },
 );
-Input.displayName = "Input";
+Input.displayName = "Input"; // i18n-ignore

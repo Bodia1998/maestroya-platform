@@ -10,6 +10,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { makeGetAdminDashboardOverviewUseCase } from "@/application/use-cases/admin/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -17,21 +18,36 @@ import { KPICard } from "@/components/dashboard/kpi-card";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { Heading } from "@/components/ui/typography";
 
-export const metadata = { title: "Admin overview" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin.overview");
+  return { title: t("title") };
+}
 
 export const dynamic = "force-dynamic";
 
-const CARDS: Array<{ key: string; label: string; icon: typeof Users; href?: string }> = [
-  { key: "totalUsers", label: "Total users", icon: Users, href: "/admin/users" },
-  { key: "totalProfessionals", label: "Professional profiles", icon: Award, href: "/admin/professionals" },
-  { key: "totalServiceRequests", label: "Service requests", icon: FileText, href: "/admin/service-requests" },
-  { key: "totalQuotes", label: "Quotes", icon: FileSignature, href: "/admin/quotes" },
-  { key: "totalAppointments", label: "Appointments", icon: CalendarDays },
-  { key: "totalJobs", label: "Jobs", icon: Briefcase, href: "/admin/jobs" },
-  { key: "totalReviews", label: "Reviews", icon: Star, href: "/admin/reviews" },
-  { key: "totalPortfolioItems", label: "Portfolio items", icon: ImageIcon, href: "/admin/portfolio" },
-  { key: "totalNotifications", label: "Notifications (active)", icon: Bell },
-  { key: "unreadNotifications", label: "Unread notifications", icon: BellRing },
+type OverviewCardKey =
+  | "totalUsers"
+  | "totalProfessionals"
+  | "totalServiceRequests"
+  | "totalQuotes"
+  | "totalAppointments"
+  | "totalJobs"
+  | "totalReviews"
+  | "totalPortfolioItems"
+  | "totalNotifications"
+  | "unreadNotifications";
+
+const CARDS: Array<{ key: OverviewCardKey; icon: typeof Users; href?: string }> = [
+  { key: "totalUsers", icon: Users, href: "/admin/users" },
+  { key: "totalProfessionals", icon: Award, href: "/admin/professionals" },
+  { key: "totalServiceRequests", icon: FileText, href: "/admin/service-requests" },
+  { key: "totalQuotes", icon: FileSignature, href: "/admin/quotes" },
+  { key: "totalAppointments", icon: CalendarDays },
+  { key: "totalJobs", icon: Briefcase, href: "/admin/jobs" },
+  { key: "totalReviews", icon: Star, href: "/admin/reviews" },
+  { key: "totalPortfolioItems", icon: ImageIcon, href: "/admin/portfolio" },
+  { key: "totalNotifications", icon: Bell },
+  { key: "unreadNotifications", icon: BellRing },
 ];
 
 /**
@@ -45,21 +61,23 @@ const CARDS: Array<{ key: string; label: string; icon: typeof Users; href?: stri
 export default async function AdminOverviewPage() {
   const overview = await makeGetAdminDashboardOverviewUseCase().execute();
   const data = overview as unknown as Record<string, number>;
+  const t = await getTranslations("admin.overview");
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="Admin overview" subtitle="Platform-wide operational counts." />
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
       <section className="flex flex-col gap-4">
         <Heading as="h2" level="h6">
-          Marketplace activity
+          {t("marketplaceActivity")}
         </Heading>
         <ResponsiveGrid cols="1-2-4">
           {CARDS.map((card) => (
             <KPICard
               key={card.key}
               icon={card.icon}
-              label={card.label}
+              label={t(`cards.${card.key}`)}
+
               value={data[card.key] ?? 0}
               href={card.href}
             />

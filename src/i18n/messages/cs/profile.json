@@ -13,5 +13,63 @@
     "email": "E-mail",
     "timezone": "Časové pásmo"
   },
-  "memberSince": "Členem od {date, date, long}"
+  "memberSince": "Členem od {date, date, long}",
+  "avatarNote": "Tato fotografie slouží jen pro váš účet — nemá vliv na ověření identity profesionála. Profesionálové ho spravují zvlášť v sekci Profil profesionála → Spravovat ověření identity.",
+  "dangerNote": "Smazání účtu lze vrátit jen prostřednictvím podpory — vaše data se deaktivují, nejsou okamžitě vymazána.",
+  "avatar": {
+    "chooseFirst": "Nejprve vyberte obrázek.",
+    "alt": "Váš profilový obrázek",
+    "chooseLabel": "Vyberte profilový obrázek",
+    "uploading": "Nahrávání…",
+    "upload": "Nahrát profilový obrázek",
+    "updated": "Profilový obrázek byl aktualizován."
+  },
+  "form": {
+    "updated": "Profil byl aktualizován.",
+    "basics": "Základní údaje",
+    "displayName": "Zobrazované jméno",
+    "phone": "Telefon",
+    "timezone": "Časové pásmo",
+    "preferredLanguage": "Preferovaný jazyk",
+    "noPreference": "Bez preference",
+    "address": "Adresa",
+    "street": "Ulice a číslo domu",
+    "line2": "Byt, patro apod. (nepovinné)",
+    "city": "Město",
+    "postalCode": "PSČ",
+    "province": "Provincie",
+    "country": "Země",
+    "notifications": "Oznámení",
+    "emailMarketing": "Marketingové e-maily",
+    "emailServiceUpdates": "E-maily o průběhu služeb",
+    "smsAppointmentReminders": "SMS připomínky schůzek",
+    "save": "Uložit změny"
+  },
+  "password": {
+    "changed": "Heslo bylo změněno. Z bezpečnostních důvodů jste byli odhlášeni na všech ostatních zařízeních.",
+    "noPassword": "Tento účet se přihlašuje přes sociální síť a nemá heslo, které by šlo změnit.",
+    "title": "Změnit heslo",
+    "current": "Současné heslo",
+    "new": "Nové heslo",
+    "confirm": "Potvrďte nové heslo",
+    "changing": "Změna…",
+    "submit": "Změnit heslo"
+  },
+  "deleteAccount": {
+    "trigger": "Deaktivovat účet",
+    "title": "Tímto se váš účet deaktivuje",
+    "password": "Heslo",
+    "confirmLabel": "Pro potvrzení napište {token}",
+    "deactivating": "Deaktivace…",
+    "submit": "Deaktivovat můj účet"
+  },
+  "errors": {
+    "updateFailed": "Při aktualizaci profilu se něco pokazilo.",
+    "avatarFailed": "Při nahrávání profilového obrázku se něco pokazilo.",
+    "passwordFailed": "Při změně hesla se něco pokazilo.",
+    "deleteFailed": "Při mazání účtu se něco pokazilo.",
+    "avatarMissing": "Vyberte obrázek k nahrání.",
+    "avatarType": "Profilový obrázek musí být ve formátu JPEG, PNG nebo WebP.",
+    "avatarTooLarge": "Profilový obrázek musí mít méně než 5 MB."
+  }
 }

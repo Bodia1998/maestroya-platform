@@ -16,5 +16,115 @@
     "title": "Espace entreprise",
     "members": "Membres",
     "invitations": "Invitations"
+  },
+  "nav": {
+    "ariaLabel": "Navigation du tableau de bord",
+    "groups": {
+      "professional": "Professionnel",
+      "admin": "Administration"
+    },
+    "items": {
+      "dashboard": "Tableau de bord",
+      "serviceRequests": "Demandes",
+      "appointments": "Rendez-vous",
+      "jobs": "Missions",
+      "receipts": "Mes reçus",
+      "messages": "Messages",
+      "disputes": "Litiges",
+      "support": "Assistance",
+      "professionalDashboard": "Tableau de bord professionnel",
+      "availableRequests": "Demandes disponibles",
+      "myQuotes": "Mes devis",
+      "myAppointments": "Mes rendez-vous",
+      "myJobs": "Mes missions",
+      "selfBilling": "Autofacturation et factures",
+      "companies": "Entreprises",
+      "adminPanel": "Panneau d'administration",
+      "profile": "Profil",
+      "professionalProfile": "Profil professionnel",
+      "switchToProfessional": "Passer au tableau de bord professionnel"
+    }
+  },
+  "shell": {
+    "skipToContent": "Aller au contenu principal",
+    "sidebar": "Barre latérale",
+    "openMenu": "Ouvrir le menu",
+    "accountMenu": "Menu du compte",
+    "account": "Compte",
+    "notifications": "Notifications",
+    "profile": "Profil",
+    "signOut": "Se déconnecter"
+  },
+  "profileBanner": {
+    "noProfile": "Complétez votre profil professionnel pour commencer à recevoir des demandes de clients.",
+    "incomplete": "Votre profil professionnel est incomplet. Complétez-le pour que les clients voient votre meilleur profil.",
+    "completeProfile": "Compléter le profil professionnel"
+  },
+  "overview": {
+    "welcomeBack": "Bon retour, {name}",
+    "welcomeBackAnonymous": "Bon retour",
+    "subtitle": "Voici un aperçu de votre compte MaestroYa.",
+    "professionalOverview": {
+      "title": "Aperçu professionnel",
+      "description": "Les demandes de clients auxquelles vous pouvez répondre, et les devis, rendez-vous et missions qui en découlent."
+    },
+    "stats": {
+      "availableRequests": "Demandes disponibles",
+      "quotesAwaitingResponse": "Devis en attente de réponse",
+      "acceptedQuotes": "Devis acceptés",
+      "upcomingAppointments": "Rendez-vous à venir",
+      "activeJobs": "Missions en cours",
+      "completedJobs": "Missions terminées",
+      "activeRequests": "Demandes actives",
+      "unreadMessages": "Messages non lus"
+    },
+    "quickActions": {
+      "ariaLabel": "Actions rapides",
+      "newRequest": "Nouvelle demande",
+      "appointments": "Rendez-vous",
+      "messages": "Messages",
+      "profile": "Profil",
+      "browseRequests": "Parcourir les demandes",
+      "myQuotes": "Mes devis",
+      "professionalProfile": "Profil professionnel"
+    },
+    "cards": {
+      "yourRequests": "Vos demandes",
+      "upcomingAppointments": "Rendez-vous à venir",
+      "messages": "Messages",
+      "yourQuotes": "Vos devis",
+      "viewAll": "Tout voir"
+    },
+    "empty": {
+      "requests": {
+        "title": "Aucune demande pour le moment.",
+        "description": "Publiez une demande pour commencer à recevoir des devis de professionnels près de chez vous."
+      },
+      "appointments": {
+        "title": "Aucun rendez-vous à venir.",
+        "description": "Les rendez-vous apparaissent ici dès que vous acceptez le devis d'un professionnel.",
+        "action": "Voir mes demandes"
+      },
+      "messages": {
+        "title": "Aucun nouveau message.",
+        "description": "Les conversations avec les clients et les professionnels s'affichent ici.",
+        "action": "Aller aux messages"
+      },
+      "noProfessionalProfile": {
+        "title": "Configurez votre profil professionnel.",
+        "description": "Créez votre profil professionnel pour commencer à recevoir des demandes sur lesquelles envoyer un devis.",
+        "action": "Commencer"
+      },
+      "quotes": {
+        "title": "Aucun devis envoyé pour le moment.",
+        "description": "Parcourez les demandes ouvertes et envoyez votre premier devis."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "avec {name}",
+    "manage": "Gérer",
+    "requestPosted": "Publiée le {created, date, medium} — mise à jour le {updated, date, medium}",
+    "quoteSubmitted": "Envoyé le {created, date, medium} — mis à jour le {updated, date, medium}"
   }
 }

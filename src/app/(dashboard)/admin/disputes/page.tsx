@@ -1,4 +1,5 @@
 import { AlertTriangle } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { listAdminDisputesAction } from "./actions";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
@@ -11,7 +12,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { ButtonLink } from "@/components/ui/button-link";
 
-export const metadata = { title: "Admin — Disputes" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("disputesPage.title") }) };
+}
 
 type SearchParams = Promise<{ page?: string; search?: string; status?: string }>;
 
@@ -36,9 +40,13 @@ export default async function AdminDisputesPage({ searchParams }: { searchParams
     return `/admin/disputes?${parts.join("&")}`;
   };
 
+  const t = await getTranslations("admin");
+  const enumLabel = (group: string, value: string) =>
+    t.has(`${group}.${value}` as never) ? t(`${group}.${value}` as never) : value;
+
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Disputes" subtitle="Customer/professional dispute cases requiring admin review." />
+      <PageHeader title={t("disputesPage.title")} subtitle={t("disputesPage.subtitle")} />
 
       {!result.success && (
         <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
@@ -46,25 +54,25 @@ export default async function AdminDisputesPage({ searchParams }: { searchParams
         </p>
       )}
 
-      <AdminFilterForm aria-label="Search disputes">
+      <AdminFilterForm aria-label={t("disputesPage.searchLabel")}>
         <SearchInput
           name="search"
           defaultValue={search}
-          placeholder="Search case number or title"
-          aria-label="Search case number or title"
+          placeholder={t("disputesPage.searchPlaceholder")}
+          aria-label={t("disputesPage.searchPlaceholder")}
           className="flex-1 min-w-[200px]"
         />
       </AdminFilterForm>
 
       {disputes.length === 0 ? (
-        <EmptyState icon={AlertTriangle} title="No disputes found" description="Dispute cases will appear here." />
+        <EmptyState icon={AlertTriangle} title={t("disputesPage.empty")} description={t("disputesPage.emptyDescription")} />
       ) : (
-        <AdminDataTable caption="Disputes" minWidth={560}>
+        <AdminDataTable caption={t("disputesPage.title")} minWidth={560}>
           <AdminTableHeadRow>
-            <AdminTh>Case</AdminTh>
-            <AdminTh>Title</AdminTh>
-            <AdminTh>Status</AdminTh>
-            <AdminTh>Priority</AdminTh>
+            <AdminTh>{t("disputesPage.columns.case")}</AdminTh>
+            <AdminTh>{t("disputesPage.columns.title")}</AdminTh>
+            <AdminTh>{t("common.columns.status")}</AdminTh>
+            <AdminTh>{t("disputesPage.columns.priority")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {disputes.map((d) => (
@@ -82,7 +90,7 @@ export default async function AdminDisputesPage({ searchParams }: { searchParams
                 <td className="px-4 py-3">
                   <StatusBadge status={d.status} />
                 </td>
-                <td className="px-4 py-3">{d.priority}</td>
+                <td className="px-4 py-3">{enumLabel("priority", d.priority)}</td>
               </AdminTableRow>
             ))}
           </AdminTableBody>

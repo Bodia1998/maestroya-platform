@@ -1,7 +1,7 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -16,6 +16,7 @@ import { FormFieldError } from "@/components/forms/form-field-description";
 import { FormSection } from "@/components/forms/form-section";
 import { OptionalBadge } from "@/components/forms/field-badges";
 import { updateProfileSchema, type UpdateProfileInput } from "@/application/dto/profile.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { updateProfileAction } from "./actions";
 
 interface Language {
@@ -50,6 +51,9 @@ export function EditProfileForm({
   address: AddressLike | null;
   languages: Language[];
 }) {
+  const t = useTranslations("profile.form");
+  const tCommon = useTranslations("common");
+  const resolver = useLocalizedZodResolver(updateProfileSchema);
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -71,7 +75,7 @@ export function EditProfileForm({
     setError,
     formState: { errors, isSubmitting },
   } = useForm<UpdateProfileInput>({
-    resolver: zodResolver(updateProfileSchema),
+    resolver,
     defaultValues: {
       name: profile.name ?? "",
       phone: profile.phone ?? "",
@@ -112,7 +116,7 @@ export function EditProfileForm({
       return;
     }
 
-    setSuccessMessage("Profile updated.");
+    setSuccessMessage(t("updated"));
   }
 
   return (
@@ -128,9 +132,9 @@ export function EditProfileForm({
         </Alert>
       )}
 
-      <FormSection title="Basics">
+      <FormSection title={t("basics")}>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="name">Display name</Label>
+          <Label htmlFor="name">{t("displayName")}</Label>
           <Input
             id="name"
             aria-invalid={!!errors.name}
@@ -142,7 +146,7 @@ export function EditProfileForm({
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="phone">
-            Phone <OptionalBadge />
+            {t("phone")} <OptionalBadge />
           </Label>
           <Input
             id="phone"
@@ -156,7 +160,7 @@ export function EditProfileForm({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="timezone">Timezone</Label>
+            <Label htmlFor="timezone">{t("timezone")}</Label>
             <Select id="timezone" {...register("timezone")}>
               {timezones.map((tz) => (
                 <option key={tz} value={tz}>
@@ -167,9 +171,9 @@ export function EditProfileForm({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="preferredLanguageId">Preferred language</Label>
+            <Label htmlFor="preferredLanguageId">{t("preferredLanguage")}</Label>
             <Select id="preferredLanguageId" {...register("preferredLanguageId")}>
-              <option value="">No preference</option>
+              <option value="">{t("noPreference")}</option>
               {languages.map((lang) => (
                 <option key={lang.id} value={lang.id}>
                   {lang.nativeName}
@@ -180,19 +184,19 @@ export function EditProfileForm({
         </div>
       </FormSection>
 
-      <FormSection title="Address">
+      <FormSection title={t("address")}>
         <fieldset className="flex flex-col gap-3 rounded-lg border border-border p-4">
           <legend className="flex items-center gap-1.5 px-1 text-sm font-medium text-foreground">
             <MapPin aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
-            Address
+            {t("address")}
           </legend>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="address.line1" className="sr-only">
-              Street address
+              {t("street")}
             </Label>
             <Input
               id="address.line1"
-              placeholder="Street address"
+              placeholder={t("street")}
               aria-invalid={!!errors.address?.line1}
               aria-describedby={errors.address?.line1 ? "address.line1-error" : undefined}
               {...register("address.line1")}
@@ -201,67 +205,67 @@ export function EditProfileForm({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="address.line2" className="sr-only">
-              Apartment, floor, etc. (optional)
+              {t("line2")}
             </Label>
-            <Input id="address.line2" placeholder="Apartment, floor, etc. (optional)" {...register("address.line2")} />
+            <Input id="address.line2" placeholder={t("line2")} {...register("address.line2")} />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="address.city" className="sr-only">
-                City
+                {t("city")}
               </Label>
               <Input
                 id="address.city"
-                placeholder="City"
+                placeholder={t("city")}
                 aria-invalid={!!errors.address?.city}
                 {...register("address.city")}
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="address.postalCode" className="sr-only">
-                Postal code
+                {t("postalCode")}
               </Label>
-              <Input id="address.postalCode" placeholder="Postal code" {...register("address.postalCode")} />
+              <Input id="address.postalCode" placeholder={t("postalCode")} {...register("address.postalCode")} />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="address.province" className="sr-only">
-                Province
+                {t("province")}
               </Label>
-              <Input id="address.province" placeholder="Province" {...register("address.province")} />
+              <Input id="address.province" placeholder={t("province")} {...register("address.province")} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="address.country" className="sr-only">
-                Country
+                {t("country")}
               </Label>
-              <Input id="address.country" placeholder="Country" {...register("address.country")} />
+              <Input id="address.country" placeholder={t("country")} {...register("address.country")} />
             </div>
           </div>
         </fieldset>
       </FormSection>
 
-      <FormSection title="Notifications">
+      <FormSection title={t("notifications")}>
         <fieldset className="flex flex-col gap-2 rounded-lg border border-border p-4">
-          <legend className="sr-only">Notifications</legend>
+          <legend className="sr-only">{t("notifications")}</legend>
           <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
             <Checkbox {...register("notificationPreferences.emailMarketing")} />
-            Marketing emails
+            {t("emailMarketing")}
           </label>
           <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
             <Checkbox {...register("notificationPreferences.emailServiceUpdates")} />
-            Service update emails
+            {t("emailServiceUpdates")}
           </label>
           <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
             <Checkbox {...register("notificationPreferences.smsAppointmentReminders")} />
-            SMS appointment reminders
+            {t("smsAppointmentReminders")}
           </label>
         </fieldset>
       </FormSection>
 
       <FormActions stickyOnMobile>
         <Button type="submit" disabled={isSubmitting} className="sm:min-w-40">
-          {isSubmitting ? "Saving…" : "Save changes"}
+          {isSubmitting ? tCommon("states.saving") : t("save")}
         </Button>
       </FormActions>
     </form>

@@ -1,0 +1,92 @@
+{
+  "metaTitle": "Panel de afiliado",
+  "title": "Panel de afiliado",
+  "subtitle": "Sigue tus enlaces de recomendación, los clics y tus ganancias como afiliado.",
+  "noAccount": {
+    "title": "Todavía no tienes una cuenta de afiliado",
+    "description": "Las cuentas de afiliado son para quienes recomiendan clientes a MaestroYa a cambio de una parte del beneficio de la plataforma. Contacta con MaestroYa para registrarte como afiliado."
+  },
+  "statusMessage": {
+    "PENDING": "Tu solicitud de afiliado está pendiente de revisión",
+    "REJECTED": "Tu solicitud de afiliado no ha sido aprobada",
+    "SUSPENDED": "Tu cuenta de afiliado está suspendida",
+    "BANNED": "Tu cuenta de afiliado ha sido bloqueada",
+    "other": "Tu cuenta de afiliado no está activa"
+  },
+  "locked": {
+    "description": "Tu panel se desbloqueará automáticamente cuando se apruebe tu cuenta de afiliado."
+  },
+  "welcome": "Hola de nuevo, {name}. Así están funcionando tus enlaces de recomendación.",
+  "stats": {
+    "clicks": "Clics",
+    "visits": "Visitas",
+    "registrations": "Registros",
+    "bookingsCreated": "Reservas creadas",
+    "completedJobs": "Trabajos completados",
+    "conversionRate": "Tasa de conversión",
+    "platformCommissionGenerated": "Comisión generada para la plataforma",
+    "pendingEarnings": "Ganancias pendientes",
+    "approvedPayable": "Aprobadas (a pagar)",
+    "paidToDate": "Pagado hasta la fecha"
+  },
+  "topCampaigns": {
+    "title": "Campañas principales",
+    "empty": "Todavía no se han registrado clics en campañas."
+  },
+  "topReferralLinks": {
+    "title": "Enlaces de recomendación principales",
+    "empty": "Todavía no se han registrado clics en enlaces de recomendación."
+  },
+  "visitsCount": "{count, plural, one {# visita} other {# visitas}}",
+  "errors": {
+    "createLinkFailed": "Algo ha fallado al crear este enlace de recomendación.",
+    "updateLinkFailed": "Algo ha fallado al actualizar este enlace de recomendación.",
+    "payoutFailed": "Algo ha fallado al solicitar este cobro."
+  },
+  "campaigns": {
+    "title": "Enlaces de campaña",
+    "code": "Código",
+    "codePlaceholder": "p. ej. telegram_valencia",
+    "label": "Etiqueta (opcional)",
+    "labelPlaceholder": "Tu nota personal",
+    "source": "Origen",
+    "none": "Ninguno",
+    "sources": {
+      "TELEGRAM": "Telegram",
+      "INSTAGRAM": "Instagram",
+      "TIKTOK": "TikTok",
+      "YOUTUBE": "YouTube",
+      "BLOG": "Blog",
+      "WEBSITE": "Sitio web"
+    },
+    "creating": "Creando…",
+    "create": "Crear enlace",
+    "empty": "Todavía no hay enlaces de campaña: crea uno arriba para empezar a compartirlo.",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "visits": "{count, plural, one {# visita} other {# visitas}}",
+    "deactivate": "Desactivar",
+    "activate": "Activar"
+  },
+  "payout": {
+    "balanceTitle": "Saldo de afiliado",
+    "available": "Saldo disponible",
+    "reserved": "Reservado para cobro",
+    "paidToDate": "Pagado hasta la fecha",
+    "minimum": "Cobro mínimo: {amount}",
+    "eligible": "Disponible para cobro",
+    "moreNeeded": "Faltan {amount}",
+    "requesting": "Solicitando…",
+    "request": "Solicitar cobro",
+    "requested": "Cobro solicitado: consulta su estado en el historial de abajo.",
+    "historyTitle": "Historial de cobros",
+    "empty": "Todavía no hay cobros.",
+    "status": {
+      "PENDING": "Pendiente",
+      "PROCESSING": "En proceso",
+      "PAID": "Pagado",
+      "FAILED": "Fallido",
+      "CANCELLED": "Cancelado"
+    }
+  }
+}

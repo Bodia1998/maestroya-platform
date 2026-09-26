@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { Badge } from "@/components/ui/badge";
 
 /**
@@ -22,16 +24,10 @@ const SEVERITY_VARIANT = {
   INFO: "secondary",
 } as const;
 
-const SEVERITY_LABEL = {
-  CRITICAL: "Critical",
-  ERROR: "High",
-  WARNING: "Medium",
-  INFO: "Low",
-} as const;
-
 export function SeverityBadge({ severity, className }: { severity: string; className?: string }) {
   const variant = SEVERITY_VARIANT[severity as keyof typeof SEVERITY_VARIANT] ?? "secondary";
-  const label = SEVERITY_LABEL[severity as keyof typeof SEVERITY_LABEL] ?? severity;
+  const t = useTranslations("admin.reconciliation");
+  const label = severity in SEVERITY_VARIANT ? t(`severity.${severity as keyof typeof SEVERITY_VARIANT}`) : severity;
   return (
     <Badge variant={variant} className={className}>
       {label}
@@ -44,14 +40,13 @@ const RESOLUTION_STATUS_VARIANT = {
   RESOLVED: "success",
 } as const;
 
-const RESOLUTION_STATUS_LABEL = {
-  OPEN: "Open",
-  RESOLVED: "Resolved",
-} as const;
-
 export function ResolutionStatusBadge({ status, className }: { status: string; className?: string }) {
   const variant = RESOLUTION_STATUS_VARIANT[status as keyof typeof RESOLUTION_STATUS_VARIANT] ?? "secondary";
-  const label = RESOLUTION_STATUS_LABEL[status as keyof typeof RESOLUTION_STATUS_LABEL] ?? status;
+  const t = useTranslations("admin.reconciliation");
+  const label =
+    status in RESOLUTION_STATUS_VARIANT
+      ? t(`resolutionStatus.${status as keyof typeof RESOLUTION_STATUS_VARIANT}`)
+      : status;
   return (
     <Badge variant={variant} className={className}>
       {label}
@@ -65,15 +60,10 @@ const RUN_STATUS_VARIANT = {
   FAILED: "danger",
 } as const;
 
-const RUN_STATUS_LABEL = {
-  RUNNING: "Running",
-  COMPLETED: "Completed",
-  FAILED: "Failed",
-} as const;
-
 export function RunStatusBadge({ status, className }: { status: string; className?: string }) {
   const variant = RUN_STATUS_VARIANT[status as keyof typeof RUN_STATUS_VARIANT] ?? "secondary";
-  const label = RUN_STATUS_LABEL[status as keyof typeof RUN_STATUS_LABEL] ?? status;
+  const t = useTranslations("admin.reconciliation");
+  const label = status in RUN_STATUS_VARIANT ? t(`runStatus.${status as keyof typeof RUN_STATUS_VARIANT}`) : status;
   return (
     <Badge variant={variant} className={className}>
       {label}

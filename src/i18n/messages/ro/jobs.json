@@ -16,5 +16,74 @@
   },
   "quotes": {
     "title": "Oferte"
+  },
+  "quoteItems": {
+    "columns": {
+      "description": "Descriere",
+      "type": "Tip",
+      "quantity": "Cant.",
+      "unitPrice": "Preț unitar",
+      "amount": "Sumă"
+    },
+    "total": "Total",
+    "category": {
+      "MATERIALS": "Materiale",
+      "LABOR": "Manoperă"
+    }
+  },
+  "urgency": {
+    "LOW": "Scăzută",
+    "MEDIUM": "Medie",
+    "HIGH": "Ridicată",
+    "EMERGENCY": "Urgență"
+  },
+  "list": {
+    "title": "Lucrările mele",
+    "subtitle": "Progresul general al lucrărilor pentru care ai acceptat o ofertă.",
+    "empty": {
+      "title": "Nicio lucrare activă",
+      "description": "Lucrările apar aici după ce accepți oferta unui profesionist și începe lucrul.",
+      "action": "Vezi cererile mele"
+    }
+  },
+  "notStarted": "Neîncepută",
+  "detail": {
+    "title": "Lucrare",
+    "started": "Începută",
+    "completed": "Finalizată",
+    "cancellationReason": "Motivul anulării",
+    "appointments": "Programările acestei lucrări",
+    "noAppointments": "Nicio programare încă.",
+    "notScheduled": "Neprogramată încă",
+    "dateUnset": "—"
+  },
+  "cancellationReason": {
+    "CUSTOMER_REQUEST": "La cererea clientului",
+    "PROFESSIONAL_UNABLE_TO_COMPLETE": "Profesionistul nu poate finaliza",
+    "SERVICE_REQUEST_ISSUE": "Problemă cu cererea",
+    "OTHER": "Altul"
+  },
+  "actions": {
+    "startWork": "Începe lucrul",
+    "starting": "Se pornește…",
+    "markCompleted": "Marchează lucrarea ca finalizată",
+    "completing": "Se finalizează…",
+    "openAppointmentsWarning": "Această lucrare are încă o programare nerezolvată. Confirmă și finalizează (sau anulează) toate programările înainte de a o marca drept finalizată.",
+    "cancelJob": "Anulează lucrarea",
+    "cancelTitle": "Anulezi această lucrare?",
+    "reason": "Motiv",
+    "note": "Notă (opțional)",
+    "cancelling": "Se anulează…",
+    "confirmCancel": "Da, anulează",
+    "notNow": "Nu acum"
+  },
+  "errors": {
+    "invalidJob": "Lucrare nevalidă.",
+    "startFailed": "A apărut o eroare la începerea lucrării.",
+    "completeFailed": "A apărut o eroare la finalizarea lucrării.",
+    "cancelFailed": "A apărut o eroare la anularea lucrării.",
+    "confirmFailed": "A apărut o eroare la confirmarea lucrării.",
+    "disputeFailed": "A apărut o eroare la contestarea finalizării lucrării.",
+    "paymentFailed": "A apărut o eroare la inițierea plății. Încearcă din nou."
   }
 }

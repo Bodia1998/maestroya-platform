@@ -15,7 +15,7 @@ const referralCodeSchema = z
   .toLowerCase()
   .min(REFERRAL_CODE_MIN_LENGTH)
   .max(REFERRAL_CODE_MAX_LENGTH)
-  .regex(/^[a-z0-9_]+$/, "Referral code may only contain lowercase letters, digits, and underscores.");
+  .regex(/^[a-z0-9_]+$/, "dto.referral.codeFormat");
 
 export const createReferralCodeSchema = z.object({
   code: referralCodeSchema,

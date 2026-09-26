@@ -1,4 +1,5 @@
 import type * as React from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
@@ -22,16 +23,18 @@ export interface AdminFilterFormProps extends Omit<React.FormHTMLAttributes<HTML
  */
 export function AdminFilterForm({
   "aria-label": ariaLabel,
-  submitLabel = "Search",
+  submitLabel,
   className,
   children,
   ...props
 }: AdminFilterFormProps) {
+  const t = useTranslations("admin.table");
   return (
     <form method="get" aria-label={ariaLabel} className={cn("flex flex-wrap items-center gap-2", className)} {...props}>
       {children}
       <Button type="submit" variant="outline" className="h-10 shrink-0">
-        {submitLabel}
+        {submitLabel ?? t("search")}
+
       </Button>
     </form>
   );

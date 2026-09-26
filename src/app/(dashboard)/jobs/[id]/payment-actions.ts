@@ -1,8 +1,10 @@
 "use server";
 
-import { DomainError } from "@/domain/errors/domain-error";
+import { getTranslations } from "next-intl/server";
+
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeInitiateQuotePaymentUseCase } from "@/application/use-cases/payments/compose";
+import { localizeActionError } from "@/presentation/i18n/server";
 
 export type InitiatePaymentActionResult =
   | { success: true; paymentId: string; clientSecret: string | null; amount: number; currency: string }
@@ -12,12 +14,8 @@ export type InitiatePaymentActionResult =
 // requests/[id]/quotes/actions.ts): domain errors surface their own
 // (safe, user-facing) message, anything else is logged server-side and
 // replaced with a generic message.
-function fromDomainError(error: unknown, fallback: string): InitiatePaymentActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+async function fromDomainError(error: unknown, fallback: string): Promise<InitiatePaymentActionResult> {
+  return { success: false, error: await localizeActionError(error, fallback) };
 }
 
 /**
@@ -42,6 +40,7 @@ export async function initiatePaymentAction(jobId: string): Promise<InitiatePaym
     const result = await makeInitiateQuotePaymentUseCase().execute(user.id, jobId);
     return { success: true, ...result };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong starting your payment. Please try again.");
+    const t = await getTranslations("jobs.errors");
+    return fromDomainError(error, t("paymentFailed"));
   }
 }

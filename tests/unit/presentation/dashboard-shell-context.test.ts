@@ -19,7 +19,7 @@ describe("resolveVisibleNavGroups", () => {
   it("shows only the customer group for a customer-only account, on every page", () => {
     for (const pathname of ["/dashboard", "/requests", "/appointments", "/profile"]) {
       const visible = resolveVisibleNavGroups(customerOnlyGroups, pathname);
-      expect(visible.some((g) => g.title === "Professional")).toBe(false);
+      expect(visible.some((g) => g.titleKey === "professional")).toBe(false);
       expect(visible.some((g) => g.context === "customer")).toBe(true);
     }
   });
@@ -33,7 +33,7 @@ describe("resolveVisibleNavGroups", () => {
     ]) {
       const visible = resolveVisibleNavGroups(dualRoleGroups, pathname);
       expect(visible.some((g) => g.context === "customer")).toBe(false);
-      expect(visible.some((g) => g.title === "Professional")).toBe(true);
+      expect(visible.some((g) => g.titleKey === "professional")).toBe(true);
     }
   });
 
@@ -41,7 +41,7 @@ describe("resolveVisibleNavGroups", () => {
     const visible = resolveVisibleNavGroups(dualRoleGroups, "/dashboard");
 
     expect(visible.some((g) => g.context === "customer")).toBe(false);
-    expect(visible.some((g) => g.title === "Professional")).toBe(true);
+    expect(visible.some((g) => g.titleKey === "professional")).toBe(true);
   });
 
   it("shows the customer group on unambiguously customer-side routes even for a dual-role account, with a link back to Professional", () => {
@@ -59,7 +59,7 @@ describe("resolveVisibleNavGroups", () => {
     for (const pathname of ["/messages", "/disputes", "/support-tickets"]) {
       const visible = resolveVisibleNavGroups(dualRoleGroups, pathname);
       expect(visible.some((g) => g.context === "customer")).toBe(false);
-      expect(visible.some((g) => g.title === "Professional")).toBe(true);
+      expect(visible.some((g) => g.titleKey === "professional")).toBe(true);
     }
   });
 
@@ -77,7 +77,7 @@ describe("resolveVisibleNavGroups", () => {
       const visible = resolveVisibleNavGroups(dualRoleGroups, pathname);
       expect(visible.some((g) => g.items.some((item) => item.href === "/requests"))).toBe(false);
       expect(
-        visible.some((g) => g.items.some((item) => item.label.toLowerCase().includes("customer"))),
+        visible.some((g) => g.items.some((item) => item.labelKey.toLowerCase().includes("customer"))),
       ).toBe(false);
     }
   });
@@ -110,7 +110,7 @@ describe("resolveVisibleNavGroups", () => {
       const profileGroup = visible.find((g) => !g.context && g.items.some((item) => item.icon === "professional" || item.href === "/profile"));
 
       expect(profileGroup?.items).toEqual([
-        { href: "/dashboard/professional", label: "Professional Profile", icon: "professional" },
+        { href: "/dashboard/professional", labelKey: "professionalProfile", icon: "professional" },
       ]);
     }
   });
@@ -120,7 +120,7 @@ describe("resolveVisibleNavGroups", () => {
       const visible = resolveVisibleNavGroups(dualRoleGroups, pathname);
       const profileGroup = visible.find((g) => !g.context && g.items.some((item) => item.href === "/profile"));
 
-      expect(profileGroup?.items).toEqual([{ href: "/profile", label: "Profile", icon: "profile" }]);
+      expect(profileGroup?.items).toEqual([{ href: "/profile", labelKey: "profile", icon: "profile" }]);
     }
   });
 
@@ -128,7 +128,7 @@ describe("resolveVisibleNavGroups", () => {
     const visible = resolveVisibleNavGroups(customerOnlyGroups, "/dashboard");
     const profileGroup = visible.find((g) => !g.context && g.items.some((item) => item.href === "/profile"));
 
-    expect(profileGroup?.items).toEqual([{ href: "/profile", label: "Profile", icon: "profile" }]);
+    expect(profileGroup?.items).toEqual([{ href: "/profile", labelKey: "profile", icon: "profile" }]);
   });
 
   /**
@@ -147,7 +147,7 @@ describe("resolveVisibleNavGroups", () => {
       const allItems = visible.flatMap((g) => g.items);
 
       expect(allItems.filter((item) => item.href === "/dashboard/professional")).toHaveLength(1);
-      expect(allItems.filter((item) => item.label === "Professional Profile")).toHaveLength(1);
+      expect(allItems.filter((item) => item.labelKey === "professionalProfile")).toHaveLength(1);
     }
   });
 
@@ -182,7 +182,7 @@ describe("resolveVisibleNavGroups", () => {
     const visible = resolveVisibleNavGroups(dualRoleGroups, "/dashboard/professional");
     const communicationGroup = visible.find((g) => g.items.some((item) => item.href === "/messages"));
 
-    expect(communicationGroup?.title).toBeUndefined();
+    expect(communicationGroup?.titleKey).toBeUndefined();
     expect(communicationGroup?.items.map((item) => item.href)).toEqual(["/messages", "/disputes", "/support-tickets"]);
   });
 });

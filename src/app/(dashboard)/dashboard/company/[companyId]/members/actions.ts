@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import {
   changeCompanyMemberRoleSchema,
@@ -13,9 +14,9 @@ import {
   makeRemoveCompanyMemberUseCase,
   makeTransferCompanyOwnershipUseCase,
 } from "@/application/use-cases/company-membership/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import type { CompanyMemberWithUser } from "@/domain/repositories/company-membership-repository";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError, localizeZodError } from "@/presentation/i18n/server";
 
 /** Module 18 — Company Professional: company membership Server Actions.
  *  `companyId` scopes the target; the caller's own role is always
@@ -24,10 +25,8 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 
 export type ActionResult<T = undefined> = { success: true; data: T } | { success: false; error: string };
 
-function fromDomainError<T>(error: unknown, fallback: string): ActionResult<T> {
-  if (error instanceof DomainError) return { success: false, error: error.message };
-  console.error(error);
-  return { success: false, error: fallback };
+async function fromDomainError<T>(error: unknown, fallback: string): Promise<ActionResult<T>> {
+  return { success: false, error: await localizeActionError(error, fallback) };
 }
 
 export async function listCompanyMembersAction(companyId: string): Promise<ActionResult<CompanyMemberWithUser[]>> {
@@ -36,7 +35,8 @@ export async function listCompanyMembersAction(companyId: string): Promise<Actio
     const members = await makeListCompanyMembersUseCase().execute(user.id, companyId);
     return { success: true, data: members };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading members.");
+    const t = await getTranslations("company.members.errors");
+    return fromDomainError(error, t("loadFailed"));
   }
 }
 
@@ -47,26 +47,34 @@ export async function changeCompanyMemberRoleAction(
 ): Promise<ActionResult> {
   const user = await requireAuth();
   const parsed = changeCompanyMemberRoleSchema.safeParse({ memberId, role });
-  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid role." };
+  if (!parsed.success) {
+    const t = await getTranslations("company.members.errors");
+    return { success: false, error: await localizeZodError(parsed.error, t("invalidRole")) };
+  }
   try {
     await makeChangeCompanyMemberRoleUseCase().execute(user.id, companyId, parsed.data.memberId, parsed.data.role);
     revalidatePath(`/dashboard/company/${companyId}/members`);
     return { success: true, data: undefined };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong changing this member's role.");
+    const t = await getTranslations("company.members.errors");
+    return fromDomainError(error, t("changeRoleFailed"));
   }
 }
 
 export async function removeCompanyMemberAction(companyId: string, memberId: string): Promise<ActionResult> {
   const user = await requireAuth();
   const parsed = companyMemberIdSchema.safeParse({ memberId });
-  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid member." };
+  if (!parsed.success) {
+    const t = await getTranslations("company.members.errors");
+    return { success: false, error: await localizeZodError(parsed.error, t("invalidMember")) };
+  }
   try {
     await makeRemoveCompanyMemberUseCase().execute(user.id, companyId, parsed.data.memberId);
     revalidatePath(`/dashboard/company/${companyId}/members`);
     return { success: true, data: undefined };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong removing this member.");
+    const t = await getTranslations("company.members.errors");
+    return fromDomainError(error, t("removeFailed"));
   }
 }
 
@@ -77,13 +85,17 @@ export async function transferCompanyOwnershipAction(
 ): Promise<ActionResult> {
   const user = await requireAuth();
   const parsed = transferCompanyOwnershipSchema.safeParse({ newOwnerMemberId, confirmationText });
-  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+  if (!parsed.success) {
+    const t = await getTranslations("company.members.errors");
+    return { success: false, error: await localizeZodError(parsed.error, t("invalidRequest")) };
+  }
   try {
     await makeTransferCompanyOwnershipUseCase().execute(user.id, companyId, parsed.data.newOwnerMemberId);
     revalidatePath(`/dashboard/company/${companyId}/members`);
     return { success: true, data: undefined };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong transferring ownership.");
+    const t = await getTranslations("company.members.errors");
+    return fromDomainError(error, t("transferFailed"));
   }
 }
 

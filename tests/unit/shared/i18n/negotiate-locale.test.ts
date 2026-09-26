@@ -115,3 +115,32 @@ describe("resolveLocale dispatch", () => {
     expect(resolveLocale({ ...input, isAuthenticated: false }).locale).toBe("it");
   });
 });
+
+describe("Module 120 — Russian and Dutch negotiation and fallback", () => {
+  it("matches ru and nl from regional browser tags", () => {
+    expect(matchSupportedLocale(parseAcceptLanguage("ru-RU,ru;q=0.9,en;q=0.5"))).toBe("ru");
+    expect(matchSupportedLocale(parseAcceptLanguage("nl-BE,nl;q=0.9"))).toBe("nl");
+  });
+
+  it("honours a stored ru/nl choice over the browser for guests and accounts", () => {
+    expect(resolveGuestLocale({ storedPreference: "nl", acceptLanguage: "ru" })).toEqual({
+      locale: "nl",
+      source: "stored-preference",
+    });
+    expect(resolveAuthenticatedLocale({ userPreference: "ru", acceptLanguage: "nl" })).toEqual({
+      locale: "ru",
+      source: "user-preference",
+    });
+  });
+
+  it("falls back deterministically: unsupported → browser → Spanish", () => {
+    expect(resolveGuestLocale({ storedPreference: "xx", acceptLanguage: "nl" }).locale).toBe("nl");
+    expect(resolveGuestLocale({ storedPreference: "zz", acceptLanguage: "ja-JP" })).toEqual({
+      locale: "es",
+      source: "default",
+    });
+    expect(resolveAuthenticatedLocale({ userPreference: "tlh", acceptLanguage: null }).locale).toBe("es");
+    // A regional variant of a supported language collapses to its primary subtag.
+    expect(resolveAuthenticatedLocale({ userPreference: "ru-UA", acceptLanguage: null }).locale).toBe("ru");
+  });
+});

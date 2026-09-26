@@ -1,0 +1,30 @@
+{
+  "site": {
+    "defaultTitle": "MaestroYa — Najděte spolehlivé profesionály pro svou domácnost",
+    "description": "Spojte se se spolehlivými profesionály pro svou domácnost: instalatérské práce, elektroinstalace, rekonstrukce, úklid a mnohem více."
+  },
+  "servicesIndex": {
+    "title": "Služby pro domácnost v MaestroYa",
+    "description": "Prohlédněte si kategorie služeb pro domácnost dostupné v MaestroYa: instalatérské práce, elektroinstalace, klimatizace, malířské práce, rekonstrukce a montáž nábytku."
+  },
+  "servicePage": {
+    "title": "{service} — MaestroYa",
+    "descriptionFallback": "Poptejte přes MaestroYa profesionála v kategorii „{service}“ a porovnejte nabídky."
+  },
+  "serviceLocationPage": {
+    "title": "{service} – {city} — MaestroYa",
+    "description": "Poptejte přes MaestroYa službu v kategorii „{service}“ v lokalitě {city} ({province}) a porovnejte nabídky."
+  },
+  "locationsIndex": {
+    "title": "Lokality — MaestroYa ve Španělsku",
+    "description": "MaestroYa je tržiště služeb pro domácnost navržené tak, aby fungovalo v celém Španělsku. Prohlédněte si působnost platformy a lokality s potvrzeným pokrytím."
+  },
+  "locationPage": {
+    "title": "Profesionálové v lokalitě {city} — MaestroYa",
+    "description": "Služby pro domácnost dostupné v lokalitě {city} ({province}) přes MaestroYa."
+  },
+  "nationalCoverage": {
+    "title": "MaestroYa ve Španělsku — celostátní působnost",
+    "description": "MaestroYa je tržiště služeb pro domácnost navržené tak, aby fungovalo v celém Španělsku. Skutečná dostupnost profesionálů závisí na dané oblasti."
+  }
+}

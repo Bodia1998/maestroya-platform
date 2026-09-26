@@ -1,9 +1,15 @@
+import { getTranslations } from "next-intl/server";
+
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { localizeCategoryName } from "@/presentation/i18n/service-categories";
 import { ServiceRequestForm } from "../service-request-form";
 
-export const metadata = { title: "New service request" };
+export async function generateMetadata() {
+  const t = await getTranslations("customer.requests");
+  return { title: t("new.title") };
+}
 
 /**
  * `categoryId`/`city` are optional prefill hints — currently only ever
@@ -26,14 +32,22 @@ export default async function NewServiceRequestPage({
   // Static reference data for the category picker — a plain read, not a
   // use case (no business logic), matching how the Professional dashboard
   // reads categories directly (see dashboard/professional/page.tsx).
-  const categories = await new PrismaServiceCategoryRepository().listActive();
+  const [rawCategories, t, tServices] = await Promise.all([
+    new PrismaServiceCategoryRepository().listActive(),
+    getTranslations("customer.requests"),
+    getTranslations("services"),
+  ]);
+  const categories = rawCategories.map((category) => ({
+    id: category.id,
+    name: localizeCategoryName(tServices, category),
+  }));
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title="New service request"
-        subtitle="Describe the job you need done. It will be posted immediately for professionals to quote on."
-        breadcrumbs={[{ label: "My requests", href: "/requests" }, { label: "New request" }]}
+        title={t("new.title")}
+        subtitle={t("new.subtitle")}
+        breadcrumbs={[{ label: t("list.title"), href: "/requests" }, { label: t("list.newRequest") }]}
       />
 
       <ServiceRequestForm

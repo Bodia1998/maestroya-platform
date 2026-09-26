@@ -85,6 +85,7 @@ export const POST = withApiTracing("/api/webhooks/stripe", async function POST(r
     rawBody = await request.text();
   } catch {
     logger.warn("stripe_connect_webhook_unreadable_body", { requestId, route });
+    // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
     return NextResponse.json({ error: "Unable to read request body." }, { status: 400, headers });
   }
 
@@ -102,6 +103,7 @@ export const POST = withApiTracing("/api/webhooks/stripe", async function POST(r
     // intentionally never surfaces the underlying `constructEvent`
     // failure reason (see that adapter's own doc comment).
     logger.warn("stripe_connect_webhook_signature_invalid", { requestId, route });
+    // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
     return NextResponse.json({ error: "Invalid webhook signature." }, { status: 401, headers });
   }
 

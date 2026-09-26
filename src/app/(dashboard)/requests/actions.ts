@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
+import type { ZodError } from "zod";
 
 import { DomainError, RateLimitedError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -18,6 +20,7 @@ import {
   makeUpdateServiceRequestUseCase,
 } from "@/application/use-cases/service-request/compose";
 import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
+import { localizeActionError, localizeZodFieldErrors } from "@/presentation/i18n/server";
 
 export type ActionResult =
   | { success: true }
@@ -27,15 +30,20 @@ export type CreateActionResult =
   | { success: true; id: string }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
-// Same translation convention as Profile/Professional's actions.ts: domain
-// errors surface their own (safe, user-facing) message, anything else is
-// logged server-side and replaced with a generic message.
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+// Module 120 — Multilingual Localization: domain errors surface their
+// localized message (`localizeActionError`), anything else is logged
+// server-side and replaced with the caller's localized fallback.
+async function fromDomainError(error: unknown, fallback: string): Promise<ActionResult> {
+  return { success: false, error: await localizeActionError(error, fallback) };
+}
+
+async function invalidInput(error: ZodError) {
+  const tValidation = await getTranslations("validation");
+  return {
+    success: false as const,
+    error: tValidation("summary"),
+    fieldErrors: await localizeZodFieldErrors(error),
+  };
 }
 
 /**
@@ -50,11 +58,7 @@ export async function createServiceRequestAction(formData: unknown): Promise<Cre
 
   const parsed = createServiceRequestSchema.safeParse(formData);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return invalidInput(parsed.error);
   }
 
   const antiAbuse = makeAntiAbuseService();
@@ -67,7 +71,7 @@ export async function createServiceRequestAction(formData: unknown): Promise<Cre
     );
   } catch (error) {
     if (error instanceof DomainError) {
-      return { success: false, error: error.message } as CreateActionResult;
+      return { success: false, error: await localizeActionError(error) };
     }
     throw error;
   }
@@ -77,8 +81,8 @@ export async function createServiceRequestAction(formData: unknown): Promise<Cre
     revalidatePath("/requests");
     return { success: true, id: created.id };
   } catch (error) {
-    const result = fromDomainError(error, "Something went wrong creating your service request.");
-    return result as CreateActionResult;
+    const t = await getTranslations("customer");
+    return (await fromDomainError(error, t("requests.errors.createFailed"))) as CreateActionResult;
   }
 }
 
@@ -90,11 +94,7 @@ export async function updateServiceRequestAction(
 
   const parsed = updateServiceRequestSchema.safeParse(formData);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return invalidInput(parsed.error);
   }
 
   try {
@@ -103,7 +103,8 @@ export async function updateServiceRequestAction(
     revalidatePath(`/requests/${requestId}`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong updating your service request.");
+    const t = await getTranslations("customer");
+    return fromDomainError(error, t("requests.errors.updateFailed"));
   }
 }
 
@@ -116,7 +117,8 @@ export async function cancelServiceRequestAction(requestId: string): Promise<Act
     revalidatePath(`/requests/${requestId}`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong cancelling your service request.");
+    const t = await getTranslations("customer");
+    return fromDomainError(error, t("requests.errors.cancelFailed"));
   }
 }
 
@@ -126,19 +128,20 @@ export async function addServiceRequestPhotoAction(
 ): Promise<ActionResult> {
   const user = await requireAuth();
 
+  const t = await getTranslations("customer");
   const file = formData.get("photo");
   if (!(file instanceof File) || file.size === 0) {
-    return { success: false, error: "Choose an image to upload." };
+    return { success: false, error: t("requests.errors.photoMissing") };
   }
   // Server-side checks — the client's <input accept> and the browser-
   // reported File.type are both just hints, not guarantees; these are the
   // checks that actually matter. Same rationale as the avatar upload
   // action; CloudinaryRequestPhotoUploadService re-checks independently.
   if (!ALLOWED_REQUEST_PHOTO_MIME_TYPES.includes(file.type as (typeof ALLOWED_REQUEST_PHOTO_MIME_TYPES)[number])) {
-    return { success: false, error: "Photos must be a JPEG, PNG, or WebP image." };
+    return { success: false, error: t("requests.errors.photoType") };
   }
   if (file.size > MAX_REQUEST_PHOTO_BYTES) {
-    return { success: false, error: "Each photo must be smaller than 5MB." };
+    return { success: false, error: t("requests.errors.photoTooLarge") };
   }
 
   // Module 33 — Security Hardening: see FILE_UPLOAD_BY_USER's doc comment
@@ -152,7 +155,7 @@ export async function addServiceRequestPhotoAction(
     );
   } catch (error) {
     if (error instanceof RateLimitedError) {
-      return { success: false, error: error.message };
+      return { success: false, error: await localizeActionError(error) };
     }
     throw error;
   }
@@ -172,7 +175,7 @@ export async function addServiceRequestPhotoAction(
     revalidatePath(`/requests/${requestId}/edit`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong uploading your photo.");
+    return fromDomainError(error, t("requests.errors.photoUploadFailed"));
   }
 }
 
@@ -188,6 +191,7 @@ export async function removeServiceRequestPhotoAction(
     revalidatePath(`/requests/${requestId}/edit`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong removing that photo.");
+    const t = await getTranslations("customer");
+    return fromDomainError(error, t("requests.errors.photoRemoveFailed"));
   }
 }

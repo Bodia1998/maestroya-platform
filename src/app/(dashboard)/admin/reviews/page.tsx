@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { moderateReviewFormAction, restoreReviewFormAction } from "@/app/(dashboard)/admin/actions";
 import { makeListAdminReviewsUseCase } from "@/application/use-cases/admin/compose";
@@ -10,7 +11,10 @@ import { AdminRowActionButton } from "@/components/dashboard/admin-row-action-bu
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 
-export const metadata = { title: "Admin — Reviews" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("reviewsPage.title") }) };
+}
 
 type SearchParams = Promise<{ page?: string }>;
 
@@ -24,24 +28,26 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
 
   const reviews = await makeListAdminReviewsUseCase().execute({ limit: DEFAULT_PAGE_SIZE, offset });
 
+  const t = await getTranslations("admin");
+
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Reviews" subtitle="Moderate customer reviews of professionals." />
+      <PageHeader title={t("reviewsPage.title")} subtitle={t("reviewsPage.subtitle")} />
 
       {reviews.length === 0 ? (
-        <EmptyState icon={Star} title="No reviews found" description="Customer reviews of professionals will appear here." />
+        <EmptyState icon={Star} title={t("reviewsPage.empty")} description={t("reviewsPage.emptyDescription")} />
       ) : (
-        <AdminDataTable caption="Reviews" minWidth={560}>
+        <AdminDataTable caption={t("reviewsPage.title")} minWidth={560}>
           <AdminTableHeadRow>
-            <AdminTh>Rating</AdminTh>
-            <AdminTh>Comment</AdminTh>
-            <AdminTh>Status</AdminTh>
-            <AdminTh>Actions</AdminTh>
+            <AdminTh>{t("common.columns.rating")}</AdminTh>
+            <AdminTh>{t("reviewsPage.columns.comment")}</AdminTh>
+            <AdminTh>{t("common.columns.status")}</AdminTh>
+            <AdminTh>{t("common.columns.actions")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {reviews.map((review) => (
               <AdminTableRow key={review.id} className="align-top">
-                <td className="px-4 py-3">{review.rating}/5</td>
+                <td className="px-4 py-3">{t("reviewsPage.ratingOutOfFive", { rating: review.rating })}</td>
                 <td className="max-w-xs truncate px-4 py-3">{review.comment ?? "—"}</td>
                 <td className="px-4 py-3">
                   <StatusBadge status={review.status} />
@@ -50,12 +56,12 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
                   <div className="flex flex-wrap gap-2">
                     {review.status !== "REMOVED" && (
                       <form action={moderateReviewFormAction.bind(null, review.id, undefined)}>
-                        <AdminRowActionButton>Hide</AdminRowActionButton>
+                        <AdminRowActionButton>{t("reviewsPage.hide")}</AdminRowActionButton>
                       </form>
                     )}
                     {review.status === "REMOVED" && (
                       <form action={restoreReviewFormAction.bind(null, review.id)}>
-                        <AdminRowActionButton>Restore</AdminRowActionButton>
+                        <AdminRowActionButton>{t("reviewsPage.restore")}</AdminRowActionButton>
                       </form>
                     )}
                   </div>

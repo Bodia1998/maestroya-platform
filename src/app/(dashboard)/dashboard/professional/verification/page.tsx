@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetProfessionalVerificationUseCase } from "@/application/use-cases/verification/compose";
 import { VERIFICATION_DOCUMENT_TYPE_VALUES } from "@/domain/services/professional-verification-rules";
+import { MAX_VERIFICATION_DOCUMENT_BYTES } from "@/application/dto/verification.dto";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
@@ -19,48 +22,18 @@ import {
   uploadVerificationDocumentFormAction,
 } from "./actions";
 
-export const metadata = { title: "Professional verification" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("professional.verification");
+  return { title: t("metaTitle") };
+}
 
-const STATUS_COPY: Record<string, { label: string; description: string }> = {
-  DRAFT: {
-    label: "Not submitted",
-    description:
-      "Upload at least one identity document (national ID, passport or driver's licence) and any supporting documents, then submit for review.",
-  },
-  PENDING: {
-    label: "Pending review",
-    description: "Your request is in the review queue. We'll let you know once a reviewer has looked at it.",
-  },
-  UNDER_REVIEW: {
-    label: "Under review",
-    description: "A reviewer is currently checking your documents. No action is needed from you right now.",
-  },
-  APPROVED: {
-    label: "Approved",
-    description: "You are a verified professional. A verified badge appears on your public profile.",
-  },
-  REJECTED: {
-    label: "Rejected",
-    description: "Your request was not approved. See the reason below — you can address it and resubmit.",
-  },
-  RESUBMISSION_REQUIRED: {
-    label: "Resubmission required",
-    description: "A reviewer needs you to update your request. Follow the instructions below, then resubmit.",
-  },
-};
+/** Statuses with their own label + explanation in `professional.verification.status.*`. */
+const STATUS_KEYS = ["DRAFT", "PENDING", "UNDER_REVIEW", "APPROVED", "REJECTED", "RESUBMISSION_REQUIRED"] as const;
+type StatusKey = (typeof STATUS_KEYS)[number];
 
-const DOC_TYPE_LABELS: Record<string, string> = {
-  NATIONAL_ID: "National ID",
-  PASSPORT: "Passport",
-  DRIVER_LICENSE: "Driver's licence",
-  BUSINESS_LICENSE: "Business licence",
-  TAX_CERTIFICATE: "Tax certificate",
-  INSURANCE_CERTIFICATE: "Insurance certificate",
-  PROFESSIONAL_CERTIFICATION: "Professional certification",
-  PROOF_OF_ADDRESS: "Proof of address",
-  BUSINESS_REGISTRATION: "Business registration",
-  OTHER: "Other",
-};
+function isStatusKey(value: string): value is StatusKey {
+  return (STATUS_KEYS as readonly string[]).includes(value);
+}
 
 /**
  * Professional Verification module (Module 17): the professional's own
@@ -72,17 +45,24 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 export default async function ProfessionalVerificationPage() {
   const user = await requireAuth();
   const { hasProfessionalProfile, verification } = await makeGetProfessionalVerificationUseCase().execute(user.id);
+  const [t, format] = await Promise.all([getTranslations("professional.verification"), getFormatter()]);
+  const docTypeLabel = (type: string): string => {
+    const key = `documentTypes.${type}`;
+    return t.has(key as never) ? t(key as never) : type;
+  };
 
   if (!hasProfessionalProfile) {
     return (
       <PageContainer gap="sm">
-        <PageHeader title="Verification" />
+        <PageHeader title={t("title")} />
         <p className="text-sm text-foreground/70">
-          You need a professional profile before you can request verification.{" "}
-          <Link href="/dashboard/professional" className="underline">
-            Create your professional profile
-          </Link>
-          .
+          {t.rich("noProfile", {
+            link: (chunks) => (
+              <Link href="/dashboard/professional" className="underline">
+                {chunks}
+              </Link>
+            ),
+          })}
         </p>
       </PageContainer>
     );
@@ -92,50 +72,54 @@ export default async function ProfessionalVerificationPage() {
   const canModifyDocs = status === "DRAFT" || status === "RESUBMISSION_REQUIRED";
   const canSubmit = status === "DRAFT";
   const canResubmit = status === "RESUBMISSION_REQUIRED" || status === "REJECTED";
+  const statusKey = verification && isStatusKey(verification.status) ? verification.status : null;
 
   return (
     <PageContainer>
       <PageHeader
-        title="Verification"
-        subtitle="Verify your identity to earn a “Verified professional” badge on your public profile."
+        title={t("title")}
+        subtitle={t("subtitle")}
       />
 
       {!verification ? (
         <Section bordered gap="lg">
-          <p className="text-sm text-foreground/80">You have not started a verification request yet.</p>
+          <p className="text-sm text-foreground/80">{t("notStarted")}</p>
           <form action={requestVerificationFormAction}>
-            <Button type="submit">Start verification</Button>
+            <Button type="submit">{t("start")}</Button>
           </form>
         </Section>
       ) : (
         <>
           <Section bordered gap="sm">
             <div className="flex items-center gap-3">
-              <StatusBadge status={verification.status} label={STATUS_COPY[verification.status]?.label} />
+              <StatusBadge
+                status={verification.status}
+                label={statusKey ? t(`status.${statusKey}.label`) : undefined}
+              />
               {verification.expiresAt && verification.status === "APPROVED" && (
                 <span className="text-xs text-foreground/60">
-                  Valid until {verification.expiresAt.toLocaleDateString()}
+                  {t("validUntil", { date: format.dateTime(verification.expiresAt, { dateStyle: "medium" }) })}
                 </span>
               )}
             </div>
-            <p className="text-sm text-foreground/80">{STATUS_COPY[verification.status]?.description}</p>
+            {statusKey && <p className="text-sm text-foreground/80">{t(`status.${statusKey}.description`)}</p>}
 
             {verification.status === "REJECTED" && verification.rejectionReason && (
-              <Alert variant="danger" title="Reason">
+              <Alert variant="danger" title={t("rejectionReasonTitle")}>
                 <p className="whitespace-pre-line">{verification.rejectionReason}</p>
               </Alert>
             )}
             {verification.status === "RESUBMISSION_REQUIRED" && verification.resubmissionReason && (
-              <Alert variant="warning" title="What to update">
+              <Alert variant="warning" title={t("resubmissionReasonTitle")}>
                 <p className="whitespace-pre-line">{verification.resubmissionReason}</p>
               </Alert>
             )}
           </Section>
 
-          <Section title="Documents">
+          <Section title={t("documentsTitle")}>
             {verification.documents.length === 0 ? (
               <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-foreground/70">
-                No documents uploaded yet.
+                {t("noDocuments")}
               </p>
             ) : (
               <ul className="flex flex-col gap-2">
@@ -145,13 +129,13 @@ export default async function ProfessionalVerificationPage() {
                     className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm"
                   >
                     <div className="min-w-0">
-                      <p className="font-medium">{DOC_TYPE_LABELS[doc.type] ?? doc.type}</p>
+                      <p className="font-medium">{docTypeLabel(doc.type)}</p>
                       <p className="truncate text-xs text-foreground/60">{doc.originalFilename}</p>
                     </div>
                     {canModifyDocs && (
                       <form action={removeVerificationDocumentFormAction.bind(null, doc.id)}>
                         <Button type="submit" variant="outline" size="sm">
-                          Remove
+                          {t("remove")}
                         </Button>
                       </form>
                     )}
@@ -165,19 +149,21 @@ export default async function ProfessionalVerificationPage() {
                 action={uploadVerificationDocumentFormAction}
                 className="flex flex-col gap-3 rounded-md border border-border p-4"
               >
-                <p className="text-sm font-medium">Upload a document</p>
+                <p className="text-sm font-medium">{t("uploadTitle")}</p>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="verification-doc-type">Document type</Label>
+                  <Label htmlFor="verification-doc-type">{t("documentType")}</Label>
                   <Select id="verification-doc-type" name="type" required>
-                    {VERIFICATION_DOCUMENT_TYPE_VALUES.map((t) => (
-                      <option key={t} value={t}>
-                        {DOC_TYPE_LABELS[t] ?? t}
+                    {VERIFICATION_DOCUMENT_TYPE_VALUES.map((type) => (
+                      <option key={type} value={type}>
+                        {docTypeLabel(type)}
                       </option>
                     ))}
                   </Select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="verification-doc-file">File (JPEG, PNG, WebP or PDF, max 10MB)</Label>
+                  <Label htmlFor="verification-doc-file">
+                    {t("fileLabel", { maxMb: MAX_VERIFICATION_DOCUMENT_BYTES / (1024 * 1024) })}
+                  </Label>
                   <input
                     id="verification-doc-file"
                     type="file"
@@ -188,7 +174,7 @@ export default async function ProfessionalVerificationPage() {
                   />
                 </div>
                 <Button type="submit" variant="outline" className="w-fit">
-                  Upload
+                  {t("upload")}
                 </Button>
               </form>
             )}
@@ -197,10 +183,10 @@ export default async function ProfessionalVerificationPage() {
           {(canSubmit || canResubmit) && (
             <section className="flex flex-col gap-2">
               <form action={canSubmit ? submitVerificationFormAction : resubmitVerificationFormAction}>
-                <Button type="submit">{canSubmit ? "Submit for review" : "Resubmit for review"}</Button>
+                <Button type="submit">{canSubmit ? t("submit") : t("resubmit")}</Button>
               </form>
               <p className="text-xs text-foreground/60">
-                You must have at least one identity document uploaded before submitting.
+                {t("submitHint")}
               </p>
             </section>
           )}

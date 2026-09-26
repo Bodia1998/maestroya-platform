@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { Search, X } from "lucide-react";
 
@@ -14,7 +15,8 @@ export interface SearchInputProps extends InputProps {
 
 /** `Input` with a leading search icon and an optional clear button (shown once there's a value). */
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
-  ({ className, clearLabel = "Limpiar búsqueda", onClear, value, defaultValue, ...props }, ref) => {
+  ({ className, clearLabel, onClear, value, defaultValue, ...props }, ref) => {
+    const t = useTranslations("ui");
     const hasValue = Boolean(value ?? defaultValue);
     return (
       <div className="relative">
@@ -34,7 +36,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           <button
             type="button"
             onClick={onClear}
-            aria-label={clearLabel}
+            aria-label={clearLabel ?? t("searchInput.clear")}
             className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <X aria-hidden className="h-4 w-4" />

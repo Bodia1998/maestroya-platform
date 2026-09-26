@@ -1,0 +1,134 @@
+{
+  "categories": {
+    "fontaneria": {
+      "name": "Hydraulika",
+      "description": "Naprawa przecieków, kranów, rur i instalacji wodnych."
+    },
+    "electricidad": {
+      "name": "Elektryka",
+      "description": "Instalacje elektryczne, awarie, rozdzielnice i gniazdka."
+    },
+    "aire-acondicionado": {
+      "name": "Klimatyzacja",
+      "description": "Montaż, serwis i naprawa klimatyzacji."
+    },
+    "pintura": {
+      "name": "Malowanie",
+      "description": "Malowanie wnętrz i elewacji, gładzie i wykończenia."
+    },
+    "reformas": {
+      "name": "Remonty",
+      "description": "Kompleksowe i częściowe remonty mieszkań."
+    },
+    "montaje-de-muebles": {
+      "name": "Montaż mebli",
+      "description": "Montaż i skręcanie mebli."
+    },
+    "fontanero": {
+      "name": "Hydraulik"
+    },
+    "electricista": {
+      "name": "Elektryk"
+    },
+    "tecnico-climatizacion": {
+      "name": "Technik klimatyzacji"
+    },
+    "pintor": {
+      "name": "Malarz"
+    },
+    "reformista": {
+      "name": "Specjalista od remontów"
+    },
+    "montador-de-muebles": {
+      "name": "Monter mebli"
+    }
+  },
+  "countries": {
+    "ES": "Hiszpania"
+  },
+  "breadcrumbs": {
+    "home": "Strona główna",
+    "services": "Usługi",
+    "locations": "Lokalizacje"
+  },
+  "shared": {
+    "faqTitle": "Najczęściej zadawane pytania",
+    "provinceCountry": "{province}, {country}",
+    "serviceInCity": "{service} w miejscowości {city}",
+    "requestThisService": "Zamów tę usługę",
+    "viewProfessionals": "Zobacz specjalistów",
+    "platformScopeTitle": "Zasięg platformy",
+    "confirmedLocalitiesTitle": "Miejscowości z potwierdzonym zasięgiem"
+  },
+  "index": {
+    "title": "Usługi domowe",
+    "intro": "Oto kategorie usług dostępne dziś w MaestroYa. Wybierz jedną, aby dowiedzieć się, co możesz zlecić i jak wygląda proces wyceny.",
+    "empty": "Obecnie nie ma opublikowanych kategorii usług.",
+    "locationsPrompt": "Szukasz zasięgu według okolicy? <link>Zobacz dostępne miejscowości</link>."
+  },
+  "servicePage": {
+    "whatYouCanRequestTitle": "Co możesz zlecić",
+    "whatProfessionalsProvideTitle": "Co zwykle zapewnia specjalista",
+    "howItWorksTitle": "Jak to działa w MaestroYa",
+    "howItWorks": {
+      "step1": "Publikujesz zapytanie opisujące prace w kategorii „{service}”.",
+      "step2": "Specjaliści obsługujący tę kategorię i Twoją okolicę mogą je przejrzeć i przesłać Ci wycenę.",
+      "step3": "Porównujesz otrzymane wyceny i akceptujesz tę, która najbardziej Ci odpowiada.",
+      "step4": "Zlecenie jest planowane i realizowane zgodnie z ustaleniami w zaakceptowanej wycenie."
+    },
+    "areasTitle": "Obszary z tą usługą",
+    "beforeRequestingTitle": "Zanim złożysz zapytanie",
+    "relatedTitle": "Powiązane usługi",
+    "cta": "Gotowy, by zacząć? Opublikuj zapytanie w kategorii „{service}”, a specjaliści, którzy ją obsługują, będą mogli przesłać Ci wycenę."
+  },
+  "serviceLocationPage": {
+    "confirmedCoverage": "MaestroYa ma potwierdzony zasięg w miejscowości {city} ({province}), więc możesz opublikować zapytanie z adresem w tej miejscowości.",
+    "localFaq": {
+      "question": "Czy mogę złożyć zapytanie w kategorii „{service}” w miejscowości {city}?",
+      "answer": "Tak. Możesz opublikować zapytanie w kategorii „{service}”, podając adres w miejscowości {city} ({province}). Specjaliści z tej kategorii obsługujący tę okolicę będą mogli je przejrzeć i przesłać Ci wycenę."
+    },
+    "howItWorksTitle": "Jak to działa w miejscowości {city}",
+    "howItWorks": {
+      "step1": "Publikujesz zapytanie w kategorii „{service}” z adresem w miejscowości {city}.",
+      "step2": "Specjaliści z tej kategorii obsługujący tę okolicę mogą przesłać Ci wycenę.",
+      "step3": "Porównujesz wyceny i akceptujesz tę, która najbardziej Ci odpowiada."
+    },
+    "cta": "Gotowy, by zacząć? Opublikuj zapytanie w kategorii „{service}” w miejscowości {city}."
+  },
+  "locationsIndex": {
+    "title": "Lokalizacje",
+    "intro": "MaestroYa to platforma usług domowych zaprojektowana do działania w całej Hiszpanii. Faktyczna dostępność specjalistów zależy od obszaru.",
+    "nationalCardTitle": "MaestroYa: {country}",
+    "nationalCardDescription": "Co oznacza, że MaestroYa jest platformą o zasięgu ogólnokrajowym, i jak działa dostępność lokalna.",
+    "confirmedEmpty": "Obecnie nie ma opublikowanych miejscowości z potwierdzonym zasięgiem.",
+    "confirmedNote": "Ta lista obejmuje tylko miejscowości, których zasięg potwierdzają rzeczywiste dane platformy — nie jest to pełna lista obszarów, na których MaestroYa może zacząć działać.",
+    "servicesPrompt": "Szukasz według rodzaju usługi? <link>Zobacz dostępne kategorie</link>."
+  },
+  "locationPage": {
+    "title": "MaestroYa w miejscowości {city}",
+    "servicesTitle": "Usługi dostępne w miejscowości {city}",
+    "howItWorksTitle": "Jak to działa w Twojej okolicy",
+    "howItWorks": {
+      "step1": "Publikujesz zapytanie opisujące prace i Twój adres w miejscowości {city}.",
+      "step2": "Specjaliści obsługujący tę kategorię i tę okolicę mogą je przejrzeć i przesłać Ci wycenę.",
+      "step3": "Porównujesz otrzymane wyceny i akceptujesz tę, która najbardziej Ci odpowiada."
+    },
+    "relatedTitle": "Inne miejscowości",
+    "cta": "Gotowy, by zacząć? Opublikuj zapytanie, a specjaliści obsługujący miejscowość {city} będą mogli przesłać Ci wycenę.",
+    "viewProfessionalsIn": "Zobacz specjalistów w miejscowości {city}"
+  },
+  "nationalPage": {
+    "title": "MaestroYa: {country}",
+    "categoriesTitle": "Kategorie usług",
+    "localAvailabilityTitle": "Jak działa dostępność lokalna",
+    "confirmedEmpty": "Nie ma jeszcze miejscowości z zasięgiem potwierdzonym rzeczywistymi danymi platformy.",
+    "confirmedNote": "Ta lista obejmuje tylko miejscowości, których zasięg potwierdzają rzeczywiste dane platformy. To, że danej miejscowości tu nie ma, nie oznacza, że MaestroYa nie będzie mogło tam działać w przyszłości — oznacza, że dziś nie ma tam potwierdzonego zasięgu do pokazania.",
+    "cta": "Gotowy, by zacząć? Opublikuj zapytanie opisujące potrzebną usługę i Twoją lokalizację.",
+    "searchProfessionals": "Szukaj specjalistów",
+    "joinAsProfessional": "Dołącz jako specjalista"
+  },
+  "map": {
+    "ariaLabel": "Mapa",
+    "unavailable": "Mapa jest obecnie niedostępna."
+  }
+}

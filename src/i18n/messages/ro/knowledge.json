@@ -1,0 +1,256 @@
+{
+  "services": {
+    "fontaneria": {
+      "nameInSentence": "Instalații sanitare",
+      "intro": "MaestroYa pune în legătură clienții cu profesioniști pentru lucrări de instalații sanitare: repararea scurgerilor, a robinetelor, a țevilor și a instalațiilor de apă din locuință. Clientul descrie problema și publică o cerere; instalatorii care acoperă zona o pot analiza și pot trimite o ofertă.",
+      "commonJobTypes": {
+        "leakRepair": "Repararea scurgerilor de apă",
+        "tapRepair": "Înlocuirea sau repararea robinetelor",
+        "pipeUnblocking": "Desfundarea țevilor",
+        "sanitaryInstallation": "Montarea obiectelor sanitare (toalete, chiuvete, dușuri)",
+        "waterHeaterRepair": "Verificarea sau repararea boilerelor și a instalațiilor de apă caldă"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Diagnosticarea problemei descrise în cerere",
+        "quote": "O ofertă detaliată înainte de începerea lucrării",
+        "execution": "Realizarea lucrării convenite în oferta acceptată"
+      },
+      "considerations": {
+        "describe": "Descrie problema cât mai detaliat și, dacă se poate, adaugă fotografii la cerere",
+        "urgency": "Indică urgența reală a lucrării (sistemul permite marcarea cererilor ca mai mult sau mai puțin urgente)",
+        "compare": "Poți primi și compara mai multe oferte înainte de a accepta una"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Ce fel de lucrări de instalații sanitare pot solicita pe MaestroYa?",
+          "answer": "Poți publica o cerere care descrie orice lucrare de instalații sanitare pentru locuință, cum ar fi o scurgere, un robinet care nu funcționează sau montarea unui obiect sanitar. Instalatorii care acoperă zona ta pot analiza cererea și îți pot trimite o ofertă."
+        },
+        "howQuote": {
+          "question": "Cum funcționează oferta pentru instalații sanitare?",
+          "answer": "După ce îți publici cererea, unul sau mai mulți profesioniști îți pot trimite o ofertă. Poți compara ofertele primite și o poți accepta pe cea preferată înainte de începerea lucrării."
+        },
+        "coverage": {
+          "question": "În ce zone este disponibil serviciul de instalații sanitare?",
+          "answer": "Acoperirea depinde de profesioniștii activi în fiecare zonă. Consultă pagina localității tale pentru a vedea disponibilitatea actuală în acea zonă."
+        }
+      }
+    },
+    "electricidad": {
+      "nameInSentence": "Instalații electrice",
+      "intro": "MaestroYa pune în legătură clienții cu profesioniști pentru lucrări electrice: instalații electrice, defecțiuni, tablouri electrice și prize. Clientul descrie lucrarea și publică o cerere; electricienii care acoperă zona o pot analiza și pot trimite o ofertă.",
+      "commonJobTypes": {
+        "faultRepair": "Remedierea defecțiunilor electrice",
+        "socketsSwitches": "Montarea sau înlocuirea prizelor și a întrerupătoarelor",
+        "panelUpgrade": "Verificarea sau modernizarea tabloului electric",
+        "lightPoints": "Montarea punctelor de iluminat",
+        "smallInstallations": "Montarea aparatajului și mici lucrări electrice casnice"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Diagnosticarea problemei electrice descrise în cerere",
+        "quote": "O ofertă detaliată înainte de începerea lucrării",
+        "execution": "Realizarea lucrării convenite în oferta acceptată"
+      },
+      "considerations": {
+        "describe": "Descrie defecțiunea sau instalația cât mai detaliat, cu fotografii dacă ajută la explicare",
+        "urgency": "Indică urgența reală a lucrării",
+        "compare": "Compară mai multe oferte înainte de a accepta una"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Ce fel de lucrări electrice pot solicita pe MaestroYa?",
+          "answer": "Poți publica o cerere pentru defecțiuni electrice, montarea de prize sau puncte de iluminat ori verificarea tabloului electric, printre alte lucrări. Electricienii care acoperă zona ta îți pot trimite o ofertă."
+        },
+        "howToRequest": {
+          "question": "Cum solicit un electrician prin MaestroYa?",
+          "answer": "Publică o cerere care descrie lucrarea. Profesioniștii care acoperă categoria și zona ta o vor putea analiza și îți vor putea trimite o ofertă, pe care o poți accepta sau refuza."
+        },
+        "coverage": {
+          "question": "În ce zone este disponibil serviciul de instalații electrice?",
+          "answer": "Acoperirea depinde de profesioniștii activi în fiecare zonă. Consultă pagina localității tale pentru a vedea disponibilitatea actuală în acea zonă."
+        }
+      }
+    },
+    "aire-acondicionado": {
+      "nameInSentence": "Aer condiționat",
+      "intro": "MaestroYa pune în legătură clienții cu profesioniști pentru lucrări de climatizare: montarea, întreținerea și repararea aparatelor de aer condiționat. Clientul descrie de ce are nevoie și publică o cerere; tehnicienii în climatizare care acoperă zona o pot analiza și pot trimite o ofertă.",
+      "commonJobTypes": {
+        "newInstallation": "Montarea unui aparat de aer condiționat nou",
+        "repair": "Repararea unui aparat care nu răcește sau nu funcționează",
+        "maintenance": "Întreținerea și curățarea aparatelor",
+        "gasRecharge": "Reîncărcarea cu agent frigorific"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Diagnosticarea sau evaluarea aparatului ori a instalației descrise în cerere",
+        "quote": "O ofertă detaliată înainte de începerea lucrării",
+        "execution": "Realizarea lucrării convenite în oferta acceptată"
+      },
+      "considerations": {
+        "equipmentType": "Indică tipul aparatului (dacă îl știi) și descrie problema sau montajul dorit",
+        "photos": "Adaugă fotografii ale aparatului sau ale spațiului dacă ajută la explicarea lucrării",
+        "compare": "Compară mai multe oferte înainte de a accepta una"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Ce lucrări de climatizare pot solicita pe MaestroYa?",
+          "answer": "Poți solicita montarea, repararea sau întreținerea aparatelor de aer condiționat. Tehnicienii în climatizare care acoperă zona ta îți pot analiza cererea și îți pot trimite o ofertă."
+        },
+        "howQuote": {
+          "question": "Cum funcționează oferta pentru montarea unui aparat de aer condiționat?",
+          "answer": "Îți publici cererea descriind de ce ai nevoie; profesioniștii interesați își trimit oferta, iar tu decizi pe care o accepți."
+        },
+        "coverage": {
+          "question": "În ce zone este disponibil serviciul de aer condiționat?",
+          "answer": "Acoperirea depinde de profesioniștii activi în fiecare zonă. Consultă pagina localității tale pentru a vedea disponibilitatea actuală în acea zonă."
+        }
+      }
+    },
+    "pintura": {
+      "nameInSentence": "Zugrăveli",
+      "intro": "MaestroYa pune în legătură clienții cu profesioniști în zugrăveli pentru lucrări interioare și exterioare. Clientul descrie spațiul de zugrăvit și publică o cerere; zugravii care acoperă zona o pot analiza și pot trimite o ofertă.",
+      "commonJobTypes": {
+        "interior": "Zugrăveli interioare (camere, holuri, tavane)",
+        "exterior": "Vopsirea fațadelor și a exterioarelor",
+        "wallPreparation": "Gletuirea și pregătirea pereților înainte de zugrăvire",
+        "touchUps": "Retușuri și finisaje punctuale"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Evaluarea spațiului și a lucrării descrise în cerere",
+        "quote": "O ofertă detaliată înainte de începerea lucrării",
+        "execution": "Realizarea lucrării convenite în oferta acceptată"
+      },
+      "considerations": {
+        "surface": "Indică suprafața aproximativă și starea actuală a pereților",
+        "photos": "Adaugă fotografii ale spațiului de zugrăvit",
+        "compare": "Compară mai multe oferte înainte de a accepta una"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Ce lucrări de zugrăveli pot solicita pe MaestroYa?",
+          "answer": "Poți solicita zugrăveli interioare, exterioare sau retușuri punctuale. Zugravii care acoperă zona ta îți pot trimite o ofertă."
+        },
+        "howQuote": {
+          "question": "Cum funcționează oferta pentru zugrăveli?",
+          "answer": "Îți publici cererea descriind spațiul și lucrarea; profesioniștii interesați își trimit oferta, iar tu decizi pe care o accepți."
+        },
+        "coverage": {
+          "question": "În ce zone este disponibil serviciul de zugrăveli?",
+          "answer": "Acoperirea depinde de profesioniștii activi în fiecare zonă. Consultă pagina localității tale pentru a vedea disponibilitatea actuală în acea zonă."
+        }
+      }
+    },
+    "reformas": {
+      "nameInSentence": "Renovări",
+      "intro": "MaestroYa pune în legătură clienții cu profesioniști pentru renovări complete și parțiale ale locuinței. Clientul descrie amploarea renovării și publică o cerere; profesioniștii în renovări care acoperă zona o pot analiza și pot trimite o ofertă.",
+      "commonJobTypes": {
+        "partial": "Renovări parțiale (o cameră, o baie, o bucătărie)",
+        "full": "Renovări complete ale locuinței",
+        "masonry": "Lucrări de zidărie asociate unei renovări",
+        "layoutFinishes": "Modificări de compartimentare sau de finisaje"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Evaluarea amplorii renovării descrise în cerere",
+        "quote": "O ofertă detaliată înainte de începerea lucrării",
+        "execution": "Realizarea lucrării convenite în oferta acceptată"
+      },
+      "considerations": {
+        "scope": "Descrie amploarea renovării cât mai detaliat",
+        "photos": "Adaugă fotografii cu starea actuală a spațiului",
+        "compare": "Renovările implică de obicei oferte mai mari: compară mai multe variante înainte de a accepta"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Ce fel de renovări pot solicita pe MaestroYa?",
+          "answer": "Poți solicita renovări parțiale sau complete ale locuinței. Profesioniștii în renovări care acoperă zona ta îți pot analiza cererea și îți pot trimite o ofertă."
+        },
+        "compareQuotes": {
+          "question": "Pot compara mai multe oferte de renovare?",
+          "answer": "Da. Poți primi oferte de la mai mulți profesioniști pentru aceeași cerere și le poți compara înainte de a accepta una."
+        },
+        "coverage": {
+          "question": "În ce zone este disponibil serviciul de renovări?",
+          "answer": "Acoperirea depinde de profesioniștii activi în fiecare zonă. Consultă pagina localității tale pentru a vedea disponibilitatea actuală în acea zonă."
+        }
+      }
+    },
+    "montaje-de-muebles": {
+      "nameInSentence": "Montaj mobilă",
+      "intro": "MaestroYa pune în legătură clienții cu profesioniști pentru montarea și asamblarea mobilei și a mobilierului. Clientul descrie piesa sau piesele de mobilier de montat și publică o cerere; montatorii care acoperă zona o pot analiza și pot trimite o ofertă.",
+      "commonJobTypes": {
+        "flatPack": "Montarea mobilei în kit (dulapuri, rafturi, mese)",
+        "kitchen": "Montarea mobilierului de bucătărie",
+        "wallFixing": "Fixarea mobilei pe perete",
+        "multiple": "Asamblarea mai multor piese de mobilier la o singură vizită"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Evaluarea piesei sau a pieselor de mobilier descrise în cerere",
+        "quote": "O ofertă înainte de începerea montajului",
+        "execution": "Realizarea montajului convenit în oferta acceptată"
+      },
+      "considerations": {
+        "typeQuantity": "Indică tipul și numărul pieselor de mobilier de montat",
+        "photos": "Adaugă fotografii ale cutiilor sau ale instrucțiunilor, dacă le ai",
+        "compare": "Compară mai multe oferte înainte de a accepta una"
+      },
+      "faqs": {
+        "whatFurniture": {
+          "question": "Ce mobilă îmi pot monta prin MaestroYa?",
+          "answer": "Poți solicita montarea practic a oricărei piese de mobilier în kit, cum ar fi dulapuri, rafturi sau mobilier de bucătărie. Montatorii care acoperă zona ta îți pot trimite o ofertă."
+        },
+        "howQuote": {
+          "question": "Cum funcționează oferta pentru montaj mobilă?",
+          "answer": "Îți publici cererea descriind piesa sau piesele de mobilier de montat; profesioniștii interesați își trimit oferta, iar tu decizi pe care o accepți."
+        },
+        "coverage": {
+          "question": "În ce zone este disponibil serviciul de montaj mobilă?",
+          "answer": "Acoperirea depinde de profesioniștii activi în fiecare zonă. Consultă pagina localității tale pentru a vedea disponibilitatea actuală în acea zonă."
+        }
+      }
+    }
+  },
+  "locations": {
+    "gandia": {
+      "intro": "Gandia (provincia Valencia) este localitatea de referință a MaestroYa. Clienții din Gandia pot publica o cerere pentru oricare dintre categoriile de servicii pentru locuință disponibile pe platformă, iar profesioniștii care acoperă zona o pot analiza și pot trimite o ofertă.",
+      "faqs": {
+        "whatServices": {
+          "question": "Ce servicii pot solicita în Gandia prin MaestroYa?",
+          "answer": "Poți publica o cerere pentru oricare dintre categoriile de servicii pentru locuință disponibile pe MaestroYa (instalații sanitare, instalații electrice, aer condiționat, zugrăveli, renovări și montaj mobilă). Consultă pagina fiecărui serviciu pentru detalii."
+        },
+        "howToHire": {
+          "question": "Cum angajez un profesionist în Gandia?",
+          "answer": "Publici o cerere care descrie lucrarea. Profesioniștii care acoperă acea categorie și zona Gandia o pot analiza și îți pot trimite o ofertă, pe care o poți compara și accepta înainte de începerea lucrării."
+        },
+        "outsideGandia": {
+          "question": "Este MaestroYa disponibil în afara orașului Gandia?",
+          "answer": "Gandia este localitatea cu acoperire confirmată în prezent pe platformă. Disponibilitatea concretă a profesioniștilor poate varia și depinde de cine este activ la un moment dat."
+        }
+      }
+    }
+  },
+  "nationalCoverage": {
+    "intro": "MaestroYa este un marketplace de servicii pentru locuință care pune în legătură clienții cu profesioniști și companii din Spania. Oricine din Spania poate publica o cerere de serviciu; dacă un profesionist o analizează și trimite o ofertă depinde de profesioniștii activi în acea categorie și în acea zonă la un moment dat.",
+    "coverageStatement": "Aria de acțiune a MaestroYa ca platformă este națională: scopul marketplace-ului este să funcționeze în toată Spania, nu doar într-o anumită localitate. Acest lucru este diferit de disponibilitatea reală a profesioniștilor într-o anumită zonă, care depinde de datele reale ale platformei la fiecare moment.",
+    "howLocalAvailabilityWorks": "Când publici o cerere, doar profesioniștii care acoperă acea categorie de servicii și zona ta o pot analiza și îți pot trimite o ofertă. MaestroYa nu garantează că există un profesionist disponibil în orice localitate anume: disponibilitatea reală variază în funcție de zonă. Localitățile cu acoperire confirmată de datele reale ale platformei au propria pagină (vezi /ubicaciones).",
+    "faqs": {
+      "wholeSpain": {
+        "question": "Funcționează MaestroYa în toată Spania?",
+        "answer": "MaestroYa este un marketplace gândit să funcționeze în toată Spania. Asta nu înseamnă că există deja profesioniști activi în fiecare localitate: disponibilitatea reală a profesioniștilor depinde de fiecare zonă și se poate schimba în timp."
+      },
+      "localAvailability": {
+        "question": "Cum aflu dacă un serviciu este disponibil în localitatea mea?",
+        "answer": "Poți publica o cerere indicând adresa ta; doar profesioniștii care acoperă categoria și zona ta îți vor putea trimite o ofertă. Localitățile cu acoperire confirmată de datele reale ale platformei sunt enumerate în secțiunea de locații."
+      },
+      "whatServices": {
+        "question": "Ce servicii oferă MaestroYa?",
+        "answer": "MaestroYa publică în prezent șase categorii de servicii pentru locuință: instalații sanitare, instalații electrice, aer condiționat, zugrăveli, renovări și montaj mobilă. Consultă pagina fiecărui serviciu pentru mai multe detalii."
+      },
+      "professionalParticipation": {
+        "question": "Cum participă un profesionist pe MaestroYa?",
+        "answer": "Un profesionist își poate crea un cont, își poate indica categoriile de servicii și zona pe care o acoperă, iar de acolo poate analiza cererile publicate care corespund categoriei și zonei sale și poate trimite oferte pentru ele."
+      }
+    },
+    "structuredData": {
+      "name": "Servicii pentru locuință prin MaestroYa",
+      "description": "Marketplace de servicii pentru locuință operat de MaestroYa în Spania. Disponibilitatea profesioniștilor variază în funcție de categoria de servicii și de zonă."
+    }
+  }
+}

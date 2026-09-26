@@ -71,7 +71,9 @@ export class ExpireServiceRequestsUseCase {
             resourceType: "SERVICE_REQUEST",
             resourceId: request.id,
             actionUrl: `/requests/${request.id}`,
-            metadata: { serviceRequestId: request.id },
+            // Module 120: `requestTitle` feeds the localized template
+            // (`notificationTemplates.SERVICE_REQUEST_EXPIRED.message`).
+            metadata: { serviceRequestId: request.id, requestTitle: request.title },
           });
         }
       } catch (error) {

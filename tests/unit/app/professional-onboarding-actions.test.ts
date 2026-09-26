@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConflictError } from "@/domain/errors/domain-error";
+import { localizeError } from "@/presentation/i18n/error-messages";
+import type { Translator } from "@/shared/i18n/validation-messages";
+import { setTestLocale, testTranslator } from "../../test-utils/intl";
 
 /**
  * `completeProfessionalOnboardingAction` (src/app/(dashboard)/dashboard/
@@ -85,15 +88,33 @@ describe("completeProfessionalOnboardingAction", () => {
     expect(mockExecute).not.toHaveBeenCalled();
   });
 
-  it("surfaces a DomainError's own message", async () => {
+  it("surfaces a DomainError as its localised message (Module 120)", async () => {
     mockExecute.mockRejectedValue(new ConflictError("A professional profile already exists for this account."));
+
+    const result = await completeProfessionalOnboardingAction(validSubmission);
+
+    // `localizeActionError`: a static message mapped in
+    // DOMAIN_ERROR_MESSAGE_KEYS → `errors.domain.*`, else `errors.byCode.CONFLICT`
+    // — never the raw English developer message.
+    const expected = localizeError(
+      testTranslator("errors") as unknown as Translator,
+      new ConflictError("A professional profile already exists for this account."),
+    );
+    expect(result).toEqual({ success: false, error: expected });
+  });
+
+  it("localises the generic fallback in the active locale", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    setTestLocale("nl");
+    mockExecute.mockRejectedValue(new Error("connection refused"));
 
     const result = await completeProfessionalOnboardingAction(validSubmission);
 
     expect(result).toEqual({
       success: false,
-      error: "A professional profile already exists for this account.",
+      error: "Er ging iets mis bij het instellen van je vakmansprofiel.",
     });
+    consoleErrorSpy.mockRestore();
   });
 
   it("falls back to a generic message for an unexpected error, without leaking internals", async () => {

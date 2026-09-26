@@ -13,5 +13,63 @@
     "email": "E-mail",
     "timezone": "Fuso horário"
   },
-  "memberSince": "Membro desde {date, date, long}"
+  "memberSince": "Membro desde {date, date, long}",
+  "avatarNote": "Esta fotografia é apenas para a sua conta — não tem efeito na verificação de identidade profissional. Os profissionais gerem-na separadamente em Perfil profissional → Gerir verificação de identidade.",
+  "dangerNote": "A eliminação da conta só pode ser revertida contactando o suporte — os seus dados são desativados, não apagados de imediato.",
+  "avatar": {
+    "chooseFirst": "Escolha primeiro uma imagem.",
+    "alt": "A sua fotografia de perfil",
+    "chooseLabel": "Escolha uma imagem de perfil",
+    "uploading": "A carregar…",
+    "upload": "Carregar fotografia de perfil",
+    "updated": "Fotografia de perfil atualizada."
+  },
+  "form": {
+    "updated": "Perfil atualizado.",
+    "basics": "Dados básicos",
+    "displayName": "Nome apresentado",
+    "phone": "Telefone",
+    "timezone": "Fuso horário",
+    "preferredLanguage": "Idioma preferido",
+    "noPreference": "Sem preferência",
+    "address": "Morada",
+    "street": "Rua e número",
+    "line2": "Andar, porta, etc. (opcional)",
+    "city": "Localidade",
+    "postalCode": "Código postal",
+    "province": "Província",
+    "country": "País",
+    "notifications": "Notificações",
+    "emailMarketing": "E-mails de marketing",
+    "emailServiceUpdates": "E-mails de atualização do serviço",
+    "smsAppointmentReminders": "Lembretes de marcações por SMS",
+    "save": "Guardar alterações"
+  },
+  "password": {
+    "changed": "Palavra-passe alterada. Por segurança, a sessão foi terminada em todos os outros dispositivos.",
+    "noPassword": "Esta conta inicia sessão através de uma rede social e não tem palavra-passe para alterar.",
+    "title": "Alterar palavra-passe",
+    "current": "Palavra-passe atual",
+    "new": "Nova palavra-passe",
+    "confirm": "Confirme a nova palavra-passe",
+    "changing": "A alterar…",
+    "submit": "Alterar palavra-passe"
+  },
+  "deleteAccount": {
+    "trigger": "Desativar conta",
+    "title": "Isto irá desativar a sua conta",
+    "password": "Palavra-passe",
+    "confirmLabel": "Escreva {token} para confirmar",
+    "deactivating": "A desativar…",
+    "submit": "Desativar a minha conta"
+  },
+  "errors": {
+    "updateFailed": "Ocorreu um erro ao atualizar o seu perfil.",
+    "avatarFailed": "Ocorreu um erro ao carregar a sua fotografia de perfil.",
+    "passwordFailed": "Ocorreu um erro ao alterar a sua palavra-passe.",
+    "deleteFailed": "Ocorreu um erro ao eliminar a sua conta.",
+    "avatarMissing": "Escolha uma imagem para carregar.",
+    "avatarType": "A fotografia de perfil tem de ser uma imagem JPEG, PNG ou WebP.",
+    "avatarTooLarge": "A fotografia de perfil tem de ter menos de 5 MB."
+  }
 }

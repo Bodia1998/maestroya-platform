@@ -1,4 +1,5 @@
 import { ScrollText } from "lucide-react";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { makeListAdminAuditLogsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
@@ -7,7 +8,10 @@ import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
 import { AdminDataTable, AdminTableHeadRow, AdminTh, AdminTableBody, AdminTableRow } from "@/components/dashboard/admin-data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 
-export const metadata = { title: "Admin — Audit log" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("auditLogsPage.title") }) };
+}
 
 type SearchParams = Promise<{ page?: string }>;
 
@@ -21,25 +25,28 @@ export default async function AdminAuditLogsPage({ searchParams }: { searchParam
 
   const logs = await makeListAdminAuditLogsUseCase().execute({ limit: DEFAULT_PAGE_SIZE, offset });
 
+  const t = await getTranslations("admin");
+  const format = await getFormatter();
+
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Audit log" subtitle="Append-only record of sensitive admin actions." />
+      <PageHeader title={t("auditLogsPage.title")} subtitle={t("auditLogsPage.subtitle")} />
 
       {logs.length === 0 ? (
-        <EmptyState icon={ScrollText} title="No audit log entries yet" description="Sensitive admin actions will be recorded here." />
+        <EmptyState icon={ScrollText} title={t("auditLogsPage.empty")} description={t("auditLogsPage.emptyDescription")} />
       ) : (
-        <AdminDataTable caption="Audit log" minWidth={640}>
+        <AdminDataTable caption={t("auditLogsPage.title")} minWidth={640}>
           <AdminTableHeadRow>
-            <AdminTh>When</AdminTh>
-            <AdminTh>Admin</AdminTh>
-            <AdminTh>Action</AdminTh>
-            <AdminTh>Target</AdminTh>
+            <AdminTh>{t("auditLogsPage.columns.when")}</AdminTh>
+            <AdminTh>{t("auditLogsPage.columns.admin")}</AdminTh>
+            <AdminTh>{t("auditLogsPage.columns.action")}</AdminTh>
+            <AdminTh>{t("auditLogsPage.columns.target")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {logs.map((log) => (
               <AdminTableRow key={log.id}>
-                <td className="px-4 py-3">{log.createdAt.toLocaleString()}</td>
-                <td className="px-4 py-3 font-mono text-xs">{log.adminUserId ?? "system"}</td>
+                <td className="px-4 py-3">{format.dateTime(log.createdAt, { dateStyle: "medium", timeStyle: "short" })}</td>
+                <td className="px-4 py-3 font-mono text-xs">{log.adminUserId ?? t("auditLogsPage.system")}</td>
                 <td className="px-4 py-3">{log.action}</td>
                 <td className="px-4 py-3 font-mono text-xs">
                   {log.targetType}

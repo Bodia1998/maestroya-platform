@@ -1,0 +1,225 @@
+{
+  "tabs": {
+    "ariaLabel": "Secciones de la empresa",
+    "profile": "Perfil",
+    "members": "Miembros",
+    "invitations": "Invitaciones",
+    "verification": "Verificación",
+    "selfBilling": "Autofacturación"
+  },
+  "roles": {
+    "OWNER": "Propietario",
+    "ADMIN": "Administrador",
+    "MANAGER": "Gestor",
+    "MEMBER": "Miembro"
+  },
+  "memberStatus": {
+    "ACTIVE": "Activo",
+    "PENDING": "Pendiente",
+    "REMOVED": "Eliminado"
+  },
+  "invitationStatus": {
+    "PENDING": "Pendiente",
+    "ACCEPTED": "Aceptada",
+    "DECLINED": "Rechazada",
+    "EXPIRED": "Caducada",
+    "CANCELLED": "Cancelada"
+  },
+  "companyStatus": {
+    "PENDING": "Pendiente",
+    "ACTIVE": "Activa",
+    "SUSPENDED": "Suspendida",
+    "DEACTIVATED": "Desactivada"
+  },
+  "errors": {
+    "invalidDetails": "Los datos de la empresa no son válidos.",
+    "createFailed": "Algo ha fallado al crear la empresa.",
+    "updateFailed": "Algo ha fallado al actualizar la empresa.",
+    "loadFailed": "Algo ha fallado al cargar la empresa."
+  },
+  "index": {
+    "metaTitle": "Mis empresas",
+    "title": "Mis empresas",
+    "subtitle": "Trabaja como empresa o equipo con varios profesionales, además de tu perfil profesional individual si lo tienes.",
+    "emptyTitle": "Todavía no tienes empresas",
+    "emptyDescription": "Aún no eres miembro de ninguna empresa. Crea una a continuación para empezar a trabajar en equipo.",
+    "manage": "Gestionar",
+    "createTitle": "Crear una empresa",
+    "legalNameRequired": "Razón social (obligatorio)",
+    "tradeName": "Nombre comercial / visible",
+    "taxIdRequired": "NIF/CIF (obligatorio)",
+    "description": "Descripción",
+    "submit": "Crear empresa"
+  },
+  "acceptInvitation": {
+    "metaTitle": "Invitación de empresa",
+    "title": "Invitación de empresa",
+    "subtitle": "Te han invitado a unirte a una empresa en MaestroYa. Si aceptas, pasarás a ser miembro activo de inmediato.",
+    "missingToken": "A este enlace de invitación le falta el token.",
+    "accept": "Aceptar invitación",
+    "decline": "Rechazar",
+    "invalidLink": "El enlace de invitación no es válido.",
+    "acceptFailed": "Algo ha fallado al aceptar esta invitación.",
+    "declineFailed": "Algo ha fallado al rechazar esta invitación."
+  },
+  "profile": {
+    "metaTitle": "Perfil de la empresa",
+    "subtitle": "Estado: {status} · {verified}",
+    "verified": "Verificada",
+    "notVerified": "Sin verificar",
+    "breadcrumbMyCompanies": "Mis empresas",
+    "detailsTitle": "Datos de la empresa",
+    "legalName": "Razón social",
+    "tradeName": "Nombre comercial / visible",
+    "description": "Descripción",
+    "contactTitle": "Información de contacto",
+    "website": "Sitio web",
+    "contactEmail": "Email de contacto",
+    "contactPhone": "Teléfono de contacto",
+    "city": "Ciudad",
+    "province": "Provincia",
+    "save": "Guardar cambios"
+  },
+  "members": {
+    "metaTitle": "Miembros de la empresa",
+    "title": "Miembros",
+    "activeCount": "{count, plural, one {# miembro activo.} other {# miembros activos.}}",
+    "emptyTitle": "Todavía no hay miembros en la empresa",
+    "emptyDescription": "Invita a tu equipo desde la pestaña Invitaciones para empezar a colaborar en esta cuenta de empresa.",
+    "columns": {
+      "name": "Nombre",
+      "email": "Email",
+      "role": "Rol",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "roleFor": "Rol de {name}",
+    "updateRole": "Actualizar rol",
+    "transferTitle": "Transferir la propiedad",
+    "transferNotice": "Solo el propietario actual puede transferir la propiedad. Esta acción es irreversible, salvo que el nuevo propietario te la vuelva a transferir.",
+    "errors": {
+      "loadFailed": "Algo ha fallado al cargar los miembros.",
+      "invalidRole": "El rol no es válido.",
+      "changeRoleFailed": "Algo ha fallado al cambiar el rol de este miembro.",
+      "invalidMember": "El miembro no es válido.",
+      "removeFailed": "Algo ha fallado al eliminar a este miembro.",
+      "invalidRequest": "La solicitud no es válida.",
+      "transferFailed": "Algo ha fallado al transferir la propiedad."
+    },
+    "remove": {
+      "trigger": "Eliminar",
+      "title": "¿Eliminar a {name}?",
+      "description": "Perderá inmediatamente el acceso a esta cuenta de empresa. Esto no se puede deshacer desde aquí.",
+      "confirm": "Sí, eliminar",
+      "pending": "Eliminando…"
+    },
+    "transfer": {
+      "trigger": "Transferir la propiedad",
+      "title": "¿Transferir la propiedad?",
+      "description": "Solo el propietario actual puede transferir la propiedad. Esta acción es irreversible, salvo que el nuevo propietario te la vuelva a transferir.",
+      "confirm": "Sí, transferir la propiedad",
+      "pending": "Transfiriendo…",
+      "newOwner": "Nuevo propietario",
+      "confirmationLabel": "Escribe {keyword} para confirmar"
+    }
+  },
+  "invitations": {
+    "metaTitle": "Invitaciones de la empresa",
+    "title": "Invitaciones",
+    "inviteTitle": "Invitar a un miembro",
+    "inviteNotice": "Por ahora solo se puede invitar a usuarios que ya tengan cuenta en MaestroYa. La invitación es válida durante 14 días.",
+    "email": "Email",
+    "role": "Rol",
+    "send": "Enviar invitación",
+    "emptyTitle": "Todavía no hay invitaciones",
+    "emptyDescription": "Las invitaciones que envíes aparecerán aquí hasta que se acepten o se cancelen.",
+    "columns": {
+      "email": "Email",
+      "role": "Rol",
+      "status": "Estado",
+      "expires": "Caduca",
+      "actions": "Acciones"
+    },
+    "errors": {
+      "loadFailed": "Algo ha fallado al cargar las invitaciones.",
+      "invalid": "La invitación no es válida.",
+      "createFailed": "Algo ha fallado al crear la invitación.",
+      "cancelFailed": "Algo ha fallado al cancelar esta invitación."
+    },
+    "cancel": {
+      "trigger": "Cancelar",
+      "title": "¿Cancelar esta invitación?",
+      "description": "{email} ya no podrá usar esta invitación para unirse a la empresa.",
+      "confirm": "Sí, cancelar la invitación",
+      "pending": "Cancelando…",
+      "keep": "Mantener la invitación"
+    }
+  },
+  "verification": {
+    "metaTitle": "Verificación de la empresa",
+    "title": "Verificación",
+    "notStarted": "Esta empresa todavía no ha iniciado la verificación.",
+    "start": "Iniciar verificación",
+    "statusCopy": {
+      "DRAFT": "Aún no enviada. Sube al menos un documento de la empresa y envíala a revisión.",
+      "PENDING": "Enviada: a la espera de que un administrador la revise.",
+      "UNDER_REVIEW": "Un administrador está revisando esta solicitud.",
+      "APPROVED": "Aprobada: tu empresa muestra una insignia de verificada en su perfil público.",
+      "REJECTED": "Rechazada. Consulta el motivo a continuación y vuelve a enviarla cuando estés listo.",
+      "RESUBMISSION_REQUIRED": "Hay que hacer cambios antes de poder aprobarla. Consulta las instrucciones a continuación.",
+      "EXPIRED": "Esta aprobación ha caducado. Inicia una nueva solicitud de verificación."
+    },
+    "reason": "Motivo",
+    "whatToUpdate": "Qué debes actualizar",
+    "documents": "Documentos",
+    "noDocuments": "Todavía no se ha subido ningún documento.",
+    "docTypes": {
+      "BUSINESS_LICENSE": "Licencia de actividad",
+      "TAX_CERTIFICATE": "Certificado tributario",
+      "INSURANCE_CERTIFICATE": "Certificado de seguro",
+      "PROFESSIONAL_CERTIFICATION": "Certificación profesional",
+      "PROOF_OF_ADDRESS": "Justificante de domicilio",
+      "OTHER": "Otro"
+    },
+    "remove": "Eliminar",
+    "uploadTitle": "Subir un documento",
+    "docType": "Tipo de documento",
+    "file": "Archivo",
+    "upload": "Subir documento",
+    "submit": "Enviar a revisión",
+    "resubmit": "Volver a enviar",
+    "errors": {
+      "startFailed": "Algo ha fallado al iniciar la verificación.",
+      "invalidDocType": "Elige un tipo de documento válido.",
+      "chooseFile": "Elige un archivo para subir.",
+      "invalidFileType": "Los documentos deben ser una imagen JPEG, PNG o WebP, o un PDF.",
+      "fileTooLarge": "Cada documento debe pesar menos de 10 MB.",
+      "uploadFailed": "Algo ha fallado al subir este documento.",
+      "invalidDocument": "El documento no es válido.",
+      "removeFailed": "Algo ha fallado al eliminar este documento.",
+      "submitFailed": "Algo ha fallado al enviar a revisión.",
+      "resubmitFailed": "Algo ha fallado al volver a enviar a revisión."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Autofacturación de la empresa",
+    "title": "Empresa",
+    "subtitle": "Gestiona la autorización de autofacturación y las facturas de tu empresa.",
+    "ownerOnlyTitle": "Solo propietario o administrador",
+    "ownerOnlyBody": "Solo el propietario de la empresa o un administrador puede ver o cambiar el estado de la autorización de autofacturación.",
+    "sectionTitle": "Autorización de autofacturación",
+    "notAuthorized": "No autorizada",
+    "activeBody": "Esta empresa ha autorizado a MaestroYa a emitir en su nombre facturas de autofacturación («{legalTerm}») por los trabajos completados. Puedes revocar esta autorización en cualquier momento.",
+    "revoke": "Revocar autorización",
+    "inactiveBody": "Sin esta autorización, MaestroYa no puede emitir facturas de autofacturación en nombre de esta empresa.",
+    "grant": "Conceder autorización",
+    "invoicesTitle": "Facturas",
+    "noInvoices": "Todavía no hay facturas de autofacturación.",
+    "notYetIssued": "Aún no emitida",
+    "errors": {
+      "invalidCompany": "La empresa no es válida.",
+      "grantFailed": "Algo ha fallado al conceder la autorización de autofacturación.",
+      "revokeFailed": "Algo ha fallado al revocar la autorización de autofacturación."
+    }
+  }
+}

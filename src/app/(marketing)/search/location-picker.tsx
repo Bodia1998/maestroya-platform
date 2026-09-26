@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ export interface LocationValue {
  * `searchDirectorySchema`'s existing lat/lng contract.
  */
 export function LocationPicker({ value, onChange }: { value: LocationValue; onChange: (value: LocationValue) => void }) {
+  const t = useTranslations("marketing");
   const [locating, setLocating] = useState(false);
   const [addressPreview, setAddressPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,13 +42,13 @@ export function LocationPicker({ value, onChange }: { value: LocationValue; onCh
   async function previewAddress(latitude: number, longitude: number) {
     setAddressPreview(null);
     const result = await reverseGeocodeAction({ latitude, longitude });
-    if (result.success) setAddressPreview(result.address ?? "Unknown address near this point");
+    if (result.success) setAddressPreview(result.address ?? t("search.location.unknownAddress"));
   }
 
   function useMyLocation() {
     setError(null);
     if (!navigator.geolocation) {
-      setError("Your browser does not support location services.");
+      setError(t("search.location.notSupported"));
       return;
     }
     setLocating(true);
@@ -59,7 +61,7 @@ export function LocationPicker({ value, onChange }: { value: LocationValue; onCh
         void previewAddress(latitude, longitude);
       },
       () => {
-        setError("Couldn't get your location. Click a point on the map instead.");
+        setError(t("search.location.failed"));
         setLocating(false);
       },
     );
@@ -86,11 +88,11 @@ export function LocationPicker({ value, onChange }: { value: LocationValue; onCh
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-3">
         <Button type="button" variant="outline" size="sm" onClick={useMyLocation} disabled={locating}>
-          {locating ? "Locating…" : "Use my location"}
+          {locating ? t("search.location.locating") : t("search.location.useMyLocation")}
         </Button>
         {value.latitude !== undefined && (
           <Button type="button" variant="ghost" size="sm" onClick={clearLocation}>
-            Clear
+            {t("search.location.clear")}
           </Button>
         )}
         {error && <p className="text-xs text-red-600">{error}</p>}
@@ -100,14 +102,16 @@ export function LocationPicker({ value, onChange }: { value: LocationValue; onCh
 
       {value.latitude !== undefined && value.longitude !== undefined && (
         <p className="text-xs text-foreground/60">
-          {addressPreview ? `Near ${addressPreview}` : `${value.latitude}, ${value.longitude}`}
+          {addressPreview
+            ? t("search.location.near", { address: addressPreview })
+            : `${value.latitude}, ${value.longitude}` /* i18n-ignore: raw coordinates */}
         </p>
       )}
 
       {value.latitude !== undefined && (
         <div className="flex flex-col gap-1">
           <label htmlFor="radiusKm" className="text-sm font-medium">
-            Search radius (km)
+            {t("search.location.radiusLabel")}
           </label>
           <input
             id="radiusKm"
@@ -115,7 +119,7 @@ export function LocationPicker({ value, onChange }: { value: LocationValue; onCh
             min={1}
             max={200}
             step={1}
-            placeholder="e.g. 25"
+            placeholder={t("search.location.radiusPlaceholder")}
             className="h-10 w-32 rounded-md border border-border px-3 text-sm"
             value={value.radiusKm ?? ""}
             onChange={(e) => onChange({ ...value, radiusKm: e.target.value ? Number(e.target.value) : undefined })}

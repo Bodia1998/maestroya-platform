@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { makeGetCompanyForMemberUseCase } from "@/application/use-cases/company/compose";
 import {
@@ -14,11 +15,13 @@ import { Section } from "@/components/layout/section";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { formatMoney } from "@/components/dashboard/quote-items-table";
 import { CompanyTabNav } from "../company-tab-nav";
 import { grantCompanySelfBillingAuthorizationFormAction, revokeCompanySelfBillingAuthorizationFormAction } from "./actions";
 
-export const metadata = { title: "Company self-billing" };
+export async function generateMetadata() {
+  const t = await getTranslations("company.selfBilling");
+  return { title: t("metaTitle") };
+}
 
 /**
  * Module 99 — Self-Billing Authorization Entry Point & Financial Document
@@ -59,24 +62,26 @@ export default async function CompanySelfBillingPage({ params }: { params: Promi
   const companyInvoices = await makeListInvoicesForCompanyUseCase().execute(user.id, companyId).catch(() => []);
 
   const isActive = authorization?.status === "ACTIVE";
+  const t = await getTranslations("company.selfBilling");
+  const format = await getFormatter();
 
   return (
     <PageContainer gap="sm">
-      <PageHeader title="Company" subtitle="Manage your company's self-billing authorization and invoices." />
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
       <CompanyTabNav companyId={companyId} active="self-billing" />
 
       {!canManage ? (
-        <Alert variant="info" title="Owner/admin only">
-          <p>Only the company owner or an admin can view or change self-billing authorization status.</p>
+        <Alert variant="info" title={t("ownerOnlyTitle")}>
+          <p>{t("ownerOnlyBody")}</p>
         </Alert>
       ) : (
-        <Section title="Self-billing authorization" bordered gap="sm">
+        <Section title={t("sectionTitle")} bordered gap="sm">
           <div className="flex items-center gap-3">
             {authorization ? (
               <StatusBadge status={authorization.status} />
             ) : (
               <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-xs font-medium text-foreground/70">
-                Not authorized
+                {t("notAuthorized")}
               </span>
             )}
           </div>
@@ -84,31 +89,31 @@ export default async function CompanySelfBillingPage({ params }: { params: Promi
           {isActive ? (
             <>
               <p className="text-sm text-foreground/80">
-                This company has authorized MaestroYa to issue self-billed invoices (&quot;facturación por el
-                destinatario&quot;) on its behalf for completed jobs. You can revoke this at any time.
+                {/* The Spanish legal term stays in Spanish in every locale (conventions §8). */}
+                {t("activeBody", { legalTerm: "facturación por el destinatario" })}
               </p>
               <form action={revokeCompanySelfBillingAuthorizationFormAction.bind(null, companyId)}>
                 <Button type="submit" variant="outline">
-                  Revoke authorization
+                  {t("revoke")}
                 </Button>
               </form>
             </>
           ) : (
             <>
               <p className="text-sm text-foreground/80">
-                Without this authorization, MaestroYa cannot issue self-billed invoices on this company&apos;s behalf.
+                {t("inactiveBody")}
               </p>
               <form action={grantCompanySelfBillingAuthorizationFormAction.bind(null, companyId)}>
-                <Button type="submit">Grant authorization</Button>
+                <Button type="submit">{t("grant")}</Button>
               </form>
             </>
           )}
         </Section>
       )}
 
-      <Section title="Invoices" bordered gap="sm">
+      <Section title={t("invoicesTitle")} bordered gap="sm">
         {companyInvoices.length === 0 ? (
-          <p className="text-sm text-foreground/70">No self-billed invoices yet.</p>
+          <p className="text-sm text-foreground/70">{t("noInvoices")}</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {companyInvoices.map((invoice) => (
@@ -117,9 +122,9 @@ export default async function CompanySelfBillingPage({ params }: { params: Promi
                   href={`/dashboard/professional/invoices/${invoice.id}`}
                   className="flex items-center justify-between gap-4 rounded-md border border-border p-3 text-sm hover:bg-black/5"
                 >
-                  <span>{invoice.invoiceNumber ?? "Not yet issued"}</span>
+                  <span>{invoice.invoiceNumber ?? t("notYetIssued")}</span>
                   <span className="flex items-center gap-3">
-                    <span className="font-medium">{formatMoney(invoice.totalAmount, invoice.currency)}</span>
+                    <span className="font-medium">{format.number(invoice.totalAmount, { style: "currency", currency: invoice.currency })}</span>
                     <StatusBadge status={invoice.status} />
                   </span>
                 </Link>

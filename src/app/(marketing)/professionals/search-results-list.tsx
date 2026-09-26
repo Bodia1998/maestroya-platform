@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { useFormatter, useTranslations } from "next-intl";
 
 import type { ProfessionalSearchResult } from "@/application/use-cases/discovery/search-professionals.use-case";
 import { VerificationBadge } from "./verification-badge";
@@ -19,10 +20,13 @@ export function SearchResultsList({
   results: ProfessionalSearchResult[];
   categoryNamesById: Record<string, string>;
 }) {
+  const t = useTranslations("marketing");
+  const format = useFormatter();
+
   if (results.length === 0) {
     return (
       <p className="rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-foreground/70">
-        No professionals found for this service near that location yet.
+        {t("professionals.results.empty")}
       </p>
     );
   }
@@ -53,7 +57,7 @@ export function SearchResultsList({
                   {professional.businessName ?? professional.displayName}
                 </span>
                 <span className="whitespace-nowrap text-sm text-foreground/70">
-                  {professional.distanceKm} km away
+                  {t("professionals.results.distance", { distance: format.number(professional.distanceKm) })}
                 </span>
               </div>
 

@@ -1,16 +1,22 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { ForgotPasswordForm } from "./forgot-password-form";
 
-export const metadata = { title: "Forgot password" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth");
+  return { title: t("meta.forgotPassword") };
+}
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const t = await getTranslations("auth");
   return (
     <div className="flex flex-col gap-6">
       <div className="text-center">
-        <h1 className="text-2xl font-semibold">Forgot your password?</h1>
+        <h1 className="text-2xl font-semibold">{t("forgotPassword.heading")}</h1>
         <p className="mt-1 text-sm text-foreground/70">
-          We&apos;ll email you a link to reset it.
+          {t("forgotPassword.subtitle")}
         </p>
       </div>
 
@@ -18,7 +24,7 @@ export default function ForgotPasswordPage() {
 
       <p className="text-center text-sm text-foreground/70">
         <Link href="/auth/login" className="font-medium underline">
-          Back to log in
+          {t("forgotPassword.backToLogin")}
         </Link>
       </p>
     </div>

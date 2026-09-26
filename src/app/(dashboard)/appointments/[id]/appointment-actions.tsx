@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -17,12 +18,7 @@ const CANCELLABLE = ["PENDING_SCHEDULE", "PROPOSED", "CONFIRMED"];
 const PROPOSABLE = ["PENDING_SCHEDULE", "PROPOSED"];
 const RESCHEDULABLE = ["PROPOSED", "CONFIRMED"];
 
-const CANCELLATION_REASONS = [
-  { value: "CUSTOMER_REQUEST", label: "Customer request" },
-  { value: "PROFESSIONAL_UNAVAILABLE", label: "Professional unavailable" },
-  { value: "SCHEDULING_CONFLICT", label: "Scheduling conflict" },
-  { value: "OTHER", label: "Other" },
-];
+const CANCELLATION_REASONS = ["CUSTOMER_REQUEST", "PROFESSIONAL_UNAVAILABLE", "SCHEDULING_CONFLICT", "OTHER"] as const;
 
 /** Converts a Date to the value a <input type="datetime-local"> expects,
  *  in the browser's local time — the input itself has no timezone
@@ -44,6 +40,8 @@ function TimeWindowForm({
   onSubmit: typeof proposeAppointmentTimeAction;
 }) {
   const router = useRouter();
+  const t = useTranslations("customer.appointments.actions");
+  const tCommon = useTranslations("common");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const defaultStart = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -68,7 +66,7 @@ function TimeWindowForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-md border border-border p-4">
       <div className="flex flex-col gap-2 sm:flex-row">
         <label className="flex flex-1 flex-col gap-1 text-sm">
-          Start
+          {t("start")}
           <input
             type="datetime-local"
             required
@@ -78,7 +76,7 @@ function TimeWindowForm({
           />
         </label>
         <label className="flex flex-1 flex-col gap-1 text-sm">
-          End
+          {t("end")}
           <input
             type="datetime-local"
             required
@@ -94,7 +92,7 @@ function TimeWindowForm({
         </p>
       )}
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Saving…" : submitLabel}
+        {isSubmitting ? tCommon("states.saving") : submitLabel}
       </Button>
     </form>
   );
@@ -102,6 +100,7 @@ function TimeWindowForm({
 
 function ConfirmButton({ appointmentId }: { appointmentId: string }) {
   const router = useRouter();
+  const t = useTranslations("customer.appointments.actions");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,7 +119,7 @@ function ConfirmButton({ appointmentId }: { appointmentId: string }) {
   return (
     <div className="flex flex-col gap-2">
       <Button type="button" disabled={isSubmitting} onClick={handleConfirm}>
-        {isSubmitting ? "Confirming…" : "Confirm this time"}
+        {isSubmitting ? t("confirming") : t("confirmTime")}
       </Button>
       {error && (
         <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
@@ -133,6 +132,7 @@ function ConfirmButton({ appointmentId }: { appointmentId: string }) {
 
 function CompleteButton({ appointmentId }: { appointmentId: string }) {
   const router = useRouter();
+  const t = useTranslations("customer.appointments.actions");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -151,7 +151,7 @@ function CompleteButton({ appointmentId }: { appointmentId: string }) {
   return (
     <div className="flex flex-col gap-2">
       <Button type="button" disabled={isSubmitting} onClick={handleComplete}>
-        {isSubmitting ? "Marking completed…" : "Mark this visit completed"}
+        {isSubmitting ? t("completing") : t("markCompleted")}
       </Button>
       {error && (
         <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
@@ -164,17 +164,18 @@ function CompleteButton({ appointmentId }: { appointmentId: string }) {
 
 function CancelDialog({ appointmentId }: { appointmentId: string }) {
   const router = useRouter();
-  const [reason, setReason] = useState<string>(CANCELLATION_REASONS[0]?.value ?? "OTHER");
+  const t = useTranslations("customer.appointments");
+  const [reason, setReason] = useState<string>(CANCELLATION_REASONS[0]);
   const [note, setNote] = useState("");
 
   return (
     <ConfirmDialog
-      triggerLabel="Cancel appointment"
+      triggerLabel={t("actions.cancelTrigger")}
       triggerVariant="ghost"
-      title="Cancel this appointment?"
-      confirmLabel="Yes, cancel"
-      pendingLabel="Cancelling…"
-      cancelLabel="Not now"
+      title={t("actions.cancelTitle")}
+      confirmLabel={t("actions.confirmCancel")}
+      pendingLabel={t("actions.cancelling")}
+      cancelLabel={t("actions.notNow")}
       destructive
       onConfirm={async () => {
         const result = await cancelAppointmentAction(appointmentId, reason, note);
@@ -184,21 +185,21 @@ function CancelDialog({ appointmentId }: { appointmentId: string }) {
     >
       <div className="flex flex-col gap-3">
         <label className="flex flex-col gap-1 text-sm">
-          Reason
+          {t("actions.reason")}
           <select
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             className="rounded-md border border-border px-3 py-2 text-sm"
           >
             {CANCELLATION_REASONS.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
+              <option key={r} value={r}>
+                {t(`cancellationReason.${r}`)}
               </option>
             ))}
           </select>
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          Note (optional)
+          {t("actions.note")}
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -232,18 +233,19 @@ export function AppointmentActions({
   status: string;
   canConfirm: boolean;
 }) {
+  const t = useTranslations("customer.appointments.actions");
   return (
     <div className="flex flex-col gap-4">
       {PROPOSABLE.includes(status) && (
         <TimeWindowForm
           appointmentId={appointmentId}
-          submitLabel={status === "PROPOSED" ? "Propose a different time" : "Propose a time"}
+          submitLabel={status === "PROPOSED" ? t("proposeDifferentTime") : t("proposeTime")}
           onSubmit={proposeAppointmentTimeAction}
         />
       )}
       {status === "PROPOSED" && canConfirm && <ConfirmButton appointmentId={appointmentId} />}
       {RESCHEDULABLE.includes(status) && status === "CONFIRMED" && (
-        <TimeWindowForm appointmentId={appointmentId} submitLabel="Reschedule" onSubmit={rescheduleAppointmentAction} />
+        <TimeWindowForm appointmentId={appointmentId} submitLabel={t("reschedule")} onSubmit={rescheduleAppointmentAction} />
       )}
       {status === "CONFIRMED" && <CompleteButton appointmentId={appointmentId} />}
       {CANCELLABLE.includes(status) && <CancelDialog appointmentId={appointmentId} />}

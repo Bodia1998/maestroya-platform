@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { setTestLocale } from "../../../test-utils/intl";
+
 /**
  * Module 118 — AI-Readable Service & Location Knowledge:
  * `generateMetadata` for `/servicios/[slug]`. Same `vi.doMock` +
@@ -12,6 +14,7 @@ afterEach(() => {
 
 describe("service page generateMetadata", () => {
   it("builds title/description/canonical for a verified, curated service", async () => {
+    setTestLocale("es");
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: {
         serviceCategory: {
@@ -67,5 +70,33 @@ describe("service page generateMetadata", () => {
     const metadata = await generateMetadata({ params: Promise.resolve({ slug: "limpieza" }) });
 
     expect(metadata).toEqual({});
+  });
+
+  it("localizes title/description (Module 120) but keeps the single canonical URL", async () => {
+    vi.doMock("@/infrastructure/database/prisma/client", () => ({
+      prisma: {
+        serviceCategory: {
+          findFirst: vi.fn().mockResolvedValue({
+            id: "cat-1",
+            slug: "fontaneria",
+            name: "Fontanería",
+            description: "Reparación de fugas, grifos, tuberías e instalaciones de agua.",
+          }),
+          findMany: vi.fn().mockResolvedValue([]),
+        },
+      },
+    }));
+
+    const { generateMetadata } = await import("@/app/(marketing)/servicios/[slug]/page");
+
+    const en = await generateMetadata({ params: Promise.resolve({ slug: "fontaneria" }) });
+    expect(en.title).toBe("Plumbing — MaestroYa");
+    expect(en.openGraph).toMatchObject({ locale: "en_US", url: "/servicios/fontaneria" });
+
+    setTestLocale("ru");
+    const ru = await generateMetadata({ params: Promise.resolve({ slug: "fontaneria" }) });
+    expect(ru.title).toBe("Сантехника — MaestroYa");
+    expect(ru.alternates).toEqual({ canonical: "/servicios/fontaneria" });
+    expect(ru.openGraph).toMatchObject({ locale: "ru_RU" });
   });
 });

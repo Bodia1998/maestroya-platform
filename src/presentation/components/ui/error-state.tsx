@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 
 import { cn } from "@/shared/utils/cn";
@@ -13,12 +14,15 @@ export interface ErrorStateProps {
 
 /** Full-block error placeholder — pairs with `LoadingState`/`EmptyState` for a section that failed to load. */
 export function ErrorState({
-  title = "Algo salió mal",
+  title: titleProp,
   description,
   onRetry,
-  retryLabel = "Reintentar",
+  retryLabel: retryLabelProp,
   className,
 }: ErrorStateProps) {
+  const t = useTranslations("ui");
+  const title = titleProp ?? t("errorState.title");
+  const retryLabel = retryLabelProp ?? t("errorState.retry");
   return (
     <div
       role="alert"

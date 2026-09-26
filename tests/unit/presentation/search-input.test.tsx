@@ -20,7 +20,7 @@ describe("SearchInput", () => {
     const onClear = vi.fn();
     render(<SearchInput aria-label="Search" value="plumber" onChange={vi.fn()} onClear={onClear} />);
 
-    const clearButton = screen.getByRole("button", { name: "Limpiar búsqueda" });
+    const clearButton = screen.getByRole("button", { name: "Clear search" });
     fireEvent.click(clearButton);
 
     expect(onClear).toHaveBeenCalledTimes(1);

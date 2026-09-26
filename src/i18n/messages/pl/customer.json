@@ -1,0 +1,365 @@
+{
+  "requests": {
+    "list": {
+      "title": "Moje zapytania",
+      "subtitle": "Zapytania, które opublikowałeś, aby specjaliści przygotowali wyceny.",
+      "newRequest": "Nowe zapytanie",
+      "empty": {
+        "title": "Brak zapytań",
+        "description": "Nie opublikowałeś jeszcze żadnego zapytania. Dodaj je, aby zacząć otrzymywać wyceny od specjalistów w pobliżu."
+      }
+    },
+    "new": {
+      "title": "Nowe zapytanie o usługę",
+      "subtitle": "Opisz, jakie zlecenie trzeba wykonać. Zapytanie zostanie od razu opublikowane, aby specjaliści mogli przygotować wyceny."
+    },
+    "edit": {
+      "title": "Edytuj zapytanie",
+      "subtitle": "Możesz edytować to zapytanie, dopóki jest otwarte.",
+      "breadcrumb": "Edytuj"
+    },
+    "detail": {
+      "metaTitle": "Zapytanie o usługę",
+      "description": "Opis",
+      "location": "Lokalizacja",
+      "urgency": "Pilność",
+      "budget": "Budżet",
+      "budgetRange": "{min} – {max}",
+      "budgetUnset": "—",
+      "posted": "Opublikowano",
+      "lastUpdated": "Ostatnia aktualizacja",
+      "photos": "Zdjęcia",
+      "acceptedNotice": "Zaakceptowałeś wycenę dla tego zapytania. Przejdź do sekcji <appointments>Moje wizyty</appointments>, aby zaproponować lub potwierdzić termin, albo sprawdź <jobs>Moje zlecenia</jobs>, aby śledzić postęp prac.",
+      "editRequest": "Edytuj zapytanie"
+    },
+    "form": {
+      "updated": "Zapytanie zostało zaktualizowane.",
+      "sections": {
+        "job": "Zlecenie",
+        "budget": "Budżet",
+        "budgetDescription": "Podaj specjalistom przybliżoną kwotę, aby wyceny były trafne.",
+        "location": "Miejsce zlecenia"
+      },
+      "category": "Kategoria usługi",
+      "selectCategory": "Wybierz kategorię",
+      "title": "Tytuł",
+      "titlePlaceholder": "np. Naprawa cieknącego kranu w kuchni",
+      "description": "Opis",
+      "descriptionPlaceholder": "Opisz zlecenie szczegółowo — co trzeba zrobić i wszelkie istotne informacje.",
+      "urgency": "Pilność",
+      "budgetMin": "Budżet min. (EUR)",
+      "budgetMax": "Budżet maks. (EUR)",
+      "address": "Adres",
+      "streetPlaceholder": "Ulica i numer",
+      "line2Placeholder": "Mieszkanie, piętro itp. (opcjonalnie)",
+      "cityPlaceholder": "Miasto",
+      "postalCodePlaceholder": "Kod pocztowy",
+      "provincePlaceholder": "Prowincja",
+      "countryPlaceholder": "Kraj",
+      "latitudePlaceholder": "Szerokość geograficzna (opcjonalnie)",
+      "longitudePlaceholder": "Długość geograficzna (opcjonalnie)",
+      "coordinatesHelp": "Szerokość i długość geograficzna są uzupełniane automatycznie, gdy to możliwe — zostaw puste, jeśli nie masz pewności.",
+      "saveChanges": "Zapisz zmiany",
+      "postRequest": "Opublikuj zapytanie"
+    },
+    "cancel": {
+      "trigger": "Anuluj to zapytanie",
+      "title": "Anulować to zapytanie?",
+      "description": "Specjaliści nie będą już mogli przesyłać wycen. Tej operacji nie można tutaj cofnąć.",
+      "confirm": "Tak, anuluj zapytanie",
+      "pending": "Anulowanie…",
+      "keep": "Zachowaj zapytanie"
+    },
+    "photos": {
+      "chooseFirst": "Najpierw wybierz obraz.",
+      "alt": "Zdjęcie do zapytania",
+      "remove": "Usuń",
+      "none": "Brak załączonych zdjęć.",
+      "add": "Dodaj zdjęcie",
+      "uploading": "Przesyłanie…",
+      "maxReached": "Osiągnięto limit: {max, plural, one {# zdjęcie} few {# zdjęcia} many {# zdjęć} other {# zdjęcia}}."
+    },
+    "errors": {
+      "createFailed": "Coś poszło nie tak podczas tworzenia zapytania.",
+      "updateFailed": "Coś poszło nie tak podczas aktualizowania zapytania.",
+      "cancelFailed": "Coś poszło nie tak podczas anulowania zapytania.",
+      "photoMissing": "Wybierz obraz do przesłania.",
+      "photoType": "Zdjęcia muszą być w formacie JPEG, PNG lub WebP.",
+      "photoTooLarge": "Każde zdjęcie musi mieć mniej niż 5 MB.",
+      "photoUploadFailed": "Coś poszło nie tak podczas przesyłania zdjęcia.",
+      "photoRemoveFailed": "Coś poszło nie tak podczas usuwania zdjęcia."
+    }
+  },
+  "quotes": {
+    "title": "Otrzymane wyceny",
+    "subtitle": "Wyceny przesłane przez specjalistów do tego zapytania.",
+    "breadcrumb": "Wyceny",
+    "empty": "Brak wycen. Zajrzyj tu wkrótce.",
+    "verification": {
+      "UNVERIFIED": "Niezweryfikowany",
+      "PENDING": "Weryfikacja w toku",
+      "VERIFIED": "Zweryfikowany",
+      "REJECTED": "Weryfikacja odrzucona"
+    },
+    "meta": "Wysłano {created, date, medium} — zaktualizowano {updated, date, medium}",
+    "metaWithValidity": "Ważna do {validUntil, date, medium} — wysłano {created, date, medium} — zaktualizowano {updated, date, medium}",
+    "messageProfessional": "Napisz do: {name}",
+    "acceptFailed": "Coś poszło nie tak podczas akceptowania wyceny.",
+    "accept": {
+      "trigger": "Zaakceptuj tę wycenę",
+      "title": "Zaakceptować tę wycenę?",
+      "description": "Wszystkie pozostałe wyceny do tego zapytania zostaną automatycznie odrzucone. Tej operacji nie można cofnąć.",
+      "confirm": "Tak, zaakceptuj wycenę",
+      "pending": "Akceptowanie…",
+      "cancel": "Jeszcze nie"
+    }
+  },
+  "appointments": {
+    "list": {
+      "title": "Moje wizyty",
+      "subtitle": "Wizyty utworzone na podstawie zaakceptowanych wycen.",
+      "empty": {
+        "title": "Brak nadchodzących wizyt",
+        "description": "Wizyty pojawią się tutaj, gdy zaakceptujesz wycenę specjalisty.",
+        "action": "Zobacz moje zapytania"
+      }
+    },
+    "noTimeProposed": "Nie zaproponowano jeszcze terminu",
+    "notSet": "Nie ustalono",
+    "awaitingProposedTime": "Oczekuje na propozycję terminu",
+    "detail": {
+      "title": "Wizyta",
+      "confirmedTime": "Potwierdzony termin",
+      "proposedTime": "Proponowany termin",
+      "cancellationReason": "Powód anulowania"
+    },
+    "cancellationReason": {
+      "CUSTOMER_REQUEST": "Na prośbę klienta",
+      "PROFESSIONAL_UNAVAILABLE": "Specjalista niedostępny",
+      "SCHEDULING_CONFLICT": "Konflikt terminów",
+      "OTHER": "Inny"
+    },
+    "actions": {
+      "start": "Początek",
+      "end": "Koniec",
+      "confirming": "Potwierdzanie…",
+      "confirmTime": "Potwierdź ten termin",
+      "completing": "Oznaczanie jako zakończona…",
+      "markCompleted": "Oznacz tę wizytę jako zakończoną",
+      "cancelTrigger": "Anuluj wizytę",
+      "cancelTitle": "Anulować tę wizytę?",
+      "confirmCancel": "Tak, anuluj",
+      "cancelling": "Anulowanie…",
+      "notNow": "Nie teraz",
+      "reason": "Powód",
+      "note": "Notatka (opcjonalnie)",
+      "proposeTime": "Zaproponuj termin",
+      "proposeDifferentTime": "Zaproponuj inny termin",
+      "reschedule": "Zmień termin"
+    },
+    "errors": {
+      "invalidAppointment": "Nieprawidłowa wizyta.",
+      "proposeFailed": "Coś poszło nie tak podczas proponowania terminu.",
+      "confirmFailed": "Coś poszło nie tak podczas potwierdzania wizyty.",
+      "cancelFailed": "Coś poszło nie tak podczas anulowania wizyty.",
+      "completeFailed": "Coś poszło nie tak podczas kończenia wizyty.",
+      "rescheduleFailed": "Coś poszło nie tak podczas zmiany terminu wizyty."
+    }
+  },
+  "messages": {
+    "title": "Wiadomości",
+    "conversation": "Rozmowa",
+    "empty": {
+      "title": "Brak rozmów",
+      "description": "Gdy ty i klient lub specjalista będziecie mieć wspólną wycenę, możecie tu do siebie pisać."
+    },
+    "participant": "Uczestnik",
+    "unknownParticipant": "Użytkownik MaestroYa",
+    "noMessagesYet": "Brak wiadomości.",
+    "emptyThread": "Brak wiadomości. Przywitaj się, aby zacząć rozmowę.",
+    "closed": "Ta rozmowa nie przyjmuje już nowych wiadomości.",
+    "opening": "Otwieranie…",
+    "messageAction": "Napisz",
+    "bubble": {
+      "deleted": "Ta wiadomość została usunięta.",
+      "deleting": "Usuwanie…",
+      "confirmDelete": "Potwierdź usunięcie",
+      "cancel": "Anuluj",
+      "delete": "Usuń"
+    },
+    "composer": {
+      "placeholder": "Napisz wiadomość…",
+      "ariaLabel": "Wiadomość",
+      "sending": "Wysyłanie…",
+      "send": "Wyślij"
+    },
+    "errors": {
+      "openFailed": "Coś poszło nie tak podczas otwierania rozmowy.",
+      "sendFailed": "Coś poszło nie tak podczas wysyłania wiadomości.",
+      "generic": "Coś poszło nie tak.",
+      "deleteFailed": "Coś poszło nie tak podczas usuwania wiadomości."
+    }
+  },
+  "disputes": {
+    "list": {
+      "metaTitle": "Moje spory",
+      "title": "Spory",
+      "subtitle": "Sprawy otwarte przez Ciebie i sprawy dotyczące Twojej pracy.",
+      "openFromJob": "Otwórz spór ze zlecenia",
+      "openedByMe": "Otwarte przeze mnie",
+      "openedAboutMe": "Dotyczące mojej pracy",
+      "emptyMine": {
+        "title": "Brak otwartych sporów",
+        "description": "Nie otworzyłeś żadnego sporu."
+      },
+      "emptyAgainst": {
+        "title": "Nic tu nie ma",
+        "description": "Nie otwarto żadnego sporu dotyczącego Twojej pracy."
+      }
+    },
+    "detail": {
+      "metaTitle": "Spór",
+      "subtitle": "{caseNumber} · Status: {status} · Priorytet: {priority} · Powód: {reason}",
+      "description": "Opis",
+      "resolution": "Rozstrzygnięcie",
+      "evidence": "Dowody",
+      "noEvidence": "Brak załączonych dowodów.",
+      "messages": "Wiadomości",
+      "noMessages": "Brak wiadomości."
+    },
+    "messageForm": {
+      "label": "Napisz wiadomość",
+      "placeholder": "Napisz wiadomość…",
+      "sending": "Wysyłanie…",
+      "send": "Wyślij wiadomość"
+    },
+    "new": {
+      "title": "Otwórz spór",
+      "subtitle": "Tylko dla zleceń w toku, zakończonych lub anulowanych — zobacz stronę szczegółów zlecenia."
+    },
+    "form": {
+      "description": "Podaj jak najwięcej szczegółów — pomoże nam to szybciej rozwiązać sprawę.",
+      "jobId": "ID zlecenia",
+      "reason": "Powód",
+      "title": "Tytuł",
+      "descriptionLabel": "Opis",
+      "submitting": "Wysyłanie…",
+      "submit": "Otwórz spór"
+    },
+    "status": {
+      "WAITING_FOR_CUSTOMER": "Oczekuje na klienta",
+      "WAITING_FOR_PROFESSIONAL": "Oczekuje na specjalistę"
+    },
+    "priority": {
+      "LOW": "Niski",
+      "MEDIUM": "Średni",
+      "HIGH": "Wysoki",
+      "URGENT": "Pilny"
+    },
+    "reason": {
+      "SERVICE_NOT_COMPLETED": "Usługa nie została wykonana",
+      "SERVICE_QUALITY": "Jakość usługi",
+      "PROPERTY_DAMAGE": "Uszkodzenie mienia",
+      "PROFESSIONAL_NO_SHOW": "Specjalista się nie pojawił",
+      "CUSTOMER_NO_SHOW": "Klient się nie pojawił",
+      "PRICE_DISAGREEMENT": "Spór o cenę",
+      "SCOPE_OF_WORK": "Zakres prac",
+      "COMMUNICATION_ISSUE": "Problem z komunikacją",
+      "OTHER": "Inny"
+    },
+    "resolution": {
+      "NO_ACTION": "Brak działań",
+      "CUSTOMER_FAVOR": "Na korzyść klienta",
+      "PROFESSIONAL_FAVOR": "Na korzyść specjalisty",
+      "PARTIAL_RESOLUTION": "Częściowe rozstrzygnięcie",
+      "FINANCIAL_ADJUSTMENT_REQUIRED": "Wymagana korekta finansowa",
+      "ESCALATED_EXTERNALLY": "Przekazano na zewnątrz"
+    },
+    "errors": {
+      "openFailed": "Coś poszło nie tak podczas otwierania sporu.",
+      "loadMineFailed": "Coś poszło nie tak podczas wczytywania Twoich sporów.",
+      "loadFailed": "Coś poszło nie tak podczas wczytywania sporów.",
+      "loadOneFailed": "Coś poszło nie tak podczas wczytywania sporu.",
+      "messageFailed": "Coś poszło nie tak podczas wysyłania wiadomości.",
+      "evidenceFailed": "Coś poszło nie tak podczas dołączania dowodu."
+    }
+  },
+  "support": {
+    "metaTitle": "Zgłoszenia do pomocy",
+    "title": "Pomoc",
+    "subtitle": "Problemy z kontem, weryfikacją, błędy lub pytania ogólne.",
+    "myTickets": "Moje zgłoszenia",
+    "empty": {
+      "title": "Brak zgłoszeń",
+      "description": "Nie utworzyłeś żadnego zgłoszenia."
+    },
+    "detail": {
+      "metaTitle": "Zgłoszenie do pomocy",
+      "subtitle": "{ticketNumber} · Status: {status} · Kategoria: {category} · Priorytet: {priority}",
+      "resolution": "Rozwiązanie"
+    },
+    "form": {
+      "title": "Utwórz nowe zgłoszenie",
+      "category": "Kategoria",
+      "subject": "Temat",
+      "description": "Opis",
+      "submitting": "Wysyłanie…",
+      "submit": "Wyślij zgłoszenie"
+    },
+    "category": {
+      "ACCOUNT": "Konto",
+      "VERIFICATION": "Weryfikacja",
+      "BUG": "Błąd",
+      "LOGIN": "Logowanie",
+      "GENERAL": "Ogólne",
+      "OTHER": "Inne"
+    },
+    "status": {
+      "WAITING_FOR_USER": "Oczekuje na Twoją odpowiedź"
+    },
+    "errors": {
+      "openFailed": "Coś poszło nie tak podczas tworzenia zgłoszenia.",
+      "loadFailed": "Coś poszło nie tak podczas wczytywania zgłoszeń.",
+      "loadOneFailed": "Coś poszło nie tak podczas wczytywania zgłoszenia."
+    }
+  },
+  "reviews": {
+    "errors": {
+      "submitFailed": "Coś poszło nie tak podczas wysyłania opinii.",
+      "updateFailed": "Coś poszło nie tak podczas aktualizowania opinii.",
+      "deleteFailed": "Coś poszło nie tak podczas usuwania opinii.",
+      "respondFailed": "Coś poszło nie tak podczas wysyłania odpowiedzi."
+    }
+  },
+  "analytics": {
+    "loadFailed": "Coś poszło nie tak podczas wczytywania statystyk."
+  },
+  "receipts": {
+    "list": {
+      "title": "Moje potwierdzenia płatności",
+      "subtitle": "Potwierdzenia płatności za zlecenia opłacone przez MaestroYa.",
+      "empty": {
+        "title": "Brak potwierdzeń płatności",
+        "description": "Potwierdzenie pojawi się tutaj, gdy opłacone zlecenie zostanie zakończone, a płatność zwolniona."
+      }
+    },
+    "notYetIssued": "Jeszcze nie wystawiono",
+    "detail": {
+      "title": "Potwierdzenie płatności",
+      "receiptNumber": "Numer potwierdzenia",
+      "date": "Data",
+      "dateUnset": "—",
+      "issuedBy": "Wystawca",
+      "billedTo": "Nabywca",
+      "items": "Pozycje",
+      "description": "Opis",
+      "amount": "Kwota",
+      "tax": "Podatek",
+      "taxableBase": "Podstawa opodatkowania",
+      "vat": "VAT – IVA ({rate})",
+      "total": "Razem",
+      "creditNotes": "Faktury korygujące",
+      "documentReference": "Odniesienie do dokumentu: {hash}… (wyłącznie suma kontrolna wykrywająca zmiany — nie jest to podpis elektroniczny)."
+    }
+  }
+}

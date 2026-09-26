@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -6,7 +8,10 @@ import { makeGetServiceRequestForProfessionalUseCase } from "@/application/use-c
 import { PageHeader } from "@/components/dashboard/page-header";
 import { QuoteForm } from "../../../quotes/quote-form";
 
-export const metadata = { title: "Create quote" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("professional.requests.createQuote");
+  return { title: t("metaTitle") };
+}
 
 /**
  * Renders the quote form only for a ServiceRequest the *authenticated*
@@ -32,21 +37,25 @@ export default async function SubmitQuotePage({
     throw error;
   }
 
+  const [t, tList] = await Promise.all([
+    getTranslations("professional.requests.createQuote"),
+    getTranslations("professional.requests.list"),
+  ]);
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title="Create quote"
+        title={t("title")}
         subtitle={request.title}
         breadcrumbs={[
-          { label: "Available requests", href: "/dashboard/professional/requests" },
+          { label: tList("title"), href: "/dashboard/professional/requests" },
           { label: request.title, href: `/dashboard/professional/requests/${request.id}` },
-          { label: "Create quote" },
+          { label: t("title") },
         ]}
       />
 
       <p className="rounded-md bg-black/5 px-4 py-3 text-sm text-foreground/70">
-        This is a customer&apos;s service request. Create a quote describing the work and materials you propose, and
-        the price you&apos;re offering to complete it.
+        {t("intro")}
       </p>
 
       <QuoteForm mode="create" requestId={request.id} quote={null} />

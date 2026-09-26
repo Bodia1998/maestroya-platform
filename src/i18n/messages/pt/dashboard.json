@@ -16,5 +16,115 @@
     "title": "Painel da empresa",
     "members": "Membros",
     "invitations": "Convites"
+  },
+  "nav": {
+    "ariaLabel": "Navegação do painel",
+    "groups": {
+      "professional": "Profissional",
+      "admin": "Administração"
+    },
+    "items": {
+      "dashboard": "Painel",
+      "serviceRequests": "Pedidos",
+      "appointments": "Marcações",
+      "jobs": "Trabalhos",
+      "receipts": "Os meus recibos",
+      "messages": "Mensagens",
+      "disputes": "Disputas",
+      "support": "Suporte",
+      "professionalDashboard": "Painel profissional",
+      "availableRequests": "Pedidos disponíveis",
+      "myQuotes": "Os meus orçamentos",
+      "myAppointments": "As minhas marcações",
+      "myJobs": "Os meus trabalhos",
+      "selfBilling": "Autofaturação e faturas",
+      "companies": "Empresas",
+      "adminPanel": "Painel de administração",
+      "profile": "Perfil",
+      "professionalProfile": "Perfil profissional",
+      "switchToProfessional": "Mudar para o painel profissional"
+    }
+  },
+  "shell": {
+    "skipToContent": "Saltar para o conteúdo principal",
+    "sidebar": "Barra lateral",
+    "openMenu": "Abrir menu",
+    "accountMenu": "Menu da conta",
+    "account": "Conta",
+    "notifications": "Notificações",
+    "profile": "Perfil",
+    "signOut": "Terminar sessão"
+  },
+  "profileBanner": {
+    "noProfile": "Complete o seu perfil profissional para começar a receber pedidos de clientes.",
+    "incomplete": "O seu perfil profissional está incompleto. Complete-o para que os clientes vejam o seu melhor perfil.",
+    "completeProfile": "Completar perfil profissional"
+  },
+  "overview": {
+    "welcomeBack": "Bem-vindo de volta, {name}",
+    "welcomeBackAnonymous": "Bem-vindo de volta",
+    "subtitle": "Eis um resumo da sua conta MaestroYa.",
+    "professionalOverview": {
+      "title": "Resumo profissional",
+      "description": "Pedidos de clientes a que pode responder, e os orçamentos, marcações e trabalhos que se seguem."
+    },
+    "stats": {
+      "availableRequests": "Pedidos disponíveis",
+      "quotesAwaitingResponse": "Orçamentos a aguardar resposta",
+      "acceptedQuotes": "Orçamentos aceites",
+      "upcomingAppointments": "Próximas marcações",
+      "activeJobs": "Trabalhos ativos",
+      "completedJobs": "Trabalhos concluídos",
+      "activeRequests": "Pedidos ativos",
+      "unreadMessages": "Mensagens não lidas"
+    },
+    "quickActions": {
+      "ariaLabel": "Ações rápidas",
+      "newRequest": "Novo pedido",
+      "appointments": "Marcações",
+      "messages": "Mensagens",
+      "profile": "Perfil",
+      "browseRequests": "Ver pedidos",
+      "myQuotes": "Os meus orçamentos",
+      "professionalProfile": "Perfil profissional"
+    },
+    "cards": {
+      "yourRequests": "Os seus pedidos",
+      "upcomingAppointments": "Próximas marcações",
+      "messages": "Mensagens",
+      "yourQuotes": "Os seus orçamentos",
+      "viewAll": "Ver tudo"
+    },
+    "empty": {
+      "requests": {
+        "title": "Ainda não tem pedidos.",
+        "description": "Publique um pedido para começar a receber orçamentos de profissionais perto de si."
+      },
+      "appointments": {
+        "title": "Não tem marcações próximas.",
+        "description": "As marcações aparecem aqui quando aceitar o orçamento de um profissional.",
+        "action": "Ver os meus pedidos"
+      },
+      "messages": {
+        "title": "Não há mensagens novas.",
+        "description": "As conversas com clientes e profissionais aparecem aqui.",
+        "action": "Ir para mensagens"
+      },
+      "noProfessionalProfile": {
+        "title": "Configure o seu perfil profissional.",
+        "description": "Crie o seu perfil profissional para começar a receber pedidos para orçamentar.",
+        "action": "Começar"
+      },
+      "quotes": {
+        "title": "Ainda não enviou orçamentos.",
+        "description": "Consulte os pedidos abertos e envie o seu primeiro orçamento."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "com {name}",
+    "manage": "Gerir",
+    "requestPosted": "Publicado a {created, date, medium} — atualizado a {updated, date, medium}",
+    "quoteSubmitted": "Enviado a {created, date, medium} — atualizado a {updated, date, medium}"
   }
 }

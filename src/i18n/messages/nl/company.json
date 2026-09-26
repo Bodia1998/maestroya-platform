@@ -1,0 +1,225 @@
+{
+  "tabs": {
+    "ariaLabel": "Bedrijfsonderdelen",
+    "profile": "Profiel",
+    "members": "Leden",
+    "invitations": "Uitnodigingen",
+    "verification": "Verificatie",
+    "selfBilling": "Self-billing"
+  },
+  "roles": {
+    "OWNER": "Eigenaar",
+    "ADMIN": "Beheerder",
+    "MANAGER": "Manager",
+    "MEMBER": "Lid"
+  },
+  "memberStatus": {
+    "ACTIVE": "Actief",
+    "PENDING": "In afwachting",
+    "REMOVED": "Verwijderd"
+  },
+  "invitationStatus": {
+    "PENDING": "In afwachting",
+    "ACCEPTED": "Geaccepteerd",
+    "DECLINED": "Afgewezen",
+    "EXPIRED": "Verlopen",
+    "CANCELLED": "Geannuleerd"
+  },
+  "companyStatus": {
+    "PENDING": "In afwachting",
+    "ACTIVE": "Actief",
+    "SUSPENDED": "Opgeschort",
+    "DEACTIVATED": "Gedeactiveerd"
+  },
+  "errors": {
+    "invalidDetails": "Ongeldige bedrijfsgegevens.",
+    "createFailed": "Er ging iets mis bij het aanmaken van het bedrijf.",
+    "updateFailed": "Er ging iets mis bij het bijwerken van het bedrijf.",
+    "loadFailed": "Er ging iets mis bij het laden van het bedrijf."
+  },
+  "index": {
+    "metaTitle": "Mijn bedrijven",
+    "title": "Mijn bedrijven",
+    "subtitle": "Werk als bedrijf of team met meerdere vakmensen, naast een eventueel individueel vakmanprofiel.",
+    "emptyTitle": "Nog geen bedrijven",
+    "emptyDescription": "Je bent nog geen lid van een bedrijf. Maak hieronder een bedrijf aan om als team aan de slag te gaan.",
+    "manage": "Beheren",
+    "createTitle": "Een bedrijf aanmaken",
+    "legalNameRequired": "Statutaire naam (verplicht)",
+    "tradeName": "Handels- / weergavenaam",
+    "taxIdRequired": "Fiscaal nummer (verplicht)",
+    "description": "Beschrijving",
+    "submit": "Bedrijf aanmaken"
+  },
+  "acceptInvitation": {
+    "metaTitle": "Uitnodiging van bedrijf",
+    "title": "Uitnodiging van bedrijf",
+    "subtitle": "Je bent uitgenodigd om lid te worden van een bedrijf op MaestroYa. Als je accepteert, word je direct een actief lid.",
+    "missingToken": "In deze uitnodigingslink ontbreekt het token.",
+    "accept": "Uitnodiging accepteren",
+    "decline": "Afwijzen",
+    "invalidLink": "Ongeldige uitnodigingslink.",
+    "acceptFailed": "Er ging iets mis bij het accepteren van deze uitnodiging.",
+    "declineFailed": "Er ging iets mis bij het afwijzen van deze uitnodiging."
+  },
+  "profile": {
+    "metaTitle": "Bedrijfsprofiel",
+    "subtitle": "Status: {status} · {verified}",
+    "verified": "Geverifieerd",
+    "notVerified": "Niet geverifieerd",
+    "breadcrumbMyCompanies": "Mijn bedrijven",
+    "detailsTitle": "Bedrijfsgegevens",
+    "legalName": "Statutaire naam",
+    "tradeName": "Handels- / weergavenaam",
+    "description": "Beschrijving",
+    "contactTitle": "Contactgegevens",
+    "website": "Website",
+    "contactEmail": "Contact-e-mail",
+    "contactPhone": "Contacttelefoon",
+    "city": "Plaats",
+    "province": "Provincie",
+    "save": "Wijzigingen opslaan"
+  },
+  "members": {
+    "metaTitle": "Bedrijfsleden",
+    "title": "Leden",
+    "activeCount": "{count, plural, one {# actief lid.} other {# actieve leden.}}",
+    "emptyTitle": "Nog geen bedrijfsleden",
+    "emptyDescription": "Nodig teamgenoten uit via het tabblad Uitnodigingen om samen te werken in dit bedrijfsaccount.",
+    "columns": {
+      "name": "Naam",
+      "email": "E-mail",
+      "role": "Rol",
+      "status": "Status",
+      "actions": "Acties"
+    },
+    "roleFor": "Rol voor {name}",
+    "updateRole": "Rol bijwerken",
+    "transferTitle": "Eigendom overdragen",
+    "transferNotice": "Alleen de huidige eigenaar kan het eigendom overdragen. Deze actie is onomkeerbaar, tenzij de nieuwe eigenaar het eigendom weer terug overdraagt.",
+    "errors": {
+      "loadFailed": "Er ging iets mis bij het laden van de leden.",
+      "invalidRole": "Ongeldige rol.",
+      "changeRoleFailed": "Er ging iets mis bij het wijzigen van de rol van dit lid.",
+      "invalidMember": "Ongeldig lid.",
+      "removeFailed": "Er ging iets mis bij het verwijderen van dit lid.",
+      "invalidRequest": "Ongeldig verzoek.",
+      "transferFailed": "Er ging iets mis bij het overdragen van het eigendom."
+    },
+    "remove": {
+      "trigger": "Verwijderen",
+      "title": "{name} verwijderen?",
+      "description": "Deze persoon verliest direct de toegang tot dit bedrijfsaccount. Dit kan hier niet ongedaan worden gemaakt.",
+      "confirm": "Ja, verwijderen",
+      "pending": "Bezig met verwijderen…"
+    },
+    "transfer": {
+      "trigger": "Eigendom overdragen",
+      "title": "Eigendom overdragen?",
+      "description": "Alleen de huidige eigenaar kan het eigendom overdragen. Deze actie is onomkeerbaar, tenzij de nieuwe eigenaar het eigendom weer terug overdraagt.",
+      "confirm": "Ja, eigendom overdragen",
+      "pending": "Bezig met overdragen…",
+      "newOwner": "Nieuwe eigenaar",
+      "confirmationLabel": "Typ {keyword} om te bevestigen"
+    }
+  },
+  "invitations": {
+    "metaTitle": "Bedrijfsuitnodigingen",
+    "title": "Uitnodigingen",
+    "inviteTitle": "Een lid uitnodigen",
+    "inviteNotice": "Op dit moment kun je alleen bestaande MaestroYa-gebruikers uitnodigen. De uitnodiging is 14 dagen geldig.",
+    "email": "E-mail",
+    "role": "Rol",
+    "send": "Uitnodiging versturen",
+    "emptyTitle": "Nog geen uitnodigingen",
+    "emptyDescription": "Uitnodigingen die je verstuurt, verschijnen hier totdat ze zijn geaccepteerd of geannuleerd.",
+    "columns": {
+      "email": "E-mail",
+      "role": "Rol",
+      "status": "Status",
+      "expires": "Verloopt",
+      "actions": "Acties"
+    },
+    "errors": {
+      "loadFailed": "Er ging iets mis bij het laden van de uitnodigingen.",
+      "invalid": "Ongeldige uitnodiging.",
+      "createFailed": "Er ging iets mis bij het aanmaken van de uitnodiging.",
+      "cancelFailed": "Er ging iets mis bij het annuleren van deze uitnodiging."
+    },
+    "cancel": {
+      "trigger": "Annuleren",
+      "title": "Deze uitnodiging annuleren?",
+      "description": "{email} kan deze uitnodiging dan niet meer gebruiken om lid te worden van het bedrijf.",
+      "confirm": "Ja, uitnodiging annuleren",
+      "pending": "Bezig met annuleren…",
+      "keep": "Uitnodiging behouden"
+    }
+  },
+  "verification": {
+    "metaTitle": "Bedrijfsverificatie",
+    "title": "Verificatie",
+    "notStarted": "Dit bedrijf is nog niet met de verificatie begonnen.",
+    "start": "Verificatie starten",
+    "statusCopy": {
+      "DRAFT": "Nog niet ingediend. Upload minstens één bedrijfsdocument en dien het in ter beoordeling.",
+      "PENDING": "Ingediend — wacht op beoordeling door een beheerder.",
+      "UNDER_REVIEW": "Een beheerder beoordeelt dit verzoek op dit moment.",
+      "APPROVED": "Goedgekeurd — je bedrijf toont een verificatiebadge op zijn openbare profiel.",
+      "REJECTED": "Afgewezen. Bekijk de reden hieronder en dien opnieuw in wanneer je klaar bent.",
+      "RESUBMISSION_REQUIRED": "Er zijn wijzigingen nodig voordat dit kan worden goedgekeurd. Bekijk de instructies hieronder.",
+      "EXPIRED": "Deze goedkeuring is verlopen. Start een nieuw verificatieverzoek."
+    },
+    "reason": "Reden",
+    "whatToUpdate": "Wat je moet bijwerken",
+    "documents": "Documenten",
+    "noDocuments": "Nog geen documenten geüpload.",
+    "docTypes": {
+      "BUSINESS_LICENSE": "Bedrijfsvergunning",
+      "TAX_CERTIFICATE": "Fiscale verklaring",
+      "INSURANCE_CERTIFICATE": "Verzekeringscertificaat",
+      "PROFESSIONAL_CERTIFICATION": "Beroepscertificaat",
+      "PROOF_OF_ADDRESS": "Adresbewijs",
+      "OTHER": "Overig"
+    },
+    "remove": "Verwijderen",
+    "uploadTitle": "Een document uploaden",
+    "docType": "Documenttype",
+    "file": "Bestand",
+    "upload": "Document uploaden",
+    "submit": "Indienen ter beoordeling",
+    "resubmit": "Opnieuw indienen",
+    "errors": {
+      "startFailed": "Er ging iets mis bij het starten van de verificatie.",
+      "invalidDocType": "Kies een geldig documenttype.",
+      "chooseFile": "Kies een bestand om te uploaden.",
+      "invalidFileType": "Documenten moeten een JPEG-, PNG- of WebP-afbeelding of een pdf zijn.",
+      "fileTooLarge": "Elk document moet kleiner zijn dan 10 MB.",
+      "uploadFailed": "Er ging iets mis bij het uploaden van dit document.",
+      "invalidDocument": "Ongeldig document.",
+      "removeFailed": "Er ging iets mis bij het verwijderen van dit document.",
+      "submitFailed": "Er ging iets mis bij het indienen ter beoordeling.",
+      "resubmitFailed": "Er ging iets mis bij het opnieuw indienen ter beoordeling."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Self-billing van het bedrijf",
+    "title": "Bedrijf",
+    "subtitle": "Beheer de self-billingmachtiging en de facturen van je bedrijf.",
+    "ownerOnlyTitle": "Alleen eigenaar/beheerder",
+    "ownerOnlyBody": "Alleen de eigenaar van het bedrijf of een beheerder kan de status van de self-billingmachtiging bekijken of wijzigen.",
+    "sectionTitle": "Self-billingmachtiging (zelffacturering)",
+    "notAuthorized": "Niet gemachtigd",
+    "activeBody": "Dit bedrijf heeft MaestroYa gemachtigd om namens het bedrijf self-billingfacturen („{legalTerm}”) uit te geven voor voltooide opdrachten. Je kunt deze machtiging op elk moment intrekken.",
+    "revoke": "Machtiging intrekken",
+    "inactiveBody": "Zonder deze machtiging kan MaestroYa geen self-billingfacturen namens dit bedrijf uitgeven.",
+    "grant": "Machtiging verlenen",
+    "invoicesTitle": "Facturen",
+    "noInvoices": "Nog geen self-billingfacturen.",
+    "notYetIssued": "Nog niet uitgegeven",
+    "errors": {
+      "invalidCompany": "Ongeldig bedrijf.",
+      "grantFailed": "Er ging iets mis bij het verlenen van de self-billingmachtiging.",
+      "revokeFailed": "Er ging iets mis bij het intrekken van de self-billingmachtiging."
+    }
+  }
+}

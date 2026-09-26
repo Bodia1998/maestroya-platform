@@ -73,6 +73,7 @@ export const GET = withApiTracing("/api/cron/reconciliation-run", async function
       reason: "CRON_SECRET is not configured",
     });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "Cron endpoint is not configured." },
       { status: 503, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
@@ -85,6 +86,7 @@ export const GET = withApiTracing("/api/cron/reconciliation-run", async function
       route: "/api/cron/reconciliation-run",
     });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "Unauthorized." },
       { status: 401, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
@@ -124,6 +126,7 @@ export const GET = withApiTracing("/api/cron/reconciliation-run", async function
     // never a 500.
     const status = sweep.outcome === "run_failed" ? 500 : 200;
     if (status === 500) {
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       createErrorReporter().reportMessage("Scheduled reconciliation run failed", {
         tags: { route: "/api/cron/reconciliation-run", source: "background-job" },
         extra: { requestId, runId: sweep.run?.run.id ?? null, errorMessage: sweep.run?.run.errorMessage ?? null },
@@ -167,6 +170,7 @@ export const GET = withApiTracing("/api/cron/reconciliation-run", async function
       extra: { requestId },
     });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "Reconciliation run failed." },
       { status: 500, headers: { [REQUEST_ID_HEADER]: requestId } },
     );

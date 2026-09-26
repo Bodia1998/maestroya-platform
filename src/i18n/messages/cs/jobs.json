@@ -16,5 +16,74 @@
   },
   "quotes": {
     "title": "Nabídky"
+  },
+  "quoteItems": {
+    "columns": {
+      "description": "Popis",
+      "type": "Typ",
+      "quantity": "Množ.",
+      "unitPrice": "Jednotková cena",
+      "amount": "Částka"
+    },
+    "total": "Celkem",
+    "category": {
+      "MATERIALS": "Materiál",
+      "LABOR": "Práce"
+    }
+  },
+  "urgency": {
+    "LOW": "Nízká",
+    "MEDIUM": "Střední",
+    "HIGH": "Vysoká",
+    "EMERGENCY": "Havárie"
+  },
+  "list": {
+    "title": "Moje zakázky",
+    "subtitle": "Celkový postup prací, u kterých jste přijali nabídku.",
+    "empty": {
+      "title": "Žádné aktivní zakázky",
+      "description": "Zakázky se zde zobrazí, jakmile přijmete nabídku profesionála a práce začne.",
+      "action": "Zobrazit moje poptávky"
+    }
+  },
+  "notStarted": "Nezahájeno",
+  "detail": {
+    "title": "Zakázka",
+    "started": "Zahájeno",
+    "completed": "Dokončeno",
+    "cancellationReason": "Důvod zrušení",
+    "appointments": "Schůzky k této zakázce",
+    "noAppointments": "Zatím žádné schůzky.",
+    "notScheduled": "Zatím nenaplánováno",
+    "dateUnset": "—"
+  },
+  "cancellationReason": {
+    "CUSTOMER_REQUEST": "Na žádost zákazníka",
+    "PROFESSIONAL_UNABLE_TO_COMPLETE": "Profesionál nemůže zakázku dokončit",
+    "SERVICE_REQUEST_ISSUE": "Problém s poptávkou",
+    "OTHER": "Jiné"
+  },
+  "actions": {
+    "startWork": "Zahájit práci",
+    "starting": "Zahajování…",
+    "markCompleted": "Označit zakázku jako dokončenou",
+    "completing": "Dokončování…",
+    "openAppointmentsWarning": "Tato zakázka má stále nevyřešenou schůzku. Než ji označíte jako dokončenou, potvrďte a dokončete (nebo zrušte) všechny její schůzky.",
+    "cancelJob": "Zrušit zakázku",
+    "cancelTitle": "Zrušit tuto zakázku?",
+    "reason": "Důvod",
+    "note": "Poznámka (nepovinné)",
+    "cancelling": "Rušení…",
+    "confirmCancel": "Ano, zrušit",
+    "notNow": "Teď ne"
+  },
+  "errors": {
+    "invalidJob": "Neplatná zakázka.",
+    "startFailed": "Při zahajování zakázky se něco pokazilo.",
+    "completeFailed": "Při dokončování zakázky se něco pokazilo.",
+    "cancelFailed": "Při rušení zakázky se něco pokazilo.",
+    "confirmFailed": "Při potvrzování zakázky se něco pokazilo.",
+    "disputeFailed": "Při rozporování dokončení zakázky se něco pokazilo.",
+    "paymentFailed": "Při zahájení platby se něco pokazilo. Zkuste to prosím znovu."
   }
 }

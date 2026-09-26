@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
@@ -87,11 +88,12 @@ export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLD
 }
 
 export function DialogClose({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("ui");
   return (
     <button
       type="button"
       onClick={onClose}
-      aria-label="Cerrar"
+      aria-label={t("close")}
       className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <X className="h-4 w-4" />

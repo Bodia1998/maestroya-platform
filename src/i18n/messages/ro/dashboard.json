@@ -16,5 +16,115 @@
     "title": "Panoul companiei",
     "members": "Membri",
     "invitations": "Invitații"
+  },
+  "nav": {
+    "ariaLabel": "Navigare panou",
+    "groups": {
+      "professional": "Profesionist",
+      "admin": "Administrare"
+    },
+    "items": {
+      "dashboard": "Panou",
+      "serviceRequests": "Cereri",
+      "appointments": "Programări",
+      "jobs": "Lucrări",
+      "receipts": "Chitanțele mele",
+      "messages": "Mesaje",
+      "disputes": "Dispute",
+      "support": "Asistență",
+      "professionalDashboard": "Panou profesionist",
+      "availableRequests": "Cereri disponibile",
+      "myQuotes": "Ofertele mele",
+      "myAppointments": "Programările mele",
+      "myJobs": "Lucrările mele",
+      "selfBilling": "Autofacturare și facturi",
+      "companies": "Companii",
+      "adminPanel": "Panou de administrare",
+      "profile": "Profil",
+      "professionalProfile": "Profil de profesionist",
+      "switchToProfessional": "Treci la panoul de profesionist"
+    }
+  },
+  "shell": {
+    "skipToContent": "Salt la conținutul principal",
+    "sidebar": "Bară laterală",
+    "openMenu": "Deschide meniul",
+    "accountMenu": "Meniul contului",
+    "account": "Cont",
+    "notifications": "Notificări",
+    "profile": "Profil",
+    "signOut": "Deconectează-te"
+  },
+  "profileBanner": {
+    "noProfile": "Completează-ți profilul de profesionist ca să începi să primești cereri de la clienți.",
+    "incomplete": "Profilul tău de profesionist este incomplet. Completează-l ca clienții să vadă cel mai bun profil al tău.",
+    "completeProfile": "Completează profilul de profesionist"
+  },
+  "overview": {
+    "welcomeBack": "Bine ai revenit, {name}",
+    "welcomeBackAnonymous": "Bine ai revenit",
+    "subtitle": "Iată o privire de ansamblu asupra contului tău MaestroYa.",
+    "professionalOverview": {
+      "title": "Prezentare generală profesionist",
+      "description": "Cereri ale clienților la care poți răspunde, plus ofertele, programările și lucrările care urmează."
+    },
+    "stats": {
+      "availableRequests": "Cereri disponibile",
+      "quotesAwaitingResponse": "Oferte în așteptarea răspunsului",
+      "acceptedQuotes": "Oferte acceptate",
+      "upcomingAppointments": "Programări viitoare",
+      "activeJobs": "Lucrări active",
+      "completedJobs": "Lucrări finalizate",
+      "activeRequests": "Cereri active",
+      "unreadMessages": "Mesaje necitite"
+    },
+    "quickActions": {
+      "ariaLabel": "Acțiuni rapide",
+      "newRequest": "Cerere nouă",
+      "appointments": "Programări",
+      "messages": "Mesaje",
+      "profile": "Profil",
+      "browseRequests": "Răsfoiește cererile",
+      "myQuotes": "Ofertele mele",
+      "professionalProfile": "Profil de profesionist"
+    },
+    "cards": {
+      "yourRequests": "Cererile tale",
+      "upcomingAppointments": "Programări viitoare",
+      "messages": "Mesaje",
+      "yourQuotes": "Ofertele tale",
+      "viewAll": "Vezi tot"
+    },
+    "empty": {
+      "requests": {
+        "title": "Nu ai încă nicio cerere.",
+        "description": "Publică o cerere ca să începi să primești oferte de la profesioniști din apropiere."
+      },
+      "appointments": {
+        "title": "Nu ai programări viitoare.",
+        "description": "Programările apar aici după ce accepți oferta unui profesionist.",
+        "action": "Vezi cererile mele"
+      },
+      "messages": {
+        "title": "Nu ai mesaje noi.",
+        "description": "Aici apar conversațiile cu clienții și profesioniștii.",
+        "action": "Mergi la mesaje"
+      },
+      "noProfessionalProfile": {
+        "title": "Configurează-ți profilul de profesionist.",
+        "description": "Creează-ți profilul de profesionist ca să primești cereri pentru care să trimiți oferte.",
+        "action": "Începe"
+      },
+      "quotes": {
+        "title": "Nu ai trimis încă nicio ofertă.",
+        "description": "Răsfoiește cererile deschise și trimite prima ta ofertă."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "cu {name}",
+    "manage": "Gestionează",
+    "requestPosted": "Publicată pe {created, date, medium} — actualizată pe {updated, date, medium}",
+    "quoteSubmitted": "Trimisă pe {created, date, medium} — actualizată pe {updated, date, medium}"
   }
 }

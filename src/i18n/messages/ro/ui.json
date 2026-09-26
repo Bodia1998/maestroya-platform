@@ -1,0 +1,51 @@
+{
+  "legalDocument": {
+    "issuedLanguageNotice": "Acest document este afișat în limba în care a fost emis (spaniolă)."
+  },
+  "close": "Închide",
+  "breadcrumb": {
+    "label": "Navigare ierarhică"
+  },
+  "chip": {
+    "remove": "Elimină"
+  },
+  "combobox": {
+    "placeholder": "Selectează o opțiune",
+    "searchPlaceholder": "Caută…",
+    "empty": "Niciun rezultat"
+  },
+  "confirmDialog": {
+    "cancel": "Anulează",
+    "genericError": "Ceva nu a funcționat. Încearcă din nou."
+  },
+  "errorState": {
+    "title": "Ceva nu a funcționat",
+    "retry": "Reîncearcă"
+  },
+  "loadingState": {
+    "label": "Se încarcă…"
+  },
+  "spinner": {
+    "label": "Se încarcă"
+  },
+  "pagination": {
+    "label": "Paginare",
+    "previous": "Înapoi",
+    "next": "Înainte"
+  },
+  "passwordInput": {
+    "show": "Arată parola",
+    "hide": "Ascunde parola"
+  },
+  "searchInput": {
+    "clear": "Șterge căutarea"
+  },
+  "toast": {
+    "close": "Închide notificarea",
+    "region": "Notificări",
+    "assertiveRegion": "Notificări importante"
+  },
+  "fieldBadges": {
+    "optional": "Opțional"
+  }
+}

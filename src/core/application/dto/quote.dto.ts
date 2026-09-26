@@ -75,14 +75,14 @@ export const quoteMaterialSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "Enter a name for this material.")
-    .max(MAX_MATERIAL_NAME_LENGTH, `Material name must be ${MAX_MATERIAL_NAME_LENGTH} characters or fewer.`),
+    .min(1, "dto.quote.materialNameRequired")
+    .max(MAX_MATERIAL_NAME_LENGTH, "maxLength"),
   brand: z.string().trim().max(MAX_MATERIAL_BRAND_LENGTH).optional().or(z.literal("")),
   model: z.string().trim().max(MAX_MATERIAL_MODEL_LENGTH).optional().or(z.literal("")),
   quantity: z.coerce
     .number()
-    .positive("Quantity must be greater than zero.")
-    .max(MAX_MATERIAL_QUANTITY, "Enter a realistic quantity."),
+    .positive("dto.quote.quantityPositive")
+    .max(MAX_MATERIAL_QUANTITY, "dto.quote.quantityRealistic"),
   notes: z.string().trim().max(MAX_MATERIAL_NOTES_LENGTH).optional().or(z.literal("")),
 });
 export type QuoteMaterialInput = z.infer<typeof quoteMaterialSchema>;
@@ -91,19 +91,19 @@ export const quoteItemSchema = z.object({
   description: z
     .string()
     .trim()
-    .min(1, "Enter a description for this item.")
+    .min(1, "dto.quote.itemDescriptionRequired")
     .max(
       MAX_QUOTE_ITEM_DESCRIPTION_LENGTH,
-      `Item description must be ${MAX_QUOTE_ITEM_DESCRIPTION_LENGTH} characters or fewer.`,
+      "maxLength",
     ),
   quantity: z.coerce
     .number()
-    .positive("Quantity must be greater than zero.")
-    .max(MAX_QUOTE_ITEM_QUANTITY, "Enter a realistic quantity."),
+    .positive("dto.quote.quantityPositive")
+    .max(MAX_QUOTE_ITEM_QUANTITY, "dto.quote.quantityRealistic"),
   unitPrice: z.coerce
     .number()
-    .min(0, "Unit price cannot be negative.")
-    .max(MAX_QUOTE_ITEM_UNIT_PRICE, "Enter a realistic unit price."),
+    .min(0, "dto.quote.unitPriceNegative")
+    .max(MAX_QUOTE_ITEM_UNIT_PRICE, "dto.quote.unitPriceRealistic"),
   category: quoteItemCategorySchema,
 });
 export type QuoteItemInput = z.infer<typeof quoteItemSchema>;
@@ -128,23 +128,23 @@ export const quoteOperationTypeSchema = z.enum(["RENOVATION_OR_REPAIR", "MAINTEN
 const quoteFieldsSchema = z.object({
   items: z
     .array(quoteItemSchema)
-    .min(1, "Add at least one item to your quote.")
-    .max(MAX_QUOTE_ITEMS, `A quote can have at most ${MAX_QUOTE_ITEMS} items.`),
+    .min(1, "dto.quote.itemsRequired")
+    .max(MAX_QUOTE_ITEMS, "dto.quote.itemsMax"),
   notes: z.string().trim().max(MAX_QUOTE_NOTES_LENGTH).optional().or(z.literal("")),
   // Module 97 — Tax & IVA Production Integration.
   operationType: quoteOperationTypeSchema,
   isResidentialProperty: z.boolean().optional(),
   validUntil: z.coerce
-    .date({ invalid_type_error: "Enter a valid date." })
+    .date({ invalid_type_error: "date" })
     .optional()
     .refine((date) => date === undefined || date.getTime() > Date.now(), {
-      message: "Validity date must be in the future.",
+      message: "dto.quote.validUntilFuture",
     }),
   // Module 63 — Materials Procurement Workflow.
   materialsStrategy: materialsStrategySchema,
   materials: z
     .array(quoteMaterialSchema)
-    .max(MAX_MATERIALS_ITEMS, `A materials list can have at most ${MAX_MATERIALS_ITEMS} items.`)
+    .max(MAX_MATERIALS_ITEMS, "dto.quote.materialsMax")
     .optional(),
 });
 
@@ -167,7 +167,7 @@ function requireMaterialsWhenCustomerPurchased(
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["materials"],
-      message: "Add at least one required material when materials are purchased by the customer.",
+      message: "dto.quote.requiredMaterialsMissing",
     });
   }
 }
@@ -196,14 +196,14 @@ function rejectPricedMaterialsWhenCustomerPurchased(
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["items", pricedMaterialsIndex, "unitPrice"],
-      message: "Materials cannot be priced on a quote when the customer purchases them directly.",
+      message: "dto.quote.materialsPriced",
     });
   }
 }
 
 export const createQuoteSchema = quoteFieldsSchema
   .extend({
-    serviceRequestId: z.string().uuid("Invalid service request."),
+    serviceRequestId: z.string().uuid("dto.ids.serviceRequest"),
   })
   .superRefine(requireMaterialsWhenCustomerPurchased)
   .superRefine(rejectPricedMaterialsWhenCustomerPurchased);

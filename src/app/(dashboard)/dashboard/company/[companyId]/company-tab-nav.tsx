@@ -1,13 +1,14 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/shared/utils/cn";
 
 const TABS = [
-  { segment: "profile", label: "Profile" },
-  { segment: "members", label: "Members" },
-  { segment: "invitations", label: "Invitations" },
-  { segment: "verification", label: "Verification" },
-  { segment: "self-billing", label: "Self-billing" },
+  { segment: "profile", labelKey: "profile" },
+  { segment: "members", labelKey: "members" },
+  { segment: "invitations", labelKey: "invitations" },
+  { segment: "verification", labelKey: "verification" },
+  { segment: "self-billing", labelKey: "selfBilling" },
 ] as const;
 
 export type CompanyTabSegment = (typeof TABS)[number]["segment"];
@@ -22,8 +23,9 @@ export type CompanyTabSegment = (typeof TABS)[number]["segment"];
  * `DashboardShell`'s own sidebar nav already uses.
  */
 export function CompanyTabNav({ companyId, active }: { companyId: string; active: CompanyTabSegment }) {
+  const t = useTranslations("company.tabs");
   return (
-    <nav aria-label="Company sections" className="flex gap-4 text-sm">
+    <nav aria-label={t("ariaLabel")} className="flex gap-4 text-sm">
       {TABS.map((tab) => {
         const isActive = tab.segment === active;
         return (
@@ -38,7 +40,7 @@ export function CompanyTabNav({ companyId, active }: { companyId: string; active
                 : "border-transparent text-muted-foreground hover:text-foreground hover:underline",
             )}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </Link>
         );
       })}

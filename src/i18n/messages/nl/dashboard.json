@@ -1,0 +1,130 @@
+{
+  "title": "Dashboard",
+  "welcome": "Hallo, {name}",
+  "summary": {
+    "requests": "Aanvragen",
+    "quotes": "Offertes",
+    "jobs": "Opdrachten",
+    "messages": "Berichten",
+    "appointments": "Afspraken"
+  },
+  "professional": {
+    "title": "Dashboard voor vakmensen",
+    "onboarding": "Maak je profiel als vakman compleet"
+  },
+  "company": {
+    "title": "Bedrijfsdashboard",
+    "members": "Medewerkers",
+    "invitations": "Uitnodigingen"
+  },
+  "nav": {
+    "ariaLabel": "Dashboardnavigatie",
+    "groups": {
+      "professional": "Vakman",
+      "admin": "Beheer"
+    },
+    "items": {
+      "dashboard": "Dashboard",
+      "serviceRequests": "Aanvragen",
+      "appointments": "Afspraken",
+      "jobs": "Opdrachten",
+      "receipts": "Mijn ontvangstbewijzen",
+      "messages": "Berichten",
+      "disputes": "Geschillen",
+      "support": "Support",
+      "professionalDashboard": "Vakmandashboard",
+      "availableRequests": "Beschikbare aanvragen",
+      "myQuotes": "Mijn offertes",
+      "myAppointments": "Mijn afspraken",
+      "myJobs": "Mijn opdrachten",
+      "selfBilling": "Self-billing en facturen",
+      "companies": "Bedrijven",
+      "adminPanel": "Beheerpaneel",
+      "profile": "Profiel",
+      "professionalProfile": "Vakmanprofiel",
+      "switchToProfessional": "Overschakelen naar vakmandashboard"
+    }
+  },
+  "shell": {
+    "skipToContent": "Naar hoofdinhoud gaan",
+    "sidebar": "Zijbalk",
+    "openMenu": "Menu openen",
+    "accountMenu": "Accountmenu",
+    "account": "Account",
+    "notifications": "Meldingen",
+    "profile": "Profiel",
+    "signOut": "Uitloggen"
+  },
+  "profileBanner": {
+    "noProfile": "Vul je vakmanprofiel aan om aanvragen van klanten te ontvangen.",
+    "incomplete": "Je vakmanprofiel is onvolledig. Maak het af zodat klanten je beste profiel zien.",
+    "completeProfile": "Vakmanprofiel aanvullen"
+  },
+  "overview": {
+    "welcomeBack": "Welkom terug, {name}",
+    "welcomeBackAnonymous": "Welkom terug",
+    "subtitle": "Hier is een overzicht van je MaestroYa-account.",
+    "professionalOverview": {
+      "title": "Vakmanoverzicht",
+      "description": "Aanvragen van klanten waarop je kunt reageren, en de offertes, afspraken en opdrachten die daarop volgen."
+    },
+    "stats": {
+      "availableRequests": "Beschikbare aanvragen",
+      "quotesAwaitingResponse": "Offertes wachtend op reactie",
+      "acceptedQuotes": "Geaccepteerde offertes",
+      "upcomingAppointments": "Komende afspraken",
+      "activeJobs": "Actieve opdrachten",
+      "completedJobs": "Voltooide opdrachten",
+      "activeRequests": "Actieve aanvragen",
+      "unreadMessages": "Ongelezen berichten"
+    },
+    "quickActions": {
+      "ariaLabel": "Snelle acties",
+      "newRequest": "Nieuwe aanvraag",
+      "appointments": "Afspraken",
+      "messages": "Berichten",
+      "profile": "Profiel",
+      "browseRequests": "Aanvragen bekijken",
+      "myQuotes": "Mijn offertes",
+      "professionalProfile": "Vakmanprofiel"
+    },
+    "cards": {
+      "yourRequests": "Je aanvragen",
+      "upcomingAppointments": "Komende afspraken",
+      "messages": "Berichten",
+      "yourQuotes": "Je offertes",
+      "viewAll": "Alles bekijken"
+    },
+    "empty": {
+      "requests": {
+        "title": "Nog geen aanvragen.",
+        "description": "Plaats een aanvraag om offertes te krijgen van vakmensen bij jou in de buurt."
+      },
+      "appointments": {
+        "title": "Geen komende afspraken.",
+        "description": "Afspraken verschijnen hier zodra je een offerte van een vakman accepteert.",
+        "action": "Mijn aanvragen bekijken"
+      },
+      "messages": {
+        "title": "Geen nieuwe berichten.",
+        "description": "Gesprekken met klanten en vakmensen verschijnen hier.",
+        "action": "Naar berichten"
+      },
+      "noProfessionalProfile": {
+        "title": "Stel je vakmanprofiel in.",
+        "description": "Maak je vakmanprofiel aan om aanvragen te ontvangen waarvoor je een offerte kunt sturen.",
+        "action": "Aan de slag"
+      },
+      "quotes": {
+        "title": "Nog geen offertes verstuurd.",
+        "description": "Bekijk open aanvragen en stuur je eerste offerte."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "met {name}",
+    "manage": "Beheren",
+    "requestPosted": "Geplaatst op {created, date, medium} — bijgewerkt op {updated, date, medium}",
+    "quoteSubmitted": "Verstuurd op {created, date, medium} — bijgewerkt op {updated, date, medium}"
+  }
+}

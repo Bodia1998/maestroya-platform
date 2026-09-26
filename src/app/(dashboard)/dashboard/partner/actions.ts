@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import {
   makeGeneratePartnerReferralLinkUseCase,
@@ -9,10 +10,11 @@ import {
   makeSetReferralCodeActiveUseCase,
 } from "@/application/use-cases/affiliate/compose";
 import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
-import { DomainError, NotFoundError, UnauthorizedError } from "@/domain/errors/domain-error";
+import { NotFoundError, UnauthorizedError } from "@/domain/errors/domain-error";
 import type { PartnerPayoutRecord } from "@/domain/repositories/partner-payout-repository";
 import type { ReferralCodeRecord } from "@/domain/repositories/referral-code-repository";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError } from "@/presentation/i18n/server";
 
 /**
  * Module 96 — Referral & Affiliate Production Wiring: partner-facing
@@ -28,12 +30,8 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
  */
 export type ActionResult<T = undefined> = { success: true; data: T } | { success: false; error: string };
 
-function fromDomainError<T>(error: unknown, fallback: string): ActionResult<T> {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+async function fromDomainError<T>(error: unknown, fallback: string): Promise<ActionResult<T>> {
+  return { success: false, error: await localizeActionError(error, fallback) };
 }
 
 async function requireOwnPartnerId(): Promise<string> {
@@ -62,7 +60,8 @@ export async function createReferralLinkAction(input: {
     revalidatePath("/dashboard/partner");
     return { success: true, data: link };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong creating this referral link.");
+    const t = await getTranslations("partner.errors");
+    return fromDomainError(error, t("createLinkFailed"));
   }
 }
 
@@ -73,13 +72,14 @@ export async function setReferralLinkActiveAction(referralCodeId: string, isActi
     revalidatePath("/dashboard/partner");
     return { success: true, data: undefined };
   } catch (error) {
+    const t = await getTranslations("partner.errors");
     if (error instanceof UnauthorizedError) {
       // Never confirm to the caller whether the id belongs to someone
       // else vs. doesn't exist — same generic-failure convention as an
       // IDOR-adjacent check anywhere else in this codebase.
-      return { success: false, error: "Something went wrong updating this referral link." };
+      return { success: false, error: t("updateLinkFailed") };
     }
-    return fromDomainError(error, "Something went wrong updating this referral link.");
+    return fromDomainError(error, t("updateLinkFailed"));
   }
 }
 
@@ -112,6 +112,7 @@ export async function requestAffiliatePayoutAction(): Promise<ActionResult<Partn
     revalidatePath("/dashboard/partner");
     return { success: true, data: payout };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong requesting this payout.");
+    const t = await getTranslations("partner.errors");
+    return fromDomainError(error, t("payoutFailed"));
   }
 }

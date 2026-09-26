@@ -28,21 +28,21 @@ export const searchReadModelSchema = z.object({
   query: z
     .string()
     .trim()
-    .max(100, "Search text must be 100 characters or fewer.")
+    .max(100, "maxLength")
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined)),
   kinds: z.array(z.enum(SEARCH_DOCUMENT_KINDS as unknown as [string, ...string[]])).optional(),
-  categoryIds: z.array(z.string().uuid("Select a valid service category.")).max(20).optional(),
+  categoryIds: z.array(z.string().uuid("dto.categories.invalid")).max(20).optional(),
   city: z
     .string()
     .trim()
-    .max(100, "City must be 100 characters or fewer.")
+    .max(100, "maxLength")
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined)),
   province: z
     .string()
     .trim()
-    .max(100, "Province must be 100 characters or fewer.")
+    .max(100, "maxLength")
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined)),
   verifiedOnly: z.coerce.boolean().optional().default(false),

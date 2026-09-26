@@ -1,5 +1,8 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
+import { adminActionFailure } from "../_lib/action-errors";
+import { localizeZodError } from "@/presentation/i18n/server";
 import { revalidatePath } from "next/cache";
 
 import {
@@ -29,7 +32,6 @@ import {
 } from "@/application/use-cases/reconciliation/compose";
 import type { ReconciliationOverview } from "@/application/use-cases/reconciliation/get-reconciliation-overview.use-case";
 import type { OpenSeverityCounts } from "@/domain/repositories/reconciliation-repository";
-import { DomainError } from "@/domain/errors/domain-error";
 import type { ReconciliationDiscrepancyRecord, ReconciliationRunRecord } from "@/domain/repositories/reconciliation-repository";
 import type { ReconciliationRunSummary } from "@/application/use-cases/reconciliation/start-reconciliation-run.use-case";
 import type { JobFinancialContext } from "@/domain/services/reconciliation/context";
@@ -49,19 +51,11 @@ import { ROLES, requireRole, getCurrentUser } from "@/infrastructure/auth/rbac";
  */
 export type ActionResult<T = undefined> = { success: true; data: T } | { success: false; error: string };
 
-function fromDomainError<T>(error: unknown, fallback: string): ActionResult<T> {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
-}
-
 export async function startReconciliationRunAction(input: Record<string, unknown> = {}): Promise<ActionResult<ReconciliationRunSummary>> {
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = startReconciliationRunSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const user = await getCurrentUser();
@@ -70,19 +64,19 @@ export async function startReconciliationRunAction(input: Record<string, unknown
     revalidatePath("/admin/reconciliation/runs");
     return { success: true, data: summary };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong starting the reconciliation run.");
+    return adminActionFailure(error, "startingTheReconciliationRun");
   }
 }
 
 export async function getReconciliationRunAction(runId: string): Promise<ActionResult<ReconciliationRunRecord>> {
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = getReconciliationRunSchema.safeParse({ runId });
-  if (!parsed.success) return { success: false, error: "Invalid run id." };
+  if (!parsed.success) return { success: false, error: (await getTranslations("admin.actionErrors"))("invalidRunId") };
   try {
     const run = await makeGetReconciliationRunUseCase().execute(parsed.data.runId);
     return { success: true, data: run };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading this reconciliation run.");
+    return adminActionFailure(error, "loadingThisReconciliationRun");
   }
 }
 
@@ -92,13 +86,13 @@ export async function listDiscrepanciesForRunAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listDiscrepanciesForRunSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const list = await makeListDiscrepanciesForRunUseCase().execute(parsed.data.runId, parsed.data.limit, parsed.data.offset);
     return { success: true, data: list };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading discrepancies for this run.");
+    return adminActionFailure(error, "loadingDiscrepanciesForThisRun");
   }
 }
 
@@ -108,7 +102,7 @@ export async function listUnresolvedHighSeverityDiscrepanciesAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listUnresolvedDiscrepanciesSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const list = await makeListUnresolvedHighSeverityDiscrepanciesUseCase().execute(
@@ -118,7 +112,7 @@ export async function listUnresolvedHighSeverityDiscrepanciesAction(
     );
     return { success: true, data: list };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading unresolved discrepancies.");
+    return adminActionFailure(error, "loadingUnresolvedDiscrepancies");
   }
 }
 
@@ -126,7 +120,7 @@ export async function resolveDiscrepancyAction(input: Record<string, unknown>): 
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = resolveDiscrepancySchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const resolved = await makeResolveDiscrepancyUseCase().execute(
@@ -140,7 +134,7 @@ export async function resolveDiscrepancyAction(input: Record<string, unknown>): 
     revalidatePath(`/admin/reconciliation/discrepancies/${parsed.data.discrepancyId}`);
     return { success: true, data: resolved };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong resolving this discrepancy.");
+    return adminActionFailure(error, "resolvingThisDiscrepancy");
   }
 }
 
@@ -148,16 +142,15 @@ export async function getFinancialEntitySnapshotAction(input: Record<string, unk
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = getFinancialEntitySnapshotSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const snapshot = await makeGetFinancialEntitySnapshotUseCase().execute(parsed.data.jobId);
     return { success: true, data: snapshot };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading this job's financial snapshot.");
+    return adminActionFailure(error, "loadingThisJobFinancialSnapshot");
   }
 }
-
 
 /**
  * Module 81 — Reconciliation Admin Dashboard & Operations: the admin
@@ -171,13 +164,13 @@ export async function listReconciliationRunsAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listReconciliationRunsSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const list = await makeListReconciliationRunsUseCase().execute(parsed.data);
     return { success: true, data: list };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading reconciliation runs.");
+    return adminActionFailure(error, "loadingReconciliationRuns");
   }
 }
 
@@ -192,13 +185,13 @@ export async function listDiscrepanciesAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listDiscrepanciesSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const list = await makeListDiscrepanciesUseCase().execute(parsed.data);
     return { success: true, data: list };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading discrepancies.");
+    return adminActionFailure(error, "loadingDiscrepancies");
   }
 }
 
@@ -209,7 +202,7 @@ export async function getReconciliationOverviewAction(): Promise<ActionResult<Re
     const overview = await makeGetReconciliationOverviewUseCase().execute();
     return { success: true, data: overview };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading the reconciliation overview.");
+    return adminActionFailure(error, "loadingTheReconciliationOverview");
   }
 }
 
@@ -230,12 +223,12 @@ export async function getReconciliationProviderBindingAction(): Promise<ActionRe
 export async function getReconciliationRunSeverityBreakdownAction(runId: string): Promise<ActionResult<OpenSeverityCounts>> {
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = getReconciliationRunSchema.safeParse({ runId });
-  if (!parsed.success) return { success: false, error: "Invalid run id." };
+  if (!parsed.success) return { success: false, error: (await getTranslations("admin.actionErrors"))("invalidRunId") };
   try {
     const breakdown = await makeGetReconciliationRunSeverityBreakdownUseCase().execute(parsed.data.runId);
     return { success: true, data: breakdown };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading this run's severity breakdown.");
+    return adminActionFailure(error, "loadingThisRunSeverityBreakdown");
   }
 }
 
@@ -243,11 +236,11 @@ export async function getReconciliationRunSeverityBreakdownAction(runId: string)
 export async function getReconciliationDiscrepancyAction(discrepancyId: string): Promise<ActionResult<ReconciliationDiscrepancyRecord>> {
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = getDiscrepancySchema.safeParse({ discrepancyId });
-  if (!parsed.success) return { success: false, error: "Invalid discrepancy id." };
+  if (!parsed.success) return { success: false, error: (await getTranslations("admin.actionErrors"))("invalidDiscrepancyId") };
   try {
     const discrepancy = await makeGetDiscrepancyByIdUseCase().execute(parsed.data.discrepancyId);
     return { success: true, data: discrepancy };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading this discrepancy.");
+    return adminActionFailure(error, "loadingThisDiscrepancy");
   }
 }

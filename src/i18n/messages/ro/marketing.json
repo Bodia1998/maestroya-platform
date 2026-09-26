@@ -1,24 +1,252 @@
 {
   "hero": {
     "title": "Găsește profesioniști de încredere pentru casa ta",
-    "subtitle": "Publică ce ai nevoie și primește oferte de la profesioniști verificați din apropiere.",
+    "subtitle": "Descrie de ce ai nevoie, compară ofertele și angajează profesionistul potrivit lângă tine, totul pe MaestroYa.",
     "ctaPrimary": "Publică o cerere",
-    "ctaSecondary": "Explorează profesioniștii"
+    "ctaSecondary": "Explorează profesioniștii",
+    "or": "sau",
+    "highlights": {
+      "verified": "Profesioniști verificați",
+      "reviews": "Recenzii de la clienți reali",
+      "audience": "Persoane fizice și companii"
+    },
+    "search": {
+      "serviceLabel": "De ce serviciu ai nevoie?",
+      "locationLabel": "Unde ai nevoie?",
+      "locationPlaceholder": "Oraș sau cod poștal",
+      "submit": "Caută profesioniști"
+    }
   },
   "howItWorks": {
     "title": "Cum funcționează",
     "step1": "Descrie ce ai nevoie",
     "step2": "Primește oferte",
-    "step3": "Alege-ți profesionistul"
+    "step3": "Alege-ți profesionistul",
+    "subtitle": "De la cerere la lucrarea terminată, în patru pași.",
+    "steps": {
+      "one": {
+        "title": "Spune-ne de ce ai nevoie",
+        "description": "Descrie lucrarea, alege categoria și publică cererea în câteva minute."
+      },
+      "two": {
+        "title": "Primește oferte",
+        "description": "Profesioniștii interesați și disponibili în zona ta îți trimit ofertele lor."
+      },
+      "three": {
+        "title": "Compară și alege",
+        "description": "Consultă profiluri, recenzii și oferte și vorbește cu profesionistul înainte să decizi."
+      },
+      "four": {
+        "title": "Rezervă și evaluează serviciul",
+        "description": "Stabilește programarea, urmărește lucrarea până la final și lasă o recenzie."
+      }
+    },
+    "cta": "Începe acum"
   },
   "professionals": {
-    "title": "Profesioniști"
+    "title": "Profesioniști",
+    "heading": "Găsește un profesionist",
+    "subtitle": "Caută după serviciu și locație pentru a vedea profesioniștii care lucrează în zona ta.",
+    "invalid": "Această căutare nu este validă. Încearcă din nou.",
+    "failed": "A apărut o problemă la efectuarea căutării.",
+    "found": "{count, plural, one {# profesionist găsit} few {# profesioniști găsiți} other {# de profesioniști găsiți}}",
+    "companiesFound": "{count, plural, one {# companie găsită} few {# companii găsite} other {# de companii găsite}}",
+    "verified": "✓ Verificată",
+    "form": {
+      "serviceLabel": "Serviciu",
+      "selectService": "Selectează un serviciu…",
+      "latitude": "Latitudine",
+      "longitude": "Longitudine",
+      "latitudePlaceholder": "ex.: 38.9665",
+      "longitudePlaceholder": "ex.: -0.1817",
+      "useMyLocation": "Folosește locația mea actuală",
+      "locating": "Se localizează…",
+      "notSupported": "Browserul tău nu acceptă serviciile de localizare.",
+      "locationFailed": "Nu am putut obține locația ta. Introdu-o manual mai jos.",
+      "submit": "Caută profesioniști",
+      "submitting": "Se caută…"
+    },
+    "results": {
+      "empty": "Încă nu am găsit profesioniști pentru acest serviciu lângă acea locație.",
+      "distance": "la {distance} km"
+    },
+    "verification": {
+      "UNVERIFIED": "Neverificat",
+      "PENDING": "Verificare în așteptare",
+      "VERIFIED": "Profesionist verificat",
+      "REJECTED": "Verificare respinsă"
+    },
+    "profile": {
+      "about": "Despre mine",
+      "experience": "Experiență",
+      "experienceYears": "{count, plural, one {# an} few {# ani} other {# de ani}}",
+      "serviceArea": "Zonă de lucru",
+      "withinKm": "Pe o rază de {km} km",
+      "readyText": "Gata să începi? Publică o cerere de serviciu, iar {name}, împreună cu ceilalți profesioniști eligibili din apropiere, o va putea analiza și îți va putea trimite o ofertă.",
+      "requestService": "Solicită acest serviciu"
+    }
   },
   "search": {
     "title": "Găsește profesioniști",
-    "resultCount": "{count, plural, =0 {Niciun rezultat} one {# profesionist} few {# profesioniști} other {# de profesioniști}}"
+    "resultCount": "{count, plural, =0 {Niciun rezultat} one {# profesionist} few {# profesioniști} other {# de profesioniști}}",
+    "heading": "Găsește un profesionist sau o companie",
+    "subtitle": "Caută după serviciu, oraș, evaluare și verificare: profesioniști și companii clasificați împreună.",
+    "invalid": "Această căutare nu este validă. Ajustează filtrele și încearcă din nou.",
+    "failed": "A apărut o problemă la efectuarea căutării.",
+    "resultsFound": "{count, plural, one {# rezultat găsit} few {# rezultate găsite} other {# de rezultate găsite}}",
+    "form": {
+      "queryLabel": "De ce ai nevoie?",
+      "queryPlaceholder": "ex.: electrician, aer condiționat…",
+      "serviceLabel": "Serviciu",
+      "anyService": "Orice serviciu",
+      "cityLabel": "Oraș",
+      "cityPlaceholder": "ex.: Gandia",
+      "minRatingLabel": "Evaluare minimă",
+      "anyRating": "Orice evaluare",
+      "ratingOption": "{rating}+ stele",
+      "sortByLabel": "Sortează după",
+      "sort": {
+        "RELEVANCE": "Cele mai relevante",
+        "RATING": "Cele mai bine evaluate",
+        "REVIEWS": "Cele mai multe recenzii",
+        "NEWEST": "Cele mai noi",
+        "VERIFIED": "Întâi cei verificați"
+      },
+      "verifiedOnly": "Doar verificați",
+      "nearLocation": "Caută lângă o locație (opțional)",
+      "submit": "Caută"
+    },
+    "location": {
+      "useMyLocation": "Folosește locația mea",
+      "locating": "Se localizează…",
+      "clear": "Șterge",
+      "unknownAddress": "Adresă necunoscută lângă acest punct",
+      "notSupported": "Browserul tău nu acceptă serviciile de localizare.",
+      "failed": "Nu am putut obține locația ta. Dă clic pe un punct de pe hartă.",
+      "near": "Lângă {address}",
+      "radiusLabel": "Raza de căutare (km)",
+      "radiusPlaceholder": "ex.: 25",
+      "invalid": "Această locație nu pare validă.",
+      "reverseGeocodeFailed": "Nu am putut găsi o adresă pentru această locație."
+    },
+    "results": {
+      "empty": "Încă nu există rezultate pentru aceste filtre.",
+      "kindProfessional": "Profesionist",
+      "kindCompany": "Companie",
+      "reasons": {
+        "verified": "Profesionist verificat",
+        "highlyRated": "Foarte bine evaluat ({rating}/5 din {count, plural, one {# recenzie} few {# recenzii} other {# de recenzii}})",
+        "manyJobs": "Multe lucrări finalizate",
+        "inCity": "Se află în orașul căutat",
+        "inRegion": "Se află în regiunea căutată",
+        "categoryMatch": "Corespunde categoriei de servicii căutate",
+        "portfolio": "Portofoliu disponibil ({count, plural, one {# element} few {# elemente} other {# de elemente}})",
+        "completeProfile": "Profil solid și complet"
+      }
+    }
   },
   "footer": {
-    "rights": "© {year, number} MaestroYa. Toate drepturile rezervate."
+    "rights": "© {year} MaestroYa. Toate drepturile rezervate.",
+    "tagline": "Punem în legătură oamenii care au nevoie de un serviciu pentru casă cu profesioniști de încredere din apropiere.",
+    "madeIn": "Creat în Spania pentru casele din Spania.",
+    "customers": "Clienți",
+    "professionals": "Profesioniști",
+    "account": "Cont",
+    "directory": "Director de profesioniști",
+    "joinAsProfessional": "Alătură-te ca profesionist",
+    "professionalDashboard": "Intră în panoul meu",
+    "forgotPassword": "Recuperează parola"
+  },
+  "meta": {
+    "home": {
+      "title": "MaestroYa — Profesioniști de încredere pentru casa ta",
+      "description": "Descrie de ce ai nevoie și găsește profesioniști verificați lângă tine: instalații sanitare, electrice, renovări, curățenie și multe altele."
+    },
+    "search": {
+      "title": "Caută profesioniști și companii",
+      "description": "Filtrează după categorie, oraș, evaluare și verificare pentru a găsi profesionistul sau compania potrivită pentru proiectul tău."
+    },
+    "professionals": {
+      "title": "Găsește un profesionist lângă tine",
+      "description": "Caută profesioniști verificați după categoria de serviciu și locație, ordonați după distanță."
+    },
+    "professionalProfile": {
+      "descriptionWithLocation": "Profesionist verificat în {location}. Vezi profilul și cere o ofertă pe MaestroYa.",
+      "description": "Vezi profilul acestui profesionist și cere o ofertă pe MaestroYa."
+    },
+    "companyProfile": {
+      "descriptionWithLocation": "Companie de servicii pentru casă în {location}. Vezi profilul pe MaestroYa.",
+      "description": "Vezi profilul acestei companii și cere o ofertă pe MaestroYa."
+    }
+  },
+  "categories": {
+    "title": "Cele mai solicitate servicii",
+    "subtitle": "Alege o categorie pentru a vedea profesioniști verificați lângă tine."
+  },
+  "trust": {
+    "title": "Gândit ca să ai încredere în fiecare angajare",
+    "subtitle": "Cu MaestroYa știi mereu cu cine vorbești și ce contractezi.",
+    "verified": {
+      "title": "Profesioniști verificați",
+      "description": "Profesioniștii își pot verifica identitatea, iar companiile documentele, înainte de a lucra pe platformă."
+    },
+    "quotes": {
+      "title": "Oferte clare",
+      "description": "Primește oferte detaliate de la mai mulți profesioniști și compară-le înainte să decizi."
+    },
+    "communication": {
+      "title": "Comunicare pe platformă",
+      "description": "Vorbește cu profesionistul direct pe MaestroYa înainte și în timpul serviciului."
+    },
+    "reviews": {
+      "title": "Recenzii reale",
+      "description": "Fiecare lucrare finalizată poate primi o recenzie, vizibilă pe profilul profesionistului."
+    },
+    "tracking": {
+      "title": "Urmărirea lucrării",
+      "description": "Verifică oricând din panoul tău stadiul cererii, al programării și al lucrării."
+    },
+    "support": {
+      "title": "Asistență dacă ceva nu merge",
+      "description": "Dacă apare o problemă, poți deschide o solicitare de asistență, iar echipa noastră te ajută."
+    }
+  },
+  "professionalCta": {
+    "badge": "Pentru profesioniști",
+    "title": "Ești profesionist? Câștigă clienți noi cu MaestroYa",
+    "benefits": {
+      "leads": "Primește cereri de la clienți care caută categoria ta de servicii",
+      "profile": "Creează-ți profilul de profesionist și arată-ți experiența și portofoliul",
+      "quotes": "Trimite oferte direct din panoul tău",
+      "schedule": "Gestionează programările și lucrările de la început până la sfârșit",
+      "reputation": "Construiește-ți reputația cu recenziile clienților tăi"
+    },
+    "join": "Alătură-te ca profesionist",
+    "haveAccount": "Am deja cont"
+  },
+  "errorPage": {
+    "title": "A apărut o problemă",
+    "retry": "Încearcă din nou"
+  },
+  "notFound": {
+    "message": "Această pagină nu a fost găsită.",
+    "backHome": "Înapoi la pagina principală"
+  },
+  "directory": {
+    "backToSearch": "← Înapoi la căutare",
+    "viewProfile": "Vezi profilul",
+    "about": "Despre noi",
+    "services": "Servicii",
+    "basedNear": "Zonă",
+    "locationNotSet": "Locație neindicată",
+    "teamOf": "{count, plural, one {Echipă de # persoană} few {Echipă de # persoane} other {Echipă de # de persoane}}",
+    "verifiedCompany": "✓ Companie verificată"
+  },
+  "companies": {
+    "profile": {
+      "teamSize": "Mărimea echipei",
+      "rating": "Evaluare",
+      "portfolio": "Portofoliu"
+    }
   }
 }

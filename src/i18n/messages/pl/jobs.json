@@ -16,5 +16,74 @@
   },
   "quotes": {
     "title": "Wyceny"
+  },
+  "quoteItems": {
+    "columns": {
+      "description": "Opis",
+      "type": "Typ",
+      "quantity": "Ilość",
+      "unitPrice": "Cena jednostkowa",
+      "amount": "Kwota"
+    },
+    "total": "Razem",
+    "category": {
+      "MATERIALS": "Materiały",
+      "LABOR": "Robocizna"
+    }
+  },
+  "urgency": {
+    "LOW": "Niska",
+    "MEDIUM": "Średnia",
+    "HIGH": "Wysoka",
+    "EMERGENCY": "Nagły wypadek"
+  },
+  "list": {
+    "title": "Moje zlecenia",
+    "subtitle": "Ogólny postęp zleceń, dla których zaakceptowałeś wycenę.",
+    "empty": {
+      "title": "Brak aktywnych zleceń",
+      "description": "Zlecenia pojawią się tutaj, gdy zaakceptujesz wycenę specjalisty i prace się rozpoczną.",
+      "action": "Zobacz moje zapytania"
+    }
+  },
+  "notStarted": "Nierozpoczęte",
+  "detail": {
+    "title": "Zlecenie",
+    "started": "Rozpoczęto",
+    "completed": "Zakończono",
+    "cancellationReason": "Powód anulowania",
+    "appointments": "Wizyty w ramach tego zlecenia",
+    "noAppointments": "Brak wizyt.",
+    "notScheduled": "Jeszcze nie zaplanowano",
+    "dateUnset": "—"
+  },
+  "cancellationReason": {
+    "CUSTOMER_REQUEST": "Na prośbę klienta",
+    "PROFESSIONAL_UNABLE_TO_COMPLETE": "Specjalista nie może ukończyć zlecenia",
+    "SERVICE_REQUEST_ISSUE": "Problem z zapytaniem",
+    "OTHER": "Inny"
+  },
+  "actions": {
+    "startWork": "Rozpocznij pracę",
+    "starting": "Rozpoczynanie…",
+    "markCompleted": "Oznacz zlecenie jako zakończone",
+    "completing": "Kończenie…",
+    "openAppointmentsWarning": "To zlecenie ma jeszcze nierozstrzygniętą wizytę. Potwierdź i zakończ (lub anuluj) wszystkie wizyty, zanim oznaczysz je jako zakończone.",
+    "cancelJob": "Anuluj zlecenie",
+    "cancelTitle": "Anulować to zlecenie?",
+    "reason": "Powód",
+    "note": "Notatka (opcjonalnie)",
+    "cancelling": "Anulowanie…",
+    "confirmCancel": "Tak, anuluj",
+    "notNow": "Nie teraz"
+  },
+  "errors": {
+    "invalidJob": "Nieprawidłowe zlecenie.",
+    "startFailed": "Coś poszło nie tak podczas rozpoczynania zlecenia.",
+    "completeFailed": "Coś poszło nie tak podczas kończenia zlecenia.",
+    "cancelFailed": "Coś poszło nie tak podczas anulowania zlecenia.",
+    "confirmFailed": "Coś poszło nie tak podczas potwierdzania zlecenia.",
+    "disputeFailed": "Coś poszło nie tak podczas zgłaszania sporu dotyczącego zakończenia zlecenia.",
+    "paymentFailed": "Coś poszło nie tak podczas rozpoczynania płatności. Spróbuj ponownie."
   }
 }

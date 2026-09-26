@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import { createReviewSchema, deleteReviewSchema, respondToReviewSchema, updateReviewSchema } from "@/application/dto/review.dto";
 import {
@@ -12,6 +13,7 @@ import {
 import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError, localizeZodError } from "@/presentation/i18n/server";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
@@ -19,12 +21,11 @@ export type ActionResult = { success: true } | { success: false; error: string }
 // jobs/actions.ts): domain errors surface their own safe, user-facing
 // message; anything else is logged server-side and replaced with a
 // generic one.
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+// Module 120 — Multilingual Localization: fallbacks are keys in
+// `customer.reviews.errors`, resolved in the request's locale.
+async function fromDomainError(error: unknown, fallbackKey: "submitFailed" | "updateFailed" | "deleteFailed" | "respondFailed"): Promise<ActionResult> {
+  const t = await getTranslations("customer.reviews.errors");
+  return { success: false, error: await localizeActionError(error, t(fallbackKey)) };
 }
 
 /**
@@ -47,7 +48,7 @@ export async function createReviewAction(jobId: string, rating: number, comment:
   const user = await requireAuth();
   const parsed = createReviewSchema.safeParse({ jobId, rating, comment });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid review." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   const antiAbuse = makeAntiAbuseService();
@@ -56,7 +57,7 @@ export async function createReviewAction(jobId: string, rating: number, comment:
     await antiAbuse.enforceRateLimit("REVIEW_CREATE_BY_USER", { userId: user.id }, "REVIEW_RATE_LIMITED");
   } catch (error) {
     if (error instanceof DomainError) {
-      return { success: false, error: error.message };
+      return { success: false, error: await localizeActionError(error) };
     }
     throw error;
   }
@@ -71,7 +72,7 @@ export async function createReviewAction(jobId: string, rating: number, comment:
     revalidatePath("/jobs");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong submitting this review.");
+    return fromDomainError(error, "submitFailed");
   }
 }
 
@@ -92,7 +93,7 @@ export async function updateReviewAction(
   const user = await requireAuth();
   const parsed = updateReviewSchema.safeParse({ reviewId, rating, comment });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid review." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
@@ -104,7 +105,7 @@ export async function updateReviewAction(
     revalidatePath("/jobs");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong updating this review.");
+    return fromDomainError(error, "updateFailed");
   }
 }
 
@@ -116,7 +117,7 @@ export async function deleteReviewAction(reviewId: string, jobId: string): Promi
   const user = await requireAuth();
   const parsed = deleteReviewSchema.safeParse({ reviewId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid review." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
@@ -125,7 +126,7 @@ export async function deleteReviewAction(reviewId: string, jobId: string): Promi
     revalidatePath("/jobs");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong deleting this review.");
+    return fromDomainError(error, "deleteFailed");
   }
 }
 
@@ -140,7 +141,7 @@ export async function respondToReviewAction(reviewId: string, response: string, 
   const user = await requireAuth();
   const parsed = respondToReviewSchema.safeParse({ reviewId, response });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid response." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
@@ -149,6 +150,6 @@ export async function respondToReviewAction(reviewId: string, response: string, 
     revalidatePath("/jobs");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong submitting this response.");
+    return fromDomainError(error, "respondFailed");
   }
 }

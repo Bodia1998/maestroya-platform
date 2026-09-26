@@ -1,0 +1,252 @@
+{
+  "hero": {
+    "title": "Vind betrouwbare vakmensen voor je huis",
+    "subtitle": "Beschrijf wat je nodig hebt, vergelijk offertes en schakel de juiste vakman bij jou in de buurt in — alles via MaestroYa.",
+    "ctaPrimary": "Aanvraag plaatsen",
+    "ctaSecondary": "Vakmensen bekijken",
+    "or": "of",
+    "highlights": {
+      "verified": "Geverifieerde vakmensen",
+      "reviews": "Beoordelingen van echte klanten",
+      "audience": "Particulieren en bedrijven"
+    },
+    "search": {
+      "serviceLabel": "Welke dienst heb je nodig?",
+      "locationLabel": "Waar heb je het nodig?",
+      "locationPlaceholder": "Stad of postcode",
+      "submit": "Vakmensen zoeken"
+    }
+  },
+  "howItWorks": {
+    "title": "Hoe het werkt",
+    "step1": "Beschrijf wat je nodig hebt",
+    "step2": "Ontvang offertes",
+    "step3": "Kies je vakman",
+    "subtitle": "Van aanvraag tot afgeronde opdracht, in vier stappen.",
+    "steps": {
+      "one": {
+        "title": "Vertel ons wat je nodig hebt",
+        "description": "Beschrijf het werk, kies de categorie en plaats je aanvraag in een paar minuten."
+      },
+      "two": {
+        "title": "Ontvang offertes",
+        "description": "Geïnteresseerde vakmensen die in jouw regio beschikbaar zijn, sturen je hun offertes."
+      },
+      "three": {
+        "title": "Vergelijk en kies",
+        "description": "Bekijk profielen, beoordelingen en offertes en praat met de vakman voordat je beslist."
+      },
+      "four": {
+        "title": "Boek en beoordeel de dienst",
+        "description": "Plan de afspraak, volg de opdracht tot die klaar is en laat een beoordeling achter."
+      }
+    },
+    "cta": "Nu beginnen"
+  },
+  "professionals": {
+    "title": "Vakmensen",
+    "heading": "Vind een vakman",
+    "subtitle": "Zoek op dienst en locatie om vakmensen te zien die in jouw regio werken.",
+    "invalid": "Deze zoekopdracht is ongeldig — probeer het opnieuw.",
+    "failed": "Er ging iets mis bij het zoeken.",
+    "found": "{count, plural, one {# vakman gevonden} other {# vakmensen gevonden}}",
+    "companiesFound": "{count, plural, one {# bedrijf gevonden} other {# bedrijven gevonden}}",
+    "verified": "✓ Geverifieerd",
+    "form": {
+      "serviceLabel": "Dienst",
+      "selectService": "Kies een dienst…",
+      "latitude": "Breedtegraad",
+      "longitude": "Lengtegraad",
+      "latitudePlaceholder": "bijv. 38.9665",
+      "longitudePlaceholder": "bijv. -0.1817",
+      "useMyLocation": "Mijn huidige locatie gebruiken",
+      "locating": "Locatie bepalen…",
+      "notSupported": "Je browser ondersteunt geen locatievoorzieningen.",
+      "locationFailed": "Je locatie kon niet worden bepaald. Vul hem hieronder handmatig in.",
+      "submit": "Vakmensen zoeken",
+      "submitting": "Zoeken…"
+    },
+    "results": {
+      "empty": "Nog geen vakmensen gevonden voor deze dienst in de buurt van die locatie.",
+      "distance": "{distance} km verderop"
+    },
+    "verification": {
+      "UNVERIFIED": "Niet geverifieerd",
+      "PENDING": "Verificatie in behandeling",
+      "VERIFIED": "Geverifieerde vakman",
+      "REJECTED": "Verificatie afgewezen"
+    },
+    "profile": {
+      "about": "Over mij",
+      "experience": "Ervaring",
+      "experienceYears": "{count, plural, one {# jaar} other {# jaar}}",
+      "serviceArea": "Werkgebied",
+      "withinKm": "Binnen {km} km",
+      "readyText": "Klaar om te beginnen? Plaats een aanvraag en {name} kan die – samen met alle andere geschikte vakmensen in de buurt – bekijken en je een offerte sturen.",
+      "requestService": "Deze dienst aanvragen"
+    }
+  },
+  "search": {
+    "title": "Vakmensen zoeken",
+    "resultCount": "{count, plural, =0 {Geen resultaten} one {# vakman} other {# vakmensen}}",
+    "heading": "Vind een vakman of bedrijf",
+    "subtitle": "Zoek op dienst, stad, beoordeling en verificatie — vakmensen en bedrijven samen gerangschikt.",
+    "invalid": "Deze zoekopdracht is ongeldig — pas de filters aan en probeer het opnieuw.",
+    "failed": "Er ging iets mis bij het zoeken.",
+    "resultsFound": "{count, plural, one {# resultaat gevonden} other {# resultaten gevonden}}",
+    "form": {
+      "queryLabel": "Wat heb je nodig?",
+      "queryPlaceholder": "bijv. elektricien, airconditioning…",
+      "serviceLabel": "Dienst",
+      "anyService": "Alle diensten",
+      "cityLabel": "Stad",
+      "cityPlaceholder": "bijv. Gandia",
+      "minRatingLabel": "Minimale beoordeling",
+      "anyRating": "Alle beoordelingen",
+      "ratingOption": "{rating}+ sterren",
+      "sortByLabel": "Sorteren op",
+      "sort": {
+        "RELEVANCE": "Beste match",
+        "RATING": "Hoogst beoordeeld",
+        "REVIEWS": "Meeste beoordelingen",
+        "NEWEST": "Nieuwste",
+        "VERIFIED": "Geverifieerd eerst"
+      },
+      "verifiedOnly": "Alleen geverifieerd",
+      "nearLocation": "Zoeken in de buurt van een locatie (optioneel)",
+      "submit": "Zoeken"
+    },
+    "location": {
+      "useMyLocation": "Mijn locatie gebruiken",
+      "locating": "Locatie bepalen…",
+      "clear": "Wissen",
+      "unknownAddress": "Onbekend adres in de buurt van dit punt",
+      "notSupported": "Je browser ondersteunt geen locatievoorzieningen.",
+      "failed": "Je locatie kon niet worden bepaald. Klik in plaats daarvan op een punt op de kaart.",
+      "near": "In de buurt van {address}",
+      "radiusLabel": "Zoekstraal (km)",
+      "radiusPlaceholder": "bijv. 25",
+      "invalid": "Deze locatie lijkt ongeldig.",
+      "reverseGeocodeFailed": "Er kon geen adres voor deze locatie worden gevonden."
+    },
+    "results": {
+      "empty": "Nog geen resultaten voor deze filters.",
+      "kindProfessional": "Vakman",
+      "kindCompany": "Bedrijf",
+      "reasons": {
+        "verified": "Geverifieerde vakman",
+        "highlyRated": "Hoog beoordeeld ({rating}/5 uit {count, plural, one {# beoordeling} other {# beoordelingen}})",
+        "manyJobs": "Veel afgeronde opdrachten",
+        "inCity": "Gevestigd in de gezochte stad",
+        "inRegion": "Gevestigd in de gezochte regio",
+        "categoryMatch": "Past bij de gezochte dienstcategorie",
+        "portfolio": "Portfolio beschikbaar ({count, plural, one {# item} other {# items}})",
+        "completeProfile": "Sterk, volledig profiel"
+      }
+    }
+  },
+  "footer": {
+    "rights": "© {year} MaestroYa. Alle rechten voorbehouden.",
+    "tagline": "We brengen mensen die een dienst aan huis nodig hebben in contact met betrouwbare vakmensen in hun buurt.",
+    "madeIn": "Gemaakt in Spanje voor Spaanse huishoudens.",
+    "customers": "Klanten",
+    "professionals": "Vakmensen",
+    "account": "Account",
+    "directory": "Overzicht van vakmensen",
+    "joinAsProfessional": "Word lid als vakman",
+    "professionalDashboard": "Naar mijn dashboard",
+    "forgotPassword": "Wachtwoord herstellen"
+  },
+  "meta": {
+    "home": {
+      "title": "MaestroYa — Betrouwbare vakmensen voor je huis",
+      "description": "Beschrijf wat je nodig hebt en kom in contact met geverifieerde vakmensen bij jou in de buurt: loodgieterswerk, elektra, verbouwingen, schoonmaak en nog veel meer."
+    },
+    "search": {
+      "title": "Vakmensen en bedrijven zoeken",
+      "description": "Filter op categorie, stad, beoordeling en verificatie om de juiste vakman of het juiste bedrijf voor je project te vinden."
+    },
+    "professionals": {
+      "title": "Vind een vakman bij jou in de buurt",
+      "description": "Zoek geverifieerde vakmensen op dienstcategorie en locatie, gesorteerd op afstand."
+    },
+    "professionalProfile": {
+      "descriptionWithLocation": "Geverifieerde vakman in {location}. Bekijk het profiel en vraag een offerte aan op MaestroYa.",
+      "description": "Bekijk het profiel van deze vakman en vraag een offerte aan op MaestroYa."
+    },
+    "companyProfile": {
+      "descriptionWithLocation": "Bedrijf voor diensten aan huis in {location}. Bekijk het profiel op MaestroYa.",
+      "description": "Bekijk het profiel van dit bedrijf en vraag een offerte aan op MaestroYa."
+    }
+  },
+  "categories": {
+    "title": "Meest gevraagde diensten",
+    "subtitle": "Kies een categorie om geverifieerde vakmensen bij jou in de buurt te zien."
+  },
+  "trust": {
+    "title": "Gemaakt zodat je elke opdracht kunt vertrouwen",
+    "subtitle": "Met MaestroYa weet je altijd met wie je praat en wat je laat doen.",
+    "verified": {
+      "title": "Geverifieerde vakmensen",
+      "description": "Vakmensen kunnen hun identiteit laten verifiëren – en bedrijven hun documenten – voordat ze op het platform aan de slag gaan."
+    },
+    "quotes": {
+      "title": "Duidelijke offertes",
+      "description": "Ontvang gedetailleerde offertes van meerdere vakmensen en vergelijk ze voordat je beslist."
+    },
+    "communication": {
+      "title": "Communicatie via het platform",
+      "description": "Praat vóór en tijdens de dienst rechtstreeks met de vakman via MaestroYa."
+    },
+    "reviews": {
+      "title": "Echte beoordelingen",
+      "description": "Elke afgeronde opdracht kan een beoordeling krijgen, zichtbaar op het profiel van de vakman."
+    },
+    "tracking": {
+      "title": "Opdracht volgen",
+      "description": "Bekijk op elk moment in je dashboard de status van je aanvraag, afspraak en opdracht."
+    },
+    "support": {
+      "title": "Hulp als er iets misgaat",
+      "description": "Als er een probleem is, kun je een melding maken en helpt ons supportteam je verder."
+    }
+  },
+  "professionalCta": {
+    "badge": "Voor vakmensen",
+    "title": "Ben je vakman? Vind nieuwe klanten met MaestroYa",
+    "benefits": {
+      "leads": "Ontvang aanvragen van klanten die jouw dienstcategorie zoeken",
+      "profile": "Maak je vakmanprofiel aan en laat je ervaring en portfolio zien",
+      "quotes": "Verstuur offertes rechtstreeks vanuit je dashboard",
+      "schedule": "Beheer afspraken en opdrachten van begin tot eind",
+      "reputation": "Bouw je reputatie op met de beoordelingen van je klanten"
+    },
+    "join": "Word lid als vakman",
+    "haveAccount": "Ik heb al een account"
+  },
+  "errorPage": {
+    "title": "Er ging iets mis",
+    "retry": "Opnieuw proberen"
+  },
+  "notFound": {
+    "message": "Deze pagina kon niet worden gevonden.",
+    "backHome": "Terug naar de startpagina"
+  },
+  "directory": {
+    "backToSearch": "← Terug naar zoeken",
+    "viewProfile": "Profiel bekijken",
+    "about": "Over ons",
+    "services": "Diensten",
+    "basedNear": "Regio",
+    "locationNotSet": "Geen locatie opgegeven",
+    "teamOf": "{count, plural, one {Team van # persoon} other {Team van # personen}}",
+    "verifiedCompany": "✓ Geverifieerd bedrijf"
+  },
+  "companies": {
+    "profile": {
+      "teamSize": "Teamgrootte",
+      "rating": "Beoordeling",
+      "portfolio": "Portfolio"
+    }
+  }
+}

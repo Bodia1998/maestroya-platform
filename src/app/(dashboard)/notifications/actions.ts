@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import {
   dismissNotificationSchema,
@@ -16,9 +17,10 @@ import {
   makeMarkAllNotificationsAsReadUseCase,
   makeMarkNotificationAsReadUseCase,
 } from "@/application/use-cases/notification/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import type { NotificationRecord } from "@/domain/repositories/notification-repository";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeNotification, type NotificationTemplateTranslator } from "@/presentation/i18n/notifications";
+import { localizeActionError, localizeZodError } from "@/presentation/i18n/server";
 
 /**
  * Notifications module (Module 15): thin Server Action adapters — every
@@ -44,12 +46,24 @@ export type ActionResult<T = undefined> =
   | { success: true; data: T }
   | { success: false; error: string };
 
-function fromDomainError<T>(error: unknown, fallback: string): ActionResult<T> {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+/**
+ * Module 120 — Multilingual Localization: errors are resolved in the
+ * request's language (`localizeActionError` logs non-domain errors, same
+ * as the previous `fromDomainError`), and every notification returned to
+ * the caller carries its title/message rendered in that language from
+ * `notificationTemplates` (see `presentation/i18n/notifications.ts`). The
+ * stored English text is never modified — it is only the fallback.
+ */
+async function fromDomainError<T>(error: unknown): Promise<ActionResult<T>> {
+  return { success: false, error: await localizeActionError(error) };
+}
+
+async function notificationTranslator(): Promise<NotificationTemplateTranslator> {
+  return (await getTranslations("notificationTemplates")) as unknown as NotificationTemplateTranslator;
+}
+
+function localized(t: NotificationTemplateTranslator, notification: NotificationRecord): NotificationRecord {
+  return { ...notification, ...localizeNotification(t, notification) };
 }
 
 export async function listNotificationsAction(
@@ -59,14 +73,15 @@ export async function listNotificationsAction(
   const user = await requireAuth();
   const parsed = listNotificationsSchema.safeParse({ limit, offset });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid pagination." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
     const notifications = await makeListNotificationsUseCase().execute(user.id, parsed.data);
-    return { success: true, data: notifications };
+    const t = await notificationTranslator();
+    return { success: true, data: notifications.map((notification) => localized(t, notification)) };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading your notifications.");
+    return fromDomainError(error);
   }
 }
 
@@ -76,7 +91,7 @@ export async function getUnreadNotificationCountAction(): Promise<ActionResult<n
     const count = await makeGetUnreadNotificationCountUseCase().execute(user.id);
     return { success: true, data: count };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading your unread notification count.");
+    return fromDomainError(error);
   }
 }
 
@@ -84,14 +99,14 @@ export async function getNotificationAction(id: string): Promise<ActionResult<No
   const user = await requireAuth();
   const parsed = getNotificationSchema.safeParse({ id });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid notification." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
     const notification = await makeGetNotificationUseCase().execute(user.id, parsed.data.id);
-    return { success: true, data: notification };
+    return { success: true, data: localized(await notificationTranslator(), notification) };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading this notification.");
+    return fromDomainError(error);
   }
 }
 
@@ -99,15 +114,15 @@ export async function markNotificationAsReadAction(id: string): Promise<ActionRe
   const user = await requireAuth();
   const parsed = markNotificationAsReadSchema.safeParse({ id });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid notification." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
     const notification = await makeMarkNotificationAsReadUseCase().execute(user.id, parsed.data.id);
     revalidatePath("/notifications");
-    return { success: true, data: notification };
+    return { success: true, data: localized(await notificationTranslator(), notification) };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong marking this notification as read.");
+    return fromDomainError(error);
   }
 }
 
@@ -118,7 +133,7 @@ export async function markAllNotificationsAsReadAction(): Promise<ActionResult<u
     revalidatePath("/notifications");
     return { success: true, data: undefined };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong marking your notifications as read.");
+    return fromDomainError(error);
   }
 }
 
@@ -126,14 +141,14 @@ export async function dismissNotificationAction(id: string): Promise<ActionResul
   const user = await requireAuth();
   const parsed = dismissNotificationSchema.safeParse({ id });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid notification." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
     const notification = await makeDismissNotificationUseCase().execute(user.id, parsed.data.id);
     revalidatePath("/notifications");
-    return { success: true, data: notification };
+    return { success: true, data: localized(await notificationTranslator(), notification) };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong dismissing this notification.");
+    return fromDomainError(error);
   }
 }

@@ -27,7 +27,7 @@ export const analyticsDateRangeSchema = z
     to: z.coerce.date().optional(),
   })
   .refine((v) => !v.from || !v.to || v.from.getTime() <= v.to.getTime(), {
-    message: "The start date must be before the end date.",
+    message: "dto.analytics.dateRange",
     path: ["from"],
   });
 export type AnalyticsDateRangeInput = z.infer<typeof analyticsDateRangeSchema>;

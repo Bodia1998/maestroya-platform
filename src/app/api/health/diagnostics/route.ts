@@ -78,6 +78,7 @@ export async function GET(request: NextRequest) {
     logger.error("diagnostics_check_failed", { requestId, route: "/api/health/diagnostics", error });
 
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "UNHEALTHY", timestamp: new Date().toISOString(), error: "diagnostics collection failed" },
       { status: 200, headers: { [REQUEST_ID_HEADER]: requestId } },
     );

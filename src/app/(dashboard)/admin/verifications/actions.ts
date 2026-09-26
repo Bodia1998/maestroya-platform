@@ -1,5 +1,7 @@
 "use server";
 
+import { adminActionFailure } from "../_lib/action-errors";
+import { localizeZodError } from "@/presentation/i18n/server";
 import { revalidatePath } from "next/cache";
 
 import {
@@ -13,7 +15,6 @@ import {
   makeRequestVerificationResubmissionUseCase,
   makeStartVerificationReviewUseCase,
 } from "@/application/use-cases/verification/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
 
 /**
@@ -29,14 +30,6 @@ import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
-}
-
 function revalidate(verificationId: string) {
   revalidatePath("/admin/verifications");
   revalidatePath(`/admin/verifications/${verificationId}`);
@@ -46,14 +39,14 @@ export async function startVerificationReviewAction(verificationId: string): Pro
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminVerificationIdSchema.safeParse({ verificationId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid verification." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     await makeStartVerificationReviewUseCase().execute(admin.id, parsed.data.verificationId);
     revalidate(parsed.data.verificationId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong starting the review.");
+    return adminActionFailure(error, "startingTheReview");
   }
 }
 
@@ -61,14 +54,14 @@ export async function approveVerificationAction(verificationId: string): Promise
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminVerificationIdSchema.safeParse({ verificationId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid verification." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     await makeApproveProfessionalVerificationUseCase().execute(admin.id, parsed.data.verificationId);
     revalidate(parsed.data.verificationId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong approving this verification.");
+    return adminActionFailure(error, "approvingThisVerification");
   }
 }
 
@@ -76,14 +69,14 @@ export async function rejectVerificationAction(verificationId: string, reason: s
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = rejectVerificationSchema.safeParse({ verificationId, reason });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "A rejection reason is required." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     await makeRejectProfessionalVerificationUseCase().execute(admin.id, parsed.data.verificationId, parsed.data.reason);
     revalidate(parsed.data.verificationId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong rejecting this verification.");
+    return adminActionFailure(error, "rejectingThisVerification");
   }
 }
 
@@ -94,7 +87,7 @@ export async function requestVerificationResubmissionAction(
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = requestVerificationResubmissionSchema.safeParse({ verificationId, reason });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "A resubmission reason is required." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     await makeRequestVerificationResubmissionUseCase().execute(
@@ -105,7 +98,7 @@ export async function requestVerificationResubmissionAction(
     revalidate(parsed.data.verificationId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong requesting a resubmission.");
+    return adminActionFailure(error, "requestingAResubmission");
   }
 }
 

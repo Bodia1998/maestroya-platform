@@ -1,6 +1,7 @@
 import { PrismaAuthTokenRepository } from "@/infrastructure/database/prisma/repositories/prisma-auth-token-repository";
 import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
 import { ResendEmailSender } from "@/infrastructure/email/resend-email-sender";
+import { IntlAuthEmailComposer } from "@/infrastructure/email/intl-auth-email-composer";
 import { env } from "@/infrastructure/config/env";
 import { getTracer } from "@/infrastructure/tracing/compose";
 import { withEmailTracing } from "@/infrastructure/tracing/traced-external-senders";
@@ -39,8 +40,18 @@ const emailSender = withEmailTracing(
   getTracer(),
 );
 
+// Module 120 — Multilingual Localization: renders the verification/reset
+// emails from the `emails` message namespace in the recipient's language.
+const authEmailComposer = new IntlAuthEmailComposer();
+
 export function makeRegisterUserUseCase() {
-  return new RegisterUserUseCase(users, tokens, emailSender, makeLinkRegistrationAttributionUseCase());
+  return new RegisterUserUseCase(
+    users,
+    tokens,
+    emailSender,
+    makeLinkRegistrationAttributionUseCase(),
+    authEmailComposer,
+  );
 }
 
 export function makeVerifyEmailUseCase() {
@@ -48,7 +59,7 @@ export function makeVerifyEmailUseCase() {
 }
 
 export function makeRequestPasswordResetUseCase() {
-  return new RequestPasswordResetUseCase(users, tokens, emailSender);
+  return new RequestPasswordResetUseCase(users, tokens, emailSender, authEmailComposer);
 }
 
 export function makeResetPasswordUseCase() {

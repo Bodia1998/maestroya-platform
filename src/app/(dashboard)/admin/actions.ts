@@ -1,5 +1,7 @@
 "use server";
 
+import { adminActionFailure } from "./_lib/action-errors";
+import { localizeZodError } from "@/presentation/i18n/server";
 import { revalidatePath } from "next/cache";
 
 import {
@@ -40,7 +42,6 @@ import {
   makeSuspendProfessionalUseCase,
 } from "@/application/use-cases/admin/compose";
 import { normalizeModerationReason } from "@/domain/services/admin-rules";
-import { DomainError } from "@/domain/errors/domain-error";
 import type { AdminAuditLogRecord } from "@/domain/repositories/admin-audit-log-repository";
 import type {
   AdminDashboardOverview,
@@ -74,14 +75,6 @@ import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
 
 export type ActionResult<T = undefined> = { success: true; data: T } | { success: false; error: string };
 
-function fromDomainError<T>(error: unknown, fallback: string): ActionResult<T> {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
-}
-
 // ---------------------------------------------------------------------------
 // Dashboard
 // ---------------------------------------------------------------------------
@@ -92,7 +85,7 @@ export async function getAdminDashboardOverviewAction(): Promise<ActionResult<Ad
     const overview = await makeGetAdminDashboardOverviewUseCase().execute();
     return { success: true, data: overview };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading the dashboard.");
+    return adminActionFailure(error, "loadingTheDashboard");
   }
 }
 
@@ -106,13 +99,13 @@ export async function listAdminUsersAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listAdminUsersSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const users = await makeListAdminUsersUseCase().execute(parsed.data);
     return { success: true, data: users };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading users.");
+    return adminActionFailure(error, "loadingUsers");
   }
 }
 
@@ -120,14 +113,14 @@ export async function suspendUserAction(userId: string): Promise<ActionResult<Ad
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminUserIdSchema.safeParse({ userId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid user." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const user = await makeSuspendAdminUserUseCase().execute(admin.id, parsed.data.userId);
     revalidatePath("/admin/users");
     return { success: true, data: user };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong suspending this user.");
+    return adminActionFailure(error, "suspendingThisUser");
   }
 }
 
@@ -135,14 +128,14 @@ export async function reactivateUserAction(userId: string): Promise<ActionResult
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminUserIdSchema.safeParse({ userId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid user." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const user = await makeReactivateAdminUserUseCase().execute(admin.id, parsed.data.userId);
     revalidatePath("/admin/users");
     return { success: true, data: user };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong reactivating this user.");
+    return adminActionFailure(error, "reactivatingThisUser");
   }
 }
 
@@ -150,14 +143,14 @@ export async function changeUserRoleAction(userId: string, roles: string[]): Pro
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = changeUserRoleSchema.safeParse({ userId, roles });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid role change." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const user = await makeChangeUserRoleUseCase().execute(admin.id, parsed.data.userId, parsed.data.roles);
     revalidatePath("/admin/users");
     return { success: true, data: user };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong changing this user's role.");
+    return adminActionFailure(error, "changingThisUserRole");
   }
 }
 
@@ -171,13 +164,13 @@ export async function listAdminProfessionalsAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listAdminProfessionalsSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const professionals = await makeListAdminProfessionalsUseCase().execute(parsed.data);
     return { success: true, data: professionals };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading professionals.");
+    return adminActionFailure(error, "loadingProfessionals");
   }
 }
 
@@ -194,7 +187,7 @@ export async function suspendProfessionalAction(
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminProfessionalIdSchema.safeParse({ professionalId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid professional." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const professional = await makeSuspendProfessionalUseCase().execute(admin.id, parsed.data.professionalId);
@@ -202,7 +195,7 @@ export async function suspendProfessionalAction(
     revalidatePath(`/admin/professionals/${parsed.data.professionalId}`);
     return { success: true, data: professional };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong suspending this professional.");
+    return adminActionFailure(error, "suspendingThisProfessional");
   }
 }
 
@@ -212,7 +205,7 @@ export async function reactivateProfessionalAction(
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminProfessionalIdSchema.safeParse({ professionalId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid professional." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const professional = await makeReactivateProfessionalUseCase().execute(admin.id, parsed.data.professionalId);
@@ -220,7 +213,7 @@ export async function reactivateProfessionalAction(
     revalidatePath(`/admin/professionals/${parsed.data.professionalId}`);
     return { success: true, data: professional };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong reactivating this professional.");
+    return adminActionFailure(error, "reactivatingThisProfessional");
   }
 }
 
@@ -234,13 +227,13 @@ export async function listAdminServiceRequestsAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listAdminServiceRequestsSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const requests = await makeListAdminServiceRequestsUseCase().execute(parsed.data);
     return { success: true, data: requests };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading service requests.");
+    return adminActionFailure(error, "loadingServiceRequests");
   }
 }
 
@@ -254,13 +247,13 @@ export async function listAdminQuotesAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listAdminQuotesSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const quotes = await makeListAdminQuotesUseCase().execute(parsed.data);
     return { success: true, data: quotes };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading quotes.");
+    return adminActionFailure(error, "loadingQuotes");
   }
 }
 
@@ -274,13 +267,13 @@ export async function listAdminJobsAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listAdminJobsSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const jobs = await makeListAdminJobsUseCase().execute(parsed.data);
     return { success: true, data: jobs };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading appointments/jobs.");
+    return adminActionFailure(error, "loadingAppointmentsJobs");
   }
 }
 
@@ -294,13 +287,13 @@ export async function listAdminReviewsAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listAdminReviewsSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const reviews = await makeListAdminReviewsUseCase().execute(parsed.data);
     return { success: true, data: reviews };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading reviews.");
+    return adminActionFailure(error, "loadingReviews");
   }
 }
 
@@ -308,7 +301,7 @@ export async function moderateReviewAction(reviewId: string, reason?: string): P
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = moderateReviewSchema.safeParse({ reviewId, reason });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid review." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const review = await makeModerateReviewUseCase().execute(
@@ -319,7 +312,7 @@ export async function moderateReviewAction(reviewId: string, reason?: string): P
     revalidatePath("/admin/reviews");
     return { success: true, data: review };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong moderating this review.");
+    return adminActionFailure(error, "moderatingThisReview");
   }
 }
 
@@ -327,14 +320,14 @@ export async function restoreReviewAction(reviewId: string): Promise<ActionResul
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminReviewIdSchema.safeParse({ reviewId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid review." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const review = await makeRestoreReviewUseCase().execute(admin.id, parsed.data.reviewId);
     revalidatePath("/admin/reviews");
     return { success: true, data: review };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong restoring this review.");
+    return adminActionFailure(error, "restoringThisReview");
   }
 }
 
@@ -348,13 +341,13 @@ export async function listAdminPortfolioItemsAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listAdminPortfolioItemsSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const items = await makeListAdminPortfolioItemsUseCase().execute(parsed.data);
     return { success: true, data: items };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading portfolio items.");
+    return adminActionFailure(error, "loadingPortfolioItems");
   }
 }
 
@@ -365,7 +358,7 @@ export async function moderatePortfolioItemAction(
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = moderatePortfolioItemSchema.safeParse({ portfolioItemId, reason });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid portfolio item." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const item = await makeModeratePortfolioItemUseCase().execute(
@@ -376,7 +369,7 @@ export async function moderatePortfolioItemAction(
     revalidatePath("/admin/portfolio");
     return { success: true, data: item };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong moderating this portfolio item.");
+    return adminActionFailure(error, "moderatingThisPortfolioItem");
   }
 }
 
@@ -384,14 +377,14 @@ export async function restorePortfolioItemAction(portfolioItemId: string): Promi
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminPortfolioItemIdSchema.safeParse({ portfolioItemId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid portfolio item." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const item = await makeRestorePortfolioItemUseCase().execute(admin.id, parsed.data.portfolioItemId);
     revalidatePath("/admin/portfolio");
     return { success: true, data: item };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong restoring this portfolio item.");
+    return adminActionFailure(error, "restoringThisPortfolioItem");
   }
 }
 
@@ -405,13 +398,13 @@ export async function listAdminAuditLogsAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listAdminAuditLogsSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const logs = await makeListAdminAuditLogsUseCase().execute(parsed.data);
     return { success: true, data: logs };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading audit logs.");
+    return adminActionFailure(error, "loadingAuditLogs");
   }
 }
 

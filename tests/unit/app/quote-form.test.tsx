@@ -129,3 +129,17 @@ describe("QuoteForm (edit mode)", () => {
     await waitFor(() => expect(mockUpdateQuoteAction).toHaveBeenCalledWith("quote-1", expect.anything()));
   });
 });
+
+describe("QuoteForm (Module 120 — localisation)", () => {
+  it("renders its labels, options and total in Russian when the UI locale is ru", async () => {
+    const { setTestLocale } = await import("../../test-utils/intl");
+    setTestLocale("ru");
+    render(<QuoteForm mode="create" requestId={CREATE_REQUEST_ID} quote={null} />);
+
+    expect(screen.getByRole("button", { name: "Создать смету" })).toBeTruthy();
+    expect(screen.getByLabelText("Количество")).toBeTruthy();
+    expect(screen.getByRole("option", { name: "Материалы" })).toBeTruthy();
+    expect(screen.getByText(/^Предварительный итог:/)).toBeTruthy();
+    expect(screen.queryByText(/Estimated total/)).toBeNull();
+  });
+});

@@ -1,0 +1,134 @@
+{
+  "categories": {
+    "fontaneria": {
+      "name": "Fontanería",
+      "description": "Reparación de fugas, grifos, tuberías e instalaciones de agua."
+    },
+    "electricidad": {
+      "name": "Electricidad",
+      "description": "Instalaciones eléctricas, averías, cuadros y enchufes."
+    },
+    "aire-acondicionado": {
+      "name": "Aire acondicionado",
+      "description": "Instalación, mantenimiento y reparación de climatización."
+    },
+    "pintura": {
+      "name": "Pintura",
+      "description": "Pintura interior y exterior, alisado de paredes y acabados."
+    },
+    "reformas": {
+      "name": "Reformas",
+      "description": "Reformas integrales y parciales de hogar."
+    },
+    "montaje-de-muebles": {
+      "name": "Montaje de muebles",
+      "description": "Montaje y ensamblaje de muebles y mobiliario."
+    },
+    "fontanero": {
+      "name": "Fontanero"
+    },
+    "electricista": {
+      "name": "Electricista"
+    },
+    "tecnico-climatizacion": {
+      "name": "Técnico de climatización"
+    },
+    "pintor": {
+      "name": "Pintor"
+    },
+    "reformista": {
+      "name": "Reformista"
+    },
+    "montador-de-muebles": {
+      "name": "Montador de muebles"
+    }
+  },
+  "countries": {
+    "ES": "España"
+  },
+  "breadcrumbs": {
+    "home": "Inicio",
+    "services": "Servicios",
+    "locations": "Ubicaciones"
+  },
+  "shared": {
+    "faqTitle": "Preguntas frecuentes",
+    "provinceCountry": "{province}, {country}",
+    "serviceInCity": "{service} en {city}",
+    "requestThisService": "Solicitar este servicio",
+    "viewProfessionals": "Ver profesionales",
+    "platformScopeTitle": "Alcance de la plataforma",
+    "confirmedLocalitiesTitle": "Localidades con cobertura confirmada"
+  },
+  "index": {
+    "title": "Servicios para el hogar",
+    "intro": "Estas son las categorías de servicio disponibles hoy en MaestroYa. Elige una para conocer qué puedes solicitar y cómo funciona el proceso de presupuesto.",
+    "empty": "No hay categorías de servicio publicadas en este momento.",
+    "locationsPrompt": "¿Buscas cobertura por zona? <link>Consulta las localidades disponibles</link>."
+  },
+  "servicePage": {
+    "whatYouCanRequestTitle": "Qué puedes solicitar",
+    "whatProfessionalsProvideTitle": "Qué suele aportar el profesional",
+    "howItWorksTitle": "Cómo funciona en MaestroYa",
+    "howItWorks": {
+      "step1": "Publicas una solicitud describiendo el trabajo de {service}.",
+      "step2": "Los profesionales que cubren esta categoría y tu zona pueden revisarla y enviarte un presupuesto.",
+      "step3": "Comparas los presupuestos recibidos y aceptas el que prefieras.",
+      "step4": "El trabajo se agenda y se realiza según lo acordado en el presupuesto aceptado."
+    },
+    "areasTitle": "Zonas con este servicio",
+    "beforeRequestingTitle": "Antes de solicitar",
+    "relatedTitle": "Servicios relacionados",
+    "cta": "¿Listo para empezar? Publica una solicitud de {service} y los profesionales que la cubran podrán enviarte un presupuesto."
+  },
+  "serviceLocationPage": {
+    "confirmedCoverage": "MaestroYa tiene cobertura confirmada en {city} ({province}), por lo que puedes publicar tu solicitud indicando una dirección en esta localidad.",
+    "localFaq": {
+      "question": "¿Puedo solicitar {service} en {city}?",
+      "answer": "Sí. Puedes publicar una solicitud de {service} indicando una dirección en {city} ({province}). Los profesionales de esta categoría que cubran la zona podrán revisarla y enviarte un presupuesto."
+    },
+    "howItWorksTitle": "Cómo funciona en {city}",
+    "howItWorks": {
+      "step1": "Publicas una solicitud de {service} con una dirección en {city}.",
+      "step2": "Los profesionales de esta categoría que cubren la zona pueden enviarte un presupuesto.",
+      "step3": "Comparas los presupuestos y aceptas el que prefieras."
+    },
+    "cta": "¿Listo para empezar? Publica tu solicitud de {service} en {city}."
+  },
+  "locationsIndex": {
+    "title": "Ubicaciones",
+    "intro": "MaestroYa es un marketplace de servicios para el hogar pensado para operar en toda España. La disponibilidad real de profesionales depende de cada zona.",
+    "nationalCardTitle": "MaestroYa en {country}",
+    "nationalCardDescription": "Qué significa que MaestroYa sea un marketplace de alcance nacional y cómo funciona la disponibilidad local.",
+    "confirmedEmpty": "No hay localidades con cobertura confirmada publicadas en este momento.",
+    "confirmedNote": "Esta lista solo incluye localidades cuya cobertura está confirmada por los datos reales de la plataforma — no es la lista completa de zonas donde MaestroYa puede llegar a operar.",
+    "servicesPrompt": "¿Buscas por tipo de servicio? <link>Consulta las categorías disponibles</link>."
+  },
+  "locationPage": {
+    "title": "MaestroYa en {city}",
+    "servicesTitle": "Servicios disponibles en {city}",
+    "howItWorksTitle": "Cómo funciona en tu zona",
+    "howItWorks": {
+      "step1": "Publicas una solicitud describiendo el trabajo y tu dirección en {city}.",
+      "step2": "Los profesionales que cubren esa categoría y esta zona pueden revisarla y enviarte un presupuesto.",
+      "step3": "Comparas los presupuestos recibidos y aceptas el que prefieras."
+    },
+    "relatedTitle": "Otras localidades",
+    "cta": "¿Listo para empezar? Publica una solicitud y los profesionales que cubran {city} podrán enviarte un presupuesto.",
+    "viewProfessionalsIn": "Ver profesionales en {city}"
+  },
+  "nationalPage": {
+    "title": "MaestroYa en {country}",
+    "categoriesTitle": "Categorías de servicio",
+    "localAvailabilityTitle": "Cómo funciona la disponibilidad local",
+    "confirmedEmpty": "Todavía no hay localidades con cobertura confirmada por datos reales de la plataforma.",
+    "confirmedNote": "Esta lista solo incluye localidades cuya cobertura está confirmada por los datos reales de la plataforma. Que una localidad no aparezca aquí no significa que MaestroYa no pueda operar allí en el futuro — significa que, hoy, no hay cobertura confirmada que mostrar.",
+    "cta": "¿Listo para empezar? Publica una solicitud describiendo el servicio que necesitas y tu ubicación.",
+    "searchProfessionals": "Buscar profesionales",
+    "joinAsProfessional": "Unirme como profesional"
+  },
+  "map": {
+    "ariaLabel": "Mapa",
+    "unavailable": "El mapa no está disponible en este momento."
+  }
+}

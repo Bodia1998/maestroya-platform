@@ -15,19 +15,19 @@ import { PAYOUT_METHOD_VALUES } from "@/domain/services/professional-onboarding-
  */
 
 export const acceptOnboardingTermsSchema = z.object({
-  version: z.string().trim().min(1, "A terms version is required.").max(50),
+  version: z.string().trim().min(1, "dto.onboarding.termsVersionRequired").max(50),
 });
 export type AcceptOnboardingTermsInput = z.infer<typeof acceptOnboardingTermsSchema>;
 
 export const acceptOnboardingPrivacyPolicySchema = z.object({
-  version: z.string().trim().min(1, "A privacy policy version is required.").max(50),
+  version: z.string().trim().min(1, "dto.onboarding.privacyVersionRequired").max(50),
 });
 export type AcceptOnboardingPrivacyPolicyInput = z.infer<typeof acceptOnboardingPrivacyPolicySchema>;
 
 const accountHolderName = z
   .string()
   .trim()
-  .min(2, "Enter the account holder's full name.")
+  .min(2, "dto.onboarding.accountHolderRequired")
   .max(150);
 
 /**
@@ -44,8 +44,8 @@ export const setPayoutDestinationSchema = z.discriminatedUnion("method", [
     iban: z
       .string()
       .trim()
-      .min(15, "Enter a valid IBAN.")
-      .max(34, "Enter a valid IBAN."),
+      .min(15, "dto.onboarding.ibanInvalid")
+      .max(34, "dto.onboarding.ibanInvalid"),
   }),
   z.object({
     method: z.literal(PAYOUT_METHOD_VALUES[1]), // "STRIPE_EXPRESS"

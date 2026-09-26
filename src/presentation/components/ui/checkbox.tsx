@@ -35,4 +35,4 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
     );
   },
 );
-Checkbox.displayName = "Checkbox";
+Checkbox.displayName = "Checkbox"; // i18n-ignore

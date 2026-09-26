@@ -1,8 +1,8 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { MapPin, Phone, Radar, Sparkles } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -20,6 +20,7 @@ import {
   professionalOnboardingSchema,
   type ProfessionalOnboardingInput,
 } from "@/application/dto/professional.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { completeProfessionalOnboardingAction } from "../actions";
 
 interface CategoryOption {
@@ -48,6 +49,7 @@ interface CategoryOption {
  * view, and never showing it first.
  */
 export function ProfessionalOnboardingForm({ categories }: { categories: CategoryOption[] }) {
+  const t = useTranslations("professional.onboarding.form");
   const { update } = useSession();
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export function ProfessionalOnboardingForm({ categories }: { categories: Categor
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<ProfessionalOnboardingInput>({
-    resolver: zodResolver(professionalOnboardingSchema),
+    resolver: useLocalizedZodResolver(professionalOnboardingSchema),
     defaultValues: {
       categoryIds: [],
       contactPhone: "",
@@ -96,12 +98,12 @@ export function ProfessionalOnboardingForm({ categories }: { categories: Categor
       )}
 
       <FormSection
-        title="Primary profession / category"
-        description="Choose every category that describes the work you do."
+        title={t("categoriesTitle")}
+        description={t("categoriesDescription")}
         titleAside={<RequiredBadge />}
       >
         <fieldset className="flex flex-col gap-3 rounded-lg border border-border p-4">
-          <legend className="sr-only">Primary profession / category</legend>
+          <legend className="sr-only">{t("categoriesTitle")}</legend>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {categories.map((category) => (
               <label
@@ -118,18 +120,18 @@ export function ProfessionalOnboardingForm({ categories }: { categories: Categor
               </label>
             ))}
             {categories.length === 0 && (
-              <p className="text-sm text-muted-foreground">No service categories are available yet.</p>
+              <p className="text-sm text-muted-foreground">{t("noCategories")}</p>
             )}
           </div>
           <FormFieldError>{errors.categoryIds?.message}</FormFieldError>
         </fieldset>
       </FormSection>
 
-      <FormSection title="Contact" titleAside={<RequiredBadge />}>
+      <FormSection title={t("contactTitle")} titleAside={<RequiredBadge />}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="contactPhone" className="flex items-center gap-1.5">
             <Phone aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
-            Phone number
+            {t("phone")}
           </Label>
           <Input
             id="contactPhone"
@@ -144,18 +146,18 @@ export function ProfessionalOnboardingForm({ categories }: { categories: Categor
       </FormSection>
 
       <FormSection
-        title="Base location"
-        description="Where you're based — used to match you with nearby requests."
+        title={t("locationTitle")}
+        description={t("locationDescription")}
         titleAside={<RequiredBadge />}
       >
         <fieldset className="flex flex-col gap-3 rounded-lg border border-border p-4">
           <legend className="flex items-center gap-1.5 px-1 text-sm font-medium text-foreground">
             <MapPin aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
-            Address
+            {t("address")}
           </legend>
           <div className="flex flex-col gap-1.5">
             <Input
-              placeholder="Street address"
+              placeholder={t("line1Placeholder")}
               autoComplete="address-line1"
               aria-invalid={!!errors.address?.line1}
               {...register("address.line1")}
@@ -163,42 +165,42 @@ export function ProfessionalOnboardingForm({ categories }: { categories: Categor
             <FormFieldError>{errors.address?.line1?.message}</FormFieldError>
           </div>
           <Input
-            placeholder="Apartment, suite, etc. (optional)"
+            placeholder={t("line2Placeholder")}
             autoComplete="address-line2"
             {...register("address.line2")}
           />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Input
-                placeholder="City"
+                placeholder={t("cityPlaceholder")}
                 autoComplete="address-level2"
                 aria-invalid={!!errors.address?.city}
                 {...register("address.city")}
               />
               <FormFieldError>{errors.address?.city?.message}</FormFieldError>
             </div>
-            <Input placeholder="Province (optional)" autoComplete="address-level1" {...register("address.province")} />
+            <Input placeholder={t("provincePlaceholder")} autoComplete="address-level1" {...register("address.province")} />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Input
-                placeholder="Postal code"
+                placeholder={t("postalCodePlaceholder")}
                 autoComplete="postal-code"
                 aria-invalid={!!errors.address?.postalCode}
                 {...register("address.postalCode")}
               />
               <FormFieldError>{errors.address?.postalCode?.message}</FormFieldError>
             </div>
-            <Input placeholder="Country" autoComplete="country-name" {...register("address.country")} />
+            <Input placeholder={t("countryPlaceholder")} autoComplete="country-name" {...register("address.country")} />
           </div>
         </fieldset>
       </FormSection>
 
-      <FormSection title="Coverage & about you">
+      <FormSection title={t("coverageTitle")}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="serviceRadiusKm" className="flex items-center gap-1.5">
             <Radar aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
-            Service radius (km)
+            {t("serviceRadius")}
             <RequiredBadge />
           </Label>
           <Input
@@ -216,7 +218,7 @@ export function ProfessionalOnboardingForm({ categories }: { categories: Categor
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="bio" className="flex items-center gap-1.5">
             <Sparkles aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
-            Short professional description
+            {t("bio")}
             <RequiredBadge />
           </Label>
           <Textarea
@@ -232,7 +234,7 @@ export function ProfessionalOnboardingForm({ categories }: { categories: Categor
 
       <FormActions stickyOnMobile>
         <Button type="submit" disabled={isSubmitting} className="sm:min-w-64">
-          {isSubmitting ? "Setting up…" : "Finish setting up my professional profile"}
+          {isSubmitting ? t("pending") : t("submit")}
         </Button>
       </FormActions>
     </form>

@@ -7,21 +7,21 @@ import { z } from "zod";
  * same schemas.
  */
 
-const emailSchema = z.string().trim().toLowerCase().email("Enter a valid email address.");
+const emailSchema = z.string().trim().toLowerCase().email("email");
 
 // Deliberately not "just min(8)" — a length-only rule is weak. Still
 // avoids being so strict it rejects legitimate passphrases.
 const passwordSchema = z
   .string()
-  .min(10, "Password must be at least 10 characters.")
-  .max(128, "Password is too long.")
-  .regex(/[a-z]/, "Password must include a lowercase letter.")
-  .regex(/[A-Z]/, "Password must include an uppercase letter.")
-  .regex(/[0-9]/, "Password must include a number.");
+  .min(10, "dto.password.minLength")
+  .max(128, "dto.password.tooLong")
+  .regex(/[a-z]/, "dto.password.lowercase")
+  .regex(/[A-Z]/, "dto.password.uppercase")
+  .regex(/[0-9]/, "dto.password.number");
 
 export const registerSchema = z
   .object({
-    name: z.string().trim().min(2, "Enter your name.").max(100),
+    name: z.string().trim().min(2, "dto.auth.nameRequired").max(100),
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: z.string(),
@@ -55,14 +55,14 @@ export const registerSchema = z
     deviceSignal: z.record(z.string(), z.unknown()).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match.",
+    message: "dto.auth.passwordsMismatch",
     path: ["confirmPassword"],
   });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, "Enter your password."),
+  password: z.string().min(1, "dto.auth.passwordRequired"),
   rememberMe: z.boolean().optional().default(false),
 });
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -79,7 +79,7 @@ export const resetPasswordSchema = z
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match.",
+    message: "dto.auth.passwordsMismatch",
     path: ["confirmPassword"],
   });
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

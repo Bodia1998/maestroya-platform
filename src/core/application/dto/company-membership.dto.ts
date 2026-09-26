@@ -11,22 +11,22 @@ import { z } from "zod";
  */
 
 export const companyMemberIdSchema = z.object({
-  memberId: z.string().uuid("Invalid member."),
+  memberId: z.string().uuid("dto.ids.member"),
 });
 export type CompanyMemberIdInput = z.infer<typeof companyMemberIdSchema>;
 
 export const changeCompanyMemberRoleSchema = z.object({
-  memberId: z.string().uuid("Invalid member."),
+  memberId: z.string().uuid("dto.ids.member"),
   role: z.enum(["ADMIN", "MANAGER", "MEMBER"], {
-    errorMap: () => ({ message: "Select a valid role." }),
+    errorMap: () => ({ message: "dto.membership.roleInvalid" }),
   }),
 });
 export type ChangeCompanyMemberRoleInput = z.infer<typeof changeCompanyMemberRoleSchema>;
 
 export const transferCompanyOwnershipSchema = z.object({
-  newOwnerMemberId: z.string().uuid("Invalid member."),
+  newOwnerMemberId: z.string().uuid("dto.ids.member"),
   confirmationText: z.literal("TRANSFER", {
-    errorMap: () => ({ message: 'Type "TRANSFER" to confirm.' }),
+    errorMap: () => ({ message: "dto.membership.transferConfirm" }),
   }),
 });
 export type TransferCompanyOwnershipInput = z.infer<typeof transferCompanyOwnershipSchema>;

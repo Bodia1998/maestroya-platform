@@ -1,0 +1,22 @@
+{
+  "common": {
+    "greeting": "Hallo {name},",
+    "signature": "Het MaestroYa-team",
+    "footer": "Je ontvangt deze e-mail omdat je een account bij MaestroYa hebt.",
+    "ignoreNotice": "Heb je hier niet om gevraagd? Dan kun je deze e-mail negeren.",
+    "linkFallback": "Werkt de knop niet? Kopieer deze link en plak hem in je browser:"
+  },
+  "verifyEmail": {
+    "subject": "Bevestig je e-mailadres",
+    "body": "Bevestig je e-mailadres om je MaestroYa-account te activeren.",
+    "cta": "E-mailadres bevestigen",
+    "expiresIn": "Deze link verloopt over {hours, plural, one {# uur} other {# uur}}."
+  },
+  "resetPassword": {
+    "subject": "Stel je wachtwoord opnieuw in",
+    "body": "We hebben een verzoek ontvangen om het wachtwoord van je account opnieuw in te stellen.",
+    "cta": "Nieuw wachtwoord instellen",
+    "expiry": "Deze link verloopt op {date, date, medium} om {date, time, short}.",
+    "expiresIn": "Deze link verloopt over {hours, plural, one {# uur} other {# uur}}."
+  }
+}

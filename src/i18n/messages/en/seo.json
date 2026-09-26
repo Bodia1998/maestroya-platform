@@ -1,0 +1,30 @@
+{
+  "site": {
+    "defaultTitle": "MaestroYa — Find trusted professionals for your home",
+    "description": "Connect with trusted professionals for your home: plumbing, electrical work, renovations, cleaning and much more."
+  },
+  "servicesIndex": {
+    "title": "Home services on MaestroYa",
+    "description": "See the home service categories available on MaestroYa: plumbing, electrical work, air conditioning, painting, renovations and furniture assembly."
+  },
+  "servicePage": {
+    "title": "{service} — MaestroYa",
+    "descriptionFallback": "Request a {service} professional through MaestroYa and compare quotes."
+  },
+  "serviceLocationPage": {
+    "title": "{service} in {city} — MaestroYa",
+    "description": "Request {service} services in {city} ({province}) through MaestroYa and compare quotes."
+  },
+  "locationsIndex": {
+    "title": "Locations — MaestroYa in Spain",
+    "description": "MaestroYa is a home services marketplace designed to operate across all of Spain. See the platform's scope and the localities with confirmed coverage."
+  },
+  "locationPage": {
+    "title": "Professionals in {city} — MaestroYa",
+    "description": "Home services available in {city} ({province}) through MaestroYa."
+  },
+  "nationalCoverage": {
+    "title": "MaestroYa in Spain — nationwide coverage",
+    "description": "MaestroYa is a home services marketplace designed to operate across all of Spain. The actual availability of professionals depends on each area."
+  }
+}

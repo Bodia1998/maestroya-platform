@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/shared/utils/cn";
 
@@ -18,10 +19,12 @@ function isActive(pathname: string, href: string): boolean {
 /** Second-level nav for everything under `/admin` — presentation only, same active-state convention as `DashboardShell`'s `NavLinks`. */
 export function AdminNav({ items }: { items: AdminNavItem[] }) {
   const pathname = usePathname();
+  const t = useTranslations("admin.nav");
 
   return (
-    <nav aria-label="Admin navigation" className="flex flex-col gap-1">
-      <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-foreground/50">Admin</p>
+    <nav aria-label={t("label")} className="flex flex-col gap-1">
+      <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-foreground/50">{t("heading")}</p>
+
       {items.map((item) => {
         const active = isActive(pathname, item.href);
         return (

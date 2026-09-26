@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 const VERIFICATION_STYLES: Record<string, string> = {
   UNVERIFIED: "bg-black/5 text-foreground/70",
   PENDING: "bg-amber-50 text-amber-700",
@@ -5,12 +7,12 @@ const VERIFICATION_STYLES: Record<string, string> = {
   REJECTED: "bg-red-50 text-red-700",
 };
 
-const VERIFICATION_LABELS: Record<string, string> = {
-  UNVERIFIED: "Not verified",
-  PENDING: "Verification pending",
-  VERIFIED: "Verified professional",
-  REJECTED: "Verification rejected",
-};
+const VERIFICATION_STATUSES = ["UNVERIFIED", "PENDING", "VERIFIED", "REJECTED"] as const;
+type KnownVerificationStatus = (typeof VERIFICATION_STATUSES)[number];
+
+function isKnownStatus(status: string): status is KnownVerificationStatus {
+  return (VERIFICATION_STATUSES as readonly string[]).includes(status);
+}
 
 /**
  * Public-facing verification badge for Professional Discovery search
@@ -21,13 +23,16 @@ const VERIFICATION_LABELS: Record<string, string> = {
  * ProfessionalDiscoveryRepository).
  */
 export function VerificationBadge({ verificationStatus }: { verificationStatus: string }) {
+  const t = useTranslations("marketing");
   return (
     <span
       className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium ${
         VERIFICATION_STYLES[verificationStatus] ?? "bg-black/5"
       }`}
     >
-      {VERIFICATION_LABELS[verificationStatus] ?? verificationStatus}
+      {isKnownStatus(verificationStatus)
+        ? t(`professionals.verification.${verificationStatus}`)
+        : verificationStatus}
     </span>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
@@ -14,6 +15,7 @@ import { addDisputeMessageAction } from "../actions";
  *  pattern (see job-actions.tsx). */
 export function DisputeMessageForm({ disputeId }: { disputeId: string }) {
   const router = useRouter();
+  const t = useTranslations("customer.disputes.messageForm");
   const [body, setBody] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,14 +37,14 @@ export function DisputeMessageForm({ disputeId }: { disputeId: string }) {
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor="dispute-message-body" className="sr-only">
-        Write a message
+        {t("label")}
       </Label>
       <Textarea
         id="dispute-message-body"
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={3}
-        placeholder="Write a message…"
+        placeholder={t("placeholder")}
       />
       {error && (
         <Alert variant="danger" role="alert">
@@ -50,7 +52,7 @@ export function DisputeMessageForm({ disputeId }: { disputeId: string }) {
         </Alert>
       )}
       <Button type="button" disabled={isSubmitting} onClick={handleSubmit} className="w-full sm:w-auto">
-        {isSubmitting ? "Sending…" : "Send message"}
+        {isSubmitting ? t("sending") : t("send")}
       </Button>
     </div>
   );

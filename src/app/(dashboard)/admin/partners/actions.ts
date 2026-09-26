@@ -1,5 +1,7 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
+import { adminActionFailure } from "../_lib/action-errors";
 import { revalidatePath } from "next/cache";
 
 import {
@@ -16,7 +18,6 @@ import {
 } from "@/application/use-cases/affiliate/compose";
 import type { PartnerAudit } from "@/application/use-cases/affiliate/get-admin-partner-audit.use-case";
 import type { PartnerPayoutRecord } from "@/domain/repositories/partner-payout-repository";
-import { DomainError } from "@/domain/errors/domain-error";
 import type { AffiliateCommissionRecord } from "@/domain/repositories/affiliate-commission-repository";
 import type { PartnerFraudFlagRecord } from "@/domain/repositories/partner-fraud-flag-repository";
 import type { PartnerRecord, PartnerStatusValue } from "@/domain/repositories/partner-repository";
@@ -39,21 +40,13 @@ import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
  */
 export type ActionResult<T = undefined> = { success: true; data: T } | { success: false; error: string };
 
-function fromDomainError<T>(error: unknown, fallback: string): ActionResult<T> {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
-}
-
 export async function listAdminPartnersAction(status?: PartnerStatusValue): Promise<ActionResult<PartnerRecord[]>> {
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   try {
     const partners = await makeListAdminPartnersUseCase().execute(status ? { status } : undefined);
     return { success: true, data: partners };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading partners.");
+    return adminActionFailure(error, "loadingPartners");
   }
 }
 
@@ -63,7 +56,7 @@ export async function getAdminPartnerAuditAction(partnerId: string): Promise<Act
     const audit = await makeGetAdminPartnerAuditUseCase().execute(partnerId);
     return { success: true, data: audit };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading this partner.");
+    return adminActionFailure(error, "loadingThisPartner");
   }
 }
 
@@ -76,7 +69,7 @@ export async function approvePartnerAction(partnerId: string): Promise<ActionRes
     revalidatePath(`/admin/partners/${partnerId}`);
     return { success: true, data: partner };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong approving this partner.");
+    return adminActionFailure(error, "approvingThisPartner");
   }
 }
 
@@ -89,7 +82,7 @@ export async function rejectPartnerAction(partnerId: string, reason: string): Pr
     revalidatePath(`/admin/partners/${partnerId}`);
     return { success: true, data: partner };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong rejecting this partner.");
+    return adminActionFailure(error, "rejectingThisPartner");
   }
 }
 
@@ -102,7 +95,7 @@ export async function suspendPartnerAction(partnerId: string, reason: string): P
     revalidatePath(`/admin/partners/${partnerId}`);
     return { success: true, data: partner };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong suspending this partner.");
+    return adminActionFailure(error, "suspendingThisPartner");
   }
 }
 
@@ -115,7 +108,7 @@ export async function banPartnerAction(partnerId: string, reason: string): Promi
     revalidatePath(`/admin/partners/${partnerId}`);
     return { success: true, data: partner };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong banning this partner.");
+    return adminActionFailure(error, "banningThisPartner");
   }
 }
 
@@ -130,7 +123,7 @@ export async function approveAffiliateCommissionAction(
     revalidatePath(`/admin/partners/${partnerId}`);
     return { success: true, data: commission };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong approving this commission.");
+    return adminActionFailure(error, "approvingThisCommission");
   }
 }
 
@@ -146,7 +139,7 @@ export async function cancelAffiliateCommissionAction(
     revalidatePath(`/admin/partners/${partnerId}`);
     return { success: true, data: commission };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong cancelling this commission.");
+    return adminActionFailure(error, "cancellingThisCommission");
   }
 }
 
@@ -164,7 +157,7 @@ export async function createPartnerPayoutAction(
     const start = new Date(periodStart);
     const end = new Date(periodEnd);
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
-      return { success: false, error: "Enter a valid payout period (start on or before end)." };
+      return { success: false, error: (await getTranslations("admin.actionErrors"))("invalidPayoutPeriod") };
     }
     // partnerId is the only identifier this action ever passes to the use
     // case — the Stripe Connect destination it eventually transfers to is
@@ -176,7 +169,7 @@ export async function createPartnerPayoutAction(
     revalidatePath(`/admin/partners/${partnerId}`);
     return { success: true, data: payout };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong creating this payout.");
+    return adminActionFailure(error, "creatingThisPayout");
   }
 }
 
@@ -193,7 +186,7 @@ export async function resolveFraudFlagAction(
     revalidatePath(`/admin/partners/${partnerId}`);
     return { success: true, data: flag };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong resolving this fraud flag.");
+    return adminActionFailure(error, "resolvingThisFraudFlag");
   }
 }
 

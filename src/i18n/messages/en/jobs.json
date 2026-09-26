@@ -16,5 +16,74 @@
   },
   "quotes": {
     "title": "Quotes"
+  },
+  "quoteItems": {
+    "columns": {
+      "description": "Description",
+      "type": "Type",
+      "quantity": "Qty",
+      "unitPrice": "Unit price",
+      "amount": "Amount"
+    },
+    "total": "Total",
+    "category": {
+      "MATERIALS": "Materials",
+      "LABOR": "Labor"
+    }
+  },
+  "urgency": {
+    "LOW": "Low",
+    "MEDIUM": "Medium",
+    "HIGH": "High",
+    "EMERGENCY": "Emergency"
+  },
+  "list": {
+    "title": "My jobs",
+    "subtitle": "The overall progress of work you've accepted a quote for.",
+    "empty": {
+      "title": "No active jobs",
+      "description": "Jobs appear here once you accept a quote from a professional and work begins.",
+      "action": "View my requests"
+    }
+  },
+  "notStarted": "Not started",
+  "detail": {
+    "title": "Job",
+    "started": "Started",
+    "completed": "Completed",
+    "cancellationReason": "Cancellation reason",
+    "appointments": "Appointments on this job",
+    "noAppointments": "No appointments yet.",
+    "notScheduled": "Not scheduled yet",
+    "dateUnset": "—"
+  },
+  "cancellationReason": {
+    "CUSTOMER_REQUEST": "Customer request",
+    "PROFESSIONAL_UNABLE_TO_COMPLETE": "Professional unable to complete",
+    "SERVICE_REQUEST_ISSUE": "Issue with the service request",
+    "OTHER": "Other"
+  },
+  "actions": {
+    "startWork": "Start work",
+    "starting": "Starting…",
+    "markCompleted": "Mark job completed",
+    "completing": "Completing…",
+    "openAppointmentsWarning": "This job still has an unresolved appointment. Confirm and complete (or cancel) every appointment on this job before marking it completed.",
+    "cancelJob": "Cancel job",
+    "cancelTitle": "Cancel this job?",
+    "reason": "Reason",
+    "note": "Note (optional)",
+    "cancelling": "Cancelling…",
+    "confirmCancel": "Yes, cancel",
+    "notNow": "Not now"
+  },
+  "errors": {
+    "invalidJob": "Invalid job.",
+    "startFailed": "Something went wrong starting this job.",
+    "completeFailed": "Something went wrong completing this job.",
+    "cancelFailed": "Something went wrong cancelling this job.",
+    "confirmFailed": "Something went wrong confirming this job.",
+    "disputeFailed": "Something went wrong disputing this job's completion.",
+    "paymentFailed": "Something went wrong starting your payment. Please try again."
   }
 }

@@ -1,3 +1,5 @@
+import { useFormatter, useTranslations } from "next-intl";
+
 /**
  * Quotes module — shared read-only line-item table, replacing two
  * hand-duplicated `<table>` markups that rendered the same
@@ -29,28 +31,39 @@ export interface QuoteItemsTableProps {
   className?: string;
 }
 
-/** `"MATERIALS"` / `"LABOR"` (or any other future category) → a human label — falls back to the raw value for forward-compatibility with a category this component doesn't know about yet. */
-function categoryLabel(category: string): string {
-  if (category === "MATERIALS") return "Materials";
-  if (category === "LABOR") return "Labor";
-  return category;
-}
-
-/** `12.5` + `"EUR"` → `"EUR 12.50"` — the exact format every quote page already rendered inline, just centralized. */
-export function formatMoney(amount: number, currency: string): string {
+/**
+ * `12.5` + `"EUR"` → `"EUR 12.50"` — the exact format every quote page
+ * already rendered inline, just centralized. `amount` is a *major-unit*
+ * decimal (Decimal(10,2) columns converted at the repository boundary).
+ *
+ * Module 120 — Multilingual Localization: pass the active `locale` to get
+ * locale-aware currency formatting (`"12,50 €"` in `es`, `"€12.50"` in
+ * `en`). Without it the legacy, locale-independent format is kept for
+ * callers not yet migrated.
+ */
+export function formatMoney(amount: number, currency: string, locale?: string): string {
+  if (locale) {
+    return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
+  }
   return `${currency} ${amount.toFixed(2)}`;
 }
 
 export function QuoteItemsTable({ items, currency, totalAmount, className }: QuoteItemsTableProps) {
+  const t = useTranslations("jobs.quoteItems");
+  const format = useFormatter();
+  /** `"MATERIALS"` / `"LABOR"` → a localized label — falls back to the raw value for forward-compatibility with a category this component doesn't know about yet. */
+  const categoryLabel = (category: string): string =>
+    t.has(`category.${category}` as never) ? t(`category.${category}` as never) : category;
+  const money = (amount: number) => format.number(amount, { style: "currency", currency });
   return (
     <table className={className ? `w-full text-sm ${className}` : "w-full text-sm"}>
       <thead>
         <tr className="border-b border-border text-left text-foreground/60">
-          <th className="py-2">Description</th>
-          <th className="py-2">Type</th>
-          <th className="py-2">Qty</th>
-          <th className="py-2">Unit price</th>
-          <th className="py-2 text-right">Amount</th>
+          <th className="py-2">{t("columns.description")}</th>
+          <th className="py-2">{t("columns.type")}</th>
+          <th className="py-2">{t("columns.quantity")}</th>
+          <th className="py-2">{t("columns.unitPrice")}</th>
+          <th className="py-2 text-right">{t("columns.amount")}</th>
         </tr>
       </thead>
       <tbody>
@@ -62,9 +75,9 @@ export function QuoteItemsTable({ items, currency, totalAmount, className }: Quo
                 {categoryLabel(item.category)}
               </span>
             </td>
-            <td className="py-2">{item.quantity}</td>
-            <td className="py-2">{formatMoney(item.unitPrice, currency)}</td>
-            <td className="py-2 text-right">{formatMoney(item.amount, currency)}</td>
+            <td className="py-2">{format.number(item.quantity)}</td>
+            <td className="py-2">{money(item.unitPrice)}</td>
+            <td className="py-2 text-right">{money(item.amount)}</td>
           </tr>
         ))}
       </tbody>
@@ -72,10 +85,10 @@ export function QuoteItemsTable({ items, currency, totalAmount, className }: Quo
         <tfoot>
           <tr>
             <td className="pt-3" colSpan={4}>
-              <span className="text-sm font-medium text-foreground">Total</span>
+              <span className="text-sm font-medium text-foreground">{t("total")}</span>
             </td>
             <td className="pt-3 text-right">
-              <span className="text-sm font-semibold text-foreground">{formatMoney(totalAmount, currency)}</span>
+              <span className="text-sm font-semibold text-foreground">{money(totalAmount)}</span>
             </td>
           </tr>
         </tfoot>

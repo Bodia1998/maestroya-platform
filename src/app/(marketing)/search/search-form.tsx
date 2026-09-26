@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -29,14 +30,6 @@ interface DirectorySearchFormValues {
   radiusKm?: number;
 }
 
-const SORT_LABELS: Record<SearchSortOption, string> = {
-  RELEVANCE: "Best match",
-  RATING: "Highest rated",
-  REVIEWS: "Most reviewed",
-  NEWEST: "Newest",
-  VERIFIED: "Verified first",
-};
-
 /**
  * Search & Ranking module (Module 19) — unified directory search form.
  *
@@ -54,6 +47,7 @@ export function DirectorySearchForm({
   sortOptions: readonly SearchSortOption[];
   defaultValues: DirectorySearchFormValues;
 }) {
+  const t = useTranslations("marketing");
   const router = useRouter();
   const [values, setValues] = useState<DirectorySearchFormValues>(defaultValues);
 
@@ -79,12 +73,12 @@ export function DirectorySearchForm({
     <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
       <div className="flex flex-col gap-1">
         <label htmlFor="q" className="text-sm font-medium">
-          What do you need?
+          {t("search.form.queryLabel")}
         </label>
         <input
           id="q"
           type="text"
-          placeholder="e.g. electrician, air conditioning…"
+          placeholder={t("search.form.queryPlaceholder")}
           className="h-10 rounded-md border border-border px-3 text-sm"
           value={values.query ?? ""}
           onChange={(e) => setValues((v) => ({ ...v, query: e.target.value }))}
@@ -94,7 +88,7 @@ export function DirectorySearchForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <label htmlFor="categoryId" className="text-sm font-medium">
-            Service
+            {t("search.form.serviceLabel")}
           </label>
           <select
             id="categoryId"
@@ -102,7 +96,7 @@ export function DirectorySearchForm({
             value={values.categoryId ?? ""}
             onChange={(e) => setValues((v) => ({ ...v, categoryId: e.target.value || undefined }))}
           >
-            <option value="">Any service</option>
+            <option value="">{t("search.form.anyService")}</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -113,12 +107,12 @@ export function DirectorySearchForm({
 
         <div className="flex flex-col gap-1">
           <label htmlFor="city" className="text-sm font-medium">
-            City
+            {t("search.form.cityLabel")}
           </label>
           <input
             id="city"
             type="text"
-            placeholder="e.g. Gandia"
+            placeholder={t("search.form.cityPlaceholder")}
             className="h-10 rounded-md border border-border px-3 text-sm"
             value={values.city ?? ""}
             onChange={(e) => setValues((v) => ({ ...v, city: e.target.value || undefined }))}
@@ -129,7 +123,7 @@ export function DirectorySearchForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <label htmlFor="minRating" className="text-sm font-medium">
-            Minimum rating
+            {t("search.form.minRatingLabel")}
           </label>
           <select
             id="minRating"
@@ -137,10 +131,10 @@ export function DirectorySearchForm({
             value={values.minRating ?? ""}
             onChange={(e) => setValues((v) => ({ ...v, minRating: e.target.value ? Number(e.target.value) : undefined }))}
           >
-            <option value="">Any rating</option>
+            <option value="">{t("search.form.anyRating")}</option>
             {[3, 3.5, 4, 4.5].map((rating) => (
               <option key={rating} value={rating}>
-                {rating}+ stars
+                {t("search.form.ratingOption", { rating })}
               </option>
             ))}
           </select>
@@ -148,7 +142,7 @@ export function DirectorySearchForm({
 
         <div className="flex flex-col gap-1">
           <label htmlFor="sortBy" className="text-sm font-medium">
-            Sort by
+            {t("search.form.sortByLabel")}
           </label>
           <select
             id="sortBy"
@@ -158,7 +152,7 @@ export function DirectorySearchForm({
           >
             {sortOptions.map((option) => (
               <option key={option} value={option}>
-                {SORT_LABELS[option]}
+                {t(`search.form.sort.${option}`)}
               </option>
             ))}
           </select>
@@ -171,18 +165,18 @@ export function DirectorySearchForm({
           checked={values.verifiedOnly ?? false}
           onChange={(e) => setValues((v) => ({ ...v, verifiedOnly: e.target.checked }))}
         />
-        Verified only
+        {t("search.form.verifiedOnly")}
       </label>
 
       <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium">Search near a location (optional)</span>
+        <span className="text-sm font-medium">{t("search.form.nearLocation")}</span>
         <LocationPicker
           value={{ latitude: values.latitude, longitude: values.longitude, radiusKm: values.radiusKm }}
           onChange={(location) => setValues((v) => ({ ...v, ...location }))}
         />
       </div>
 
-      <Button type="submit">Search</Button>
+      <Button type="submit">{t("search.form.submit")}</Button>
     </form>
   );
 }

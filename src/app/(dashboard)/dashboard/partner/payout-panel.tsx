@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,8 +29,9 @@ interface PayoutHistoryItem {
   processedAt: Date | null;
 }
 
-function formatEuro(amount: number): string {
-  return `€${amount.toFixed(2)}`;
+const PAYOUT_STATUS_KEYS = ["PENDING", "PROCESSING", "PAID", "FAILED", "CANCELLED"] as const;
+function isPayoutStatusKey(status: string): status is (typeof PAYOUT_STATUS_KEYS)[number] {
+  return (PAYOUT_STATUS_KEYS as readonly string[]).includes(status);
 }
 
 function statusVariant(status: string): "default" | "secondary" | "success" | "warning" | "danger" | "outline" {
@@ -68,6 +70,9 @@ export function PayoutPanel({
   balance: AffiliateBalanceSummaryView;
   payoutHistory: PayoutHistoryItem[];
 }) {
+  const t = useTranslations("partner.payout");
+  const format = useFormatter();
+  const formatEuro = (amount: number) => format.number(amount, { style: "currency", currency: "EUR" });
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [justRequested, setJustRequested] = useState(false);
@@ -91,13 +96,13 @@ export function PayoutPanel({
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>Affiliate balance</CardTitle>
+          <CardTitle>{t("balanceTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="flex flex-col gap-1">
               <Text size="xs" tone="muted">
-                Available balance
+                {t("available")}
               </Text>
               <Text size="xl" weight="bold" tone="primary">
                 {formatEuro(balance.availableBalance)}
@@ -105,7 +110,7 @@ export function PayoutPanel({
             </div>
             <div className="flex flex-col gap-1">
               <Text size="xs" tone="muted">
-                Reserved for payout
+                {t("reserved")}
               </Text>
               <Text size="xl" weight="bold">
                 {formatEuro(balance.reservedForPayout)}
@@ -113,7 +118,7 @@ export function PayoutPanel({
             </div>
             <div className="flex flex-col gap-1">
               <Text size="xs" tone="muted">
-                Paid to date
+                {t("paidToDate")}
               </Text>
               <Text size="xl" weight="bold">
                 {formatEuro(balance.paidTotal)}
@@ -124,12 +129,12 @@ export function PayoutPanel({
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <Text size="sm" tone="muted">
-                Minimum payout: {formatEuro(balance.minimumPayoutThreshold)}
+                {t("minimum", { amount: formatEuro(balance.minimumPayoutThreshold) })}
               </Text>
               {balance.isEligibleForPayout ? (
-                <Badge variant="success">Eligible for payout</Badge>
+                <Badge variant="success">{t("eligible")}</Badge>
               ) : (
-                <Badge variant="secondary">{formatEuro(balance.amountUntilEligible)} more needed</Badge>
+                <Badge variant="secondary">{t("moreNeeded", { amount: formatEuro(balance.amountUntilEligible) })}</Badge>
               )}
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -139,7 +144,7 @@ export function PayoutPanel({
 
           <div className="flex flex-col gap-2">
             <Button onClick={handleRequestPayout} disabled={!balance.isEligibleForPayout || isPending} className="self-start">
-              {isPending ? "Requesting…" : "Request payout"}
+              {isPending ? t("requesting") : t("request")}
             </Button>
             {error && (
               <Text size="sm" tone="danger">
@@ -148,7 +153,7 @@ export function PayoutPanel({
             )}
             {justRequested && !error && (
               <Text size="sm" tone="muted">
-                Payout requested — check the history below for its status.
+                {t("requested")}
               </Text>
             )}
           </div>
@@ -157,12 +162,12 @@ export function PayoutPanel({
 
       <Card>
         <CardHeader>
-          <CardTitle>Payout history</CardTitle>
+          <CardTitle>{t("historyTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           {payoutHistory.length === 0 ? (
             <Text size="sm" tone="muted">
-              No payouts yet.
+              {t("empty")}
             </Text>
           ) : (
             <ul className="flex flex-col gap-3">
@@ -171,11 +176,13 @@ export function PayoutPanel({
                   <div className="flex flex-col">
                     <span className="font-medium">{formatEuro(p.amount)}</span>
                     <span className="text-muted-foreground text-xs">
-                      {new Date(p.createdAt).toLocaleDateString()}
+                      {format.dateTime(new Date(p.createdAt), { dateStyle: "medium" })}
                       {p.reference ? ` · ${p.reference}` : ""}
                     </span>
                   </div>
-                  <Badge variant={statusVariant(p.status)}>{p.status}</Badge>
+                  <Badge variant={statusVariant(p.status)}>
+                    {isPayoutStatusKey(p.status) ? t(`status.${p.status}`) : p.status}
+                  </Badge>
                 </li>
               ))}
             </ul>

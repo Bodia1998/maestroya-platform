@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { acceptQuoteAction } from "./actions";
@@ -14,16 +15,17 @@ import { acceptQuoteAction } from "./actions";
  */
 export function AcceptQuoteDialog({ requestId, quoteId }: { requestId: string; quoteId: string }) {
   const router = useRouter();
+  const t = useTranslations("customer.quotes.accept");
 
   return (
     <ConfirmDialog
-      triggerLabel="Accept this quote"
+      triggerLabel={t("trigger")}
       triggerVariant="default"
-      title="Accept this quote?"
-      description="Every other quote for this request will be automatically declined. This cannot be undone."
-      confirmLabel="Yes, accept quote"
-      pendingLabel="Accepting…"
-      cancelLabel="Not yet"
+      title={t("title")}
+      description={t("description")}
+      confirmLabel={t("confirm")}
+      pendingLabel={t("pending")}
+      cancelLabel={t("cancel")}
       onConfirm={async () => {
         const result = await acceptQuoteAction(requestId, quoteId);
         if (result.success) router.refresh();

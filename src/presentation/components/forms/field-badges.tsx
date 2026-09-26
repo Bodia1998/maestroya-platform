@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import * as React from "react";
 
 import { cn } from "@/shared/utils/cn";
@@ -19,6 +20,7 @@ export function RequiredBadge({ className, children, ...props }: FieldBadgeProps
 
 /** Small inline "Optional" indicator for field labels. */
 export function OptionalBadge({ className, children, ...props }: FieldBadgeProps) {
+  const t = useTranslations("ui");
   return (
     <span
       className={cn(
@@ -27,7 +29,7 @@ export function OptionalBadge({ className, children, ...props }: FieldBadgeProps
       )}
       {...props}
     >
-      {children ?? "Opcional"}
+      {children ?? t("fieldBadges.optional")}
     </span>
   );
 }

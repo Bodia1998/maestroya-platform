@@ -1,0 +1,92 @@
+{
+  "metaTitle": "Partner dashboard",
+  "title": "Partner dashboard",
+  "subtitle": "Track your referral links, clicks, and affiliate earnings.",
+  "noAccount": {
+    "title": "You don't have a partner account yet",
+    "description": "Partner accounts are for affiliates who refer customers to MaestroYa in exchange for a share of the platform's profit. Contact MaestroYa to register as a partner."
+  },
+  "statusMessage": {
+    "PENDING": "Your partner application is pending review",
+    "REJECTED": "Your partner application was not approved",
+    "SUSPENDED": "Your partner account is currently suspended",
+    "BANNED": "Your partner account has been banned",
+    "other": "Your partner account isn't active"
+  },
+  "locked": {
+    "description": "Your dashboard will unlock automatically once your partner account is approved."
+  },
+  "welcome": "Welcome back, {name}. Here's how your referral links are performing.",
+  "stats": {
+    "clicks": "Clicks",
+    "visits": "Visits",
+    "registrations": "Registrations",
+    "bookingsCreated": "Bookings created",
+    "completedJobs": "Completed jobs",
+    "conversionRate": "Conversion rate",
+    "platformCommissionGenerated": "Platform commission generated",
+    "pendingEarnings": "Pending earnings",
+    "approvedPayable": "Approved (payable)",
+    "paidToDate": "Paid to date"
+  },
+  "topCampaigns": {
+    "title": "Top campaigns",
+    "empty": "No campaign clicks recorded yet."
+  },
+  "topReferralLinks": {
+    "title": "Top referral links",
+    "empty": "No referral link clicks recorded yet."
+  },
+  "visitsCount": "{count, plural, one {# visit} other {# visits}}",
+  "errors": {
+    "createLinkFailed": "Something went wrong creating this referral link.",
+    "updateLinkFailed": "Something went wrong updating this referral link.",
+    "payoutFailed": "Something went wrong requesting this payout."
+  },
+  "campaigns": {
+    "title": "Campaign links",
+    "code": "Code",
+    "codePlaceholder": "e.g. telegram_valencia",
+    "label": "Label (optional)",
+    "labelPlaceholder": "Your own note",
+    "source": "Source",
+    "none": "None",
+    "sources": {
+      "TELEGRAM": "Telegram",
+      "INSTAGRAM": "Instagram",
+      "TIKTOK": "TikTok",
+      "YOUTUBE": "YouTube",
+      "BLOG": "Blog",
+      "WEBSITE": "Website"
+    },
+    "creating": "Creating…",
+    "create": "Create link",
+    "empty": "No campaign links yet — create one above to start sharing it.",
+    "active": "Active",
+    "inactive": "Inactive",
+    "visits": "{count, plural, one {# visit} other {# visits}}",
+    "deactivate": "Deactivate",
+    "activate": "Activate"
+  },
+  "payout": {
+    "balanceTitle": "Affiliate balance",
+    "available": "Available balance",
+    "reserved": "Reserved for payout",
+    "paidToDate": "Paid to date",
+    "minimum": "Minimum payout: {amount}",
+    "eligible": "Eligible for payout",
+    "moreNeeded": "{amount} more needed",
+    "requesting": "Requesting…",
+    "request": "Request payout",
+    "requested": "Payout requested — check the history below for its status.",
+    "historyTitle": "Payout history",
+    "empty": "No payouts yet.",
+    "status": {
+      "PENDING": "Pending",
+      "PROCESSING": "Processing",
+      "PAID": "Paid",
+      "FAILED": "Failed",
+      "CANCELLED": "Cancelled"
+    }
+  }
+}

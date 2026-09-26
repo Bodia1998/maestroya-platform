@@ -1,0 +1,344 @@
+{
+  "errors": {
+    "fixErrors": "Popraw poniższe błędy.",
+    "createProfile": "Nie udało się utworzyć profilu specjalisty.",
+    "onboarding": "Nie udało się skonfigurować profilu specjalisty.",
+    "updateProfile": "Nie udało się zaktualizować profilu specjalisty.",
+    "updateServices": "Nie udało się zaktualizować kategorii usług.",
+    "deactivate": "Nie udało się dezaktywować profilu specjalisty.",
+    "submitQuote": "Nie udało się wysłać wyceny.",
+    "updateQuote": "Nie udało się zaktualizować wyceny.",
+    "withdrawQuote": "Nie udało się wycofać wyceny.",
+    "acceptInvoice": "Nie udało się zaakceptować tej faktury.",
+    "invalidInvoice": "Nieprawidłowa faktura.",
+    "grantSelfBilling": "Nie udało się udzielić zgody na samofakturowanie.",
+    "revokeSelfBilling": "Nie udało się cofnąć zgody na samofakturowanie.",
+    "startVerification": "Nie udało się rozpocząć wniosku o weryfikację.",
+    "uploadDocument": "Nie udało się przesłać dokumentu.",
+    "removeDocument": "Nie udało się usunąć dokumentu.",
+    "submitVerification": "Nie udało się złożyć wniosku o weryfikację.",
+    "resubmitVerification": "Nie udało się ponownie złożyć wniosku o weryfikację.",
+    "invalidDocumentType": "Wybierz prawidłowy typ dokumentu.",
+    "fileRequired": "Wybierz plik do przesłania.",
+    "invalidFileType": "Dokument musi być obrazem JPEG, PNG lub WebP albo plikiem PDF.",
+    "fileTooLarge": "Każdy dokument musi mieć mniej niż {maxMb, number} MB.",
+    "invalidDocument": "Nieprawidłowy dokument.",
+    "createPortfolioItem": "Nie udało się utworzyć tej pozycji portfolio.",
+    "updatePortfolioItem": "Nie udało się zaktualizować tej pozycji portfolio.",
+    "deletePortfolioItem": "Nie udało się usunąć tej pozycji portfolio.",
+    "invalidDateRange": "Nieprawidłowy zakres dat.",
+    "loadAnalytics": "Nie udało się wczytać statystyk."
+  },
+  "servicesForm": {
+    "success": "Kategorie usług zostały zaktualizowane.",
+    "title": "Kategorie usług",
+    "description": "Klienci znajdują cię według tych kategorii — zaznacz wszystkie, które pasują.",
+    "empty": "Nie ma jeszcze dostępnych kategorii usług.",
+    "saving": "Zapisywanie…",
+    "submit": "Zapisz kategorie usług"
+  },
+  "deactivate": {
+    "success": "Twój profil specjalisty został dezaktywowany.",
+    "trigger": "Dezaktywuj profil specjalisty",
+    "title": "Nowi klienci nie będą mogli cię znaleźć",
+    "description": "Istniejące wyceny, wizyty i opinie zostaną zachowane. W razie potrzeby zespół wsparcia może później ponownie cię aktywować.",
+    "confirmLabel": "Wpisz {word}, aby potwierdzić",
+    "pending": "Dezaktywowanie…",
+    "confirm": "Dezaktywuj mój profil specjalisty"
+  },
+  "profileForm": {
+    "updated": "Profil specjalisty został zaktualizowany.",
+    "created": "Profil specjalisty został utworzony.",
+    "aboutSection": "O twojej działalności",
+    "businessName": "Nazwa firmy",
+    "headline": "Nagłówek",
+    "headlinePlaceholder": "np. Elektryk z uprawnieniami, ponad 10 lat doświadczenia",
+    "bio": "Opis",
+    "yearsExperience": "Lata doświadczenia",
+    "serviceRadius": "Promień działania (km)",
+    "contactSection": "Dane kontaktowe",
+    "contactEmail": "E-mail kontaktowy",
+    "contactPhone": "Telefon kontaktowy",
+    "websiteUrl": "Adres strony internetowej",
+    "taxId": "Numer podatkowy (NIF/CIF)",
+    "availabilitySection": "Dostępność",
+    "acceptingRequests": "Obecnie przyjmuję nowe zapytania",
+    "saving": "Zapisywanie…",
+    "saveChanges": "Zapisz zmiany",
+    "create": "Utwórz profil specjalisty"
+  },
+  "onboarding": {
+    "form": {
+      "categoriesTitle": "Główny zawód / kategoria",
+      "categoriesDescription": "Wybierz wszystkie kategorie, które opisują twoją pracę.",
+      "noCategories": "Nie ma jeszcze dostępnych kategorii usług.",
+      "contactTitle": "Kontakt",
+      "phone": "Numer telefonu",
+      "locationTitle": "Lokalizacja bazowa",
+      "locationDescription": "Gdzie działasz — na tej podstawie dopasowujemy do ciebie zapytania w pobliżu.",
+      "address": "Adres",
+      "line1Placeholder": "Ulica i numer",
+      "line2Placeholder": "Mieszkanie, lokal itp. (opcjonalnie)",
+      "cityPlaceholder": "Miejscowość",
+      "provincePlaceholder": "Prowincja (opcjonalnie)",
+      "postalCodePlaceholder": "Kod pocztowy",
+      "countryPlaceholder": "Kraj",
+      "coverageTitle": "Obszar działania i o tobie",
+      "serviceRadius": "Promień działania (km)",
+      "bio": "Krótki opis zawodowy",
+      "pending": "Konfigurowanie…",
+      "submit": "Zakończ konfigurację mojego profilu specjalisty"
+    },
+    "metaTitle": "Rejestracja specjalisty",
+    "title": "Skonfiguruj profil specjalisty",
+    "subtitle": "Kilka informacji, aby klienci mogli cię znaleźć i skontaktować się z tobą. Więcej możesz dodać później w panelu specjalisty.",
+    "photoTitle": "Zdjęcie profilowe (opcjonalnie)"
+  },
+  "quotes": {
+    "form": {
+      "itemsTitle": "Pozycje",
+      "itemsDescription": "Rozpisz robociznę i materiały, aby klient dokładnie widział, za co płaci.",
+      "addItem": "Dodaj pozycję",
+      "description": "Opis",
+      "descriptionPlaceholder": "Opis (np. robocizna, materiały)",
+      "quantity": "Ilość",
+      "quantityPlaceholder": "Ilość",
+      "unitPrice": "Cena jednostkowa",
+      "unitPricePlaceholder": "€ za jedn.",
+      "itemType": "Typ pozycji",
+      "categories": {
+        "LABOR": "Robocizna",
+        "MATERIALS": "Materiały"
+      },
+      "removeItem": "Usuń pozycję",
+      "estimatedTotal": "Szacowana suma: {amount}",
+      "detailsTitle": "Szczegóły",
+      "notes": "Uwagi / propozycja",
+      "notesPlaceholder": "Opisz swoją propozycję, harmonogram lub wszystko, co klient powinien wiedzieć.",
+      "validUntil": "Ważna do",
+      "saving": "Zapisywanie…",
+      "saveChanges": "Zapisz zmiany",
+      "create": "Utwórz wycenę"
+    },
+    "withdraw": {
+      "trigger": "Wycofaj tę wycenę",
+      "title": "Wycofać tę wycenę?",
+      "description": "Klient nie będzie już mógł jej zaakceptować. Tej operacji nie można cofnąć.",
+      "confirm": "Tak, wycofaj wycenę",
+      "pending": "Wycofywanie…",
+      "cancel": "Zachowaj wycenę"
+    },
+    "list": {
+      "metaTitle": "Moje wyceny",
+      "title": "Moje wyceny",
+      "subtitle": "Wyceny wysłane w odpowiedzi na zapytania klientów.",
+      "findRequests": "Znajdź zapytania",
+      "emptyTitle": "Nie wysłano jeszcze żadnej wyceny",
+      "emptyDescription": "Przejrzyj otwarte zapytania i wyślij swoją pierwszą wycenę.",
+      "browseRequests": "Przeglądaj zapytania"
+    },
+    "detail": {
+      "metaTitle": "Szczegóły wyceny",
+      "notes": "Uwagi / propozycja",
+      "items": "Pozycje",
+      "validUntil": "Ważna do",
+      "noExpiry": "Brak daty ważności",
+      "submitted": "Wysłano",
+      "lastUpdated": "Ostatnia aktualizacja",
+      "edit": "Edytuj wycenę",
+      "messageCustomer": "Napisz do klienta"
+    },
+    "edit": {
+      "metaTitle": "Edycja wyceny",
+      "title": "Edycja wyceny",
+      "subtitle": "Zaktualizuj ceny lub szczegóły propozycji."
+    }
+  },
+  "dashboard": {
+    "metaTitle": "Profil specjalisty",
+    "title": "Profil specjalisty",
+    "subtitle": "Zarządzaj tym, jak widzą cię klienci jako samodzielnego specjalistę.",
+    "createTitle": "Utwórz profil specjalisty",
+    "statusTitle": "Status",
+    "profileStatus": "Status: {status}",
+    "selfBillingLink": "Samofakturowanie i faktury",
+    "verificationLink": "Zarządzaj weryfikacją tożsamości",
+    "profileDetails": "Dane profilu",
+    "serviceCategories": "Kategorie usług",
+    "dangerZone": "Strefa zagrożenia",
+    "dangerZoneDescription": "Po dezaktywacji twój profil nie będzie widoczny w wyszukiwarce klientów, dopóki nie zostanie ponownie aktywowany."
+  },
+  "requests": {
+    "distance": "{distance, number} km stąd",
+    "postedOn": "Opublikowano {date}",
+    "urgency": {
+      "LOW": "Niska",
+      "MEDIUM": "Średnia",
+      "HIGH": "Wysoka",
+      "EMERGENCY": "Pilne"
+    },
+    "list": {
+      "metaTitle": "Dostępne zapytania",
+      "title": "Dostępne zapytania",
+      "subtitle": "Zapytania klientów pasujące do twoich kategorii i promienia działania. Otwórz jedno i utwórz wycenę, aby odpowiedzieć.",
+      "empty": "Obecnie brak pasujących zapytań. Upewnij się, że twój profil specjalisty jest aktywny i ma skonfigurowane kategorie usług oraz promień działania."
+    },
+    "detail": {
+      "metaTitle": "Zapytanie",
+      "intro": "To zapytanie od klienta. Zapoznaj się ze szczegółami poniżej i utwórz wycenę, jeśli chcesz zaproponować cenę za pracę.",
+      "description": "Opis",
+      "location": "Lokalizacja",
+      "urgency": "Pilność",
+      "posted": "Opublikowano",
+      "createQuote": "Utwórz wycenę"
+    },
+    "createQuote": {
+      "metaTitle": "Tworzenie wyceny",
+      "title": "Tworzenie wyceny",
+      "intro": "To zapytanie klienta. Utwórz wycenę opisującą proponowaną pracę i materiały oraz cenę, za jaką zrealizujesz zlecenie."
+    }
+  },
+  "jobs": {
+    "list": {
+      "metaTitle": "Moje zlecenia",
+      "title": "Moje zlecenia",
+      "subtitle": "Zlecenia utworzone z wycen zaakceptowanych przez klientów.",
+      "empty": "Nie masz aktywnych zleceń.",
+      "withCounterparty": "z: {name}"
+    },
+    "detail": {
+      "metaTitle": "Zlecenie",
+      "title": "Zlecenie",
+      "started": "Rozpoczęto",
+      "completed": "Zakończono",
+      "cancellationReason": "Powód anulowania",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "Na prośbę klienta",
+        "PROFESSIONAL_UNABLE_TO_COMPLETE": "Specjalista nie może ukończyć zlecenia",
+        "SERVICE_REQUEST_ISSUE": "Problem z zapytaniem",
+        "OTHER": "Inny"
+      },
+      "appointmentsTitle": "Wizyty w ramach tego zlecenia",
+      "noAppointments": "Brak wizyt.",
+      "notScheduled": "Jeszcze nie zaplanowano"
+    }
+  },
+  "appointments": {
+    "window": "{start} – {end}",
+    "list": {
+      "metaTitle": "Moje wizyty",
+      "title": "Moje wizyty",
+      "subtitle": "Wizyty z wycen zaakceptowanych przez klientów.",
+      "emptyTitle": "Brak nadchodzących wizyt",
+      "emptyDescription": "Wizyty pojawią się tutaj, gdy klient zaakceptuje jedną z twoich wycen.",
+      "noTimeProposed": "Nie zaproponowano jeszcze terminu"
+    },
+    "detail": {
+      "metaTitle": "Wizyta",
+      "title": "Wizyta",
+      "confirmedTime": "Potwierdzony termin",
+      "proposedTime": "Proponowany termin",
+      "notSet": "Nie ustalono",
+      "cancellationReason": "Powód anulowania",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "Na prośbę klienta",
+        "PROFESSIONAL_UNAVAILABLE": "Specjalista niedostępny",
+        "SCHEDULING_CONFLICT": "Konflikt terminów",
+        "OTHER": "Inny"
+      }
+    }
+  },
+  "invoices": {
+    "list": {
+      "metaTitle": "Moje faktury",
+      "title": "Moje faktury",
+      "subtitle": "Faktury wystawione przez MaestroYa w twoim imieniu w ramach samofakturowania.",
+      "emptyTitle": "Brak faktur",
+      "emptyDescription": "Projekt faktury tworzy się automatycznie, gdy płatność za zakończone zlecenie zostanie ci przekazana — wymaga to aktywnej zgody na samofakturowanie.",
+      "notYetIssued": "Jeszcze niewystawiona"
+    },
+    "detail": {
+      "metaTitle": "Faktura",
+      "title": "Faktura",
+      "acceptIntro": "MaestroYa przygotowała tę fakturę w twoim imieniu w ramach samofakturowania. Sprawdź dane poniżej i zaakceptuj fakturę, aby potwierdzić, że są poprawne.",
+      "accept": "Zaakceptuj tę fakturę",
+      "documentReference": "Identyfikator dokumentu: {reference}… (tylko suma kontrolna chroniąca przed zmianami — nie podpis elektroniczny)."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Zgoda na samofakturowanie",
+    "title": "Zgoda na samofakturowanie",
+    "subtitle": "Zdecyduj, czy MaestroYa może wystawiać faktury w twoim imieniu za zakończone zlecenia.",
+    "status": {
+      "ACTIVE": "Aktywna",
+      "REVOKED": "Cofnięta"
+    },
+    "notAuthorized": "Brak zgody",
+    "activeDescription": "Upoważniłeś MaestroYa do wystawiania faktur w twoim imieniu („facturación por el destinatario”) za zakończone zlecenia. Możesz w każdej chwili cofnąć tę zgodę.",
+    "revoke": "Cofnij zgodę",
+    "inactiveDescription": "Bez tej zgody MaestroYa nie może wystawiać faktur w twoim imieniu, a dla twoich zakończonych zleceń nie można przygotować projektów faktur.",
+    "previouslyRevokedTitle": "Wcześniej cofnięta",
+    "previouslyRevokedDescription": "Wcześniej cofnąłeś tę zgodę. Możesz udzielić jej ponownie poniżej.",
+    "grant": "Udziel zgody",
+    "viewInvoices": "Zobacz swoje <link>faktury wystawione w ramach samofakturowania</link>."
+  },
+  "verification": {
+    "metaTitle": "Weryfikacja specjalisty",
+    "title": "Weryfikacja",
+    "subtitle": "Potwierdź swoją tożsamość, aby otrzymać odznakę „Zweryfikowany specjalista” w profilu publicznym.",
+    "noProfile": "Aby złożyć wniosek o weryfikację, potrzebujesz profilu specjalisty. <link>Utwórz profil specjalisty</link>.",
+    "notStarted": "Nie rozpocząłeś jeszcze wniosku o weryfikację.",
+    "start": "Rozpocznij weryfikację",
+    "validUntil": "Ważna do {date}",
+    "status": {
+      "DRAFT": {
+        "label": "Nie złożono",
+        "description": "Prześlij co najmniej jeden dokument tożsamości (dowód osobisty, paszport lub prawo jazdy) oraz ewentualne dokumenty uzupełniające, a następnie złóż je do weryfikacji."
+      },
+      "PENDING": {
+        "label": "Oczekuje na weryfikację",
+        "description": "Twój wniosek czeka w kolejce. Powiadomimy cię, gdy weryfikator go sprawdzi."
+      },
+      "UNDER_REVIEW": {
+        "label": "W trakcie weryfikacji",
+        "description": "Weryfikator sprawdza teraz twoje dokumenty. Na razie nie musisz nic robić."
+      },
+      "APPROVED": {
+        "label": "Zatwierdzono",
+        "description": "Jesteś zweryfikowanym specjalistą. W twoim profilu publicznym widnieje odznaka weryfikacji."
+      },
+      "REJECTED": {
+        "label": "Odrzucono",
+        "description": "Twój wniosek nie został zatwierdzony. Powód znajdziesz poniżej — możesz go usunąć i złożyć wniosek ponownie."
+      },
+      "RESUBMISSION_REQUIRED": {
+        "label": "Wymagane ponowne złożenie",
+        "description": "Weryfikator prosi o zaktualizowanie wniosku. Postępuj zgodnie z instrukcjami poniżej, a następnie złóż go ponownie."
+      }
+    },
+    "rejectionReasonTitle": "Powód",
+    "resubmissionReasonTitle": "Co należy zaktualizować",
+    "documentsTitle": "Dokumenty",
+    "noDocuments": "Nie przesłano jeszcze dokumentów.",
+    "remove": "Usuń",
+    "uploadTitle": "Prześlij dokument",
+    "documentType": "Typ dokumentu",
+    "fileLabel": "Plik (JPEG, PNG, WebP lub PDF, maks. {maxMb, number} MB)",
+    "upload": "Prześlij",
+    "submit": "Złóż do weryfikacji",
+    "resubmit": "Złóż ponownie do weryfikacji",
+    "submitHint": "Przed złożeniem wniosku musisz przesłać co najmniej jeden dokument tożsamości.",
+    "documentTypes": {
+      "NATIONAL_ID": "Dowód osobisty",
+      "PASSPORT": "Paszport",
+      "DRIVER_LICENSE": "Prawo jazdy",
+      "BUSINESS_LICENSE": "Licencja na działalność",
+      "TAX_CERTIFICATE": "Zaświadczenie podatkowe",
+      "INSURANCE_CERTIFICATE": "Polisa ubezpieczeniowa",
+      "PROFESSIONAL_CERTIFICATION": "Certyfikat zawodowy",
+      "PROOF_OF_ADDRESS": "Potwierdzenie adresu",
+      "BUSINESS_REGISTRATION": "Wpis do rejestru działalności",
+      "OTHER": "Inny"
+    }
+  }
+}

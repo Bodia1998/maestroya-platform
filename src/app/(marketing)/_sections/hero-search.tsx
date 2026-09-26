@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { MapPin, Search } from "lucide-react";
 
@@ -22,6 +23,7 @@ export interface HeroSearchProps {
  * `DirectorySearchForm` already does on `/search` itself.
  */
 export function HeroSearch({ categories }: HeroSearchProps) {
+  const t = useTranslations("marketing");
   const router = useRouter();
   const [categoryId, setCategoryId] = useState("");
   const [city, setCity] = useState("");
@@ -42,12 +44,12 @@ export function HeroSearch({ categories }: HeroSearchProps) {
       <div className="flex flex-1 items-center gap-2 rounded-xl px-2 sm:pl-4">
         <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <Select
-          aria-label="¿Qué servicio necesitas?"
+          aria-label={t("hero.search.serviceLabel")}
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
           className="h-11 border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
         >
-          <option value="">¿Qué servicio necesitas?</option>
+          <option value="">{t("hero.search.serviceLabel")}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -61,8 +63,8 @@ export function HeroSearch({ categories }: HeroSearchProps) {
       <div className="flex flex-1 items-center gap-2 rounded-xl px-2 sm:pl-2">
         <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <Input
-          aria-label="¿Dónde lo necesitas?"
-          placeholder="Ciudad o código postal"
+          aria-label={t("hero.search.locationLabel")}
+          placeholder={t("hero.search.locationPlaceholder")}
           value={city}
           onChange={(e) => setCity(e.target.value)}
           className="h-11 border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
@@ -71,7 +73,7 @@ export function HeroSearch({ categories }: HeroSearchProps) {
 
       <Button type="submit" size="lg" className="w-full rounded-full sm:w-auto">
         <Search className="h-4 w-4" aria-hidden />
-        Buscar profesionales
+        {t("hero.search.submit")}
       </Button>
     </form>
   );
@@ -79,9 +81,10 @@ export function HeroSearch({ categories }: HeroSearchProps) {
 
 /** Static secondary CTA shown next to the search widget on larger screens. */
 export function RequestServiceCta() {
+  const t = useTranslations("marketing");
   return (
     <ButtonLink href="/requests/new" variant="outline" size="lg" className="rounded-full">
-      Publicar una solicitud
+      {t("hero.ctaPrimary")}
     </ButtonLink>
   );
 }

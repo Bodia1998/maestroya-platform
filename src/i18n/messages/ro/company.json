@@ -1,0 +1,225 @@
+{
+  "tabs": {
+    "ariaLabel": "Secțiunile companiei",
+    "profile": "Profil",
+    "members": "Membri",
+    "invitations": "Invitații",
+    "verification": "Verificare",
+    "selfBilling": "Autofacturare"
+  },
+  "roles": {
+    "OWNER": "Proprietar",
+    "ADMIN": "Administrator",
+    "MANAGER": "Manager",
+    "MEMBER": "Membru"
+  },
+  "memberStatus": {
+    "ACTIVE": "Activ",
+    "PENDING": "În așteptare",
+    "REMOVED": "Eliminat"
+  },
+  "invitationStatus": {
+    "PENDING": "În așteptare",
+    "ACCEPTED": "Acceptată",
+    "DECLINED": "Refuzată",
+    "EXPIRED": "Expirată",
+    "CANCELLED": "Anulată"
+  },
+  "companyStatus": {
+    "PENDING": "În așteptare",
+    "ACTIVE": "Activă",
+    "SUSPENDED": "Suspendată",
+    "DEACTIVATED": "Dezactivată"
+  },
+  "errors": {
+    "invalidDetails": "Datele companiei nu sunt valide.",
+    "createFailed": "A apărut o problemă la crearea companiei.",
+    "updateFailed": "A apărut o problemă la actualizarea companiei.",
+    "loadFailed": "A apărut o problemă la încărcarea companiei."
+  },
+  "index": {
+    "metaTitle": "Companiile mele",
+    "title": "Companiile mele",
+    "subtitle": "Lucrează ca o companie sau o echipă cu mai mulți profesioniști, pe lângă eventualul tău profil individual de profesionist.",
+    "emptyTitle": "Încă nu ai companii",
+    "emptyDescription": "Nu ești încă membru al niciunei companii. Creează una mai jos ca să începi să lucrezi în echipă.",
+    "manage": "Gestionează",
+    "createTitle": "Creează o companie",
+    "legalNameRequired": "Denumire legală (obligatoriu)",
+    "tradeName": "Denumire comercială / afișată",
+    "taxIdRequired": "Cod fiscal (obligatoriu)",
+    "description": "Descriere",
+    "submit": "Creează compania"
+  },
+  "acceptInvitation": {
+    "metaTitle": "Invitație de la o companie",
+    "title": "Invitație de la o companie",
+    "subtitle": "Ai fost invitat să te alături unei companii pe MaestroYa. Dacă accepți, devii imediat membru activ.",
+    "missingToken": "Acestui link de invitație îi lipsește tokenul.",
+    "accept": "Acceptă invitația",
+    "decline": "Refuză",
+    "invalidLink": "Link de invitație invalid.",
+    "acceptFailed": "A apărut o problemă la acceptarea acestei invitații.",
+    "declineFailed": "A apărut o problemă la refuzarea acestei invitații."
+  },
+  "profile": {
+    "metaTitle": "Profilul companiei",
+    "subtitle": "Stare: {status} · {verified}",
+    "verified": "Verificată",
+    "notVerified": "Neverificată",
+    "breadcrumbMyCompanies": "Companiile mele",
+    "detailsTitle": "Datele companiei",
+    "legalName": "Denumire legală",
+    "tradeName": "Denumire comercială / afișată",
+    "description": "Descriere",
+    "contactTitle": "Informații de contact",
+    "website": "Site web",
+    "contactEmail": "Email de contact",
+    "contactPhone": "Telefon de contact",
+    "city": "Oraș",
+    "province": "Provincie",
+    "save": "Salvează modificările"
+  },
+  "members": {
+    "metaTitle": "Membrii companiei",
+    "title": "Membri",
+    "activeCount": "{count, plural, one {# membru activ.} few {# membri activi.} other {# de membri activi.}}",
+    "emptyTitle": "Compania nu are încă membri",
+    "emptyDescription": "Invită-ți colegii din fila Invitații ca să începeți să colaborați în acest cont de companie.",
+    "columns": {
+      "name": "Nume",
+      "email": "Email",
+      "role": "Rol",
+      "status": "Stare",
+      "actions": "Acțiuni"
+    },
+    "roleFor": "Rolul pentru {name}",
+    "updateRole": "Actualizează rolul",
+    "transferTitle": "Transferă calitatea de proprietar",
+    "transferNotice": "Doar proprietarul actual poate transfera calitatea de proprietar. Această acțiune este ireversibilă, cu excepția cazului în care noul proprietar ți-o transferă înapoi.",
+    "errors": {
+      "loadFailed": "A apărut o problemă la încărcarea membrilor.",
+      "invalidRole": "Rol invalid.",
+      "changeRoleFailed": "A apărut o problemă la schimbarea rolului acestui membru.",
+      "invalidMember": "Membru invalid.",
+      "removeFailed": "A apărut o problemă la eliminarea acestui membru.",
+      "invalidRequest": "Solicitare invalidă.",
+      "transferFailed": "A apărut o problemă la transferul calității de proprietar."
+    },
+    "remove": {
+      "trigger": "Elimină",
+      "title": "Elimini pe {name}?",
+      "description": "Persoana va pierde imediat accesul la acest cont de companie. Acțiunea nu poate fi anulată de aici.",
+      "confirm": "Da, elimină",
+      "pending": "Se elimină…"
+    },
+    "transfer": {
+      "trigger": "Transferă calitatea de proprietar",
+      "title": "Transferi calitatea de proprietar?",
+      "description": "Doar proprietarul actual poate transfera calitatea de proprietar. Această acțiune este ireversibilă, cu excepția cazului în care noul proprietar ți-o transferă înapoi.",
+      "confirm": "Da, transferă calitatea de proprietar",
+      "pending": "Se transferă…",
+      "newOwner": "Noul proprietar",
+      "confirmationLabel": "Scrie {keyword} pentru a confirma"
+    }
+  },
+  "invitations": {
+    "metaTitle": "Invitațiile companiei",
+    "title": "Invitații",
+    "inviteTitle": "Invită un membru",
+    "inviteNotice": "Deocamdată pot fi invitați doar utilizatori MaestroYa existenți. Invitația este valabilă 14 zile.",
+    "email": "Email",
+    "role": "Rol",
+    "send": "Trimite invitația",
+    "emptyTitle": "Încă nu există invitații",
+    "emptyDescription": "Invitațiile pe care le trimiți vor apărea aici până când sunt acceptate sau anulate.",
+    "columns": {
+      "email": "Email",
+      "role": "Rol",
+      "status": "Stare",
+      "expires": "Expiră",
+      "actions": "Acțiuni"
+    },
+    "errors": {
+      "loadFailed": "A apărut o problemă la încărcarea invitațiilor.",
+      "invalid": "Invitație invalidă.",
+      "createFailed": "A apărut o problemă la crearea invitației.",
+      "cancelFailed": "A apărut o problemă la anularea acestei invitații."
+    },
+    "cancel": {
+      "trigger": "Anulează",
+      "title": "Anulezi această invitație?",
+      "description": "{email} nu va mai putea folosi această invitație pentru a se alătura companiei.",
+      "confirm": "Da, anulează invitația",
+      "pending": "Se anulează…",
+      "keep": "Păstrează invitația"
+    }
+  },
+  "verification": {
+    "metaTitle": "Verificarea companiei",
+    "title": "Verificare",
+    "notStarted": "Această companie nu a început încă verificarea.",
+    "start": "Începe verificarea",
+    "statusCopy": {
+      "DRAFT": "Netrimisă încă. Încarcă cel puțin un document al companiei și trimite-o spre analiză.",
+      "PENDING": "Trimisă — așteaptă analiza unui administrator.",
+      "UNDER_REVIEW": "Un administrator analizează în prezent această solicitare.",
+      "APPROVED": "Aprobată — compania ta afișează o insignă de verificare pe profilul public.",
+      "REJECTED": "Respinsă. Vezi motivul mai jos și retrimite-o când ești pregătit.",
+      "RESUBMISSION_REQUIRED": "Sunt necesare modificări înainte de aprobare. Vezi instrucțiunile de mai jos.",
+      "EXPIRED": "Această aprobare a expirat. Începe o nouă solicitare de verificare."
+    },
+    "reason": "Motiv",
+    "whatToUpdate": "Ce trebuie actualizat",
+    "documents": "Documente",
+    "noDocuments": "Încă nu a fost încărcat niciun document.",
+    "docTypes": {
+      "BUSINESS_LICENSE": "Autorizație de funcționare",
+      "TAX_CERTIFICATE": "Certificat fiscal",
+      "INSURANCE_CERTIFICATE": "Certificat de asigurare",
+      "PROFESSIONAL_CERTIFICATION": "Certificare profesională",
+      "PROOF_OF_ADDRESS": "Dovada adresei",
+      "OTHER": "Altul"
+    },
+    "remove": "Elimină",
+    "uploadTitle": "Încarcă un document",
+    "docType": "Tipul documentului",
+    "file": "Fișier",
+    "upload": "Încarcă documentul",
+    "submit": "Trimite spre analiză",
+    "resubmit": "Retrimite",
+    "errors": {
+      "startFailed": "A apărut o problemă la începerea verificării.",
+      "invalidDocType": "Alege un tip de document valid.",
+      "chooseFile": "Alege un fișier de încărcat.",
+      "invalidFileType": "Documentele trebuie să fie o imagine JPEG, PNG, WebP sau un PDF.",
+      "fileTooLarge": "Fiecare document trebuie să aibă mai puțin de 10 MB.",
+      "uploadFailed": "A apărut o problemă la încărcarea acestui document.",
+      "invalidDocument": "Document invalid.",
+      "removeFailed": "A apărut o problemă la eliminarea acestui document.",
+      "submitFailed": "A apărut o problemă la trimiterea spre analiză.",
+      "resubmitFailed": "A apărut o problemă la retrimiterea spre analiză."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Autofacturarea companiei",
+    "title": "Companie",
+    "subtitle": "Gestionează autorizația de autofacturare și facturile companiei tale.",
+    "ownerOnlyTitle": "Doar proprietar/administrator",
+    "ownerOnlyBody": "Doar proprietarul companiei sau un administrator poate vedea sau modifica starea autorizației de autofacturare.",
+    "sectionTitle": "Autorizație de autofacturare",
+    "notAuthorized": "Neautorizată",
+    "activeBody": "Această companie a autorizat MaestroYa să emită în numele ei facturi în regim de autofacturare („{legalTerm}”) pentru lucrările finalizate. Poți revoca această autorizație oricând.",
+    "revoke": "Revocă autorizația",
+    "inactiveBody": "Fără această autorizație, MaestroYa nu poate emite facturi în regim de autofacturare în numele acestei companii.",
+    "grant": "Acordă autorizația",
+    "invoicesTitle": "Facturi",
+    "noInvoices": "Încă nu există facturi în regim de autofacturare.",
+    "notYetIssued": "Neemisă încă",
+    "errors": {
+      "invalidCompany": "Companie invalidă.",
+      "grantFailed": "A apărut o problemă la acordarea autorizației de autofacturare.",
+      "revokeFailed": "A apărut o problemă la revocarea autorizației de autofacturare."
+    }
+  }
+}

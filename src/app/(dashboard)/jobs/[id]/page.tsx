@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import {
   makeGetJobUseCase,
@@ -17,13 +18,12 @@ import { AppointmentStatusBadge } from "@/app/(dashboard)/appointments/appointme
 import { JobStatusBadge } from "../job-status-badge";
 import { JobActions } from "./job-actions";
 
-export const metadata = { title: "Job" };
+export async function generateMetadata() {
+  const t = await getTranslations("jobs.detail");
+  return { title: t("title") };
+}
 
 const APPOINTMENT_NON_TERMINAL = ["PENDING_SCHEDULE", "PROPOSED", "CONFIRMED"];
-
-function formatDate(date: Date | null): string {
-  return date ? date.toLocaleString() : "—";
-}
 
 /**
  * Order / Job Lifecycle module (Module 11): shared customer/professional
@@ -69,39 +69,46 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const hasOpenAppointments = jobAppointments.some((a) => APPOINTMENT_NON_TERMINAL.includes(a.status));
 
   const backHref = viewerRole === "customer" ? "/jobs" : "/dashboard/professional/jobs";
+  const [t, tJobs, format] = await Promise.all([getTranslations("jobs.detail"), getTranslations("jobs"), getFormatter()]);
+  const formatDate = (date: Date | null): string =>
+    date ? format.dateTime(date, { dateStyle: "medium", timeStyle: "short" }) : t("dateUnset");
+  const reasonLabel = (reason: string | null): string =>
+    reason && tJobs.has(`cancellationReason.${reason}` as never)
+      ? tJobs(`cancellationReason.${reason}` as never)
+      : (reason ?? "");
 
   return (
     <PageContainer gap="sm">
       <PageHeader
-        title="Job"
-        breadcrumbs={[{ label: "My jobs", href: backHref }, { label: "Job" }]}
+        title={t("title")}
+        breadcrumbs={[{ label: tJobs("list.title"), href: backHref }, { label: t("title") }]}
         actions={<JobStatusBadge status={job.status} />}
       />
 
       <ResponsiveGrid as="dl" cols="1-2" gap="sm" bordered>
         <div>
-          <dt className="text-foreground/60">Started</dt>
+          <dt className="text-foreground/60">{t("started")}</dt>
           <dd>{formatDate(job.startedAt)}</dd>
         </div>
         <div>
-          <dt className="text-foreground/60">Completed</dt>
+          <dt className="text-foreground/60">{t("completed")}</dt>
           <dd>{formatDate(job.completedAt)}</dd>
         </div>
         {job.status === "CANCELLED" && (
           <div className="sm:col-span-2">
-            <dt className="text-foreground/60">Cancellation reason</dt>
+            <dt className="text-foreground/60">{t("cancellationReason")}</dt>
             <dd>
-              {job.cancellationReason}
+              {reasonLabel(job.cancellationReason)}
               {job.cancellationNote ? ` — ${job.cancellationNote}` : ""}
             </dd>
           </div>
         )}
       </ResponsiveGrid>
 
-      <Section title="Appointments on this job">
+      <Section title={t("appointments")}>
         {jobAppointments.length === 0 ? (
           <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-foreground/70">
-            No appointments yet.
+            {t("noAppointments")}
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -111,7 +118,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 className="flex items-center justify-between gap-4 rounded-md border border-border p-3"
               >
                 <span className="text-sm">
-                  {appointment.scheduledStart ? appointment.scheduledStart.toLocaleString() : "Not scheduled yet"}
+                  {appointment.scheduledStart
+                    ? format.dateTime(appointment.scheduledStart, { dateStyle: "medium", timeStyle: "short" })
+                    : t("notScheduled")}
                 </span>
                 <AppointmentStatusBadge status={appointment.status} />
               </li>

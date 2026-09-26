@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
 
   try {
+    // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
     await prisma.$queryRaw`SELECT 1`;
 
     return NextResponse.json(

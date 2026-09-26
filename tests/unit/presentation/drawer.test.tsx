@@ -35,7 +35,7 @@ describe("Drawer", () => {
   it("calls onOpenChange(false) when the close button is clicked", () => {
     const { onOpenChange } = renderDrawer(true);
 
-    fireEvent.click(screen.getByRole("button", { name: /cerrar/i }));
+    fireEvent.click(screen.getByRole("button", { name: /close/i }));
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });

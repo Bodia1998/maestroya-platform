@@ -1,8 +1,9 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
+import { adminActionFailure } from "../_lib/action-errors";
 import { revalidatePath } from "next/cache";
 
-import { DomainError } from "@/domain/errors/domain-error";
 import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
 import {
   createAccountRestrictionSchema,
@@ -32,14 +33,6 @@ import {
  */
 export type ActionResult = { success: true } | { success: false; error: string };
 
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
-}
-
 export async function listSecurityEventsAction(
   input: unknown,
 ): Promise<{ success: true; events: AdminSecurityEventView[] } | { success: false; error: string }> {
@@ -47,7 +40,7 @@ export async function listSecurityEventsAction(
 
   const parsed = listSecurityEventsSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: "Invalid filters." };
+    return { success: false, error: (await getTranslations("admin.actionErrors"))("invalidFilters") };
   }
 
   const events = await makeListSecurityEventsUseCase().execute({
@@ -77,7 +70,7 @@ export async function createAccountRestrictionAction(formData: unknown): Promise
 
   const parsed = createAccountRestrictionSchema.safeParse(formData);
   if (!parsed.success) {
-    return { success: false, error: "Invalid restriction details." };
+    return { success: false, error: (await getTranslations("admin.actionErrors"))("invalidRestrictionDetails") };
   }
 
   try {
@@ -85,7 +78,7 @@ export async function createAccountRestrictionAction(formData: unknown): Promise
     revalidatePath("/admin/security");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong creating this restriction.");
+    return adminActionFailure(error, "creatingThisRestriction");
   }
 }
 
@@ -97,6 +90,6 @@ export async function liftAccountRestrictionAction(restrictionId: string): Promi
     revalidatePath("/admin/security");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong lifting this restriction.");
+    return adminActionFailure(error, "liftingThisRestriction");
   }
 }

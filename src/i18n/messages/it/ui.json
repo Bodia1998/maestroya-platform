@@ -1,0 +1,51 @@
+{
+  "legalDocument": {
+    "issuedLanguageNotice": "Questo documento è mostrato nella lingua in cui è stato emesso (spagnolo)."
+  },
+  "close": "Chiudi",
+  "breadcrumb": {
+    "label": "Percorso di navigazione"
+  },
+  "chip": {
+    "remove": "Rimuovi"
+  },
+  "combobox": {
+    "placeholder": "Seleziona un'opzione",
+    "searchPlaceholder": "Cerca…",
+    "empty": "Nessun risultato"
+  },
+  "confirmDialog": {
+    "cancel": "Annulla",
+    "genericError": "Qualcosa è andato storto. Riprova."
+  },
+  "errorState": {
+    "title": "Qualcosa è andato storto",
+    "retry": "Riprova"
+  },
+  "loadingState": {
+    "label": "Caricamento…"
+  },
+  "spinner": {
+    "label": "Caricamento"
+  },
+  "pagination": {
+    "label": "Paginazione",
+    "previous": "Indietro",
+    "next": "Avanti"
+  },
+  "passwordInput": {
+    "show": "Mostra password",
+    "hide": "Nascondi password"
+  },
+  "searchInput": {
+    "clear": "Cancella ricerca"
+  },
+  "toast": {
+    "close": "Chiudi notifica",
+    "region": "Notifiche",
+    "assertiveRegion": "Notifiche importanti"
+  },
+  "fieldBadges": {
+    "optional": "Facoltativo"
+  }
+}

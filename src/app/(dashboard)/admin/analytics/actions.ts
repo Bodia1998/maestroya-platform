@@ -1,5 +1,7 @@
 "use server";
 
+import { adminActionFailure } from "../_lib/action-errors";
+import { localizeZodError } from "@/presentation/i18n/server";
 import {
   analyticsDateRangeSchema,
   getAnalyticsTimeSeriesSchema,
@@ -16,7 +18,6 @@ import {
   makeGetPlatformGeoBreakdownUseCase,
   makeGetPlatformRequestsTimeSeriesUseCase,
 } from "@/application/use-cases/analytics/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
 
 /**
@@ -28,27 +29,19 @@ import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
 
 export type AnalyticsActionResult<T> = { success: true; data: T } | { success: false; error: string };
 
-function fromDomainError<T>(error: unknown, fallback: string): AnalyticsActionResult<T> {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
-}
-
 export async function getPlatformAnalyticsSummaryAction(
   input: { from?: Date; to?: Date } = {},
 ): Promise<AnalyticsActionResult<PlatformAnalyticsSummaryDTO>> {
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = analyticsDateRangeSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid date range." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const data = await makeGetPlatformAnalyticsSummaryUseCase().execute(parsed.data);
     return { success: true, data };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading platform analytics.");
+    return adminActionFailure(error, "loadingPlatformAnalytics");
   }
 }
 
@@ -58,13 +51,13 @@ export async function getPlatformRequestsTimeSeriesAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = getAnalyticsTimeSeriesSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const data = await makeGetPlatformRequestsTimeSeriesUseCase().execute(parsed.data);
     return { success: true, data };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading the requests time series.");
+    return adminActionFailure(error, "loadingTheRequestsTimeSeries");
   }
 }
 
@@ -74,13 +67,13 @@ export async function getPlatformCategoryBreakdownAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = analyticsDateRangeSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid date range." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const data = await makeGetPlatformCategoryBreakdownUseCase().execute(parsed.data);
     return { success: true, data };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading category analytics.");
+    return adminActionFailure(error, "loadingCategoryAnalytics");
   }
 }
 
@@ -90,13 +83,13 @@ export async function getPlatformGeoBreakdownAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = analyticsDateRangeSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid date range." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const data = await makeGetPlatformGeoBreakdownUseCase().execute(parsed.data);
     return { success: true, data };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading geographic analytics.");
+    return adminActionFailure(error, "loadingGeographicAnalytics");
   }
 }
 
@@ -106,12 +99,12 @@ export async function getPlatformFunnelAction(
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = analyticsDateRangeSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid date range." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const data = await makeGetPlatformFunnelUseCase().execute(parsed.data);
     return { success: true, data };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading the service funnel.");
+    return adminActionFailure(error, "loadingTheServiceFunnel");
   }
 }

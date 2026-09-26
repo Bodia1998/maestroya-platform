@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
 
@@ -69,17 +71,13 @@ const STATUS_VARIANT: Record<string, BadgeProps["variant"]> = {
   DECLINED: "danger",
 };
 
-/** Human-facing label overrides — falls back to a title-cased version of the raw status. */
-const STATUS_LABEL: Record<string, string> = {
-  PUBLISHED: "Open",
-  PENDING_SCHEDULE: "Awaiting schedule",
-  IN_PROGRESS: "In progress",
-  PENDING_REVIEW: "Pending review",
-  UNDER_REVIEW: "Under review",
-  UNVERIFIED: "Not verified",
-  PENDING_ACCEPTANCE: "Pending acceptance",
-};
-
+/**
+ * Module 120 — Multilingual Localization: labels come from the
+ * `enums.status` namespace (keyed by the raw enum value). A status that
+ * has no entry yet falls back to a title-cased version of the raw value,
+ * so a newly added enum member degrades to readable text rather than a
+ * raw key — and `status-badge-labels.test.ts` fails until it is added.
+ */
 function toTitleCase(status: string): string {
   return status
     .toLowerCase()
@@ -87,6 +85,9 @@ function toTitleCase(status: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+
+/** Every status this badge knows how to colour — exported for the label-coverage test. */
+export const KNOWN_STATUSES: readonly string[] = Object.keys(STATUS_VARIANT);
 
 export interface StatusBadgeProps {
   /** Raw enum/status string from any domain module (case-sensitive, matches the DB/enum value). */
@@ -109,8 +110,11 @@ export interface StatusBadgeProps {
  * call site across the app) unchanged.
  */
 export function StatusBadge({ status, label, className }: StatusBadgeProps) {
+  // `useTranslations` (not `getTranslations`) works in both Server and
+  // Client Components, which is exactly where this badge is rendered from.
+  const t = useTranslations("enums.status");
   const variant = STATUS_VARIANT[status] ?? "secondary";
-  const text = label ?? STATUS_LABEL[status] ?? toTitleCase(status);
+  const text = label ?? (t.has(status as never) ? t(status as never) : toTitleCase(status));
   return (
     <Badge variant={variant} className={cn("whitespace-nowrap", className)}>
       {text}

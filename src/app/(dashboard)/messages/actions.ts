@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -13,6 +14,7 @@ import {
   makeSendMessageUseCase,
 } from "@/application/use-cases/chat/compose";
 import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
+import { localizeActionError, localizeZodError } from "@/presentation/i18n/server";
 
 export type ActionResult =
   | { success: true }
@@ -21,12 +23,14 @@ export type ActionResult =
 // Same translation convention as every other module's actions.ts: domain
 // errors surface their own (safe, user-facing) message, anything else is
 // logged server-side and replaced with a generic message.
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+// Module 120 — Multilingual Localization: fallbacks are keys in
+// `customer.messages.errors`, resolved in the request's locale.
+async function fromDomainError(
+  error: unknown,
+  fallbackKey: "openFailed" | "sendFailed" | "generic" | "deleteFailed",
+): Promise<ActionResult> {
+  const t = await getTranslations("customer.messages.errors");
+  return { success: false, error: await localizeActionError(error, t(fallbackKey)) };
 }
 
 /**
@@ -54,7 +58,7 @@ export async function openConversationAction(
     );
     conversationId = conversation.id;
   } catch (error) {
-    return fromDomainError(error, "Something went wrong opening this conversation.");
+    return fromDomainError(error, "openFailed");
   }
 
   // redirect() throws internally (Next.js control-flow signal) — must run
@@ -76,7 +80,7 @@ export async function sendMessageAction(formData: FormData): Promise<ActionResul
     body: formData.get("body"),
   });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid message." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   const antiAbuse = makeAntiAbuseService();
@@ -85,7 +89,7 @@ export async function sendMessageAction(formData: FormData): Promise<ActionResul
     await antiAbuse.enforceRateLimit("MESSAGE_SEND_BY_USER", { userId: user.id }, "MESSAGE_RATE_LIMITED");
   } catch (error) {
     if (error instanceof DomainError) {
-      return { success: false, error: error.message };
+      return { success: false, error: await localizeActionError(error) };
     }
     throw error;
   }
@@ -96,7 +100,7 @@ export async function sendMessageAction(formData: FormData): Promise<ActionResul
     revalidatePath("/messages");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong sending your message.");
+    return fromDomainError(error, "sendFailed");
   }
 }
 
@@ -107,7 +111,7 @@ export async function markConversationReadAction(conversationId: string): Promis
     revalidatePath("/messages");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong.");
+    return fromDomainError(error, "generic");
   }
 }
 
@@ -118,6 +122,6 @@ export async function deleteMessageAction(conversationId: string, messageId: str
     revalidatePath(`/messages/${conversationId}`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong deleting this message.");
+    return fromDomainError(error, "deleteFailed");
   }
 }

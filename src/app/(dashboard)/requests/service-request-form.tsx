@@ -1,7 +1,7 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -16,6 +16,7 @@ import { FormActions } from "@/components/forms/form-actions";
 import { FormFieldDescription, FormFieldError } from "@/components/forms/form-field-description";
 import { FormSection } from "@/components/forms/form-section";
 import { OptionalBadge, RequiredBadge } from "@/components/forms/field-badges";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import {
   createServiceRequestSchema,
   updateServiceRequestSchema,
@@ -86,11 +87,15 @@ export function ServiceRequestForm({
   prefill?: { categoryId?: string; city?: string };
 }) {
   const router = useRouter();
+  const t = useTranslations("customer.requests.form");
+  const tCommon = useTranslations("common");
+  const tJobs = useTranslations("jobs");
   const isEditing = mode === "edit";
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const schema = isEditing ? updateServiceRequestSchema : createServiceRequestSchema;
+  const resolver = useLocalizedZodResolver(schema);
 
   const {
     register,
@@ -98,7 +103,7 @@ export function ServiceRequestForm({
     setError,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver,
     defaultValues: {
       categoryId: request?.categoryId ?? prefill?.categoryId ?? "",
       title: request?.title ?? "",
@@ -138,7 +143,7 @@ export function ServiceRequestForm({
         }
         return;
       }
-      setSuccessMessage("Service request updated.");
+      setSuccessMessage(t("updated"));
       router.refresh();
       return;
     }
@@ -172,10 +177,10 @@ export function ServiceRequestForm({
         </Alert>
       )}
 
-      <FormSection title="The job">
+      <FormSection title={t("sections.job")}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="categoryId">
-            Service category <RequiredBadge />
+            {t("category")} <RequiredBadge />
           </Label>
           <Select
             id="categoryId"
@@ -183,7 +188,7 @@ export function ServiceRequestForm({
             aria-describedby={errors.categoryId ? "categoryId-error" : undefined}
             {...register("categoryId")}
           >
-            <option value="">Select a category</option>
+            <option value="">{t("selectCategory")}</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -195,11 +200,11 @@ export function ServiceRequestForm({
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="title">
-            Title <RequiredBadge />
+            {t("title")} <RequiredBadge />
           </Label>
           <Input
             id="title"
-            placeholder="e.g. Fix leaking kitchen tap"
+            placeholder={t("titlePlaceholder")}
             aria-invalid={!!errors.title}
             aria-describedby={errors.title ? "title-error" : undefined}
             {...register("title")}
@@ -209,12 +214,12 @@ export function ServiceRequestForm({
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="description">
-            Description <RequiredBadge />
+            {t("description")} <RequiredBadge />
           </Label>
           <Textarea
             id="description"
             rows={5}
-            placeholder="Describe the job in detail — what needs doing, any relevant context."
+            placeholder={t("descriptionPlaceholder")}
             aria-invalid={!!errors.description}
             aria-describedby={errors.description ? "description-error" : undefined}
             {...register("description")}
@@ -224,7 +229,7 @@ export function ServiceRequestForm({
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="urgency">
-            Urgency <RequiredBadge />
+            {t("urgency")} <RequiredBadge />
           </Label>
           <Select
             id="urgency"
@@ -233,20 +238,20 @@ export function ServiceRequestForm({
             aria-describedby={errors.urgency ? "urgency-error" : undefined}
             {...register("urgency")}
           >
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
-            <option value="EMERGENCY">Emergency</option>
+            <option value="LOW">{tJobs("urgency.LOW")}</option>
+            <option value="MEDIUM">{tJobs("urgency.MEDIUM")}</option>
+            <option value="HIGH">{tJobs("urgency.HIGH")}</option>
+            <option value="EMERGENCY">{tJobs("urgency.EMERGENCY")}</option>
           </Select>
           <FormFieldError id="urgency-error">{errors.urgency?.message}</FormFieldError>
         </div>
       </FormSection>
 
-      <FormSection title="Budget" description="Give professionals a ballpark so quotes come in on target.">
+      <FormSection title={t("sections.budget")} description={t("sections.budgetDescription")}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="budgetMin">
-              Budget min (EUR) <OptionalBadge />
+              {t("budgetMin")} <OptionalBadge />
             </Label>
             <Input
               id="budgetMin"
@@ -262,7 +267,7 @@ export function ServiceRequestForm({
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="budgetMax">
-              Budget max (EUR) <OptionalBadge />
+              {t("budgetMax")} <OptionalBadge />
             </Label>
             <Input
               id="budgetMax"
@@ -278,41 +283,41 @@ export function ServiceRequestForm({
         </div>
       </FormSection>
 
-      <FormSection title="Job location" titleAside={<RequiredBadge />}>
+      <FormSection title={t("sections.location")} titleAside={<RequiredBadge />}>
         <fieldset className="flex flex-col gap-3 rounded-lg border border-border p-4">
           <legend className="flex items-center gap-1.5 px-1 text-sm font-medium text-foreground">
             <MapPin aria-hidden className="h-3.5 w-3.5 text-muted-foreground" />
-            Address
+            {t("address")}
           </legend>
           <div className="flex flex-col gap-1.5">
-            <Input placeholder="Street address" aria-invalid={!!errors.location?.line1} {...register("location.line1")} />
+            <Input placeholder={t("streetPlaceholder")} aria-invalid={!!errors.location?.line1} {...register("location.line1")} />
             <FormFieldError>{errors.location?.line1?.message}</FormFieldError>
           </div>
-          <Input placeholder="Apartment, floor, etc. (optional)" {...register("location.line2")} />
+          <Input placeholder={t("line2Placeholder")} {...register("location.line2")} />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Input placeholder="City" aria-invalid={!!errors.location?.city} {...register("location.city")} />
-            <Input placeholder="Postal code" {...register("location.postalCode")} />
+            <Input placeholder={t("cityPlaceholder")} aria-invalid={!!errors.location?.city} {...register("location.city")} />
+            <Input placeholder={t("postalCodePlaceholder")} {...register("location.postalCode")} />
           </div>
           <FormFieldError>{errors.location?.city?.message}</FormFieldError>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Input placeholder="Province" {...register("location.province")} />
-            <Input placeholder="Country" {...register("location.country")} />
+            <Input placeholder={t("provincePlaceholder")} {...register("location.province")} />
+            <Input placeholder={t("countryPlaceholder")} {...register("location.country")} />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Input type="number" step="any" placeholder="Latitude (optional)" {...register("location.latitude")} />
-            <Input type="number" step="any" placeholder="Longitude (optional)" {...register("location.longitude")} />
+            <Input type="number" step="any" placeholder={t("latitudePlaceholder")} {...register("location.latitude")} />
+            <Input type="number" step="any" placeholder={t("longitudePlaceholder")} {...register("location.longitude")} />
           </div>
           <FormFieldError>{errors.location?.latitude?.message}</FormFieldError>
           <FormFieldError>{errors.location?.longitude?.message}</FormFieldError>
           <FormFieldDescription>
-            Latitude/longitude are filled in automatically where possible — leave blank if unsure.
+            {t("coordinatesHelp")}
           </FormFieldDescription>
         </fieldset>
       </FormSection>
 
       <FormActions stickyOnMobile>
         <Button type="submit" disabled={isSubmitting} className="sm:min-w-48">
-          {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Post request"}
+          {isSubmitting ? tCommon("states.saving") : isEditing ? t("saveChanges") : t("postRequest")}
         </Button>
       </FormActions>
     </form>

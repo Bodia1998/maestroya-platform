@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeListConversationsUseCase } from "@/application/use-cases/chat/compose";
@@ -9,7 +10,10 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageContainer } from "@/components/layout/page-container";
 
-export const metadata = { title: "Messages" };
+export async function generateMetadata() {
+  const t = await getTranslations("customer.messages");
+  return { title: t("title") };
+}
 
 /**
  * Inbox view: every conversation the signed-in user (customer or
@@ -20,17 +24,21 @@ export const metadata = { title: "Messages" };
  */
 export default async function MessagesPage() {
   const user = await requireAuth();
-  const conversations = await makeListConversationsUseCase().execute(user.id);
+  const [conversations, t, format] = await Promise.all([
+    makeListConversationsUseCase().execute(user.id),
+    getTranslations("customer.messages"),
+    getFormatter(),
+  ]);
 
   return (
     <PageContainer gap="sm">
-      <PageHeader title="Messages" />
+      <PageHeader title={t("title")} />
 
       {conversations.length === 0 ? (
         <EmptyState
           icon={MessageSquare}
-          title="No conversations yet"
-          description="Once you and a customer or professional have a quote in common, you can message each other here."
+          title={t("empty.title")}
+          description={t("empty.description")}
         />
       ) : (
         <Card className="overflow-hidden p-0 shadow-sm">
@@ -44,7 +52,7 @@ export default async function MessagesPage() {
                 {conversation.otherParticipant.image ? (
                   <Image
                     src={conversation.otherParticipant.image}
-                    alt={conversation.otherParticipant.name ?? "Participant"}
+                    alt={conversation.otherParticipant.name ?? t("participant")}
                     width={40}
                     height={40}
                     className="h-10 w-10 shrink-0 rounded-full object-cover"
@@ -56,17 +64,17 @@ export default async function MessagesPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate font-medium">
-                      {conversation.otherParticipant.name ?? "Marketplace user"}
+                      {conversation.otherParticipant.name ?? t("unknownParticipant")}
                     </p>
                     {conversation.lastMessageAt && (
                       <span className="shrink-0 text-xs text-foreground/50">
-                        {conversation.lastMessageAt.toLocaleDateString()}
+                        {format.dateTime(conversation.lastMessageAt, { dateStyle: "medium" })}
                       </span>
                     )}
                   </div>
                   <p className="truncate text-xs text-foreground/60">{conversation.serviceRequestTitle}</p>
                   <p className="truncate text-sm text-foreground/70">
-                    {conversation.lastMessagePreview ?? "No messages yet."}
+                    {conversation.lastMessagePreview ?? t("noMessagesYet")}
                   </p>
                 </div>
 

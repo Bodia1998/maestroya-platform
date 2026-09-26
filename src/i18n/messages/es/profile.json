@@ -13,5 +13,63 @@
     "email": "Correo electrónico",
     "timezone": "Zona horaria"
   },
-  "memberSince": "Miembro desde {date, date, long}"
+  "memberSince": "Miembro desde {date, date, long}",
+  "avatarNote": "Esta foto es solo para tu cuenta: no afecta a la verificación de identidad profesional. Los profesionales la gestionan por separado en Perfil profesional → Gestionar verificación de identidad.",
+  "dangerNote": "Eliminar tu cuenta solo se puede revertir contactando con soporte: tus datos se desactivan, no se borran de inmediato.",
+  "avatar": {
+    "chooseFirst": "Primero elige una imagen.",
+    "alt": "Tu foto de perfil",
+    "chooseLabel": "Elige una imagen de perfil",
+    "uploading": "Subiendo…",
+    "upload": "Subir foto de perfil",
+    "updated": "Foto de perfil actualizada."
+  },
+  "form": {
+    "updated": "Perfil actualizado.",
+    "basics": "Datos básicos",
+    "displayName": "Nombre visible",
+    "phone": "Teléfono",
+    "timezone": "Zona horaria",
+    "preferredLanguage": "Idioma preferido",
+    "noPreference": "Sin preferencia",
+    "address": "Dirección",
+    "street": "Calle y número",
+    "line2": "Piso, puerta, etc. (opcional)",
+    "city": "Ciudad",
+    "postalCode": "Código postal",
+    "province": "Provincia",
+    "country": "País",
+    "notifications": "Notificaciones",
+    "emailMarketing": "Correos de marketing",
+    "emailServiceUpdates": "Correos sobre el estado del servicio",
+    "smsAppointmentReminders": "Recordatorios de citas por SMS",
+    "save": "Guardar cambios"
+  },
+  "password": {
+    "changed": "Contraseña cambiada. Por seguridad, hemos cerrado tu sesión en todos los demás dispositivos.",
+    "noPassword": "Esta cuenta inicia sesión con una red social y no tiene contraseña que cambiar.",
+    "title": "Cambiar contraseña",
+    "current": "Contraseña actual",
+    "new": "Nueva contraseña",
+    "confirm": "Confirma la nueva contraseña",
+    "changing": "Cambiando…",
+    "submit": "Cambiar contraseña"
+  },
+  "deleteAccount": {
+    "trigger": "Desactivar cuenta",
+    "title": "Esto desactivará tu cuenta",
+    "password": "Contraseña",
+    "confirmLabel": "Escribe {token} para confirmar",
+    "deactivating": "Desactivando…",
+    "submit": "Desactivar mi cuenta"
+  },
+  "errors": {
+    "updateFailed": "Algo salió mal al actualizar tu perfil.",
+    "avatarFailed": "Algo salió mal al subir tu foto de perfil.",
+    "passwordFailed": "Algo salió mal al cambiar tu contraseña.",
+    "deleteFailed": "Algo salió mal al eliminar tu cuenta.",
+    "avatarMissing": "Elige una imagen para subir.",
+    "avatarType": "La foto de perfil debe ser una imagen JPEG, PNG o WebP.",
+    "avatarTooLarge": "La foto de perfil debe pesar menos de 5 MB."
+  }
 }

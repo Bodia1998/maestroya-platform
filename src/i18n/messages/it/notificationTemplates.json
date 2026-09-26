@@ -1,0 +1,281 @@
+{
+  "NEW_QUOTE": {
+    "title": "Nuovo preventivo ricevuto",
+    "message": "Un professionista ha inviato un preventivo per la tua richiesta."
+  },
+  "QUOTE_ACCEPTED": {
+    "title": "Il tuo preventivo è stato accettato",
+    "message": "Il cliente ha accettato il tuo preventivo."
+  },
+  "QUOTE_REJECTED": {
+    "title": "Il tuo preventivo non è stato scelto",
+    "message": "Il cliente ha accettato un altro preventivo per questa richiesta."
+  },
+  "QUOTE_EXPIRED": {
+    "title": "Il tuo preventivo è scaduto",
+    "message": "Uno dei tuoi preventivi è scaduto perché non è stato accettato in tempo."
+  },
+  "NEW_MESSAGE": {
+    "title": "Nuovo messaggio"
+  },
+  "APPOINTMENT_PROPOSED": {
+    "title": "Nuovo orario proposto per l'appuntamento",
+    "message": "È stato proposto un nuovo orario per l'appuntamento.",
+    "variants": {
+      "byCustomer": {
+        "message": "Il cliente ha proposto un nuovo orario per l'appuntamento."
+      },
+      "byProfessional": {
+        "message": "Il professionista ha proposto un nuovo orario per l'appuntamento."
+      }
+    }
+  },
+  "APPOINTMENT_CONFIRMED": {
+    "title": "Orario dell'appuntamento confermato",
+    "message": "L'orario dell'appuntamento è stato confermato.",
+    "variants": {
+      "byCustomer": {
+        "message": "Il cliente ha confermato l'orario dell'appuntamento."
+      },
+      "byProfessional": {
+        "message": "Il professionista ha confermato l'orario dell'appuntamento."
+      }
+    }
+  },
+  "APPOINTMENT_CANCELLED": {
+    "title": "Appuntamento annullato",
+    "message": "Questo appuntamento è stato annullato.",
+    "variants": {
+      "byCustomer": {
+        "message": "Il cliente ha annullato questo appuntamento."
+      },
+      "byProfessional": {
+        "message": "Il professionista ha annullato questo appuntamento."
+      }
+    }
+  },
+  "JOB_STARTED": {
+    "title": "Il lavoro è iniziato",
+    "message": "Il professionista ha iniziato il tuo lavoro."
+  },
+  "JOB_CANCELLED": {
+    "title": "Lavoro annullato",
+    "message": "Questo lavoro è stato annullato.",
+    "variants": {
+      "byCustomer": {
+        "message": "Il cliente ha annullato questo lavoro."
+      },
+      "byProfessional": {
+        "message": "Il professionista ha annullato questo lavoro."
+      }
+    }
+  },
+  "JOB_COMPLETION_CONFIRMATION_REQUESTED": {
+    "title": "Conferma il servizio completato",
+    "message": "Il professionista ha segnato il tuo lavoro come completato. Conferma che il lavoro è stato svolto o segnalaci eventuali problemi."
+  },
+  "JOB_COMPLETION_CONFIRMATION_REMINDER": {
+    "title": "Conferma il servizio completato",
+    "message": "Conferma il servizio completato o segnalaci eventuali problemi prima della scadenza del termine di conferma."
+  },
+  "JOB_COMPLETION_CONFIRMED": {
+    "title": "Servizio confermato",
+    "message": "Il cliente ha confermato il servizio completato."
+  },
+  "JOB_COMPLETION_CONFIRMATION_TIMED_OUT": {
+    "title": "Lavoro in revisione",
+    "message": "Il cliente non ha risposto in tempo alla richiesta di conferma. Il lavoro è ora in revisione manuale prima dello sblocco del pagamento."
+  },
+  "MATERIALS_PURCHASE_CONFIRMED": {
+    "title": "Acquisto dei materiali confermato",
+    "message": "Il cliente ha confermato di aver acquistato tutti i materiali necessari."
+  },
+  "REVIEW_RECEIVED": {
+    "title": "Hai ricevuto una nuova recensione",
+    "message": "Un cliente ha lasciato una recensione sul tuo lavoro completato."
+  },
+  "REVIEW_RESPONSE_ADDED": {
+    "title": "Un professionista ha risposto alla tua recensione",
+    "message": "Il professionista che hai recensito ha pubblicato una risposta."
+  },
+  "SERVICE_REQUEST_EXPIRED": {
+    "title": "La tua richiesta è scaduta",
+    "message": "La tua richiesta «{requestTitle}» è scaduta senza essere completata."
+  },
+  "VERIFICATION_SUBMITTED": {
+    "title": "Richiesta di verifica inviata",
+    "message": "Abbiamo ricevuto la tua richiesta di verifica e la esamineremo a breve.",
+    "variants": {
+      "resubmitted": {
+        "title": "Richiesta di verifica inviata di nuovo",
+        "message": "Abbiamo ricevuto la tua richiesta di verifica aggiornata e la esamineremo a breve."
+      }
+    }
+  },
+  "VERIFICATION_APPROVED": {
+    "title": "Ora sei un professionista verificato",
+    "message": "La tua verifica è stata approvata. Sul tuo profilo pubblico ora compare il badge di verifica.",
+    "variants": {
+      "automated": {
+        "message": "Hai superato la verifica automatica dell'identità. Sul tuo profilo pubblico ora compare il badge di verifica."
+      }
+    }
+  },
+  "VERIFICATION_REJECTED": {
+    "title": "Richiesta di verifica rifiutata",
+    "message": "La tua richiesta di verifica è stata rifiutata. Apri la pagina di verifica per vedere il motivo e riprovare.",
+    "variants": {
+      "automated": {
+        "message": "La verifica automatica dell'identità non è andata a buon fine. Apri la pagina di verifica per vedere il motivo e riprovare."
+      }
+    }
+  },
+  "VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Servono altre informazioni per la verifica",
+    "message": "Un revisore ti ha chiesto di aggiornare la richiesta di verifica. Apri la pagina di verifica per i dettagli.",
+    "variants": {
+      "businessRegistration": {
+        "title": "Serve un documento di registrazione dell'attività",
+        "message": "Hai superato la verifica automatica dell'identità. Carica un documento di registrazione dell'attività per completare la verifica professionale."
+      }
+    }
+  },
+  "VERIFICATION_EXPIRED": {
+    "title": "La tua verifica è scaduta",
+    "message": "La tua verifica professionale è scaduta. Avvia una nuova verifica per mantenere il badge di verifica."
+  },
+  "COMPANY_INVITATION_RECEIVED": {
+    "title": "Sei stato invitato in un'azienda",
+    "message": "Hai un invito in sospeso da un'azienda."
+  },
+  "COMPANY_INVITATION_ACCEPTED": {
+    "title": "Invito accettato",
+    "message": "Un invito in sospeso dell'azienda è stato accettato."
+  },
+  "COMPANY_INVITATION_DECLINED": {
+    "title": "Invito rifiutato",
+    "message": "Un invito in sospeso dell'azienda è stato rifiutato."
+  },
+  "COMPANY_MEMBER_REMOVED": {
+    "title": "Sei stato rimosso da un'azienda",
+    "message": "Non sei più membro di questa azienda."
+  },
+  "COMPANY_MEMBER_ROLE_CHANGED": {
+    "title": "Il tuo ruolo è cambiato",
+    "message": "Il tuo ruolo nell'azienda ora è: {role}.",
+    "variants": {
+      "ownershipTransferred": {
+        "title": "Ora sei il titolare dell'azienda",
+        "message": "La titolarità dell'azienda è stata trasferita a te."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_SUBMITTED": {
+    "title": "Richiesta di verifica inviata",
+    "message": "Abbiamo ricevuto la richiesta di verifica della tua azienda e la esamineremo a breve.",
+    "variants": {
+      "resubmitted": {
+        "title": "Richiesta di verifica inviata di nuovo",
+        "message": "Abbiamo ricevuto la richiesta di verifica aggiornata della tua azienda."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_APPROVED": {
+    "title": "La tua azienda è verificata",
+    "message": "La verifica della tua azienda è stata approvata. Sul suo profilo pubblico ora compare il badge di verifica."
+  },
+  "COMPANY_VERIFICATION_REJECTED": {
+    "title": "Richiesta di verifica rifiutata",
+    "message": "La richiesta di verifica della tua azienda è stata rifiutata. Consulta i dettagli per il motivo."
+  },
+  "COMPANY_VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Nuovo invio necessario",
+    "message": "La richiesta di verifica della tua azienda deve essere modificata prima di poter essere approvata."
+  },
+  "COMPANY_VERIFICATION_EXPIRED": {
+    "title": "La verifica della tua azienda è scaduta",
+    "message": "La verifica della tua azienda è scaduta. Avvia una nuova verifica per mantenere il badge di verifica."
+  },
+  "COMPANY_SUSPENDED": {
+    "title": "La tua azienda è stata sospesa",
+    "message": "Un amministratore della piattaforma ha sospeso il profilo della tua azienda."
+  },
+  "COMPANY_REACTIVATED": {
+    "title": "La tua azienda è stata riattivata",
+    "message": "Il profilo della tua azienda è di nuovo attivo."
+  },
+  "DISPUTE_CREATED": {
+    "title": "È stata aperta una controversia",
+    "message": "È stata aperta una controversia ({caseNumber}) sul tuo lavoro."
+  },
+  "DISPUTE_ASSIGNED": {
+    "title": "Ti è stata assegnata una controversia",
+    "message": "Ti è stata assegnata la controversia {caseNumber}."
+  },
+  "DISPUTE_STATUS_CHANGED": {
+    "title": "Stato della controversia aggiornato",
+    "message": "Nuovo stato della controversia {caseNumber}: {status}.",
+    "variants": {
+      "newMessage": {
+        "title": "Nuovo messaggio nella tua controversia",
+        "message": "C'è un nuovo messaggio nella controversia {caseNumber}."
+      }
+    }
+  },
+  "DISPUTE_RESPONSE_REQUESTED": {
+    "title": "Serve una tua risposta nella controversia",
+    "message": "Nuovo stato della controversia {caseNumber}: {status}."
+  },
+  "DISPUTE_RESOLVED": {
+    "title": "La tua controversia è stata risolta",
+    "message": "La controversia {caseNumber} è stata risolta."
+  },
+  "DISPUTE_REJECTED": {
+    "title": "La tua controversia è stata respinta",
+    "message": "La controversia {caseNumber} è stata respinta."
+  },
+  "DISPUTE_CLOSED": {
+    "title": "La tua controversia è stata chiusa",
+    "message": "La controversia {caseNumber} è stata chiusa."
+  },
+  "SUPPORT_TICKET_ASSIGNED": {
+    "title": "Ti è stato assegnato un ticket di assistenza",
+    "message": "Ti è stato assegnato il ticket {ticketNumber}."
+  },
+  "SUPPORT_TICKET_STATUS_CHANGED": {
+    "title": "Il tuo ticket di assistenza è stato aggiornato",
+    "message": "Nuovo stato del ticket {ticketNumber}: {status}."
+  },
+  "SUPPORT_TICKET_RESOLVED": {
+    "title": "Il tuo ticket di assistenza è stato risolto",
+    "message": "Il ticket {ticketNumber} è stato risolto."
+  },
+  "SUPPORT_TICKET_CLOSED": {
+    "title": "Il tuo ticket di assistenza è stato chiuso",
+    "message": "Il ticket {ticketNumber} è stato chiuso."
+  },
+  "labels": {
+    "disputeStatus": {
+      "OPEN": "Aperta",
+      "UNDER_REVIEW": "In esame",
+      "WAITING_FOR_CUSTOMER": "In attesa del cliente",
+      "WAITING_FOR_PROFESSIONAL": "In attesa del professionista",
+      "RESOLVED": "Risolta",
+      "REJECTED": "Respinta",
+      "CLOSED": "Chiusa"
+    },
+    "ticketStatus": {
+      "OPEN": "Aperto",
+      "IN_PROGRESS": "In lavorazione",
+      "WAITING_FOR_USER": "In attesa di una tua risposta",
+      "RESOLVED": "Risolto",
+      "CLOSED": "Chiuso"
+    },
+    "companyRole": {
+      "OWNER": "Titolare",
+      "ADMIN": "Amministratore",
+      "MANAGER": "Responsabile",
+      "MEMBER": "Membro"
+    }
+  }
+}

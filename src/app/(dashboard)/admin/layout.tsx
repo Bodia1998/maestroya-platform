@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { ROLES, getCurrentUser } from "@/infrastructure/auth/rbac";
 import { AdminNav } from "./admin-nav";
@@ -17,22 +18,22 @@ import { AdminNav } from "./admin-nav";
  * Server Actions also follow (see admin/actions.ts).
  */
 const NAV_ITEMS = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/users", label: "Users" },
-  { href: "/admin/professionals", label: "Professionals" },
-  { href: "/admin/verifications", label: "Verifications" },
-  { href: "/admin/companies", label: "Companies" },
-  { href: "/admin/company-verifications", label: "Company verifications" },
-  { href: "/admin/service-requests", label: "Service requests" },
-  { href: "/admin/quotes", label: "Quotes" },
-  { href: "/admin/jobs", label: "Appointments & jobs" },
-  { href: "/admin/reviews", label: "Reviews" },
-  { href: "/admin/portfolio", label: "Portfolio" },
-  { href: "/admin/audit-logs", label: "Audit log" },
-  { href: "/admin/ai-visibility", label: "AI visibility" },
-  { href: "/admin/reconciliation", label: "Reconciliation" },
-  { href: "/admin/partners", label: "Partners" },
-];
+  { href: "/admin", labelKey: "overview" },
+  { href: "/admin/users", labelKey: "users" },
+  { href: "/admin/professionals", labelKey: "professionals" },
+  { href: "/admin/verifications", labelKey: "verifications" },
+  { href: "/admin/companies", labelKey: "companies" },
+  { href: "/admin/company-verifications", labelKey: "companyVerifications" },
+  { href: "/admin/service-requests", labelKey: "serviceRequests" },
+  { href: "/admin/quotes", labelKey: "quotes" },
+  { href: "/admin/jobs", labelKey: "jobs" },
+  { href: "/admin/reviews", labelKey: "reviews" },
+  { href: "/admin/portfolio", labelKey: "portfolio" },
+  { href: "/admin/audit-logs", labelKey: "auditLogs" },
+  { href: "/admin/ai-visibility", labelKey: "aiVisibility" },
+  { href: "/admin/reconciliation", labelKey: "reconciliation" },
+  { href: "/admin/partners", labelKey: "partners" },
+] as const;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -45,10 +46,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/");
   }
 
+  const t = await getTranslations("admin.nav");
+  const navItems = NAV_ITEMS.map((item) => ({ href: item.href, label: t(item.labelKey) }));
+
   return (
     <div className="flex w-full flex-col gap-6 lg:flex-row lg:gap-8">
-      <aside className="lg:w-56 lg:shrink-0" aria-label="Admin sidebar">
-        <AdminNav items={NAV_ITEMS} />
+      <aside className="lg:w-56 lg:shrink-0" aria-label={t("sidebar")}>
+        <AdminNav items={navItems} />
+
       </aside>
       <div className="min-w-0 flex-1">{children}</div>
     </div>

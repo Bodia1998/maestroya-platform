@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -10,12 +12,15 @@ import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { ActionBar } from "@/components/layout/action-bar";
 import { StatusTimeline } from "@/components/dashboard/status-timeline";
 import { getQuoteTimelineSteps } from "@/components/dashboard/quote-timeline-steps";
-import { QuoteItemsTable, formatMoney } from "@/components/dashboard/quote-items-table";
+import { QuoteItemsTable } from "@/components/dashboard/quote-items-table";
 import { OpenConversationButton } from "../../../../messages/open-conversation-button";
 import { QuoteStatusBadge } from "../quote-status-badge";
 import { WithdrawQuoteDialog } from "../withdraw-quote-dialog";
 
-export const metadata = { title: "Quote detail" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("professional.quotes.detail");
+  return { title: t("metaTitle") };
+}
 
 /**
  * Professional-facing detail page for one of *their own* quotes only —
@@ -42,42 +47,47 @@ export default async function ProfessionalQuoteDetailPage({
 
   const isEditable = quote.status === "SENT" || quote.status === "VIEWED";
 
-  const quoteLabel = formatMoney(quote.totalAmount, quote.currency);
+  const [t, tList, format] = await Promise.all([
+    getTranslations("professional.quotes.detail"),
+    getTranslations("professional.quotes.list"),
+    getFormatter(),
+  ]);
+  const quoteLabel = format.number(quote.totalAmount, { style: "currency", currency: quote.currency });
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         title={quoteLabel}
-        breadcrumbs={[{ label: "My quotes", href: "/dashboard/professional/quotes" }, { label: quoteLabel }]}
+        breadcrumbs={[{ label: tList("title"), href: "/dashboard/professional/quotes" }, { label: quoteLabel }]}
         actions={<QuoteStatusBadge status={quote.status} />}
       />
 
       <StatusTimeline steps={getQuoteTimelineSteps(quote.status)} />
 
       {quote.notes && (
-        <Section title="Notes / proposal" gap="sm">
+        <Section title={t("notes")} gap="sm">
           <p className="whitespace-pre-line text-sm text-foreground/80">{quote.notes}</p>
         </Section>
       )}
 
-      <Section title="Items" gap="sm">
+      <Section title={t("items")} gap="sm">
         <QuoteItemsTable items={quote.items} currency={quote.currency} totalAmount={quote.totalAmount} />
       </Section>
 
       <ResponsiveGrid cols="2" gap="md" bordered>
         <div>
-          <p className="text-foreground/60">Valid until</p>
+          <p className="text-foreground/60">{t("validUntil")}</p>
           <p className="font-medium">
-            {quote.validUntil ? quote.validUntil.toLocaleDateString() : "No expiry set"}
+            {quote.validUntil ? format.dateTime(quote.validUntil, { dateStyle: "medium" }) : t("noExpiry")}
           </p>
         </div>
         <div>
-          <p className="text-foreground/60">Submitted</p>
-          <p className="font-medium">{quote.createdAt.toLocaleString()}</p>
+          <p className="text-foreground/60">{t("submitted")}</p>
+          <p className="font-medium">{format.dateTime(quote.createdAt, { dateStyle: "medium", timeStyle: "short" })}</p>
         </div>
         <div>
-          <p className="text-foreground/60">Last updated</p>
-          <p className="font-medium">{quote.updatedAt.toLocaleString()}</p>
+          <p className="text-foreground/60">{t("lastUpdated")}</p>
+          <p className="font-medium">{format.dateTime(quote.updatedAt, { dateStyle: "medium", timeStyle: "short" })}</p>
         </div>
       </ResponsiveGrid>
 
@@ -88,12 +98,12 @@ export default async function ProfessionalQuoteDetailPage({
               href={`/dashboard/professional/quotes/${quote.id}/edit`}
               className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-transparent px-4 text-sm font-medium hover:bg-black/5"
             >
-              Edit quote
+              {t("edit")}
             </Link>
             <WithdrawQuoteDialog quoteId={quote.id} />
           </>
         )}
-        <OpenConversationButton serviceRequestId={quote.serviceRequestId} label="Message customer" />
+        <OpenConversationButton serviceRequestId={quote.serviceRequestId} label={t("messageCustomer")} />
       </ActionBar>
     </div>
   );

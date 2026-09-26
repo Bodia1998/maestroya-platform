@@ -1,5 +1,7 @@
 "use server";
 
+import { adminActionFailure } from "../_lib/action-errors";
+import { localizeZodError } from "@/presentation/i18n/server";
 import { revalidatePath } from "next/cache";
 
 import {
@@ -23,7 +25,6 @@ import {
   makeResolveDisputeUseCase,
 } from "@/application/use-cases/dispute/compose";
 import { makeResolveDisputeWithFinancialOutcomeUseCase } from "@/application/use-cases/dispute-resolution/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import type { DisputeRecord } from "@/domain/repositories/dispute-repository";
 import type { DisputeResolutionDecisionRecord } from "@/domain/repositories/dispute-resolution-decision-repository";
 import type { AdminDisputeDetail } from "@/application/use-cases/dispute/get-admin-dispute.use-case";
@@ -36,27 +37,19 @@ import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
  */
 export type ActionResult<T = undefined> = { success: true; data: T } | { success: false; error: string };
 
-function fromDomainError<T>(error: unknown, fallback: string): ActionResult<T> {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
-}
-
 export async function listAdminDisputesAction(
   input: Record<string, unknown> = {},
 ): Promise<ActionResult<DisputeRecord[]>> {
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPPORT);
   const parsed = listAdminDisputesSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const disputes = await makeListAdminDisputesUseCase().execute(parsed.data);
     return { success: true, data: disputes };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading disputes.");
+    return adminActionFailure(error, "loadingDisputes");
   }
 }
 
@@ -66,7 +59,7 @@ export async function getAdminDisputeAction(disputeId: string): Promise<ActionRe
     const detail = await makeGetAdminDisputeUseCase().execute(disputeId);
     return { success: true, data: detail };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading this dispute.");
+    return adminActionFailure(error, "loadingThisDispute");
   }
 }
 
@@ -74,14 +67,14 @@ export async function assignDisputeAction(disputeId: string, adminUserId: string
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPPORT);
   const parsed = assignDisputeSchema.safeParse({ disputeId, adminUserId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const dispute = await makeAssignDisputeUseCase().execute(admin.id, parsed.data.disputeId, parsed.data.adminUserId);
     revalidatePath(`/admin/disputes/${disputeId}`);
     return { success: true, data: dispute };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong assigning this dispute.");
+    return adminActionFailure(error, "assigningThisDispute");
   }
 }
 
@@ -89,14 +82,14 @@ export async function changeDisputeStatusAction(disputeId: string, status: strin
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPPORT);
   const parsed = changeDisputeStatusSchema.safeParse({ disputeId, status });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const dispute = await makeChangeDisputeStatusUseCase().execute(admin.id, parsed.data.disputeId, parsed.data.status);
     revalidatePath(`/admin/disputes/${disputeId}`);
     return { success: true, data: dispute };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong changing this dispute's status.");
+    return adminActionFailure(error, "changingThisDisputeStatus");
   }
 }
 
@@ -104,14 +97,14 @@ export async function addDisputeInternalNoteAction(disputeId: string, body: stri
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPPORT);
   const parsed = addDisputeInternalNoteSchema.safeParse({ disputeId, body });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid note." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     await makeAddDisputeInternalNoteUseCase().execute(admin.id, parsed.data.disputeId, parsed.data.body);
     revalidatePath(`/admin/disputes/${disputeId}`);
     return { success: true, data: undefined };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong adding this note.");
+    return adminActionFailure(error, "addingThisNote");
   }
 }
 
@@ -123,7 +116,7 @@ export async function resolveDisputeAction(
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPPORT);
   const parsed = resolveDisputeSchema.safeParse({ disputeId, resolution, resolutionNote });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid resolution." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const dispute = await makeResolveDisputeUseCase().execute(admin.id, parsed.data.disputeId, {
@@ -133,7 +126,7 @@ export async function resolveDisputeAction(
     revalidatePath(`/admin/disputes/${disputeId}`);
     return { success: true, data: dispute };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong resolving this dispute.");
+    return adminActionFailure(error, "resolvingThisDispute");
   }
 }
 
@@ -141,14 +134,14 @@ export async function rejectDisputeAction(disputeId: string, resolutionNote: str
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPPORT);
   const parsed = rejectDisputeSchema.safeParse({ disputeId, resolutionNote });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid rejection." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const dispute = await makeRejectDisputeUseCase().execute(admin.id, parsed.data.disputeId, parsed.data.resolutionNote);
     revalidatePath(`/admin/disputes/${disputeId}`);
     return { success: true, data: dispute };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong rejecting this dispute.");
+    return adminActionFailure(error, "rejectingThisDispute");
   }
 }
 
@@ -205,7 +198,7 @@ export async function resolveDisputeWithFinancialOutcomeAction(
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = resolveDisputeWithFinancialOutcomeSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid resolution." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const decision = await makeResolveDisputeWithFinancialOutcomeUseCase().execute(admin.id, parsed.data.disputeId, {
@@ -217,7 +210,7 @@ export async function resolveDisputeWithFinancialOutcomeAction(
     revalidatePath(`/admin/disputes/${parsed.data.disputeId}`);
     return { success: true, data: decision };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong resolving this dispute's financial outcome.");
+    return adminActionFailure(error, "resolvingThisDisputeFinancialOutcome");
   }
 }
 
@@ -225,13 +218,13 @@ export async function closeDisputeAction(disputeId: string): Promise<ActionResul
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPPORT);
   const parsed = closeDisputeSchema.safeParse({ disputeId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const dispute = await makeCloseDisputeUseCase().execute(admin.id, parsed.data.disputeId);
     revalidatePath(`/admin/disputes/${disputeId}`);
     return { success: true, data: dispute };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong closing this dispute.");
+    return adminActionFailure(error, "closingThisDispute");
   }
 }

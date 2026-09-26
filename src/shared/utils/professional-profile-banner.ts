@@ -24,10 +24,17 @@ import { computeProfileCompleteness, type ProfileCompletenessSignals } from "@/d
  */
 export interface ProfessionalProfileBannerInfo {
   show: boolean;
-  message: string;
-  ctaLabel: string;
+  /**
+   * Module 120 — Multilingual Localization: catalog keys under
+   * `dashboard.profileBanner.*` (not prose) — `ProfessionalProfileBanner`
+   * renders them in the active locale. `null` when the banner is hidden.
+   */
+  messageKey: ProfessionalProfileBannerMessageKey | null;
+  ctaLabelKey: "completeProfile" | null;
   ctaHref: string;
 }
+
+export type ProfessionalProfileBannerMessageKey = "noProfile" | "incomplete";
 
 const COMPLETE_PROFESSIONAL_PROFILE_HREF = "/dashboard/professional";
 
@@ -40,8 +47,8 @@ const COMPLETE_PROFESSIONAL_PROFILE_HREF = "/dashboard/professional";
 export function buildNoProfessionalProfileBanner(): ProfessionalProfileBannerInfo {
   return {
     show: true,
-    message: "Complete your professional profile to start receiving customer requests.",
-    ctaLabel: "Complete professional profile",
+    messageKey: "noProfile",
+    ctaLabelKey: "completeProfile",
     ctaHref: COMPLETE_PROFESSIONAL_PROFILE_HREF,
   };
 }
@@ -63,16 +70,16 @@ export function buildProfessionalProfileBanner(
   if (completeness >= 1) {
     return {
       show: false,
-      message: "",
-      ctaLabel: "",
+      messageKey: null,
+      ctaLabelKey: null,
       ctaHref: COMPLETE_PROFESSIONAL_PROFILE_HREF,
     };
   }
 
   return {
     show: true,
-    message: "Your professional profile is incomplete. Finish it so customers see your best profile.",
-    ctaLabel: "Complete professional profile",
+    messageKey: "incomplete",
+    ctaLabelKey: "completeProfile",
     ctaHref: COMPLETE_PROFESSIONAL_PROFILE_HREF,
   };
 }

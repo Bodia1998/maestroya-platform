@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Handshake } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { listAdminPartnersAction } from "./actions";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -9,7 +10,12 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select } from "@/components/ui/select";
 
-export const metadata = { title: "Admin — Partners" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("partners.title") }) };
+}
+
+const PARTNER_STATUS_OPTIONS = ["PENDING", "APPROVED", "REJECTED", "SUSPENDED", "BANNED"] as const;
 
 type SearchParams = Promise<{ status?: string }>;
 
@@ -27,9 +33,13 @@ export default async function AdminPartnersPage({ searchParams }: { searchParams
   const result = await listAdminPartnersAction(status as never);
   const partners = result.success ? result.data : [];
 
+  const t = await getTranslations("admin");
+  const enumLabel = (group: string, value: string) =>
+    t.has(`${group}.${value}` as never) ? t(`${group}.${value}` as never) : value;
+
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Partners" subtitle="Affiliate/referral partners — approval, status, and referral performance." />
+      <PageHeader title={t("partners.title")} subtitle={t("partners.subtitle")} />
 
       {!result.success && (
         <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
@@ -37,27 +47,27 @@ export default async function AdminPartnersPage({ searchParams }: { searchParams
         </p>
       )}
 
-      <AdminFilterForm aria-label="Filter partners" submitLabel="Filter">
-        <Select name="status" defaultValue={status ?? ""} aria-label="Filter by status" className="h-10 w-auto">
-          <option value="">All statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="APPROVED">Approved</option>
-          <option value="REJECTED">Rejected</option>
-          <option value="SUSPENDED">Suspended</option>
-          <option value="BANNED">Banned</option>
+      <AdminFilterForm aria-label={t("partners.filterLabel")} submitLabel={t("table.filter")}>
+        <Select name="status" defaultValue={status ?? ""} aria-label={t("common.filterByStatus")} className="h-10 w-auto">
+          <option value="">{t("common.allStatuses")}</option>
+          {PARTNER_STATUS_OPTIONS.map((value) => (
+            <option key={value} value={value}>
+              {t(`partners.status.${value}`)}
+            </option>
+          ))}
         </Select>
       </AdminFilterForm>
 
       {partners.length === 0 ? (
-        <EmptyState icon={Handshake} title="No partners found" description="Partner applications will appear here." />
+        <EmptyState icon={Handshake} title={t("partners.empty")} description={t("partners.emptyDescription")} />
       ) : (
-        <AdminDataTable caption="Partners" minWidth={640}>
+        <AdminDataTable caption={t("partners.title")} minWidth={640}>
           <AdminTableHeadRow>
-            <AdminTh>Name</AdminTh>
-            <AdminTh>Type</AdminTh>
-            <AdminTh>Contact</AdminTh>
-            <AdminTh>Payout method</AdminTh>
-            <AdminTh>Status</AdminTh>
+            <AdminTh>{t("common.columns.name")}</AdminTh>
+            <AdminTh>{t("partners.columns.type")}</AdminTh>
+            <AdminTh>{t("partners.columns.contact")}</AdminTh>
+            <AdminTh>{t("partners.columns.payoutMethod")}</AdminTh>
+            <AdminTh>{t("common.columns.status")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {partners.map((partner) => (
@@ -70,9 +80,9 @@ export default async function AdminPartnersPage({ searchParams }: { searchParams
                     {partner.displayName}
                   </Link>
                 </td>
-                <td className="px-4 py-3">{partner.type}</td>
+                <td className="px-4 py-3">{enumLabel("partners.type", partner.type)}</td>
                 <td className="px-4 py-3">{partner.contactEmail}</td>
-                <td className="px-4 py-3">{partner.payoutMethod}</td>
+                <td className="px-4 py-3">{enumLabel("partners.payoutMethod", partner.payoutMethod)}</td>
                 <td className="px-4 py-3">
                   <StatusBadge status={partner.status} />
                 </td>

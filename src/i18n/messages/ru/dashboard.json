@@ -1,0 +1,130 @@
+{
+  "title": "Панель",
+  "welcome": "Здравствуйте, {name}",
+  "summary": {
+    "requests": "Заявки",
+    "quotes": "Сметы",
+    "jobs": "Заказы",
+    "messages": "Сообщения",
+    "appointments": "Визиты"
+  },
+  "professional": {
+    "title": "Панель специалиста",
+    "onboarding": "Заполните профиль специалиста"
+  },
+  "company": {
+    "title": "Панель компании",
+    "members": "Сотрудники",
+    "invitations": "Приглашения"
+  },
+  "nav": {
+    "ariaLabel": "Навигация панели",
+    "groups": {
+      "professional": "Специалист",
+      "admin": "Администрирование"
+    },
+    "items": {
+      "dashboard": "Панель",
+      "serviceRequests": "Заявки",
+      "appointments": "Визиты",
+      "jobs": "Заказы",
+      "receipts": "Мои квитанции",
+      "messages": "Сообщения",
+      "disputes": "Споры",
+      "support": "Поддержка",
+      "professionalDashboard": "Панель специалиста",
+      "availableRequests": "Доступные заявки",
+      "myQuotes": "Мои сметы",
+      "myAppointments": "Мои визиты",
+      "myJobs": "Мои заказы",
+      "selfBilling": "Самовыставление счетов и счета",
+      "companies": "Компании",
+      "adminPanel": "Панель администратора",
+      "profile": "Профиль",
+      "professionalProfile": "Профиль специалиста",
+      "switchToProfessional": "Перейти в панель специалиста"
+    }
+  },
+  "shell": {
+    "skipToContent": "Перейти к основному содержимому",
+    "sidebar": "Боковая панель",
+    "openMenu": "Открыть меню",
+    "accountMenu": "Меню аккаунта",
+    "account": "Аккаунт",
+    "notifications": "Уведомления",
+    "profile": "Профиль",
+    "signOut": "Выйти"
+  },
+  "profileBanner": {
+    "noProfile": "Заполните профиль специалиста, чтобы начать получать заявки от клиентов.",
+    "incomplete": "Ваш профиль специалиста не заполнен до конца. Заполните его, чтобы клиенты видели ваш лучший профиль.",
+    "completeProfile": "Заполнить профиль специалиста"
+  },
+  "overview": {
+    "welcomeBack": "С возвращением, {name}",
+    "welcomeBackAnonymous": "С возвращением",
+    "subtitle": "Вот обзор вашего аккаунта MaestroYa.",
+    "professionalOverview": {
+      "title": "Обзор специалиста",
+      "description": "Заявки клиентов, на которые вы можете ответить, а также последующие сметы, визиты и заказы."
+    },
+    "stats": {
+      "availableRequests": "Доступные заявки",
+      "quotesAwaitingResponse": "Сметы, ожидающие ответа",
+      "acceptedQuotes": "Принятые сметы",
+      "upcomingAppointments": "Предстоящие визиты",
+      "activeJobs": "Активные заказы",
+      "completedJobs": "Завершённые заказы",
+      "activeRequests": "Активные заявки",
+      "unreadMessages": "Непрочитанные сообщения"
+    },
+    "quickActions": {
+      "ariaLabel": "Быстрые действия",
+      "newRequest": "Новая заявка",
+      "appointments": "Визиты",
+      "messages": "Сообщения",
+      "profile": "Профиль",
+      "browseRequests": "Просмотреть заявки",
+      "myQuotes": "Мои сметы",
+      "professionalProfile": "Профиль специалиста"
+    },
+    "cards": {
+      "yourRequests": "Ваши заявки",
+      "upcomingAppointments": "Предстоящие визиты",
+      "messages": "Сообщения",
+      "yourQuotes": "Ваши сметы",
+      "viewAll": "Смотреть все"
+    },
+    "empty": {
+      "requests": {
+        "title": "Заявок пока нет.",
+        "description": "Разместите заявку, чтобы начать получать сметы от специалистов поблизости."
+      },
+      "appointments": {
+        "title": "Предстоящих визитов нет.",
+        "description": "Визиты появятся здесь, как только вы примете смету специалиста.",
+        "action": "Посмотреть мои заявки"
+      },
+      "messages": {
+        "title": "Новых сообщений нет.",
+        "description": "Здесь отображаются переписки с клиентами и специалистами.",
+        "action": "Перейти к сообщениям"
+      },
+      "noProfessionalProfile": {
+        "title": "Настройте профиль специалиста.",
+        "description": "Создайте профиль специалиста, чтобы получать заявки, на которые можно отправлять сметы.",
+        "action": "Начать"
+      },
+      "quotes": {
+        "title": "Вы ещё не отправили ни одной сметы.",
+        "description": "Просмотрите открытые заявки и отправьте свою первую смету."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "с {name}",
+    "manage": "Управлять",
+    "requestPosted": "Опубликовано {created, date, medium} — обновлено {updated, date, medium}",
+    "quoteSubmitted": "Отправлено {created, date, medium} — обновлено {updated, date, medium}"
+  }
+}

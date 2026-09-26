@@ -1,0 +1,134 @@
+{
+  "categories": {
+    "fontaneria": {
+      "name": "Instalații sanitare",
+      "description": "Remedierea scurgerilor, robinetelor, țevilor și instalațiilor de apă."
+    },
+    "electricidad": {
+      "name": "Instalații electrice",
+      "description": "Instalații electrice, defecțiuni, tablouri și prize."
+    },
+    "aire-acondicionado": {
+      "name": "Aer condiționat",
+      "description": "Montarea, întreținerea și repararea aerului condiționat."
+    },
+    "pintura": {
+      "name": "Zugrăveli",
+      "description": "Zugrăveli interioare și exterioare, finisarea pereților."
+    },
+    "reformas": {
+      "name": "Renovări",
+      "description": "Renovări complete și parțiale ale locuinței."
+    },
+    "montaje-de-muebles": {
+      "name": "Montaj mobilă",
+      "description": "Montarea și asamblarea mobilei."
+    },
+    "fontanero": {
+      "name": "Instalator"
+    },
+    "electricista": {
+      "name": "Electrician"
+    },
+    "tecnico-climatizacion": {
+      "name": "Tehnician climatizare"
+    },
+    "pintor": {
+      "name": "Zugrav"
+    },
+    "reformista": {
+      "name": "Specialist în renovări"
+    },
+    "montador-de-muebles": {
+      "name": "Montator de mobilă"
+    }
+  },
+  "countries": {
+    "ES": "Spania"
+  },
+  "breadcrumbs": {
+    "home": "Acasă",
+    "services": "Servicii",
+    "locations": "Locații"
+  },
+  "shared": {
+    "faqTitle": "Întrebări frecvente",
+    "provinceCountry": "{province}, {country}",
+    "serviceInCity": "{service} în {city}",
+    "requestThisService": "Solicită acest serviciu",
+    "viewProfessionals": "Vezi profesioniștii",
+    "platformScopeTitle": "Aria de acțiune a platformei",
+    "confirmedLocalitiesTitle": "Localități cu acoperire confirmată"
+  },
+  "index": {
+    "title": "Servicii pentru locuință",
+    "intro": "Acestea sunt categoriile de servicii disponibile astăzi pe MaestroYa. Alege una ca să afli ce poți solicita și cum funcționează procesul de ofertare.",
+    "empty": "Momentan nu există categorii de servicii publicate.",
+    "locationsPrompt": "Cauți acoperirea pe zone? <link>Consultă localitățile disponibile</link>."
+  },
+  "servicePage": {
+    "whatYouCanRequestTitle": "Ce poți solicita",
+    "whatProfessionalsProvideTitle": "Ce asigură de obicei profesionistul",
+    "howItWorksTitle": "Cum funcționează pe MaestroYa",
+    "howItWorks": {
+      "step1": "Publici o cerere care descrie lucrarea din categoria „{service}”.",
+      "step2": "Profesioniștii care acoperă această categorie și zona ta o pot analiza și îți pot trimite o ofertă.",
+      "step3": "Compari ofertele primite și o accepți pe cea preferată.",
+      "step4": "Lucrarea este programată și realizată conform celor convenite în oferta acceptată."
+    },
+    "areasTitle": "Zone cu acest serviciu",
+    "beforeRequestingTitle": "Înainte de a solicita",
+    "relatedTitle": "Servicii similare",
+    "cta": "Gata să începi? Publică o cerere în categoria „{service}”, iar profesioniștii care o acoperă îți vor putea trimite o ofertă."
+  },
+  "serviceLocationPage": {
+    "confirmedCoverage": "MaestroYa are acoperire confirmată în {city} ({province}), așa că îți poți publica cererea indicând o adresă din această localitate.",
+    "localFaq": {
+      "question": "Pot face o cerere în categoria „{service}” în {city}?",
+      "answer": "Da. Poți publica o cerere în categoria „{service}” indicând o adresă din {city} ({province}). Profesioniștii din această categorie care acoperă zona o vor putea analiza și îți vor putea trimite o ofertă."
+    },
+    "howItWorksTitle": "Cum funcționează în {city}",
+    "howItWorks": {
+      "step1": "Publici o cerere în categoria „{service}” cu o adresă din {city}.",
+      "step2": "Profesioniștii din această categorie care acoperă zona îți pot trimite o ofertă.",
+      "step3": "Compari ofertele și o accepți pe cea preferată."
+    },
+    "cta": "Gata să începi? Publică-ți cererea în categoria „{service}” în {city}."
+  },
+  "locationsIndex": {
+    "title": "Locații",
+    "intro": "MaestroYa este un marketplace de servicii pentru locuință gândit să funcționeze în toată Spania. Disponibilitatea reală a profesioniștilor depinde de fiecare zonă.",
+    "nationalCardTitle": "MaestroYa în {country}",
+    "nationalCardDescription": "Ce înseamnă faptul că MaestroYa este un marketplace cu acoperire națională și cum funcționează disponibilitatea locală.",
+    "confirmedEmpty": "Momentan nu există localități cu acoperire confirmată publicate.",
+    "confirmedNote": "Această listă include doar localitățile a căror acoperire este confirmată de datele reale ale platformei — nu este lista completă a zonelor în care MaestroYa poate ajunge să funcționeze.",
+    "servicesPrompt": "Cauți după tipul de serviciu? <link>Consultă categoriile disponibile</link>."
+  },
+  "locationPage": {
+    "title": "MaestroYa în {city}",
+    "servicesTitle": "Servicii disponibile în {city}",
+    "howItWorksTitle": "Cum funcționează în zona ta",
+    "howItWorks": {
+      "step1": "Publici o cerere care descrie lucrarea și adresa ta din {city}.",
+      "step2": "Profesioniștii care acoperă acea categorie și această zonă o pot analiza și îți pot trimite o ofertă.",
+      "step3": "Compari ofertele primite și o accepți pe cea preferată."
+    },
+    "relatedTitle": "Alte localități",
+    "cta": "Gata să începi? Publică o cerere, iar profesioniștii care acoperă {city} îți vor putea trimite o ofertă.",
+    "viewProfessionalsIn": "Vezi profesioniștii din {city}"
+  },
+  "nationalPage": {
+    "title": "MaestroYa în {country}",
+    "categoriesTitle": "Categorii de servicii",
+    "localAvailabilityTitle": "Cum funcționează disponibilitatea locală",
+    "confirmedEmpty": "Încă nu există localități cu acoperire confirmată de datele reale ale platformei.",
+    "confirmedNote": "Această listă include doar localitățile a căror acoperire este confirmată de datele reale ale platformei. Faptul că o localitate nu apare aici nu înseamnă că MaestroYa nu va putea funcționa acolo în viitor — înseamnă că, astăzi, nu există acoperire confirmată de afișat.",
+    "cta": "Gata să începi? Publică o cerere care descrie serviciul de care ai nevoie și locația ta.",
+    "searchProfessionals": "Caută profesioniști",
+    "joinAsProfessional": "Alătură-te ca profesionist"
+  },
+  "map": {
+    "ariaLabel": "Hartă",
+    "unavailable": "Harta nu este disponibilă momentan."
+  }
+}

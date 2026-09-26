@@ -1,0 +1,15 @@
+{
+  "title": "Уведомления",
+  "empty": "У вас нет уведомлений.",
+  "markAllRead": "Отметить все как прочитанные",
+  "unreadCount": "{count, plural, =0 {Нет новых уведомлений} one {# непрочитанное уведомление} few {# непрочитанных уведомления} many {# непрочитанных уведомлений} other {# непрочитанного уведомления}}",
+  "receivedAt": "Получено {date, date, medium} в {date, time, short}",
+  "types": {
+    "jobUpdate": "Обновление заказа",
+    "newMessage": "Новое сообщение",
+    "quoteReceived": "Получена смета",
+    "appointmentProposed": "Предложено время визита",
+    "verificationExpired": "Срок проверки истёк",
+    "systemMessage": "Системное сообщение"
+  }
+}

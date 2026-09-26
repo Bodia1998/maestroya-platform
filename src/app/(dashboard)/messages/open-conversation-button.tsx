@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -20,12 +21,13 @@ import { openConversationAction } from "./actions";
 export function OpenConversationButton({
   serviceRequestId,
   professionalProfileId,
-  label = "Message",
+  label,
 }: {
   serviceRequestId: string;
   professionalProfileId?: string;
   label?: string;
 }) {
+  const t = useTranslations("customer.messages");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -45,7 +47,7 @@ export function OpenConversationButton({
   return (
     <div className="flex flex-col gap-1">
       <Button type="button" variant="outline" disabled={isPending} onClick={handleClick}>
-        {isPending ? "Opening…" : label}
+        {isPending ? t("opening") : (label ?? t("messageAction"))}
       </Button>
       {error && (
         <p role="alert" className="text-xs text-red-700">

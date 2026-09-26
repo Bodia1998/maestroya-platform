@@ -1,0 +1,75 @@
+{
+  "title": "Profiel",
+  "subtitle": "Beheer je accountgegevens en voorkeuren.",
+  "section": {
+    "avatar": "Profielfoto",
+    "details": "Profielgegevens",
+    "password": "Wachtwoord wijzigen",
+    "danger": "Gevarenzone"
+  },
+  "field": {
+    "name": "Naam",
+    "phone": "Telefoon",
+    "email": "E-mailadres",
+    "timezone": "Tijdzone"
+  },
+  "memberSince": "Lid sinds {date, date, long}",
+  "avatarNote": "Deze foto is alleen voor je account — hij heeft geen invloed op de identiteitsverificatie als vakman. Vakmensen beheren die apart via Vakmanprofiel → Identiteitsverificatie beheren.",
+  "dangerNote": "Het verwijderen van je account kan alleen via support worden teruggedraaid — je gegevens worden gedeactiveerd, niet direct gewist.",
+  "avatar": {
+    "chooseFirst": "Kies eerst een afbeelding.",
+    "alt": "Je profielfoto",
+    "chooseLabel": "Kies een profielfoto",
+    "uploading": "Bezig met uploaden…",
+    "upload": "Profielfoto uploaden",
+    "updated": "Profielfoto bijgewerkt."
+  },
+  "form": {
+    "updated": "Profiel bijgewerkt.",
+    "basics": "Basisgegevens",
+    "displayName": "Weergavenaam",
+    "phone": "Telefoon",
+    "timezone": "Tijdzone",
+    "preferredLanguage": "Voorkeurstaal",
+    "noPreference": "Geen voorkeur",
+    "address": "Adres",
+    "street": "Straat en huisnummer",
+    "line2": "Appartement, verdieping enz. (optioneel)",
+    "city": "Plaats",
+    "postalCode": "Postcode",
+    "province": "Provincie",
+    "country": "Land",
+    "notifications": "Meldingen",
+    "emailMarketing": "Marketingmails",
+    "emailServiceUpdates": "Mails over updates van diensten",
+    "smsAppointmentReminders": "Sms-herinneringen voor afspraken",
+    "save": "Wijzigingen opslaan"
+  },
+  "password": {
+    "changed": "Wachtwoord gewijzigd. Voor de veiligheid ben je overal elders uitgelogd.",
+    "noPassword": "Dit account logt in via een social login en heeft geen wachtwoord om te wijzigen.",
+    "title": "Wachtwoord wijzigen",
+    "current": "Huidig wachtwoord",
+    "new": "Nieuw wachtwoord",
+    "confirm": "Bevestig nieuw wachtwoord",
+    "changing": "Bezig met wijzigen…",
+    "submit": "Wachtwoord wijzigen"
+  },
+  "deleteAccount": {
+    "trigger": "Account deactiveren",
+    "title": "Hiermee wordt je account gedeactiveerd",
+    "password": "Wachtwoord",
+    "confirmLabel": "Typ {token} om te bevestigen",
+    "deactivating": "Bezig met deactiveren…",
+    "submit": "Mijn account deactiveren"
+  },
+  "errors": {
+    "updateFailed": "Er ging iets mis bij het bijwerken van je profiel.",
+    "avatarFailed": "Er ging iets mis bij het uploaden van je profielfoto.",
+    "passwordFailed": "Er ging iets mis bij het wijzigen van je wachtwoord.",
+    "deleteFailed": "Er ging iets mis bij het verwijderen van je account.",
+    "avatarMissing": "Kies een afbeelding om te uploaden.",
+    "avatarType": "De profielfoto moet een JPEG-, PNG- of WebP-afbeelding zijn.",
+    "avatarTooLarge": "De profielfoto moet kleiner zijn dan 5 MB."
+  }
+}

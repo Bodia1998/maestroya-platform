@@ -1,0 +1,281 @@
+{
+  "NEW_QUOTE": {
+    "title": "Nowa wycena",
+    "message": "Specjalista przesłał wycenę do Twojego zapytania."
+  },
+  "QUOTE_ACCEPTED": {
+    "title": "Twoja wycena została zaakceptowana",
+    "message": "Klient zaakceptował Twoją wycenę."
+  },
+  "QUOTE_REJECTED": {
+    "title": "Twoja wycena nie została wybrana",
+    "message": "Klient zaakceptował inną wycenę dla tego zapytania."
+  },
+  "QUOTE_EXPIRED": {
+    "title": "Twoja wycena wygasła",
+    "message": "Jedna z Twoich wycen wygasła, ponieważ nie została zaakceptowana na czas."
+  },
+  "NEW_MESSAGE": {
+    "title": "Nowa wiadomość"
+  },
+  "APPOINTMENT_PROPOSED": {
+    "title": "Zaproponowano nowy termin wizyty",
+    "message": "Zaproponowano nowy termin wizyty.",
+    "variants": {
+      "byCustomer": {
+        "message": "Klient zaproponował nowy termin wizyty."
+      },
+      "byProfessional": {
+        "message": "Specjalista zaproponował nowy termin wizyty."
+      }
+    }
+  },
+  "APPOINTMENT_CONFIRMED": {
+    "title": "Termin wizyty potwierdzony",
+    "message": "Termin wizyty został potwierdzony.",
+    "variants": {
+      "byCustomer": {
+        "message": "Klient potwierdził termin wizyty."
+      },
+      "byProfessional": {
+        "message": "Specjalista potwierdził termin wizyty."
+      }
+    }
+  },
+  "APPOINTMENT_CANCELLED": {
+    "title": "Wizyta anulowana",
+    "message": "Ta wizyta została anulowana.",
+    "variants": {
+      "byCustomer": {
+        "message": "Klient anulował tę wizytę."
+      },
+      "byProfessional": {
+        "message": "Specjalista anulował tę wizytę."
+      }
+    }
+  },
+  "JOB_STARTED": {
+    "title": "Prace się rozpoczęły",
+    "message": "Specjalista rozpoczął realizację Twojego zlecenia."
+  },
+  "JOB_CANCELLED": {
+    "title": "Zlecenie anulowane",
+    "message": "To zlecenie zostało anulowane.",
+    "variants": {
+      "byCustomer": {
+        "message": "Klient anulował to zlecenie."
+      },
+      "byProfessional": {
+        "message": "Specjalista anulował to zlecenie."
+      }
+    }
+  },
+  "JOB_COMPLETION_CONFIRMATION_REQUESTED": {
+    "title": "Potwierdź wykonanie usługi",
+    "message": "Specjalista oznaczył Twoje zlecenie jako wykonane. Potwierdź, że praca została wykonana, lub daj nam znać, jeśli jest jakiś problem."
+  },
+  "JOB_COMPLETION_CONFIRMATION_REMINDER": {
+    "title": "Potwierdź wykonanie usługi",
+    "message": "Potwierdź wykonanie usługi lub daj nam znać o problemie, zanim minie termin na potwierdzenie."
+  },
+  "JOB_COMPLETION_CONFIRMED": {
+    "title": "Usługa potwierdzona",
+    "message": "Klient potwierdził wykonanie usługi."
+  },
+  "JOB_COMPLETION_CONFIRMATION_TIMED_OUT": {
+    "title": "Zlecenie w weryfikacji",
+    "message": "Klient nie odpowiedział na czas na prośbę o potwierdzenie wykonania. Przed zwolnieniem płatności zlecenie przechodzi ręczną weryfikację."
+  },
+  "MATERIALS_PURCHASE_CONFIRMED": {
+    "title": "Zakup materiałów potwierdzony",
+    "message": "Klient potwierdził, że kupił wszystkie potrzebne materiały."
+  },
+  "REVIEW_RECEIVED": {
+    "title": "Nowa opinia",
+    "message": "Klient wystawił opinię o wykonanym przez Ciebie zleceniu."
+  },
+  "REVIEW_RESPONSE_ADDED": {
+    "title": "Specjalista odpowiedział na Twoją opinię",
+    "message": "Specjalista, któremu wystawiłeś opinię, opublikował odpowiedź."
+  },
+  "SERVICE_REQUEST_EXPIRED": {
+    "title": "Twoje zapytanie wygasło",
+    "message": "Twoje zapytanie „{requestTitle}” wygasło bez realizacji."
+  },
+  "VERIFICATION_SUBMITTED": {
+    "title": "Wniosek o weryfikację wysłany",
+    "message": "Otrzymaliśmy Twój wniosek o weryfikację i wkrótce go sprawdzimy.",
+    "variants": {
+      "resubmitted": {
+        "title": "Wniosek o weryfikację wysłany ponownie",
+        "message": "Otrzymaliśmy zaktualizowany wniosek o weryfikację i wkrótce go sprawdzimy."
+      }
+    }
+  },
+  "VERIFICATION_APPROVED": {
+    "title": "Jesteś teraz zweryfikowanym specjalistą",
+    "message": "Twoja weryfikacja została zatwierdzona. Na Twoim profilu publicznym widać teraz odznakę weryfikacji.",
+    "variants": {
+      "automated": {
+        "message": "Automatyczna weryfikacja tożsamości zakończyła się pomyślnie. Na Twoim profilu publicznym widać teraz odznakę weryfikacji."
+      }
+    }
+  },
+  "VERIFICATION_REJECTED": {
+    "title": "Wniosek o weryfikację odrzucony",
+    "message": "Twój wniosek o weryfikację został odrzucony. Otwórz stronę weryfikacji, aby sprawdzić powód i spróbować ponownie.",
+    "variants": {
+      "automated": {
+        "message": "Automatyczna weryfikacja tożsamości nie powiodła się. Otwórz stronę weryfikacji, aby sprawdzić powód i spróbować ponownie."
+      }
+    }
+  },
+  "VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Potrzebujemy więcej informacji do weryfikacji",
+    "message": "Osoba weryfikująca poprosiła o aktualizację wniosku o weryfikację. Szczegóły znajdziesz na stronie weryfikacji.",
+    "variants": {
+      "businessRegistration": {
+        "title": "Wymagany dokument rejestracji działalności",
+        "message": "Automatyczna weryfikacja tożsamości zakończyła się pomyślnie. Prześlij dokument rejestracji działalności, aby dokończyć weryfikację specjalisty."
+      }
+    }
+  },
+  "VERIFICATION_EXPIRED": {
+    "title": "Twoja weryfikacja wygasła",
+    "message": "Twoja weryfikacja specjalisty wygasła. Rozpocznij nową weryfikację, aby zachować odznakę weryfikacji."
+  },
+  "COMPANY_INVITATION_RECEIVED": {
+    "title": "Zaproszono Cię do firmy",
+    "message": "Masz oczekujące zaproszenie do firmy."
+  },
+  "COMPANY_INVITATION_ACCEPTED": {
+    "title": "Zaproszenie przyjęte",
+    "message": "Oczekujące zaproszenie do firmy zostało przyjęte."
+  },
+  "COMPANY_INVITATION_DECLINED": {
+    "title": "Zaproszenie odrzucone",
+    "message": "Oczekujące zaproszenie do firmy zostało odrzucone."
+  },
+  "COMPANY_MEMBER_REMOVED": {
+    "title": "Usunięto Cię z firmy",
+    "message": "Nie jesteś już członkiem tej firmy."
+  },
+  "COMPANY_MEMBER_ROLE_CHANGED": {
+    "title": "Twoja rola się zmieniła",
+    "message": "Twoja rola w firmie to teraz: {role}.",
+    "variants": {
+      "ownershipTransferred": {
+        "title": "Jesteś teraz właścicielem firmy",
+        "message": "Przekazano Ci własność firmy."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_SUBMITTED": {
+    "title": "Wniosek o weryfikację wysłany",
+    "message": "Otrzymaliśmy wniosek o weryfikację Twojej firmy i wkrótce go sprawdzimy.",
+    "variants": {
+      "resubmitted": {
+        "title": "Wniosek o weryfikację wysłany ponownie",
+        "message": "Otrzymaliśmy zaktualizowany wniosek o weryfikację Twojej firmy."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_APPROVED": {
+    "title": "Twoja firma jest zweryfikowana",
+    "message": "Weryfikacja Twojej firmy została zatwierdzona. Na jej profilu publicznym widać teraz odznakę weryfikacji."
+  },
+  "COMPANY_VERIFICATION_REJECTED": {
+    "title": "Wniosek o weryfikację odrzucony",
+    "message": "Wniosek o weryfikację Twojej firmy został odrzucony. Powód znajdziesz w szczegółach."
+  },
+  "COMPANY_VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Wymagane ponowne przesłanie",
+    "message": "Wniosek o weryfikację Twojej firmy wymaga zmian, zanim będzie mógł zostać zatwierdzony."
+  },
+  "COMPANY_VERIFICATION_EXPIRED": {
+    "title": "Weryfikacja Twojej firmy wygasła",
+    "message": "Weryfikacja Twojej firmy wygasła. Rozpocznij nową weryfikację, aby zachować odznakę weryfikacji."
+  },
+  "COMPANY_SUSPENDED": {
+    "title": "Twoja firma została zawieszona",
+    "message": "Administrator platformy zawiesił profil Twojej firmy."
+  },
+  "COMPANY_REACTIVATED": {
+    "title": "Twoja firma została przywrócona",
+    "message": "Profil Twojej firmy jest znowu aktywny."
+  },
+  "DISPUTE_CREATED": {
+    "title": "Otwarto spór",
+    "message": "Otwarto spór ({caseNumber}) dotyczący Twojego zlecenia."
+  },
+  "DISPUTE_ASSIGNED": {
+    "title": "Przydzielono Ci spór",
+    "message": "Przydzielono Ci spór {caseNumber}."
+  },
+  "DISPUTE_STATUS_CHANGED": {
+    "title": "Zaktualizowano status sporu",
+    "message": "Nowy status sporu {caseNumber}: {status}.",
+    "variants": {
+      "newMessage": {
+        "title": "Nowa wiadomość w Twoim sporze",
+        "message": "W sporze {caseNumber} pojawiła się nowa wiadomość."
+      }
+    }
+  },
+  "DISPUTE_RESPONSE_REQUESTED": {
+    "title": "Czekamy na Twoją odpowiedź w sporze",
+    "message": "Nowy status sporu {caseNumber}: {status}."
+  },
+  "DISPUTE_RESOLVED": {
+    "title": "Twój spór został rozstrzygnięty",
+    "message": "Spór {caseNumber} został rozstrzygnięty."
+  },
+  "DISPUTE_REJECTED": {
+    "title": "Twój spór został odrzucony",
+    "message": "Spór {caseNumber} został odrzucony."
+  },
+  "DISPUTE_CLOSED": {
+    "title": "Twój spór został zamknięty",
+    "message": "Spór {caseNumber} został zamknięty."
+  },
+  "SUPPORT_TICKET_ASSIGNED": {
+    "title": "Przydzielono Ci zgłoszenie do pomocy technicznej",
+    "message": "Przydzielono Ci zgłoszenie {ticketNumber}."
+  },
+  "SUPPORT_TICKET_STATUS_CHANGED": {
+    "title": "Twoje zgłoszenie zostało zaktualizowane",
+    "message": "Nowy status zgłoszenia {ticketNumber}: {status}."
+  },
+  "SUPPORT_TICKET_RESOLVED": {
+    "title": "Twoje zgłoszenie zostało rozwiązane",
+    "message": "Zgłoszenie {ticketNumber} zostało rozwiązane."
+  },
+  "SUPPORT_TICKET_CLOSED": {
+    "title": "Twoje zgłoszenie zostało zamknięte",
+    "message": "Zgłoszenie {ticketNumber} zostało zamknięte."
+  },
+  "labels": {
+    "disputeStatus": {
+      "OPEN": "Otwarty",
+      "UNDER_REVIEW": "W trakcie rozpatrywania",
+      "WAITING_FOR_CUSTOMER": "Oczekuje na klienta",
+      "WAITING_FOR_PROFESSIONAL": "Oczekuje na specjalistę",
+      "RESOLVED": "Rozstrzygnięty",
+      "REJECTED": "Odrzucony",
+      "CLOSED": "Zamknięty"
+    },
+    "ticketStatus": {
+      "OPEN": "Otwarte",
+      "IN_PROGRESS": "W toku",
+      "WAITING_FOR_USER": "Oczekuje na Twoją odpowiedź",
+      "RESOLVED": "Rozwiązane",
+      "CLOSED": "Zamknięte"
+    },
+    "companyRole": {
+      "OWNER": "Właściciel",
+      "ADMIN": "Administrator",
+      "MANAGER": "Menedżer",
+      "MEMBER": "Członek"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "legalDocument": {
+    "issuedLanguageNotice": "Цей документ показано мовою, якою його було видано (іспанською)."
+  },
+  "close": "Закрити",
+  "breadcrumb": {
+    "label": "Навігаційний ланцюжок"
+  },
+  "chip": {
+    "remove": "Прибрати"
+  },
+  "combobox": {
+    "placeholder": "Виберіть варіант",
+    "searchPlaceholder": "Пошук…",
+    "empty": "Нічого не знайдено"
+  },
+  "confirmDialog": {
+    "cancel": "Скасувати",
+    "genericError": "Щось пішло не так. Спробуйте ще раз."
+  },
+  "errorState": {
+    "title": "Щось пішло не так",
+    "retry": "Повторити"
+  },
+  "loadingState": {
+    "label": "Завантаження…"
+  },
+  "spinner": {
+    "label": "Завантаження"
+  },
+  "pagination": {
+    "label": "Пагінація",
+    "previous": "Назад",
+    "next": "Далі"
+  },
+  "passwordInput": {
+    "show": "Показати пароль",
+    "hide": "Приховати пароль"
+  },
+  "searchInput": {
+    "clear": "Очистити пошук"
+  },
+  "toast": {
+    "close": "Закрити сповіщення",
+    "region": "Сповіщення",
+    "assertiveRegion": "Важливі сповіщення"
+  },
+  "fieldBadges": {
+    "optional": "Необов’язково"
+  }
+}

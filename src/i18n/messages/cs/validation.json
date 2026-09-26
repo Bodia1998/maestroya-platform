@@ -12,5 +12,192 @@
   "passwordTooWeak": "Heslo musí obsahovat velká i malá písmena a číslice.",
   "mismatch": "Hodnoty se neshodují.",
   "invalid": "Zadaná hodnota není platná.",
-  "summary": "Opravte prosím chyby ve formuláři."
+  "summary": "Opravte prosím chyby ve formuláři.",
+  "dto": {
+    "ids": {
+      "action": "Neplatná akce.",
+      "adminUser": "Neplatný uživatel administrátora.",
+      "admin": "Neplatný administrátor.",
+      "appeal": "Neplatné odvolání.",
+      "appointment": "Neplatná schůzka.",
+      "case": "Neplatný případ.",
+      "company": "Neplatná firma.",
+      "conversation": "Neplatná konverzace.",
+      "dispute": "Neplatný spor.",
+      "document": "Neplatný dokument.",
+      "invitation": "Neplatná pozvánka.",
+      "job": "Neplatná zakázka.",
+      "member": "Neplatný člen.",
+      "notification": "Neplatné oznámení.",
+      "payment": "Neplatná platba.",
+      "portfolioItem": "Neplatná položka portfolia.",
+      "professional": "Neplatný profesionál.",
+      "quote": "Neplatná nabídka.",
+      "recipient": "Neplatný příjemce.",
+      "review": "Neplatná recenze.",
+      "reviewer": "Neplatný posuzovatel.",
+      "serviceCategory": "Neplatná kategorie služeb.",
+      "serviceRequest": "Neplatná poptávka.",
+      "ticket": "Neplatný požadavek.",
+      "user": "Neplatný uživatel.",
+      "verification": "Neplatné ověření."
+    },
+    "invitation": {
+      "linkInvalid": "Odkaz na pozvánku je neplatný."
+    },
+    "admin": {
+      "roleRequired": "Je vyžadována alespoň jedna role."
+    },
+    "aiVisibility": {
+      "queryRequired": "Je vyžadován dotaz.",
+      "unknownQuery": "Neznámý dotaz — musí jít o jeden z aktivních dotazů viditelnosti v AI."
+    },
+    "analytics": {
+      "dateRange": "Počáteční datum musí být před koncovým datem."
+    },
+    "auth": {
+      "nameRequired": "Zadejte své jméno.",
+      "passwordRequired": "Zadejte heslo.",
+      "passwordsMismatch": "Hesla se neshodují."
+    },
+    "password": {
+      "minLength": "Heslo musí mít alespoň 10 znaků.",
+      "tooLong": "Heslo je příliš dlouhé.",
+      "lowercase": "Heslo musí obsahovat malé písmeno.",
+      "uppercase": "Heslo musí obsahovat velké písmeno.",
+      "number": "Heslo musí obsahovat číslici."
+    },
+    "profile": {
+      "currentPasswordRequired": "Zadejte své současné heslo.",
+      "passwordMustDiffer": "Nové heslo se musí lišit od současného.",
+      "timezoneRequired": "Vyberte časové pásmo.",
+      "deleteConfirm": "Pro potvrzení napište \"DELETE\"."
+    },
+    "professional": {
+      "deactivateConfirm": "Pro potvrzení napište \"DEACTIVATE\".",
+      "yearsNegative": "Počet let praxe nemůže být záporný.",
+      "yearsRealistic": "Zadejte reálný počet let.",
+      "radiusNegative": "Okruh působnosti nemůže být záporný.",
+      "radiusRealistic": "Zadejte reálný okruh působnosti.",
+      "descriptionRequired": "Přidejte krátký popis."
+    },
+    "membership": {
+      "transferConfirm": "Pro potvrzení napište \"TRANSFER\".",
+      "roleInvalid": "Vyberte platnou roli."
+    },
+    "address": {
+      "street": "Zadejte ulici a číslo.",
+      "city": "Zadejte město.",
+      "postalCode": "Zadejte PSČ.",
+      "country": "Zadejte zemi."
+    },
+    "location": {
+      "cityRequired": "Město je povinné.",
+      "latitudeInvalid": "Zadejte platnou zeměpisnou šířku.",
+      "longitudeInvalid": "Zadejte platnou zeměpisnou délku.",
+      "latitudeRange": "Zeměpisná šířka musí být mezi -90 a 90.",
+      "longitudeRange": "Zeměpisná délka musí být mezi -180 a 180."
+    },
+    "search": {
+      "coordinatesTogether": "Zeměpisnou šířku a délku je nutné zadat společně.",
+      "radiusRequiresLocation": "Pro okruh hledání je nutné zadat zeměpisnou šířku a délku.",
+      "radiusInvalid": "Zadejte platný okruh hledání.",
+      "radiusPositive": "Okruh hledání musí být větší než nula.",
+      "radiusMax": "Okruh hledání může být nejvýše 200 km.",
+      "minRatingInvalid": "Zadejte platné minimální hodnocení.",
+      "minRatingRange": "Minimální hodnocení musí být mezi 1 a 5.",
+      "minReviewCountInvalid": "Zadejte platný minimální počet recenzí.",
+      "minReviewCountNegative": "Minimální počet recenzí nemůže být záporný.",
+      "minReviewCountTooLarge": "Minimální počet recenzí je příliš vysoký."
+    },
+    "categories": {
+      "invalid": "Vyberte platnou kategorii služeb.",
+      "min": "Vyberte alespoň jednu kategorii služeb.",
+      "max": "Vyberte nejvýše 20 kategorií."
+    },
+    "company": {
+      "legalNameRequired": "Obchodní název je povinný.",
+      "taxIdRequired": "DIČ je povinné."
+    },
+    "common": {
+      "wholeNumber": "Zadejte celé číslo.",
+      "cancellationReasonRequired": "Vyberte důvod zrušení."
+    },
+    "portfolio": {
+      "mediaUrlInvalid": "Zadejte platnou URL médií."
+    },
+    "referral": {
+      "codeFormat": "Kód doporučení smí obsahovat jen malá písmena, číslice a podtržítka."
+    },
+    "verification": {
+      "countryCode": "Kód země musí být dvoupísmenný kód ISO 3166-1."
+    },
+    "chat": {
+      "messageRequired": "Před odesláním napište zprávu."
+    },
+    "onboarding": {
+      "termsVersionRequired": "Je vyžadována verze podmínek.",
+      "privacyVersionRequired": "Je vyžadována verze zásad ochrany osobních údajů.",
+      "accountHolderRequired": "Zadejte celé jméno majitele účtu.",
+      "ibanInvalid": "Zadejte platný IBAN."
+    },
+    "dispute": {
+      "reasonRequired": "Důvod je povinný.",
+      "refundAmountRequired": "Pro částečné vyřešení je nutné zadat částku vrácení.",
+      "amountRequired": "Pro toto řešení je nutné zadat částku.",
+      "adjustmentTypeRequired": "Pro toto řešení je nutné zvolit typ úpravy.",
+      "messageEmpty": "Zpráva nemůže být prázdná.",
+      "fileUrlInvalid": "Neplatná URL souboru.",
+      "fileUrlHttp": "URL souboru musí být odkaz http(s).",
+      "resolutionNoteRequired": "Poznámka k vyřešení je povinná.",
+      "amountPositive": "Částka musí být kladná."
+    },
+    "review": {
+      "responseEmpty": "Odpověď nemůže být prázdná.",
+      "ratingInteger": "Hodnocení musí být celé číslo."
+    },
+    "notification": {
+      "actionUrlUnsafe": "URL akce musí být bezpečná interní cesta.",
+      "titleRequired": "Název je povinný.",
+      "messageRequired": "Zpráva je povinná."
+    },
+    "quote": {
+      "itemsRequired": "Přidejte do nabídky alespoň jednu položku.",
+      "requiredMaterialsMissing": "Pokud materiál nakupuje zákazník, přidejte alespoň jednu potřebnou položku materiálu.",
+      "materialsPriced": "Pokud zákazník nakupuje materiál přímo, nesmí mít materiál v nabídce cenu.",
+      "materialNameRequired": "Zadejte název tohoto materiálu.",
+      "itemDescriptionRequired": "Zadejte popis této položky.",
+      "quantityPositive": "Množství musí být větší než nula.",
+      "quantityRealistic": "Zadejte reálné množství.",
+      "unitPriceNegative": "Jednotková cena nemůže být záporná.",
+      "unitPriceRealistic": "Zadejte reálnou jednotkovou cenu.",
+      "validUntilFuture": "Datum platnosti musí být v budoucnosti.",
+      "itemsMax": "Nabídka může mít nejvýše 20 položek.",
+      "materialsMax": "Seznam materiálu může mít nejvýše 50 položek."
+    },
+    "financial": {
+      "adjustmentPositive": "Částka úpravy musí být větší než nula.",
+      "adjustmentRealistic": "Zadejte reálnou částku úpravy."
+    },
+    "booking": {
+      "startTimeInvalid": "Zadejte platný čas začátku.",
+      "endTimeInvalid": "Zadejte platný čas konce.",
+      "endAfterStart": "Čas konce musí být po čase začátku."
+    },
+    "job": {
+      "reasonRequired": "Vyberte důvod.",
+      "decisionRequired": "Vyberte rozhodnutí.",
+      "describeProblem": "Popište problém alespoň 20 znaky."
+    },
+    "serviceRequest": {
+      "titleRequired": "Zadejte název.",
+      "descriptionRequired": "Zadejte popis.",
+      "budgetNegative": "Rozpočet nemůže být záporný.",
+      "budgetRange": "Minimální rozpočet nesmí překročit maximální."
+    },
+    "featureFlag": {
+      "keyRequired": "Klíč příznaku je povinný.",
+      "keyFormat": "Klíč příznaku smí obsahovat jen písmena, číslice, '-', '_' a '.'."
+    }
+  }
 }

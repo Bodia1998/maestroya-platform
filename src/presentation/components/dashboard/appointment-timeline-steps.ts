@@ -6,28 +6,23 @@ import type { TimelineStep } from "./status-timeline";
  * Proposed → Confirmed → Completed) — see
  * `domain/services/appointment-state.ts` for the actual transition rules
  * this deliberately does not duplicate.
+ *
+ * Module 120 — Multilingual Localization: steps carry only the status
+ * `key`; `StatusTimeline` renders the localized `enums.status.<key>` label.
  */
 export function getAppointmentTimelineSteps(status: string): TimelineStep[] {
-  const happyPath: TimelineStep[] = [
-    { key: "PENDING_SCHEDULE", label: "Pending", state: "upcoming" },
-    { key: "PROPOSED", label: "Proposed", state: "upcoming" },
-    { key: "CONFIRMED", label: "Confirmed", state: "upcoming" },
-    { key: "COMPLETED", label: "Completed", state: "upcoming" },
-  ];
+  const order = ["PENDING_SCHEDULE", "PROPOSED", "CONFIRMED", "COMPLETED"];
+  const happyPath: TimelineStep[] = order.map((key) => ({ key, state: "upcoming" }));
 
-  const negativeTerminalLabel: Record<string, string> = {
-    CANCELLED: "Cancelled",
-    RESCHEDULED: "Rescheduled",
-  };
+  const negativeTerminalStatuses = new Set(["CANCELLED", "RESCHEDULED"]);
 
-  if (status in negativeTerminalLabel) {
+  if (negativeTerminalStatuses.has(status)) {
     return [
-      { key: "PENDING_SCHEDULE", label: "Pending", state: "complete" },
-      { key: status, label: negativeTerminalLabel[status]!, state: "danger" },
+      { key: "PENDING_SCHEDULE", state: "complete" },
+      { key: status, state: "danger" },
     ];
   }
 
-  const order = ["PENDING_SCHEDULE", "PROPOSED", "CONFIRMED", "COMPLETED"];
   const currentIndex = order.indexOf(status);
 
   return happyPath.map((step, index) => {

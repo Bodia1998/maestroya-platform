@@ -5,8 +5,10 @@ import {
   makeAcceptCompanyInvitationUseCase,
   makeDeclineCompanyInvitationUseCase,
 } from "@/application/use-cases/company-invitation/compose";
-import { DomainError } from "@/domain/errors/domain-error";
+import { getTranslations } from "next-intl/server";
+
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError } from "@/presentation/i18n/server";
 
 /**
  * Module 18 — Company Professional: accept/decline a company invitation by
@@ -18,33 +20,33 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
  */
 export type ActionResult = { success: true } | { success: false; error: string };
 
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) return { success: false, error: error.message };
-  console.error(error);
-  return { success: false, error: fallback };
+async function fromDomainError(error: unknown, fallback: string): Promise<ActionResult> {
+  return { success: false, error: await localizeActionError(error, fallback) };
 }
 
 export async function acceptCompanyInvitationAction(token: string): Promise<ActionResult> {
   const user = await requireAuth();
+  const t = await getTranslations("company.acceptInvitation");
   const parsed = acceptCompanyInvitationSchema.safeParse({ token });
-  if (!parsed.success) return { success: false, error: "Invalid invitation link." };
+  if (!parsed.success) return { success: false, error: t("invalidLink") };
   try {
     await makeAcceptCompanyInvitationUseCase().execute(user.id, parsed.data.token);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong accepting this invitation.");
+    return fromDomainError(error, t("acceptFailed"));
   }
 }
 
 export async function declineCompanyInvitationAction(token: string): Promise<ActionResult> {
   const user = await requireAuth();
+  const t = await getTranslations("company.acceptInvitation");
   const parsed = declineCompanyInvitationSchema.safeParse({ token });
-  if (!parsed.success) return { success: false, error: "Invalid invitation link." };
+  if (!parsed.success) return { success: false, error: t("invalidLink") };
   try {
     await makeDeclineCompanyInvitationUseCase().execute(user.id, parsed.data.token);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong declining this invitation.");
+    return fromDomainError(error, t("declineFailed"));
   }
 }
 

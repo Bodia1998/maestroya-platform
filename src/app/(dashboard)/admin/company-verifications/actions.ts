@@ -1,5 +1,7 @@
 "use server";
 
+import { adminActionFailure } from "../_lib/action-errors";
+import { localizeZodError } from "@/presentation/i18n/server";
 import { revalidatePath } from "next/cache";
 
 import {
@@ -13,21 +15,12 @@ import {
   makeRequestCompanyVerificationResubmissionUseCase,
   makeStartCompanyVerificationReviewUseCase,
 } from "@/application/use-cases/company-verification/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
 
 /** Module 18 — Company Professional: admin company-verification review
  *  actions — mirrors admin/verifications/actions.ts (Module 17) exactly. */
 
 export type ActionResult = { success: true } | { success: false; error: string };
-
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
-}
 
 function revalidate(verificationId: string) {
   revalidatePath("/admin/company-verifications");
@@ -37,39 +30,39 @@ function revalidate(verificationId: string) {
 export async function startCompanyVerificationReviewAction(verificationId: string): Promise<ActionResult> {
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminCompanyVerificationIdSchema.safeParse({ verificationId });
-  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid verification." };
+  if (!parsed.success) return { success: false, error: await localizeZodError(parsed.error) };
   try {
     await makeStartCompanyVerificationReviewUseCase().execute(admin.id, parsed.data.verificationId);
     revalidate(parsed.data.verificationId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong starting the review.");
+    return adminActionFailure(error, "startingTheReview");
   }
 }
 
 export async function approveCompanyVerificationAction(verificationId: string): Promise<ActionResult> {
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminCompanyVerificationIdSchema.safeParse({ verificationId });
-  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid verification." };
+  if (!parsed.success) return { success: false, error: await localizeZodError(parsed.error) };
   try {
     await makeApproveCompanyVerificationUseCase().execute(admin.id, parsed.data.verificationId);
     revalidate(parsed.data.verificationId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong approving this verification.");
+    return adminActionFailure(error, "approvingThisVerification");
   }
 }
 
 export async function rejectCompanyVerificationAction(verificationId: string, reason: string): Promise<ActionResult> {
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = rejectCompanyVerificationSchema.safeParse({ verificationId, reason });
-  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "A rejection reason is required." };
+  if (!parsed.success) return { success: false, error: await localizeZodError(parsed.error) };
   try {
     await makeRejectCompanyVerificationUseCase().execute(admin.id, parsed.data.verificationId, parsed.data.reason);
     revalidate(parsed.data.verificationId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong rejecting this verification.");
+    return adminActionFailure(error, "rejectingThisVerification");
   }
 }
 
@@ -80,7 +73,7 @@ export async function requestCompanyVerificationResubmissionAction(
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = requestCompanyVerificationResubmissionSchema.safeParse({ verificationId, reason });
   if (!parsed.success)
-    return { success: false, error: parsed.error.issues[0]?.message ?? "A resubmission reason is required." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   try {
     await makeRequestCompanyVerificationResubmissionUseCase().execute(
       admin.id,
@@ -90,7 +83,7 @@ export async function requestCompanyVerificationResubmissionAction(
     revalidate(parsed.data.verificationId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong requesting a resubmission.");
+    return adminActionFailure(error, "requestingAResubmission");
   }
 }
 

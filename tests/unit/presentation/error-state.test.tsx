@@ -9,7 +9,7 @@ describe("ErrorState", () => {
   it("renders the default title as an alert", () => {
     render(<ErrorState />);
     const alert = screen.getByRole("alert");
-    expect(alert).toHaveTextContent("Algo salió mal");
+    expect(alert).toHaveTextContent("Something went wrong");
   });
 
   it("renders a custom title and description", () => {

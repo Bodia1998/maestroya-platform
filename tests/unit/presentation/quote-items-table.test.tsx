@@ -52,8 +52,9 @@ describe("QuoteItemsTable", () => {
 
   it("formats each item's unit price and amount with the currency", () => {
     render(<QuoteItemsTable items={ITEMS} currency="EUR" />);
-    expect(screen.getByText("EUR 10.00")).toBeTruthy();
-    expect(screen.getByText("EUR 20.00")).toBeTruthy();
+    // Module 120: locale-aware currency (English test locale).
+    expect(screen.getByText("€10.00")).toBeTruthy();
+    expect(screen.getByText("€20.00")).toBeTruthy();
   });
 
   it("omits the total row when totalAmount is not provided", () => {
@@ -64,7 +65,7 @@ describe("QuoteItemsTable", () => {
   it("renders a total row when totalAmount is provided", () => {
     render(<QuoteItemsTable items={ITEMS} currency="EUR" totalAmount={70} />);
     expect(screen.getByText("Total")).toBeTruthy();
-    expect(screen.getByText("EUR 70.00")).toBeTruthy();
+    expect(screen.getByText("€70.00")).toBeTruthy();
   });
 
   it("falls back to the raw category value for an unknown category", () => {

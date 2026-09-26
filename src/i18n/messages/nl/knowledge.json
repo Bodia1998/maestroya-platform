@@ -1,0 +1,256 @@
+{
+  "services": {
+    "fontaneria": {
+      "nameInSentence": "Loodgieterswerk",
+      "intro": "MaestroYa brengt klanten in contact met vakmensen voor loodgieterswerk: het repareren van lekkages, kranen, leidingen en waterinstallaties in huis. De klant beschrijft het probleem en plaatst een aanvraag; loodgieters die het gebied bedienen, kunnen de aanvraag bekijken en een offerte sturen.",
+      "commonJobTypes": {
+        "leakRepair": "Waterlekkages repareren",
+        "tapRepair": "Kranen vervangen of repareren",
+        "pipeUnblocking": "Verstopte leidingen ontstoppen",
+        "sanitaryInstallation": "Sanitair installeren (toiletten, wastafels, douches)",
+        "waterHeaterRepair": "Boilers en warmwaterinstallaties controleren of repareren"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Een diagnose van het probleem dat in de aanvraag is beschreven",
+        "quote": "Een gedetailleerde offerte voordat het werk begint",
+        "execution": "Het uitvoeren van het werk dat in de geaccepteerde offerte is afgesproken"
+      },
+      "considerations": {
+        "describe": "Beschrijf het probleem zo gedetailleerd mogelijk en voeg zo mogelijk foto's toe aan de aanvraag",
+        "urgency": "Geef aan hoe dringend het werk echt is (in het systeem kun je aanvragen als meer of minder dringend markeren)",
+        "compare": "Je kunt meerdere offertes ontvangen en vergelijken voordat je er een accepteert"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Wat voor loodgieterswerk kan ik via MaestroYa aanvragen?",
+          "answer": "Je kunt een aanvraag plaatsen voor elk loodgieterswerk in huis, zoals een lekkage, een kraan die niet werkt of het installeren van sanitair. Loodgieters die jouw gebied bedienen, kunnen de aanvraag bekijken en je een offerte sturen."
+        },
+        "howQuote": {
+          "question": "Hoe werkt een offerte voor loodgieterswerk?",
+          "answer": "Nadat je je aanvraag hebt geplaatst, kunnen een of meer vakmensen je een offerte sturen. Je kunt de ontvangen offertes vergelijken en de offerte van je voorkeur accepteren voordat het werk begint."
+        },
+        "coverage": {
+          "question": "In welke gebieden is loodgieterswerk beschikbaar?",
+          "answer": "De dekking hangt af van de vakmensen die in elk gebied actief zijn. Bekijk de pagina van jouw plaats om de huidige beschikbaarheid in dat gebied te zien."
+        }
+      }
+    },
+    "electricidad": {
+      "nameInSentence": "Elektra",
+      "intro": "MaestroYa brengt klanten in contact met vakmensen voor elektrawerk: elektrische installaties, storingen, meterkasten en stopcontacten. De klant beschrijft het werk en plaatst een aanvraag; elektriciens die het gebied bedienen, kunnen de aanvraag bekijken en een offerte sturen.",
+      "commonJobTypes": {
+        "faultRepair": "Elektrische storingen verhelpen",
+        "socketsSwitches": "Stopcontacten en schakelaars installeren of vervangen",
+        "panelUpgrade": "De meterkast controleren of vernieuwen",
+        "lightPoints": "Lichtpunten installeren",
+        "smallInstallations": "Schakelmateriaal en klein elektrawerk in huis installeren"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Een diagnose van het elektrische probleem dat in de aanvraag is beschreven",
+        "quote": "Een gedetailleerde offerte voordat het werk begint",
+        "execution": "Het uitvoeren van het werk dat in de geaccepteerde offerte is afgesproken"
+      },
+      "considerations": {
+        "describe": "Beschrijf de storing of installatie zo gedetailleerd mogelijk, met foto's als die helpen om het uit te leggen",
+        "urgency": "Geef aan hoe dringend het werk echt is",
+        "compare": "Vergelijk meerdere offertes voordat je er een accepteert"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Wat voor elektrawerk kan ik via MaestroYa aanvragen?",
+          "answer": "Je kunt onder meer een aanvraag plaatsen voor elektrische storingen, het installeren van stopcontacten of lichtpunten, of het controleren van de meterkast. Elektriciens die jouw gebied bedienen, kunnen je een offerte sturen."
+        },
+        "howToRequest": {
+          "question": "Hoe vraag ik via MaestroYa een elektricien aan?",
+          "answer": "Plaats een aanvraag waarin je het werk beschrijft. Vakmensen die jouw categorie en gebied bedienen, kunnen de aanvraag bekijken en je een offerte sturen, die je kunt accepteren of afwijzen."
+        },
+        "coverage": {
+          "question": "In welke gebieden is elektrawerk beschikbaar?",
+          "answer": "De dekking hangt af van de vakmensen die in elk gebied actief zijn. Bekijk de pagina van jouw plaats om de huidige beschikbaarheid in dat gebied te zien."
+        }
+      }
+    },
+    "aire-acondicionado": {
+      "nameInSentence": "Airconditioning",
+      "intro": "MaestroYa brengt klanten in contact met vakmensen voor klimaattechniek: het installeren, onderhouden en repareren van airconditioning. De klant beschrijft wat hij nodig heeft en plaatst een aanvraag; klimaattechnici die het gebied bedienen, kunnen de aanvraag bekijken en een offerte sturen.",
+      "commonJobTypes": {
+        "newInstallation": "Een nieuwe airconditioning installeren",
+        "repair": "Een apparaat repareren dat niet koelt of niet werkt",
+        "maintenance": "Apparaten onderhouden en reinigen",
+        "gasRecharge": "Koudemiddel bijvullen"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Een diagnose of beoordeling van het apparaat of de installatie die in de aanvraag is beschreven",
+        "quote": "Een gedetailleerde offerte voordat het werk begint",
+        "execution": "Het uitvoeren van het werk dat in de geaccepteerde offerte is afgesproken"
+      },
+      "considerations": {
+        "equipmentType": "Vermeld het type apparaat (als je dat weet) en beschrijf het probleem of de gewenste installatie",
+        "photos": "Voeg foto's van het apparaat of de ruimte toe als die helpen om het werk uit te leggen",
+        "compare": "Vergelijk meerdere offertes voordat je er een accepteert"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Welke klimaattechnische werkzaamheden kan ik via MaestroYa aanvragen?",
+          "answer": "Je kunt installatie, reparatie of onderhoud van airconditioning aanvragen. Klimaattechnici die jouw gebied bedienen, kunnen je aanvraag bekijken en je een offerte sturen."
+        },
+        "howQuote": {
+          "question": "Hoe werkt een offerte voor het installeren van airconditioning?",
+          "answer": "Je plaatst een aanvraag waarin je beschrijft wat je nodig hebt; geïnteresseerde vakmensen sturen hun offerte en jij beslist welke je accepteert."
+        },
+        "coverage": {
+          "question": "In welke gebieden is airconditioningservice beschikbaar?",
+          "answer": "De dekking hangt af van de vakmensen die in elk gebied actief zijn. Bekijk de pagina van jouw plaats om de huidige beschikbaarheid in dat gebied te zien."
+        }
+      }
+    },
+    "pintura": {
+      "nameInSentence": "Schilderwerk",
+      "intro": "MaestroYa brengt klanten in contact met schilders voor binnen- en buitenwerk. De klant beschrijft de ruimte die geschilderd moet worden en plaatst een aanvraag; schilders die het gebied bedienen, kunnen de aanvraag bekijken en een offerte sturen.",
+      "commonJobTypes": {
+        "interior": "Binnenschilderwerk (kamers, gangen, plafonds)",
+        "exterior": "Gevels en buitenkanten schilderen",
+        "wallPreparation": "Muren egaliseren en voorbereiden voor het schilderen",
+        "touchUps": "Bijwerken en plaatselijke afwerking"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Een beoordeling van de ruimte en het werk dat in de aanvraag is beschreven",
+        "quote": "Een gedetailleerde offerte voordat het werk begint",
+        "execution": "Het uitvoeren van het werk dat in de geaccepteerde offerte is afgesproken"
+      },
+      "considerations": {
+        "surface": "Vermeld de geschatte oppervlakte en de huidige staat van de muren",
+        "photos": "Voeg foto's toe van de ruimte die geschilderd moet worden",
+        "compare": "Vergelijk meerdere offertes voordat je er een accepteert"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Welk schilderwerk kan ik via MaestroYa aanvragen?",
+          "answer": "Je kunt binnen- of buitenschilderwerk of plaatselijk bijwerken aanvragen. Schilders die jouw gebied bedienen, kunnen je een offerte sturen."
+        },
+        "howQuote": {
+          "question": "Hoe werkt een offerte voor schilderwerk?",
+          "answer": "Je plaatst een aanvraag waarin je de ruimte en het werk beschrijft; geïnteresseerde vakmensen sturen hun offerte en jij beslist welke je accepteert."
+        },
+        "coverage": {
+          "question": "In welke gebieden is schilderwerk beschikbaar?",
+          "answer": "De dekking hangt af van de vakmensen die in elk gebied actief zijn. Bekijk de pagina van jouw plaats om de huidige beschikbaarheid in dat gebied te zien."
+        }
+      }
+    },
+    "reformas": {
+      "nameInSentence": "Verbouwingen",
+      "intro": "MaestroYa brengt klanten in contact met vakmensen voor volledige en gedeeltelijke verbouwingen van woningen. De klant beschrijft de omvang van de verbouwing en plaatst een aanvraag; vakmensen voor verbouwingen die het gebied bedienen, kunnen de aanvraag bekijken en een offerte sturen.",
+      "commonJobTypes": {
+        "partial": "Gedeeltelijke verbouwingen (een kamer, een badkamer, een keuken)",
+        "full": "Volledige verbouwingen van woningen",
+        "masonry": "Metsel- en bouwwerk bij een verbouwing",
+        "layoutFinishes": "Indelingswijzigingen of afwerking"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Een beoordeling van de omvang van de verbouwing die in de aanvraag is beschreven",
+        "quote": "Een gedetailleerde offerte voordat het werk begint",
+        "execution": "Het uitvoeren van het werk dat in de geaccepteerde offerte is afgesproken"
+      },
+      "considerations": {
+        "scope": "Beschrijf de omvang van de verbouwing zo gedetailleerd mogelijk",
+        "photos": "Voeg foto's toe van de huidige staat van de ruimte",
+        "compare": "Verbouwingen gaan meestal gepaard met hogere offertes: vergelijk meerdere opties voordat je er een accepteert"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Wat voor verbouwingen kan ik via MaestroYa aanvragen?",
+          "answer": "Je kunt gedeeltelijke of volledige verbouwingen van je woning aanvragen. Vakmensen voor verbouwingen die jouw gebied bedienen, kunnen je aanvraag bekijken en je een offerte sturen."
+        },
+        "compareQuotes": {
+          "question": "Kan ik meerdere offertes voor een verbouwing vergelijken?",
+          "answer": "Ja. Je kunt voor dezelfde aanvraag offertes van meerdere vakmensen ontvangen en ze vergelijken voordat je er een accepteert."
+        },
+        "coverage": {
+          "question": "In welke gebieden zijn verbouwingen beschikbaar?",
+          "answer": "De dekking hangt af van de vakmensen die in elk gebied actief zijn. Bekijk de pagina van jouw plaats om de huidige beschikbaarheid in dat gebied te zien."
+        }
+      }
+    },
+    "montaje-de-muebles": {
+      "nameInSentence": "Meubelmontage",
+      "intro": "MaestroYa brengt klanten in contact met vakmensen voor het monteren en in elkaar zetten van meubels en inrichting. De klant beschrijft het meubel of de meubels die gemonteerd moeten worden en plaatst een aanvraag; monteurs die het gebied bedienen, kunnen de aanvraag bekijken en een offerte sturen.",
+      "commonJobTypes": {
+        "flatPack": "Bouwpakketmeubels monteren (kasten, boekenkasten, tafels)",
+        "kitchen": "Keukenmeubels monteren",
+        "wallFixing": "Meubels aan de muur bevestigen",
+        "multiple": "Meerdere meubels monteren tijdens één bezoek"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Een beoordeling van het meubel of de meubels die in de aanvraag zijn beschreven",
+        "quote": "Een offerte voordat de montage begint",
+        "execution": "Het uitvoeren van de montage die in de geaccepteerde offerte is afgesproken"
+      },
+      "considerations": {
+        "typeQuantity": "Vermeld het type en het aantal meubels dat gemonteerd moet worden",
+        "photos": "Voeg foto's toe van de dozen of van de handleiding als je die hebt",
+        "compare": "Vergelijk meerdere offertes voordat je er een accepteert"
+      },
+      "faqs": {
+        "whatFurniture": {
+          "question": "Welke meubels kan ik via MaestroYa laten monteren?",
+          "answer": "Je kunt de montage aanvragen van vrijwel elk bouwpakketmeubel, zoals kasten, boekenkasten of keukenmeubels. Monteurs die jouw gebied bedienen, kunnen je een offerte sturen."
+        },
+        "howQuote": {
+          "question": "Hoe werkt een offerte voor meubelmontage?",
+          "answer": "Je plaatst een aanvraag waarin je het meubel of de meubels beschrijft die gemonteerd moeten worden; geïnteresseerde vakmensen sturen hun offerte en jij beslist welke je accepteert."
+        },
+        "coverage": {
+          "question": "In welke gebieden is meubelmontage beschikbaar?",
+          "answer": "De dekking hangt af van de vakmensen die in elk gebied actief zijn. Bekijk de pagina van jouw plaats om de huidige beschikbaarheid in dat gebied te zien."
+        }
+      }
+    }
+  },
+  "locations": {
+    "gandia": {
+      "intro": "Gandia (provincie Valencia) is de referentieplaats van MaestroYa. Klanten in Gandia kunnen een aanvraag plaatsen voor elk van de categorieën huishoudelijke diensten die op het platform beschikbaar zijn, en vakmensen die het gebied bedienen, kunnen de aanvraag bekijken en een offerte sturen.",
+      "faqs": {
+        "whatServices": {
+          "question": "Welke diensten kan ik in Gandia via MaestroYa aanvragen?",
+          "answer": "Je kunt een aanvraag plaatsen voor elk van de categorieën huishoudelijke diensten die op MaestroYa beschikbaar zijn (loodgieterswerk, elektra, airconditioning, schilderwerk, verbouwingen en meubelmontage). Bekijk de pagina van elke dienst voor de details."
+        },
+        "howToHire": {
+          "question": "Hoe schakel ik een vakman in Gandia in?",
+          "answer": "Je plaatst een aanvraag waarin je het werk beschrijft. Vakmensen die die categorie en het gebied Gandia bedienen, kunnen de aanvraag bekijken en je een offerte sturen, die je kunt vergelijken en accepteren voordat het werk begint."
+        },
+        "outsideGandia": {
+          "question": "Is MaestroYa ook buiten Gandia beschikbaar?",
+          "answer": "Gandia is de plaats met op dit moment bevestigde dekking op het platform. De daadwerkelijke beschikbaarheid van vakmensen kan wisselen en hangt af van wie er op een bepaald moment actief is."
+        }
+      }
+    }
+  },
+  "nationalCoverage": {
+    "intro": "MaestroYa is een marktplaats voor huishoudelijke diensten die klanten in contact brengt met vakmensen en bedrijven in Spanje. Iedereen in Spanje kan een aanvraag voor een dienst plaatsen; of een vakman die bekijkt en een offerte stuurt, hangt af van welke vakmensen op dat moment actief zijn in die categorie en dat gebied.",
+    "coverageStatement": "Het bereik van MaestroYa als platform is landelijk: het doel van de marktplaats is om in heel Spanje actief te zijn, niet alleen in één bepaalde plaats. Dat is iets anders dan de daadwerkelijke beschikbaarheid van vakmensen in een bepaald gebied, die afhangt van de werkelijke gegevens van het platform op dat moment.",
+    "howLocalAvailabilityWorks": "Wanneer je een aanvraag plaatst, kunnen alleen de vakmensen die die dienstcategorie en jouw gebied bedienen de aanvraag bekijken en je een offerte sturen. MaestroYa garandeert niet dat er in een bepaalde plaats een vakman beschikbaar is: de daadwerkelijke beschikbaarheid verschilt per gebied. Plaatsen met dekking die door de werkelijke gegevens van het platform is bevestigd, hebben een eigen pagina (zie /ubicaciones).",
+    "faqs": {
+      "wholeSpain": {
+        "question": "Is MaestroYa in heel Spanje actief?",
+        "answer": "MaestroYa is een marktplaats die is opgezet om in heel Spanje actief te zijn. Dat betekent niet dat er al in elke plaats actieve vakmensen zijn: de daadwerkelijke beschikbaarheid van vakmensen hangt af van het gebied en kan in de loop van de tijd veranderen."
+      },
+      "localAvailability": {
+        "question": "Hoe weet ik of een dienst in mijn plaats beschikbaar is?",
+        "answer": "Je kunt een aanvraag plaatsen met je adres; alleen vakmensen die jouw categorie en jouw gebied bedienen, kunnen je een offerte sturen. Plaatsen met dekking die door de werkelijke gegevens van het platform is bevestigd, staan in het onderdeel locaties."
+      },
+      "whatServices": {
+        "question": "Welke diensten biedt MaestroYa aan?",
+        "answer": "MaestroYa publiceert op dit moment zes categorieën huishoudelijke diensten: loodgieterswerk, elektra, airconditioning, schilderwerk, verbouwingen en meubelmontage. Bekijk de pagina van elke dienst voor meer details."
+      },
+      "professionalParticipation": {
+        "question": "Hoe doet een vakman mee aan MaestroYa?",
+        "answer": "Een vakman kan een account aanmaken, zijn dienstcategorieën en het gebied dat hij bedient opgeven, en vanaf dat moment geplaatste aanvragen die bij zijn categorie en gebied passen bekijken en er offertes voor sturen."
+      }
+    },
+    "structuredData": {
+      "name": "Huishoudelijke diensten via MaestroYa",
+      "description": "Marktplaats voor huishoudelijke diensten, beheerd door MaestroYa in Spanje. De beschikbaarheid van vakmensen verschilt per dienstcategorie en gebied."
+    }
+  }
+}

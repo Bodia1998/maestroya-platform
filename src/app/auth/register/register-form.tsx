@@ -1,11 +1,12 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { registerSchema, type RegisterInput } from "@/application/dto/auth.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { registerAction } from "../actions";
 
 export function RegisterForm({
@@ -14,6 +15,7 @@ export function RegisterForm({
   /** Professional Onboarding: carried from the register page's own `?intent=` read — see page.tsx. */
   intendedRole?: "CUSTOMER" | "PROFESSIONAL";
 }) {
+  const t = useTranslations("auth");
   const [serverError, setServerError] = useState<string | null>(null);
   const [succeeded, setSucceeded] = useState(false);
 
@@ -23,7 +25,7 @@ export function RegisterForm({
     setError,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
-    resolver: zodResolver(registerSchema),
+    resolver: useLocalizedZodResolver(registerSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -55,7 +57,7 @@ export function RegisterForm({
   if (succeeded) {
     return (
       <p role="status" className="rounded-md bg-green-50 px-3 py-3 text-sm text-green-700">
-        Account created. Check your email for a verification link before logging in.
+        {t("register.success")}
       </p>
     );
   }
@@ -70,7 +72,7 @@ export function RegisterForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="name" className="text-sm font-medium">
-          Name
+          {t("register.nameLabel")}
         </label>
         <input
           id="name"
@@ -83,7 +85,7 @@ export function RegisterForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="email" className="text-sm font-medium">
-          Email
+          {t("register.emailLabel")}
         </label>
         <input
           id="email"
@@ -97,7 +99,7 @@ export function RegisterForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="password" className="text-sm font-medium">
-          Password
+          {t("register.passwordLabel")}
         </label>
         <input
           id="password"
@@ -111,7 +113,7 @@ export function RegisterForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="confirmPassword" className="text-sm font-medium">
-          Confirm password
+          {t("register.confirmPasswordLabel")}
         </label>
         <input
           id="confirmPassword"
@@ -126,7 +128,7 @@ export function RegisterForm({
       </div>
 
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Creating account…" : "Create account"}
+        {isSubmitting ? t("register.submitting") : t("register.submit")}
       </Button>
     </form>
   );

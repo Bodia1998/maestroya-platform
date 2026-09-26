@@ -12,7 +12,10 @@ import { ChangePasswordForm } from "./change-password-form";
 import { DeleteAccountDialog } from "./delete-account-dialog";
 import { EditProfileForm } from "./edit-profile-form";
 
-export const metadata = { title: "Profile" };
+export async function generateMetadata() {
+  const t = await getTranslations("profile");
+  return { title: t("title") };
+}
 
 export default async function ProfilePage() {
   const user = await requireAuth();
@@ -39,11 +42,7 @@ export default async function ProfilePage() {
 
       <Section title={t("section.avatar")} gap="lg">
         <AvatarUpload currentImageUrl={profile.image} />
-        <p className="text-xs text-foreground/60">
-          This photo is just for your account — it has no effect on professional identity
-          verification. Professionals manage that separately from Professional profile → Manage
-          identity verification.
-        </p>
+        <p className="text-xs text-foreground/60">{t("avatarNote")}</p>
       </Section>
 
       <Section title={t("section.details")} gap="lg">
@@ -64,10 +63,7 @@ export default async function ProfilePage() {
       </Section>
 
       <Section title={t("section.danger")} titleTone="danger" gap="lg" divider>
-        <p className="text-sm text-foreground/70">
-          Deleting your account is reversible only by contacting support — your data is deactivated,
-          not immediately erased.
-        </p>
+        <p className="text-sm text-foreground/70">{t("dangerNote")}</p>
         <DeleteAccountDialog hasPassword={profile.hasPassword} />
       </Section>
     </PageContainer>

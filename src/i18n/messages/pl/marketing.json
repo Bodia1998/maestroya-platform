@@ -1,24 +1,252 @@
 {
   "hero": {
-    "title": "Znajdź zaufanych specjalistów dla swojego domu",
-    "subtitle": "Opisz, czego potrzebujesz, i otrzymaj wyceny od zweryfikowanych specjalistów w pobliżu.",
+    "title": "Znajdź zaufanych specjalistów do swojego domu",
+    "subtitle": "Opisz, czego potrzebujesz, porównaj wyceny i zatrudnij odpowiedniego specjalistę w pobliżu — wszystko w MaestroYa.",
     "ctaPrimary": "Dodaj zapytanie",
-    "ctaSecondary": "Przeglądaj specjalistów"
+    "ctaSecondary": "Przeglądaj specjalistów",
+    "or": "lub",
+    "highlights": {
+      "verified": "Zweryfikowani specjaliści",
+      "reviews": "Opinie prawdziwych klientów",
+      "audience": "Osoby prywatne i firmy"
+    },
+    "search": {
+      "serviceLabel": "Jakiej usługi potrzebujesz?",
+      "locationLabel": "Gdzie jej potrzebujesz?",
+      "locationPlaceholder": "Miasto lub kod pocztowy",
+      "submit": "Szukaj specjalistów"
+    }
   },
   "howItWorks": {
     "title": "Jak to działa",
     "step1": "Opisz, czego potrzebujesz",
     "step2": "Otrzymaj wyceny",
-    "step3": "Wybierz specjalistę"
+    "step3": "Wybierz specjalistę",
+    "subtitle": "Od zapytania do wykonanego zlecenia w czterech krokach.",
+    "steps": {
+      "one": {
+        "title": "Powiedz nam, czego potrzebujesz",
+        "description": "Opisz pracę, wybierz kategorię i opublikuj zapytanie w kilka minut."
+      },
+      "two": {
+        "title": "Otrzymaj wyceny",
+        "description": "Zainteresowani specjaliści dostępni w Twojej okolicy przyślą Ci swoje wyceny."
+      },
+      "three": {
+        "title": "Porównaj i wybierz",
+        "description": "Przejrzyj profile, opinie i wyceny i porozmawiaj ze specjalistą przed podjęciem decyzji."
+      },
+      "four": {
+        "title": "Zarezerwuj i oceń usługę",
+        "description": "Umów wizytę, śledź zlecenie aż do zakończenia i zostaw opinię."
+      }
+    },
+    "cta": "Zacznij teraz"
   },
   "professionals": {
-    "title": "Specjaliści"
+    "title": "Specjaliści",
+    "heading": "Znajdź specjalistę",
+    "subtitle": "Szukaj według usługi i lokalizacji, aby zobaczyć specjalistów działających w Twojej okolicy.",
+    "invalid": "To wyszukiwanie jest nieprawidłowe — spróbuj ponownie.",
+    "failed": "Coś poszło nie tak podczas wyszukiwania.",
+    "found": "{count, plural, one {Znaleziono # specjalistę} few {Znaleziono # specjalistów} many {Znaleziono # specjalistów} other {Znaleziono # specjalisty}}",
+    "companiesFound": "{count, plural, one {Znaleziono # firmę} few {Znaleziono # firmy} many {Znaleziono # firm} other {Znaleziono # firmy}}",
+    "verified": "✓ Zweryfikowana",
+    "form": {
+      "serviceLabel": "Usługa",
+      "selectService": "Wybierz usługę…",
+      "latitude": "Szerokość geograficzna",
+      "longitude": "Długość geograficzna",
+      "latitudePlaceholder": "np. 38.9665",
+      "longitudePlaceholder": "np. -0.1817",
+      "useMyLocation": "Użyj mojej bieżącej lokalizacji",
+      "locating": "Ustalanie lokalizacji…",
+      "notSupported": "Twoja przeglądarka nie obsługuje usług lokalizacji.",
+      "locationFailed": "Nie udało się ustalić Twojej lokalizacji. Wpisz ją ręcznie poniżej.",
+      "submit": "Szukaj specjalistów",
+      "submitting": "Wyszukiwanie…"
+    },
+    "results": {
+      "empty": "Nie znaleziono jeszcze specjalistów tej usługi w pobliżu tej lokalizacji.",
+      "distance": "{distance} km stąd"
+    },
+    "verification": {
+      "UNVERIFIED": "Niezweryfikowany",
+      "PENDING": "Weryfikacja w toku",
+      "VERIFIED": "Zweryfikowany specjalista",
+      "REJECTED": "Weryfikacja odrzucona"
+    },
+    "profile": {
+      "about": "O mnie",
+      "experience": "Doświadczenie",
+      "experienceYears": "{count, plural, one {# rok} few {# lata} many {# lat} other {# roku}}",
+      "serviceArea": "Obszar działania",
+      "withinKm": "W promieniu {km} km",
+      "readyText": "Gotowy, by zacząć? Opublikuj zapytanie o usługę, a {name} — wraz z innymi odpowiednimi specjalistami w okolicy — będzie mógł je przejrzeć i przesłać Ci wycenę.",
+      "requestService": "Zamów tę usługę"
+    }
   },
   "search": {
     "title": "Znajdź specjalistów",
-    "resultCount": "{count, plural, =0 {Brak wyników} one {# specjalista} few {# specjalistów} many {# specjalistów} other {# specjalisty}}"
+    "resultCount": "{count, plural, =0 {Brak wyników} one {# specjalista} few {# specjalistów} many {# specjalistów} other {# specjalisty}}",
+    "heading": "Znajdź specjalistę lub firmę",
+    "subtitle": "Szukaj według usługi, miasta, oceny i weryfikacji — specjaliści i firmy w jednym rankingu.",
+    "invalid": "To wyszukiwanie jest nieprawidłowe — zmień filtry i spróbuj ponownie.",
+    "failed": "Coś poszło nie tak podczas wyszukiwania.",
+    "resultsFound": "{count, plural, one {Znaleziono # wynik} few {Znaleziono # wyniki} many {Znaleziono # wyników} other {Znaleziono # wyniku}}",
+    "form": {
+      "queryLabel": "Czego potrzebujesz?",
+      "queryPlaceholder": "np. elektryk, klimatyzacja…",
+      "serviceLabel": "Usługa",
+      "anyService": "Dowolna usługa",
+      "cityLabel": "Miasto",
+      "cityPlaceholder": "np. Gandia",
+      "minRatingLabel": "Minimalna ocena",
+      "anyRating": "Dowolna ocena",
+      "ratingOption": "{rating}+ gwiazdki",
+      "sortByLabel": "Sortuj według",
+      "sort": {
+        "RELEVANCE": "Najlepiej dopasowane",
+        "RATING": "Najwyżej oceniane",
+        "REVIEWS": "Najwięcej opinii",
+        "NEWEST": "Najnowsze",
+        "VERIFIED": "Najpierw zweryfikowani"
+      },
+      "verifiedOnly": "Tylko zweryfikowani",
+      "nearLocation": "Szukaj w pobliżu lokalizacji (opcjonalnie)",
+      "submit": "Szukaj"
+    },
+    "location": {
+      "useMyLocation": "Użyj mojej lokalizacji",
+      "locating": "Ustalanie lokalizacji…",
+      "clear": "Wyczyść",
+      "unknownAddress": "Nieznany adres w pobliżu tego punktu",
+      "notSupported": "Twoja przeglądarka nie obsługuje usług lokalizacji.",
+      "failed": "Nie udało się ustalić Twojej lokalizacji. Kliknij punkt na mapie.",
+      "near": "W pobliżu: {address}",
+      "radiusLabel": "Promień wyszukiwania (km)",
+      "radiusPlaceholder": "np. 25",
+      "invalid": "Ta lokalizacja wygląda na nieprawidłową.",
+      "reverseGeocodeFailed": "Nie udało się ustalić adresu dla tej lokalizacji."
+    },
+    "results": {
+      "empty": "Brak wyników dla tych filtrów.",
+      "kindProfessional": "Specjalista",
+      "kindCompany": "Firma",
+      "reasons": {
+        "verified": "Zweryfikowany specjalista",
+        "highlyRated": "Wysoko oceniany ({rating}/5, {count, plural, one {# opinia} few {# opinie} many {# opinii} other {# opinii}})",
+        "manyJobs": "Wiele zakończonych zleceń",
+        "inCity": "W wyszukiwanym mieście",
+        "inRegion": "W wyszukiwanym regionie",
+        "categoryMatch": "Pasuje do wyszukiwanej kategorii usług",
+        "portfolio": "Dostępne portfolio ({count, plural, one {# pozycja} few {# pozycje} many {# pozycji} other {# pozycji}})",
+        "completeProfile": "Mocny, kompletny profil"
+      }
+    }
   },
   "footer": {
-    "rights": "© {year, number} MaestroYa. Wszelkie prawa zastrzeżone."
+    "rights": "© {year} MaestroYa. Wszelkie prawa zastrzeżone.",
+    "tagline": "Łączymy osoby potrzebujące usług domowych z zaufanymi specjalistami w ich okolicy.",
+    "madeIn": "Stworzone w Hiszpanii dla hiszpańskich domów.",
+    "customers": "Klienci",
+    "professionals": "Specjaliści",
+    "account": "Konto",
+    "directory": "Katalog specjalistów",
+    "joinAsProfessional": "Dołącz jako specjalista",
+    "professionalDashboard": "Przejdź do panelu",
+    "forgotPassword": "Odzyskaj hasło"
+  },
+  "meta": {
+    "home": {
+      "title": "MaestroYa — Zaufani specjaliści do Twojego domu",
+      "description": "Opisz, czego potrzebujesz, i skontaktuj się ze zweryfikowanymi specjalistami w pobliżu: hydraulika, elektryka, remonty, sprzątanie i wiele więcej."
+    },
+    "search": {
+      "title": "Szukaj specjalistów i firm",
+      "description": "Filtruj według kategorii, miasta, oceny i weryfikacji, aby znaleźć odpowiedniego specjalistę lub firmę do swojego projektu."
+    },
+    "professionals": {
+      "title": "Znajdź specjalistę w pobliżu",
+      "description": "Szukaj zweryfikowanych specjalistów według kategorii usług i lokalizacji, posortowanych według odległości."
+    },
+    "professionalProfile": {
+      "descriptionWithLocation": "Zweryfikowany specjalista: {location}. Zobacz profil i poproś o wycenę w MaestroYa.",
+      "description": "Zobacz profil tego specjalisty i poproś o wycenę w MaestroYa."
+    },
+    "companyProfile": {
+      "descriptionWithLocation": "Firma usług domowych: {location}. Zobacz jej profil w MaestroYa.",
+      "description": "Zobacz profil tej firmy i poproś o wycenę w MaestroYa."
+    }
+  },
+  "categories": {
+    "title": "Najczęściej wybierane usługi",
+    "subtitle": "Wybierz kategorię, aby zobaczyć zweryfikowanych specjalistów w pobliżu."
+  },
+  "trust": {
+    "title": "Stworzone, by każde zlecenie budziło zaufanie",
+    "subtitle": "Z MaestroYa zawsze wiesz, z kim rozmawiasz i co zlecasz.",
+    "verified": {
+      "title": "Zweryfikowani specjaliści",
+      "description": "Specjaliści mogą potwierdzić swoją tożsamość, a firmy — dokumenty, zanim zaczną działać na platformie."
+    },
+    "quotes": {
+      "title": "Przejrzyste wyceny",
+      "description": "Otrzymuj szczegółowe wyceny od kilku specjalistów i porównuj je przed podjęciem decyzji."
+    },
+    "communication": {
+      "title": "Komunikacja na platformie",
+      "description": "Rozmawiaj ze specjalistą bezpośrednio w MaestroYa przed usługą i w jej trakcie."
+    },
+    "reviews": {
+      "title": "Prawdziwe opinie",
+      "description": "Każde zakończone zlecenie może otrzymać opinię widoczną w profilu specjalisty."
+    },
+    "tracking": {
+      "title": "Śledzenie zlecenia",
+      "description": "Sprawdzaj w dowolnej chwili w swoim panelu status zapytania, wizyty i zlecenia."
+    },
+    "support": {
+      "title": "Wsparcie, gdy coś pójdzie nie tak",
+      "description": "Jeśli pojawi się problem, możesz zgłosić sprawę, a nasz zespół wsparcia Ci pomoże."
+    }
+  },
+  "professionalCta": {
+    "badge": "Dla specjalistów",
+    "title": "Jesteś specjalistą? Zdobywaj nowych klientów z MaestroYa",
+    "benefits": {
+      "leads": "Otrzymuj zapytania od klientów szukających Twojej kategorii usług",
+      "profile": "Utwórz profil specjalisty i pokaż swoje doświadczenie oraz portfolio",
+      "quotes": "Wysyłaj wyceny bezpośrednio z panelu",
+      "schedule": "Zarządzaj wizytami i zleceniami od początku do końca",
+      "reputation": "Buduj reputację dzięki opiniom klientów"
+    },
+    "join": "Dołącz jako specjalista",
+    "haveAccount": "Mam już konto"
+  },
+  "errorPage": {
+    "title": "Coś poszło nie tak",
+    "retry": "Spróbuj ponownie"
+  },
+  "notFound": {
+    "message": "Nie znaleziono tej strony.",
+    "backHome": "Wróć na stronę główną"
+  },
+  "directory": {
+    "backToSearch": "← Wróć do wyszukiwania",
+    "viewProfile": "Zobacz profil",
+    "about": "O nas",
+    "services": "Usługi",
+    "basedNear": "Okolica",
+    "locationNotSet": "Nie podano lokalizacji",
+    "teamOf": "{count, plural, one {Zespół: # osoba} few {Zespół: # osoby} many {Zespół: # osób} other {Zespół: # osoby}}",
+    "verifiedCompany": "✓ Zweryfikowana firma"
+  },
+  "companies": {
+    "profile": {
+      "teamSize": "Wielkość zespołu",
+      "rating": "Ocena",
+      "portfolio": "Portfolio"
+    }
   }
 }

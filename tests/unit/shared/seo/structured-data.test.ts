@@ -41,6 +41,13 @@ describe("buildServiceJsonLd", () => {
     expect(withoutArea.areaServed).toBeUndefined();
   });
 
+  it("states the rendered language via inLanguage only when given (Module 120)", () => {
+    const localized = buildServiceJsonLd({ name: "Сантехника", path: "/servicios/fontaneria", inLanguage: "ru" });
+    expect(localized.inLanguage).toBe("ru");
+    expect(localized.url).toMatch(/\/servicios\/fontaneria$/);
+    expect(buildServiceJsonLd({ name: "Fontanería", path: "/servicios/fontaneria" }).inLanguage).toBeUndefined();
+  });
+
   it("scopes the provider to a specific business when providerId is given", () => {
     const jsonLd = buildServiceJsonLd({
       name: "Fontanería",
@@ -163,6 +170,12 @@ describe("buildFaqJsonLd", () => {
       name: "¿Qué es MaestroYa?",
       acceptedAnswer: { "@type": "Answer", text: "Un marketplace de servicios para el hogar." },
     });
+  });
+
+  it("adds inLanguage for the rendered locale when given (Module 120)", () => {
+    const jsonLd = buildFaqJsonLd([{ question: "Q?", answer: "A." }], { inLanguage: "nl" });
+    expect(jsonLd.inLanguage).toBe("nl");
+    expect(buildFaqJsonLd([]).inLanguage).toBeUndefined();
   });
 
   it("returns an empty mainEntity for no items, never a fabricated placeholder question", () => {

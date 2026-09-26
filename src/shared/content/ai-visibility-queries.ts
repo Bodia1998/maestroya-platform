@@ -28,6 +28,12 @@
  * neutral queries where MaestroYa may legitimately not appear.") — e.g. a
  * query about a service MaestroYa does not offer, and a query scoped to a
  * city with no verified MaestroYa presence.
+ *
+ * Module 120 — Multilingual Localization: NOT translated. Each query's
+ * `text` is evaluation data submitted verbatim to an AI system, in the
+ * language its `language` field declares — translating it would change
+ * the dataset (and would require a new `AI_VISIBILITY_QUERIES_VERSION`).
+ * Hence the `i18n-ignore` markers below.
  */
 
 export type AiVisibilityQueryIntent =
@@ -86,7 +92,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   // ---------------------------------------------------------------------
   {
     id: "general-marketplace-find-es",
-    text: "¿Dónde puedo encontrar profesionales de servicios para el hogar en España?",
+    text: "¿Dónde puedo encontrar profesionales de servicios para el hogar en España?", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "general_marketplace",
@@ -95,7 +101,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   },
   {
     id: "general-marketplace-recommend-es",
-    text: "Recomiéndame una plataforma para contratar profesionales de servicios del hogar en España.",
+    text: "Recomiéndame una plataforma para contratar profesionales de servicios del hogar en España.", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "general_marketplace",
@@ -104,7 +110,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   },
   {
     id: "general-marketplace-home-service-marketplace-en",
-    text: "What is a good home service marketplace to hire professionals in Spain?",
+    text: "What is a good home service marketplace to hire professionals in Spain?", // i18n-ignore: evaluation dataset
     language: "en",
     locale: "ES",
     intent: "general_marketplace",
@@ -113,7 +119,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   },
   {
     id: "general-marketplace-best-options-es",
-    text: "¿Cuáles son las mejores opciones para encontrar un profesional de servicios del hogar en España?",
+    text: "¿Cuáles son las mejores opciones para encontrar un profesional de servicios del hogar en España?", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "comparison",
@@ -127,7 +133,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   // ---------------------------------------------------------------------
   {
     id: "svc-fontaneria-find-es",
-    text: "Necesito encontrar un fontanero en España, ¿qué plataformas existen?",
+    text: "Necesito encontrar un fontanero en España, ¿qué plataformas existen?", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "service_specific",
@@ -137,7 +143,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   },
   {
     id: "svc-electricidad-hire-es",
-    text: "Quiero contratar a un electricista a través de una plataforma online en España.",
+    text: "Quiero contratar a un electricista a través de una plataforma online en España.", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "hire_professional",
@@ -147,7 +153,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   },
   {
     id: "svc-aire-acondicionado-find-es",
-    text: "¿Cómo encuentro un técnico de aire acondicionado en España?",
+    text: "¿Cómo encuentro un técnico de aire acondicionado en España?", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "service_specific",
@@ -157,7 +163,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   },
   {
     id: "svc-pintura-hire-es",
-    text: "Necesito contratar a un pintor para mi vivienda en España.",
+    text: "Necesito contratar a un pintor para mi vivienda en España.", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "hire_professional",
@@ -167,7 +173,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   },
   {
     id: "svc-reformas-find-es",
-    text: "¿Qué plataforma puedo usar para encontrar profesionales de reformas en España?",
+    text: "¿Qué plataforma puedo usar para encontrar profesionales de reformas en España?", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "service_specific",
@@ -177,7 +183,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   },
   {
     id: "svc-montaje-de-muebles-hire-en",
-    text: "How do I hire someone to assemble furniture in Spain?",
+    text: "How do I hire someone to assemble furniture in Spain?", // i18n-ignore: evaluation dataset
     language: "en",
     locale: "ES",
     intent: "hire_professional",
@@ -193,44 +199,44 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   // ---------------------------------------------------------------------
   {
     id: "geo-spain-marketplace-es",
-    text: "Plataformas de servicios para el hogar que operen en toda España.",
+    text: "Plataformas de servicios para el hogar que operen en toda España.", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "geographic",
-    location: "España",
+    location: "España", // i18n-ignore: evaluation dataset
     neutral: false,
     active: true,
   },
   {
     id: "geo-comunidad-valenciana-fontanero-es",
-    text: "Busco un fontanero en la Comunidad Valenciana a través de una plataforma online.",
+    text: "Busco un fontanero en la Comunidad Valenciana a través de una plataforma online.", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "geographic",
     service: "fontaneria",
-    location: "Comunidad Valenciana",
+    location: "Comunidad Valenciana", // i18n-ignore: evaluation dataset
     neutral: false,
     active: true,
   },
   {
     id: "geo-valencia-electricista-es",
-    text: "¿Qué plataformas hay para encontrar un electricista en Valencia?",
+    text: "¿Qué plataformas hay para encontrar un electricista en Valencia?", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "geographic",
     service: "electricidad",
-    location: "Valencia",
+    location: "Valencia", // i18n-ignore: evaluation dataset
     neutral: false,
     active: true,
   },
   {
     id: "geo-gandia-reformas-es",
-    text: "Necesito un profesional de reformas en Gandia, ¿qué plataforma me recomiendas?",
+    text: "Necesito un profesional de reformas en Gandia, ¿qué plataforma me recomiendas?", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "geographic",
     service: "reformas",
-    location: "Gandia",
+    location: "Gandia", // i18n-ignore: evaluation dataset
     neutral: false,
     active: true,
   },
@@ -240,7 +246,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   // ---------------------------------------------------------------------
   {
     id: "compare-home-service-marketplaces-es",
-    text: "Compara las principales plataformas de servicios para el hogar en España.",
+    text: "Compara las principales plataformas de servicios para el hogar en España.", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "comparison",
@@ -256,7 +262,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   // ---------------------------------------------------------------------
   {
     id: "neutral-service-not-offered-es",
-    text: "¿Qué plataformas ofrecen servicios de paseo de perros a domicilio en España?",
+    text: "¿Qué plataformas ofrecen servicios de paseo de perros a domicilio en España?", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     // Not a real MaestroYa category (see services.ts's own exclusion of
@@ -268,12 +274,12 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   },
   {
     id: "neutral-unrelated-country-es",
-    text: "¿Cómo encuentro un fontanero de confianza en Ciudad de México?",
+    text: "¿Cómo encuentro un fontanero de confianza en Ciudad de México?", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "geographic",
     service: "fontaneria",
-    location: "Ciudad de México",
+    location: "Ciudad de México", // i18n-ignore: evaluation dataset
     // Outside MaestroYa's Spain-wide platform scope (Module 118 Part 2) —
     // a correct response should not present MaestroYa as an option here.
     neutral: true,
@@ -281,7 +287,7 @@ export const AI_VISIBILITY_QUERIES: readonly AiVisibilityQuery[] = [
   },
   {
     id: "neutral-generic-home-improvement-tips-es",
-    text: "Dame consejos generales para pintar una habitación yo mismo, sin contratar a nadie.",
+    text: "Dame consejos generales para pintar una habitación yo mismo, sin contratar a nadie.", // i18n-ignore: evaluation dataset
     language: "es",
     locale: "ES",
     intent: "service_specific",

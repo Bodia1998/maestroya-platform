@@ -1,31 +1,43 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
-const COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string }> }> = [
+/**
+ * Module 120 — Multilingual Localization: hrefs stay here, labels are
+ * catalog keys — `nav.*` where the header already has the same label,
+ * `marketing.footer.*` for footer-only text.
+ */
+type FooterLabel = { ns: "nav"; key: "search" | "services" | "locations" | "register" | "howItWorks" | "login" }
+  | { ns: "footer"; key: "directory" | "joinAsProfessional" | "professionalDashboard" | "forgotPassword" };
+
+const COLUMNS: Array<{
+  titleKey: "customers" | "professionals" | "account";
+  links: Array<{ href: string; label: FooterLabel }>;
+}> = [
   {
-    title: "Clientes",
+    titleKey: "customers",
     links: [
-      { href: "/search", label: "Buscar profesionales" },
-      { href: "/professionals", label: "Directorio de profesionales" },
+      { href: "/search", label: { ns: "nav", key: "search" } },
+      { href: "/professionals", label: { ns: "footer", key: "directory" } },
       // Module 118 — AI-Readable Service & Location Knowledge.
-      { href: "/servicios", label: "Servicios" },
-      { href: "/ubicaciones", label: "Ubicaciones" },
-      { href: "/auth/register", label: "Crear cuenta" },
-      { href: "/#como-funciona", label: "Cómo funciona" },
+      { href: "/servicios", label: { ns: "nav", key: "services" } },
+      { href: "/ubicaciones", label: { ns: "nav", key: "locations" } },
+      { href: "/auth/register", label: { ns: "nav", key: "register" } },
+      { href: "/#como-funciona", label: { ns: "nav", key: "howItWorks" } },
     ],
   },
   {
-    title: "Profesionales",
+    titleKey: "professionals",
     links: [
-      { href: "/auth/register", label: "Únete como profesional" },
-      { href: "/auth/login", label: "Acceder a mi panel" },
+      { href: "/auth/register", label: { ns: "footer", key: "joinAsProfessional" } },
+      { href: "/auth/login", label: { ns: "footer", key: "professionalDashboard" } },
     ],
   },
   {
-    title: "Cuenta",
+    titleKey: "account",
     links: [
-      { href: "/auth/login", label: "Iniciar sesión" },
-      { href: "/auth/register", label: "Crear cuenta" },
-      { href: "/auth/forgot-password", label: "Recuperar contraseña" },
+      { href: "/auth/login", label: { ns: "nav", key: "login" } },
+      { href: "/auth/register", label: { ns: "nav", key: "register" } },
+      { href: "/auth/forgot-password", label: { ns: "footer", key: "forgotPassword" } },
     ],
   },
 ];
@@ -38,7 +50,11 @@ const COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string
  * terms/privacy pages exist.
  */
 export function SiteFooter() {
+  const t = useTranslations("marketing");
+  const tNav = useTranslations("nav");
   const year = new Date().getFullYear();
+  const labelOf = (label: FooterLabel) =>
+    label.ns === "nav" ? tNav(label.key) : t(`footer.${label.key}`);
 
   return (
     <footer className="border-t border-border bg-muted/40">
@@ -51,22 +67,21 @@ export function SiteFooter() {
             MaestroYa
           </Link>
           <p className="max-w-xs text-sm text-muted-foreground">
-            Conectamos a personas que necesitan un servicio para el hogar con profesionales de
-            confianza cerca de ellas.
+            {t("footer.tagline")}
           </p>
         </div>
 
         {COLUMNS.map((column) => (
-          <div key={column.title} className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold text-foreground">{column.title}</h3>
+          <div key={column.titleKey} className="flex flex-col gap-3">
+            <h3 className="text-sm font-semibold text-foreground">{t(`footer.${column.titleKey}`)}</h3>
             <ul className="flex flex-col gap-2">
               {column.links.map((link) => (
-                <li key={link.label}>
+                <li key={`${link.label.ns}.${link.label.key}`}>
                   <Link
                     href={link.href}
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
-                    {link.label}
+                    {labelOf(link.label)}
                   </Link>
                 </li>
               ))}
@@ -77,8 +92,8 @@ export function SiteFooter() {
 
       <div className="border-t border-border">
         <div className="container flex flex-col items-center justify-between gap-3 py-6 text-xs text-muted-foreground sm:flex-row">
-          <p>© {year} MaestroYa. Todos los derechos reservados.</p>
-          <p>Hecho en España para el hogar español.</p>
+          <p>{t("footer.rights", { year: String(year) })}</p>
+          <p>{t("footer.madeIn")}</p>
         </div>
       </div>
     </footer>

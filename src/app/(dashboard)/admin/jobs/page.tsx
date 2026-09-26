@@ -1,4 +1,5 @@
 import { Briefcase } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { makeListAdminJobsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
@@ -8,7 +9,10 @@ import { AdminDataTable, AdminTableHeadRow, AdminTh, AdminTableBody, AdminTableR
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 
-export const metadata = { title: "Admin — Appointments & jobs" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("jobsPage.title") }) };
+}
 
 type SearchParams = Promise<{ page?: string }>;
 
@@ -21,18 +25,20 @@ export default async function AdminJobsPage({ searchParams }: { searchParams: Se
 
   const jobs = await makeListAdminJobsUseCase().execute({ limit: DEFAULT_PAGE_SIZE, offset });
 
+  const t = await getTranslations("admin");
+
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Appointments & jobs" subtitle="Read-only oversight of the execution lifecycle." />
+      <PageHeader title={t("jobsPage.title")} subtitle={t("jobsPage.subtitle")} />
 
       {jobs.length === 0 ? (
-        <EmptyState icon={Briefcase} title="No jobs found" description="Jobs created from accepted quotes will appear here." />
+        <EmptyState icon={Briefcase} title={t("jobsPage.empty")} description={t("jobsPage.emptyDescription")} />
       ) : (
-        <AdminDataTable caption="Appointments and jobs" minWidth={480}>
+        <AdminDataTable caption={t("jobsPage.caption")} minWidth={480}>
           <AdminTableHeadRow>
-            <AdminTh>Job</AdminTh>
-            <AdminTh>Status</AdminTh>
-            <AdminTh>Appointments</AdminTh>
+            <AdminTh>{t("jobsPage.columns.job")}</AdminTh>
+            <AdminTh>{t("common.columns.status")}</AdminTh>
+            <AdminTh>{t("jobsPage.columns.appointments")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {jobs.map((job) => (

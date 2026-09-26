@@ -1,0 +1,256 @@
+{
+  "services": {
+    "fontaneria": {
+      "nameInSentence": "Hydraulika",
+      "intro": "MaestroYa łączy klientów ze specjalistami od prac hydraulicznych: naprawy przecieków, kranów, rur i instalacji wodnych w domu. Klient opisuje problem i publikuje zapytanie; hydraulicy działający w danej okolicy mogą je przejrzeć i przesłać wycenę.",
+      "commonJobTypes": {
+        "leakRepair": "Naprawa przecieków wody",
+        "tapRepair": "Wymiana lub naprawa kranów",
+        "pipeUnblocking": "Udrażnianie rur",
+        "sanitaryInstallation": "Montaż armatury sanitarnej (toalet, umywalek, pryszniców)",
+        "waterHeaterRepair": "Przegląd lub naprawa podgrzewaczy wody i instalacji ciepłej wody"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Diagnozę problemu opisanego w zapytaniu",
+        "quote": "Szczegółową wycenę przed rozpoczęciem prac",
+        "execution": "Wykonanie prac uzgodnionych w zaakceptowanej wycenie"
+      },
+      "considerations": {
+        "describe": "Opisz problem jak najdokładniej i w miarę możliwości dodaj zdjęcia do zapytania",
+        "urgency": "Określ rzeczywistą pilność prac (system pozwala oznaczać zapytania jako bardziej lub mniej pilne)",
+        "compare": "Możesz otrzymać i porównać kilka wycen, zanim zaakceptujesz jedną z nich"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Jakie prace hydrauliczne mogę zlecić w MaestroYa?",
+          "answer": "Możesz opublikować zapytanie opisujące dowolne domowe prace hydrauliczne, na przykład przeciek, niedziałający kran lub montaż armatury sanitarnej. Hydraulicy działający w Twojej okolicy mogą przejrzeć zapytanie i przesłać Ci wycenę."
+        },
+        "howQuote": {
+          "question": "Jak działa wycena prac hydraulicznych?",
+          "answer": "Po opublikowaniu zapytania jeden lub kilku specjalistów może przesłać Ci wycenę. Możesz porównać otrzymane wyceny i zaakceptować tę, która najbardziej Ci odpowiada, zanim rozpoczną się prace."
+        },
+        "coverage": {
+          "question": "Na jakich obszarach dostępne są usługi hydrauliczne?",
+          "answer": "Zasięg zależy od specjalistów aktywnych na danym obszarze. Sprawdź stronę swojej miejscowości, aby zobaczyć aktualną dostępność w tej okolicy."
+        }
+      }
+    },
+    "electricidad": {
+      "nameInSentence": "Elektryka",
+      "intro": "MaestroYa łączy klientów ze specjalistami od prac elektrycznych: instalacji elektrycznych, awarii, rozdzielnic i gniazdek. Klient opisuje prace i publikuje zapytanie; elektrycy działający w danej okolicy mogą je przejrzeć i przesłać wycenę.",
+      "commonJobTypes": {
+        "faultRepair": "Usuwanie awarii elektrycznych",
+        "socketsSwitches": "Montaż lub wymiana gniazdek i włączników",
+        "panelUpgrade": "Przegląd lub modernizacja rozdzielnicy elektrycznej",
+        "lightPoints": "Montaż punktów świetlnych",
+        "smallInstallations": "Montaż osprzętu i drobne domowe prace elektryczne"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Diagnozę problemu elektrycznego opisanego w zapytaniu",
+        "quote": "Szczegółową wycenę przed rozpoczęciem prac",
+        "execution": "Wykonanie prac uzgodnionych w zaakceptowanej wycenie"
+      },
+      "considerations": {
+        "describe": "Opisz awarię lub instalację jak najdokładniej, ze zdjęciami, jeśli pomagają ją wyjaśnić",
+        "urgency": "Określ rzeczywistą pilność prac",
+        "compare": "Porównaj kilka wycen, zanim zaakceptujesz jedną z nich"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Jakie prace elektryczne mogę zlecić w MaestroYa?",
+          "answer": "Możesz opublikować zapytanie dotyczące m.in. awarii elektrycznych, montażu gniazdek lub punktów świetlnych albo przeglądu rozdzielnicy. Elektrycy działający w Twojej okolicy mogą przesłać Ci wycenę."
+        },
+        "howToRequest": {
+          "question": "Jak zamówić elektryka przez MaestroYa?",
+          "answer": "Opublikuj zapytanie opisujące prace. Specjaliści obsługujący Twoją kategorię i okolicę będą mogli je przejrzeć i przesłać Ci wycenę, którą możesz zaakceptować lub odrzucić."
+        },
+        "coverage": {
+          "question": "Na jakich obszarach dostępne są usługi elektryczne?",
+          "answer": "Zasięg zależy od specjalistów aktywnych na danym obszarze. Sprawdź stronę swojej miejscowości, aby zobaczyć aktualną dostępność w tej okolicy."
+        }
+      }
+    },
+    "aire-acondicionado": {
+      "nameInSentence": "Klimatyzacja",
+      "intro": "MaestroYa łączy klientów ze specjalistami od klimatyzacji: montażu, konserwacji i naprawy klimatyzatorów. Klient opisuje, czego potrzebuje, i publikuje zapytanie; technicy klimatyzacji działający w danej okolicy mogą je przejrzeć i przesłać wycenę.",
+      "commonJobTypes": {
+        "newInstallation": "Montaż nowego klimatyzatora",
+        "repair": "Naprawa urządzenia, które nie chłodzi lub nie działa",
+        "maintenance": "Konserwacja i czyszczenie urządzeń",
+        "gasRecharge": "Uzupełnianie czynnika chłodniczego"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Diagnozę lub ocenę urządzenia bądź instalacji opisanej w zapytaniu",
+        "quote": "Szczegółową wycenę przed rozpoczęciem prac",
+        "execution": "Wykonanie prac uzgodnionych w zaakceptowanej wycenie"
+      },
+      "considerations": {
+        "equipmentType": "Podaj typ urządzenia (jeśli go znasz) i opisz problem lub oczekiwaną instalację",
+        "photos": "Dodaj zdjęcia urządzenia lub pomieszczenia, jeśli pomagają wyjaśnić zlecenie",
+        "compare": "Porównaj kilka wycen, zanim zaakceptujesz jedną z nich"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Jakie prace związane z klimatyzacją mogę zlecić w MaestroYa?",
+          "answer": "Możesz zlecić montaż, naprawę lub konserwację klimatyzacji. Technicy klimatyzacji działający w Twojej okolicy mogą przejrzeć Twoje zapytanie i przesłać Ci wycenę."
+        },
+        "howQuote": {
+          "question": "Jak działa wycena montażu klimatyzacji?",
+          "answer": "Publikujesz zapytanie opisujące, czego potrzebujesz; zainteresowani specjaliści przesyłają swoje wyceny, a Ty decydujesz, którą zaakceptować."
+        },
+        "coverage": {
+          "question": "Na jakich obszarach dostępne są usługi klimatyzacji?",
+          "answer": "Zasięg zależy od specjalistów aktywnych na danym obszarze. Sprawdź stronę swojej miejscowości, aby zobaczyć aktualną dostępność w tej okolicy."
+        }
+      }
+    },
+    "pintura": {
+      "nameInSentence": "Malowanie",
+      "intro": "MaestroYa łączy klientów z malarzami do prac wewnętrznych i zewnętrznych. Klient opisuje przestrzeń do pomalowania i publikuje zapytanie; malarze działający w danej okolicy mogą je przejrzeć i przesłać wycenę.",
+      "commonJobTypes": {
+        "interior": "Malowanie wnętrz (pokoi, korytarzy, sufitów)",
+        "exterior": "Malowanie elewacji i powierzchni zewnętrznych",
+        "wallPreparation": "Wygładzanie i przygotowanie ścian przed malowaniem",
+        "touchUps": "Poprawki i punktowe wykończenia"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Ocenę przestrzeni i prac opisanych w zapytaniu",
+        "quote": "Szczegółową wycenę przed rozpoczęciem prac",
+        "execution": "Wykonanie prac uzgodnionych w zaakceptowanej wycenie"
+      },
+      "considerations": {
+        "surface": "Podaj przybliżoną powierzchnię i obecny stan ścian",
+        "photos": "Dodaj zdjęcia przestrzeni do pomalowania",
+        "compare": "Porównaj kilka wycen, zanim zaakceptujesz jedną z nich"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Jakie prace malarskie mogę zlecić w MaestroYa?",
+          "answer": "Możesz zlecić malowanie wnętrz, powierzchni zewnętrznych lub punktowe poprawki. Malarze działający w Twojej okolicy mogą przesłać Ci wycenę."
+        },
+        "howQuote": {
+          "question": "Jak działa wycena prac malarskich?",
+          "answer": "Publikujesz zapytanie opisujące przestrzeń i prace; zainteresowani specjaliści przesyłają swoje wyceny, a Ty decydujesz, którą zaakceptować."
+        },
+        "coverage": {
+          "question": "Na jakich obszarach dostępne są usługi malarskie?",
+          "answer": "Zasięg zależy od specjalistów aktywnych na danym obszarze. Sprawdź stronę swojej miejscowości, aby zobaczyć aktualną dostępność w tej okolicy."
+        }
+      }
+    },
+    "reformas": {
+      "nameInSentence": "Remonty",
+      "intro": "MaestroYa łączy klientów ze specjalistami od kompleksowych i częściowych remontów domów i mieszkań. Klient opisuje zakres remontu i publikuje zapytanie; specjaliści od remontów działający w danej okolicy mogą je przejrzeć i przesłać wycenę.",
+      "commonJobTypes": {
+        "partial": "Remonty częściowe (pokoju, łazienki, kuchni)",
+        "full": "Kompleksowe remonty mieszkań",
+        "masonry": "Prace murarskie związane z remontem",
+        "layoutFinishes": "Zmiany układu pomieszczeń lub wykończeń"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Ocenę zakresu remontu opisanego w zapytaniu",
+        "quote": "Szczegółową wycenę przed rozpoczęciem prac",
+        "execution": "Wykonanie prac uzgodnionych w zaakceptowanej wycenie"
+      },
+      "considerations": {
+        "scope": "Opisz zakres remontu jak najdokładniej",
+        "photos": "Dodaj zdjęcia obecnego stanu pomieszczenia",
+        "compare": "Remonty zwykle wiążą się z wyższymi wycenami: porównaj kilka ofert, zanim zaakceptujesz jedną"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Jakie remonty mogę zlecić w MaestroYa?",
+          "answer": "Możesz zlecić częściowy lub kompleksowy remont domu. Specjaliści od remontów działający w Twojej okolicy mogą przejrzeć Twoje zapytanie i przesłać Ci wycenę."
+        },
+        "compareQuotes": {
+          "question": "Czy mogę porównać kilka wycen remontu?",
+          "answer": "Tak. Możesz otrzymać wyceny od kilku specjalistów dla tego samego zapytania i porównać je, zanim zaakceptujesz jedną z nich."
+        },
+        "coverage": {
+          "question": "Na jakich obszarach dostępne są usługi remontowe?",
+          "answer": "Zasięg zależy od specjalistów aktywnych na danym obszarze. Sprawdź stronę swojej miejscowości, aby zobaczyć aktualną dostępność w tej okolicy."
+        }
+      }
+    },
+    "montaje-de-muebles": {
+      "nameInSentence": "Montaż mebli",
+      "intro": "MaestroYa łączy klientów ze specjalistami od montażu i składania mebli oraz wyposażenia. Klient opisuje mebel lub meble do zmontowania i publikuje zapytanie; monterzy działający w danej okolicy mogą je przejrzeć i przesłać wycenę.",
+      "commonJobTypes": {
+        "flatPack": "Montaż mebli z paczki (szaf, regałów, stołów)",
+        "kitchen": "Montaż mebli kuchennych",
+        "wallFixing": "Mocowanie mebli do ściany",
+        "multiple": "Składanie kilku mebli podczas jednej wizyty"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Ocenę mebla lub mebli opisanych w zapytaniu",
+        "quote": "Wycenę przed rozpoczęciem montażu",
+        "execution": "Wykonanie montażu uzgodnionego w zaakceptowanej wycenie"
+      },
+      "considerations": {
+        "typeQuantity": "Podaj rodzaj i liczbę mebli do zmontowania",
+        "photos": "Dodaj zdjęcia kartonów lub instrukcji, jeśli ją masz",
+        "compare": "Porównaj kilka wycen, zanim zaakceptujesz jedną z nich"
+      },
+      "faqs": {
+        "whatFurniture": {
+          "question": "Jakie meble mogę zlecić do montażu w MaestroYa?",
+          "answer": "Możesz zlecić montaż praktycznie każdego mebla z paczki, np. szaf, regałów czy mebli kuchennych. Monterzy działający w Twojej okolicy mogą przesłać Ci wycenę."
+        },
+        "howQuote": {
+          "question": "Jak działa wycena montażu mebli?",
+          "answer": "Publikujesz zapytanie opisujące mebel lub meble do zmontowania; zainteresowani specjaliści przesyłają swoje wyceny, a Ty decydujesz, którą zaakceptować."
+        },
+        "coverage": {
+          "question": "Na jakich obszarach dostępny jest montaż mebli?",
+          "answer": "Zasięg zależy od specjalistów aktywnych na danym obszarze. Sprawdź stronę swojej miejscowości, aby zobaczyć aktualną dostępność w tej okolicy."
+        }
+      }
+    }
+  },
+  "locations": {
+    "gandia": {
+      "intro": "Gandia (prowincja Valencia) to miejscowość referencyjna MaestroYa. Klienci w Gandii mogą opublikować zapytanie w dowolnej kategorii usług domowych dostępnych na platformie, a specjaliści działający w tej okolicy mogą je przejrzeć i przesłać wycenę.",
+      "faqs": {
+        "whatServices": {
+          "question": "Jakie usługi mogę zamówić w Gandii przez MaestroYa?",
+          "answer": "Możesz opublikować zapytanie w dowolnej kategorii usług domowych dostępnych w MaestroYa (hydraulika, elektryka, klimatyzacja, malowanie, remonty i montaż mebli). Szczegóły znajdziesz na stronie każdej usługi."
+        },
+        "howToHire": {
+          "question": "Jak zatrudnić specjalistę w Gandii?",
+          "answer": "Publikujesz zapytanie opisujące prace. Specjaliści obsługujący tę kategorię i okolice Gandii mogą je przejrzeć i przesłać Ci wycenę, którą możesz porównać i zaakceptować przed rozpoczęciem prac."
+        },
+        "outsideGandia": {
+          "question": "Czy MaestroYa jest dostępne poza Gandią?",
+          "answer": "Gandia to miejscowość z potwierdzonym obecnie zasięgiem na platformie. Faktyczna dostępność specjalistów może się zmieniać i zależy od tego, kto jest aktywny w danym momencie."
+        }
+      }
+    }
+  },
+  "nationalCoverage": {
+    "intro": "MaestroYa to platforma usług domowych, która łączy klientów ze specjalistami i firmami w Hiszpanii. Każdy w Hiszpanii może opublikować zapytanie o usługę; to, czy specjalista je przejrzy i prześle wycenę, zależy od tego, którzy specjaliści są w danym momencie aktywni w tej kategorii i na tym obszarze.",
+    "coverageStatement": "Zasięg MaestroYa jako platformy jest ogólnokrajowy: celem platformy jest działanie w całej Hiszpanii, a nie tylko w jednej miejscowości. To coś innego niż faktyczna dostępność specjalistów na danym obszarze, która zależy od rzeczywistych danych platformy w danym momencie.",
+    "howLocalAvailabilityWorks": "Gdy publikujesz zapytanie, przejrzeć je i przesłać Ci wycenę mogą tylko specjaliści obsługujący tę kategorię usług i Twoją okolicę. MaestroYa nie gwarantuje, że w danej miejscowości jest dostępny specjalista: faktyczna dostępność różni się w zależności od obszaru. Miejscowości z zasięgiem potwierdzonym rzeczywistymi danymi platformy mają własną stronę (zob. /ubicaciones).",
+    "faqs": {
+      "wholeSpain": {
+        "question": "Czy MaestroYa działa w całej Hiszpanii?",
+        "answer": "MaestroYa to platforma zaprojektowana do działania w całej Hiszpanii. Nie oznacza to, że w każdej miejscowości są już aktywni specjaliści: faktyczna dostępność specjalistów zależy od obszaru i może się zmieniać w czasie."
+      },
+      "localAvailability": {
+        "question": "Skąd mam wiedzieć, czy usługa jest dostępna w mojej miejscowości?",
+        "answer": "Możesz opublikować zapytanie z podaniem swojego adresu; wycenę będą mogli przesłać Ci tylko specjaliści obsługujący Twoją kategorię i Twoją okolicę. Miejscowości z zasięgiem potwierdzonym rzeczywistymi danymi platformy są wymienione w sekcji lokalizacji."
+      },
+      "whatServices": {
+        "question": "Jakie usługi oferuje MaestroYa?",
+        "answer": "MaestroYa publikuje obecnie sześć kategorii usług domowych: hydraulika, elektryka, klimatyzacja, malowanie, remonty i montaż mebli. Więcej szczegółów znajdziesz na stronie każdej usługi."
+      },
+      "professionalParticipation": {
+        "question": "Jak specjalista może dołączyć do MaestroYa?",
+        "answer": "Specjalista może założyć konto, wskazać swoje kategorie usług i obszar, który obsługuje, a następnie przeglądać opublikowane zapytania pasujące do jego kategorii i obszaru oraz przesyłać do nich wyceny."
+      }
+    },
+    "structuredData": {
+      "name": "Usługi domowe przez MaestroYa",
+      "description": "Platforma usług domowych prowadzona przez MaestroYa w Hiszpanii. Dostępność specjalistów różni się w zależności od kategorii usług i obszaru."
+    }
+  }
+}

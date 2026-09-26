@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
@@ -17,6 +18,7 @@ const CATEGORIES = ["ACCOUNT", "VERIFICATION", "BUG", "LOGIN", "GENERAL", "OTHER
 
 export function NewSupportTicketForm() {
   const router = useRouter();
+  const t = useTranslations("customer.support");
   const [category, setCategory] = useState<string>(CATEGORIES[0] ?? "OTHER");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
@@ -39,10 +41,10 @@ export function NewSupportTicketForm() {
 
   return (
     <div className="rounded-lg border border-border p-4 sm:p-6">
-      <FormSection title="Open a new ticket">
+      <FormSection title={t("form.title")}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="ticket-category">
-            Category <RequiredBadge />
+            {t("form.category")} <RequiredBadge />
           </Label>
           <Select
             id="ticket-category"
@@ -52,7 +54,7 @@ export function NewSupportTicketForm() {
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {t(`category.${c}` as never)}
               </option>
             ))}
           </Select>
@@ -60,14 +62,14 @@ export function NewSupportTicketForm() {
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="ticket-subject">
-            Subject <RequiredBadge />
+            {t("form.subject")} <RequiredBadge />
           </Label>
           <Input id="ticket-subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
         </div>
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="ticket-description">
-            Description <RequiredBadge />
+            {t("form.description")} <RequiredBadge />
           </Label>
           <Textarea
             id="ticket-description"
@@ -84,7 +86,7 @@ export function NewSupportTicketForm() {
         )}
 
         <Button type="button" disabled={isSubmitting} onClick={handleSubmit} className="w-full sm:w-auto">
-          {isSubmitting ? "Submitting…" : "Submit ticket"}
+          {isSubmitting ? t("form.submitting") : t("form.submit")}
         </Button>
       </FormSection>
     </div>

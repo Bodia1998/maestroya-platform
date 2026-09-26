@@ -10,7 +10,8 @@ import {
 } from "@/infrastructure/auth/tokens";
 import type { EmailSender } from "@/application/interfaces/email-sender";
 import type { RegistrationAttributionLinker } from "@/application/ports/registration-attribution-linker";
-import { renderActionLinkEmailHtml } from "@/infrastructure/email/email-template";
+import type { AuthEmailComposer } from "@/application/ports/auth-email-composer";
+import { IntlAuthEmailComposer } from "@/infrastructure/email/intl-auth-email-composer";
 import type { RegisterInput } from "@/application/dto/auth.dto";
 
 export class RegisterUserUseCase {
@@ -23,9 +24,18 @@ export class RegisterUserUseCase {
     // three arguments keeps compiling unchanged. See `execute`'s own
     // comment for why a failure here can never break registration.
     private readonly attributionLinker?: RegistrationAttributionLinker,
+    // Module 120 — Multilingual Localization: composes the verification
+    // email in the registrant's language. Defaulted so every existing
+    // three/four-argument construction keeps working.
+    private readonly emailComposer: AuthEmailComposer = new IntlAuthEmailComposer(),
   ) {}
 
-  async execute(input: RegisterInput): Promise<{ userId: string }> {
+  /**
+   * `options.locale` — Module 120: the request locale the registrant was
+   * using (the verification email is written in it). Optional; unknown or
+   * missing → Spanish.
+   */
+  async execute(input: RegisterInput, options: { locale?: string | null } = {}): Promise<{ userId: string }> {
     const existing = await this.users.findByEmail(input.email);
     if (existing) {
       // Same message regardless of whether the email is OAuth-only or
@@ -70,15 +80,13 @@ export class RegisterUserUseCase {
     );
 
     const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${rawToken}`;
-    await this.emailSender.send({
-      to: input.email,
-      subject: "Verify your MaestroYa email",
-      html: renderActionLinkEmailHtml({
-        intro: "Welcome to MaestroYa. Confirm your email address:",
-        actionUrl: verifyUrl,
-        expiryNote: "This link expires in 24 hours.",
-      }),
+    const email = this.emailComposer.composeVerifyEmail({
+      locale: options.locale,
+      name: input.name,
+      actionUrl: verifyUrl,
+      ttlMs: EMAIL_VERIFICATION_TOKEN_TTL_MS,
     });
+    await this.emailSender.send({ to: input.email, subject: email.subject, html: email.html });
 
     return { userId: user.id };
   }

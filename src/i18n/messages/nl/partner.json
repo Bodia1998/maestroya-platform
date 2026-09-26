@@ -1,0 +1,92 @@
+{
+  "metaTitle": "Partnerdashboard",
+  "title": "Partnerdashboard",
+  "subtitle": "Volg je doorverwijslinks, klikken en inkomsten als affiliate-partner.",
+  "noAccount": {
+    "title": "Je hebt nog geen partneraccount",
+    "description": "Partneraccounts zijn bedoeld voor affiliate-partners die klanten naar MaestroYa doorverwijzen in ruil voor een deel van de winst van het platform. Neem contact op met MaestroYa om je als partner te registreren."
+  },
+  "statusMessage": {
+    "PENDING": "Je partneraanvraag wacht op beoordeling",
+    "REJECTED": "Je partneraanvraag is niet goedgekeurd",
+    "SUSPENDED": "Je partneraccount is momenteel opgeschort",
+    "BANNED": "Je partneraccount is geblokkeerd",
+    "other": "Je partneraccount is niet actief"
+  },
+  "locked": {
+    "description": "Je dashboard wordt automatisch ontgrendeld zodra je partneraccount is goedgekeurd."
+  },
+  "welcome": "Welkom terug, {name}. Zo presteren je doorverwijslinks.",
+  "stats": {
+    "clicks": "Klikken",
+    "visits": "Bezoeken",
+    "registrations": "Registraties",
+    "bookingsCreated": "Aangemaakte boekingen",
+    "completedJobs": "Voltooide opdrachten",
+    "conversionRate": "Conversieratio",
+    "platformCommissionGenerated": "Gegenereerde platformcommissie",
+    "pendingEarnings": "Openstaande inkomsten",
+    "approvedPayable": "Goedgekeurd (uit te betalen)",
+    "paidToDate": "Tot nu toe uitbetaald"
+  },
+  "topCampaigns": {
+    "title": "Topcampagnes",
+    "empty": "Nog geen klikken op campagnes geregistreerd."
+  },
+  "topReferralLinks": {
+    "title": "Top-doorverwijslinks",
+    "empty": "Nog geen klikken op doorverwijslinks geregistreerd."
+  },
+  "visitsCount": "{count, plural, one {# bezoek} other {# bezoeken}}",
+  "errors": {
+    "createLinkFailed": "Er ging iets mis bij het aanmaken van deze doorverwijslink.",
+    "updateLinkFailed": "Er ging iets mis bij het bijwerken van deze doorverwijslink.",
+    "payoutFailed": "Er ging iets mis bij het aanvragen van deze uitbetaling."
+  },
+  "campaigns": {
+    "title": "Campagnelinks",
+    "code": "Code",
+    "codePlaceholder": "bijv. telegram_valencia",
+    "label": "Label (optioneel)",
+    "labelPlaceholder": "Je eigen notitie",
+    "source": "Bron",
+    "none": "Geen",
+    "sources": {
+      "TELEGRAM": "Telegram",
+      "INSTAGRAM": "Instagram",
+      "TIKTOK": "TikTok",
+      "YOUTUBE": "YouTube",
+      "BLOG": "Blog",
+      "WEBSITE": "Website"
+    },
+    "creating": "Bezig met aanmaken…",
+    "create": "Link aanmaken",
+    "empty": "Nog geen campagnelinks — maak er hierboven een aan om hem te delen.",
+    "active": "Actief",
+    "inactive": "Inactief",
+    "visits": "{count, plural, one {# bezoek} other {# bezoeken}}",
+    "deactivate": "Deactiveren",
+    "activate": "Activeren"
+  },
+  "payout": {
+    "balanceTitle": "Affiliate-saldo",
+    "available": "Beschikbaar saldo",
+    "reserved": "Gereserveerd voor uitbetaling",
+    "paidToDate": "Tot nu toe uitbetaald",
+    "minimum": "Minimale uitbetaling: {amount}",
+    "eligible": "Komt in aanmerking voor uitbetaling",
+    "moreNeeded": "Nog {amount} nodig",
+    "requesting": "Bezig met aanvragen…",
+    "request": "Uitbetaling aanvragen",
+    "requested": "Uitbetaling aangevraagd — bekijk de status in de geschiedenis hieronder.",
+    "historyTitle": "Uitbetalingsgeschiedenis",
+    "empty": "Nog geen uitbetalingen.",
+    "status": {
+      "PENDING": "In afwachting",
+      "PROCESSING": "In behandeling",
+      "PAID": "Uitbetaald",
+      "FAILED": "Mislukt",
+      "CANCELLED": "Geannuleerd"
+    }
+  }
+}

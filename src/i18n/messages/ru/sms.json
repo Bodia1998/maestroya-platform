@@ -1,0 +1,13 @@
+{
+  "bookingConfirmed": "Здравствуйте, {name}! Ваше бронирование на {date} подтверждено. MaestroYa",
+  "appointmentReminder": "Напоминание: ваш визит назначен на {date} в {time}. MaestroYa",
+  "professionalAssigned": "{name} назначен(а) на ваш заказ. MaestroYa",
+  "quoteAccepted": "Ваша смета на {amount} принята. MaestroYa",
+  "quoteRejected": "Ваша смета отклонена. MaestroYa",
+  "serviceRequestUpdated": "Статус вашей заявки изменён на «{status}». MaestroYa",
+  "chatNotification": "Новое сообщение от {name}: {preview}",
+  "disputeNotification": "По вашему заказу открыт спор ({caseNumber}). MaestroYa",
+  "passwordReset": "Код для сброса пароля MaestroYa: {code}. Действует 15 мин.",
+  "phoneVerification": "Ваш код подтверждения MaestroYa: {code}.",
+  "twoFactorAuthentication": "Ваш код входа в MaestroYa: {code}."
+}

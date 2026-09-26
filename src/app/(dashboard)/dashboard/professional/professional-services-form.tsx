@@ -1,6 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -13,6 +13,7 @@ import {
   updateProfessionalServicesSchema,
   type UpdateProfessionalServicesInput,
 } from "@/application/dto/professional.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { updateProfessionalServicesAction } from "./actions";
 
 interface CategoryOption {
@@ -27,6 +28,7 @@ export function ProfessionalServicesForm({
   categories: CategoryOption[];
   selectedCategoryIds: string[];
 }) {
+  const t = useTranslations("professional.servicesForm");
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -35,7 +37,7 @@ export function ProfessionalServicesForm({
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<UpdateProfessionalServicesInput>({
-    resolver: zodResolver(updateProfessionalServicesSchema),
+    resolver: useLocalizedZodResolver(updateProfessionalServicesSchema),
     defaultValues: { categoryIds: selectedCategoryIds },
   });
 
@@ -48,7 +50,7 @@ export function ProfessionalServicesForm({
       setServerError(result.error);
       return;
     }
-    setSuccessMessage("Service categories updated.");
+    setSuccessMessage(t("success"));
   }
 
   return (
@@ -64,9 +66,9 @@ export function ProfessionalServicesForm({
         </Alert>
       )}
 
-      <FormSection title="Service categories" description="Customers find you by these categories — pick every one that applies.">
+      <FormSection title={t("title")} description={t("description")}>
         <fieldset className="grid grid-cols-1 gap-2 rounded-lg border border-border p-4 sm:grid-cols-2">
-          <legend className="sr-only">Service categories</legend>
+          <legend className="sr-only">{t("title")}</legend>
           {categories.map((category) => (
             <label key={category.id} className="flex min-h-11 items-center gap-2 rounded-md px-1 text-sm text-foreground">
               <input
@@ -79,7 +81,7 @@ export function ProfessionalServicesForm({
             </label>
           ))}
           {categories.length === 0 && (
-            <p className="text-sm text-muted-foreground">No service categories are available yet.</p>
+            <p className="text-sm text-muted-foreground">{t("empty")}</p>
           )}
         </fieldset>
         <FormFieldError>{errors.categoryIds?.message}</FormFieldError>
@@ -87,7 +89,7 @@ export function ProfessionalServicesForm({
 
       <FormActions stickyOnMobile>
         <Button type="submit" disabled={isSubmitting} className="sm:min-w-48">
-          {isSubmitting ? "Saving…" : "Save service categories"}
+          {isSubmitting ? t("saving") : t("submit")}
         </Button>
       </FormActions>
     </form>

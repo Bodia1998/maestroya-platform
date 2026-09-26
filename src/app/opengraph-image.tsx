@@ -14,6 +14,10 @@ import { SITE_DESCRIPTION, SITE_NAME } from "@/shared/seo/site";
  * a sibling `twitter-image.tsx`) the Twitter card image to it
  * automatically — no manual `metadata.openGraph.images`/`metadata.twitter.images`
  * wiring needed for the pages that don't override it.
+ *
+ * Module 120: one image URL shared by every language and cached by social
+ * crawlers, so it shows the canonical Spanish `SITE_DESCRIPTION` (read
+ * from the `es` `seo` catalog) rather than the request locale.
  */
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

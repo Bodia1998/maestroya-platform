@@ -1,5 +1,7 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
+
 import { reverseGeocodeSchema } from "@/application/dto/geolocation.dto";
 import { makeReverseGeocodeUseCase } from "@/application/use-cases/geolocation/compose";
 import { logger } from "@/infrastructure/observability/logger";
@@ -29,9 +31,10 @@ export async function reverseGeocodeAction(input: {
   latitude: number;
   longitude: number;
 }): Promise<ReverseGeocodeActionResult> {
+  const t = await getTranslations("marketing");
   const parsed = reverseGeocodeSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: "That location looks invalid." };
+    return { success: false, error: t("search.location.invalid") };
   }
 
   try {
@@ -47,6 +50,6 @@ export async function reverseGeocodeAction(input: {
     return { success: true, address: label || result.address.city, latitude: result.point.latitude, longitude: result.point.longitude };
   } catch (error) {
     logger.error("reverse_geocode_action_failed", { error });
-    return { success: false, error: "Couldn't resolve an address for that location." };
+    return { success: false, error: t("search.location.reverseGeocodeFailed") };
   }
 }

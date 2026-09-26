@@ -1,4 +1,5 @@
 import { AlertTriangle } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { makeListDisputesAgainstMeUseCase, makeListMyDisputesUseCase } from "@/application/use-cases/dispute/compose";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -10,7 +11,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Heading } from "@/components/ui/typography";
 import { PageContainer } from "@/components/layout/page-container";
 
-export const metadata = { title: "My disputes" };
+export async function generateMetadata() {
+  const t = await getTranslations("customer.disputes");
+  return { title: t("list.metaTitle") };
+}
 
 /**
  * Module 21 — Disputes & Support: minimal customer/professional-facing
@@ -22,29 +26,33 @@ export const metadata = { title: "My disputes" };
  */
 export default async function DisputesPage() {
   const user = await requireAuth();
-  const [mine, againstMe] = await Promise.all([
+  const [mine, againstMe, t] = await Promise.all([
     makeListMyDisputesUseCase().execute(user.id, { limit: 50, offset: 0 }),
     makeListDisputesAgainstMeUseCase().execute(user.id),
+    getTranslations("customer.disputes"),
   ]);
+  // Statuses not covered by `enums.status` (WAITING_FOR_*) get a label from this namespace.
+  const statusLabel = (status: string): string | undefined =>
+    t.has(`status.${status}` as never) ? t(`status.${status}` as never) : undefined;
 
   return (
     <PageContainer maxWidth="3xl">
       <PageHeader
-        title="Disputes"
-        subtitle="Cases you've opened, and cases opened about your work."
+        title={t("list.title")}
+        subtitle={t("list.subtitle")}
         actions={
           <ButtonLink href="/jobs" variant="ghost" size="sm">
-            Open a dispute from a job
+            {t("list.openFromJob")}
           </ButtonLink>
         }
       />
 
       <section className="flex flex-col gap-3">
         <Heading as="h2" level="h6">
-          Opened by me
+          {t("list.openedByMe")}
         </Heading>
         {mine.length === 0 ? (
-          <EmptyState icon={AlertTriangle} title="No disputes opened" description="You haven't opened any disputes." />
+          <EmptyState icon={AlertTriangle} title={t("list.emptyMine.title")} description={t("list.emptyMine.description")} />
         ) : (
           <ul className="flex flex-col gap-2">
             {mine.map((d) => (
@@ -53,7 +61,7 @@ export default async function DisputesPage() {
                   <span className="min-w-0 truncate">
                     <span className="font-mono text-xs text-muted-foreground">{d.caseNumber}</span> — {d.title}
                   </span>
-                  <StatusBadge status={d.status} />
+                  <StatusBadge status={d.status} label={statusLabel(d.status)} />
                 </LinkCard>
               </li>
             ))}
@@ -63,10 +71,10 @@ export default async function DisputesPage() {
 
       <section className="flex flex-col gap-3">
         <Heading as="h2" level="h6">
-          Opened about my work
+          {t("list.openedAboutMe")}
         </Heading>
         {againstMe.length === 0 ? (
-          <EmptyState icon={AlertTriangle} title="Nothing here" description="No disputes have been opened about your work." />
+          <EmptyState icon={AlertTriangle} title={t("list.emptyAgainst.title")} description={t("list.emptyAgainst.description")} />
         ) : (
           <ul className="flex flex-col gap-2">
             {againstMe.map((d) => (
@@ -75,7 +83,7 @@ export default async function DisputesPage() {
                   <span className="min-w-0 truncate">
                     <span className="font-mono text-xs text-muted-foreground">{d.caseNumber}</span> — {d.title}
                   </span>
-                  <StatusBadge status={d.status} />
+                  <StatusBadge status={d.status} label={statusLabel(d.status)} />
                 </LinkCard>
               </li>
             ))}

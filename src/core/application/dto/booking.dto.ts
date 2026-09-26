@@ -23,33 +23,33 @@ import { z } from "zod";
  *  via `.refine()` on each full schema (Zod doesn't preserve `.refine()`
  *  across `.extend()`, so it's re-declared, not re-implemented). */
 const timeWindowFields = {
-  start: z.coerce.date({ invalid_type_error: "Enter a valid start time." }),
-  end: z.coerce.date({ invalid_type_error: "Enter a valid end time." }),
+  start: z.coerce.date({ invalid_type_error: "dto.booking.startTimeInvalid" }),
+  end: z.coerce.date({ invalid_type_error: "dto.booking.endTimeInvalid" }),
 };
 
 function withEndAfterStart<T extends { start: Date; end: Date }>(schema: z.ZodType<T>) {
   return schema.refine((data) => data.end.getTime() > data.start.getTime(), {
-    message: "End time must be after the start time.",
+    message: "dto.booking.endAfterStart",
     path: ["end"],
   });
 }
 
 export const proposeAppointmentTimeSchema = withEndAfterStart(
   z.object({
-    appointmentId: z.string().uuid("Invalid appointment."),
+    appointmentId: z.string().uuid("dto.ids.appointment"),
     ...timeWindowFields,
   }),
 );
 export type ProposeAppointmentTimeInput = z.infer<typeof proposeAppointmentTimeSchema>;
 
 export const confirmAppointmentSchema = z.object({
-  appointmentId: z.string().uuid("Invalid appointment."),
+  appointmentId: z.string().uuid("dto.ids.appointment"),
 });
 export type ConfirmAppointmentInput = z.infer<typeof confirmAppointmentSchema>;
 
 export const rescheduleAppointmentSchema = withEndAfterStart(
   z.object({
-    appointmentId: z.string().uuid("Invalid appointment."),
+    appointmentId: z.string().uuid("dto.ids.appointment"),
     ...timeWindowFields,
   }),
 );
@@ -58,14 +58,14 @@ export type RescheduleAppointmentInput = z.infer<typeof rescheduleAppointmentSch
 export const MAX_CANCELLATION_NOTE_LENGTH = 1000;
 
 export const cancelAppointmentSchema = z.object({
-  appointmentId: z.string().uuid("Invalid appointment."),
+  appointmentId: z.string().uuid("dto.ids.appointment"),
   reason: z.enum(["CUSTOMER_REQUEST", "PROFESSIONAL_UNAVAILABLE", "SCHEDULING_CONFLICT", "OTHER"], {
-    errorMap: () => ({ message: "Choose a cancellation reason." }),
+    errorMap: () => ({ message: "dto.common.cancellationReasonRequired" }),
   }),
   note: z
     .string()
     .trim()
-    .max(MAX_CANCELLATION_NOTE_LENGTH, `Notes must be ${MAX_CANCELLATION_NOTE_LENGTH} characters or fewer.`)
+    .max(MAX_CANCELLATION_NOTE_LENGTH, "maxLength")
     .optional()
     .or(z.literal("")),
 });
@@ -78,6 +78,6 @@ export type ListAppointmentsInput = z.infer<typeof listAppointmentsSchema>;
 
 /** Order / Job Lifecycle module (Module 11). */
 export const completeAppointmentSchema = z.object({
-  appointmentId: z.string().uuid("Invalid appointment."),
+  appointmentId: z.string().uuid("dto.ids.appointment"),
 });
 export type CompleteAppointmentInput = z.infer<typeof completeAppointmentSchema>;

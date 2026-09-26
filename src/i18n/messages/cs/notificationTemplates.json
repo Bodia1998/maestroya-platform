@@ -1,0 +1,281 @@
+{
+  "NEW_QUOTE": {
+    "title": "Nová nabídka",
+    "message": "Profesionál poslal nabídku na vaši poptávku."
+  },
+  "QUOTE_ACCEPTED": {
+    "title": "Vaše nabídka byla přijata",
+    "message": "Zákazník přijal vaši nabídku."
+  },
+  "QUOTE_REJECTED": {
+    "title": "Vaše nabídka nebyla vybrána",
+    "message": "Zákazník přijal jinou nabídku na tuto poptávku."
+  },
+  "QUOTE_EXPIRED": {
+    "title": "Platnost vaší nabídky vypršela",
+    "message": "Platnost jedné z vašich nabídek vypršela, protože nebyla včas přijata."
+  },
+  "NEW_MESSAGE": {
+    "title": "Nová zpráva"
+  },
+  "APPOINTMENT_PROPOSED": {
+    "title": "Navržen nový čas schůzky",
+    "message": "Byl navržen nový čas schůzky.",
+    "variants": {
+      "byCustomer": {
+        "message": "Zákazník navrhl nový čas schůzky."
+      },
+      "byProfessional": {
+        "message": "Profesionál navrhl nový čas schůzky."
+      }
+    }
+  },
+  "APPOINTMENT_CONFIRMED": {
+    "title": "Čas schůzky potvrzen",
+    "message": "Čas schůzky byl potvrzen.",
+    "variants": {
+      "byCustomer": {
+        "message": "Zákazník potvrdil čas schůzky."
+      },
+      "byProfessional": {
+        "message": "Profesionál potvrdil čas schůzky."
+      }
+    }
+  },
+  "APPOINTMENT_CANCELLED": {
+    "title": "Schůzka zrušena",
+    "message": "Tato schůzka byla zrušena.",
+    "variants": {
+      "byCustomer": {
+        "message": "Zákazník tuto schůzku zrušil."
+      },
+      "byProfessional": {
+        "message": "Profesionál tuto schůzku zrušil."
+      }
+    }
+  },
+  "JOB_STARTED": {
+    "title": "Práce začala",
+    "message": "Profesionál začal pracovat na vaší zakázce."
+  },
+  "JOB_CANCELLED": {
+    "title": "Zakázka zrušena",
+    "message": "Tato zakázka byla zrušena.",
+    "variants": {
+      "byCustomer": {
+        "message": "Zákazník tuto zakázku zrušil."
+      },
+      "byProfessional": {
+        "message": "Profesionál tuto zakázku zrušil."
+      }
+    }
+  },
+  "JOB_COMPLETION_CONFIRMATION_REQUESTED": {
+    "title": "Potvrďte dokončení služby",
+    "message": "Profesionál označil vaši zakázku jako dokončenou. Potvrďte, že práce byla provedena, nebo nám dejte vědět, pokud je nějaký problém."
+  },
+  "JOB_COMPLETION_CONFIRMATION_REMINDER": {
+    "title": "Potvrďte dokončení služby",
+    "message": "Potvrďte dokončení služby nebo nám dejte vědět o problému dříve, než uplyne lhůta pro potvrzení."
+  },
+  "JOB_COMPLETION_CONFIRMED": {
+    "title": "Služba potvrzena",
+    "message": "Zákazník potvrdil dokončení služby."
+  },
+  "JOB_COMPLETION_CONFIRMATION_TIMED_OUT": {
+    "title": "Zakázka v kontrole",
+    "message": "Zákazník neodpověděl včas na žádost o potvrzení dokončení. Před uvolněním platby prochází zakázka ruční kontrolou."
+  },
+  "MATERIALS_PURCHASE_CONFIRMED": {
+    "title": "Nákup materiálu potvrzen",
+    "message": "Zákazník potvrdil, že nakoupil veškerý potřebný materiál."
+  },
+  "REVIEW_RECEIVED": {
+    "title": "Máte novou recenzi",
+    "message": "Zákazník napsal recenzi k vaší dokončené zakázce."
+  },
+  "REVIEW_RESPONSE_ADDED": {
+    "title": "Profesionál odpověděl na vaši recenzi",
+    "message": "Profesionál, kterého jste hodnotili, zveřejnil odpověď."
+  },
+  "SERVICE_REQUEST_EXPIRED": {
+    "title": "Platnost vaší poptávky vypršela",
+    "message": "Platnost vaší poptávky „{requestTitle}“ vypršela, aniž by byla dokončena."
+  },
+  "VERIFICATION_SUBMITTED": {
+    "title": "Žádost o ověření odeslána",
+    "message": "Vaši žádost o ověření jsme obdrželi a brzy ji zkontrolujeme.",
+    "variants": {
+      "resubmitted": {
+        "title": "Žádost o ověření znovu odeslána",
+        "message": "Vaši aktualizovanou žádost o ověření jsme obdrželi a brzy ji zkontrolujeme."
+      }
+    }
+  },
+  "VERIFICATION_APPROVED": {
+    "title": "Jste ověřený profesionál",
+    "message": "Vaše ověření bylo schváleno. Na vašem veřejném profilu se nyní zobrazuje odznak ověření.",
+    "variants": {
+      "automated": {
+        "message": "Automatickým ověřením totožnosti jste prošli. Na vašem veřejném profilu se nyní zobrazuje odznak ověření."
+      }
+    }
+  },
+  "VERIFICATION_REJECTED": {
+    "title": "Žádost o ověření zamítnuta",
+    "message": "Vaše žádost o ověření byla zamítnuta. Otevřete stránku ověření, zjistěte důvod a zkuste to znovu.",
+    "variants": {
+      "automated": {
+        "message": "Automatickým ověřením totožnosti jste neprošli. Otevřete stránku ověření, zjistěte důvod a zkuste to znovu."
+      }
+    }
+  },
+  "VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "K ověření potřebujeme další informace",
+    "message": "Kontrolor vás požádal o aktualizaci žádosti o ověření. Podrobnosti najdete na stránce ověření.",
+    "variants": {
+      "businessRegistration": {
+        "title": "Je potřeba doklad o registraci podnikání",
+        "message": "Automatickým ověřením totožnosti jste prošli. Nahrajte doklad o registraci podnikání a dokončete ověření profesionála."
+      }
+    }
+  },
+  "VERIFICATION_EXPIRED": {
+    "title": "Platnost vašeho ověření vypršela",
+    "message": "Platnost vašeho ověření profesionála vypršela. Zahajte nové ověření, abyste si zachovali odznak ověření."
+  },
+  "COMPANY_INVITATION_RECEIVED": {
+    "title": "Máte pozvánku do firmy",
+    "message": "Máte čekající pozvánku do firmy."
+  },
+  "COMPANY_INVITATION_ACCEPTED": {
+    "title": "Pozvánka přijata",
+    "message": "Čekající pozvánka do firmy byla přijata."
+  },
+  "COMPANY_INVITATION_DECLINED": {
+    "title": "Pozvánka odmítnuta",
+    "message": "Čekající pozvánka do firmy byla odmítnuta."
+  },
+  "COMPANY_MEMBER_REMOVED": {
+    "title": "Byli jste odebráni z firmy",
+    "message": "Už nejste členem této firmy."
+  },
+  "COMPANY_MEMBER_ROLE_CHANGED": {
+    "title": "Vaše role se změnila",
+    "message": "Vaše role ve firmě je nyní: {role}.",
+    "variants": {
+      "ownershipTransferred": {
+        "title": "Nyní jste vlastníkem firmy",
+        "message": "Vlastnictví firmy bylo převedeno na vás."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_SUBMITTED": {
+    "title": "Žádost o ověření odeslána",
+    "message": "Žádost o ověření vaší firmy jsme obdrželi a brzy ji zkontrolujeme.",
+    "variants": {
+      "resubmitted": {
+        "title": "Žádost o ověření znovu odeslána",
+        "message": "Aktualizovanou žádost o ověření vaší firmy jsme obdrželi."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_APPROVED": {
+    "title": "Vaše firma je ověřená",
+    "message": "Ověření vaší firmy bylo schváleno. Na jejím veřejném profilu se nyní zobrazuje odznak ověření."
+  },
+  "COMPANY_VERIFICATION_REJECTED": {
+    "title": "Žádost o ověření zamítnuta",
+    "message": "Žádost o ověření vaší firmy byla zamítnuta. Důvod najdete v podrobnostech."
+  },
+  "COMPANY_VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Je nutné opětovné odeslání",
+    "message": "Žádost o ověření vaší firmy potřebuje před schválením úpravy."
+  },
+  "COMPANY_VERIFICATION_EXPIRED": {
+    "title": "Platnost ověření vaší firmy vypršela",
+    "message": "Platnost ověření vaší firmy vypršela. Zahajte nové ověření, abyste si zachovali odznak ověření."
+  },
+  "COMPANY_SUSPENDED": {
+    "title": "Vaše firma byla pozastavena",
+    "message": "Správce platformy pozastavil profil vaší firmy."
+  },
+  "COMPANY_REACTIVATED": {
+    "title": "Vaše firma byla znovu aktivována",
+    "message": "Profil vaší firmy je opět aktivní."
+  },
+  "DISPUTE_CREATED": {
+    "title": "Byl otevřen spor",
+    "message": "K vaší zakázce byl otevřen spor ({caseNumber})."
+  },
+  "DISPUTE_ASSIGNED": {
+    "title": "Byl vám přidělen spor",
+    "message": "Byl vám přidělen spor {caseNumber}."
+  },
+  "DISPUTE_STATUS_CHANGED": {
+    "title": "Stav sporu aktualizován",
+    "message": "Nový stav sporu {caseNumber}: {status}.",
+    "variants": {
+      "newMessage": {
+        "title": "Nová zpráva ve vašem sporu",
+        "message": "Ve sporu {caseNumber} je nová zpráva."
+      }
+    }
+  },
+  "DISPUTE_RESPONSE_REQUESTED": {
+    "title": "Ve sporu se čeká na vaši odpověď",
+    "message": "Nový stav sporu {caseNumber}: {status}."
+  },
+  "DISPUTE_RESOLVED": {
+    "title": "Váš spor byl vyřešen",
+    "message": "Spor {caseNumber} byl vyřešen."
+  },
+  "DISPUTE_REJECTED": {
+    "title": "Váš spor byl zamítnut",
+    "message": "Spor {caseNumber} byl zamítnut."
+  },
+  "DISPUTE_CLOSED": {
+    "title": "Váš spor byl uzavřen",
+    "message": "Spor {caseNumber} byl uzavřen."
+  },
+  "SUPPORT_TICKET_ASSIGNED": {
+    "title": "Byl vám přidělen požadavek na podporu",
+    "message": "Byl vám přidělen požadavek {ticketNumber}."
+  },
+  "SUPPORT_TICKET_STATUS_CHANGED": {
+    "title": "Váš požadavek na podporu byl aktualizován",
+    "message": "Nový stav požadavku {ticketNumber}: {status}."
+  },
+  "SUPPORT_TICKET_RESOLVED": {
+    "title": "Váš požadavek na podporu byl vyřešen",
+    "message": "Požadavek {ticketNumber} byl vyřešen."
+  },
+  "SUPPORT_TICKET_CLOSED": {
+    "title": "Váš požadavek na podporu byl uzavřen",
+    "message": "Požadavek {ticketNumber} byl uzavřen."
+  },
+  "labels": {
+    "disputeStatus": {
+      "OPEN": "Otevřený",
+      "UNDER_REVIEW": "V posouzení",
+      "WAITING_FOR_CUSTOMER": "Čeká na zákazníka",
+      "WAITING_FOR_PROFESSIONAL": "Čeká na profesionála",
+      "RESOLVED": "Vyřešený",
+      "REJECTED": "Zamítnutý",
+      "CLOSED": "Uzavřený"
+    },
+    "ticketStatus": {
+      "OPEN": "Otevřený",
+      "IN_PROGRESS": "Řeší se",
+      "WAITING_FOR_USER": "Čeká na vaši odpověď",
+      "RESOLVED": "Vyřešený",
+      "CLOSED": "Uzavřený"
+    },
+    "companyRole": {
+      "OWNER": "Vlastník",
+      "ADMIN": "Správce",
+      "MANAGER": "Manažer",
+      "MEMBER": "Člen"
+    }
+  }
+}

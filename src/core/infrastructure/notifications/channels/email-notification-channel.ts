@@ -6,6 +6,7 @@ import type {
 import type { EmailSender } from "@/application/interfaces/email-sender";
 import { renderNotificationEmailHtml } from "@/infrastructure/email/email-template";
 import { env } from "@/infrastructure/config/env";
+import type { RecipientNotificationLocalizer } from "@/infrastructure/notifications/recipient-notification-localizer";
 
 /**
  * Module 32 — Notifications & Real-Time Communication.
@@ -27,11 +28,21 @@ import { env } from "@/infrastructure/config/env";
  * thrown) — the caller may not always have resolved one, and a missing
  * email address must never fail the primary operation that triggered the
  * notification.
+ *
+ * Module 120 — Multilingual Localization: subject and body are rendered in
+ * the recipient's language (`RecipientNotificationLocalizer`: explicit
+ * payload locale → `User.preferredLocale` → Spanish) from
+ * `notificationTemplates`; the stored English text is the fallback. The
+ * localizer is optional so existing direct constructions keep sending the
+ * stored text unchanged.
  */
 export class EmailNotificationChannel implements NotificationChannelAdapter {
   readonly channel: NotificationChannel = "EMAIL";
 
-  constructor(private readonly emailSender: EmailSender) {}
+  constructor(
+    private readonly emailSender: EmailSender,
+    private readonly localizer?: RecipientNotificationLocalizer,
+  ) {}
 
   async send(payload: NotificationChannelPayload): Promise<void> {
     if (!payload.email) {
@@ -45,12 +56,16 @@ export class EmailNotificationChannel implements NotificationChannelAdapter {
       ? new URL(payload.actionUrl, env.NEXT_PUBLIC_APP_URL).toString()
       : null;
 
+    const { title, message } = this.localizer
+      ? await this.localizer.localize(payload)
+      : { title: payload.title, message: payload.message };
+
     await this.emailSender.send({
       to: payload.email,
-      subject: payload.title,
+      subject: title,
       html: renderNotificationEmailHtml({
-        title: payload.title,
-        message: payload.message,
+        title,
+        message,
         actionUrl: absoluteActionUrl,
       }),
     });

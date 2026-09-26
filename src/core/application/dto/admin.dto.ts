@@ -35,7 +35,7 @@ export type PaginationInput = z.infer<typeof paginationSchema>;
 const searchSchema = z
   .string()
   .trim()
-  .max(MAX_SEARCH_LENGTH, `Search must be ${MAX_SEARCH_LENGTH} characters or fewer.`)
+  .max(MAX_SEARCH_LENGTH, "maxLength")
   .optional();
 
 export const listAdminUsersSchema = paginationSchema.extend({ search: searchSchema });
@@ -70,25 +70,25 @@ export type ListAdminPortfolioItemsInput = z.infer<typeof listAdminPortfolioItem
 export const listAdminAuditLogsSchema = paginationSchema;
 export type ListAdminAuditLogsInput = z.infer<typeof listAdminAuditLogsSchema>;
 
-export const adminUserIdSchema = z.object({ userId: z.string().uuid("Invalid user.") });
+export const adminUserIdSchema = z.object({ userId: z.string().uuid("dto.ids.user") });
 export type AdminUserIdInput = z.infer<typeof adminUserIdSchema>;
 
-export const adminProfessionalIdSchema = z.object({ professionalId: z.string().uuid("Invalid professional.") });
+export const adminProfessionalIdSchema = z.object({ professionalId: z.string().uuid("dto.ids.professional") });
 export type AdminProfessionalIdInput = z.infer<typeof adminProfessionalIdSchema>;
 
-export const adminServiceRequestIdSchema = z.object({ serviceRequestId: z.string().uuid("Invalid service request.") });
+export const adminServiceRequestIdSchema = z.object({ serviceRequestId: z.string().uuid("dto.ids.serviceRequest") });
 export type AdminServiceRequestIdInput = z.infer<typeof adminServiceRequestIdSchema>;
 
-export const adminQuoteIdSchema = z.object({ quoteId: z.string().uuid("Invalid quote.") });
+export const adminQuoteIdSchema = z.object({ quoteId: z.string().uuid("dto.ids.quote") });
 export type AdminQuoteIdInput = z.infer<typeof adminQuoteIdSchema>;
 
-export const adminJobIdSchema = z.object({ jobId: z.string().uuid("Invalid job.") });
+export const adminJobIdSchema = z.object({ jobId: z.string().uuid("dto.ids.job") });
 export type AdminJobIdInput = z.infer<typeof adminJobIdSchema>;
 
-export const adminReviewIdSchema = z.object({ reviewId: z.string().uuid("Invalid review.") });
+export const adminReviewIdSchema = z.object({ reviewId: z.string().uuid("dto.ids.review") });
 export type AdminReviewIdInput = z.infer<typeof adminReviewIdSchema>;
 
-export const adminPortfolioItemIdSchema = z.object({ portfolioItemId: z.string().uuid("Invalid portfolio item.") });
+export const adminPortfolioItemIdSchema = z.object({ portfolioItemId: z.string().uuid("dto.ids.portfolioItem") });
 export type AdminPortfolioItemIdInput = z.infer<typeof adminPortfolioItemIdSchema>;
 
 /**
@@ -100,20 +100,20 @@ export type AdminPortfolioItemIdInput = z.infer<typeof adminPortfolioItemIdSchem
 const roleKeySchema = z.enum([ROLES.CUSTOMER, ROLES.PROVIDER, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPPORT, ROLES.MODERATOR]);
 
 export const changeUserRoleSchema = z.object({
-  userId: z.string().uuid("Invalid user."),
-  roles: z.array(roleKeySchema).min(1, "At least one role is required."),
+  userId: z.string().uuid("dto.ids.user"),
+  roles: z.array(roleKeySchema).min(1, "dto.admin.roleRequired"),
 });
 export type ChangeUserRoleInput = z.infer<typeof changeUserRoleSchema>;
 
 const moderationReasonSchema = z
   .string()
   .trim()
-  .max(MAX_MODERATION_REASON_LENGTH, `Reason must be ${MAX_MODERATION_REASON_LENGTH} characters or fewer.`)
+  .max(MAX_MODERATION_REASON_LENGTH, "maxLength")
   .optional()
   .or(z.literal(""));
 
 export const moderateReviewSchema = z.object({
-  reviewId: z.string().uuid("Invalid review."),
+  reviewId: z.string().uuid("dto.ids.review"),
   reason: moderationReasonSchema,
 });
 export type ModerateReviewInput = z.infer<typeof moderateReviewSchema>;
@@ -122,7 +122,7 @@ export const restoreReviewSchema = adminReviewIdSchema;
 export type RestoreReviewInput = z.infer<typeof restoreReviewSchema>;
 
 export const moderatePortfolioItemSchema = z.object({
-  portfolioItemId: z.string().uuid("Invalid portfolio item."),
+  portfolioItemId: z.string().uuid("dto.ids.portfolioItem"),
   reason: moderationReasonSchema,
 });
 export type ModeratePortfolioItemInput = z.infer<typeof moderatePortfolioItemSchema>;

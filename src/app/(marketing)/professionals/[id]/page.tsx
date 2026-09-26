@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { NotFoundError } from "@/domain/errors/domain-error";
@@ -12,6 +13,7 @@ import { Section } from "@/components/layout/section";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buildBreadcrumbJsonLd, buildProfessionalServiceJsonLd } from "@/shared/seo/structured-data";
+import { localizeCategoryName } from "@/presentation/i18n/service-categories";
 import { VerificationBadge } from "../verification-badge";
 
 type ProfessionalPageProps = { params: Promise<{ id: string }> };
@@ -38,13 +40,14 @@ export async function generateMetadata({ params }: ProfessionalPageProps): Promi
   const profile = await getProfile(id);
   if (!profile) return {};
 
+  const t = await getTranslations("marketing");
   const name = profile.businessName ?? profile.displayName;
   const location = [profile.city, profile.province].filter(Boolean).join(", ");
   const description =
     profile.headline ??
     (location
-      ? `Profesional verificado en ${location}. Consulta su perfil y solicita presupuesto en MaestroYa.`
-      : "Consulta el perfil de este profesional y solicita presupuesto en MaestroYa.");
+      ? t("meta.professionalProfile.descriptionWithLocation", { location })
+      : t("meta.professionalProfile.description"));
   const path = `/professionals/${id}`;
 
   return {
@@ -85,10 +88,16 @@ export default async function PublicProfessionalProfilePage({ params }: Professi
     notFound();
   }
 
+  const [t, tNav, tServices] = await Promise.all([
+    getTranslations("marketing"),
+    getTranslations("nav"),
+    getTranslations("services"),
+  ]);
+
   const categories = profile.categoryIds.length
     ? await prisma.serviceCategory.findMany({
         where: { id: { in: profile.categoryIds } },
-        select: { id: true, name: true },
+        select: { id: true, name: true, slug: true },
       })
     : [];
 
@@ -116,14 +125,14 @@ export default async function PublicProfessionalProfilePage({ params }: Professi
       />
       <JsonLd
         data={buildBreadcrumbJsonLd([
-          { name: "Inicio", path: "/" },
-          { name: "Profesionales", path: "/professionals" },
+          { name: tNav("home"), path: "/" },
+          { name: tNav("professionals"), path: "/professionals" },
           { name, path },
         ])}
       />
 
       <Link href="/professionals" className="text-sm text-foreground/70 hover:underline">
-        ← Back to search
+        {t("directory.backToSearch")}
       </Link>
 
       <div className="flex items-start gap-5">
@@ -149,7 +158,7 @@ export default async function PublicProfessionalProfilePage({ params }: Professi
       </div>
 
       {profile.bio && (
-        <Section title="About" gap="sm">
+        <Section title={t("professionals.profile.about")} gap="sm">
           <p className="whitespace-pre-line text-sm text-foreground/80">{profile.bio}</p>
         </Section>
       )}
@@ -157,19 +166,23 @@ export default async function PublicProfessionalProfilePage({ params }: Professi
       <ResponsiveGrid cols="2" gap="md" bordered>
         {profile.yearsExperience !== null && (
           <div>
-            <p className="text-foreground/60">Experience</p>
-            <p className="font-medium">{profile.yearsExperience} years</p>
+            <p className="text-foreground/60">{t("professionals.profile.experience")}</p>
+            <p className="font-medium">
+              {t("professionals.profile.experienceYears", { count: profile.yearsExperience })}
+            </p>
           </div>
         )}
         {profile.serviceRadiusKm !== null && (
           <div>
-            <p className="text-foreground/60">Service area</p>
-            <p className="font-medium">Within {profile.serviceRadiusKm} km</p>
+            <p className="text-foreground/60">{t("professionals.profile.serviceArea")}</p>
+            <p className="font-medium">
+              {t("professionals.profile.withinKm", { km: profile.serviceRadiusKm })}
+            </p>
           </div>
         )}
         {(profile.city || profile.province) && (
           <div>
-            <p className="text-foreground/60">Based near</p>
+            <p className="text-foreground/60">{t("directory.basedNear")}</p>
             <p className="font-medium">
               {[profile.city, profile.province].filter(Boolean).join(", ")}
             </p>
@@ -178,14 +191,14 @@ export default async function PublicProfessionalProfilePage({ params }: Professi
       </ResponsiveGrid>
 
       {categories.length > 0 && (
-        <Section title="Services" gap="sm">
+        <Section title={t("directory.services")} gap="sm">
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <span
                 key={category.id}
                 className="rounded-full bg-black/5 px-3 py-1 text-xs text-foreground/70"
               >
-                {category.name}
+                {localizeCategoryName(tServices, category)}
               </span>
             ))}
           </div>
@@ -212,9 +225,7 @@ export default async function PublicProfessionalProfilePage({ params }: Professi
       */}
       <section className="rounded-md border border-border bg-black/5 p-4">
         <p className="text-sm text-foreground/70">
-          Ready to get started? Post a service request and {profile.businessName ?? profile.displayName}{" "}
-          — along with every other eligible professional nearby — will be able to review it and send you a
-          quote.
+          {t("professionals.profile.readyText", { name: profile.businessName ?? profile.displayName })}
         </p>
         <Link
           href={{
@@ -226,7 +237,7 @@ export default async function PublicProfessionalProfilePage({ params }: Professi
           }}
           className="mt-3 inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
-          Request this service
+          {t("professionals.profile.requestService")}
         </Link>
       </section>
     </PageContainer>

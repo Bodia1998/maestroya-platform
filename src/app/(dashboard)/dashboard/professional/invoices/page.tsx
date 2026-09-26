@@ -1,15 +1,19 @@
 import { FileText } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { makeListInvoicesForProfessionalUseCase } from "@/application/use-cases/invoicing/compose";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatusBadge } from "@/components/dashboard/status-badge";
-import { formatMoney } from "@/components/dashboard/quote-items-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageContainer } from "@/components/layout/page-container";
 
-export const metadata = { title: "My invoices" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("professional.invoices.list");
+  return { title: t("metaTitle") };
+}
 
 /**
  * Module 99 — Self-Billing Authorization Entry Point & Financial Document
@@ -27,17 +31,21 @@ export const metadata = { title: "My invoices" };
  */
 export default async function ProfessionalInvoicesPage() {
   const user = await requireAuth();
-  const invoices = await makeListInvoicesForProfessionalUseCase().execute(user.id);
+  const [invoices, t, format] = await Promise.all([
+    makeListInvoicesForProfessionalUseCase().execute(user.id),
+    getTranslations("professional.invoices.list"),
+    getFormatter(),
+  ]);
 
   return (
     <PageContainer maxWidth="3xl" gap="sm">
-      <PageHeader title="My invoices" subtitle="Self-billed invoices MaestroYa has issued to you." />
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
       {invoices.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title="No invoices yet"
-          description="An invoice is drafted automatically once a completed job's payment is released to you — this requires an active self-billing authorization."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
         />
       ) : (
         <ul className="flex flex-col gap-3">
@@ -48,11 +56,11 @@ export default async function ProfessionalInvoicesPage() {
                 className="flex items-center justify-between gap-4 rounded-md border border-border p-4 hover:bg-black/5"
               >
                 <div className="flex flex-col gap-1">
-                  <span className="font-medium">{invoice.invoiceNumber ?? "Not yet issued"}</span>
-                  <span className="text-xs text-foreground/60">{invoice.invoiceDate.toLocaleDateString()}</span>
+                  <span className="font-medium">{invoice.invoiceNumber ?? t("notYetIssued")}</span>
+                  <span className="text-xs text-foreground/60">{format.dateTime(invoice.invoiceDate, { dateStyle: "medium" })}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium">{formatMoney(invoice.totalAmount, invoice.currency)}</span>
+                  <span className="text-sm font-medium">{format.number(invoice.totalAmount, { style: "currency", currency: invoice.currency })}</span>
                   <StatusBadge status={invoice.status} />
                 </div>
               </Link>

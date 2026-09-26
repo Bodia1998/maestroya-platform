@@ -1,0 +1,344 @@
+{
+  "errors": {
+    "fixErrors": "Corrigeer de fouten hieronder.",
+    "createProfile": "Er ging iets mis bij het aanmaken van je vakmansprofiel.",
+    "onboarding": "Er ging iets mis bij het instellen van je vakmansprofiel.",
+    "updateProfile": "Er ging iets mis bij het bijwerken van je vakmansprofiel.",
+    "updateServices": "Er ging iets mis bij het bijwerken van je dienstcategorieën.",
+    "deactivate": "Er ging iets mis bij het deactiveren van je vakmansprofiel.",
+    "submitQuote": "Er ging iets mis bij het versturen van je offerte.",
+    "updateQuote": "Er ging iets mis bij het bijwerken van je offerte.",
+    "withdrawQuote": "Er ging iets mis bij het intrekken van je offerte.",
+    "acceptInvoice": "Er ging iets mis bij het accepteren van deze factuur.",
+    "invalidInvoice": "Ongeldige factuur.",
+    "grantSelfBilling": "Er ging iets mis bij het verlenen van de machtiging voor self-billing.",
+    "revokeSelfBilling": "Er ging iets mis bij het intrekken van de machtiging voor self-billing.",
+    "startVerification": "Er ging iets mis bij het starten van je verificatieaanvraag.",
+    "uploadDocument": "Er ging iets mis bij het uploaden van je document.",
+    "removeDocument": "Er ging iets mis bij het verwijderen van je document.",
+    "submitVerification": "Er ging iets mis bij het indienen van je verificatieaanvraag.",
+    "resubmitVerification": "Er ging iets mis bij het opnieuw indienen van je verificatieaanvraag.",
+    "invalidDocumentType": "Kies een geldig documenttype.",
+    "fileRequired": "Kies een bestand om te uploaden.",
+    "invalidFileType": "Documenten moeten een JPEG-, PNG- of WebP-afbeelding of een pdf zijn.",
+    "fileTooLarge": "Elk document moet kleiner zijn dan {maxMb, number} MB.",
+    "invalidDocument": "Ongeldig document.",
+    "createPortfolioItem": "Er ging iets mis bij het aanmaken van dit portfolio-item.",
+    "updatePortfolioItem": "Er ging iets mis bij het bijwerken van dit portfolio-item.",
+    "deletePortfolioItem": "Er ging iets mis bij het verwijderen van dit portfolio-item.",
+    "invalidDateRange": "Ongeldige periode.",
+    "loadAnalytics": "Er ging iets mis bij het laden van je statistieken."
+  },
+  "servicesForm": {
+    "success": "Dienstcategorieën bijgewerkt.",
+    "title": "Dienstcategorieën",
+    "description": "Klanten vinden je via deze categorieën — kies alle categorieën die van toepassing zijn.",
+    "empty": "Er zijn nog geen dienstcategorieën beschikbaar.",
+    "saving": "Opslaan…",
+    "submit": "Dienstcategorieën opslaan"
+  },
+  "deactivate": {
+    "success": "Je vakmansprofiel is gedeactiveerd.",
+    "trigger": "Vakmansprofiel deactiveren",
+    "title": "Nieuwe klanten kunnen je dan niet meer vinden",
+    "description": "Bestaande offertes, afspraken en beoordelingen blijven bewaard. Indien nodig kan de klantenservice je later weer activeren.",
+    "confirmLabel": "Typ {word} om te bevestigen",
+    "pending": "Deactiveren…",
+    "confirm": "Mijn vakmansprofiel deactiveren"
+  },
+  "profileForm": {
+    "updated": "Vakmansprofiel bijgewerkt.",
+    "created": "Vakmansprofiel aangemaakt.",
+    "aboutSection": "Over je bedrijf",
+    "businessName": "Bedrijfsnaam",
+    "headline": "Kopregel",
+    "headlinePlaceholder": "bijv. Erkend elektricien, meer dan 10 jaar ervaring",
+    "bio": "Beschrijving",
+    "yearsExperience": "Jaren ervaring",
+    "serviceRadius": "Werkgebied (km)",
+    "contactSection": "Contactgegevens",
+    "contactEmail": "Contact-e-mail",
+    "contactPhone": "Contacttelefoon",
+    "websiteUrl": "Website-URL",
+    "taxId": "Fiscaal nummer (NIF/CIF)",
+    "availabilitySection": "Beschikbaarheid",
+    "acceptingRequests": "Ik neem momenteel nieuwe aanvragen aan",
+    "saving": "Opslaan…",
+    "saveChanges": "Wijzigingen opslaan",
+    "create": "Vakmansprofiel aanmaken"
+  },
+  "onboarding": {
+    "form": {
+      "categoriesTitle": "Hoofdberoep / categorie",
+      "categoriesDescription": "Kies alle categorieën die het werk beschrijven dat je doet.",
+      "noCategories": "Er zijn nog geen dienstcategorieën beschikbaar.",
+      "contactTitle": "Contact",
+      "phone": "Telefoonnummer",
+      "locationTitle": "Vestigingslocatie",
+      "locationDescription": "Waar je gevestigd bent — hiermee koppelen we je aan aanvragen in de buurt.",
+      "address": "Adres",
+      "line1Placeholder": "Straat en huisnummer",
+      "line2Placeholder": "Appartement, verdieping enz. (optioneel)",
+      "cityPlaceholder": "Plaats",
+      "provincePlaceholder": "Provincie (optioneel)",
+      "postalCodePlaceholder": "Postcode",
+      "countryPlaceholder": "Land",
+      "coverageTitle": "Werkgebied & over jou",
+      "serviceRadius": "Werkgebied (km)",
+      "bio": "Korte beschrijving van je werk",
+      "pending": "Bezig met instellen…",
+      "submit": "Instellen van mijn vakmansprofiel afronden"
+    },
+    "metaTitle": "Aanmelden als vakman",
+    "title": "Stel je vakmansprofiel in",
+    "subtitle": "Een paar gegevens zodat klanten je kunnen vinden en contact met je kunnen opnemen. Je kunt later meer toevoegen via je vakmansdashboard.",
+    "photoTitle": "Profielfoto (optioneel)"
+  },
+  "quotes": {
+    "form": {
+      "itemsTitle": "Posten",
+      "itemsDescription": "Splits arbeid en materialen uit, zodat de klant precies ziet waarvoor hij betaalt.",
+      "addItem": "Post toevoegen",
+      "description": "Omschrijving",
+      "descriptionPlaceholder": "Omschrijving (bijv. arbeid, materialen)",
+      "quantity": "Aantal",
+      "quantityPlaceholder": "Aantal",
+      "unitPrice": "Prijs per stuk",
+      "unitPricePlaceholder": "€ per stuk",
+      "itemType": "Soort post",
+      "categories": {
+        "LABOR": "Arbeid",
+        "MATERIALS": "Materialen"
+      },
+      "removeItem": "Post verwijderen",
+      "estimatedTotal": "Geschat totaal: {amount}",
+      "detailsTitle": "Details",
+      "notes": "Notities / voorstel",
+      "notesPlaceholder": "Beschrijf je voorstel, de planning of alles wat de klant moet weten.",
+      "validUntil": "Geldig tot",
+      "saving": "Opslaan…",
+      "saveChanges": "Wijzigingen opslaan",
+      "create": "Offerte maken"
+    },
+    "withdraw": {
+      "trigger": "Deze offerte intrekken",
+      "title": "Deze offerte intrekken?",
+      "description": "De klant kan de offerte dan niet meer accepteren. Dit kan niet ongedaan worden gemaakt.",
+      "confirm": "Ja, offerte intrekken",
+      "pending": "Intrekken…",
+      "cancel": "Offerte behouden"
+    },
+    "list": {
+      "metaTitle": "Mijn offertes",
+      "title": "Mijn offertes",
+      "subtitle": "Offertes die je hebt ingediend op aanvragen van klanten.",
+      "findRequests": "Aanvragen zoeken",
+      "emptyTitle": "Nog geen offertes ingediend",
+      "emptyDescription": "Bekijk open aanvragen en stuur je eerste offerte.",
+      "browseRequests": "Aanvragen bekijken"
+    },
+    "detail": {
+      "metaTitle": "Offertedetails",
+      "notes": "Notities / voorstel",
+      "items": "Posten",
+      "validUntil": "Geldig tot",
+      "noExpiry": "Geen vervaldatum ingesteld",
+      "submitted": "Ingediend",
+      "lastUpdated": "Laatst bijgewerkt",
+      "edit": "Offerte bewerken",
+      "messageCustomer": "Bericht aan klant"
+    },
+    "edit": {
+      "metaTitle": "Offerte bewerken",
+      "title": "Offerte bewerken",
+      "subtitle": "Werk je prijzen of de details van je voorstel bij."
+    }
+  },
+  "dashboard": {
+    "metaTitle": "Vakmansprofiel",
+    "title": "Vakmansprofiel",
+    "subtitle": "Beheer hoe klanten je zien als zelfstandige vakman.",
+    "createTitle": "Maak je vakmansprofiel aan",
+    "statusTitle": "Status",
+    "profileStatus": "Status: {status}",
+    "selfBillingLink": "Self-billing & facturen",
+    "verificationLink": "Identiteitsverificatie beheren",
+    "profileDetails": "Profielgegevens",
+    "serviceCategories": "Dienstcategorieën",
+    "dangerZone": "Gevarenzone",
+    "dangerZoneDescription": "Als je je profiel deactiveert, verschijnt het niet meer in de zoekresultaten van klanten totdat het weer wordt geactiveerd."
+  },
+  "requests": {
+    "distance": "{distance, number} km verderop",
+    "postedOn": "Geplaatst op {date}",
+    "urgency": {
+      "LOW": "Laag",
+      "MEDIUM": "Gemiddeld",
+      "HIGH": "Hoog",
+      "EMERGENCY": "Spoed"
+    },
+    "list": {
+      "metaTitle": "Beschikbare aanvragen",
+      "title": "Beschikbare aanvragen",
+      "subtitle": "Aanvragen van klanten die passen bij je categorieën en werkgebied. Bekijk er een en maak een offerte om te reageren.",
+      "empty": "Er zijn momenteel geen passende aanvragen. Zorg dat je vakmansprofiel actief is en dat je dienstcategorieën en werkgebied hebt ingesteld."
+    },
+    "detail": {
+      "metaTitle": "Aanvraag",
+      "intro": "Dit is een aanvraag van een klant. Bekijk de details hieronder en maak een offerte als je een prijs voor het werk wilt voorstellen.",
+      "description": "Beschrijving",
+      "location": "Locatie",
+      "urgency": "Urgentie",
+      "posted": "Geplaatst",
+      "createQuote": "Offerte maken"
+    },
+    "createQuote": {
+      "metaTitle": "Offerte maken",
+      "title": "Offerte maken",
+      "intro": "Dit is de aanvraag van een klant. Maak een offerte waarin je het voorgestelde werk en de materialen beschrijft, en de prijs waarvoor je de opdracht wilt uitvoeren."
+    }
+  },
+  "jobs": {
+    "list": {
+      "metaTitle": "Mijn opdrachten",
+      "title": "Mijn opdrachten",
+      "subtitle": "Opdrachten op basis van offertes die je klanten hebben geaccepteerd.",
+      "empty": "Je hebt geen actieve opdrachten.",
+      "withCounterparty": "met {name}"
+    },
+    "detail": {
+      "metaTitle": "Opdracht",
+      "title": "Opdracht",
+      "started": "Gestart",
+      "completed": "Afgerond",
+      "cancellationReason": "Reden van annulering",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "Op verzoek van de klant",
+        "PROFESSIONAL_UNABLE_TO_COMPLETE": "Vakman kan de opdracht niet afronden",
+        "SERVICE_REQUEST_ISSUE": "Probleem met de aanvraag",
+        "OTHER": "Anders"
+      },
+      "appointmentsTitle": "Afspraken voor deze opdracht",
+      "noAppointments": "Nog geen afspraken.",
+      "notScheduled": "Nog niet ingepland"
+    }
+  },
+  "appointments": {
+    "window": "{start} – {end}",
+    "list": {
+      "metaTitle": "Mijn afspraken",
+      "title": "Mijn afspraken",
+      "subtitle": "Afspraken op basis van offertes die je klanten hebben geaccepteerd.",
+      "emptyTitle": "Geen komende afspraken",
+      "emptyDescription": "Afspraken verschijnen hier zodra een klant een van je offertes accepteert.",
+      "noTimeProposed": "Nog geen tijd voorgesteld"
+    },
+    "detail": {
+      "metaTitle": "Afspraak",
+      "title": "Afspraak",
+      "confirmedTime": "Bevestigde tijd",
+      "proposedTime": "Voorgestelde tijd",
+      "notSet": "Niet ingesteld",
+      "cancellationReason": "Reden van annulering",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "Op verzoek van de klant",
+        "PROFESSIONAL_UNAVAILABLE": "Vakman niet beschikbaar",
+        "SCHEDULING_CONFLICT": "Planningsconflict",
+        "OTHER": "Anders"
+      }
+    }
+  },
+  "invoices": {
+    "list": {
+      "metaTitle": "Mijn facturen",
+      "title": "Mijn facturen",
+      "subtitle": "Facturen die MaestroYa via self-billing (zelffacturering) namens jou heeft uitgereikt.",
+      "emptyTitle": "Nog geen facturen",
+      "emptyDescription": "Er wordt automatisch een conceptfactuur gemaakt zodra de betaling voor een afgeronde opdracht aan je wordt vrijgegeven — hiervoor is een actieve machtiging voor self-billing nodig.",
+      "notYetIssued": "Nog niet uitgereikt"
+    },
+    "detail": {
+      "metaTitle": "Factuur",
+      "title": "Factuur",
+      "acceptIntro": "MaestroYa heeft deze factuur via self-billing namens jou opgesteld. Controleer de gegevens hieronder en accepteer de factuur om te bevestigen dat ze kloppen.",
+      "accept": "Deze factuur accepteren",
+      "documentReference": "Documentreferentie: {reference}… (alleen een controlesom tegen manipulatie — geen elektronische handtekening)."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Machtiging voor self-billing",
+    "title": "Machtiging voor self-billing",
+    "subtitle": "Bepaal of MaestroYa namens jou facturen mag uitreiken voor afgeronde opdrachten.",
+    "status": {
+      "ACTIVE": "Actief",
+      "REVOKED": "Ingetrokken"
+    },
+    "notAuthorized": "Niet gemachtigd",
+    "activeDescription": "Je hebt MaestroYa gemachtigd om namens jou facturen uit te reiken („facturación por el destinatario”) voor afgeronde opdrachten. Je kunt deze machtiging op elk moment intrekken.",
+    "revoke": "Machtiging intrekken",
+    "inactiveDescription": "Zonder deze machtiging kan MaestroYa geen facturen namens jou uitreiken en kunnen er geen conceptfacturen voor je afgeronde opdrachten worden gemaakt.",
+    "previouslyRevokedTitle": "Eerder ingetrokken",
+    "previouslyRevokedDescription": "Je hebt deze machtiging eerder ingetrokken. Je kunt haar hieronder opnieuw verlenen.",
+    "grant": "Machtiging verlenen",
+    "viewInvoices": "Bekijk je <link>via self-billing uitgereikte facturen</link>."
+  },
+  "verification": {
+    "metaTitle": "Verificatie als vakman",
+    "title": "Verificatie",
+    "subtitle": "Verifieer je identiteit om de badge „Geverifieerde vakman” op je openbare profiel te krijgen.",
+    "noProfile": "Je hebt een vakmansprofiel nodig voordat je verificatie kunt aanvragen. <link>Maak je vakmansprofiel aan</link>.",
+    "notStarted": "Je hebt nog geen verificatieaanvraag gestart.",
+    "start": "Verificatie starten",
+    "validUntil": "Geldig tot {date}",
+    "status": {
+      "DRAFT": {
+        "label": "Niet ingediend",
+        "description": "Upload minstens één identiteitsbewijs (identiteitskaart, paspoort of rijbewijs) en eventuele ondersteunende documenten, en dien ze daarna in ter beoordeling."
+      },
+      "PENDING": {
+        "label": "Wacht op beoordeling",
+        "description": "Je aanvraag staat in de wachtrij voor beoordeling. We laten het je weten zodra een beoordelaar ernaar heeft gekeken."
+      },
+      "UNDER_REVIEW": {
+        "label": "In beoordeling",
+        "description": "Een beoordelaar controleert momenteel je documenten. Je hoeft nu niets te doen."
+      },
+      "APPROVED": {
+        "label": "Goedgekeurd",
+        "description": "Je bent een geverifieerde vakman. Op je openbare profiel staat een verificatiebadge."
+      },
+      "REJECTED": {
+        "label": "Afgewezen",
+        "description": "Je aanvraag is niet goedgekeurd. Bekijk de reden hieronder — je kunt dit oplossen en de aanvraag opnieuw indienen."
+      },
+      "RESUBMISSION_REQUIRED": {
+        "label": "Opnieuw indienen vereist",
+        "description": "Een beoordelaar vraagt je je aanvraag bij te werken. Volg de instructies hieronder en dien haar daarna opnieuw in."
+      }
+    },
+    "rejectionReasonTitle": "Reden",
+    "resubmissionReasonTitle": "Wat je moet bijwerken",
+    "documentsTitle": "Documenten",
+    "noDocuments": "Nog geen documenten geüpload.",
+    "remove": "Verwijderen",
+    "uploadTitle": "Document uploaden",
+    "documentType": "Documenttype",
+    "fileLabel": "Bestand (JPEG, PNG, WebP of pdf, max. {maxMb, number} MB)",
+    "upload": "Uploaden",
+    "submit": "Indienen ter beoordeling",
+    "resubmit": "Opnieuw indienen ter beoordeling",
+    "submitHint": "Je moet minstens één identiteitsbewijs hebben geüpload voordat je indient.",
+    "documentTypes": {
+      "NATIONAL_ID": "Identiteitskaart",
+      "PASSPORT": "Paspoort",
+      "DRIVER_LICENSE": "Rijbewijs",
+      "BUSINESS_LICENSE": "Bedrijfsvergunning",
+      "TAX_CERTIFICATE": "Fiscale verklaring",
+      "INSURANCE_CERTIFICATE": "Verzekeringsbewijs",
+      "PROFESSIONAL_CERTIFICATION": "Vakcertificaat",
+      "PROOF_OF_ADDRESS": "Adresbewijs",
+      "BUSINESS_REGISTRATION": "Inschrijving in het handelsregister",
+      "OTHER": "Anders"
+    }
+  }
+}

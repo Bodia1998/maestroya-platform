@@ -43,6 +43,8 @@ export const SUPPORTED_LOCALES = [
   "pt",
   "ro",
   "pl",
+  "ru",
+  "nl",
 ] as const;
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
@@ -73,6 +75,10 @@ export const LOCALE_DESCRIPTORS: readonly LocaleDescriptor[] = [
   { code: "pt", nativeName: "Português", englishName: "Portuguese" },
   { code: "ro", nativeName: "Română", englishName: "Romanian" },
   { code: "pl", nativeName: "Polski", englishName: "Polish" },
+  // Module 120 — Multilingual Localization: appended in the order they
+  // were added to the product, per the ordering rule above.
+  { code: "ru", nativeName: "Русский", englishName: "Russian" },
+  { code: "nl", nativeName: "Nederlands", englishName: "Dutch" },
 ];
 
 /**

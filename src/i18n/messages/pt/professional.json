@@ -1,0 +1,344 @@
+{
+  "errors": {
+    "fixErrors": "Corrija os erros indicados abaixo.",
+    "createProfile": "Ocorreu um problema ao criar o seu perfil profissional.",
+    "onboarding": "Ocorreu um problema ao configurar o seu perfil profissional.",
+    "updateProfile": "Ocorreu um problema ao atualizar o seu perfil profissional.",
+    "updateServices": "Ocorreu um problema ao atualizar as suas categorias de serviço.",
+    "deactivate": "Ocorreu um problema ao desativar o seu perfil profissional.",
+    "submitQuote": "Ocorreu um problema ao enviar o seu orçamento.",
+    "updateQuote": "Ocorreu um problema ao atualizar o seu orçamento.",
+    "withdrawQuote": "Ocorreu um problema ao retirar o seu orçamento.",
+    "acceptInvoice": "Ocorreu um problema ao aceitar esta fatura.",
+    "invalidInvoice": "Fatura inválida.",
+    "grantSelfBilling": "Ocorreu um problema ao conceder a autorização de autofaturação.",
+    "revokeSelfBilling": "Ocorreu um problema ao revogar a autorização de autofaturação.",
+    "startVerification": "Ocorreu um problema ao iniciar o seu pedido de verificação.",
+    "uploadDocument": "Ocorreu um problema ao carregar o seu documento.",
+    "removeDocument": "Ocorreu um problema ao remover o seu documento.",
+    "submitVerification": "Ocorreu um problema ao submeter o seu pedido de verificação.",
+    "resubmitVerification": "Ocorreu um problema ao voltar a submeter o seu pedido de verificação.",
+    "invalidDocumentType": "Escolha um tipo de documento válido.",
+    "fileRequired": "Escolha um ficheiro para carregar.",
+    "invalidFileType": "Os documentos têm de ser uma imagem JPEG, PNG ou WebP, ou um PDF.",
+    "fileTooLarge": "Cada documento tem de ter menos de {maxMb, number} MB.",
+    "invalidDocument": "Documento inválido.",
+    "createPortfolioItem": "Ocorreu um problema ao criar este elemento do portefólio.",
+    "updatePortfolioItem": "Ocorreu um problema ao atualizar este elemento do portefólio.",
+    "deletePortfolioItem": "Ocorreu um problema ao eliminar este elemento do portefólio.",
+    "invalidDateRange": "Intervalo de datas inválido.",
+    "loadAnalytics": "Ocorreu um problema ao carregar as suas estatísticas."
+  },
+  "servicesForm": {
+    "success": "Categorias de serviço atualizadas.",
+    "title": "Categorias de serviço",
+    "description": "Os clientes encontram-no através destas categorias — selecione todas as que se aplicam.",
+    "empty": "Ainda não há categorias de serviço disponíveis.",
+    "saving": "A guardar…",
+    "submit": "Guardar categorias de serviço"
+  },
+  "deactivate": {
+    "success": "O seu perfil profissional foi desativado.",
+    "trigger": "Desativar perfil profissional",
+    "title": "Os novos clientes deixarão de o encontrar",
+    "description": "Os orçamentos, marcações e avaliações existentes são mantidos. Se necessário, o apoio ao cliente poderá reativá-lo mais tarde.",
+    "confirmLabel": "Escreva {word} para confirmar",
+    "pending": "A desativar…",
+    "confirm": "Desativar o meu perfil profissional"
+  },
+  "profileForm": {
+    "updated": "Perfil profissional atualizado.",
+    "created": "Perfil profissional criado.",
+    "aboutSection": "Sobre o seu negócio",
+    "businessName": "Nome comercial",
+    "headline": "Título",
+    "headlinePlaceholder": "p. ex. Eletricista credenciado, mais de 10 anos de experiência",
+    "bio": "Descrição",
+    "yearsExperience": "Anos de experiência",
+    "serviceRadius": "Raio de serviço (km)",
+    "contactSection": "Informações de contacto",
+    "contactEmail": "E-mail de contacto",
+    "contactPhone": "Telefone de contacto",
+    "websiteUrl": "URL do website",
+    "taxId": "Número de identificação fiscal (NIF/CIF)",
+    "availabilitySection": "Disponibilidade",
+    "acceptingRequests": "A aceitar novos pedidos neste momento",
+    "saving": "A guardar…",
+    "saveChanges": "Guardar alterações",
+    "create": "Criar perfil profissional"
+  },
+  "onboarding": {
+    "form": {
+      "categoriesTitle": "Profissão / categoria principal",
+      "categoriesDescription": "Escolha todas as categorias que descrevem o trabalho que faz.",
+      "noCategories": "Ainda não há categorias de serviço disponíveis.",
+      "contactTitle": "Contacto",
+      "phone": "Número de telefone",
+      "locationTitle": "Localização base",
+      "locationDescription": "Onde está sediado — serve para lhe propor pedidos próximos.",
+      "address": "Morada",
+      "line1Placeholder": "Rua e número",
+      "line2Placeholder": "Andar, porta, etc. (opcional)",
+      "cityPlaceholder": "Cidade",
+      "provincePlaceholder": "Província (opcional)",
+      "postalCodePlaceholder": "Código postal",
+      "countryPlaceholder": "País",
+      "coverageTitle": "Área de atuação e apresentação",
+      "serviceRadius": "Raio de serviço (km)",
+      "bio": "Breve descrição profissional",
+      "pending": "A configurar…",
+      "submit": "Concluir a configuração do meu perfil profissional"
+    },
+    "metaTitle": "Registo de profissional",
+    "title": "Configure o seu perfil profissional",
+    "subtitle": "Alguns dados para que os clientes o possam encontrar e contactar. Pode acrescentar mais tarde a partir do seu painel profissional.",
+    "photoTitle": "Foto de perfil (opcional)"
+  },
+  "quotes": {
+    "form": {
+      "itemsTitle": "Linhas",
+      "itemsDescription": "Discrimine a mão de obra e os materiais para que o cliente veja exatamente o que está a pagar.",
+      "addItem": "Adicionar linha",
+      "description": "Descrição",
+      "descriptionPlaceholder": "Descrição (p. ex. mão de obra, materiais)",
+      "quantity": "Quantidade",
+      "quantityPlaceholder": "Qtd.",
+      "unitPrice": "Preço unitário",
+      "unitPricePlaceholder": "€ por unidade",
+      "itemType": "Tipo de linha",
+      "categories": {
+        "LABOR": "Mão de obra",
+        "MATERIALS": "Materiais"
+      },
+      "removeItem": "Remover linha",
+      "estimatedTotal": "Total estimado: {amount}",
+      "detailsTitle": "Detalhes",
+      "notes": "Notas / proposta",
+      "notesPlaceholder": "Descreva a sua proposta, os prazos ou tudo o que o cliente deva saber.",
+      "validUntil": "Válido até",
+      "saving": "A guardar…",
+      "saveChanges": "Guardar alterações",
+      "create": "Criar orçamento"
+    },
+    "withdraw": {
+      "trigger": "Retirar este orçamento",
+      "title": "Retirar este orçamento?",
+      "description": "O cliente deixará de o poder aceitar. Esta ação não pode ser anulada.",
+      "confirm": "Sim, retirar orçamento",
+      "pending": "A retirar…",
+      "cancel": "Manter orçamento"
+    },
+    "list": {
+      "metaTitle": "Os meus orçamentos",
+      "title": "Os meus orçamentos",
+      "subtitle": "Orçamentos que enviou em resposta a pedidos de clientes.",
+      "findRequests": "Encontrar pedidos",
+      "emptyTitle": "Ainda não enviou orçamentos",
+      "emptyDescription": "Consulte os pedidos abertos e envie o seu primeiro orçamento.",
+      "browseRequests": "Ver pedidos"
+    },
+    "detail": {
+      "metaTitle": "Detalhe do orçamento",
+      "notes": "Notas / proposta",
+      "items": "Linhas",
+      "validUntil": "Válido até",
+      "noExpiry": "Sem data de validade",
+      "submitted": "Enviado",
+      "lastUpdated": "Última atualização",
+      "edit": "Editar orçamento",
+      "messageCustomer": "Enviar mensagem ao cliente"
+    },
+    "edit": {
+      "metaTitle": "Editar orçamento",
+      "title": "Editar orçamento",
+      "subtitle": "Atualize os preços ou os detalhes da sua proposta."
+    }
+  },
+  "dashboard": {
+    "metaTitle": "Perfil profissional",
+    "title": "Perfil profissional",
+    "subtitle": "Gira a forma como os clientes o veem enquanto profissional independente.",
+    "createTitle": "Crie o seu perfil profissional",
+    "statusTitle": "Estado",
+    "profileStatus": "Estado: {status}",
+    "selfBillingLink": "Autofaturação e faturas",
+    "verificationLink": "Gerir a verificação de identidade",
+    "profileDetails": "Dados do perfil",
+    "serviceCategories": "Categorias de serviço",
+    "dangerZone": "Zona de perigo",
+    "dangerZoneDescription": "Ao desativar o perfil, este deixa de aparecer nas pesquisas dos clientes até ser reativado."
+  },
+  "requests": {
+    "distance": "A {distance, number} km",
+    "postedOn": "Publicado a {date}",
+    "urgency": {
+      "LOW": "Baixa",
+      "MEDIUM": "Média",
+      "HIGH": "Alta",
+      "EMERGENCY": "Emergência"
+    },
+    "list": {
+      "metaTitle": "Pedidos disponíveis",
+      "title": "Pedidos disponíveis",
+      "subtitle": "Pedidos de clientes que correspondem às suas categorias e ao seu raio de serviço. Abra um e crie um orçamento para responder.",
+      "empty": "De momento não há pedidos correspondentes. Confirme que o seu perfil profissional está ativo e tem categorias de serviço e um raio de serviço configurados."
+    },
+    "detail": {
+      "metaTitle": "Pedido",
+      "intro": "Este é um pedido de um cliente. Reveja os detalhes abaixo e, se quiser propor um preço para o trabalho, crie um orçamento.",
+      "description": "Descrição",
+      "location": "Localização",
+      "urgency": "Urgência",
+      "posted": "Publicado",
+      "createQuote": "Criar orçamento"
+    },
+    "createQuote": {
+      "metaTitle": "Criar orçamento",
+      "title": "Criar orçamento",
+      "intro": "Este é o pedido de um cliente. Crie um orçamento que descreva o trabalho e os materiais que propõe, bem como o preço pelo qual o realizaria."
+    }
+  },
+  "jobs": {
+    "list": {
+      "metaTitle": "Os meus trabalhos",
+      "title": "Os meus trabalhos",
+      "subtitle": "Trabalhos criados a partir de orçamentos aceites pelos seus clientes.",
+      "empty": "Não tem trabalhos ativos.",
+      "withCounterparty": "com {name}"
+    },
+    "detail": {
+      "metaTitle": "Trabalho",
+      "title": "Trabalho",
+      "started": "Iniciado",
+      "completed": "Concluído",
+      "cancellationReason": "Motivo do cancelamento",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "A pedido do cliente",
+        "PROFESSIONAL_UNABLE_TO_COMPLETE": "O profissional não pode concluí-lo",
+        "SERVICE_REQUEST_ISSUE": "Problema com o pedido",
+        "OTHER": "Outro"
+      },
+      "appointmentsTitle": "Marcações deste trabalho",
+      "noAppointments": "Ainda não há marcações.",
+      "notScheduled": "Ainda não agendada"
+    }
+  },
+  "appointments": {
+    "window": "{start} – {end}",
+    "list": {
+      "metaTitle": "As minhas marcações",
+      "title": "As minhas marcações",
+      "subtitle": "Marcações de orçamentos aceites pelos seus clientes.",
+      "emptyTitle": "Sem marcações próximas",
+      "emptyDescription": "As marcações aparecem aqui quando um cliente aceita um dos seus orçamentos.",
+      "noTimeProposed": "Ainda não foi proposto um horário"
+    },
+    "detail": {
+      "metaTitle": "Marcação",
+      "title": "Marcação",
+      "confirmedTime": "Horário confirmado",
+      "proposedTime": "Horário proposto",
+      "notSet": "Não definido",
+      "cancellationReason": "Motivo do cancelamento",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "A pedido do cliente",
+        "PROFESSIONAL_UNAVAILABLE": "Profissional indisponível",
+        "SCHEDULING_CONFLICT": "Conflito de horário",
+        "OTHER": "Outro"
+      }
+    }
+  },
+  "invoices": {
+    "list": {
+      "metaTitle": "As minhas faturas",
+      "title": "As minhas faturas",
+      "subtitle": "Faturas emitidas pela MaestroYa em seu nome por autofaturação.",
+      "emptyTitle": "Ainda não há faturas",
+      "emptyDescription": "É criado automaticamente um rascunho de fatura quando o pagamento de um trabalho concluído lhe é transferido — para isso é necessária uma autorização de autofaturação ativa.",
+      "notYetIssued": "Ainda não emitida"
+    },
+    "detail": {
+      "metaTitle": "Fatura",
+      "title": "Fatura",
+      "acceptIntro": "A MaestroYa preparou esta fatura em seu nome por autofaturação. Reveja os dados abaixo e aceite-a para confirmar que estão corretos.",
+      "accept": "Aceitar esta fatura",
+      "documentReference": "Referência do documento: {reference}… (apenas uma soma de verificação contra adulteração — não é uma assinatura eletrónica)."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Autorização de autofaturação",
+    "title": "Autorização de autofaturação",
+    "subtitle": "Decida se a MaestroYa pode emitir faturas em seu nome pelos trabalhos concluídos.",
+    "status": {
+      "ACTIVE": "Ativa",
+      "REVOKED": "Revogada"
+    },
+    "notAuthorized": "Não autorizada",
+    "activeDescription": "Autorizou a MaestroYa a emitir faturas em seu nome («facturación por el destinatario») pelos trabalhos concluídos. Pode revogar esta autorização a qualquer momento.",
+    "revoke": "Revogar autorização",
+    "inactiveDescription": "Sem esta autorização, a MaestroYa não pode emitir faturas em seu nome nem preparar rascunhos de fatura para os seus trabalhos concluídos.",
+    "previouslyRevokedTitle": "Revogada anteriormente",
+    "previouslyRevokedDescription": "Revogou esta autorização anteriormente. Pode voltar a concedê-la abaixo.",
+    "grant": "Conceder autorização",
+    "viewInvoices": "Consulte as suas <link>faturas emitidas por autofaturação</link>."
+  },
+  "verification": {
+    "metaTitle": "Verificação de profissional",
+    "title": "Verificação",
+    "subtitle": "Verifique a sua identidade para obter o selo «Profissional verificado» no seu perfil público.",
+    "noProfile": "Precisa de um perfil profissional antes de poder pedir a verificação. <link>Crie o seu perfil profissional</link>.",
+    "notStarted": "Ainda não iniciou um pedido de verificação.",
+    "start": "Iniciar verificação",
+    "validUntil": "Válida até {date}",
+    "status": {
+      "DRAFT": {
+        "label": "Não submetido",
+        "description": "Carregue pelo menos um documento de identificação (cartão de cidadão/documento nacional de identidade, passaporte ou carta de condução) e os documentos comprovativos que tiver e, depois, submeta-os para análise."
+      },
+      "PENDING": {
+        "label": "A aguardar análise",
+        "description": "O seu pedido está na fila de análise. Será avisado assim que um revisor o tiver analisado."
+      },
+      "UNDER_REVIEW": {
+        "label": "Em análise",
+        "description": "Um revisor está a verificar os seus documentos. De momento não é necessária qualquer ação."
+      },
+      "APPROVED": {
+        "label": "Aprovado",
+        "description": "É um profissional verificado. O seu perfil público apresenta um selo de verificação."
+      },
+      "REJECTED": {
+        "label": "Rejeitado",
+        "description": "O seu pedido não foi aprovado. Veja o motivo abaixo — pode corrigi-lo e voltar a submeter."
+      },
+      "RESUBMISSION_REQUIRED": {
+        "label": "Nova submissão necessária",
+        "description": "Um revisor precisa que atualize o seu pedido. Siga as instruções abaixo e volte a submetê-lo."
+      }
+    },
+    "rejectionReasonTitle": "Motivo",
+    "resubmissionReasonTitle": "O que atualizar",
+    "documentsTitle": "Documentos",
+    "noDocuments": "Ainda não foram carregados documentos.",
+    "remove": "Remover",
+    "uploadTitle": "Carregar um documento",
+    "documentType": "Tipo de documento",
+    "fileLabel": "Ficheiro (JPEG, PNG, WebP ou PDF, máx. {maxMb, number} MB)",
+    "upload": "Carregar",
+    "submit": "Submeter para análise",
+    "resubmit": "Voltar a submeter para análise",
+    "submitHint": "É necessário ter carregado pelo menos um documento de identificação antes de submeter.",
+    "documentTypes": {
+      "NATIONAL_ID": "Documento nacional de identidade",
+      "PASSPORT": "Passaporte",
+      "DRIVER_LICENSE": "Carta de condução",
+      "BUSINESS_LICENSE": "Licença de atividade",
+      "TAX_CERTIFICATE": "Certidão fiscal",
+      "INSURANCE_CERTIFICATE": "Certificado de seguro",
+      "PROFESSIONAL_CERTIFICATION": "Certificação profissional",
+      "PROOF_OF_ADDRESS": "Comprovativo de morada",
+      "BUSINESS_REGISTRATION": "Registo comercial",
+      "OTHER": "Outro"
+    }
+  }
+}

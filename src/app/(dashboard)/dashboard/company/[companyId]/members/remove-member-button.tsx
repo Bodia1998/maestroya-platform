@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { removeCompanyMemberAction } from "./actions";
@@ -25,16 +26,17 @@ export function RemoveMemberButton({
   memberLabel: string;
 }) {
   const router = useRouter();
+  const t = useTranslations("company.members.remove");
 
   return (
     <ConfirmDialog
-      triggerLabel="Remove"
+      triggerLabel={t("trigger")}
       triggerVariant="outline"
       triggerClassName="h-9 text-xs"
-      title={`Remove ${memberLabel}?`}
-      description="They will immediately lose access to this company account. This cannot be undone from here."
-      confirmLabel="Yes, remove"
-      pendingLabel="Removing…"
+      title={t("title", { name: memberLabel })}
+      description={t("description")}
+      confirmLabel={t("confirm")}
+      pendingLabel={t("pending")}
       destructive
       onConfirm={async () => {
         const result = await removeCompanyMemberAction(companyId, memberId);

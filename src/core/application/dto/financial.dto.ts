@@ -17,12 +17,12 @@ import { z } from "zod";
  */
 
 export const getJobCommissionBreakdownSchema = z.object({
-  jobId: z.string().uuid("Invalid job."),
+  jobId: z.string().uuid("dto.ids.job"),
 });
 export type GetJobCommissionBreakdownInput = z.infer<typeof getJobCommissionBreakdownSchema>;
 
 export const recordCommissionForPaymentSchema = z.object({
-  paymentId: z.string().uuid("Invalid payment."),
+  paymentId: z.string().uuid("dto.ids.payment"),
 });
 export type RecordCommissionForPaymentInput = z.infer<typeof recordCommissionForPaymentSchema>;
 
@@ -40,14 +40,14 @@ export const MAX_ADJUSTMENT_REASON_LENGTH = 2000;
 export const MAX_ADJUSTMENT_AMOUNT = 1000000;
 
 export const createFinancialAdjustmentSchema = z.object({
-  jobId: z.string().uuid("Invalid job."),
-  disputeId: z.string().uuid("Invalid dispute.").optional(),
-  paymentId: z.string().uuid("Invalid payment.").optional(),
+  jobId: z.string().uuid("dto.ids.job"),
+  disputeId: z.string().uuid("dto.ids.dispute").optional(),
+  paymentId: z.string().uuid("dto.ids.payment").optional(),
   type: financialAdjustmentTypeSchema,
   amount: z.coerce
     .number()
-    .positive("Adjustment amount must be greater than zero.")
-    .max(MAX_ADJUSTMENT_AMOUNT, "Enter a realistic adjustment amount."),
+    .positive("dto.financial.adjustmentPositive")
+    .max(MAX_ADJUSTMENT_AMOUNT, "dto.financial.adjustmentRealistic"),
   reason: z.string().trim().max(MAX_ADJUSTMENT_REASON_LENGTH).optional().or(z.literal("")),
 });
 export type CreateFinancialAdjustmentInput = z.infer<typeof createFinancialAdjustmentSchema>;

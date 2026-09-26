@@ -13,5 +13,63 @@
     "email": "Email",
     "timezone": "Fuso orario"
   },
-  "memberSince": "Membro dal {date, date, long}"
+  "memberSince": "Membro dal {date, date, long}",
+  "avatarNote": "Questa foto riguarda solo il tuo account: non influisce sulla verifica dell'identità professionale. I professionisti la gestiscono separatamente da Profilo professionale → Gestisci verifica dell'identità.",
+  "dangerNote": "L'eliminazione dell'account è reversibile solo contattando l'assistenza: i tuoi dati vengono disattivati, non cancellati subito.",
+  "avatar": {
+    "chooseFirst": "Scegli prima un'immagine.",
+    "alt": "La tua foto profilo",
+    "chooseLabel": "Scegli un'immagine del profilo",
+    "uploading": "Caricamento…",
+    "upload": "Carica foto profilo",
+    "updated": "Foto profilo aggiornata."
+  },
+  "form": {
+    "updated": "Profilo aggiornato.",
+    "basics": "Dati di base",
+    "displayName": "Nome visualizzato",
+    "phone": "Telefono",
+    "timezone": "Fuso orario",
+    "preferredLanguage": "Lingua preferita",
+    "noPreference": "Nessuna preferenza",
+    "address": "Indirizzo",
+    "street": "Via e numero civico",
+    "line2": "Interno, piano, ecc. (facoltativo)",
+    "city": "Città",
+    "postalCode": "CAP",
+    "province": "Provincia",
+    "country": "Paese",
+    "notifications": "Notifiche",
+    "emailMarketing": "Email di marketing",
+    "emailServiceUpdates": "Email sugli aggiornamenti del servizio",
+    "smsAppointmentReminders": "Promemoria degli appuntamenti via SMS",
+    "save": "Salva le modifiche"
+  },
+  "password": {
+    "changed": "Password modificata. Per sicurezza, sei stato disconnesso da tutti gli altri dispositivi.",
+    "noPassword": "Questo account accede tramite un social login e non ha una password da modificare.",
+    "title": "Cambia password",
+    "current": "Password attuale",
+    "new": "Nuova password",
+    "confirm": "Conferma la nuova password",
+    "changing": "Modifica in corso…",
+    "submit": "Cambia password"
+  },
+  "deleteAccount": {
+    "trigger": "Disattiva l'account",
+    "title": "Questa operazione disattiverà il tuo account",
+    "password": "Password",
+    "confirmLabel": "Digita {token} per confermare",
+    "deactivating": "Disattivazione…",
+    "submit": "Disattiva il mio account"
+  },
+  "errors": {
+    "updateFailed": "Si è verificato un errore durante l'aggiornamento del profilo.",
+    "avatarFailed": "Si è verificato un errore durante il caricamento della foto profilo.",
+    "passwordFailed": "Si è verificato un errore durante la modifica della password.",
+    "deleteFailed": "Si è verificato un errore durante l'eliminazione dell'account.",
+    "avatarMissing": "Scegli un'immagine da caricare.",
+    "avatarType": "La foto profilo deve essere un'immagine JPEG, PNG o WebP.",
+    "avatarTooLarge": "La foto profilo deve essere inferiore a 5 MB."
+  }
 }

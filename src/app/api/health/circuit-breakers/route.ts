@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { error: "Request body must be valid JSON with a 'name' field." },
       { status: 400, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
@@ -96,6 +97,7 @@ export async function POST(request: NextRequest) {
   const parsed = resetRequestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { error: "Request body must be { name: string } — a breaker name, or 'all'." },
       { status: 400, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
@@ -107,6 +109,7 @@ export async function POST(request: NextRequest) {
 
   if (result.reset.length === 0) {
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { error: `No circuit breaker named "${parsed.data.name}" is registered.`, ...result },
       { status: 404, headers: { [REQUEST_ID_HEADER]: requestId } },
     );

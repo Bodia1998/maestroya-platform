@@ -25,9 +25,9 @@ import { z } from "zod";
 const featureFlagKeySchema = z
   .string()
   .trim()
-  .min(1, "Flag key is required.")
-  .max(100, "Flag key must be 100 characters or fewer.")
-  .regex(/^[a-z0-9][a-z0-9-_.]*$/i, "Flag key may only contain letters, numbers, '-', '_' and '.'.");
+  .min(1, "dto.featureFlag.keyRequired")
+  .max(100, "maxLength")
+  .regex(/^[a-z0-9][a-z0-9-_.]*$/i, "dto.featureFlag.keyFormat");
 
 export const featureFlagEnvironmentSchema = z.enum(["development", "test", "production"]);
 

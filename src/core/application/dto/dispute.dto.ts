@@ -66,22 +66,22 @@ export const paginationSchema = z.object({
 });
 
 export const createDisputeSchema = z.object({
-  jobId: z.string().uuid("Invalid job."),
+  jobId: z.string().uuid("dto.ids.job"),
   reason: z.enum(DISPUTE_REASON_VALUES),
   title: z
     .string()
     .trim()
-    .min(MIN_TITLE_LENGTH, `Title must be at least ${MIN_TITLE_LENGTH} characters.`)
-    .max(MAX_TITLE_LENGTH, `Title must be ${MAX_TITLE_LENGTH} characters or fewer.`),
+    .min(MIN_TITLE_LENGTH, "minLength")
+    .max(MAX_TITLE_LENGTH, "maxLength"),
   description: z
     .string()
     .trim()
-    .min(MIN_DESCRIPTION_LENGTH, `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters.`)
-    .max(MAX_DESCRIPTION_LENGTH, `Description must be ${MAX_DESCRIPTION_LENGTH} characters or fewer.`),
+    .min(MIN_DESCRIPTION_LENGTH, "minLength")
+    .max(MAX_DESCRIPTION_LENGTH, "maxLength"),
 });
 export type CreateDisputeInput = z.infer<typeof createDisputeSchema>;
 
-export const getDisputeSchema = z.object({ disputeId: z.string().uuid("Invalid dispute.") });
+export const getDisputeSchema = z.object({ disputeId: z.string().uuid("dto.ids.dispute") });
 export type GetDisputeInput = z.infer<typeof getDisputeSchema>;
 
 export const listMyDisputesSchema = paginationSchema.extend({
@@ -99,30 +99,30 @@ export const listAdminDisputesSchema = paginationSchema.extend({
 export type ListAdminDisputesInput = z.infer<typeof listAdminDisputesSchema>;
 
 export const assignDisputeSchema = z.object({
-  disputeId: z.string().uuid("Invalid dispute."),
-  adminUserId: z.string().uuid("Invalid admin.").nullable(),
+  disputeId: z.string().uuid("dto.ids.dispute"),
+  adminUserId: z.string().uuid("dto.ids.admin").nullable(),
 });
 export type AssignDisputeInput = z.infer<typeof assignDisputeSchema>;
 
 export const setDisputePrioritySchema = z.object({
-  disputeId: z.string().uuid("Invalid dispute."),
+  disputeId: z.string().uuid("dto.ids.dispute"),
   priority: z.enum(DISPUTE_PRIORITY_VALUES),
 });
 export type SetDisputePriorityInput = z.infer<typeof setDisputePrioritySchema>;
 
 export const changeDisputeStatusSchema = z.object({
-  disputeId: z.string().uuid("Invalid dispute."),
+  disputeId: z.string().uuid("dto.ids.dispute"),
   status: z.enum(DISPUTE_STATUS_VALUES),
 });
 export type ChangeDisputeStatusInput = z.infer<typeof changeDisputeStatusSchema>;
 
 export const addDisputeMessageSchema = z.object({
-  disputeId: z.string().uuid("Invalid dispute."),
+  disputeId: z.string().uuid("dto.ids.dispute"),
   body: z
     .string()
     .trim()
-    .min(1, "Message cannot be empty.")
-    .max(MAX_MESSAGE_LENGTH, `Message must be ${MAX_MESSAGE_LENGTH} characters or fewer.`),
+    .min(1, "dto.dispute.messageEmpty")
+    .max(MAX_MESSAGE_LENGTH, "maxLength"),
 });
 export type AddDisputeMessageInput = z.infer<typeof addDisputeMessageSchema>;
 
@@ -130,7 +130,7 @@ export const addDisputeInternalNoteSchema = addDisputeMessageSchema;
 export type AddDisputeInternalNoteInput = z.infer<typeof addDisputeInternalNoteSchema>;
 
 export const addDisputeEvidenceSchema = z.object({
-  disputeId: z.string().uuid("Invalid dispute."),
+  disputeId: z.string().uuid("dto.ids.dispute"),
   // Module 33 — Security Hardening: `z.string().url()` alone accepts any
   // URL-shaped string the `URL` constructor parses, including
   // `javascript:...`/`data:...`/`vbscript:...` — every one of those is a
@@ -142,41 +142,41 @@ export const addDisputeEvidenceSchema = z.object({
   // "user-submitted URL rendered as a link" shape) enforces http(s)-only,
   // which is the only scheme this platform's upload pipeline can ever
   // produce.
-  fileUrl: z.string().url("Invalid file URL.").refine(isValidMediaUrl, "File URL must be an http(s) link."),
+  fileUrl: z.string().url("dto.dispute.fileUrlInvalid").refine(isValidMediaUrl, "dto.dispute.fileUrlHttp"),
   fileName: z.string().trim().max(255).optional(),
   fileType: z.string().trim().max(100).optional(),
   fileSizeBytes: z.coerce.number().int().positive().optional(),
   description: z
     .string()
     .trim()
-    .max(MAX_EVIDENCE_DESCRIPTION_LENGTH, `Description must be ${MAX_EVIDENCE_DESCRIPTION_LENGTH} characters or fewer.`)
+    .max(MAX_EVIDENCE_DESCRIPTION_LENGTH, "maxLength")
     .optional()
     .or(z.literal("")),
 });
 export type AddDisputeEvidenceInput = z.infer<typeof addDisputeEvidenceSchema>;
 
 export const resolveDisputeSchema = z.object({
-  disputeId: z.string().uuid("Invalid dispute."),
+  disputeId: z.string().uuid("dto.ids.dispute"),
   resolution: z.enum(DISPUTE_RESOLUTION_VALUES),
   resolutionNote: z
     .string()
     .trim()
-    .min(1, "Resolution note is required.")
-    .max(MAX_RESOLUTION_NOTE_LENGTH, `Resolution note must be ${MAX_RESOLUTION_NOTE_LENGTH} characters or fewer.`),
+    .min(1, "dto.dispute.resolutionNoteRequired")
+    .max(MAX_RESOLUTION_NOTE_LENGTH, "maxLength"),
 });
 export type ResolveDisputeInput = z.infer<typeof resolveDisputeSchema>;
 
 export const rejectDisputeSchema = z.object({
-  disputeId: z.string().uuid("Invalid dispute."),
+  disputeId: z.string().uuid("dto.ids.dispute"),
   resolutionNote: z
     .string()
     .trim()
-    .min(1, "A reason is required.")
-    .max(MAX_RESOLUTION_NOTE_LENGTH, `Reason must be ${MAX_RESOLUTION_NOTE_LENGTH} characters or fewer.`),
+    .min(1, "dto.dispute.reasonRequired")
+    .max(MAX_RESOLUTION_NOTE_LENGTH, "maxLength"),
 });
 export type RejectDisputeInput = z.infer<typeof rejectDisputeSchema>;
 
-export const closeDisputeSchema = z.object({ disputeId: z.string().uuid("Invalid dispute.") });
+export const closeDisputeSchema = z.object({ disputeId: z.string().uuid("dto.ids.dispute") });
 export type CloseDisputeInput = z.infer<typeof closeDisputeSchema>;
 
 // Module 68 — Dispute Resolution & Financial Protection.
@@ -204,26 +204,26 @@ const FINANCIAL_ADJUSTMENT_TYPE_VALUES = [
  */
 export const resolveDisputeWithFinancialOutcomeSchema = z
   .object({
-    disputeId: z.string().uuid("Invalid dispute."),
+    disputeId: z.string().uuid("dto.ids.dispute"),
     resolution: z.enum(DISPUTE_RESOLUTION_VALUES),
     resolutionNote: z
       .string()
       .trim()
-      .min(1, "Resolution note is required.")
-      .max(MAX_RESOLUTION_NOTE_LENGTH, `Resolution note must be ${MAX_RESOLUTION_NOTE_LENGTH} characters or fewer.`),
-    requestedAmount: z.coerce.number().positive("Amount must be positive.").max(1_000_000).optional(),
+      .min(1, "dto.dispute.resolutionNoteRequired")
+      .max(MAX_RESOLUTION_NOTE_LENGTH, "maxLength"),
+    requestedAmount: z.coerce.number().positive("dto.dispute.amountPositive").max(1_000_000).optional(),
     requestedAdjustmentType: z.enum(FINANCIAL_ADJUSTMENT_TYPE_VALUES).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.resolution === "PARTIAL_RESOLUTION" && data.requestedAmount === undefined) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["requestedAmount"], message: "A refund amount is required for a partial resolution." });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["requestedAmount"], message: "dto.dispute.refundAmountRequired" });
     }
     if (data.resolution === "FINANCIAL_ADJUSTMENT_REQUIRED") {
       if (data.requestedAmount === undefined) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["requestedAmount"], message: "An amount is required for this resolution." });
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["requestedAmount"], message: "dto.dispute.amountRequired" });
       }
       if (data.requestedAdjustmentType === undefined) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["requestedAdjustmentType"], message: "An adjustment type is required for this resolution." });
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["requestedAdjustmentType"], message: "dto.dispute.adjustmentTypeRequired" });
       }
     }
   });

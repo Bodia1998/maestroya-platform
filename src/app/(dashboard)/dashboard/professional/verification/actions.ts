@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import {
   ALLOWED_VERIFICATION_DOCUMENT_MIME_TYPES,
@@ -15,8 +16,9 @@ import {
   makeSubmitProfessionalVerificationUseCase,
   makeUploadVerificationDocumentUseCase,
 } from "@/application/use-cases/verification/compose";
-import { DomainError, RateLimitedError } from "@/domain/errors/domain-error";
+import { RateLimitedError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError, localizeZodError } from "@/presentation/i18n/server";
 import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 
 /**
@@ -33,12 +35,19 @@ export type ActionResult =
   | { success: true }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+// Module 120 — errors are localised at the edge (`localizeActionError`):
+// domain errors map to their catalog sentence, anything else is logged
+// server-side and replaced with the localised fallback.
+type FallbackKey =
+  | "startVerification"
+  | "uploadDocument"
+  | "removeDocument"
+  | "submitVerification"
+  | "resubmitVerification";
+
+async function fromDomainError(error: unknown, fallbackKey: FallbackKey): Promise<ActionResult> {
+  const t = await getTranslations("professional.errors");
+  return { success: false, error: await localizeActionError(error, t(fallbackKey)) };
 }
 
 const PATH = "/dashboard/professional/verification";
@@ -50,7 +59,7 @@ export async function requestVerificationAction(): Promise<ActionResult> {
     revalidatePath(PATH);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong starting your verification request.");
+    return fromDomainError(error, "startVerification");
   }
 }
 
@@ -59,21 +68,25 @@ export async function uploadVerificationDocumentAction(formData: FormData): Prom
 
   const parsed = uploadVerificationDocumentSchema.safeParse({ type: formData.get("type") });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Choose a valid document type." };
+    const t = await getTranslations("professional.errors");
+    return { success: false, error: await localizeZodError(parsed.error, t("invalidDocumentType")) };
   }
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
-    return { success: false, error: "Choose a file to upload." };
+    const t = await getTranslations("professional.errors");
+    return { success: false, error: t("fileRequired") };
   }
   // Server-side checks — the client's <input accept> and browser-reported
   // File.type are only hints; these are the checks that matter. The
   // Cloudinary service re-checks independently too.
   if (!ALLOWED_VERIFICATION_DOCUMENT_MIME_TYPES.includes(file.type as (typeof ALLOWED_VERIFICATION_DOCUMENT_MIME_TYPES)[number])) {
-    return { success: false, error: "Documents must be a JPEG, PNG, WebP image or a PDF." };
+    const t = await getTranslations("professional.errors");
+    return { success: false, error: t("invalidFileType") };
   }
   if (file.size > MAX_VERIFICATION_DOCUMENT_BYTES) {
-    return { success: false, error: "Each document must be smaller than 10MB." };
+    const t = await getTranslations("professional.errors");
+    return { success: false, error: t("fileTooLarge", { maxMb: MAX_VERIFICATION_DOCUMENT_BYTES / (1024 * 1024) }) };
   }
 
   // Module 33 — Security Hardening: see FILE_UPLOAD_BY_USER's doc comment
@@ -87,7 +100,7 @@ export async function uploadVerificationDocumentAction(formData: FormData): Prom
     );
   } catch (error) {
     if (error instanceof RateLimitedError) {
-      return { success: false, error: error.message };
+      return { success: false, error: await localizeActionError(error) };
     }
     throw error;
   }
@@ -104,7 +117,7 @@ export async function uploadVerificationDocumentAction(formData: FormData): Prom
     revalidatePath(PATH);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong uploading your document.");
+    return fromDomainError(error, "uploadDocument");
   }
 }
 
@@ -113,7 +126,8 @@ export async function removeVerificationDocumentAction(documentId: string): Prom
 
   const parsed = verificationDocumentIdSchema.safeParse({ documentId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid document." };
+    const t = await getTranslations("professional.errors");
+    return { success: false, error: await localizeZodError(parsed.error, t("invalidDocument")) };
   }
 
   try {
@@ -121,7 +135,7 @@ export async function removeVerificationDocumentAction(documentId: string): Prom
     revalidatePath(PATH);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong removing your document.");
+    return fromDomainError(error, "removeDocument");
   }
 }
 
@@ -132,7 +146,7 @@ export async function submitVerificationAction(): Promise<ActionResult> {
     revalidatePath(PATH);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong submitting your verification request.");
+    return fromDomainError(error, "submitVerification");
   }
 }
 
@@ -143,7 +157,7 @@ export async function resubmitVerificationAction(): Promise<ActionResult> {
     revalidatePath(PATH);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong resubmitting your verification request.");
+    return fromDomainError(error, "resubmitVerification");
   }
 }
 

@@ -1,0 +1,30 @@
+{
+  "site": {
+    "defaultTitle": "MaestroYa — Encontre profissionais de confiança para a sua casa",
+    "description": "Entre em contacto com profissionais de confiança para a sua casa: canalização, eletricidade, remodelações, limpeza e muito mais."
+  },
+  "servicesIndex": {
+    "title": "Serviços para a casa na MaestroYa",
+    "description": "Consulte as categorias de serviços para a casa disponíveis na MaestroYa: canalização, eletricidade, ar condicionado, pintura, remodelações e montagem de móveis."
+  },
+  "servicePage": {
+    "title": "{service} — MaestroYa",
+    "descriptionFallback": "Peça um profissional na categoria «{service}» através da MaestroYa e compare orçamentos."
+  },
+  "serviceLocationPage": {
+    "title": "{service} em {city} — MaestroYa",
+    "description": "Peça um serviço na categoria «{service}» em {city} ({province}) através da MaestroYa e compare orçamentos."
+  },
+  "locationsIndex": {
+    "title": "Localizações — MaestroYa em Espanha",
+    "description": "A MaestroYa é um marketplace de serviços para a casa pensado para operar em toda a Espanha. Consulte o âmbito da plataforma e as localidades com cobertura confirmada."
+  },
+  "locationPage": {
+    "title": "Profissionais em {city} — MaestroYa",
+    "description": "Serviços para a casa disponíveis em {city} ({province}) através da MaestroYa."
+  },
+  "nationalCoverage": {
+    "title": "MaestroYa em Espanha — cobertura nacional",
+    "description": "A MaestroYa é um marketplace de serviços para a casa pensado para operar em toda a Espanha. A disponibilidade real de profissionais depende de cada zona."
+  }
+}

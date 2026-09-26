@@ -1,4 +1,5 @@
 import { FileSignature } from "lucide-react";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { makeListAdminQuotesUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
@@ -8,7 +9,10 @@ import { AdminDataTable, AdminTableHeadRow, AdminTh, AdminTableBody, AdminTableR
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 
-export const metadata = { title: "Admin — Quotes" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("quotes.title") }) };
+}
 
 type SearchParams = Promise<{ page?: string }>;
 
@@ -21,18 +25,21 @@ export default async function AdminQuotesPage({ searchParams }: { searchParams: 
 
   const quotes = await makeListAdminQuotesUseCase().execute({ limit: DEFAULT_PAGE_SIZE, offset });
 
+  const t = await getTranslations("admin");
+  const format = await getFormatter();
+
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Quotes" subtitle="Read-only oversight of quotes." />
+      <PageHeader title={t("quotes.title")} subtitle={t("quotes.subtitle")} />
 
       {quotes.length === 0 ? (
-        <EmptyState icon={FileSignature} title="No quotes found" description="Quotes submitted by professionals will appear here." />
+        <EmptyState icon={FileSignature} title={t("quotes.empty")} description={t("quotes.emptyDescription")} />
       ) : (
-        <AdminDataTable caption="Quotes" minWidth={480}>
+        <AdminDataTable caption={t("quotes.title")} minWidth={480}>
           <AdminTableHeadRow>
-            <AdminTh>Request</AdminTh>
-            <AdminTh>Status</AdminTh>
-            <AdminTh>Amount</AdminTh>
+            <AdminTh>{t("quotes.columns.request")}</AdminTh>
+            <AdminTh>{t("common.columns.status")}</AdminTh>
+            <AdminTh>{t("quotes.columns.amount")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {quotes.map((quote) => (
@@ -42,7 +49,7 @@ export default async function AdminQuotesPage({ searchParams }: { searchParams: 
                   <StatusBadge status={quote.status} />
                 </td>
                 <td className="px-4 py-3">
-                  {quote.totalAmount.toFixed(2)} {quote.currency}
+                  {format.number(quote.totalAmount, { style: "currency", currency: quote.currency })}
                 </td>
               </AdminTableRow>
             ))}

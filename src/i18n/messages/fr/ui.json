@@ -1,0 +1,51 @@
+{
+  "legalDocument": {
+    "issuedLanguageNotice": "Ce document est affiché dans la langue dans laquelle il a été émis (espagnol)."
+  },
+  "close": "Fermer",
+  "breadcrumb": {
+    "label": "Fil d'Ariane"
+  },
+  "chip": {
+    "remove": "Retirer"
+  },
+  "combobox": {
+    "placeholder": "Sélectionnez une option",
+    "searchPlaceholder": "Rechercher…",
+    "empty": "Aucun résultat"
+  },
+  "confirmDialog": {
+    "cancel": "Annuler",
+    "genericError": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "errorState": {
+    "title": "Une erreur s'est produite",
+    "retry": "Réessayer"
+  },
+  "loadingState": {
+    "label": "Chargement…"
+  },
+  "spinner": {
+    "label": "Chargement"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Précédent",
+    "next": "Suivant"
+  },
+  "passwordInput": {
+    "show": "Afficher le mot de passe",
+    "hide": "Masquer le mot de passe"
+  },
+  "searchInput": {
+    "clear": "Effacer la recherche"
+  },
+  "toast": {
+    "close": "Fermer la notification",
+    "region": "Notifications",
+    "assertiveRegion": "Notifications importantes"
+  },
+  "fieldBadges": {
+    "optional": "Facultatif"
+  }
+}

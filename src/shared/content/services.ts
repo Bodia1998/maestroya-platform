@@ -22,6 +22,15 @@
  * Intentionally NOT Created" for services considered and excluded (e.g.
  * "Repairs" — mentioned in planning documents but not a seeded category).
  *
+ * Module 120 — Multilingual Localization: this file keeps the typed
+ * STRUCTURE (slugs, which entries exist, related slugs); the prose itself
+ * lives once, in the server-only `knowledge` message namespace
+ * (`src/i18n/messages/<locale>/knowledge.json`, keyed
+ * `services.<slug>.…`, Spanish = the original, reviewed copy) and is
+ * resolved for the active locale by `resolveServiceContent()` below.
+ * Every translation must follow the same content rules — translating
+ * never adds, strengthens or softens a claim.
+ *
  * Content rules (Module 118 brief, Phase 3 / Phase 7):
  *  - No prices, response times, guarantees, availability counts,
  *    professional counts, ratings, review counts, insurance, licensing,
@@ -38,265 +47,137 @@
 export interface ServiceContent {
   /** Must match a real `ServiceCategory.slug` (see `prisma/seed.ts`). */
   slug: string;
-  /** One-paragraph, factual introduction — no marketing superlatives. */
-  intro: string;
-  /** Concrete, generic examples of jobs a customer can request in this
-   *  category. Always phrased as "can request", never "guaranteed". */
-  commonJobTypes: string[];
-  /** What a professional who takes this kind of job typically brings /
-   *  covers — generic trade knowledge, never a MaestroYa-specific
-   *  guarantee (no insurance/certification/licensing claims). */
-  whatProfessionalsTypicallyProvide: string[];
-  /** Things worth deciding/preparing before publishing a request — tied
-   *  to real platform fields (photos, urgency, budget range), not
-   *  invented advice. */
-  considerations: string[];
-  /** Genuine, answerable-from-the-page FAQ. */
-  faqs: Array<{ question: string; answer: string }>;
+  /** Keys under `knowledge.services.<slug>.commonJobTypes` — concrete,
+   *  generic examples of jobs a customer can request in this category.
+   *  Always phrased as "can request", never "guaranteed". */
+  commonJobTypes: readonly string[];
+  /** Keys under `knowledge.services.<slug>.whatProfessionalsTypicallyProvide`
+   *  — generic trade knowledge, never a MaestroYa-specific guarantee (no
+   *  insurance/certification/licensing claims). */
+  whatProfessionalsTypicallyProvide: readonly string[];
+  /** Keys under `knowledge.services.<slug>.considerations` — things worth
+   *  deciding/preparing before publishing a request, tied to real
+   *  platform fields (photos, urgency, budget range). */
+  considerations: readonly string[];
+  /** Keys under `knowledge.services.<slug>.faqs` (each with a `question`
+   *  and an `answer`) — genuine, answerable-from-the-page FAQ. */
+  faqs: readonly string[];
   /** Other service slugs to link to from this page — must also exist in
    *  this same catalog. */
-  relatedServiceSlugs: string[];
+  relatedServiceSlugs: readonly string[];
 }
 
+/** Also defined per slug in the `knowledge` catalog: `intro` (one factual
+ *  paragraph, no marketing superlatives) and `nameInSentence` (the
+ *  category name in the form that locale's sentences embed it, e.g.
+ *  "fontanería" in "una solicitud de fontanería"). */
 export const SERVICE_CONTENT: readonly ServiceContent[] = [
   {
     slug: "fontaneria",
-    intro:
-      "MaestroYa conecta a clientes con profesionales para trabajos de fontanería: reparación de fugas, grifos, tuberías e instalaciones de agua en el hogar. El cliente describe el problema y publica una solicitud; los profesionales de fontanería que cubren la zona pueden revisarla y enviar un presupuesto.",
     commonJobTypes: [
-      "Reparación de fugas de agua",
-      "Sustitución o reparación de grifos",
-      "Desatasco de tuberías",
-      "Instalación de sanitarios (inodoros, lavabos, duchas)",
-      "Revisión o reparación de termos e instalaciones de agua caliente",
+      "leakRepair",
+      "tapRepair",
+      "pipeUnblocking",
+      "sanitaryInstallation",
+      "waterHeaterRepair",
     ],
-    whatProfessionalsTypicallyProvide: [
-      "Diagnóstico del problema descrito en la solicitud",
-      "Un presupuesto detallado antes de empezar el trabajo",
-      "La realización del trabajo acordado en el presupuesto aceptado",
-    ],
-    considerations: [
-      "Describe el problema con el mayor detalle posible y añade fotos a la solicitud si es posible",
-      "Indica la urgencia real del trabajo (el sistema permite marcar solicitudes como más o menos urgentes)",
-      "Puedes recibir y comparar varios presupuestos antes de aceptar uno",
-    ],
-    faqs: [
-      {
-        question: "¿Qué tipo de trabajos de fontanería puedo solicitar en MaestroYa?",
-        answer:
-          "Puedes publicar una solicitud describiendo cualquier trabajo de fontanería para el hogar, como una fuga, un grifo que no funciona o la instalación de un sanitario. Los profesionales de fontanería que cubren tu zona pueden revisar la solicitud y enviarte un presupuesto.",
-      },
-      {
-        question: "¿Cómo funciona el presupuesto de fontanería?",
-        answer:
-          "Después de publicar tu solicitud, uno o varios profesionales pueden enviarte un presupuesto. Puedes comparar los presupuestos recibidos y aceptar el que prefieras antes de que empiece el trabajo.",
-      },
-      {
-        question: "¿En qué zonas está disponible el servicio de fontanería?",
-        answer:
-          "La cobertura depende de los profesionales activos en cada zona. Consulta la página de tu localidad para ver la disponibilidad actual en esa zona.",
-      },
-    ],
+    whatProfessionalsTypicallyProvide: ["diagnosis", "quote", "execution"],
+    considerations: ["describe", "urgency", "compare"],
+    faqs: ["whatJobs", "howQuote", "coverage"],
     relatedServiceSlugs: ["electricidad", "reformas"],
   },
   {
     slug: "electricidad",
-    intro:
-      "MaestroYa conecta a clientes con profesionales para trabajos de electricidad: instalaciones eléctricas, averías, cuadros eléctricos y enchufes. El cliente describe el trabajo y publica una solicitud; los profesionales de electricidad que cubren la zona pueden revisarla y enviar un presupuesto.",
     commonJobTypes: [
-      "Reparación de averías eléctricas",
-      "Instalación o sustitución de enchufes e interruptores",
-      "Revisión o actualización del cuadro eléctrico",
-      "Instalación de puntos de luz",
-      "Instalación de mecanismos y pequeña electricidad doméstica",
+      "faultRepair",
+      "socketsSwitches",
+      "panelUpgrade",
+      "lightPoints",
+      "smallInstallations",
     ],
-    whatProfessionalsTypicallyProvide: [
-      "Diagnóstico del problema eléctrico descrito en la solicitud",
-      "Un presupuesto detallado antes de empezar el trabajo",
-      "La realización del trabajo acordado en el presupuesto aceptado",
-    ],
-    considerations: [
-      "Describe la avería o instalación con el mayor detalle posible, con fotos si ayuda a explicarla",
-      "Indica la urgencia real del trabajo",
-      "Compara varios presupuestos antes de aceptar uno",
-    ],
-    faqs: [
-      {
-        question: "¿Qué tipo de trabajos de electricidad puedo solicitar en MaestroYa?",
-        answer:
-          "Puedes publicar una solicitud para averías eléctricas, instalación de enchufes o puntos de luz, o revisión del cuadro eléctrico, entre otros trabajos. Los profesionales de electricidad que cubren tu zona pueden enviarte un presupuesto.",
-      },
-      {
-        question: "¿Cómo solicito un electricista a través de MaestroYa?",
-        answer:
-          "Publica una solicitud describiendo el trabajo. Los profesionales que cubren tu categoría y zona podrán revisarla y enviarte un presupuesto, que puedes aceptar o rechazar.",
-      },
-      {
-        question: "¿En qué zonas está disponible el servicio de electricidad?",
-        answer:
-          "La cobertura depende de los profesionales activos en cada zona. Consulta la página de tu localidad para ver la disponibilidad actual en esa zona.",
-      },
-    ],
+    whatProfessionalsTypicallyProvide: ["diagnosis", "quote", "execution"],
+    considerations: ["describe", "urgency", "compare"],
+    faqs: ["whatJobs", "howToRequest", "coverage"],
     relatedServiceSlugs: ["fontaneria", "aire-acondicionado"],
   },
   {
     slug: "aire-acondicionado",
-    intro:
-      "MaestroYa conecta a clientes con profesionales para trabajos de climatización: instalación, mantenimiento y reparación de aire acondicionado. El cliente describe lo que necesita y publica una solicitud; los técnicos de climatización que cubren la zona pueden revisarla y enviar un presupuesto.",
-    commonJobTypes: [
-      "Instalación de un nuevo equipo de aire acondicionado",
-      "Reparación de un equipo que no enfría o no funciona",
-      "Mantenimiento y limpieza de equipos",
-      "Recarga de gas refrigerante",
-    ],
-    whatProfessionalsTypicallyProvide: [
-      "Diagnóstico o valoración del equipo o instalación descrita en la solicitud",
-      "Un presupuesto detallado antes de empezar el trabajo",
-      "La realización del trabajo acordado en el presupuesto aceptado",
-    ],
-    considerations: [
-      "Indica el tipo de equipo (si lo conoces) y describe el problema o la instalación deseada",
-      "Añade fotos del equipo o del espacio si ayuda a explicar el trabajo",
-      "Compara varios presupuestos antes de aceptar uno",
-    ],
-    faqs: [
-      {
-        question: "¿Qué trabajos de climatización puedo solicitar en MaestroYa?",
-        answer:
-          "Puedes solicitar instalación, reparación o mantenimiento de aire acondicionado. Los técnicos de climatización que cubren tu zona pueden revisar tu solicitud y enviarte un presupuesto.",
-      },
-      {
-        question: "¿Cómo funciona el presupuesto para instalar aire acondicionado?",
-        answer:
-          "Publicas tu solicitud describiendo lo que necesitas; los profesionales interesados envían su presupuesto y tú decides cuál aceptar.",
-      },
-      {
-        question: "¿En qué zonas está disponible el servicio de aire acondicionado?",
-        answer:
-          "La cobertura depende de los profesionales activos en cada zona. Consulta la página de tu localidad para ver la disponibilidad actual en esa zona.",
-      },
-    ],
+    commonJobTypes: ["newInstallation", "repair", "maintenance", "gasRecharge"],
+    whatProfessionalsTypicallyProvide: ["assessment", "quote", "execution"],
+    considerations: ["equipmentType", "photos", "compare"],
+    faqs: ["whatJobs", "howQuote", "coverage"],
     relatedServiceSlugs: ["electricidad", "reformas"],
   },
   {
     slug: "pintura",
-    intro:
-      "MaestroYa conecta a clientes con profesionales de pintura para trabajos de interior y exterior. El cliente describe el espacio a pintar y publica una solicitud; los profesionales de pintura que cubren la zona pueden revisarla y enviar un presupuesto.",
-    commonJobTypes: [
-      "Pintura de interiores (habitaciones, pasillos, techos)",
-      "Pintura de fachadas y exteriores",
-      "Alisado y preparación de paredes antes de pintar",
-      "Retoques y acabados puntuales",
-    ],
-    whatProfessionalsTypicallyProvide: [
-      "Valoración del espacio y del trabajo descrito en la solicitud",
-      "Un presupuesto detallado antes de empezar el trabajo",
-      "La realización del trabajo acordado en el presupuesto aceptado",
-    ],
-    considerations: [
-      "Indica la superficie aproximada y el estado actual de las paredes",
-      "Añade fotos del espacio a pintar",
-      "Compara varios presupuestos antes de aceptar uno",
-    ],
-    faqs: [
-      {
-        question: "¿Qué trabajos de pintura puedo solicitar en MaestroYa?",
-        answer:
-          "Puedes solicitar pintura de interiores, exteriores o retoques puntuales. Los profesionales de pintura que cubren tu zona pueden enviarte un presupuesto.",
-      },
-      {
-        question: "¿Cómo funciona el presupuesto de pintura?",
-        answer:
-          "Publicas tu solicitud describiendo el espacio y el trabajo; los profesionales interesados envían su presupuesto y tú decides cuál aceptar.",
-      },
-      {
-        question: "¿En qué zonas está disponible el servicio de pintura?",
-        answer:
-          "La cobertura depende de los profesionales activos en cada zona. Consulta la página de tu localidad para ver la disponibilidad actual en esa zona.",
-      },
-    ],
+    commonJobTypes: ["interior", "exterior", "wallPreparation", "touchUps"],
+    whatProfessionalsTypicallyProvide: ["assessment", "quote", "execution"],
+    considerations: ["surface", "photos", "compare"],
+    faqs: ["whatJobs", "howQuote", "coverage"],
     relatedServiceSlugs: ["reformas", "montaje-de-muebles"],
   },
   {
     slug: "reformas",
-    intro:
-      "MaestroYa conecta a clientes con profesionales para reformas integrales y parciales del hogar. El cliente describe el alcance de la reforma y publica una solicitud; los profesionales de reformas que cubren la zona pueden revisarla y enviar un presupuesto.",
-    commonJobTypes: [
-      "Reformas parciales (una habitación, un baño, una cocina)",
-      "Reformas integrales de vivienda",
-      "Trabajos de albañilería asociados a una reforma",
-      "Cambios de distribución o acabados",
-    ],
-    whatProfessionalsTypicallyProvide: [
-      "Valoración del alcance de la reforma descrita en la solicitud",
-      "Un presupuesto detallado antes de empezar el trabajo",
-      "La realización del trabajo acordado en el presupuesto aceptado",
-    ],
-    considerations: [
-      "Describe el alcance de la reforma con el mayor detalle posible",
-      "Añade fotos del estado actual del espacio",
-      "Las reformas suelen implicar presupuestos más elevados: compara varias opciones antes de aceptar",
-    ],
-    faqs: [
-      {
-        question: "¿Qué tipo de reformas puedo solicitar en MaestroYa?",
-        answer:
-          "Puedes solicitar reformas parciales o integrales del hogar. Los profesionales de reformas que cubren tu zona pueden revisar tu solicitud y enviarte un presupuesto.",
-      },
-      {
-        question: "¿Puedo comparar varios presupuestos de reforma?",
-        answer:
-          "Sí. Puedes recibir presupuestos de varios profesionales para la misma solicitud y comparar antes de aceptar uno.",
-      },
-      {
-        question: "¿En qué zonas está disponible el servicio de reformas?",
-        answer:
-          "La cobertura depende de los profesionales activos en cada zona. Consulta la página de tu localidad para ver la disponibilidad actual en esa zona.",
-      },
-    ],
+    commonJobTypes: ["partial", "full", "masonry", "layoutFinishes"],
+    whatProfessionalsTypicallyProvide: ["assessment", "quote", "execution"],
+    considerations: ["scope", "photos", "compare"],
+    faqs: ["whatJobs", "compareQuotes", "coverage"],
     relatedServiceSlugs: ["pintura", "fontaneria"],
   },
   {
     slug: "montaje-de-muebles",
-    intro:
-      "MaestroYa conecta a clientes con profesionales para el montaje y ensamblaje de muebles y mobiliario. El cliente describe el mueble o los muebles a montar y publica una solicitud; los profesionales de montaje que cubren la zona pueden revisarla y enviar un presupuesto.",
-    commonJobTypes: [
-      "Montaje de muebles de kit (armarios, estanterías, mesas)",
-      "Montaje de mobiliario de cocina",
-      "Fijación de muebles a pared",
-      "Ensamblaje de varios muebles en una misma visita",
-    ],
-    whatProfessionalsTypicallyProvide: [
-      "Valoración del mueble o muebles descritos en la solicitud",
-      "Un presupuesto antes de empezar el montaje",
-      "La realización del montaje acordado en el presupuesto aceptado",
-    ],
-    considerations: [
-      "Indica el tipo y la cantidad de muebles a montar",
-      "Añade fotos de las cajas o del manual si lo tienes",
-      "Compara varios presupuestos antes de aceptar uno",
-    ],
-    faqs: [
-      {
-        question: "¿Qué muebles puedo pedir que me monten en MaestroYa?",
-        answer:
-          "Puedes solicitar el montaje de prácticamente cualquier mueble de kit, como armarios, estanterías o mobiliario de cocina. Los profesionales de montaje que cubren tu zona pueden enviarte un presupuesto.",
-      },
-      {
-        question: "¿Cómo funciona el presupuesto de montaje de muebles?",
-        answer:
-          "Publicas tu solicitud describiendo el mueble o muebles a montar; los profesionales interesados envían su presupuesto y tú decides cuál aceptar.",
-      },
-      {
-        question: "¿En qué zonas está disponible el servicio de montaje de muebles?",
-        answer:
-          "La cobertura depende de los profesionales activos en cada zona. Consulta la página de tu localidad para ver la disponibilidad actual en esa zona.",
-      },
-    ],
+    commonJobTypes: ["flatPack", "kitchen", "wallFixing", "multiple"],
+    whatProfessionalsTypicallyProvide: ["assessment", "quote", "execution"],
+    considerations: ["typeQuantity", "photos", "compare"],
+    faqs: ["whatFurniture", "howQuote", "coverage"],
     relatedServiceSlugs: ["pintura", "fontaneria"],
   },
 ] as const;
 
 export function getServiceContentBySlug(slug: string): ServiceContent | undefined {
   return SERVICE_CONTENT.find((service) => service.slug === slug);
+}
+
+/** The minimal translator shape the resolvers need: `t(key)` bound to the
+ *  `knowledge` namespace (a next-intl translator from
+ *  `getTranslations("knowledge")`, or `createTranslator` for a fixed
+ *  locale). Typed loosely because the keys are built from slugs. */
+export type KnowledgeTranslator = (key: string) => string;
+
+export interface FaqEntry {
+  question: string;
+  answer: string;
+}
+
+/** `ServiceContent` with every key resolved to text in one locale. */
+export interface ResolvedServiceContent {
+  slug: string;
+  intro: string;
+  /** Category name as it reads inside that locale's sentences. */
+  nameInSentence: string;
+  commonJobTypes: string[];
+  whatProfessionalsTypicallyProvide: string[];
+  considerations: string[];
+  faqs: FaqEntry[];
+  relatedServiceSlugs: readonly string[];
+}
+
+export function resolveServiceContent(content: ServiceContent, t: unknown): ResolvedServiceContent {
+  const translate = t as KnowledgeTranslator;
+  const base = `services.${content.slug}`;
+  return {
+    slug: content.slug,
+    intro: translate(`${base}.intro`),
+    nameInSentence: translate(`${base}.nameInSentence`),
+    commonJobTypes: content.commonJobTypes.map((key) => translate(`${base}.commonJobTypes.${key}`)),
+    whatProfessionalsTypicallyProvide: content.whatProfessionalsTypicallyProvide.map((key) =>
+      translate(`${base}.whatProfessionalsTypicallyProvide.${key}`),
+    ),
+    considerations: content.considerations.map((key) => translate(`${base}.considerations.${key}`)),
+    faqs: content.faqs.map((key) => ({
+      question: translate(`${base}.faqs.${key}.question`),
+      answer: translate(`${base}.faqs.${key}.answer`),
+    })),
+    relatedServiceSlugs: content.relatedServiceSlugs,
+  };
 }

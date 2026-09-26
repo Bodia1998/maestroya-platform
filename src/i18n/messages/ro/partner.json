@@ -1,0 +1,92 @@
+{
+  "metaTitle": "Panou de partener",
+  "title": "Panou de partener",
+  "subtitle": "Urmărește-ți linkurile de recomandare, clicurile și câștigurile de afiliat.",
+  "noAccount": {
+    "title": "Încă nu ai un cont de partener",
+    "description": "Conturile de partener sunt destinate afiliaților care recomandă clienți către MaestroYa în schimbul unei părți din profitul platformei. Contactează MaestroYa pentru a te înregistra ca partener."
+  },
+  "statusMessage": {
+    "PENDING": "Cererea ta de partener așteaptă analiza",
+    "REJECTED": "Cererea ta de partener nu a fost aprobată",
+    "SUSPENDED": "Contul tău de partener este suspendat în prezent",
+    "BANNED": "Contul tău de partener a fost blocat",
+    "other": "Contul tău de partener nu este activ"
+  },
+  "locked": {
+    "description": "Panoul tău se va debloca automat imediat ce contul tău de partener este aprobat."
+  },
+  "welcome": "Bine ai revenit, {name}. Iată cum performează linkurile tale de recomandare.",
+  "stats": {
+    "clicks": "Clicuri",
+    "visits": "Vizite",
+    "registrations": "Înregistrări",
+    "bookingsCreated": "Rezervări create",
+    "completedJobs": "Lucrări finalizate",
+    "conversionRate": "Rată de conversie",
+    "platformCommissionGenerated": "Comision generat pentru platformă",
+    "pendingEarnings": "Câștiguri în așteptare",
+    "approvedPayable": "Aprobate (de plătit)",
+    "paidToDate": "Plătit până acum"
+  },
+  "topCampaigns": {
+    "title": "Campanii de top",
+    "empty": "Încă nu s-au înregistrat clicuri pe campanii."
+  },
+  "topReferralLinks": {
+    "title": "Linkuri de recomandare de top",
+    "empty": "Încă nu s-au înregistrat clicuri pe linkurile de recomandare."
+  },
+  "visitsCount": "{count, plural, one {# vizită} few {# vizite} other {# de vizite}}",
+  "errors": {
+    "createLinkFailed": "A apărut o problemă la crearea acestui link de recomandare.",
+    "updateLinkFailed": "A apărut o problemă la actualizarea acestui link de recomandare.",
+    "payoutFailed": "A apărut o problemă la solicitarea acestei plăți."
+  },
+  "campaigns": {
+    "title": "Linkuri de campanie",
+    "code": "Cod",
+    "codePlaceholder": "de ex. telegram_valencia",
+    "label": "Etichetă (opțional)",
+    "labelPlaceholder": "Notița ta",
+    "source": "Sursă",
+    "none": "Niciuna",
+    "sources": {
+      "TELEGRAM": "Telegram",
+      "INSTAGRAM": "Instagram",
+      "TIKTOK": "TikTok",
+      "YOUTUBE": "YouTube",
+      "BLOG": "Blog",
+      "WEBSITE": "Site web"
+    },
+    "creating": "Se creează…",
+    "create": "Creează linkul",
+    "empty": "Încă nu există linkuri de campanie — creează unul mai sus ca să începi să-l distribui.",
+    "active": "Activ",
+    "inactive": "Inactiv",
+    "visits": "{count, plural, one {# vizită} few {# vizite} other {# de vizite}}",
+    "deactivate": "Dezactivează",
+    "activate": "Activează"
+  },
+  "payout": {
+    "balanceTitle": "Sold de afiliat",
+    "available": "Sold disponibil",
+    "reserved": "Rezervat pentru plată",
+    "paidToDate": "Plătit până acum",
+    "minimum": "Plată minimă: {amount}",
+    "eligible": "Eligibil pentru plată",
+    "moreNeeded": "Mai sunt necesari {amount}",
+    "requesting": "Se solicită…",
+    "request": "Solicită plata",
+    "requested": "Plata a fost solicitată — verifică starea ei în istoricul de mai jos.",
+    "historyTitle": "Istoricul plăților",
+    "empty": "Încă nu există plăți.",
+    "status": {
+      "PENDING": "În așteptare",
+      "PROCESSING": "În procesare",
+      "PAID": "Plătită",
+      "FAILED": "Eșuată",
+      "CANCELLED": "Anulată"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "legalDocument": {
+    "issuedLanguageNotice": "Dieses Dokument wird in der Sprache angezeigt, in der es ausgestellt wurde (Spanisch)."
+  },
+  "close": "Schließen",
+  "breadcrumb": {
+    "label": "Brotkrümelnavigation"
+  },
+  "chip": {
+    "remove": "Entfernen"
+  },
+  "combobox": {
+    "placeholder": "Option auswählen",
+    "searchPlaceholder": "Suchen…",
+    "empty": "Keine Ergebnisse"
+  },
+  "confirmDialog": {
+    "cancel": "Abbrechen",
+    "genericError": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+  },
+  "errorState": {
+    "title": "Etwas ist schiefgelaufen",
+    "retry": "Erneut versuchen"
+  },
+  "loadingState": {
+    "label": "Wird geladen…"
+  },
+  "spinner": {
+    "label": "Wird geladen"
+  },
+  "pagination": {
+    "label": "Seitennavigation",
+    "previous": "Zurück",
+    "next": "Weiter"
+  },
+  "passwordInput": {
+    "show": "Passwort anzeigen",
+    "hide": "Passwort verbergen"
+  },
+  "searchInput": {
+    "clear": "Suche löschen"
+  },
+  "toast": {
+    "close": "Benachrichtigung schließen",
+    "region": "Benachrichtigungen",
+    "assertiveRegion": "Wichtige Benachrichtigungen"
+  },
+  "fieldBadges": {
+    "optional": "Optional"
+  }
+}

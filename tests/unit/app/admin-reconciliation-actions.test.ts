@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { setTestLocale, testTranslator } from "../../test-utils/intl";
+
 /**
  * Module 81 — Reconciliation Admin Dashboard & Operations: Server Action
  * tests for `src/app/(dashboard)/admin/reconciliation/actions.ts` — same
@@ -209,9 +211,23 @@ describe("resolveDiscrepancyAction", () => {
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error).toContain("already resolved");
+      // Module 120: a domain error is shown through the localized error
+      // catalog (`errors.byCode.CONFLICT`), never its raw English message.
+      expect(result.error).toBe(testTranslator("errors")("byCode.CONFLICT" as never));
     }
     expect(mockRevalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("localizes the fallback for an unexpected failure into the active locale (Spanish)", async () => {
+    setTestLocale("es");
+    mockRequireRole.mockResolvedValue({ id: "admin-1" });
+    mockResolveDiscrepancy.mockRejectedValue(new Error("db down"));
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const result = await resolveDiscrepancyAction({ discrepancyId: VALID_UUID, reason: "Trying again." });
+
+    expect(result).toEqual({ success: false, error: "No se pudo resolver esta discrepancia." });
+    consoleError.mockRestore();
   });
 
   it("rejects a reason shorter than 3 characters before reaching the use case", async () => {

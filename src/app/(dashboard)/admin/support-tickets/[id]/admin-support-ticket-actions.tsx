@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,9 @@ const NEXT_STATUSES: Record<string, string[]> = {
 
 export function AdminSupportTicketActions({ ticketId, status }: { ticketId: string; status: string }) {
   const router = useRouter();
+  const t = useTranslations("admin");
+  const enumLabel = (group: string, value: string) =>
+    t.has(`${group}.${value}` as never) ? t(`${group}.${value}` as never) : value;
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,7 +31,7 @@ export function AdminSupportTicketActions({ ticketId, status }: { ticketId: stri
     const result = await action();
     setIsSubmitting(false);
     if (!result.success) {
-      setError(result.error ?? "Something went wrong.");
+      setError(result.error ?? t("common.genericError"));
       return;
     }
     router.refresh();
@@ -38,25 +42,25 @@ export function AdminSupportTicketActions({ ticketId, status }: { ticketId: stri
   const canClose = status === "RESOLVED";
 
   return (
-    <Section title="Admin actions" bordered aria-busy={isSubmitting}>
+    <Section title={t("supportTicketsPage.actions.title")} bordered aria-busy={isSubmitting}>
       {nextStatuses.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {nextStatuses.map((s) => (
             <Button key={s} type="button" variant="ghost" disabled={isSubmitting} onClick={() => run(() => changeSupportTicketStatusAction(ticketId, s))}>
-              Move to {s}
+              {t("supportTicketsPage.actions.moveTo", { status: enumLabel("supportTicketsPage.statuses", s) })}
             </Button>
           ))}
         </div>
       )}
       {canResolve && (
         <div className="flex flex-col gap-2">
-          <Label htmlFor="support-ticket-resolution-note">Resolution note</Label>
+          <Label htmlFor="support-ticket-resolution-note">{t("supportTicketsPage.actions.resolutionNote")}</Label>
           <Textarea
             id="support-ticket-resolution-note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={2}
-            placeholder="Resolution note"
+            placeholder={t("supportTicketsPage.actions.resolutionNote")}
           />
           <Button
             type="button"
@@ -64,13 +68,13 @@ export function AdminSupportTicketActions({ ticketId, status }: { ticketId: stri
             disabled={isSubmitting || note.trim().length === 0}
             onClick={() => run(() => resolveSupportTicketAction(ticketId, note))}
           >
-            Resolve
+            {t("supportTicketsPage.actions.resolve")}
           </Button>
         </div>
       )}
       {canClose && (
         <Button type="button" className="w-fit" disabled={isSubmitting} onClick={() => run(() => closeSupportTicketAction(ticketId))}>
-          Close ticket
+          {t("supportTicketsPage.actions.close")}
         </Button>
       )}
       <div role="alert" aria-live="assertive">

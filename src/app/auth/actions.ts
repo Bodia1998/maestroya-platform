@@ -1,8 +1,9 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { getLocale, getTranslations } from "next-intl/server";
 
-import { DomainError, RateLimitedError } from "@/domain/errors/domain-error";
+import { RateLimitedError } from "@/domain/errors/domain-error";
 import {
   forgotPasswordSchema,
   registerSchema,
@@ -19,17 +20,19 @@ import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 import { makeCollectFraudTrustSignalsUseCase } from "@/application/use-cases/trust-integrity/compose";
 import { getClientIp, getClientIpHash } from "@/infrastructure/auth/request-context";
 import { logger } from "@/infrastructure/observability/logger";
+import { localizeActionError, localizeZodFieldErrors } from "@/presentation/i18n/server";
 
 export type ActionResult =
   | { success: true }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+/**
+ * Module 120 — Multilingual Localization: a domain error's localised
+ * message (see `localizeActionError`), else the caller's localised
+ * fallback. Non-domain errors are still logged, exactly as before.
+ */
+async function fromDomainError(error: unknown, fallback: string): Promise<ActionResult> {
+  return { success: false, error: await localizeActionError(error, fallback) };
 }
 
 /**
@@ -42,12 +45,13 @@ function fromDomainError(error: unknown, fallback: string): ActionResult {
  * docs/MODULE_24_SECURITY_ANTI_ABUSE.md.
  */
 export async function registerAction(formData: unknown): Promise<ActionResult> {
+  const t = await getTranslations("auth");
   const parsed = registerSchema.safeParse(formData);
   if (!parsed.success) {
     return {
       success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
+      error: t("errors.fixBelow"),
+      fieldErrors: await localizeZodFieldErrors(parsed.error),
     };
   }
 
@@ -58,7 +62,7 @@ export async function registerAction(formData: unknown): Promise<ActionResult> {
       await antiAbuse.enforceRateLimit("REGISTRATION_BY_IP", { ipHash }, "RATE_LIMIT_TRIGGERED");
     } catch (error) {
       if (error instanceof RateLimitedError) {
-        return { success: false, error: error.message };
+        return { success: false, error: await localizeActionError(error) };
       }
       throw error;
     }
@@ -77,7 +81,11 @@ export async function registerAction(formData: unknown): Promise<ActionResult> {
   const registerInput = { ...parsed.data, visitorId: visitorId || undefined };
 
   try {
-    const { userId } = await makeRegisterUserUseCase().execute(registerInput);
+    const { userId } = await makeRegisterUserUseCase().execute(registerInput, {
+      // Module 120: the verification email goes out in the language the
+      // visitor registered in.
+      locale: await getLocale(),
+    });
     await antiAbuse.recordEvent({ type: "ACCOUNT_CREATED", userId, ipHash });
 
     // Module 93 — Real Fraud & Trust Signal Providers: best-effort,
@@ -90,7 +98,7 @@ export async function registerAction(formData: unknown): Promise<ActionResult> {
 
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong creating your account.");
+    return fromDomainError(error, t("register.failed"));
   }
 }
 
@@ -122,12 +130,13 @@ async function collectRegistrationFraudTrustSignals(
  * see rate-limit-policies.ts's own doc comment for why both matter.
  */
 export async function forgotPasswordAction(formData: unknown): Promise<ActionResult> {
+  const t = await getTranslations("auth");
   const parsed = forgotPasswordSchema.safeParse(formData);
   if (!parsed.success) {
     return {
       success: false,
-      error: "Enter a valid email address.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
+      error: t("forgotPassword.invalidEmail"),
+      fieldErrors: await localizeZodFieldErrors(parsed.error),
     };
   }
 
@@ -148,27 +157,31 @@ export async function forgotPasswordAction(formData: unknown): Promise<ActionRes
       // rate-limit message whether the email exists (that would reopen
       // the exact enumeration hole RequestPasswordResetUseCase's own doc
       // comment already avoids).
-      return { success: false, error: "Something went wrong. Please try again." };
+      return { success: false, error: t("forgotPassword.failed") };
     }
     throw error;
   }
 
   try {
-    await makeRequestPasswordResetUseCase().execute(parsed.data.email);
+    await makeRequestPasswordResetUseCase().execute(parsed.data.email, {
+      // Module 120: only used when the account has no stored preferredLocale.
+      locale: await getLocale(),
+    });
     await antiAbuse.recordEvent({ type: "PASSWORD_RESET_REQUESTED", ipHash, metadata: null });
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong. Please try again.");
+    return fromDomainError(error, t("forgotPassword.failed"));
   }
 }
 
 export async function resetPasswordAction(formData: unknown): Promise<ActionResult> {
+  const t = await getTranslations("auth");
   const parsed = resetPasswordSchema.safeParse(formData);
   if (!parsed.success) {
     return {
       success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
+      error: t("errors.fixBelow"),
+      fieldErrors: await localizeZodFieldErrors(parsed.error),
     };
   }
 
@@ -177,20 +190,21 @@ export async function resetPasswordAction(formData: unknown): Promise<ActionResu
     await makeAntiAbuseService().recordEvent({ type: "PASSWORD_RESET_COMPLETED" });
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong resetting your password.");
+    return fromDomainError(error, t("resetPassword.failed"));
   }
 }
 
 export async function verifyEmailAction(formData: unknown): Promise<ActionResult> {
+  const t = await getTranslations("auth");
   const parsed = verifyEmailSchema.safeParse(formData);
   if (!parsed.success) {
-    return { success: false, error: "Missing or invalid verification token." };
+    return { success: false, error: t("verifyEmail.invalidToken") };
   }
 
   try {
     await makeVerifyEmailUseCase().execute(parsed.data.token);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong verifying your email.");
+    return fromDomainError(error, t("verifyEmail.failed"));
   }
 }

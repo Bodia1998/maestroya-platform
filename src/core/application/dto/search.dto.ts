@@ -23,33 +23,33 @@ export const searchDirectorySchema = z.object({
   query: z
     .string()
     .trim()
-    .max(100, "Search text must be 100 characters or fewer.")
+    .max(100, "maxLength")
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined)),
-  categoryId: z.string().uuid("Select a valid service category.").optional(),
+  categoryId: z.string().uuid("dto.categories.invalid").optional(),
   city: z
     .string()
     .trim()
-    .max(100, "City must be 100 characters or fewer.")
+    .max(100, "maxLength")
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined)),
   province: z
     .string()
     .trim()
-    .max(100, "Province must be 100 characters or fewer.")
+    .max(100, "maxLength")
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined)),
   verifiedOnly: z.coerce.boolean().optional().default(false),
   minRating: z.coerce
-    .number({ invalid_type_error: "Enter a valid minimum rating." })
-    .min(1, "Minimum rating must be between 1 and 5.")
-    .max(5, "Minimum rating must be between 1 and 5.")
+    .number({ invalid_type_error: "dto.search.minRatingInvalid" })
+    .min(1, "dto.search.minRatingRange")
+    .max(5, "dto.search.minRatingRange")
     .optional(),
   minReviewCount: z.coerce
-    .number({ invalid_type_error: "Enter a valid minimum review count." })
+    .number({ invalid_type_error: "dto.search.minReviewCountInvalid" })
     .int()
-    .min(0, "Minimum review count cannot be negative.")
-    .max(100000, "Minimum review count is too large.")
+    .min(0, "dto.search.minReviewCountNegative")
+    .max(100000, "dto.search.minReviewCountTooLarge")
     .optional(),
   sortBy: z.enum(SEARCH_SORT_OPTIONS).optional().default("RELEVANCE"),
   page: z.coerce.number().int().min(1).max(1000).optional().default(1),
@@ -68,27 +68,27 @@ export const searchDirectorySchema = z.object({
    * a radius is meaningless without a center point.
    */
   latitude: z.coerce
-    .number({ invalid_type_error: "Enter a valid latitude." })
-    .min(-90, "Latitude must be between -90 and 90.")
-    .max(90, "Latitude must be between -90 and 90.")
+    .number({ invalid_type_error: "dto.location.latitudeInvalid" })
+    .min(-90, "dto.location.latitudeRange")
+    .max(90, "dto.location.latitudeRange")
     .optional(),
   longitude: z.coerce
-    .number({ invalid_type_error: "Enter a valid longitude." })
-    .min(-180, "Longitude must be between -180 and 180.")
-    .max(180, "Longitude must be between -180 and 180.")
+    .number({ invalid_type_error: "dto.location.longitudeInvalid" })
+    .min(-180, "dto.location.longitudeRange")
+    .max(180, "dto.location.longitudeRange")
     .optional(),
   radiusKm: z.coerce
-    .number({ invalid_type_error: "Enter a valid search radius." })
-    .positive("Search radius must be greater than zero.")
-    .max(200, "Search radius must be 200km or fewer.")
+    .number({ invalid_type_error: "dto.search.radiusInvalid" })
+    .positive("dto.search.radiusPositive")
+    .max(200, "dto.search.radiusMax")
     .optional(),
 })
   .refine((value) => (value.latitude === undefined) === (value.longitude === undefined), {
-    message: "Both latitude and longitude must be provided together.",
+    message: "dto.search.coordinatesTogether",
     path: ["longitude"],
   })
   .refine((value) => value.radiusKm === undefined || value.latitude !== undefined, {
-    message: "A search radius requires latitude/longitude to be set.",
+    message: "dto.search.radiusRequiresLocation",
     path: ["radiusKm"],
   });
 

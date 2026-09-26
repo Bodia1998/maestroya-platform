@@ -9,6 +9,10 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     include: ["tests/unit/**/*.test.{ts,tsx}", "tests/integration/**/*.test.{ts,tsx}"],
+    // Module 120 — Multilingual Localization: next-intl test wiring
+    // (server APIs + provider-less client hooks resolve against a test
+    // locale, English by default). See tests/test-utils/intl.ts.
+    setupFiles: ["./tests/test-utils/intl-setup.ts"],
     /**
      * Baseline `process.env` for every test file, applied before any test
      * runs. `env.ts` validates `process.env` as a module-load side effect

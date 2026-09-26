@@ -1,0 +1,256 @@
+{
+  "services": {
+    "fontaneria": {
+      "nameInSentence": "Canalização",
+      "intro": "A MaestroYa põe clientes em contacto com profissionais para trabalhos de canalização: reparação de fugas, torneiras, canos e instalações de água em casa. O cliente descreve o problema e publica um pedido; os profissionais de canalização que cobrem a zona podem analisá-lo e enviar um orçamento.",
+      "commonJobTypes": {
+        "leakRepair": "Reparação de fugas de água",
+        "tapRepair": "Substituição ou reparação de torneiras",
+        "pipeUnblocking": "Desentupimento de canos",
+        "sanitaryInstallation": "Instalação de louças sanitárias (sanitas, lavatórios, chuveiros)",
+        "waterHeaterRepair": "Revisão ou reparação de termoacumuladores e instalações de água quente"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "O diagnóstico do problema descrito no pedido",
+        "quote": "Um orçamento detalhado antes de iniciar o trabalho",
+        "execution": "A execução do trabalho acordado no orçamento aceite"
+      },
+      "considerations": {
+        "describe": "Descreva o problema com o máximo de detalhe possível e, se puder, adicione fotografias ao pedido",
+        "urgency": "Indique a urgência real do trabalho (o sistema permite marcar pedidos como mais ou menos urgentes)",
+        "compare": "É possível receber e comparar vários orçamentos antes de aceitar um"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Que tipo de trabalhos de canalização posso pedir na MaestroYa?",
+          "answer": "Pode publicar um pedido a descrever qualquer trabalho de canalização doméstico, como uma fuga, uma torneira que não funciona ou a instalação de uma louça sanitária. Os profissionais de canalização que cobrem a sua zona podem analisar o pedido e enviar-lhe um orçamento."
+        },
+        "howQuote": {
+          "question": "Como funciona o orçamento de canalização?",
+          "answer": "Depois de publicar o seu pedido, um ou vários profissionais podem enviar-lhe um orçamento. Pode comparar os orçamentos recebidos e aceitar o que preferir antes de o trabalho começar."
+        },
+        "coverage": {
+          "question": "Em que zonas está disponível o serviço de canalização?",
+          "answer": "A cobertura depende dos profissionais ativos em cada zona. Consulte a página da sua localidade para ver a disponibilidade atual nessa zona."
+        }
+      }
+    },
+    "electricidad": {
+      "nameInSentence": "Eletricidade",
+      "intro": "A MaestroYa põe clientes em contacto com profissionais para trabalhos de eletricidade: instalações elétricas, avarias, quadros elétricos e tomadas. O cliente descreve o trabalho e publica um pedido; os profissionais de eletricidade que cobrem a zona podem analisá-lo e enviar um orçamento.",
+      "commonJobTypes": {
+        "faultRepair": "Reparação de avarias elétricas",
+        "socketsSwitches": "Instalação ou substituição de tomadas e interruptores",
+        "panelUpgrade": "Revisão ou atualização do quadro elétrico",
+        "lightPoints": "Instalação de pontos de luz",
+        "smallInstallations": "Instalação de aparelhagem e pequenos trabalhos de eletricidade doméstica"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "O diagnóstico do problema elétrico descrito no pedido",
+        "quote": "Um orçamento detalhado antes de iniciar o trabalho",
+        "execution": "A execução do trabalho acordado no orçamento aceite"
+      },
+      "considerations": {
+        "describe": "Descreva a avaria ou a instalação com o máximo de detalhe possível, com fotografias se ajudarem a explicá-la",
+        "urgency": "Indique a urgência real do trabalho",
+        "compare": "Compare vários orçamentos antes de aceitar um"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Que tipo de trabalhos de eletricidade posso pedir na MaestroYa?",
+          "answer": "Pode publicar um pedido para avarias elétricas, instalação de tomadas ou pontos de luz, ou revisão do quadro elétrico, entre outros trabalhos. Os profissionais de eletricidade que cobrem a sua zona podem enviar-lhe um orçamento."
+        },
+        "howToRequest": {
+          "question": "Como peço um eletricista através da MaestroYa?",
+          "answer": "Publique um pedido a descrever o trabalho. Os profissionais que cobrem a sua categoria e a sua zona poderão analisá-lo e enviar-lhe um orçamento, que pode aceitar ou recusar."
+        },
+        "coverage": {
+          "question": "Em que zonas está disponível o serviço de eletricidade?",
+          "answer": "A cobertura depende dos profissionais ativos em cada zona. Consulte a página da sua localidade para ver a disponibilidade atual nessa zona."
+        }
+      }
+    },
+    "aire-acondicionado": {
+      "nameInSentence": "Ar condicionado",
+      "intro": "A MaestroYa põe clientes em contacto com profissionais para trabalhos de climatização: instalação, manutenção e reparação de ar condicionado. O cliente descreve o que precisa e publica um pedido; os técnicos de climatização que cobrem a zona podem analisá-lo e enviar um orçamento.",
+      "commonJobTypes": {
+        "newInstallation": "Instalação de um novo equipamento de ar condicionado",
+        "repair": "Reparação de um equipamento que não arrefece ou não funciona",
+        "maintenance": "Manutenção e limpeza de equipamentos",
+        "gasRecharge": "Recarga de gás refrigerante"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "O diagnóstico ou avaliação do equipamento ou da instalação descritos no pedido",
+        "quote": "Um orçamento detalhado antes de iniciar o trabalho",
+        "execution": "A execução do trabalho acordado no orçamento aceite"
+      },
+      "considerations": {
+        "equipmentType": "Indique o tipo de equipamento (se o souber) e descreva o problema ou a instalação pretendida",
+        "photos": "Adicione fotografias do equipamento ou do espaço se ajudarem a explicar o trabalho",
+        "compare": "Compare vários orçamentos antes de aceitar um"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Que trabalhos de climatização posso pedir na MaestroYa?",
+          "answer": "Pode pedir a instalação, reparação ou manutenção de ar condicionado. Os técnicos de climatização que cobrem a sua zona podem analisar o seu pedido e enviar-lhe um orçamento."
+        },
+        "howQuote": {
+          "question": "Como funciona o orçamento para instalar ar condicionado?",
+          "answer": "Publica o seu pedido a descrever o que precisa; os profissionais interessados enviam o seu orçamento e é o cliente que decide qual aceitar."
+        },
+        "coverage": {
+          "question": "Em que zonas está disponível o serviço de ar condicionado?",
+          "answer": "A cobertura depende dos profissionais ativos em cada zona. Consulte a página da sua localidade para ver a disponibilidade atual nessa zona."
+        }
+      }
+    },
+    "pintura": {
+      "nameInSentence": "Pintura",
+      "intro": "A MaestroYa põe clientes em contacto com profissionais de pintura para trabalhos interiores e exteriores. O cliente descreve o espaço a pintar e publica um pedido; os profissionais de pintura que cobrem a zona podem analisá-lo e enviar um orçamento.",
+      "commonJobTypes": {
+        "interior": "Pintura de interiores (quartos, corredores, tetos)",
+        "exterior": "Pintura de fachadas e exteriores",
+        "wallPreparation": "Estucagem e preparação de paredes antes de pintar",
+        "touchUps": "Retoques e acabamentos pontuais"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "A avaliação do espaço e do trabalho descritos no pedido",
+        "quote": "Um orçamento detalhado antes de iniciar o trabalho",
+        "execution": "A execução do trabalho acordado no orçamento aceite"
+      },
+      "considerations": {
+        "surface": "Indique a área aproximada e o estado atual das paredes",
+        "photos": "Adicione fotografias do espaço a pintar",
+        "compare": "Compare vários orçamentos antes de aceitar um"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Que trabalhos de pintura posso pedir na MaestroYa?",
+          "answer": "Pode pedir pintura de interiores, de exteriores ou retoques pontuais. Os profissionais de pintura que cobrem a sua zona podem enviar-lhe um orçamento."
+        },
+        "howQuote": {
+          "question": "Como funciona o orçamento de pintura?",
+          "answer": "Publica o seu pedido a descrever o espaço e o trabalho; os profissionais interessados enviam o seu orçamento e é o cliente que decide qual aceitar."
+        },
+        "coverage": {
+          "question": "Em que zonas está disponível o serviço de pintura?",
+          "answer": "A cobertura depende dos profissionais ativos em cada zona. Consulte a página da sua localidade para ver a disponibilidade atual nessa zona."
+        }
+      }
+    },
+    "reformas": {
+      "nameInSentence": "Remodelações",
+      "intro": "A MaestroYa põe clientes em contacto com profissionais para remodelações totais e parciais da casa. O cliente descreve o âmbito da remodelação e publica um pedido; os profissionais de remodelações que cobrem a zona podem analisá-lo e enviar um orçamento.",
+      "commonJobTypes": {
+        "partial": "Remodelações parciais (um quarto, uma casa de banho, uma cozinha)",
+        "full": "Remodelações totais de habitação",
+        "masonry": "Trabalhos de alvenaria associados a uma remodelação",
+        "layoutFinishes": "Alterações de distribuição ou de acabamentos"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "A avaliação do âmbito da remodelação descrita no pedido",
+        "quote": "Um orçamento detalhado antes de iniciar o trabalho",
+        "execution": "A execução do trabalho acordado no orçamento aceite"
+      },
+      "considerations": {
+        "scope": "Descreva o âmbito da remodelação com o máximo de detalhe possível",
+        "photos": "Adicione fotografias do estado atual do espaço",
+        "compare": "As remodelações costumam implicar orçamentos mais elevados: compare várias opções antes de aceitar"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Que tipo de remodelações posso pedir na MaestroYa?",
+          "answer": "Pode pedir remodelações parciais ou totais da casa. Os profissionais de remodelações que cobrem a sua zona podem analisar o seu pedido e enviar-lhe um orçamento."
+        },
+        "compareQuotes": {
+          "question": "Posso comparar vários orçamentos de remodelação?",
+          "answer": "Sim. Pode receber orçamentos de vários profissionais para o mesmo pedido e compará-los antes de aceitar um."
+        },
+        "coverage": {
+          "question": "Em que zonas está disponível o serviço de remodelações?",
+          "answer": "A cobertura depende dos profissionais ativos em cada zona. Consulte a página da sua localidade para ver a disponibilidade atual nessa zona."
+        }
+      }
+    },
+    "montaje-de-muebles": {
+      "nameInSentence": "Montagem de móveis",
+      "intro": "A MaestroYa põe clientes em contacto com profissionais para a montagem e o encaixe de móveis e mobiliário. O cliente descreve o móvel ou os móveis a montar e publica um pedido; os profissionais de montagem que cobrem a zona podem analisá-lo e enviar um orçamento.",
+      "commonJobTypes": {
+        "flatPack": "Montagem de móveis em kit (roupeiros, estantes, mesas)",
+        "kitchen": "Montagem de mobiliário de cozinha",
+        "wallFixing": "Fixação de móveis à parede",
+        "multiple": "Montagem de vários móveis numa só visita"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "A avaliação do móvel ou dos móveis descritos no pedido",
+        "quote": "Um orçamento antes de iniciar a montagem",
+        "execution": "A execução da montagem acordada no orçamento aceite"
+      },
+      "considerations": {
+        "typeQuantity": "Indique o tipo e a quantidade de móveis a montar",
+        "photos": "Adicione fotografias das caixas ou do manual, se o tiver",
+        "compare": "Compare vários orçamentos antes de aceitar um"
+      },
+      "faqs": {
+        "whatFurniture": {
+          "question": "Que móveis posso mandar montar através da MaestroYa?",
+          "answer": "Pode pedir a montagem de praticamente qualquer móvel em kit, como roupeiros, estantes ou mobiliário de cozinha. Os profissionais de montagem que cobrem a sua zona podem enviar-lhe um orçamento."
+        },
+        "howQuote": {
+          "question": "Como funciona o orçamento de montagem de móveis?",
+          "answer": "Publica o seu pedido a descrever o móvel ou os móveis a montar; os profissionais interessados enviam o seu orçamento e é o cliente que decide qual aceitar."
+        },
+        "coverage": {
+          "question": "Em que zonas está disponível o serviço de montagem de móveis?",
+          "answer": "A cobertura depende dos profissionais ativos em cada zona. Consulte a página da sua localidade para ver a disponibilidade atual nessa zona."
+        }
+      }
+    }
+  },
+  "locations": {
+    "gandia": {
+      "intro": "Gandia (província de Valencia) é a localidade de referência da MaestroYa. Os clientes em Gandia podem publicar um pedido para qualquer uma das categorias de serviços para a casa disponíveis na plataforma, e os profissionais que cobrem a zona podem analisá-lo e enviar um orçamento.",
+      "faqs": {
+        "whatServices": {
+          "question": "Que serviços posso pedir em Gandia através da MaestroYa?",
+          "answer": "Pode publicar um pedido para qualquer uma das categorias de serviços para a casa disponíveis na MaestroYa (canalização, eletricidade, ar condicionado, pintura, remodelações e montagem de móveis). Consulte a página de cada serviço para ver os detalhes."
+        },
+        "howToHire": {
+          "question": "Como contrato um profissional em Gandia?",
+          "answer": "Publica um pedido a descrever o trabalho. Os profissionais que cobrem essa categoria e a zona de Gandia podem analisá-lo e enviar-lhe um orçamento, que pode comparar e aceitar antes de o trabalho começar."
+        },
+        "outsideGandia": {
+          "question": "A MaestroYa está disponível fora de Gandia?",
+          "answer": "Gandia é a localidade com cobertura confirmada hoje na plataforma. A disponibilidade concreta de profissionais pode variar e depende de quem está ativo em cada momento."
+        }
+      }
+    }
+  },
+  "nationalCoverage": {
+    "intro": "A MaestroYa é um marketplace de serviços para a casa que põe clientes em contacto com profissionais e empresas em Espanha. Qualquer pessoa em Espanha pode publicar um pedido de serviço; que um profissional o analise e envie um orçamento depende de quais profissionais estão ativos nessa categoria e nessa zona em cada momento.",
+    "coverageStatement": "O âmbito da MaestroYa como plataforma é nacional: o objetivo do marketplace é operar em toda a Espanha, e não apenas numa localidade concreta. Isto é diferente da disponibilidade real de profissionais numa determinada zona, que depende dos dados reais da plataforma em cada momento.",
+    "howLocalAvailabilityWorks": "Quando publica um pedido, apenas os profissionais que cobrem essa categoria de serviço e a sua zona podem analisá-lo e enviar-lhe um orçamento. A MaestroYa não garante que exista um profissional disponível em qualquer localidade concreta: a disponibilidade real varia consoante a zona. As localidades com cobertura confirmada por dados reais da plataforma têm a sua própria página (ver /ubicaciones).",
+    "faqs": {
+      "wholeSpain": {
+        "question": "A MaestroYa opera em toda a Espanha?",
+        "answer": "A MaestroYa é um marketplace pensado para operar em toda a Espanha. Isso não significa que já existam profissionais ativos em cada localidade: a disponibilidade real de profissionais depende de cada zona e pode variar ao longo do tempo."
+      },
+      "localAvailability": {
+        "question": "Como sei se um serviço está disponível na minha localidade?",
+        "answer": "Pode publicar um pedido indicando a sua morada; só os profissionais que cobrem a sua categoria e a sua zona poderão enviar-lhe um orçamento. As localidades com cobertura confirmada por dados reais da plataforma estão listadas na secção de localizações."
+      },
+      "whatServices": {
+        "question": "Que serviços oferece a MaestroYa?",
+        "answer": "A MaestroYa publica hoje seis categorias de serviços para a casa: canalização, eletricidade, ar condicionado, pintura, remodelações e montagem de móveis. Consulte a página de cada serviço para mais detalhes."
+      },
+      "professionalParticipation": {
+        "question": "Como participa um profissional na MaestroYa?",
+        "answer": "Um profissional pode criar uma conta, indicar as suas categorias de serviço e a zona que cobre e, a partir daí, analisar os pedidos publicados que correspondam à sua categoria e à sua zona e enviar orçamentos."
+      }
+    },
+    "structuredData": {
+      "name": "Serviços para a casa através da MaestroYa",
+      "description": "Marketplace de serviços para a casa operado pela MaestroYa em Espanha. A disponibilidade de profissionais varia consoante a categoria de serviço e a zona."
+    }
+  }
+}

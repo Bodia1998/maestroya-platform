@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/shared/utils/cn";
 import { Spinner } from "./spinner";
 
@@ -7,7 +8,9 @@ export interface LoadingStateProps {
 }
 
 /** Full-block loading placeholder for a page/section still fetching data — pairs with `EmptyState`/`ErrorState`. */
-export function LoadingState({ label = "Cargando…", className }: LoadingStateProps) {
+export function LoadingState({ label: labelProp, className }: LoadingStateProps) {
+  const t = useTranslations("ui");
+  const label = labelProp ?? t("loadingState.label");
   return (
     <div
       className={cn(

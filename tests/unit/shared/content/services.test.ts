@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { SERVICE_CONTENT, getServiceContentBySlug } from "@/shared/content/services";
+import {
+  SERVICE_CONTENT,
+  getServiceContentBySlug,
+  resolveServiceContent,
+} from "@/shared/content/services";
+import { SUPPORTED_LOCALES } from "@/shared/i18n/locales";
+import { testTranslator } from "../../../test-utils/intl";
+import { rawTranslator } from "./raw-catalog";
 
 /**
  * Module 118 — AI-Readable Service & Location Knowledge.
@@ -53,9 +60,10 @@ describe("SERVICE_CONTENT", () => {
     }
   });
 
-  it("never mentions price, guarantee, or availability-count claims", () => {
+  it("never mentions price, guarantee, or availability-count claims (canonical Spanish copy)", () => {
     const forbidden = /\b(precio|gratis|garantizado|garantía|24\/7|urgencias 24|mejor valorado)\b/i;
-    for (const service of SERVICE_CONTENT) {
+    const t = testTranslator("knowledge", "es");
+    for (const service of SERVICE_CONTENT.map((entry) => resolveServiceContent(entry, t))) {
       const text = [
         service.intro,
         ...service.commonJobTypes,
@@ -69,5 +77,49 @@ describe("SERVICE_CONTENT", () => {
 
   it("getServiceContentBySlug returns undefined for an unknown slug", () => {
     expect(getServiceContentBySlug("does-not-exist")).toBeUndefined();
+  });
+
+  it("never mentions price, guarantee or 24/7 claims in the English translation either", () => {
+    const forbidden =
+      /\b(price|free of charge|guarantee[ds]?|24\/7|top[- ]rated|insured|certified|licensed)\b/i;
+    const t = testTranslator("knowledge", "en");
+    for (const service of SERVICE_CONTENT.map((entry) => resolveServiceContent(entry, t))) {
+      const text = [
+        service.intro,
+        ...service.commonJobTypes,
+        ...service.whatProfessionalsTypicallyProvide,
+        ...service.considerations,
+        ...service.faqs.flatMap((f) => [f.question, f.answer]),
+      ].join(" ");
+      expect(text, service.slug).not.toMatch(forbidden);
+    }
+  });
+
+  // Module 120: the prose lives in the `knowledge` catalog; every key the
+  // typed structure references must exist in EVERY locale (no raw keys, no
+  // silent Spanish fallback).
+  it.each([...SUPPORTED_LOCALES])("resolves every referenced knowledge key in %s", (locale) => {
+    const t = rawTranslator("knowledge", locale);
+    const own = (key: string) => {
+      if (!t.has(key as never)) throw new Error(`missing knowledge.${key} in ${locale}`);
+      return t(key as never);
+    };
+    for (const entry of SERVICE_CONTENT) {
+      const resolved = resolveServiceContent(entry, own);
+      expect(resolved.intro.length, `${locale}/${entry.slug}`).toBeGreaterThan(20);
+      expect(resolved.nameInSentence.length).toBeGreaterThan(2);
+      expect(resolved.faqs).toHaveLength(entry.faqs.length);
+    }
+  });
+
+  it("resolves the service copy in the requested locale (ru, nl)", () => {
+    const fontaneria = getServiceContentBySlug("fontaneria")!;
+    const ru = resolveServiceContent(fontaneria, testTranslator("knowledge", "ru"));
+    const nl = resolveServiceContent(fontaneria, testTranslator("knowledge", "nl"));
+    const es = resolveServiceContent(fontaneria, testTranslator("knowledge", "es"));
+    expect(ru.intro).toMatch(/[а-яё]/i);
+    expect(ru.intro).toContain("MaestroYa");
+    expect(nl.intro).not.toBe(es.intro);
+    expect(nl.faqs[0]!.question).not.toBe(es.faqs[0]!.question);
   });
 });

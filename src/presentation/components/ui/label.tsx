@@ -11,4 +11,4 @@ export const Label = React.forwardRef<HTMLLabelElement, React.LabelHTMLAttribute
     />
   ),
 );
-Label.displayName = "Label";
+Label.displayName = "Label"; // i18n-ignore

@@ -18,8 +18,8 @@ describe("buildNoProfessionalProfileBanner", () => {
 
     expect(info.show).toBe(true);
     expect(info.ctaHref).toBe("/dashboard/professional");
-    expect(info.message.length).toBeGreaterThan(0);
-    expect(info.ctaLabel.length).toBeGreaterThan(0);
+    expect(info.messageKey).not.toBeNull();
+    expect(info.ctaLabelKey).toBe("completeProfile");
   });
 });
 
@@ -65,7 +65,7 @@ describe("buildProfessionalProfileBanner", () => {
     const info = buildProfessionalProfileBanner({ ...completeSignals, hasCategories: false });
 
     expect(info.show).toBe(true);
-    expect(info.ctaLabel.length).toBeGreaterThan(0);
-    expect(info.message.length).toBeGreaterThan(0);
+    expect(info.ctaLabelKey).toBe("completeProfile");
+    expect(info.messageKey).not.toBeNull();
   });
 });

@@ -1,0 +1,281 @@
+{
+  "NEW_QUOTE": {
+    "title": "Nouveau devis reçu",
+    "message": "Un professionnel a envoyé un devis pour votre demande."
+  },
+  "QUOTE_ACCEPTED": {
+    "title": "Votre devis a été accepté",
+    "message": "Le client a accepté votre devis."
+  },
+  "QUOTE_REJECTED": {
+    "title": "Votre devis n'a pas été retenu",
+    "message": "Le client a accepté un autre devis pour cette demande."
+  },
+  "QUOTE_EXPIRED": {
+    "title": "Votre devis a expiré",
+    "message": "L'un de vos devis a expiré car il n'a pas été accepté à temps."
+  },
+  "NEW_MESSAGE": {
+    "title": "Nouveau message"
+  },
+  "APPOINTMENT_PROPOSED": {
+    "title": "Nouvel horaire de rendez-vous proposé",
+    "message": "Un nouvel horaire a été proposé pour le rendez-vous.",
+    "variants": {
+      "byCustomer": {
+        "message": "Le client a proposé un nouvel horaire pour le rendez-vous."
+      },
+      "byProfessional": {
+        "message": "Le professionnel a proposé un nouvel horaire pour le rendez-vous."
+      }
+    }
+  },
+  "APPOINTMENT_CONFIRMED": {
+    "title": "Horaire du rendez-vous confirmé",
+    "message": "L'horaire du rendez-vous a été confirmé.",
+    "variants": {
+      "byCustomer": {
+        "message": "Le client a confirmé l'horaire du rendez-vous."
+      },
+      "byProfessional": {
+        "message": "Le professionnel a confirmé l'horaire du rendez-vous."
+      }
+    }
+  },
+  "APPOINTMENT_CANCELLED": {
+    "title": "Rendez-vous annulé",
+    "message": "Ce rendez-vous a été annulé.",
+    "variants": {
+      "byCustomer": {
+        "message": "Le client a annulé ce rendez-vous."
+      },
+      "byProfessional": {
+        "message": "Le professionnel a annulé ce rendez-vous."
+      }
+    }
+  },
+  "JOB_STARTED": {
+    "title": "Les travaux ont commencé",
+    "message": "Le professionnel a commencé votre mission."
+  },
+  "JOB_CANCELLED": {
+    "title": "Mission annulée",
+    "message": "Cette mission a été annulée.",
+    "variants": {
+      "byCustomer": {
+        "message": "Le client a annulé cette mission."
+      },
+      "byProfessional": {
+        "message": "Le professionnel a annulé cette mission."
+      }
+    }
+  },
+  "JOB_COMPLETION_CONFIRMATION_REQUESTED": {
+    "title": "Veuillez confirmer la prestation réalisée",
+    "message": "Le professionnel a marqué votre mission comme terminée. Confirmez que le travail a été effectué ou signalez-nous un problème."
+  },
+  "JOB_COMPLETION_CONFIRMATION_REMINDER": {
+    "title": "Confirmez la prestation réalisée",
+    "message": "Confirmez la prestation réalisée ou signalez-nous un problème avant la fin du délai de confirmation."
+  },
+  "JOB_COMPLETION_CONFIRMED": {
+    "title": "Prestation confirmée",
+    "message": "Le client a confirmé la prestation réalisée."
+  },
+  "JOB_COMPLETION_CONFIRMATION_TIMED_OUT": {
+    "title": "Mission en cours d'examen",
+    "message": "Le client n'a pas répondu à temps à la demande de confirmation. Cette mission fait maintenant l'objet d'un examen manuel avant la libération du paiement."
+  },
+  "MATERIALS_PURCHASE_CONFIRMED": {
+    "title": "Achat des matériaux confirmé",
+    "message": "Le client a confirmé avoir acheté tous les matériaux nécessaires."
+  },
+  "REVIEW_RECEIVED": {
+    "title": "Vous avez reçu un nouvel avis",
+    "message": "Un client a laissé un avis sur votre mission terminée."
+  },
+  "REVIEW_RESPONSE_ADDED": {
+    "title": "Un professionnel a répondu à votre avis",
+    "message": "Le professionnel que vous avez évalué a publié une réponse."
+  },
+  "SERVICE_REQUEST_EXPIRED": {
+    "title": "Votre demande a expiré",
+    "message": "Votre demande « {requestTitle} » a expiré sans avoir été réalisée."
+  },
+  "VERIFICATION_SUBMITTED": {
+    "title": "Demande de vérification envoyée",
+    "message": "Nous avons bien reçu votre demande de vérification et l'examinerons prochainement.",
+    "variants": {
+      "resubmitted": {
+        "title": "Demande de vérification renvoyée",
+        "message": "Nous avons bien reçu votre demande de vérification mise à jour et l'examinerons prochainement."
+      }
+    }
+  },
+  "VERIFICATION_APPROVED": {
+    "title": "Vous êtes maintenant un professionnel vérifié",
+    "message": "Votre vérification a été approuvée. Un badge de vérification apparaît désormais sur votre profil public.",
+    "variants": {
+      "automated": {
+        "message": "Votre vérification d'identité automatique a réussi. Un badge de vérification apparaît désormais sur votre profil public."
+      }
+    }
+  },
+  "VERIFICATION_REJECTED": {
+    "title": "Demande de vérification refusée",
+    "message": "Votre demande de vérification a été refusée. Ouvrez votre page de vérification pour en connaître la raison et réessayer.",
+    "variants": {
+      "automated": {
+        "message": "Votre vérification d'identité automatique n'a pas abouti. Ouvrez votre page de vérification pour en connaître la raison et réessayer."
+      }
+    }
+  },
+  "VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Informations complémentaires nécessaires",
+    "message": "Un examinateur vous demande de mettre à jour votre demande de vérification. Consultez votre page de vérification pour plus de détails.",
+    "variants": {
+      "businessRegistration": {
+        "title": "Justificatif d'immatriculation requis",
+        "message": "Votre vérification d'identité automatique a réussi. Téléversez un justificatif d'immatriculation de l'activité pour finaliser votre vérification professionnelle."
+      }
+    }
+  },
+  "VERIFICATION_EXPIRED": {
+    "title": "Votre vérification a expiré",
+    "message": "Votre vérification professionnelle a expiré. Lancez une nouvelle vérification pour conserver votre badge de vérification."
+  },
+  "COMPANY_INVITATION_RECEIVED": {
+    "title": "Vous avez été invité à rejoindre une entreprise",
+    "message": "Vous avez une invitation d'entreprise en attente."
+  },
+  "COMPANY_INVITATION_ACCEPTED": {
+    "title": "Invitation acceptée",
+    "message": "Une invitation de l'entreprise en attente a été acceptée."
+  },
+  "COMPANY_INVITATION_DECLINED": {
+    "title": "Invitation refusée",
+    "message": "Une invitation de l'entreprise en attente a été refusée."
+  },
+  "COMPANY_MEMBER_REMOVED": {
+    "title": "Vous avez été retiré d'une entreprise",
+    "message": "Vous n'êtes plus membre de cette entreprise."
+  },
+  "COMPANY_MEMBER_ROLE_CHANGED": {
+    "title": "Votre rôle a changé",
+    "message": "Votre rôle dans l'entreprise est désormais : {role}.",
+    "variants": {
+      "ownershipTransferred": {
+        "title": "Vous êtes maintenant propriétaire de l'entreprise",
+        "message": "La propriété de l'entreprise vous a été transférée."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_SUBMITTED": {
+    "title": "Demande de vérification envoyée",
+    "message": "Nous avons bien reçu la demande de vérification de votre entreprise et l'examinerons prochainement.",
+    "variants": {
+      "resubmitted": {
+        "title": "Demande de vérification renvoyée",
+        "message": "Nous avons bien reçu la demande de vérification mise à jour de votre entreprise."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_APPROVED": {
+    "title": "Votre entreprise est maintenant vérifiée",
+    "message": "La vérification de votre entreprise a été approuvée. Un badge de vérification apparaît désormais sur son profil public."
+  },
+  "COMPANY_VERIFICATION_REJECTED": {
+    "title": "Demande de vérification refusée",
+    "message": "La demande de vérification de votre entreprise a été refusée. Consultez les détails pour en connaître la raison."
+  },
+  "COMPANY_VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Nouvel envoi requis",
+    "message": "La demande de vérification de votre entreprise doit être modifiée avant de pouvoir être approuvée."
+  },
+  "COMPANY_VERIFICATION_EXPIRED": {
+    "title": "La vérification de votre entreprise a expiré",
+    "message": "La vérification de votre entreprise a expiré. Lancez une nouvelle vérification pour conserver le badge de vérification."
+  },
+  "COMPANY_SUSPENDED": {
+    "title": "Votre entreprise a été suspendue",
+    "message": "Un administrateur de la plateforme a suspendu le profil de votre entreprise."
+  },
+  "COMPANY_REACTIVATED": {
+    "title": "Votre entreprise a été réactivée",
+    "message": "Le profil de votre entreprise est de nouveau actif."
+  },
+  "DISPUTE_CREATED": {
+    "title": "Un litige a été ouvert",
+    "message": "Un litige ({caseNumber}) a été ouvert concernant votre mission."
+  },
+  "DISPUTE_ASSIGNED": {
+    "title": "Un litige vous a été attribué",
+    "message": "Le litige {caseNumber} vous a été attribué."
+  },
+  "DISPUTE_STATUS_CHANGED": {
+    "title": "Statut du litige mis à jour",
+    "message": "Nouveau statut du litige {caseNumber} : {status}.",
+    "variants": {
+      "newMessage": {
+        "title": "Nouveau message dans votre litige",
+        "message": "Il y a un nouveau message dans le litige {caseNumber}."
+      }
+    }
+  },
+  "DISPUTE_RESPONSE_REQUESTED": {
+    "title": "Votre réponse est attendue dans un litige",
+    "message": "Nouveau statut du litige {caseNumber} : {status}."
+  },
+  "DISPUTE_RESOLVED": {
+    "title": "Votre litige a été résolu",
+    "message": "Le litige {caseNumber} a été résolu."
+  },
+  "DISPUTE_REJECTED": {
+    "title": "Votre litige a été rejeté",
+    "message": "Le litige {caseNumber} a été rejeté."
+  },
+  "DISPUTE_CLOSED": {
+    "title": "Votre litige a été clôturé",
+    "message": "Le litige {caseNumber} a été clôturé."
+  },
+  "SUPPORT_TICKET_ASSIGNED": {
+    "title": "Un ticket d'assistance vous a été attribué",
+    "message": "Le ticket {ticketNumber} vous a été attribué."
+  },
+  "SUPPORT_TICKET_STATUS_CHANGED": {
+    "title": "Votre ticket d'assistance a été mis à jour",
+    "message": "Nouveau statut du ticket {ticketNumber} : {status}."
+  },
+  "SUPPORT_TICKET_RESOLVED": {
+    "title": "Votre ticket d'assistance a été résolu",
+    "message": "Le ticket {ticketNumber} a été résolu."
+  },
+  "SUPPORT_TICKET_CLOSED": {
+    "title": "Votre ticket d'assistance a été clôturé",
+    "message": "Le ticket {ticketNumber} a été clôturé."
+  },
+  "labels": {
+    "disputeStatus": {
+      "OPEN": "Ouvert",
+      "UNDER_REVIEW": "En cours d'examen",
+      "WAITING_FOR_CUSTOMER": "En attente du client",
+      "WAITING_FOR_PROFESSIONAL": "En attente du professionnel",
+      "RESOLVED": "Résolu",
+      "REJECTED": "Rejeté",
+      "CLOSED": "Clôturé"
+    },
+    "ticketStatus": {
+      "OPEN": "Ouvert",
+      "IN_PROGRESS": "En cours",
+      "WAITING_FOR_USER": "En attente de votre réponse",
+      "RESOLVED": "Résolu",
+      "CLOSED": "Clôturé"
+    },
+    "companyRole": {
+      "OWNER": "Propriétaire",
+      "ADMIN": "Administrateur",
+      "MANAGER": "Responsable",
+      "MEMBER": "Membre"
+    }
+  }
+}

@@ -14,21 +14,21 @@ import { z } from "zod";
 export const MAX_MESSAGE_LENGTH = 4000;
 
 export const sendMessageSchema = z.object({
-  conversationId: z.string().uuid("Invalid conversation."),
+  conversationId: z.string().uuid("dto.ids.conversation"),
   body: z
     .string()
     .trim()
-    .min(1, "Write a message before sending.")
-    .max(MAX_MESSAGE_LENGTH, `Messages must be ${MAX_MESSAGE_LENGTH} characters or fewer.`),
+    .min(1, "dto.chat.messageRequired")
+    .max(MAX_MESSAGE_LENGTH, "maxLength"),
 });
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 
 export const openConversationSchema = z.object({
-  serviceRequestId: z.string().uuid("Invalid service request."),
+  serviceRequestId: z.string().uuid("dto.ids.serviceRequest"),
   /** Only supplied by a customer opening a thread with a specific
    *  professional who quoted them — a professional opens a thread on their
    *  own ServiceRequest+Quote instead, with no counterparty to choose (see
    *  OpenConversationUseCase). */
-  professionalProfileId: z.string().uuid("Invalid professional.").optional(),
+  professionalProfileId: z.string().uuid("dto.ids.professional").optional(),
 });
 export type OpenConversationInput = z.infer<typeof openConversationSchema>;

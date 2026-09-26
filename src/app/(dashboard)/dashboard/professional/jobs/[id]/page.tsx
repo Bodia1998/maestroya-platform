@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { makeGetJobUseCase } from "@/application/use-cases/job/compose";
 import {
@@ -14,13 +16,13 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { Section } from "@/components/layout/section";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 
-export const metadata = { title: "Job" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("professional.jobs.detail");
+  return { title: t("metaTitle") };
+}
 
 const APPOINTMENT_NON_TERMINAL = ["PENDING_SCHEDULE", "PROPOSED", "CONFIRMED"];
 
-function formatDate(date: Date | null): string {
-  return date ? date.toLocaleString() : "—";
-}
 
 /**
  * Order / Job Lifecycle module (Module 11): professional-side mirror of
@@ -60,38 +62,47 @@ export default async function ProfessionalJobDetailPage({ params }: { params: Pr
   const jobAppointments = appointments.filter((a) => a.serviceRequestId === job.serviceRequestId);
   const hasOpenAppointments = jobAppointments.some((a) => APPOINTMENT_NON_TERMINAL.includes(a.status));
 
+  const [t, tList, format] = await Promise.all([
+    getTranslations("professional.jobs.detail"),
+    getTranslations("professional.jobs.list"),
+    getFormatter(),
+  ]);
+  const formatDate = (date: Date | null): string =>
+    date ? format.dateTime(date, { dateStyle: "medium", timeStyle: "short" }) : "—";
+  const reasonKey = `cancellationReasons.${job.cancellationReason ?? ""}`;
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Job"
-        breadcrumbs={[{ label: "My jobs", href: "/dashboard/professional/jobs" }, { label: "Job" }]}
+        title={t("title")}
+        breadcrumbs={[{ label: tList("title"), href: "/dashboard/professional/jobs" }, { label: t("title") }]}
         actions={<JobStatusBadge status={job.status} />}
       />
 
       <ResponsiveGrid as="dl" cols="1-2" gap="sm" bordered>
         <div>
-          <dt className="text-foreground/60">Started</dt>
+          <dt className="text-foreground/60">{t("started")}</dt>
           <dd>{formatDate(job.startedAt)}</dd>
         </div>
         <div>
-          <dt className="text-foreground/60">Completed</dt>
+          <dt className="text-foreground/60">{t("completed")}</dt>
           <dd>{formatDate(job.completedAt)}</dd>
         </div>
         {job.status === "CANCELLED" && (
           <div className="sm:col-span-2">
-            <dt className="text-foreground/60">Cancellation reason</dt>
+            <dt className="text-foreground/60">{t("cancellationReason")}</dt>
             <dd>
-              {job.cancellationReason}
+              {job.cancellationReason && t.has(reasonKey as never) ? t(reasonKey as never) : job.cancellationReason}
               {job.cancellationNote ? ` — ${job.cancellationNote}` : ""}
             </dd>
           </div>
         )}
       </ResponsiveGrid>
 
-      <Section title="Appointments on this job">
+      <Section title={t("appointmentsTitle")}>
         {jobAppointments.length === 0 ? (
           <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-foreground/70">
-            No appointments yet.
+            {t("noAppointments")}
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -101,7 +112,9 @@ export default async function ProfessionalJobDetailPage({ params }: { params: Pr
                 className="flex items-center justify-between gap-4 rounded-md border border-border p-3"
               >
                 <span className="text-sm">
-                  {appointment.scheduledStart ? appointment.scheduledStart.toLocaleString() : "Not scheduled yet"}
+                  {appointment.scheduledStart
+                    ? format.dateTime(appointment.scheduledStart, { dateStyle: "medium", timeStyle: "short" })
+                    : t("notScheduled")}
                 </span>
                 <AppointmentStatusBadge status={appointment.status} />
               </li>

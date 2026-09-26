@@ -1,4 +1,5 @@
 import { Award } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { makeListAdminProfessionalsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
@@ -10,7 +11,10 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
 
-export const metadata = { title: "Admin — Professionals" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("professionals.title") }) };
+}
 
 type SearchParams = Promise<{ page?: string; search?: string }>;
 
@@ -24,32 +28,34 @@ export default async function AdminProfessionalsPage({ searchParams }: { searchP
   const offset = (page - 1) * DEFAULT_PAGE_SIZE;
 
   const professionals = await makeListAdminProfessionalsUseCase().execute({ limit: DEFAULT_PAGE_SIZE, offset, search });
+  const t = await getTranslations("admin");
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Professionals" subtitle="Read-only oversight of professional profiles." />
+      <PageHeader title={t("professionals.title")} subtitle={t("professionals.subtitle")} />
 
-      <AdminFilterForm aria-label="Search professionals">
+      <AdminFilterForm aria-label={t("professionals.searchLabel")}>
         <SearchInput
           name="search"
           defaultValue={search}
-          placeholder="Search by business name, name, or email"
-          aria-label="Search by business name, name, or email"
+          placeholder={t("professionals.searchPlaceholder")}
+          aria-label={t("professionals.searchPlaceholder")}
           className="flex-1 min-w-[200px]"
         />
       </AdminFilterForm>
 
       {professionals.length === 0 ? (
-        <EmptyState icon={Award} title="No professionals found" description="Try a different search term." />
+        <EmptyState icon={Award} title={t("professionals.empty")} description={t("common.tryDifferentSearch")} />
       ) : (
-        <AdminDataTable caption="Professionals" minWidth={640}>
+        <AdminDataTable caption={t("professionals.title")} minWidth={640}>
           <AdminTableHeadRow>
-            <AdminTh>Business name</AdminTh>
-            <AdminTh>Owner</AdminTh>
-            <AdminTh>Status</AdminTh>
-            <AdminTh>Verification</AdminTh>
-            <AdminTh>Rating</AdminTh>
-            <AdminTh>Portfolio</AdminTh>
+            <AdminTh>{t("professionals.columns.businessName")}</AdminTh>
+            <AdminTh>{t("common.columns.owner")}</AdminTh>
+            <AdminTh>{t("common.columns.status")}</AdminTh>
+            <AdminTh>{t("professionals.columns.verification")}</AdminTh>
+            <AdminTh>{t("common.columns.rating")}</AdminTh>
+            <AdminTh>{t("professionals.columns.portfolio")}</AdminTh>
+
           </AdminTableHeadRow>
           <AdminTableBody>
             {professionals.map((pro) => (

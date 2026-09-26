@@ -16,5 +16,115 @@
     "title": "Кабінет компанії",
     "members": "Учасники",
     "invitations": "Запрошення"
+  },
+  "nav": {
+    "ariaLabel": "Навігація панелі",
+    "groups": {
+      "professional": "Фахівець",
+      "admin": "Адміністрування"
+    },
+    "items": {
+      "dashboard": "Панель",
+      "serviceRequests": "Заявки",
+      "appointments": "Зустрічі",
+      "jobs": "Роботи",
+      "receipts": "Мої квитанції",
+      "messages": "Повідомлення",
+      "disputes": "Спори",
+      "support": "Підтримка",
+      "professionalDashboard": "Панель фахівця",
+      "availableRequests": "Доступні заявки",
+      "myQuotes": "Мої пропозиції",
+      "myAppointments": "Мої зустрічі",
+      "myJobs": "Мої роботи",
+      "selfBilling": "Самовиставлення рахунків і рахунки",
+      "companies": "Компанії",
+      "adminPanel": "Панель адміністратора",
+      "profile": "Профіль",
+      "professionalProfile": "Профіль фахівця",
+      "switchToProfessional": "Перейти до панелі фахівця"
+    }
+  },
+  "shell": {
+    "skipToContent": "Перейти до основного вмісту",
+    "sidebar": "Бічна панель",
+    "openMenu": "Відкрити меню",
+    "accountMenu": "Меню облікового запису",
+    "account": "Обліковий запис",
+    "notifications": "Сповіщення",
+    "profile": "Профіль",
+    "signOut": "Вийти"
+  },
+  "profileBanner": {
+    "noProfile": "Заповніть профіль фахівця, щоб почати отримувати заявки від клієнтів.",
+    "incomplete": "Ваш профіль фахівця неповний. Заповніть його, щоб клієнти бачили найкращий вигляд вашого профілю.",
+    "completeProfile": "Заповнити профіль фахівця"
+  },
+  "overview": {
+    "welcomeBack": "З поверненням, {name}",
+    "welcomeBackAnonymous": "З поверненням",
+    "subtitle": "Ось огляд вашого облікового запису MaestroYa.",
+    "professionalOverview": {
+      "title": "Огляд фахівця",
+      "description": "Заявки клієнтів, на які ви можете відповісти, а також пропозиції, зустрічі й роботи, що з них випливають."
+    },
+    "stats": {
+      "availableRequests": "Доступні заявки",
+      "quotesAwaitingResponse": "Пропозиції, що очікують відповіді",
+      "acceptedQuotes": "Прийняті пропозиції",
+      "upcomingAppointments": "Найближчі зустрічі",
+      "activeJobs": "Активні роботи",
+      "completedJobs": "Завершені роботи",
+      "activeRequests": "Активні заявки",
+      "unreadMessages": "Непрочитані повідомлення"
+    },
+    "quickActions": {
+      "ariaLabel": "Швидкі дії",
+      "newRequest": "Нова заявка",
+      "appointments": "Зустрічі",
+      "messages": "Повідомлення",
+      "profile": "Профіль",
+      "browseRequests": "Переглянути заявки",
+      "myQuotes": "Мої пропозиції",
+      "professionalProfile": "Профіль фахівця"
+    },
+    "cards": {
+      "yourRequests": "Ваші заявки",
+      "upcomingAppointments": "Найближчі зустрічі",
+      "messages": "Повідомлення",
+      "yourQuotes": "Ваші пропозиції",
+      "viewAll": "Переглянути все"
+    },
+    "empty": {
+      "requests": {
+        "title": "Заявок поки немає.",
+        "description": "Створіть заявку, щоб почати отримувати пропозиції від фахівців поруч."
+      },
+      "appointments": {
+        "title": "Найближчих зустрічей немає.",
+        "description": "Зустрічі з'являться тут, щойно ви приймете пропозицію фахівця.",
+        "action": "Переглянути мої заявки"
+      },
+      "messages": {
+        "title": "Нових повідомлень немає.",
+        "description": "Тут з'являються розмови з клієнтами та фахівцями.",
+        "action": "Перейти до повідомлень"
+      },
+      "noProfessionalProfile": {
+        "title": "Налаштуйте профіль фахівця.",
+        "description": "Створіть профіль фахівця, щоб отримувати заявки, на які можна надсилати пропозиції.",
+        "action": "Почати"
+      },
+      "quotes": {
+        "title": "Ви ще не надіслали жодної пропозиції.",
+        "description": "Перегляньте відкриті заявки та надішліть свою першу пропозицію."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "з {name}",
+    "manage": "Керувати",
+    "requestPosted": "Опубліковано {created, date, medium} — оновлено {updated, date, medium}",
+    "quoteSubmitted": "Надіслано {created, date, medium} — оновлено {updated, date, medium}"
   }
 }

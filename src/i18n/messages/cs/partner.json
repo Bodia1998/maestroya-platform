@@ -1,0 +1,92 @@
+{
+  "metaTitle": "Přehled partnera",
+  "title": "Přehled partnera",
+  "subtitle": "Sledujte své doporučující odkazy, kliknutí a výdělky affiliate partnera.",
+  "noAccount": {
+    "title": "Zatím nemáte partnerský účet",
+    "description": "Partnerské účty jsou určeny pro affiliate partnery, kteří doporučují zákazníky do MaestroYa výměnou za podíl na zisku platformy. Chcete-li se zaregistrovat jako partner, kontaktujte MaestroYa."
+  },
+  "statusMessage": {
+    "PENDING": "Vaše partnerská žádost čeká na posouzení",
+    "REJECTED": "Vaše partnerská žádost nebyla schválena",
+    "SUSPENDED": "Váš partnerský účet je momentálně pozastaven",
+    "BANNED": "Váš partnerský účet byl zablokován",
+    "other": "Váš partnerský účet není aktivní"
+  },
+  "locked": {
+    "description": "Váš přehled se automaticky odemkne, jakmile bude váš partnerský účet schválen."
+  },
+  "welcome": "Vítejte zpět, {name}. Takto si vedou vaše doporučující odkazy.",
+  "stats": {
+    "clicks": "Kliknutí",
+    "visits": "Návštěvy",
+    "registrations": "Registrace",
+    "bookingsCreated": "Vytvořené rezervace",
+    "completedJobs": "Dokončené zakázky",
+    "conversionRate": "Míra konverze",
+    "platformCommissionGenerated": "Vygenerovaná provize platformy",
+    "pendingEarnings": "Čekající výdělky",
+    "approvedPayable": "Schváleno (k výplatě)",
+    "paidToDate": "Dosud vyplaceno"
+  },
+  "topCampaigns": {
+    "title": "Nejlepší kampaně",
+    "empty": "Zatím nebyla zaznamenána žádná kliknutí na kampaně."
+  },
+  "topReferralLinks": {
+    "title": "Nejlepší doporučující odkazy",
+    "empty": "Zatím nebyla zaznamenána žádná kliknutí na doporučující odkazy."
+  },
+  "visitsCount": "{count, plural, one {# návštěva} few {# návštěvy} many {# návštěvy} other {# návštěv}}",
+  "errors": {
+    "createLinkFailed": "Při vytváření tohoto doporučujícího odkazu se něco pokazilo.",
+    "updateLinkFailed": "Při aktualizaci tohoto doporučujícího odkazu se něco pokazilo.",
+    "payoutFailed": "Při žádosti o tuto výplatu se něco pokazilo."
+  },
+  "campaigns": {
+    "title": "Odkazy kampaní",
+    "code": "Kód",
+    "codePlaceholder": "např. telegram_valencia",
+    "label": "Štítek (nepovinné)",
+    "labelPlaceholder": "Vaše vlastní poznámka",
+    "source": "Zdroj",
+    "none": "Žádný",
+    "sources": {
+      "TELEGRAM": "Telegram",
+      "INSTAGRAM": "Instagram",
+      "TIKTOK": "TikTok",
+      "YOUTUBE": "YouTube",
+      "BLOG": "Blog",
+      "WEBSITE": "Web"
+    },
+    "creating": "Vytváření…",
+    "create": "Vytvořit odkaz",
+    "empty": "Zatím žádné odkazy kampaní – vytvořte odkaz výše a začněte ho sdílet.",
+    "active": "Aktivní",
+    "inactive": "Neaktivní",
+    "visits": "{count, plural, one {# návštěva} few {# návštěvy} many {# návštěvy} other {# návštěv}}",
+    "deactivate": "Deaktivovat",
+    "activate": "Aktivovat"
+  },
+  "payout": {
+    "balanceTitle": "Zůstatek affiliate partnera",
+    "available": "Dostupný zůstatek",
+    "reserved": "Rezervováno pro výplatu",
+    "paidToDate": "Dosud vyplaceno",
+    "minimum": "Minimální výplata: {amount}",
+    "eligible": "Nárok na výplatu",
+    "moreNeeded": "Chybí ještě {amount}",
+    "requesting": "Odesílání žádosti…",
+    "request": "Požádat o výplatu",
+    "requested": "O výplatu bylo požádáno – její stav najdete v historii níže.",
+    "historyTitle": "Historie výplat",
+    "empty": "Zatím žádné výplaty.",
+    "status": {
+      "PENDING": "Čeká",
+      "PROCESSING": "Zpracovává se",
+      "PAID": "Vyplaceno",
+      "FAILED": "Nezdařilo se",
+      "CANCELLED": "Zrušeno"
+    }
+  }
+}

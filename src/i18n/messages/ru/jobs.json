@@ -1,0 +1,89 @@
+{
+  "title": "Заказы",
+  "status": {
+    "pending": "Ожидает",
+    "inProgress": "В работе",
+    "completed": "Выполнен",
+    "cancelled": "Отменён",
+    "expired": "Истёк"
+  },
+  "empty": "У вас пока нет заказов.",
+  "count": "{count, plural, =0 {Нет заказов} one {# заказ} few {# заказа} many {# заказов} other {# заказа}}",
+  "viewDetails": "Подробнее",
+  "scheduledFor": "Запланировано на {date, date, long}",
+  "requests": {
+    "title": "Заявки на услуги"
+  },
+  "quotes": {
+    "title": "Сметы"
+  },
+  "quoteItems": {
+    "columns": {
+      "description": "Описание",
+      "type": "Тип",
+      "quantity": "Кол-во",
+      "unitPrice": "Цена за единицу",
+      "amount": "Сумма"
+    },
+    "total": "Итого",
+    "category": {
+      "MATERIALS": "Материалы",
+      "LABOR": "Работа"
+    }
+  },
+  "urgency": {
+    "LOW": "Низкая",
+    "MEDIUM": "Средняя",
+    "HIGH": "Высокая",
+    "EMERGENCY": "Экстренная"
+  },
+  "list": {
+    "title": "Мои заказы",
+    "subtitle": "Общий ход работ, по которым вы приняли смету.",
+    "empty": {
+      "title": "Активных заказов нет",
+      "description": "Заказы появятся здесь, как только вы примете смету специалиста и работа начнётся.",
+      "action": "Посмотреть мои заявки"
+    }
+  },
+  "notStarted": "Не начат",
+  "detail": {
+    "title": "Заказ",
+    "started": "Начат",
+    "completed": "Завершён",
+    "cancellationReason": "Причина отмены",
+    "appointments": "Визиты по этому заказу",
+    "noAppointments": "Визитов пока нет.",
+    "notScheduled": "Ещё не запланирован",
+    "dateUnset": "—"
+  },
+  "cancellationReason": {
+    "CUSTOMER_REQUEST": "По просьбе клиента",
+    "PROFESSIONAL_UNABLE_TO_COMPLETE": "Специалист не может завершить заказ",
+    "SERVICE_REQUEST_ISSUE": "Проблема с заявкой",
+    "OTHER": "Другое"
+  },
+  "actions": {
+    "startWork": "Начать работу",
+    "starting": "Запуск…",
+    "markCompleted": "Отметить заказ как выполненный",
+    "completing": "Завершение…",
+    "openAppointmentsWarning": "У этого заказа есть незавершённый визит. Подтвердите и завершите (или отмените) все визиты по заказу, прежде чем отмечать его как выполненный.",
+    "cancelJob": "Отменить заказ",
+    "cancelTitle": "Отменить этот заказ?",
+    "reason": "Причина",
+    "note": "Примечание (необязательно)",
+    "cancelling": "Отмена…",
+    "confirmCancel": "Да, отменить",
+    "notNow": "Не сейчас"
+  },
+  "errors": {
+    "invalidJob": "Недействительный заказ.",
+    "startFailed": "При запуске заказа произошла ошибка.",
+    "completeFailed": "При завершении заказа произошла ошибка.",
+    "cancelFailed": "При отмене заказа произошла ошибка.",
+    "confirmFailed": "При подтверждении заказа произошла ошибка.",
+    "disputeFailed": "При оспаривании завершения заказа произошла ошибка.",
+    "paymentFailed": "При запуске оплаты произошла ошибка. Попробуйте ещё раз."
+  }
+}

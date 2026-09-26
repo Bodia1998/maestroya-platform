@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 import { getCurrentUser } from "@/infrastructure/auth/rbac";
 import { logger } from "@/infrastructure/observability/logger";
@@ -51,7 +52,7 @@ export const GET = withApiTracing("/api/realtime/sse", async function GET(reques
 
   const user = await getCurrentUser();
   if (!user) {
-    return new Response(JSON.stringify({ status: "error", message: "Unauthorized." }), {
+    return new Response(JSON.stringify({ status: "error", message: await errorsT("domain.signInRequired") }), {
       status: 401,
       headers: { "content-type": "application/json", [REQUEST_ID_HEADER]: requestId },
     });
@@ -106,9 +107,19 @@ export const GET = withApiTracing("/api/realtime/sse", async function GET(reques
     status: 200,
     headers: {
       "content-type": "text/event-stream",
-      "cache-control": "no-cache, no-transform",
+      "cache-control": "no-cache, no-transform", // i18n-ignore: HTTP header value
       connection: "keep-alive",
       [REQUEST_ID_HEADER]: requestId,
     },
   });
 });
+
+/**
+ * Module 120 — Multilingual Localization: user-facing error text in the
+ * request's language (`errors` namespace); JSON shape and status codes are
+ * unchanged.
+ */
+async function errorsT(key: "domain.signInRequired" | "byCode.VALIDATION_ERROR" | "generic"): Promise<string> {
+  const t = await getTranslations("errors");
+  return t(key);
+}

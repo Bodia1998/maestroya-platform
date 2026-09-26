@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 
 import { logoutAction } from "./actions";
@@ -18,6 +19,7 @@ import { logoutAction } from "./actions";
  * rendered or prefetched.
  */
 export function LogoutRedirect() {
+  const t = useTranslations("auth");
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export function LogoutRedirect() {
   return (
     <form ref={formRef} action={logoutAction}>
       <main className="flex min-h-screen flex-col items-center justify-center gap-2 text-sm text-foreground/70">
-        Signing you out…
+        {t("logout.signingOut")}
       </main>
     </form>
   );

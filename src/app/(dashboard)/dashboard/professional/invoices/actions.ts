@@ -1,10 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import { makeAcceptInvoiceUseCase } from "@/application/use-cases/invoicing/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError } from "@/presentation/i18n/server";
 
 /**
  * Module 99 — Self-Billing Authorization Entry Point & Financial Document
@@ -21,18 +22,22 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+// Module 120 — errors are localised at the edge (`localizeActionError`):
+// domain errors map to their catalog sentence, anything else is logged
+// server-side and replaced with the localised fallback.
+type FallbackKey =
+  | "acceptInvoice";
+
+async function fromDomainError(error: unknown, fallbackKey: FallbackKey): Promise<ActionResult> {
+  const t = await getTranslations("professional.errors");
+  return { success: false, error: await localizeActionError(error, t(fallbackKey)) };
 }
 
 export async function acceptProfessionalInvoiceAction(invoiceId: string): Promise<ActionResult> {
   const user = await requireAuth();
   if (!invoiceId) {
-    return { success: false, error: "Invalid invoice." };
+    const t = await getTranslations("professional.errors");
+    return { success: false, error: t("invalidInvoice") };
   }
 
   try {
@@ -41,7 +46,7 @@ export async function acceptProfessionalInvoiceAction(invoiceId: string): Promis
     revalidatePath("/dashboard/professional/invoices");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong accepting this invoice.");
+    return fromDomainError(error, "acceptInvoice");
   }
 }
 

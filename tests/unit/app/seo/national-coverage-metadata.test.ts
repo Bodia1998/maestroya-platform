@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { setTestLocale } from "../../../test-utils/intl";
+
 /**
  * Module 118 (continuation) — Spain-wide geographic coverage:
  * `generateMetadata` for the static `/ubicaciones/espana` page. Same
@@ -12,6 +14,7 @@ afterEach(() => {
 
 describe("national coverage page generateMetadata", () => {
   it("builds title/description/canonical when the ES Country row verifies", async () => {
+    setTestLocale("es");
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: {
         country: { findFirst: vi.fn().mockResolvedValue({ id: "country-1", code: "ES", name: "Spain" }) },
@@ -38,6 +41,7 @@ describe("national coverage page generateMetadata", () => {
   });
 
   it("never claims a title implying availability everywhere (no 'disponible en todas partes' wording)", async () => {
+    setTestLocale("es");
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: {
         country: { findFirst: vi.fn().mockResolvedValue({ id: "country-1", code: "ES", name: "Spain" }) },

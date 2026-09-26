@@ -8,6 +8,8 @@ import { SmsNotificationChannel } from "@/infrastructure/notifications/channels/
 import { NotificationDispatcher } from "@/infrastructure/notifications/notification-dispatcher";
 import type { NotificationService } from "@/application/ports/notification-service";
 import { PublishToChannelUseCase } from "@/application/use-cases/realtime/publish-to-channel.use-case";
+import { makeGetUserLanguagePreferenceUseCase } from "@/application/use-cases/i18n/compose";
+import { RecipientNotificationLocalizer } from "@/infrastructure/notifications/recipient-notification-localizer";
 import { realtimeHub } from "@/infrastructure/realtime/compose";
 import { deferredSmsQueue } from "@/infrastructure/sms/compose";
 import { getTracer } from "@/infrastructure/tracing/compose";
@@ -65,12 +67,22 @@ import {
  */
 const emailSender = withEmailTracing(new ResendEmailSender(env.RESEND_API_KEY, env.EMAIL_FROM), getTracer());
 
+/**
+ * Module 120 — Multilingual Localization: renders EMAIL/REALTIME
+ * notifications in the recipient's language (payload locale →
+ * `User.preferredLocale` via `GetUserLanguagePreferenceUseCase` → Spanish).
+ * `IN_APP` stores the English source text unchanged (it is localized when
+ * read, in `notifications/actions.ts`); `SMS` already renders per
+ * recipient locale from `sms.json`; `WEB_PUSH` is still a no-op stub.
+ */
+const recipientLocalizer = new RecipientNotificationLocalizer(makeGetUserLanguagePreferenceUseCase());
+
 export const notificationService: NotificationService = new NotificationDispatcher([
   new InAppNotificationChannel(),
-  new EmailNotificationChannel(emailSender),
+  new EmailNotificationChannel(emailSender, recipientLocalizer),
   new WebPushNotificationChannel(),
   withNotificationChannelTracing(
-    new RealTimeNotificationChannel(new PublishToChannelUseCase(realtimeHub)),
+    new RealTimeNotificationChannel(new PublishToChannelUseCase(realtimeHub), recipientLocalizer),
     getTracer(),
   ),
   new SmsNotificationChannel(deferredSmsQueue),

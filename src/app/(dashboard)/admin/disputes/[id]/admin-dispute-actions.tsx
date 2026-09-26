@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,9 @@ const NEXT_STATUSES: Record<string, string[]> = {
  *  showing given the current status. */
 export function AdminDisputeActions({ disputeId, status }: { disputeId: string; status: string }) {
   const router = useRouter();
+  const t = useTranslations("admin");
+  const enumLabel = (group: string, value: string) =>
+    t.has(`${group}.${value}` as never) ? t(`${group}.${value}` as never) : value;
   const [note, setNote] = useState("");
   const [resolution, setResolution] = useState<string>(RESOLUTIONS[0] ?? "NO_ACTION");
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +54,7 @@ export function AdminDisputeActions({ disputeId, status }: { disputeId: string; 
     const result = await action();
     setIsSubmitting(false);
     if (!result.success) {
-      setError(result.error ?? "Something went wrong.");
+      setError(result.error ?? t("common.genericError"));
       return;
     }
     router.refresh();
@@ -61,19 +65,19 @@ export function AdminDisputeActions({ disputeId, status }: { disputeId: string; 
   const canClose = status === "RESOLVED" || status === "REJECTED";
 
   return (
-    <Section title="Admin actions" bordered aria-busy={isSubmitting}>
+    <Section title={t("disputesPage.actions.title")} bordered aria-busy={isSubmitting}>
       {nextStatuses.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {nextStatuses.map((s) => (
             <Button key={s} type="button" variant="ghost" disabled={isSubmitting} onClick={() => run(() => changeDisputeStatusAction(disputeId, s))}>
-              Move to {s}
+              {t("disputesPage.actions.moveTo", { status: enumLabel("disputesPage.statuses", s) })}
             </Button>
           ))}
         </div>
       )}
 
       <div className="flex flex-col gap-1">
-        <Label htmlFor="dispute-internal-note">Internal note (never visible to customer/professional)</Label>
+        <Label htmlFor="dispute-internal-note">{t("disputesPage.actions.internalNoteLabel")}</Label>
         <Textarea id="dispute-internal-note" value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
       </div>
       <Button
@@ -83,27 +87,27 @@ export function AdminDisputeActions({ disputeId, status }: { disputeId: string; 
         disabled={isSubmitting || note.trim().length === 0}
         onClick={() => run(() => addDisputeInternalNoteAction(disputeId, note)).then(() => setNote(""))}
       >
-        Add internal note
+        {t("disputesPage.actions.addInternalNote")}
       </Button>
 
       {canResolveOrReject && (
         <div className="flex flex-col gap-2 border-t border-border pt-4">
           <div className="flex flex-col gap-1">
-            <Label htmlFor="dispute-resolution">Resolution</Label>
+            <Label htmlFor="dispute-resolution">{t("disputesPage.actions.resolution")}</Label>
             <Select id="dispute-resolution" value={resolution} onChange={(e) => setResolution(e.target.value)} className="w-auto">
               {RESOLUTIONS.map((r) => (
                 <option key={r} value={r}>
-                  {r}
+                  {enumLabel("disputesPage.resolution", r)}
                 </option>
               ))}
             </Select>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button type="button" disabled={isSubmitting || note.trim().length === 0} onClick={() => run(() => resolveDisputeAction(disputeId, resolution, note))}>
-              Resolve
+              {t("disputesPage.actions.resolve")}
             </Button>
             <Button type="button" variant="danger" disabled={isSubmitting || note.trim().length === 0} onClick={() => run(() => rejectDisputeAction(disputeId, note))}>
-              Reject
+              {t("disputesPage.actions.reject")}
             </Button>
           </div>
         </div>
@@ -111,7 +115,7 @@ export function AdminDisputeActions({ disputeId, status }: { disputeId: string; 
 
       {canClose && (
         <Button type="button" onClick={() => run(() => closeDisputeAction(disputeId))} disabled={isSubmitting} className="w-fit">
-          Close case
+          {t("disputesPage.actions.close")}
         </Button>
       )}
 

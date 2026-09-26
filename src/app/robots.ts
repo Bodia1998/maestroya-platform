@@ -9,6 +9,9 @@ import { SITE_URL } from "@/shared/seo/site";
  * `shared/seo/robots-rules.ts` (`DISALLOWED_PATHS`) — see that file's own
  * doc comment for why each prefix is disallowed and how it maps back to
  * `middleware.ts`'s auth gating.
+ *
+ * Module 120: contains no language-dependent text and never reads the
+ * request locale — identical for every visitor and crawler.
  */
 export default function robots(): MetadataRoute.Robots {
   return {

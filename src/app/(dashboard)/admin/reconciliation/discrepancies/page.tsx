@@ -1,4 +1,5 @@
 import { AlertOctagon } from "lucide-react";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { listDiscrepanciesAction } from "../actions";
 import { CATEGORY_VALUES, ENTITY_TYPE_VALUES } from "@/application/dto/reconciliation.dto";
@@ -12,10 +13,12 @@ import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ButtonLink } from "@/components/ui/button-link";
-import { formatMoney } from "@/components/dashboard/quote-items-table";
 import { SeverityBadge, ResolutionStatusBadge } from "../_components/badges";
 
-export const metadata = { title: "Admin — Discrepancies" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("reconciliation.discrepancies.title") }) };
+}
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{
@@ -73,12 +76,18 @@ export default async function AdminReconciliationDiscrepanciesPage({ searchParam
     return `/admin/reconciliation/discrepancies?${parts.join("&")}`;
   };
 
+  const t = await getTranslations("admin");
+  const format = await getFormatter();
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Discrepancies"
-        subtitle="Detected financial inconsistencies awaiting or already given a resolution."
-        breadcrumbs={[{ label: "Reconciliation", href: "/admin/reconciliation" }, { label: "Discrepancies" }]}
+        title={t("reconciliation.discrepancies.title")}
+        subtitle={t("reconciliation.discrepancies.subtitle")}
+        breadcrumbs={[
+          { label: t("reconciliation.title"), href: "/admin/reconciliation" },
+          { label: t("reconciliation.discrepancies.title") },
+        ]}
       />
 
       {!result.success && (
@@ -87,29 +96,29 @@ export default async function AdminReconciliationDiscrepanciesPage({ searchParam
         </p>
       )}
 
-      <AdminFilterForm aria-label="Filter discrepancies" submitLabel="Filter" className="items-end">
+      <AdminFilterForm aria-label={t("reconciliation.discrepancies.filterLabel")} submitLabel={t("table.filter")} className="items-end">
         <div className="flex flex-col gap-1">
-          <Label htmlFor="filter-resolutionStatus">Status</Label>
+          <Label htmlFor="filter-resolutionStatus">{t("reconciliation.discrepancies.filters.status")}</Label>
           <Select id="filter-resolutionStatus" name="resolutionStatus" defaultValue={resolutionStatus ?? ""} className="h-10 w-auto">
-            <option value="">Any</option>
-            <option value="OPEN">Open</option>
-            <option value="RESOLVED">Resolved</option>
+            <option value="">{t("reconciliation.discrepancies.any")}</option>
+            <option value="OPEN">{t("reconciliation.resolutionStatus.OPEN")}</option>
+            <option value="RESOLVED">{t("reconciliation.resolutionStatus.RESOLVED")}</option>
           </Select>
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="filter-severity">Severity</Label>
+          <Label htmlFor="filter-severity">{t("reconciliation.discrepancies.filters.severity")}</Label>
           <Select id="filter-severity" name="severity" defaultValue={severity ?? ""} className="h-10 w-auto">
-            <option value="">Any</option>
-            <option value="CRITICAL">Critical</option>
-            <option value="ERROR">High</option>
-            <option value="WARNING">Medium</option>
-            <option value="INFO">Low</option>
+            <option value="">{t("reconciliation.discrepancies.any")}</option>
+            <option value="CRITICAL">{t("reconciliation.severity.CRITICAL")}</option>
+            <option value="ERROR">{t("reconciliation.severity.ERROR")}</option>
+            <option value="WARNING">{t("reconciliation.severity.WARNING")}</option>
+            <option value="INFO">{t("reconciliation.severity.INFO")}</option>
           </Select>
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="filter-entityType">Entity type</Label>
+          <Label htmlFor="filter-entityType">{t("reconciliation.discrepancies.filters.entityType")}</Label>
           <Select id="filter-entityType" name="entityType" defaultValue={entityType ?? ""} className="h-10 w-auto">
-            <option value="">Any</option>
+            <option value="">{t("reconciliation.discrepancies.any")}</option>
             {ENTITY_TYPE_VALUES.map((v) => (
               <option key={v} value={v}>
                 {v.replaceAll("_", " ")}
@@ -118,9 +127,9 @@ export default async function AdminReconciliationDiscrepanciesPage({ searchParam
           </Select>
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="filter-category">Type</Label>
+          <Label htmlFor="filter-category">{t("reconciliation.discrepancies.filters.type")}</Label>
           <Select id="filter-category" name="category" defaultValue={category ?? ""} className="h-10 w-auto max-w-[220px]">
-            <option value="">Any</option>
+            <option value="">{t("reconciliation.discrepancies.any")}</option>
             {CATEGORY_VALUES.map((v) => (
               <option key={v} value={v}>
                 {v.replaceAll("_", " ").toLowerCase()}
@@ -129,27 +138,27 @@ export default async function AdminReconciliationDiscrepanciesPage({ searchParam
           </Select>
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="filter-detectedFrom">Detected from</Label>
+          <Label htmlFor="filter-detectedFrom">{t("reconciliation.discrepancies.filters.detectedFrom")}</Label>
           <Input id="filter-detectedFrom" type="date" name="detectedFrom" defaultValue={detectedFrom ?? ""} className="h-10 w-auto" />
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="filter-detectedTo">Detected to</Label>
+          <Label htmlFor="filter-detectedTo">{t("reconciliation.discrepancies.filters.detectedTo")}</Label>
           <Input id="filter-detectedTo" type="date" name="detectedTo" defaultValue={detectedTo ?? ""} className="h-10 w-auto" />
         </div>
       </AdminFilterForm>
 
       {discrepancies.length === 0 ? (
-        <EmptyState icon={AlertOctagon} title="No discrepancies found" description="Try a different filter, or narrow the date range." />
+        <EmptyState icon={AlertOctagon} title={t("reconciliation.discrepancies.empty")} description={t("reconciliation.discrepancies.emptyDescription")} />
       ) : (
-        <AdminDataTable caption="Discrepancies" minWidth={860}>
+        <AdminDataTable caption={t("reconciliation.discrepancies.title")} minWidth={860}>
           <AdminTableHeadRow>
-            <AdminTh>Discrepancy</AdminTh>
-            <AdminTh>Entity</AdminTh>
-            <AdminTh>Type</AdminTh>
-            <AdminTh>Severity</AdminTh>
-            <AdminTh>Status</AdminTh>
-            <AdminTh>Difference</AdminTh>
-            <AdminTh>Detected</AdminTh>
+            <AdminTh>{t("reconciliation.discrepancies.columns.discrepancy")}</AdminTh>
+            <AdminTh>{t("reconciliation.discrepancies.columns.entity")}</AdminTh>
+            <AdminTh>{t("reconciliation.discrepancies.columns.type")}</AdminTh>
+            <AdminTh>{t("reconciliation.discrepancies.columns.severity")}</AdminTh>
+            <AdminTh>{t("reconciliation.discrepancies.columns.status")}</AdminTh>
+            <AdminTh>{t("reconciliation.discrepancies.columns.difference")}</AdminTh>
+            <AdminTh>{t("reconciliation.discrepancies.columns.detected")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {discrepancies.map((d) => (
@@ -168,9 +177,9 @@ export default async function AdminReconciliationDiscrepanciesPage({ searchParam
                   <ResolutionStatusBadge status={d.resolutionStatus} />
                 </td>
                 <td className="px-4 py-3 tabular-nums">
-                  {d.differenceValue !== null ? formatMoney(d.differenceValue, d.currency ?? "EUR") : "—"}
+                  {d.differenceValue !== null ? format.number(d.differenceValue, { style: "currency", currency: d.currency ?? "EUR" }) : "—"}
                 </td>
-                <td className="px-4 py-3">{new Date(d.detectedAt).toLocaleDateString()}</td>
+                <td className="px-4 py-3">{format.dateTime(new Date(d.detectedAt), { dateStyle: "medium" })}</td>
               </AdminTableRow>
             ))}
           </AdminTableBody>

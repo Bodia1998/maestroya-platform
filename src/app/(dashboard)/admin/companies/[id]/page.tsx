@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { reactivateCompanyFormAction, suspendCompanyFormAction } from "@/app/(dashboard)/admin/companies/actions";
 import { makeGetAdminCompanyUseCase } from "@/application/use-cases/admin/compose";
@@ -9,7 +10,10 @@ import { Section } from "@/components/layout/section";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { AdminRowActionButton } from "@/components/dashboard/admin-row-action-button";
 
-export const metadata = { title: "Admin — Company detail" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("companiesPage.detail.metaTitle") }) };
+}
 
 /** Module 18 — Company Professional: admin company detail — owner, member
  *  count, verification status, status transition actions. Never exposes
@@ -28,48 +32,51 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
 
   const canSuspend = company.status === "ACTIVE" || company.status === "PENDING";
   const canReactivate = company.status === "SUSPENDED";
+  const t = await getTranslations("admin");
+  const format = await getFormatter();
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title={company.tradeName ?? company.legalName}
         subtitle={company.legalName}
-        breadcrumbs={[{ label: "Companies", href: "/admin/companies" }, { label: company.tradeName ?? company.legalName }]}
+        breadcrumbs={[{ label: t("companiesPage.title"), href: "/admin/companies" }, { label: company.tradeName ?? company.legalName }]}
         actions={<StatusBadge status={company.status} />}
       />
 
-      <Section title="Company details">
+      <Section title={t("companiesPage.detail.details")}>
         <ResponsiveGrid as="dl" cols="2" gap="md" bordered className="text-sm">
-          <dt className="text-foreground/60">Tax ID</dt>
+          <dt className="text-foreground/60">{t("companiesPage.detail.taxId")}</dt>
           <dd>{company.taxId}</dd>
-          <dt className="text-foreground/60">Owner</dt>
+          <dt className="text-foreground/60">{t("common.columns.owner")}</dt>
           <dd>{company.ownerName ?? company.ownerEmail ?? "—"}</dd>
-          <dt className="text-foreground/60">Status</dt>
+          <dt className="text-foreground/60">{t("common.columns.status")}</dt>
           <dd>
             <StatusBadge status={company.status} />
           </dd>
-          <dt className="text-foreground/60">Verified</dt>
-          <dd>{company.isVerified ? "Yes" : "No"}</dd>
-          <dt className="text-foreground/60">Members</dt>
+          <dt className="text-foreground/60">{t("common.columns.verified")}</dt>
+          <dd>{company.isVerified ? t("common.yes") : t("common.no")}</dd>
+          <dt className="text-foreground/60">{t("common.columns.members")}</dt>
           <dd>{company.memberCount}</dd>
-          <dt className="text-foreground/60">Rating</dt>
+          <dt className="text-foreground/60">{t("common.columns.rating")}</dt>
           <dd>{company.averageRating !== null ? `${company.averageRating} (${company.reviewCount})` : "—"}</dd>
-          <dt className="text-foreground/60">Created</dt>
-          <dd>{company.createdAt.toLocaleDateString()}</dd>
+          <dt className="text-foreground/60">{t("common.columns.created")}</dt>
+          <dd>{format.dateTime(company.createdAt, { dateStyle: "medium" })}</dd>
         </ResponsiveGrid>
       </Section>
 
       {(canSuspend || canReactivate) && (
-        <Section title="Admin actions" bordered>
+        <Section title={t("companiesPage.detail.adminActions")} bordered>
           <div className="flex flex-wrap gap-2">
             {canSuspend && (
               <form action={suspendCompanyFormAction.bind(null, company.id)}>
-                <AdminRowActionButton className="h-10 px-4 text-sm">Suspend company</AdminRowActionButton>
+                <AdminRowActionButton className="h-10 px-4 text-sm">{t("companiesPage.detail.suspend")}</AdminRowActionButton>
               </form>
             )}
             {canReactivate && (
               <form action={reactivateCompanyFormAction.bind(null, company.id)}>
-                <AdminRowActionButton className="h-10 px-4 text-sm">Reactivate company</AdminRowActionButton>
+                <AdminRowActionButton className="h-10 px-4 text-sm">{t("companiesPage.detail.reactivate")}</AdminRowActionButton>
+
               </form>
             )}
           </div>

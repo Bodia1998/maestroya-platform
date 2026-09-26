@@ -1,17 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cancelJobAction, completeJobAction, startJobAction } from "../actions";
 
 const CANCELLATION_REASONS = [
-  { value: "CUSTOMER_REQUEST", label: "Customer request" },
-  { value: "PROFESSIONAL_UNABLE_TO_COMPLETE", label: "Professional unable to complete" },
-  { value: "SERVICE_REQUEST_ISSUE", label: "Issue with the service request" },
-  { value: "OTHER", label: "Other" },
-];
+  "CUSTOMER_REQUEST",
+  "PROFESSIONAL_UNABLE_TO_COMPLETE",
+  "SERVICE_REQUEST_ISSUE",
+  "OTHER",
+] as const;
 
 function ActionButton({
   label,
@@ -25,6 +26,7 @@ function ActionButton({
   jobId: string;
 }) {
   const router = useRouter();
+  const tCommon = useTranslations("common");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +36,7 @@ function ActionButton({
     const result = await onSubmit(jobId);
     setIsSubmitting(false);
     if (!result.success) {
-      setError(result.error ?? "Something went wrong.");
+      setError(result.error ?? tCommon("errors.generic"));
       return;
     }
     router.refresh();
@@ -56,8 +58,9 @@ function ActionButton({
 
 function CancelJobDialog({ jobId }: { jobId: string }) {
   const router = useRouter();
+  const t = useTranslations("jobs");
   const [isOpen, setIsOpen] = useState(false);
-  const [reason, setReason] = useState<string>(CANCELLATION_REASONS[0]?.value ?? "OTHER");
+  const [reason, setReason] = useState<string>(CANCELLATION_REASONS[0]);
   const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +81,7 @@ function CancelJobDialog({ jobId }: { jobId: string }) {
   if (!isOpen) {
     return (
       <Button type="button" variant="ghost" onClick={() => setIsOpen(true)}>
-        Cancel job
+        {t("actions.cancelJob")}
       </Button>
     );
   }
@@ -91,24 +94,24 @@ function CancelJobDialog({ jobId }: { jobId: string }) {
       className="flex flex-col gap-3 rounded-md border border-border bg-black/5 p-4"
     >
       <h3 id="cancel-job-title" className="text-sm font-semibold">
-        Cancel this job?
+        {t("actions.cancelTitle")}
       </h3>
       <label className="flex flex-col gap-1 text-sm">
-        Reason
+        {t("actions.reason")}
         <select
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           className="rounded-md border border-border px-3 py-2 text-sm"
         >
           {CANCELLATION_REASONS.map((r) => (
-            <option key={r.value} value={r.value}>
-              {r.label}
+            <option key={r} value={r}>
+              {t(`cancellationReason.${r}`)}
             </option>
           ))}
         </select>
       </label>
       <label className="flex flex-col gap-1 text-sm">
-        Note (optional)
+        {t("actions.note")}
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -123,10 +126,10 @@ function CancelJobDialog({ jobId }: { jobId: string }) {
       )}
       <div className="flex gap-2">
         <Button type="button" disabled={isSubmitting} onClick={handleCancel}>
-          {isSubmitting ? "Cancelling…" : "Yes, cancel"}
+          {isSubmitting ? t("actions.cancelling") : t("actions.confirmCancel")}
         </Button>
         <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
-          Not now
+          {t("actions.notNow")}
         </Button>
       </div>
     </div>
@@ -163,25 +166,25 @@ export function JobActions({
   viewerRole: "customer" | "professional";
   hasOpenAppointments: boolean;
 }) {
+  const t = useTranslations("jobs.actions");
   const isProfessional = viewerRole === "professional";
   const cancellable = status === "CREATED" || status === "IN_PROGRESS";
 
   return (
     <div className="flex flex-col gap-4">
       {isProfessional && status === "CREATED" && (
-        <ActionButton label="Start work" submittingLabel="Starting…" onSubmit={startJobAction} jobId={jobId} />
+        <ActionButton label={t("startWork")} submittingLabel={t("starting")} onSubmit={startJobAction} jobId={jobId} />
       )}
       {isProfessional && status === "IN_PROGRESS" && (
         <div className="flex flex-col gap-2">
           {hasOpenAppointments && (
             <p className="rounded-md bg-black/5 px-3 py-2 text-sm text-foreground/70">
-              This job still has an unresolved appointment. Confirm and complete (or cancel) every appointment on
-              this job before marking it completed.
+              {t("openAppointmentsWarning")}
             </p>
           )}
           <ActionButton
-            label="Mark job completed"
-            submittingLabel="Completing…"
+            label={t("markCompleted")}
+            submittingLabel={t("completing")}
             onSubmit={completeJobAction}
             jobId={jobId}
           />

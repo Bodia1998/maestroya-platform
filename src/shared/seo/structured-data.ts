@@ -39,7 +39,7 @@ export type JsonLdObject = Record<string, any>;
 export function buildOrganizationJsonLd(): JsonLdObject {
   return {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "Organization", // i18n-ignore: schema.org type
     name: SITE_NAME,
     url: SITE_URL,
     logo: absoluteUrl("/icon"),
@@ -62,7 +62,7 @@ export function buildWebSiteJsonLd(): JsonLdObject {
         "@type": "EntryPoint",
         urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
       },
-      "query-input": "required name=search_term_string",
+      "query-input": "required name=search_term_string", // i18n-ignore: schema.org syntax
     },
   };
 }
@@ -199,8 +199,10 @@ export function buildLocalBusinessJsonLd(profile: LocalBusinessLike): JsonLdObje
  * divergent representation.
  */
 export interface ServiceJsonLdInput {
-  /** The category name as MaestroYa actually names it, e.g. "Fontanería" —
-   *  never an invented or translated variant. */
+  /** The category name exactly as the page renders it in its `<h1>` —
+   *  MaestroYa's own category name, in the rendered locale (Module 120:
+   *  the catalog translation of the seeded name, e.g. "Fontanería" /
+   *  "Plumbing"), never an invented variant. */
   name: string;
   /** Canonical site-relative path of the page this Service is embedded
    *  in, once one exists (e.g. `/servicios/fontaneria`). */
@@ -215,18 +217,25 @@ export interface ServiceJsonLdInput {
    *  professional/company `LocalBusinessLike` `@id` when this Service is
    *  scoped to one provider rather than the platform as a whole. */
   providerId?: string;
+  /** Module 120 — BCP 47 language of `name`/`description` (the page's
+   *  rendered locale). Each public page has ONE URL whose language is
+   *  negotiated per visitor, so this states which language this rendering
+   *  of the node is in; a crawler without language signals gets `es`. */
+  inLanguage?: string;
 }
 
 export function buildServiceJsonLd(input: ServiceJsonLdInput): JsonLdObject {
   return {
     "@context": "https://schema.org",
-    "@type": "Service",
+    "@type": "Service", // i18n-ignore: schema.org type
     name: input.name,
     url: absoluteUrl(input.path),
     ...(input.description ? { description: input.description } : {}),
+    // i18n-ignore: schema.org type
     ...(input.areaServed ? { areaServed: { "@type": "Place", name: input.areaServed } } : {}),
+    ...(input.inLanguage ? { inLanguage: input.inLanguage } : {}),
     provider: {
-      "@type": "Organization",
+      "@type": "Organization", // i18n-ignore: schema.org type
       "@id": input.providerId ?? SITE_URL,
       name: SITE_NAME,
     },
@@ -248,15 +257,18 @@ export interface FaqItem {
   answer: string;
 }
 
-export function buildFaqJsonLd(items: FaqItem[]): JsonLdObject {
+/** Module 120 — `inLanguage`: the rendered locale of the questions and
+ *  answers (see `ServiceJsonLdInput.inLanguage`). */
+export function buildFaqJsonLd(items: FaqItem[], options: { inLanguage?: string } = {}): JsonLdObject {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    ...(options.inLanguage ? { inLanguage: options.inLanguage } : {}),
     mainEntity: items.map((item) => ({
-      "@type": "Question",
+      "@type": "Question", // i18n-ignore: schema.org type
       name: item.question,
       acceptedAnswer: {
-        "@type": "Answer",
+        "@type": "Answer", // i18n-ignore: schema.org type
         text: item.answer,
       },
     })),

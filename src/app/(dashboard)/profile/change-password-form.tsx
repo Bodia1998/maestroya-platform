@@ -1,6 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -12,9 +12,12 @@ import { FormActions } from "@/components/forms/form-actions";
 import { FormFieldError } from "@/components/forms/form-field-description";
 import { FormSection } from "@/components/forms/form-section";
 import { changePasswordSchema, type ChangePasswordInput } from "@/application/dto/profile.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { changePasswordAction } from "./actions";
 
 export function ChangePasswordForm({ hasPassword }: { hasPassword: boolean }) {
+  const t = useTranslations("profile.password");
+  const resolver = useLocalizedZodResolver(changePasswordSchema);
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -25,7 +28,7 @@ export function ChangePasswordForm({ hasPassword }: { hasPassword: boolean }) {
     setError,
     formState: { errors, isSubmitting },
   } = useForm<ChangePasswordInput>({
-    resolver: zodResolver(changePasswordSchema),
+    resolver,
     defaultValues: { currentPassword: "", newPassword: "", confirmNewPassword: "" },
   });
 
@@ -46,14 +49,14 @@ export function ChangePasswordForm({ hasPassword }: { hasPassword: boolean }) {
       return;
     }
 
-    setSuccessMessage("Password changed. You've been signed out everywhere else for security.");
+    setSuccessMessage(t("changed"));
     reset();
   }
 
   if (!hasPassword) {
     return (
       <Alert variant="info">
-        This account signs in via a social login and has no password to change.
+        {t("noPassword")}
       </Alert>
     );
   }
@@ -71,9 +74,9 @@ export function ChangePasswordForm({ hasPassword }: { hasPassword: boolean }) {
         </Alert>
       )}
 
-      <FormSection title="Change password">
+      <FormSection title={t("title")}>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="currentPassword">Current password</Label>
+          <Label htmlFor="currentPassword">{t("current")}</Label>
           <PasswordInput
             id="currentPassword"
             autoComplete="current-password"
@@ -85,7 +88,7 @@ export function ChangePasswordForm({ hasPassword }: { hasPassword: boolean }) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="newPassword">New password</Label>
+          <Label htmlFor="newPassword">{t("new")}</Label>
           <PasswordInput
             id="newPassword"
             autoComplete="new-password"
@@ -97,7 +100,7 @@ export function ChangePasswordForm({ hasPassword }: { hasPassword: boolean }) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="confirmNewPassword">Confirm new password</Label>
+          <Label htmlFor="confirmNewPassword">{t("confirm")}</Label>
           <PasswordInput
             id="confirmNewPassword"
             autoComplete="new-password"
@@ -111,7 +114,7 @@ export function ChangePasswordForm({ hasPassword }: { hasPassword: boolean }) {
 
       <FormActions>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Changing…" : "Change password"}
+          {isSubmitting ? t("changing") : t("submit")}
         </Button>
       </FormActions>
     </form>

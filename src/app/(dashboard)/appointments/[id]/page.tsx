@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { makeGetAppointmentUseCase } from "@/application/use-cases/booking/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
@@ -12,7 +13,10 @@ import { formatAppointmentWindow } from "@/shared/utils/format-appointment-windo
 import { AppointmentStatusBadge } from "../appointment-status-badge";
 import { AppointmentActions } from "./appointment-actions";
 
-export const metadata = { title: "Appointment" };
+export async function generateMetadata() {
+  const t = await getTranslations("customer.appointments");
+  return { title: t("detail.title") };
+}
 
 export default async function AppointmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -34,12 +38,16 @@ export default async function AppointmentDetailPage({ params }: { params: Promis
   }
 
   const canConfirm = appointment.status === "PROPOSED" && appointment.proposedByUserId !== user.id;
+  const [t, format] = await Promise.all([getTranslations("customer.appointments"), getFormatter()]);
+  const reason = appointment.cancellationReason;
+  const reasonLabel =
+    reason && t.has(`cancellationReason.${reason}` as never) ? t(`cancellationReason.${reason}` as never) : reason;
 
   return (
     <PageContainer gap="sm">
       <PageHeader
-        title="Appointment"
-        breadcrumbs={[{ label: "My appointments", href: "/appointments" }, { label: "Appointment" }]}
+        title={t("detail.title")}
+        breadcrumbs={[{ label: t("list.title"), href: "/appointments" }, { label: t("detail.title") }]}
         actions={<AppointmentStatusBadge status={appointment.status} />}
       />
 
@@ -47,18 +55,18 @@ export default async function AppointmentDetailPage({ params }: { params: Promis
 
       <ResponsiveGrid as="dl" cols="1-2" gap="sm" bordered>
         <div>
-          <dt className="text-foreground/60">Confirmed time</dt>
-          <dd>{formatAppointmentWindow(appointment.scheduledStart, appointment.scheduledEnd)}</dd>
+          <dt className="text-foreground/60">{t("detail.confirmedTime")}</dt>
+          <dd>{formatAppointmentWindow(appointment.scheduledStart, appointment.scheduledEnd, t("notSet"), format)}</dd>
         </div>
         <div>
-          <dt className="text-foreground/60">Proposed time</dt>
-          <dd>{formatAppointmentWindow(appointment.proposedStart, appointment.proposedEnd)}</dd>
+          <dt className="text-foreground/60">{t("detail.proposedTime")}</dt>
+          <dd>{formatAppointmentWindow(appointment.proposedStart, appointment.proposedEnd, t("notSet"), format)}</dd>
         </div>
         {appointment.status === "CANCELLED" && (
           <div className="sm:col-span-2">
-            <dt className="text-foreground/60">Cancellation reason</dt>
+            <dt className="text-foreground/60">{t("detail.cancellationReason")}</dt>
             <dd>
-              {appointment.cancellationReason}
+              {reasonLabel}
               {appointment.cancellationNote ? ` — ${appointment.cancellationNote}` : ""}
             </dd>
           </div>

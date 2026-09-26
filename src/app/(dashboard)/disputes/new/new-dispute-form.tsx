@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
@@ -27,6 +28,7 @@ const REASONS = [
 
 export function NewDisputeForm({ initialJobId }: { initialJobId: string }) {
   const router = useRouter();
+  const t = useTranslations("customer.disputes");
   const [jobId, setJobId] = useState(initialJobId);
   const [reason, setReason] = useState<string>(REASONS[0] ?? "OTHER");
   const [title, setTitle] = useState("");
@@ -47,22 +49,22 @@ export function NewDisputeForm({ initialJobId }: { initialJobId: string }) {
   }
 
   return (
-    <FormSection title="Open a dispute" description="Give as much detail as possible — this helps us resolve it faster.">
+    <FormSection title={t("new.title")} description={t("form.description")}>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="dispute-jobId">
-          Job ID <RequiredBadge />
+          {t("form.jobId")} <RequiredBadge />
         </Label>
         <Input id="dispute-jobId" value={jobId} onChange={(e) => setJobId(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="dispute-reason">
-          Reason <RequiredBadge />
+          {t("form.reason")} <RequiredBadge />
         </Label>
         <Select id="dispute-reason" value={reason} onChange={(e) => setReason(e.target.value)}>
           {REASONS.map((r) => (
             <option key={r} value={r}>
-              {r}
+              {t(`reason.${r}` as never)}
             </option>
           ))}
         </Select>
@@ -70,14 +72,14 @@ export function NewDisputeForm({ initialJobId }: { initialJobId: string }) {
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="dispute-title">
-          Title <RequiredBadge />
+          {t("form.title")} <RequiredBadge />
         </Label>
         <Input id="dispute-title" value={title} onChange={(e) => setTitle(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="dispute-description">
-          Description <RequiredBadge />
+          {t("form.descriptionLabel")} <RequiredBadge />
         </Label>
         <Textarea
           id="dispute-description"
@@ -94,7 +96,7 @@ export function NewDisputeForm({ initialJobId }: { initialJobId: string }) {
       )}
 
       <Button type="button" disabled={isSubmitting} onClick={handleSubmit} className="w-full sm:w-auto">
-        {isSubmitting ? "Submitting…" : "Open dispute"}
+        {isSubmitting ? t("form.submitting") : t("form.submit")}
       </Button>
     </FormSection>
   );

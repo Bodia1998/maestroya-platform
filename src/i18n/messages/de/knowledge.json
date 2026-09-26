@@ -1,0 +1,256 @@
+{
+  "services": {
+    "fontaneria": {
+      "nameInSentence": "Sanitär",
+      "intro": "MaestroYa bringt Kunden mit Fachleuten für Sanitärarbeiten zusammen: Reparatur von Lecks, Wasserhähnen, Rohren und Wasserinstallationen im Haushalt. Der Kunde beschreibt das Problem und veröffentlicht eine Anfrage; Sanitärfachleute, die das Gebiet abdecken, können sie prüfen und ein Angebot senden.",
+      "commonJobTypes": {
+        "leakRepair": "Wasserlecks reparieren",
+        "tapRepair": "Wasserhähne austauschen oder reparieren",
+        "pipeUnblocking": "Verstopfte Rohre reinigen",
+        "sanitaryInstallation": "Sanitärobjekte installieren (Toiletten, Waschbecken, Duschen)",
+        "waterHeaterRepair": "Warmwasserbereiter und Warmwasserinstallationen prüfen oder reparieren"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Eine Diagnose des in der Anfrage beschriebenen Problems",
+        "quote": "Ein detailliertes Angebot vor Beginn der Arbeiten",
+        "execution": "Die Ausführung der im angenommenen Angebot vereinbarten Arbeiten"
+      },
+      "considerations": {
+        "describe": "Beschreibe das Problem so genau wie möglich und füge der Anfrage nach Möglichkeit Fotos hinzu",
+        "urgency": "Gib an, wie dringend die Arbeit wirklich ist (im System kannst du Anfragen als mehr oder weniger dringend markieren)",
+        "compare": "Du kannst mehrere Angebote erhalten und vergleichen, bevor du eines annimmst"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Welche Sanitärarbeiten kann ich über MaestroYa anfragen?",
+          "answer": "Du kannst eine Anfrage für jede Sanitärarbeit im Haushalt veröffentlichen, zum Beispiel ein Leck, einen defekten Wasserhahn oder die Installation eines Sanitärobjekts. Sanitärfachleute, die dein Gebiet abdecken, können die Anfrage prüfen und dir ein Angebot senden."
+        },
+        "howQuote": {
+          "question": "Wie funktioniert ein Angebot für Sanitärarbeiten?",
+          "answer": "Nachdem du deine Anfrage veröffentlicht hast, können dir eine oder mehrere Fachkräfte ein Angebot senden. Du kannst die erhaltenen Angebote vergleichen und das bevorzugte annehmen, bevor die Arbeit beginnt."
+        },
+        "coverage": {
+          "question": "In welchen Gebieten ist der Sanitärservice verfügbar?",
+          "answer": "Die Abdeckung hängt von den Fachleuten ab, die in dem jeweiligen Gebiet aktiv sind. Sieh dir die Seite deines Ortes an, um die aktuelle Verfügbarkeit in diesem Gebiet zu sehen."
+        }
+      }
+    },
+    "electricidad": {
+      "nameInSentence": "Elektroarbeiten",
+      "intro": "MaestroYa bringt Kunden mit Fachleuten für Elektroarbeiten zusammen: Elektroinstallationen, Störungen, Sicherungskästen und Steckdosen. Der Kunde beschreibt die Arbeit und veröffentlicht eine Anfrage; Elektrofachleute, die das Gebiet abdecken, können sie prüfen und ein Angebot senden.",
+      "commonJobTypes": {
+        "faultRepair": "Elektrische Störungen beheben",
+        "socketsSwitches": "Steckdosen und Schalter installieren oder austauschen",
+        "panelUpgrade": "Den Sicherungskasten prüfen oder modernisieren",
+        "lightPoints": "Lichtauslässe installieren",
+        "smallInstallations": "Schalterprogramme und kleinere Elektroarbeiten im Haushalt installieren"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Eine Diagnose des in der Anfrage beschriebenen elektrischen Problems",
+        "quote": "Ein detailliertes Angebot vor Beginn der Arbeiten",
+        "execution": "Die Ausführung der im angenommenen Angebot vereinbarten Arbeiten"
+      },
+      "considerations": {
+        "describe": "Beschreibe die Störung oder Installation so genau wie möglich, mit Fotos, wenn sie bei der Erklärung helfen",
+        "urgency": "Gib an, wie dringend die Arbeit wirklich ist",
+        "compare": "Vergleiche mehrere Angebote, bevor du eines annimmst"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Welche Elektroarbeiten kann ich über MaestroYa anfragen?",
+          "answer": "Du kannst unter anderem eine Anfrage für elektrische Störungen, die Installation von Steckdosen oder Lichtauslässen oder die Prüfung des Sicherungskastens veröffentlichen. Elektrofachleute, die dein Gebiet abdecken, können dir ein Angebot senden."
+        },
+        "howToRequest": {
+          "question": "Wie fordere ich über MaestroYa einen Elektriker an?",
+          "answer": "Veröffentliche eine Anfrage, in der du die Arbeit beschreibst. Fachleute, die deine Kategorie und dein Gebiet abdecken, können sie prüfen und dir ein Angebot senden, das du annehmen oder ablehnen kannst."
+        },
+        "coverage": {
+          "question": "In welchen Gebieten ist der Elektroservice verfügbar?",
+          "answer": "Die Abdeckung hängt von den Fachleuten ab, die in dem jeweiligen Gebiet aktiv sind. Sieh dir die Seite deines Ortes an, um die aktuelle Verfügbarkeit in diesem Gebiet zu sehen."
+        }
+      }
+    },
+    "aire-acondicionado": {
+      "nameInSentence": "Klimaanlagen",
+      "intro": "MaestroYa bringt Kunden mit Fachleuten für Klimatechnik zusammen: Installation, Wartung und Reparatur von Klimaanlagen. Der Kunde beschreibt, was er braucht, und veröffentlicht eine Anfrage; Klimatechniker, die das Gebiet abdecken, können sie prüfen und ein Angebot senden.",
+      "commonJobTypes": {
+        "newInstallation": "Eine neue Klimaanlage installieren",
+        "repair": "Ein Gerät reparieren, das nicht kühlt oder nicht funktioniert",
+        "maintenance": "Geräte warten und reinigen",
+        "gasRecharge": "Kältemittel nachfüllen"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Eine Diagnose oder Einschätzung des in der Anfrage beschriebenen Geräts oder der Installation",
+        "quote": "Ein detailliertes Angebot vor Beginn der Arbeiten",
+        "execution": "Die Ausführung der im angenommenen Angebot vereinbarten Arbeiten"
+      },
+      "considerations": {
+        "equipmentType": "Gib den Gerätetyp an (falls du ihn kennst) und beschreibe das Problem oder die gewünschte Installation",
+        "photos": "Füge Fotos des Geräts oder des Raums hinzu, wenn sie bei der Erklärung helfen",
+        "compare": "Vergleiche mehrere Angebote, bevor du eines annimmst"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Welche Klimatechnik-Arbeiten kann ich über MaestroYa anfragen?",
+          "answer": "Du kannst die Installation, Reparatur oder Wartung einer Klimaanlage anfragen. Klimatechniker, die dein Gebiet abdecken, können deine Anfrage prüfen und dir ein Angebot senden."
+        },
+        "howQuote": {
+          "question": "Wie funktioniert ein Angebot für die Installation einer Klimaanlage?",
+          "answer": "Du veröffentlichst deine Anfrage und beschreibst, was du brauchst; interessierte Fachleute senden ihr Angebot, und du entscheidest, welches du annimmst."
+        },
+        "coverage": {
+          "question": "In welchen Gebieten ist der Klimaanlagenservice verfügbar?",
+          "answer": "Die Abdeckung hängt von den Fachleuten ab, die in dem jeweiligen Gebiet aktiv sind. Sieh dir die Seite deines Ortes an, um die aktuelle Verfügbarkeit in diesem Gebiet zu sehen."
+        }
+      }
+    },
+    "pintura": {
+      "nameInSentence": "Malerarbeiten",
+      "intro": "MaestroYa bringt Kunden mit Malerfachleuten für Innen- und Außenarbeiten zusammen. Der Kunde beschreibt den zu streichenden Bereich und veröffentlicht eine Anfrage; Malerfachleute, die das Gebiet abdecken, können sie prüfen und ein Angebot senden.",
+      "commonJobTypes": {
+        "interior": "Innenanstriche (Zimmer, Flure, Decken)",
+        "exterior": "Fassaden und Außenflächen streichen",
+        "wallPreparation": "Wände vor dem Streichen glätten und vorbereiten",
+        "touchUps": "Ausbesserungen und punktuelle Endarbeiten"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Eine Einschätzung des Raums und der in der Anfrage beschriebenen Arbeit",
+        "quote": "Ein detailliertes Angebot vor Beginn der Arbeiten",
+        "execution": "Die Ausführung der im angenommenen Angebot vereinbarten Arbeiten"
+      },
+      "considerations": {
+        "surface": "Gib die ungefähre Fläche und den aktuellen Zustand der Wände an",
+        "photos": "Füge Fotos des zu streichenden Raums hinzu",
+        "compare": "Vergleiche mehrere Angebote, bevor du eines annimmst"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Welche Malerarbeiten kann ich über MaestroYa anfragen?",
+          "answer": "Du kannst Innen- oder Außenanstriche oder punktuelle Ausbesserungen anfragen. Malerfachleute, die dein Gebiet abdecken, können dir ein Angebot senden."
+        },
+        "howQuote": {
+          "question": "Wie funktioniert ein Angebot für Malerarbeiten?",
+          "answer": "Du veröffentlichst deine Anfrage und beschreibst den Raum und die Arbeit; interessierte Fachleute senden ihr Angebot, und du entscheidest, welches du annimmst."
+        },
+        "coverage": {
+          "question": "In welchen Gebieten sind Malerarbeiten verfügbar?",
+          "answer": "Die Abdeckung hängt von den Fachleuten ab, die in dem jeweiligen Gebiet aktiv sind. Sieh dir die Seite deines Ortes an, um die aktuelle Verfügbarkeit in diesem Gebiet zu sehen."
+        }
+      }
+    },
+    "reformas": {
+      "nameInSentence": "Renovierungen",
+      "intro": "MaestroYa bringt Kunden mit Fachleuten für Komplett- und Teilrenovierungen von Wohnungen und Häusern zusammen. Der Kunde beschreibt den Umfang der Renovierung und veröffentlicht eine Anfrage; Renovierungsfachleute, die das Gebiet abdecken, können sie prüfen und ein Angebot senden.",
+      "commonJobTypes": {
+        "partial": "Teilrenovierungen (ein Zimmer, ein Bad, eine Küche)",
+        "full": "Komplettrenovierungen von Wohnungen",
+        "masonry": "Maurerarbeiten im Rahmen einer Renovierung",
+        "layoutFinishes": "Änderungen am Grundriss oder an der Ausstattung"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Eine Einschätzung des Umfangs der in der Anfrage beschriebenen Renovierung",
+        "quote": "Ein detailliertes Angebot vor Beginn der Arbeiten",
+        "execution": "Die Ausführung der im angenommenen Angebot vereinbarten Arbeiten"
+      },
+      "considerations": {
+        "scope": "Beschreibe den Umfang der Renovierung so genau wie möglich",
+        "photos": "Füge Fotos vom aktuellen Zustand des Raums hinzu",
+        "compare": "Renovierungen bedeuten meist höhere Angebote: Vergleiche mehrere Optionen, bevor du eines annimmst"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Welche Renovierungen kann ich über MaestroYa anfragen?",
+          "answer": "Du kannst Teil- oder Komplettrenovierungen deines Zuhauses anfragen. Renovierungsfachleute, die dein Gebiet abdecken, können deine Anfrage prüfen und dir ein Angebot senden."
+        },
+        "compareQuotes": {
+          "question": "Kann ich mehrere Angebote für eine Renovierung vergleichen?",
+          "answer": "Ja. Du kannst für dieselbe Anfrage Angebote von mehreren Fachleuten erhalten und sie vergleichen, bevor du eines annimmst."
+        },
+        "coverage": {
+          "question": "In welchen Gebieten sind Renovierungen verfügbar?",
+          "answer": "Die Abdeckung hängt von den Fachleuten ab, die in dem jeweiligen Gebiet aktiv sind. Sieh dir die Seite deines Ortes an, um die aktuelle Verfügbarkeit in diesem Gebiet zu sehen."
+        }
+      }
+    },
+    "montaje-de-muebles": {
+      "nameInSentence": "Möbelmontage",
+      "intro": "MaestroYa bringt Kunden mit Fachleuten für den Aufbau und die Montage von Möbeln und Einrichtung zusammen. Der Kunde beschreibt das Möbelstück oder die Möbel, die aufgebaut werden sollen, und veröffentlicht eine Anfrage; Montagefachleute, die das Gebiet abdecken, können sie prüfen und ein Angebot senden.",
+      "commonJobTypes": {
+        "flatPack": "Aufbau von Bausatzmöbeln (Schränke, Regale, Tische)",
+        "kitchen": "Aufbau von Küchenmöbeln",
+        "wallFixing": "Möbel an der Wand befestigen",
+        "multiple": "Aufbau mehrerer Möbelstücke bei einem Besuch"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Eine Einschätzung des in der Anfrage beschriebenen Möbelstücks oder der Möbel",
+        "quote": "Ein Angebot vor Beginn der Montage",
+        "execution": "Die Ausführung der im angenommenen Angebot vereinbarten Montage"
+      },
+      "considerations": {
+        "typeQuantity": "Gib Art und Anzahl der aufzubauenden Möbel an",
+        "photos": "Füge Fotos der Kartons oder der Anleitung hinzu, falls du sie hast",
+        "compare": "Vergleiche mehrere Angebote, bevor du eines annimmst"
+      },
+      "faqs": {
+        "whatFurniture": {
+          "question": "Welche Möbel kann ich über MaestroYa aufbauen lassen?",
+          "answer": "Du kannst den Aufbau praktisch jedes Bausatzmöbels anfragen, etwa Schränke, Regale oder Küchenmöbel. Montagefachleute, die dein Gebiet abdecken, können dir ein Angebot senden."
+        },
+        "howQuote": {
+          "question": "Wie funktioniert ein Angebot für die Möbelmontage?",
+          "answer": "Du veröffentlichst deine Anfrage und beschreibst das Möbelstück oder die Möbel, die aufgebaut werden sollen; interessierte Fachleute senden ihr Angebot, und du entscheidest, welches du annimmst."
+        },
+        "coverage": {
+          "question": "In welchen Gebieten ist die Möbelmontage verfügbar?",
+          "answer": "Die Abdeckung hängt von den Fachleuten ab, die in dem jeweiligen Gebiet aktiv sind. Sieh dir die Seite deines Ortes an, um die aktuelle Verfügbarkeit in diesem Gebiet zu sehen."
+        }
+      }
+    }
+  },
+  "locations": {
+    "gandia": {
+      "intro": "Gandia (Provinz Valencia) ist der Referenzort von MaestroYa. Kunden in Gandia können eine Anfrage für jede der auf der Plattform verfügbaren Kategorien von Haushaltsdienstleistungen veröffentlichen, und Fachleute, die das Gebiet abdecken, können sie prüfen und ein Angebot senden.",
+      "faqs": {
+        "whatServices": {
+          "question": "Welche Dienstleistungen kann ich in Gandia über MaestroYa anfragen?",
+          "answer": "Du kannst eine Anfrage für jede der auf MaestroYa verfügbaren Kategorien von Haushaltsdienstleistungen veröffentlichen (Sanitär, Elektroarbeiten, Klimaanlagen, Malerarbeiten, Renovierungen und Möbelmontage). Details findest du auf der Seite der jeweiligen Dienstleistung."
+        },
+        "howToHire": {
+          "question": "Wie beauftrage ich eine Fachkraft in Gandia?",
+          "answer": "Du veröffentlichst eine Anfrage, in der du die Arbeit beschreibst. Fachleute, die diese Kategorie und das Gebiet Gandia abdecken, können sie prüfen und dir ein Angebot senden, das du vergleichen und vor Beginn der Arbeiten annehmen kannst."
+        },
+        "outsideGandia": {
+          "question": "Ist MaestroYa auch außerhalb von Gandia verfügbar?",
+          "answer": "Gandia ist der Ort mit derzeit bestätigter Abdeckung auf der Plattform. Die tatsächliche Verfügbarkeit von Fachleuten kann schwanken und hängt davon ab, wer gerade aktiv ist."
+        }
+      }
+    }
+  },
+  "nationalCoverage": {
+    "intro": "MaestroYa ist ein Marktplatz für Haushaltsdienstleistungen, der Kunden mit Fachleuten und Unternehmen in Spanien zusammenbringt. Jede Person in Spanien kann eine Dienstleistungsanfrage veröffentlichen; ob eine Fachkraft sie prüft und ein Angebot sendet, hängt davon ab, welche Fachleute in dieser Kategorie und diesem Gebiet gerade aktiv sind.",
+    "coverageStatement": "Die Reichweite von MaestroYa als Plattform ist landesweit: Ziel des Marktplatzes ist es, in ganz Spanien tätig zu sein, nicht nur an einem bestimmten Ort. Das ist etwas anderes als die tatsächliche Verfügbarkeit von Fachleuten in einem bestimmten Gebiet, die von den realen Daten der Plattform zum jeweiligen Zeitpunkt abhängt.",
+    "howLocalAvailabilityWorks": "Wenn du eine Anfrage veröffentlichst, können nur die Fachleute, die diese Dienstleistungskategorie und dein Gebiet abdecken, sie prüfen und dir ein Angebot senden. MaestroYa garantiert nicht, dass an einem bestimmten Ort eine Fachkraft verfügbar ist: Die tatsächliche Verfügbarkeit ist je nach Gebiet unterschiedlich. Orte, deren Abdeckung durch reale Daten der Plattform bestätigt ist, haben eine eigene Seite (siehe /ubicaciones).",
+    "faqs": {
+      "wholeSpain": {
+        "question": "Ist MaestroYa in ganz Spanien tätig?",
+        "answer": "MaestroYa ist ein Marktplatz, der darauf ausgelegt ist, in ganz Spanien tätig zu sein. Das bedeutet nicht, dass es bereits an jedem Ort aktive Fachleute gibt: Die tatsächliche Verfügbarkeit von Fachleuten hängt vom jeweiligen Gebiet ab und kann sich im Laufe der Zeit ändern."
+      },
+      "localAvailability": {
+        "question": "Woher weiß ich, ob eine Dienstleistung an meinem Ort verfügbar ist?",
+        "answer": "Du kannst eine Anfrage mit deiner Adresse veröffentlichen; nur Fachleute, die deine Kategorie und dein Gebiet abdecken, können dir ein Angebot senden. Orte, deren Abdeckung durch reale Daten der Plattform bestätigt ist, sind im Bereich Standorte aufgeführt."
+      },
+      "whatServices": {
+        "question": "Welche Dienstleistungen bietet MaestroYa an?",
+        "answer": "MaestroYa veröffentlicht derzeit sechs Kategorien von Haushaltsdienstleistungen: Sanitär, Elektroarbeiten, Klimaanlagen, Malerarbeiten, Renovierungen und Möbelmontage. Weitere Details findest du auf der Seite der jeweiligen Dienstleistung."
+      },
+      "professionalParticipation": {
+        "question": "Wie kann eine Fachkraft bei MaestroYa mitmachen?",
+        "answer": "Eine Fachkraft kann ein Konto erstellen, ihre Dienstleistungskategorien und das Gebiet angeben, das sie abdeckt, und von da an veröffentlichte Anfragen, die zu ihrer Kategorie und ihrem Gebiet passen, prüfen und Angebote dafür senden."
+      }
+    },
+    "structuredData": {
+      "name": "Haushaltsdienstleistungen über MaestroYa",
+      "description": "Marktplatz für Haushaltsdienstleistungen, betrieben von MaestroYa in Spanien. Die Verfügbarkeit von Fachleuten ist je nach Dienstleistungskategorie und Gebiet unterschiedlich."
+    }
+  }
+}

@@ -17,26 +17,26 @@ import { z } from "zod";
  */
 
 export const startJobSchema = z.object({
-  jobId: z.string().uuid("Invalid job."),
+  jobId: z.string().uuid("dto.ids.job"),
 });
 export type StartJobInput = z.infer<typeof startJobSchema>;
 
 export const completeJobSchema = z.object({
-  jobId: z.string().uuid("Invalid job."),
+  jobId: z.string().uuid("dto.ids.job"),
 });
 export type CompleteJobInput = z.infer<typeof completeJobSchema>;
 
 export const MAX_JOB_CANCELLATION_NOTE_LENGTH = 1000;
 
 export const cancelJobSchema = z.object({
-  jobId: z.string().uuid("Invalid job."),
+  jobId: z.string().uuid("dto.ids.job"),
   reason: z.enum(["CUSTOMER_REQUEST", "PROFESSIONAL_UNABLE_TO_COMPLETE", "SERVICE_REQUEST_ISSUE", "OTHER"], {
-    errorMap: () => ({ message: "Choose a cancellation reason." }),
+    errorMap: () => ({ message: "dto.common.cancellationReasonRequired" }),
   }),
   note: z
     .string()
     .trim()
-    .max(MAX_JOB_CANCELLATION_NOTE_LENGTH, `Notes must be ${MAX_JOB_CANCELLATION_NOTE_LENGTH} characters or fewer.`)
+    .max(MAX_JOB_CANCELLATION_NOTE_LENGTH, "maxLength")
     .optional()
     .or(z.literal("")),
 });
@@ -50,14 +50,14 @@ export type ListJobsInput = z.infer<typeof listJobsSchema>;
 // --- Module 66 — Job Completion & Payment Release Protection ---
 
 export const confirmJobCompletionSchema = z.object({
-  jobId: z.string().uuid("Invalid job."),
+  jobId: z.string().uuid("dto.ids.job"),
 });
 export type ConfirmJobCompletionInput = z.infer<typeof confirmJobCompletionSchema>;
 
 export const MAX_DISPUTE_JOB_COMPLETION_DESCRIPTION_LENGTH = 5000;
 
 export const disputeJobCompletionSchema = z.object({
-  jobId: z.string().uuid("Invalid job."),
+  jobId: z.string().uuid("dto.ids.job"),
   reason: z.enum(
     [
       "SERVICE_NOT_COMPLETED",
@@ -70,20 +70,20 @@ export const disputeJobCompletionSchema = z.object({
       "COMMUNICATION_ISSUE",
       "OTHER",
     ],
-    { errorMap: () => ({ message: "Choose a reason." }) },
+    { errorMap: () => ({ message: "dto.job.reasonRequired" }) },
   ),
-  title: z.string().trim().min(5, "Title must be at least 5 characters.").max(150, "Title must be 150 characters or fewer."),
+  title: z.string().trim().min(5, "minLength").max(150, "maxLength"),
   description: z
     .string()
     .trim()
-    .min(20, "Please describe the problem in at least 20 characters.")
-    .max(MAX_DISPUTE_JOB_COMPLETION_DESCRIPTION_LENGTH, `Description must be ${MAX_DISPUTE_JOB_COMPLETION_DESCRIPTION_LENGTH} characters or fewer.`),
+    .min(20, "dto.job.describeProblem")
+    .max(MAX_DISPUTE_JOB_COMPLETION_DESCRIPTION_LENGTH, "maxLength"),
 });
 export type DisputeJobCompletionInput = z.infer<typeof disputeJobCompletionSchema>;
 
 export const adminResolvePaymentReleaseSchema = z.object({
-  jobId: z.string().uuid("Invalid job."),
-  decision: z.enum(["APPROVE", "HOLD"], { errorMap: () => ({ message: "Choose a decision." }) }),
-  note: z.string().trim().max(2000, "Note must be 2000 characters or fewer.").optional().or(z.literal("")),
+  jobId: z.string().uuid("dto.ids.job"),
+  decision: z.enum(["APPROVE", "HOLD"], { errorMap: () => ({ message: "dto.job.decisionRequired" }) }),
+  note: z.string().trim().max(2000, "maxLength").optional().or(z.literal("")),
 });
 export type AdminResolvePaymentReleaseInput = z.infer<typeof adminResolvePaymentReleaseSchema>;

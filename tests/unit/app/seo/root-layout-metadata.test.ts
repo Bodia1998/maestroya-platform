@@ -1,6 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import type { Metadata } from "next";
 
-import { metadata } from "@/app/layout";
+import { generateMetadata } from "@/app/layout";
+import { setTestLocale } from "../../../test-utils/intl";
+
+let metadata: Metadata;
+beforeAll(async () => {
+  metadata = await generateMetadata();
+});
 
 /**
  * Module 43 — SEO Infrastructure: asserts the root layout's site-wide
@@ -35,5 +42,18 @@ describe("root layout metadata", () => {
   it("points icons and manifest at the generated routes", () => {
     expect(metadata.icons).toMatchObject({ icon: "/icon", apple: "/apple-icon" });
     expect(metadata.manifest).toBe("/manifest.webmanifest");
+  });
+
+  it("follows the active locale for text and og:locale, without hreflang alternates", async () => {
+    setTestLocale("ru");
+    const ru = await generateMetadata();
+    expect(ru.title).toMatchObject({ default: expect.stringMatching(/MaestroYa.*[а-яё]/i) });
+    expect(ru.openGraph).toMatchObject({ locale: "ru_RU" });
+    expect(ru.alternates).toEqual({ canonical: "/" });
+
+    setTestLocale("es");
+    const es = await generateMetadata();
+    expect(es.title).toMatchObject({ default: "MaestroYa — Encuentra profesionales de confianza para tu hogar" });
+    expect(es.openGraph).toMatchObject({ locale: "es_ES" });
   });
 });
