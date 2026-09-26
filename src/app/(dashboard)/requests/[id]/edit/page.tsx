@@ -1,15 +1,20 @@
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
 import { makeGetServiceRequestUseCase } from "@/application/use-cases/service-request/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { localizeCategoryName } from "@/presentation/i18n/service-categories";
 import { Section } from "@/components/layout/section";
 import { ServiceRequestForm } from "../../service-request-form";
 import { ServiceRequestPhotoManager } from "../service-request-photo-manager";
 
-export const metadata = { title: "Edit service request" };
+export async function generateMetadata() {
+  const t = await getTranslations("customer.requests");
+  return { title: t("edit.title") };
+}
 
 export default async function EditServiceRequestPage({
   params,
@@ -37,23 +42,31 @@ export default async function EditServiceRequestPage({
     redirect(`/requests/${request.id}`);
   }
 
-  const categories = await new PrismaServiceCategoryRepository().listActive();
+  const [rawCategories, t, tServices] = await Promise.all([
+    new PrismaServiceCategoryRepository().listActive(),
+    getTranslations("customer.requests"),
+    getTranslations("services"),
+  ]);
+  const categories = rawCategories.map((category) => ({
+    id: category.id,
+    name: localizeCategoryName(tServices, category),
+  }));
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title="Edit service request"
-        subtitle="You can edit this request while it's still open."
+        title={t("edit.title")}
+        subtitle={t("edit.subtitle")}
         breadcrumbs={[
-          { label: "My requests", href: "/requests" },
+          { label: t("list.title"), href: "/requests" },
           { label: request.title, href: `/requests/${request.id}` },
-          { label: "Edit" },
+          { label: t("edit.breadcrumb") },
         ]}
       />
 
       <ServiceRequestForm mode="edit" categories={categories} request={request} />
 
-      <Section title="Photos" divider>
+      <Section title={t("detail.photos")} divider>
         <ServiceRequestPhotoManager requestId={request.id} photos={request.photos} editable />
       </Section>
     </div>

@@ -1,15 +1,18 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { getFinancialEntitySnapshotAction, getReconciliationDiscrepancyAction } from "../../actions";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { Section } from "@/components/layout/section";
-import { formatMoney } from "@/components/dashboard/quote-items-table";
 import { SeverityBadge, ResolutionStatusBadge } from "../../_components/badges";
 import { ResolveDiscrepancyDialog } from "./resolve-discrepancy-dialog";
 
-export const metadata = { title: "Admin — Discrepancy" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("reconciliation.discrepancyDetail.metaTitle") }) };
+}
 export const dynamic = "force-dynamic";
 
 /**
@@ -41,15 +44,18 @@ export default async function AdminDiscrepancyDetailPage({ params }: { params: P
 
   const snapshotResult = discrepancy.jobId ? await getFinancialEntitySnapshotAction({ jobId: discrepancy.jobId }) : null;
   const snapshot = snapshotResult?.success ? snapshotResult.data : null;
+  const t = await getTranslations("admin.reconciliation");
+  const format = await getFormatter();
+  const dateTime = (value: Date) => format.dateTime(new Date(value), { dateStyle: "medium", timeStyle: "short" });
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={`Discrepancy ${discrepancy.id.slice(0, 8)}…`}
+        title={t("discrepancyDetail.title", { id: discrepancy.id.slice(0, 8) })}
         subtitle={discrepancy.category.replaceAll("_", " ").toLowerCase()}
         breadcrumbs={[
-          { label: "Reconciliation", href: "/admin/reconciliation" },
-          { label: "Discrepancies", href: "/admin/reconciliation/discrepancies" },
+          { label: t("title"), href: "/admin/reconciliation" },
+          { label: t("discrepancies.title"), href: "/admin/reconciliation/discrepancies" },
           { label: discrepancy.id.slice(0, 8) },
         ]}
         actions={
@@ -62,50 +68,50 @@ export default async function AdminDiscrepancyDetailPage({ params }: { params: P
 
       <p className="whitespace-pre-wrap text-sm">{discrepancy.explanation}</p>
 
-      <Section title="Identity" bordered>
+      <Section title={t("discrepancyDetail.identity")} bordered>
         <ResponsiveGrid cols="1-2-lg">
           <div>
-            <p className="text-muted-foreground">Entity type</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.entityType")}</p>
             <p className="font-medium">{discrepancy.entityType}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Fingerprint</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.fingerprint")}</p>
             <p className="font-mono text-xs">{discrepancy.fingerprint}</p>
           </div>
         </ResponsiveGrid>
       </Section>
 
-      <Section title="Financial information" bordered>
+      <Section title={t("discrepancyDetail.financial")} bordered>
         <ResponsiveGrid cols="1-2-4">
           <div>
-            <p className="text-muted-foreground">Internal amount</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.internalAmount")}</p>
             <p className="font-medium tabular-nums">
-              {discrepancy.expectedValue !== null ? formatMoney(discrepancy.expectedValue, discrepancy.currency ?? "EUR") : "—"}
+              {discrepancy.expectedValue !== null ? format.number(discrepancy.expectedValue, { style: "currency", currency: discrepancy.currency ?? "EUR" }) : "—"}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Provider/actual amount</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.providerAmount")}</p>
             <p className="font-medium tabular-nums">
-              {discrepancy.actualValue !== null ? formatMoney(discrepancy.actualValue, discrepancy.currency ?? "EUR") : "—"}
+              {discrepancy.actualValue !== null ? format.number(discrepancy.actualValue, { style: "currency", currency: discrepancy.currency ?? "EUR" }) : "—"}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Difference</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.difference")}</p>
             <p className="font-medium tabular-nums">
-              {discrepancy.differenceValue !== null ? formatMoney(discrepancy.differenceValue, discrepancy.currency ?? "EUR") : "—"}
+              {discrepancy.differenceValue !== null ? format.number(discrepancy.differenceValue, { style: "currency", currency: discrepancy.currency ?? "EUR" }) : "—"}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Currency</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.currency")}</p>
             <p className="font-medium">{discrepancy.currency ?? "—"}</p>
           </div>
         </ResponsiveGrid>
       </Section>
 
-      <Section title="References" bordered>
+      <Section title={t("discrepancyDetail.references")} bordered>
         <ResponsiveGrid cols="1-2-4">
           <div>
-            <p className="text-muted-foreground">Job</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.job")}</p>
             <p className="font-mono text-xs">
               {discrepancy.jobId ? (
                 <Link
@@ -120,44 +126,44 @@ export default async function AdminDiscrepancyDetailPage({ params }: { params: P
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Payment</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.payment")}</p>
             <p className="font-mono text-xs">{discrepancy.paymentId ?? "—"}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Invoice</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.invoice")}</p>
             <p className="font-mono text-xs">{discrepancy.invoiceId ?? "—"}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Payout</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.payout")}</p>
             <p className="font-mono text-xs">{discrepancy.payoutId ?? "—"}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Refund</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.refund")}</p>
             <p className="font-mono text-xs">{discrepancy.refundId ?? "—"}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Credit note</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.creditNote")}</p>
             <p className="font-mono text-xs">{discrepancy.creditNoteId ?? "—"}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Entity id</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.entityId")}</p>
             <p className="font-mono text-xs">{discrepancy.entityId ?? "—"}</p>
           </div>
         </ResponsiveGrid>
       </Section>
 
-      <Section title="Timeline" bordered>
+      <Section title={t("discrepancyDetail.timeline")} bordered>
         <ResponsiveGrid cols="1-2-4">
           <div>
-            <p className="text-muted-foreground">Detected at</p>
-            <p className="font-medium">{new Date(discrepancy.detectedAt).toLocaleString()}</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.detectedAt")}</p>
+            <p className="font-medium">{dateTime(discrepancy.detectedAt)}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Last updated</p>
-            <p className="font-medium">{new Date(discrepancy.updatedAt).toLocaleString()}</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.lastUpdated")}</p>
+            <p className="font-medium">{dateTime(discrepancy.updatedAt)}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Detected by run</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.detectedByRun")}</p>
             <Link
               href={`/admin/reconciliation/runs/${discrepancy.detectedByRunId}`}
               className="font-mono text-xs text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
@@ -166,7 +172,7 @@ export default async function AdminDiscrepancyDetailPage({ params }: { params: P
             </Link>
           </div>
           <div>
-            <p className="text-muted-foreground">Last seen in run</p>
+            <p className="text-muted-foreground">{t("discrepancyDetail.lastSeenInRun")}</p>
             <Link
               href={`/admin/reconciliation/runs/${discrepancy.lastSeenRunId}`}
               className="font-mono text-xs text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
@@ -177,25 +183,25 @@ export default async function AdminDiscrepancyDetailPage({ params }: { params: P
         </ResponsiveGrid>
       </Section>
 
-      <Section title="Resolution" bordered className={discrepancy.resolution ? "bg-success-muted/20" : undefined}>
+      <Section title={t("discrepancyDetail.resolution")} bordered className={discrepancy.resolution ? "bg-success-muted/20" : undefined}>
         {discrepancy.resolution ? (
           <ResponsiveGrid cols="1-2-lg">
             <div>
-              <p className="text-muted-foreground">Resolved by</p>
+              <p className="text-muted-foreground">{t("discrepancyDetail.resolvedBy")}</p>
               <p className="font-mono text-xs">{discrepancy.resolution.resolvedByUserId}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Resolved at</p>
-              <p className="font-medium">{new Date(discrepancy.resolution.resolvedAt).toLocaleString()}</p>
+              <p className="text-muted-foreground">{t("discrepancyDetail.resolvedAt")}</p>
+              <p className="font-medium">{dateTime(discrepancy.resolution.resolvedAt)}</p>
             </div>
             <div className="sm:col-span-2">
-              <p className="text-muted-foreground">Reason</p>
+              <p className="text-muted-foreground">{t("discrepancyDetail.reason")}</p>
               <p className="whitespace-pre-wrap text-sm font-medium">{discrepancy.resolution.reason}</p>
             </div>
           </ResponsiveGrid>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground">This discrepancy has not been resolved yet.</p>
+            <p className="text-sm text-muted-foreground">{t("discrepancyDetail.notResolved")}</p>
             <div>
               <ResolveDiscrepancyDialog discrepancyId={discrepancy.id} />
             </div>
@@ -204,15 +210,19 @@ export default async function AdminDiscrepancyDetailPage({ params }: { params: P
       </Section>
 
       {snapshot && (
-        <Section title="Job financial snapshot">
+        <Section title={t("discrepancyDetail.snapshot")}>
           <p className="text-sm text-muted-foreground">
-            Job {snapshot.jobId} — status {snapshot.jobStatus}, quote total {formatMoney(snapshot.quoteTotalAmount, snapshot.quoteCurrency)}.
+            {t("discrepancyDetail.snapshotSummary", {
+              jobId: snapshot.jobId,
+              status: snapshot.jobStatus,
+              total: format.number(snapshot.quoteTotalAmount, { style: "currency", currency: snapshot.quoteCurrency }),
+            })}
             {" "}
             <Link
               href={`/admin/reconciliation/jobs/${snapshot.jobId}`}
               className="text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
             >
-              View full snapshot
+              {t("discrepancyDetail.viewSnapshot")}
             </Link>
           </p>
         </Section>

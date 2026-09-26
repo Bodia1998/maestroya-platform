@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -11,14 +12,10 @@ import { OpenConversationButton } from "../../../messages/open-conversation-butt
 import { QuoteStatusBadge } from "../../../dashboard/professional/quotes/quote-status-badge";
 import { AcceptQuoteDialog } from "./accept-quote-dialog";
 
-export const metadata = { title: "Received quotes" };
-
-const VERIFICATION_LABELS: Record<string, string> = {
-  UNVERIFIED: "Not verified",
-  PENDING: "Verification pending",
-  VERIFIED: "Verified",
-  REJECTED: "Verification rejected",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("customer.quotes");
+  return { title: t("title") };
+}
 
 /**
  * Customer-facing view of the Quotes received for *their own* Service
@@ -45,23 +42,30 @@ export default async function ServiceRequestQuotesPage({
     throw error;
   }
 
-  const quotes = await makeGetServiceRequestQuotesUseCase().execute(user.id, id);
+  const [quotes, t, tRequests, locale] = await Promise.all([
+    makeGetServiceRequestQuotesUseCase().execute(user.id, id),
+    getTranslations("customer.quotes"),
+    getTranslations("customer.requests"),
+    getLocale(),
+  ]);
+  const verificationLabel = (status: string): string =>
+    t.has(`verification.${status}` as never) ? t(`verification.${status}` as never) : status;
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title="Received quotes"
-        subtitle="Quotes professionals have submitted for this request."
+        title={t("title")}
+        subtitle={t("subtitle")}
         breadcrumbs={[
-          { label: "My requests", href: "/requests" },
+          { label: tRequests("list.title"), href: "/requests" },
           { label: request.title, href: `/requests/${id}` },
-          { label: "Quotes" },
+          { label: t("breadcrumb") },
         ]}
       />
 
       {quotes.length === 0 ? (
         <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-foreground/70">
-          No quotes yet. Check back soon.
+          {t("empty")}
         </p>
       ) : (
         <ul className="flex flex-col gap-4">
@@ -83,24 +87,27 @@ export default async function ServiceRequestQuotesPage({
                   <div>
                     <p className="font-medium">{quote.professional.displayName}</p>
                     <p className="text-xs text-foreground/60">
-                      {VERIFICATION_LABELS[quote.professional.verificationStatus] ??
-                        quote.professional.verificationStatus}
+                      {verificationLabel(quote.professional.verificationStatus)}
                     </p>
                   </div>
                 </div>
                 <QuoteStatusBadge status={quote.status} />
               </div>
 
-              <p className="text-lg font-semibold">{formatMoney(quote.totalAmount, quote.currency)}</p>
+              <p className="text-lg font-semibold">{formatMoney(quote.totalAmount, quote.currency, locale)}</p>
 
               {quote.notes && <p className="whitespace-pre-line text-sm text-foreground/80">{quote.notes}</p>}
 
               <QuoteItemsTable items={quote.items} currency={quote.currency} />
 
               <p className="text-xs text-foreground/50">
-                {quote.validUntil ? `Valid until ${quote.validUntil.toLocaleDateString()} — ` : ""}
-                Submitted {quote.createdAt.toLocaleDateString()} — updated{" "}
-                {quote.updatedAt.toLocaleDateString()}
+                {quote.validUntil
+                  ? t("metaWithValidity", {
+                      validUntil: quote.validUntil,
+                      created: quote.createdAt,
+                      updated: quote.updatedAt,
+                    })
+                  : t("meta", { created: quote.createdAt, updated: quote.updatedAt })}
               </p>
 
               <div className="flex flex-wrap items-center gap-3 border-t border-border/50 pt-3">
@@ -110,7 +117,7 @@ export default async function ServiceRequestQuotesPage({
                 <OpenConversationButton
                   serviceRequestId={id}
                   professionalProfileId={quote.professional.id}
-                  label={`Message ${quote.professional.displayName}`}
+                  label={t("messageProfessional", { name: quote.professional.displayName })}
                 />
               </div>
             </li>

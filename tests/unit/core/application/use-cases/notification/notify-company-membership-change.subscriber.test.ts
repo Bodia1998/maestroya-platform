@@ -46,7 +46,11 @@ describe("application/use-cases/notification/notify-company-membership-change.su
       new CompanyMembershipChanged("company-1", "member-1", "user-1", "owner-1", "ROLE_CHANGED", "MANAGER", "ADMIN"),
     );
 
-    expect(notifications.events[0]).toMatchObject({ message: "Your role in the company was changed to ADMIN." });
+    expect(notifications.events[0]).toMatchObject({
+      message: "Your role in the company was changed to ADMIN.",
+      // Module 120: carried for the localized template.
+      metadata: { role: "ADMIN" },
+    });
   });
 
   it("notifies the removed member with fixed copy for a REMOVED transition, including on self-removal", async () => {

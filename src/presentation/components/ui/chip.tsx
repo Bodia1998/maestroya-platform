@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { type VariantProps, cva } from "class-variance-authority";
 import { X } from "lucide-react";
@@ -7,6 +8,7 @@ import { X } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
 const chipVariants = cva(
+  // i18n-ignore — Tailwind classes
   "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.98] motion-reduce:active:scale-100",
   {
     variants: {
@@ -37,7 +39,8 @@ export interface ChipProps
  * for things like removable search filters or multi-select tag pickers.
  */
 export const Chip = React.forwardRef<HTMLButtonElement, ChipProps>(
-  ({ className, variant, selected, onRemove, removeLabel = "Quitar", children, ...props }, ref) => {
+  ({ className, variant, selected, onRemove, removeLabel, children, ...props }, ref) => {
+    const t = useTranslations("ui");
     return (
       <button
         ref={ref}
@@ -56,7 +59,7 @@ export const Chip = React.forwardRef<HTMLButtonElement, ChipProps>(
           <span
             role="button"
             tabIndex={-1}
-            aria-label={removeLabel}
+            aria-label={removeLabel ?? t("chip.remove")}
             onClick={(e) => {
               e.stopPropagation();
               onRemove();
@@ -70,4 +73,4 @@ export const Chip = React.forwardRef<HTMLButtonElement, ChipProps>(
     );
   },
 );
-Chip.displayName = "Chip";
+Chip.displayName = "Chip"; // i18n-ignore

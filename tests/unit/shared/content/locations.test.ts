@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { LOCATION_CONTENT, getLocationContentBySlug } from "@/shared/content/locations";
+import {
+  LOCATION_CONTENT,
+  getLocationContentBySlug,
+  localizeCountryName,
+  resolveLocationContent,
+} from "@/shared/content/locations";
+import { SUPPORTED_LOCALES } from "@/shared/i18n/locales";
+import { testTranslator } from "../../../test-utils/intl";
+import { rawTranslator } from "./raw-catalog";
 
 /**
  * Module 118 — AI-Readable Service & Location Knowledge.
@@ -18,7 +26,11 @@ describe("LOCATION_CONTENT", () => {
 
   it("matches the seeded city/province/country names exactly", () => {
     const gandia = getLocationContentBySlug("gandia");
-    expect(gandia).toMatchObject({ cityName: "Gandia", provinceName: "Valencia", countryCode: "ES" });
+    expect(gandia).toMatchObject({
+      cityName: "Gandia",
+      provinceName: "Valencia",
+      countryCode: "ES",
+    });
   });
 
   it("never includes a 'Playa de Gandia' entry", () => {
@@ -41,13 +53,40 @@ describe("LOCATION_CONTENT", () => {
 
   it("never claims current professional availability counts", () => {
     const forbidden = /\d+\s*(profesionales|professionals)/i;
-    for (const location of LOCATION_CONTENT) {
-      const text = [location.intro, ...location.faqs.flatMap((f) => [f.question, f.answer])].join(" ");
-      expect(text, location.slug).not.toMatch(forbidden);
+    for (const locale of ["es", "en"] as const) {
+      const t = rawTranslator("knowledge", locale);
+      for (const location of LOCATION_CONTENT) {
+        const text = resolveLocationContent(location, t);
+        const joined = [text.intro, ...text.faqs.flatMap((f) => [f.question, f.answer])].join(" ");
+        expect(joined, `${locale}/${location.slug}`).not.toMatch(forbidden);
+      }
     }
   });
 
   it("getLocationContentBySlug returns undefined for an unknown slug", () => {
     expect(getLocationContentBySlug("madrid")).toBeUndefined();
+  });
+
+  it.each([...SUPPORTED_LOCALES])("resolves every location knowledge key in %s", (locale) => {
+    const t = rawTranslator("knowledge", locale);
+    for (const location of LOCATION_CONTENT) {
+      for (const key of [
+        `locations.${location.slug}.intro`,
+        ...location.faqs.map((f) => `locations.${location.slug}.faqs.${f}.answer`),
+      ]) {
+        expect(t.has(key as never), `${locale}: ${key}`).toBe(true);
+      }
+    }
+  });
+
+  it("keeps city names untranslated and localizes the country name", () => {
+    const ru = resolveLocationContent(
+      getLocationContentBySlug("gandia")!,
+      testTranslator("knowledge", "ru"),
+    );
+    expect(ru.intro).toContain("Gandia");
+    expect(localizeCountryName(testTranslator("services", "es"), "ES")).toBe("España");
+    expect(localizeCountryName(testTranslator("services", "nl"), "ES")).toBe("Spanje");
+    expect(localizeCountryName(testTranslator("services", "en"), "XX")).toBe("XX");
   });
 });

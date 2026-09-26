@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -8,8 +10,12 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { Section } from "@/components/layout/section";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { ActionBar } from "@/components/layout/action-bar";
+import { getCategoryNameLocalizer } from "../../category-labels";
 
-export const metadata = { title: "Service request" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("professional.requests.detail");
+  return { title: t("metaTitle") };
+}
 
 /**
  * Professional-facing detail page for a single eligible ServiceRequest.
@@ -35,28 +41,36 @@ export default async function ProfessionalServiceRequestDetailPage({
     throw error;
   }
 
+  const [t, tRequests, tList, format, categories] = await Promise.all([
+    getTranslations("professional.requests.detail"),
+    getTranslations("professional.requests"),
+    getTranslations("professional.requests.list"),
+    getFormatter(),
+    getCategoryNameLocalizer(),
+  ]);
+  const urgencyKey = `urgency.${request.urgency}`;
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         title={request.title}
-        subtitle={request.categoryName}
+        subtitle={categories.byId(request.categoryId, request.categoryName)}
         breadcrumbs={[
-          { label: "Available requests", href: "/dashboard/professional/requests" },
+          { label: tList("title"), href: "/dashboard/professional/requests" },
           { label: request.title },
         ]}
         actions={
           <span className="rounded-full bg-black/5 px-3 py-1 text-xs font-medium text-foreground/70">
-            {request.distanceKm} km away
+            {tRequests("distance", { distance: request.distanceKm })}
           </span>
         }
       />
 
       <p className="rounded-md bg-black/5 px-4 py-3 text-sm text-foreground/70">
-        This is a service request from a customer. Review the details below, then create a quote if you&apos;d
-        like to propose a price for the work.
+        {t("intro")}
       </p>
 
-      <Section title="Description" gap="sm">
+      <Section title={t("description")} gap="sm">
         <p className="whitespace-pre-line text-sm text-foreground/80">{request.description}</p>
       </Section>
 
@@ -65,19 +79,21 @@ export default async function ProfessionalServiceRequestDetailPage({
           hasn't been accepted for the job (see ServiceRequestDiscoveryRepository). */}
       <ResponsiveGrid cols="2" gap="md" bordered>
         <div>
-          <p className="text-foreground/60">Location</p>
+          <p className="text-foreground/60">{t("location")}</p>
           <p className="font-medium">
             {request.city}
             {request.province ? `, ${request.province}` : ""}
           </p>
         </div>
         <div>
-          <p className="text-foreground/60">Urgency</p>
-          <p className="font-medium">{request.urgency}</p>
+          <p className="text-foreground/60">{t("urgency")}</p>
+          <p className="font-medium">
+            {tRequests.has(urgencyKey as never) ? tRequests(urgencyKey as never) : request.urgency}
+          </p>
         </div>
         <div>
-          <p className="text-foreground/60">Posted</p>
-          <p className="font-medium">{request.createdAt.toLocaleDateString()}</p>
+          <p className="text-foreground/60">{t("posted")}</p>
+          <p className="font-medium">{format.dateTime(request.createdAt, { dateStyle: "medium" })}</p>
         </div>
       </ResponsiveGrid>
 
@@ -86,7 +102,7 @@ export default async function ProfessionalServiceRequestDetailPage({
           href={`/dashboard/professional/requests/${request.id}/quote`}
           className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
         >
-          Create quote
+          {t("createQuote")}
         </Link>
       </ActionBar>
     </div>

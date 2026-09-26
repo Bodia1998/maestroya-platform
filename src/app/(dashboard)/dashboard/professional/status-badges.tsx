@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { StatusBadge } from "@/components/dashboard/status-badge";
 
 /**
@@ -17,9 +19,12 @@ export function StatusBadges({
   status: string;
   verificationStatus: string;
 }) {
+  const t = useTranslations("professional.dashboard");
+  const tStatus = useTranslations("enums.status");
+  const statusLabel = tStatus.has(status as never) ? tStatus(status as never) : status;
   return (
     <div className="flex flex-wrap gap-2">
-      <StatusBadge status={status} label={`Status: ${status}`} />
+      <StatusBadge status={status} label={t("profileStatus", { status: statusLabel })} />
       <StatusBadge status={verificationStatus} />
     </div>
   );

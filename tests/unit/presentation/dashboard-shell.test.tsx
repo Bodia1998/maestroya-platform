@@ -128,7 +128,7 @@ describe("DashboardShell", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
     expect(screen.getByRole("dialog")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: /cerrar/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
 
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });

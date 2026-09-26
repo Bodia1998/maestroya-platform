@@ -1,0 +1,344 @@
+{
+  "errors": {
+    "fixErrors": "Please fix the errors below.",
+    "createProfile": "Something went wrong creating your professional profile.",
+    "onboarding": "Something went wrong setting up your professional profile.",
+    "updateProfile": "Something went wrong updating your professional profile.",
+    "updateServices": "Something went wrong updating your service categories.",
+    "deactivate": "Something went wrong deactivating your professional profile.",
+    "submitQuote": "Something went wrong submitting your quote.",
+    "updateQuote": "Something went wrong updating your quote.",
+    "withdrawQuote": "Something went wrong withdrawing your quote.",
+    "acceptInvoice": "Something went wrong accepting this invoice.",
+    "invalidInvoice": "Invalid invoice.",
+    "grantSelfBilling": "Something went wrong granting self-billing authorization.",
+    "revokeSelfBilling": "Something went wrong revoking self-billing authorization.",
+    "startVerification": "Something went wrong starting your verification request.",
+    "uploadDocument": "Something went wrong uploading your document.",
+    "removeDocument": "Something went wrong removing your document.",
+    "submitVerification": "Something went wrong submitting your verification request.",
+    "resubmitVerification": "Something went wrong resubmitting your verification request.",
+    "invalidDocumentType": "Choose a valid document type.",
+    "fileRequired": "Choose a file to upload.",
+    "invalidFileType": "Documents must be a JPEG, PNG, WebP image or a PDF.",
+    "fileTooLarge": "Each document must be smaller than {maxMb, number}MB.",
+    "invalidDocument": "Invalid document.",
+    "createPortfolioItem": "Something went wrong creating this portfolio item.",
+    "updatePortfolioItem": "Something went wrong updating this portfolio item.",
+    "deletePortfolioItem": "Something went wrong deleting this portfolio item.",
+    "invalidDateRange": "Invalid date range.",
+    "loadAnalytics": "Something went wrong loading your analytics."
+  },
+  "servicesForm": {
+    "success": "Service categories updated.",
+    "title": "Service categories",
+    "description": "Customers find you by these categories — pick every one that applies.",
+    "empty": "No service categories are available yet.",
+    "saving": "Saving…",
+    "submit": "Save service categories"
+  },
+  "deactivate": {
+    "success": "Your professional profile has been deactivated.",
+    "trigger": "Deactivate professional profile",
+    "title": "This will stop new customers from finding you",
+    "description": "Existing quotes, appointments, and reviews are kept. You can be reactivated later by support if needed.",
+    "confirmLabel": "Type {word} to confirm",
+    "pending": "Deactivating…",
+    "confirm": "Deactivate my professional profile"
+  },
+  "profileForm": {
+    "updated": "Professional profile updated.",
+    "created": "Professional profile created.",
+    "aboutSection": "About your business",
+    "businessName": "Business name",
+    "headline": "Headline",
+    "headlinePlaceholder": "e.g. Licensed electrician, 10+ years",
+    "bio": "Description",
+    "yearsExperience": "Years of experience",
+    "serviceRadius": "Service radius (km)",
+    "contactSection": "Contact information",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "websiteUrl": "Website URL",
+    "taxId": "Tax ID (NIF/CIF)",
+    "availabilitySection": "Availability",
+    "acceptingRequests": "Currently accepting new requests",
+    "saving": "Saving…",
+    "saveChanges": "Save changes",
+    "create": "Create professional profile"
+  },
+  "onboarding": {
+    "form": {
+      "categoriesTitle": "Primary profession / category",
+      "categoriesDescription": "Choose every category that describes the work you do.",
+      "noCategories": "No service categories are available yet.",
+      "contactTitle": "Contact",
+      "phone": "Phone number",
+      "locationTitle": "Base location",
+      "locationDescription": "Where you're based — used to match you with nearby requests.",
+      "address": "Address",
+      "line1Placeholder": "Street address",
+      "line2Placeholder": "Apartment, suite, etc. (optional)",
+      "cityPlaceholder": "City",
+      "provincePlaceholder": "Province (optional)",
+      "postalCodePlaceholder": "Postal code",
+      "countryPlaceholder": "Country",
+      "coverageTitle": "Coverage & about you",
+      "serviceRadius": "Service radius (km)",
+      "bio": "Short professional description",
+      "pending": "Setting up…",
+      "submit": "Finish setting up my professional profile"
+    },
+    "metaTitle": "Professional onboarding",
+    "title": "Set up your professional profile",
+    "subtitle": "A few details so customers can find and contact you. You can add more later from your professional dashboard.",
+    "photoTitle": "Profile photo (optional)"
+  },
+  "quotes": {
+    "form": {
+      "itemsTitle": "Items",
+      "itemsDescription": "Break down labor and materials so the customer sees exactly what they're paying for.",
+      "addItem": "Add item",
+      "description": "Description",
+      "descriptionPlaceholder": "Description (e.g. Labor, materials)",
+      "quantity": "Quantity",
+      "quantityPlaceholder": "Qty",
+      "unitPrice": "Unit price",
+      "unitPricePlaceholder": "Unit €",
+      "itemType": "Item type",
+      "categories": {
+        "LABOR": "Labor",
+        "MATERIALS": "Materials"
+      },
+      "removeItem": "Remove item",
+      "estimatedTotal": "Estimated total: {amount}",
+      "detailsTitle": "Details",
+      "notes": "Notes / proposal",
+      "notesPlaceholder": "Describe your proposal, timeline, or anything the customer should know.",
+      "validUntil": "Valid until",
+      "saving": "Saving…",
+      "saveChanges": "Save changes",
+      "create": "Create quote"
+    },
+    "withdraw": {
+      "trigger": "Withdraw this quote",
+      "title": "Withdraw this quote?",
+      "description": "The customer will no longer be able to accept it. This cannot be undone.",
+      "confirm": "Yes, withdraw quote",
+      "pending": "Withdrawing…",
+      "cancel": "Keep quote"
+    },
+    "list": {
+      "metaTitle": "My quotes",
+      "title": "My quotes",
+      "subtitle": "Quotes you've submitted to customers' service requests.",
+      "findRequests": "Find requests",
+      "emptyTitle": "No quotes submitted yet",
+      "emptyDescription": "Browse open service requests and send your first quote.",
+      "browseRequests": "Browse requests"
+    },
+    "detail": {
+      "metaTitle": "Quote detail",
+      "notes": "Notes / proposal",
+      "items": "Items",
+      "validUntil": "Valid until",
+      "noExpiry": "No expiry set",
+      "submitted": "Submitted",
+      "lastUpdated": "Last updated",
+      "edit": "Edit quote",
+      "messageCustomer": "Message customer"
+    },
+    "edit": {
+      "metaTitle": "Edit quote",
+      "title": "Edit quote",
+      "subtitle": "Update your pricing or proposal details."
+    }
+  },
+  "dashboard": {
+    "metaTitle": "Professional profile",
+    "title": "Professional profile",
+    "subtitle": "Manage how you appear to customers as an individual professional.",
+    "createTitle": "Create your professional profile",
+    "statusTitle": "Status",
+    "profileStatus": "Status: {status}",
+    "selfBillingLink": "Self-billing & invoices",
+    "verificationLink": "Manage identity verification",
+    "profileDetails": "Profile details",
+    "serviceCategories": "Service categories",
+    "dangerZone": "Danger zone",
+    "dangerZoneDescription": "Deactivating your profile removes it from customer search until reactivated."
+  },
+  "requests": {
+    "distance": "{distance, number} km away",
+    "postedOn": "Posted {date}",
+    "urgency": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "EMERGENCY": "Emergency"
+    },
+    "list": {
+      "metaTitle": "Available requests",
+      "title": "Available requests",
+      "subtitle": "Service requests from customers that match your categories and service radius. Review one and create a quote to respond.",
+      "empty": "No matching service requests right now. Make sure your professional profile is active, with service categories and a service radius configured."
+    },
+    "detail": {
+      "metaTitle": "Service request",
+      "intro": "This is a service request from a customer. Review the details below, then create a quote if you'd like to propose a price for the work.",
+      "description": "Description",
+      "location": "Location",
+      "urgency": "Urgency",
+      "posted": "Posted",
+      "createQuote": "Create quote"
+    },
+    "createQuote": {
+      "metaTitle": "Create quote",
+      "title": "Create quote",
+      "intro": "This is a customer's service request. Create a quote describing the work and materials you propose, and the price you're offering to complete it."
+    }
+  },
+  "jobs": {
+    "list": {
+      "metaTitle": "My jobs",
+      "title": "My jobs",
+      "subtitle": "Work created from quotes your customers have accepted.",
+      "empty": "You have no active jobs.",
+      "withCounterparty": "with {name}"
+    },
+    "detail": {
+      "metaTitle": "Job",
+      "title": "Job",
+      "started": "Started",
+      "completed": "Completed",
+      "cancellationReason": "Cancellation reason",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "Customer request",
+        "PROFESSIONAL_UNABLE_TO_COMPLETE": "Professional unable to complete",
+        "SERVICE_REQUEST_ISSUE": "Service request issue",
+        "OTHER": "Other"
+      },
+      "appointmentsTitle": "Appointments on this job",
+      "noAppointments": "No appointments yet.",
+      "notScheduled": "Not scheduled yet"
+    }
+  },
+  "appointments": {
+    "window": "{start} – {end}",
+    "list": {
+      "metaTitle": "My appointments",
+      "title": "My appointments",
+      "subtitle": "Appointments from quotes your customers have accepted.",
+      "emptyTitle": "No upcoming appointments",
+      "emptyDescription": "Appointments appear here once a customer accepts one of your quotes.",
+      "noTimeProposed": "No time proposed yet"
+    },
+    "detail": {
+      "metaTitle": "Appointment",
+      "title": "Appointment",
+      "confirmedTime": "Confirmed time",
+      "proposedTime": "Proposed time",
+      "notSet": "Not set",
+      "cancellationReason": "Cancellation reason",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "Customer request",
+        "PROFESSIONAL_UNAVAILABLE": "Professional unavailable",
+        "SCHEDULING_CONFLICT": "Scheduling conflict",
+        "OTHER": "Other"
+      }
+    }
+  },
+  "invoices": {
+    "list": {
+      "metaTitle": "My invoices",
+      "title": "My invoices",
+      "subtitle": "Self-billed invoices MaestroYa has issued to you.",
+      "emptyTitle": "No invoices yet",
+      "emptyDescription": "An invoice is drafted automatically once a completed job's payment is released to you — this requires an active self-billing authorization.",
+      "notYetIssued": "Not yet issued"
+    },
+    "detail": {
+      "metaTitle": "Invoice",
+      "title": "Invoice",
+      "acceptIntro": "MaestroYa has drafted this self-billed invoice on your behalf. Review the details below and accept it to confirm they are correct.",
+      "accept": "Accept this invoice",
+      "documentReference": "Document reference: {reference}… (tamper-evidence checksum only — not an electronic signature)."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Self-billing authorization",
+    "title": "Self-billing authorization",
+    "subtitle": "Control whether MaestroYa may issue self-billed invoices to you on completed jobs.",
+    "status": {
+      "ACTIVE": "Active",
+      "REVOKED": "Revoked"
+    },
+    "notAuthorized": "Not authorized",
+    "activeDescription": "You have authorized MaestroYa to issue self-billed invoices (“facturación por el destinatario”) on your behalf for completed jobs. You can revoke this at any time.",
+    "revoke": "Revoke authorization",
+    "inactiveDescription": "Without this authorization, MaestroYa cannot issue self-billed invoices on your behalf, and self-billed invoices cannot be drafted for your completed jobs.",
+    "previouslyRevokedTitle": "Previously revoked",
+    "previouslyRevokedDescription": "You revoked this authorization previously. You can grant it again below.",
+    "grant": "Grant authorization",
+    "viewInvoices": "View your <link>self-billed invoices</link>."
+  },
+  "verification": {
+    "metaTitle": "Professional verification",
+    "title": "Verification",
+    "subtitle": "Verify your identity to earn a “Verified professional” badge on your public profile.",
+    "noProfile": "You need a professional profile before you can request verification. <link>Create your professional profile</link>.",
+    "notStarted": "You have not started a verification request yet.",
+    "start": "Start verification",
+    "validUntil": "Valid until {date}",
+    "status": {
+      "DRAFT": {
+        "label": "Not submitted",
+        "description": "Upload at least one identity document (national ID, passport or driver's licence) and any supporting documents, then submit for review."
+      },
+      "PENDING": {
+        "label": "Pending review",
+        "description": "Your request is in the review queue. We'll let you know once a reviewer has looked at it."
+      },
+      "UNDER_REVIEW": {
+        "label": "Under review",
+        "description": "A reviewer is currently checking your documents. No action is needed from you right now."
+      },
+      "APPROVED": {
+        "label": "Approved",
+        "description": "You are a verified professional. A verified badge appears on your public profile."
+      },
+      "REJECTED": {
+        "label": "Rejected",
+        "description": "Your request was not approved. See the reason below — you can address it and resubmit."
+      },
+      "RESUBMISSION_REQUIRED": {
+        "label": "Resubmission required",
+        "description": "A reviewer needs you to update your request. Follow the instructions below, then resubmit."
+      }
+    },
+    "rejectionReasonTitle": "Reason",
+    "resubmissionReasonTitle": "What to update",
+    "documentsTitle": "Documents",
+    "noDocuments": "No documents uploaded yet.",
+    "remove": "Remove",
+    "uploadTitle": "Upload a document",
+    "documentType": "Document type",
+    "fileLabel": "File (JPEG, PNG, WebP or PDF, max {maxMb, number}MB)",
+    "upload": "Upload",
+    "submit": "Submit for review",
+    "resubmit": "Resubmit for review",
+    "submitHint": "You must have at least one identity document uploaded before submitting.",
+    "documentTypes": {
+      "NATIONAL_ID": "National ID",
+      "PASSPORT": "Passport",
+      "DRIVER_LICENSE": "Driver's licence",
+      "BUSINESS_LICENSE": "Business licence",
+      "TAX_CERTIFICATE": "Tax certificate",
+      "INSURANCE_CERTIFICATE": "Insurance certificate",
+      "PROFESSIONAL_CERTIFICATION": "Professional certification",
+      "PROOF_OF_ADDRESS": "Proof of address",
+      "BUSINESS_REGISTRATION": "Business registration",
+      "OTHER": "Other"
+    }
+  }
+}

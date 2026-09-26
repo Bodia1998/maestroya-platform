@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -13,7 +14,9 @@ export interface PasswordInputProps extends Omit<InputProps, "type"> {
 
 /** `Input` with a show/hide toggle. Client Component — the toggle is local UI state. */
 export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ className, toggleLabel = { show: "Mostrar contraseña", hide: "Ocultar contraseña" }, ...props }, ref) => {
+  ({ className, toggleLabel: toggleLabelProp, ...props }, ref) => {
+    const t = useTranslations("ui");
+    const toggleLabel = toggleLabelProp ?? { show: t("passwordInput.show"), hide: t("passwordInput.hide") };
     const [visible, setVisible] = React.useState(false);
 
     return (

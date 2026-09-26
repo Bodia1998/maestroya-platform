@@ -16,5 +16,115 @@
     "title": "Company dashboard",
     "members": "Members",
     "invitations": "Invitations"
+  },
+  "nav": {
+    "ariaLabel": "Dashboard navigation",
+    "groups": {
+      "professional": "Professional",
+      "admin": "Admin"
+    },
+    "items": {
+      "dashboard": "Dashboard",
+      "serviceRequests": "Service requests",
+      "appointments": "Appointments",
+      "jobs": "Jobs",
+      "receipts": "My receipts",
+      "messages": "Messages",
+      "disputes": "Disputes",
+      "support": "Support",
+      "professionalDashboard": "Professional dashboard",
+      "availableRequests": "Available requests",
+      "myQuotes": "My quotes",
+      "myAppointments": "My appointments",
+      "myJobs": "My jobs",
+      "selfBilling": "Self-billing & invoices",
+      "companies": "Companies",
+      "adminPanel": "Admin panel",
+      "profile": "Profile",
+      "professionalProfile": "Professional Profile",
+      "switchToProfessional": "Switch to Professional dashboard"
+    }
+  },
+  "shell": {
+    "skipToContent": "Skip to main content",
+    "sidebar": "Sidebar",
+    "openMenu": "Open menu",
+    "accountMenu": "Account menu",
+    "account": "Account",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "signOut": "Sign out"
+  },
+  "profileBanner": {
+    "noProfile": "Complete your professional profile to start receiving customer requests.",
+    "incomplete": "Your professional profile is incomplete. Finish it so customers see your best profile.",
+    "completeProfile": "Complete professional profile"
+  },
+  "overview": {
+    "welcomeBack": "Welcome back, {name}",
+    "welcomeBackAnonymous": "Welcome back",
+    "subtitle": "Here's an overview of your MaestroYa account.",
+    "professionalOverview": {
+      "title": "Professional overview",
+      "description": "Customer requests you can respond to, and the quotes, appointments, and jobs that follow."
+    },
+    "stats": {
+      "availableRequests": "Available requests",
+      "quotesAwaitingResponse": "Quotes awaiting response",
+      "acceptedQuotes": "Accepted quotes",
+      "upcomingAppointments": "Upcoming appointments",
+      "activeJobs": "Active jobs",
+      "completedJobs": "Completed jobs",
+      "activeRequests": "Active requests",
+      "unreadMessages": "Unread messages"
+    },
+    "quickActions": {
+      "ariaLabel": "Quick actions",
+      "newRequest": "New request",
+      "appointments": "Appointments",
+      "messages": "Messages",
+      "profile": "Profile",
+      "browseRequests": "Browse requests",
+      "myQuotes": "My quotes",
+      "professionalProfile": "Professional profile"
+    },
+    "cards": {
+      "yourRequests": "Your requests",
+      "upcomingAppointments": "Upcoming appointments",
+      "messages": "Messages",
+      "yourQuotes": "Your quotes",
+      "viewAll": "View all"
+    },
+    "empty": {
+      "requests": {
+        "title": "No service requests yet.",
+        "description": "Post a request to start getting quotes from professionals near you."
+      },
+      "appointments": {
+        "title": "No upcoming appointments.",
+        "description": "Appointments appear here once you accept a quote from a professional.",
+        "action": "View my requests"
+      },
+      "messages": {
+        "title": "No new messages.",
+        "description": "Conversations with customers and professionals show up here.",
+        "action": "Go to messages"
+      },
+      "noProfessionalProfile": {
+        "title": "Set up your professional profile.",
+        "description": "Create your professional profile to start receiving service requests to quote on.",
+        "action": "Get started"
+      },
+      "quotes": {
+        "title": "No quotes submitted yet.",
+        "description": "Browse open service requests and send your first quote."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "with {name}",
+    "manage": "Manage",
+    "requestPosted": "Posted {created, date, medium} — updated {updated, date, medium}",
+    "quoteSubmitted": "Submitted {created, date, medium} — updated {updated, date, medium}"
   }
 }

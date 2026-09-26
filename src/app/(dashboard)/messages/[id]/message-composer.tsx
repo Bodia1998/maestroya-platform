@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { sendMessageAction } from "../actions";
  */
 export function MessageComposer({ conversationId }: { conversationId: string }) {
   const router = useRouter();
+  const t = useTranslations("customer.messages.composer");
   const formRef = useRef<HTMLFormElement>(null);
   const [body, setBody] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,8 +59,8 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
           maxLength={MAX_MESSAGE_LENGTH}
           rows={2}
           disabled={isSubmitting}
-          placeholder="Write a message…"
-          aria-label="Message"
+          placeholder={t("placeholder")}
+          aria-label={t("ariaLabel")}
           className="min-h-10 flex-1 resize-none rounded-md border border-border bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -68,7 +70,7 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
           }}
         />
         <Button type="submit" disabled={isSubmitting || !body.trim()}>
-          {isSubmitting ? "Sending…" : "Send"}
+          {isSubmitting ? t("sending") : t("send")}
         </Button>
       </div>
     </form>

@@ -1,0 +1,30 @@
+{
+  "site": {
+    "defaultTitle": "MaestroYa — Trouvez des professionnels de confiance pour votre logement",
+    "description": "Entrez en contact avec des professionnels de confiance pour votre logement : plomberie, électricité, rénovation, ménage et bien plus encore."
+  },
+  "servicesIndex": {
+    "title": "Services à domicile sur MaestroYa",
+    "description": "Consultez les catégories de services à domicile disponibles sur MaestroYa : plomberie, électricité, climatisation, peinture, rénovation et montage de meubles."
+  },
+  "servicePage": {
+    "title": "{service} — MaestroYa",
+    "descriptionFallback": "Demandez un professionnel dans la catégorie « {service} » via MaestroYa et comparez les devis."
+  },
+  "serviceLocationPage": {
+    "title": "{service} à {city} — MaestroYa",
+    "description": "Demandez un service dans la catégorie « {service} » à {city} ({province}) via MaestroYa et comparez les devis."
+  },
+  "locationsIndex": {
+    "title": "Emplacements — MaestroYa en Espagne",
+    "description": "MaestroYa est une place de marché de services à domicile conçue pour opérer dans toute l’Espagne. Consultez la portée de la plateforme et les localités à couverture confirmée."
+  },
+  "locationPage": {
+    "title": "Professionnels à {city} — MaestroYa",
+    "description": "Services à domicile disponibles à {city} ({province}) via MaestroYa."
+  },
+  "nationalCoverage": {
+    "title": "MaestroYa en Espagne — couverture nationale",
+    "description": "MaestroYa est une place de marché de services à domicile conçue pour opérer dans toute l’Espagne. La disponibilité réelle des professionnels dépend de chaque zone."
+  }
+}

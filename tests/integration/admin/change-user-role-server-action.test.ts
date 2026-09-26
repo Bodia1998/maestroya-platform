@@ -95,7 +95,10 @@ describe("changeUserRoleAction — Server Action cannot bypass the ADMIN privile
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error).toMatch(/SUPER_ADMIN/);
+      // Module 120: the user sees the localized sentence for this domain
+      // error (errors.domain.*), not the English developer message that
+      // named the SUPER_ADMIN enum. The rejection itself is unchanged.
+      expect(result.error).toMatch(/super admin/i);
     }
     expect((await admins.getUserById(TARGET_ID))?.roles).toEqual(["CUSTOMER"]);
     expect(securityEvents.events).toHaveLength(1);

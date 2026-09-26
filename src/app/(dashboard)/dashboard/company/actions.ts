@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import { createCompanySchema, updateCompanySchema } from "@/application/dto/company.dto";
 import {
@@ -8,9 +9,9 @@ import {
   makeGetCompanyForMemberUseCase,
   makeUpdateCompanyUseCase,
 } from "@/application/use-cases/company/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import type { CompanyRecord } from "@/domain/repositories/company-repository";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError, localizeZodError } from "@/presentation/i18n/server";
 
 /**
  * Module 18 — Company Professional: thin Server Action adapters for
@@ -23,12 +24,8 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 
 export type ActionResult<T = undefined> = { success: true; data: T } | { success: false; error: string };
 
-function fromDomainError<T>(error: unknown, fallback: string): ActionResult<T> {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+async function fromDomainError<T>(error: unknown, fallback: string): Promise<ActionResult<T>> {
+  return { success: false, error: await localizeActionError(error, fallback) };
 }
 
 function formToInput(formData: FormData) {
@@ -41,14 +38,16 @@ export async function createCompanyAction(formData: FormData): Promise<ActionRes
   const user = await requireAuth();
   const parsed = createCompanySchema.safeParse(formToInput(formData));
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid company details." };
+    const t = await getTranslations("company.errors");
+    return { success: false, error: await localizeZodError(parsed.error, t("invalidDetails")) };
   }
   try {
     const company = await makeCreateCompanyUseCase().execute(user.id, parsed.data);
     revalidatePath("/dashboard/company");
     return { success: true, data: company };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong creating the company.");
+    const t = await getTranslations("company.errors");
+    return fromDomainError(error, t("createFailed"));
   }
 }
 
@@ -56,14 +55,16 @@ export async function updateCompanyAction(companyId: string, formData: FormData)
   const user = await requireAuth();
   const parsed = updateCompanySchema.safeParse(formToInput(formData));
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid company details." };
+    const t = await getTranslations("company.errors");
+    return { success: false, error: await localizeZodError(parsed.error, t("invalidDetails")) };
   }
   try {
     const company = await makeUpdateCompanyUseCase().execute(user.id, companyId, parsed.data);
     revalidatePath(`/dashboard/company/${companyId}/profile`);
     return { success: true, data: company };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong updating the company.");
+    const t = await getTranslations("company.errors");
+    return fromDomainError(error, t("updateFailed"));
   }
 }
 
@@ -73,7 +74,8 @@ export async function getCompanyForMemberAction(companyId: string): Promise<Acti
     const company = await makeGetCompanyForMemberUseCase().execute(user.id, companyId);
     return { success: true, data: company };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading the company.");
+    const t = await getTranslations("company.errors");
+    return fromDomainError(error, t("loadFailed"));
   }
 }
 

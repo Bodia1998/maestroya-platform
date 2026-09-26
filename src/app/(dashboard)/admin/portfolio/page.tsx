@@ -1,4 +1,5 @@
 import { Image as ImageIcon } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { moderatePortfolioItemFormAction, restorePortfolioItemFormAction } from "@/app/(dashboard)/admin/actions";
 import { makeListAdminPortfolioItemsUseCase } from "@/application/use-cases/admin/compose";
@@ -9,7 +10,10 @@ import { AdminDataTable, AdminTableHeadRow, AdminTh, AdminTableBody, AdminTableR
 import { AdminRowActionButton } from "@/components/dashboard/admin-row-action-button";
 import { EmptyState } from "@/components/ui/empty-state";
 
-export const metadata = { title: "Admin — Portfolio" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("portfolio.metaTitle") }) };
+}
 
 type SearchParams = Promise<{ page?: string }>;
 
@@ -23,18 +27,21 @@ export default async function AdminPortfolioPage({ searchParams }: { searchParam
 
   const items = await makeListAdminPortfolioItemsUseCase().execute({ limit: DEFAULT_PAGE_SIZE, offset });
 
+  const t = await getTranslations("admin");
+  const srOnly = (chunks: React.ReactNode) => <span className="sr-only">{chunks}</span>;
+
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Portfolio items" subtitle="Moderate professionals' showcased work." />
+      <PageHeader title={t("portfolio.title")} subtitle={t("portfolio.subtitle")} />
 
       {items.length === 0 ? (
-        <EmptyState icon={ImageIcon} title="No portfolio items found" description="Work samples professionals showcase will appear here." />
+        <EmptyState icon={ImageIcon} title={t("portfolio.empty")} description={t("portfolio.emptyDescription")} />
       ) : (
-        <AdminDataTable caption="Portfolio items" minWidth={480}>
+        <AdminDataTable caption={t("portfolio.title")} minWidth={480}>
           <AdminTableHeadRow>
-            <AdminTh>Title</AdminTh>
-            <AdminTh>Status</AdminTh>
-            <AdminTh>Actions</AdminTh>
+            <AdminTh>{t("portfolio.columns.title")}</AdminTh>
+            <AdminTh>{t("common.columns.status")}</AdminTh>
+            <AdminTh>{t("common.columns.actions")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {items.map((item) => {
@@ -43,21 +50,21 @@ export default async function AdminPortfolioPage({ searchParams }: { searchParam
               return (
                 <AdminTableRow key={item.id} className="align-top">
                   <td className="px-4 py-3">{item.title}</td>
-                  <td className="px-4 py-3">{isDeleted ? "Deleted (owner)" : isModerated ? "Hidden (admin)" : "Visible"}</td>
+                  <td className="px-4 py-3">{isDeleted ? t("portfolio.state.deleted") : isModerated ? t("portfolio.state.hidden") : t("portfolio.state.visible")}</td>
                   <td className="px-4 py-3">
                     {!isDeleted && (
                       <div className="flex flex-wrap gap-2">
                         {!isModerated && (
                           <form action={moderatePortfolioItemFormAction.bind(null, item.id, undefined)}>
                             <AdminRowActionButton>
-                              Hide<span className="sr-only"> {item.title}</span>
+                              {t.rich("portfolio.hide", { title: item.title, sr: srOnly })}
                             </AdminRowActionButton>
                           </form>
                         )}
                         {isModerated && (
                           <form action={restorePortfolioItemFormAction.bind(null, item.id)}>
                             <AdminRowActionButton>
-                              Restore<span className="sr-only"> {item.title}</span>
+                              {t.rich("portfolio.restore", { title: item.title, sr: srOnly })}
                             </AdminRowActionButton>
                           </form>
                         )}

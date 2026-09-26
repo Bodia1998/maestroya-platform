@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { setTestLocale } from "../../../test-utils/intl";
+
 afterEach(() => {
   vi.doUnmock("@/infrastructure/database/prisma/client");
   vi.resetModules();
@@ -20,6 +22,7 @@ const FONTANERIA_ROW = {
 
 describe("service+location page generateMetadata", () => {
   it("builds metadata for a justified, verified pair (fontaneria + gandia)", async () => {
+    setTestLocale("es");
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: {
         serviceCategory: { findFirst: vi.fn().mockResolvedValue(FONTANERIA_ROW), findMany: vi.fn() },
@@ -33,7 +36,18 @@ describe("service+location page generateMetadata", () => {
     });
 
     expect(metadata.title).toBe("Fontanería en Gandia — MaestroYa");
+    expect(metadata.description).toBe(
+      "Solicita fontanería en Gandia (Valencia) a través de MaestroYa y compara presupuestos.",
+    );
     expect(metadata.alternates).toMatchObject({ canonical: "/servicios/fontaneria/gandia" });
+
+    // Module 120: Dutch visitor — localized text, same canonical URL,
+    // city/province names untranslated.
+    setTestLocale("nl");
+    const nl = await generateMetadata({ params: Promise.resolve({ slug: "fontaneria", location: "gandia" }) });
+    expect(nl.title).toBe("Loodgieterswerk in Gandia — MaestroYa");
+    expect(nl.description).toContain("Gandia (Valencia)");
+    expect(nl.alternates).toMatchObject({ canonical: "/servicios/fontaneria/gandia" });
   });
 
   it("returns empty metadata for a pair never reviewed/justified, even if both sides would verify", async () => {

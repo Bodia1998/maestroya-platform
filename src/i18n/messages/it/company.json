@@ -1,0 +1,225 @@
+{
+  "tabs": {
+    "ariaLabel": "Sezioni dell’azienda",
+    "profile": "Profilo",
+    "members": "Membri",
+    "invitations": "Inviti",
+    "verification": "Verifica",
+    "selfBilling": "Autofatturazione"
+  },
+  "roles": {
+    "OWNER": "Titolare",
+    "ADMIN": "Amministratore",
+    "MANAGER": "Responsabile",
+    "MEMBER": "Membro"
+  },
+  "memberStatus": {
+    "ACTIVE": "Attivo",
+    "PENDING": "In attesa",
+    "REMOVED": "Rimosso"
+  },
+  "invitationStatus": {
+    "PENDING": "In attesa",
+    "ACCEPTED": "Accettato",
+    "DECLINED": "Rifiutato",
+    "EXPIRED": "Scaduto",
+    "CANCELLED": "Annullato"
+  },
+  "companyStatus": {
+    "PENDING": "In attesa",
+    "ACTIVE": "Attiva",
+    "SUSPENDED": "Sospesa",
+    "DEACTIVATED": "Disattivata"
+  },
+  "errors": {
+    "invalidDetails": "Dati dell’azienda non validi.",
+    "createFailed": "Si è verificato un problema durante la creazione dell’azienda.",
+    "updateFailed": "Si è verificato un problema durante l’aggiornamento dell’azienda.",
+    "loadFailed": "Si è verificato un problema durante il caricamento dell’azienda."
+  },
+  "index": {
+    "metaTitle": "Le mie aziende",
+    "title": "Le mie aziende",
+    "subtitle": "Lavora come azienda o team con più professionisti, oltre all’eventuale profilo da professionista individuale.",
+    "emptyTitle": "Nessuna azienda per ora",
+    "emptyDescription": "Non sei ancora membro di nessuna azienda. Creane una qui sotto per iniziare a lavorare in team.",
+    "manage": "Gestisci",
+    "createTitle": "Crea un’azienda",
+    "legalNameRequired": "Ragione sociale (obbligatoria)",
+    "tradeName": "Nome commerciale / visualizzato",
+    "taxIdRequired": "Codice fiscale / partita IVA (obbligatorio)",
+    "description": "Descrizione",
+    "submit": "Crea azienda"
+  },
+  "acceptInvitation": {
+    "metaTitle": "Invito dell’azienda",
+    "title": "Invito dell’azienda",
+    "subtitle": "Sei stato invitato a unirti a un’azienda su MaestroYa. Accettando diventerai subito un membro attivo.",
+    "missingToken": "In questo link di invito manca il token.",
+    "accept": "Accetta invito",
+    "decline": "Rifiuta",
+    "invalidLink": "Link di invito non valido.",
+    "acceptFailed": "Si è verificato un problema durante l’accettazione di questo invito.",
+    "declineFailed": "Si è verificato un problema durante il rifiuto di questo invito."
+  },
+  "profile": {
+    "metaTitle": "Profilo dell’azienda",
+    "subtitle": "Stato: {status} · {verified}",
+    "verified": "Verificata",
+    "notVerified": "Non verificata",
+    "breadcrumbMyCompanies": "Le mie aziende",
+    "detailsTitle": "Dati dell’azienda",
+    "legalName": "Ragione sociale",
+    "tradeName": "Nome commerciale / visualizzato",
+    "description": "Descrizione",
+    "contactTitle": "Informazioni di contatto",
+    "website": "Sito web",
+    "contactEmail": "Email di contatto",
+    "contactPhone": "Telefono di contatto",
+    "city": "Città",
+    "province": "Provincia",
+    "save": "Salva modifiche"
+  },
+  "members": {
+    "metaTitle": "Membri dell’azienda",
+    "title": "Membri",
+    "activeCount": "{count, plural, one {# membro attivo.} other {# membri attivi.}}",
+    "emptyTitle": "Nessun membro nell’azienda per ora",
+    "emptyDescription": "Invita i tuoi colleghi dalla scheda Inviti per iniziare a collaborare su questo account aziendale.",
+    "columns": {
+      "name": "Nome",
+      "email": "Email",
+      "role": "Ruolo",
+      "status": "Stato",
+      "actions": "Azioni"
+    },
+    "roleFor": "Ruolo di {name}",
+    "updateRole": "Aggiorna ruolo",
+    "transferTitle": "Trasferisci la titolarità",
+    "transferNotice": "Solo il titolare attuale può trasferire la titolarità. Questa azione è irreversibile, a meno che il nuovo titolare non te la ritrasferisca.",
+    "errors": {
+      "loadFailed": "Si è verificato un problema durante il caricamento dei membri.",
+      "invalidRole": "Ruolo non valido.",
+      "changeRoleFailed": "Si è verificato un problema durante la modifica del ruolo di questo membro.",
+      "invalidMember": "Membro non valido.",
+      "removeFailed": "Si è verificato un problema durante la rimozione di questo membro.",
+      "invalidRequest": "Richiesta non valida.",
+      "transferFailed": "Si è verificato un problema durante il trasferimento della titolarità."
+    },
+    "remove": {
+      "trigger": "Rimuovi",
+      "title": "Rimuovere {name}?",
+      "description": "Perderà immediatamente l’accesso a questo account aziendale. Da qui non è possibile annullare l’operazione.",
+      "confirm": "Sì, rimuovi",
+      "pending": "Rimozione…"
+    },
+    "transfer": {
+      "trigger": "Trasferisci la titolarità",
+      "title": "Trasferire la titolarità?",
+      "description": "Solo il titolare attuale può trasferire la titolarità. Questa azione è irreversibile, a meno che il nuovo titolare non te la ritrasferisca.",
+      "confirm": "Sì, trasferisci la titolarità",
+      "pending": "Trasferimento…",
+      "newOwner": "Nuovo titolare",
+      "confirmationLabel": "Digita {keyword} per confermare"
+    }
+  },
+  "invitations": {
+    "metaTitle": "Inviti dell’azienda",
+    "title": "Inviti",
+    "inviteTitle": "Invita un membro",
+    "inviteNotice": "Per ora è possibile invitare solo utenti MaestroYa già registrati. L’invito è valido per 14 giorni.",
+    "email": "Email",
+    "role": "Ruolo",
+    "send": "Invia invito",
+    "emptyTitle": "Nessun invito per ora",
+    "emptyDescription": "Gli inviti che invii compariranno qui finché non verranno accettati o annullati.",
+    "columns": {
+      "email": "Email",
+      "role": "Ruolo",
+      "status": "Stato",
+      "expires": "Scadenza",
+      "actions": "Azioni"
+    },
+    "errors": {
+      "loadFailed": "Si è verificato un problema durante il caricamento degli inviti.",
+      "invalid": "Invito non valido.",
+      "createFailed": "Si è verificato un problema durante la creazione dell’invito.",
+      "cancelFailed": "Si è verificato un problema durante l’annullamento di questo invito."
+    },
+    "cancel": {
+      "trigger": "Annulla",
+      "title": "Annullare questo invito?",
+      "description": "{email} non potrà più usare questo invito per unirsi all’azienda.",
+      "confirm": "Sì, annulla l’invito",
+      "pending": "Annullamento…",
+      "keep": "Mantieni l’invito"
+    }
+  },
+  "verification": {
+    "metaTitle": "Verifica dell’azienda",
+    "title": "Verifica",
+    "notStarted": "Questa azienda non ha ancora avviato la verifica.",
+    "start": "Avvia la verifica",
+    "statusCopy": {
+      "DRAFT": "Non ancora inviata. Carica almeno un documento aziendale e inviala per la revisione.",
+      "PENDING": "Inviata — in attesa della revisione di un amministratore.",
+      "UNDER_REVIEW": "Un amministratore sta esaminando questa richiesta.",
+      "APPROVED": "Approvata — la tua azienda mostra un badge di verifica sul suo profilo pubblico.",
+      "REJECTED": "Rifiutata. Leggi il motivo qui sotto e inviala di nuovo quando sei pronto.",
+      "RESUBMISSION_REQUIRED": "Servono delle modifiche prima dell’approvazione. Leggi le istruzioni qui sotto.",
+      "EXPIRED": "Questa approvazione è scaduta. Avvia una nuova richiesta di verifica."
+    },
+    "reason": "Motivo",
+    "whatToUpdate": "Cosa aggiornare",
+    "documents": "Documenti",
+    "noDocuments": "Nessun documento caricato per ora.",
+    "docTypes": {
+      "BUSINESS_LICENSE": "Licenza commerciale",
+      "TAX_CERTIFICATE": "Certificato fiscale",
+      "INSURANCE_CERTIFICATE": "Certificato assicurativo",
+      "PROFESSIONAL_CERTIFICATION": "Certificazione professionale",
+      "PROOF_OF_ADDRESS": "Prova di residenza",
+      "OTHER": "Altro"
+    },
+    "remove": "Rimuovi",
+    "uploadTitle": "Carica un documento",
+    "docType": "Tipo di documento",
+    "file": "File",
+    "upload": "Carica documento",
+    "submit": "Invia per la revisione",
+    "resubmit": "Invia di nuovo",
+    "errors": {
+      "startFailed": "Si è verificato un problema durante l’avvio della verifica.",
+      "invalidDocType": "Scegli un tipo di documento valido.",
+      "chooseFile": "Scegli un file da caricare.",
+      "invalidFileType": "I documenti devono essere un’immagine JPEG, PNG o WebP oppure un PDF.",
+      "fileTooLarge": "Ogni documento deve pesare meno di 10 MB.",
+      "uploadFailed": "Si è verificato un problema durante il caricamento di questo documento.",
+      "invalidDocument": "Documento non valido.",
+      "removeFailed": "Si è verificato un problema durante la rimozione di questo documento.",
+      "submitFailed": "Si è verificato un problema durante l’invio per la revisione.",
+      "resubmitFailed": "Si è verificato un problema durante il nuovo invio per la revisione."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Autofatturazione dell’azienda",
+    "title": "Azienda",
+    "subtitle": "Gestisci l’autorizzazione all’autofatturazione e le fatture della tua azienda.",
+    "ownerOnlyTitle": "Solo titolare/amministratore",
+    "ownerOnlyBody": "Solo il titolare dell’azienda o un amministratore può visualizzare o modificare lo stato dell’autorizzazione all’autofatturazione.",
+    "sectionTitle": "Autorizzazione all’autofatturazione",
+    "notAuthorized": "Non autorizzata",
+    "activeBody": "Questa azienda ha autorizzato MaestroYa a emettere per suo conto fatture in autofatturazione («{legalTerm}») per i lavori completati. Puoi revocare questa autorizzazione in qualsiasi momento.",
+    "revoke": "Revoca l’autorizzazione",
+    "inactiveBody": "Senza questa autorizzazione, MaestroYa non può emettere fatture in autofatturazione per conto di questa azienda.",
+    "grant": "Concedi l’autorizzazione",
+    "invoicesTitle": "Fatture",
+    "noInvoices": "Nessuna fattura in autofatturazione per ora.",
+    "notYetIssued": "Non ancora emessa",
+    "errors": {
+      "invalidCompany": "Azienda non valida.",
+      "grantFailed": "Si è verificato un problema durante la concessione dell’autorizzazione all’autofatturazione.",
+      "revokeFailed": "Si è verificato un problema durante la revoca dell’autorizzazione all’autofatturazione."
+    }
+  }
+}

@@ -156,6 +156,7 @@ export async function GET(request: NextRequest) {
   const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
 
   try {
+    // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
     await prisma.$queryRaw`SELECT 1`;
 
     // `cachingLayer` reads the shared CacheManager's own hit/miss
@@ -273,6 +274,7 @@ async function checkCache(requestId: string): Promise<"ok" | "error" | "not_conf
     // connection near-instantly on a genuinely closed port) — this only
     // guards the rarer case of a connection attempt that hangs instead of
     // failing fast (e.g. packets silently dropped rather than refused).
+    // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
     await withTimeout(client.command(["PING"]), CACHE_CHECK_TIMEOUT_MS, "cache readiness check");
     return "ok";
   } catch (error) {

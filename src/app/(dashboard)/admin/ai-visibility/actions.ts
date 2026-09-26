@@ -1,10 +1,11 @@
 "use server";
 
+import { adminActionFailure } from "../_lib/action-errors";
+import { localizeZodError } from "@/presentation/i18n/server";
 import { revalidatePath } from "next/cache";
 
 import { recordAiVisibilityObservationSchema } from "@/application/dto/ai-visibility.dto";
 import { makeRecordAiVisibilityObservationUseCase } from "@/application/use-cases/ai-visibility/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import type { AiVisibilityObservationRecord } from "@/domain/repositories/ai-visibility-observation-repository";
 import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
 
@@ -27,7 +28,7 @@ export async function recordAiVisibilityObservationAction(
 
   const parsed = recordAiVisibilityObservationSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid observation." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
@@ -42,10 +43,6 @@ export async function recordAiVisibilityObservationAction(
     revalidatePath("/admin/ai-visibility");
     return { success: true, data: observation };
   } catch (error) {
-    if (error instanceof DomainError) {
-      return { success: false, error: error.message };
-    }
-    console.error(error);
-    return { success: false, error: "Something went wrong recording the observation." };
+    return adminActionFailure(error, "recordingTheObservation");
   }
 }

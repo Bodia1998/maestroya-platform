@@ -59,6 +59,8 @@ describe("toOgLocale", () => {
     expect(toOgLocale("es")).toBe("es_ES");
     expect(toOgLocale("en")).toBe("en_US");
     expect(toOgLocale("de")).toBe("de_DE");
+    expect(toOgLocale("ru")).toBe("ru_RU");
+    expect(toOgLocale("nl")).toBe("nl_NL");
   });
 
   it("falls back to Spanish for an unrecognized locale", async () => {

@@ -1,4 +1,5 @@
 import { Building2 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { createCompanyFormAction } from "@/app/(dashboard)/dashboard/company/actions";
 import { makeListMyCompaniesUseCase } from "@/application/use-cases/company/compose";
@@ -14,7 +15,10 @@ import { Button } from "@/components/ui/button";
 import { FormActions } from "@/components/forms/form-actions";
 import { FormSection } from "@/components/forms/form-section";
 
-export const metadata = { title: "My companies" };
+export async function generateMetadata() {
+  const t = await getTranslations("company.index");
+  return { title: t("metaTitle") };
+}
 
 /**
  * Module 18 — Company Professional: company context selector (Section 17
@@ -28,19 +32,20 @@ export const metadata = { title: "My companies" };
 export default async function CompanyIndexPage() {
   const user = await requireAuth();
   const companies = await makeListMyCompaniesUseCase().execute(user.id);
+  const t = await getTranslations("company.index");
 
   return (
     <PageContainer>
       <PageHeader
-        title="My companies"
-        subtitle="Operate as a company/team with multiple professionals, alongside any individual professional profile you have."
+        title={t("title")}
+        subtitle={t("subtitle")}
       />
 
       {companies.length === 0 ? (
         <EmptyState
           icon={Building2}
-          title="No companies yet"
-          description="You are not a member of any company yet. Create one below to start operating as a team."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
         />
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -50,33 +55,34 @@ export default async function CompanyIndexPage() {
                 href={`/dashboard/company/${company.id}/profile`}
                 name={company.tradeName ?? company.legalName}
                 status={company.status}
+                actionLabel={t("manage")}
               />
             </li>
           ))}
         </ul>
       )}
 
-      <FormSection title="Create a company">
+      <FormSection title={t("createTitle")}>
         <form action={createCompanyFormAction} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="legalName">Legal name (required)</Label>
+            <Label htmlFor="legalName">{t("legalNameRequired")}</Label>
             <Input id="legalName" name="legalName" required minLength={2} maxLength={200} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="tradeName">Trade / display name</Label>
+            <Label htmlFor="tradeName">{t("tradeName")}</Label>
             <Input id="tradeName" name="tradeName" maxLength={200} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="taxId">Tax ID (required)</Label>
+            <Label htmlFor="taxId">{t("taxIdRequired")}</Label>
             <Input id="taxId" name="taxId" required maxLength={50} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t("description")}</Label>
             <Textarea id="description" name="description" rows={3} maxLength={5000} />
           </div>
           <FormActions>
             <Button type="submit" className="sm:w-fit">
-              Create company
+              {t("submit")}
             </Button>
           </FormActions>
         </form>

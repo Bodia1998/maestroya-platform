@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export function ServiceRequestPhotoManager({
   photos: PhotoLike[];
   editable: boolean;
 }) {
+  const t = useTranslations("customer.requests.photos");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function ServiceRequestPhotoManager({
   async function handleUpload() {
     const file = fileInputRef.current?.files?.[0];
     if (!file) {
-      setError("Choose an image first.");
+      setError(t("chooseFirst"));
       return;
     }
 
@@ -74,7 +76,7 @@ export function ServiceRequestPhotoManager({
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {photos.map((photo) => (
             <div key={photo.id} className="relative aspect-square overflow-hidden rounded-md bg-black/5">
-              <Image src={photo.url} alt={photo.caption ?? "Request photo"} fill className="object-cover" />
+              <Image src={photo.url} alt={photo.caption ?? t("alt")} fill className="object-cover" />
               {editable && (
                 <button
                   type="button"
@@ -82,14 +84,14 @@ export function ServiceRequestPhotoManager({
                   disabled={removingId === photo.id}
                   className="absolute right-1 top-1 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white hover:bg-black/80"
                 >
-                  {removingId === photo.id ? "…" : "Remove"}
+                  {removingId === photo.id ? "…" : t("remove")}
                 </button>
               )}
             </div>
           ))}
         </div>
       )}
-      {photos.length === 0 && <p className="text-sm text-foreground/70">No photos attached.</p>}
+      {photos.length === 0 && <p className="text-sm text-foreground/70">{t("none")}</p>}
 
       {editable && (
         <div className="flex flex-col gap-2">
@@ -102,12 +104,12 @@ export function ServiceRequestPhotoManager({
                 className="text-sm"
               />
               <Button type="button" size="sm" disabled={isUploading} onClick={handleUpload}>
-                {isUploading ? "Uploading…" : "Add photo"}
+                {isUploading ? t("uploading") : t("add")}
               </Button>
             </div>
           ) : (
             <p className="text-xs text-foreground/70">
-              Maximum of {MAX_PHOTOS_PER_REQUEST} photos reached.
+              {t("maxReached", { max: MAX_PHOTOS_PER_REQUEST })}
             </p>
           )}
           {error && (

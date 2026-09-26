@@ -68,6 +68,7 @@ export const POST = withApiTracing("/api/webhooks/persona", async function POST(
     rawBody = await request.text();
   } catch {
     logger.warn("persona_webhook_unreadable_body", { requestId, route });
+    // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
     return NextResponse.json({ error: "Unable to read request body." }, { status: 400, headers });
   }
 
@@ -82,6 +83,7 @@ export const POST = withApiTracing("/api/webhooks/persona", async function POST(
     // would help an attacker narrow down what's wrong with a forged
     // request. The real reason is only ever in the server-side log below.
     logger.warn("persona_webhook_signature_invalid", { requestId, route });
+    // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
     return NextResponse.json({ error: "Invalid webhook signature." }, { status: 401, headers });
   }
 

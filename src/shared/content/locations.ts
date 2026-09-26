@@ -19,56 +19,74 @@
  * (`Country` → `Province` → `City`) and 404s if it does not find an exact
  * match — so a stale entry here can never cause a page to claim coverage
  * of a place MaestroYa's own data does not have.
+ *
+ * Module 120 — Multilingual Localization: the prose (intro, FAQ) lives in
+ * the server-only `knowledge` namespace (`locations.<slug>.…`, Spanish =
+ * the original copy) and is resolved per locale by
+ * `resolveLocationContent()`. City/province names are proper nouns and
+ * stay untranslated; the country's display name comes from
+ * `services.countries.<countryCode>`.
  */
+
+import type { FaqEntry } from "./services";
 
 export interface LocationContent {
   /** URL slug, e.g. "gandia". */
   slug: string;
   /** Must exactly match a real `City.name` row (case-insensitive compare
-   *  performed by the page's live lookup). */
+   *  performed by the page's live lookup). Proper noun — never translated. */
   cityName: string;
   /** Must exactly match that city's `Province.name`. */
   provinceName: string;
-  /** Must exactly match that province's `Country.code` (ISO 3166-1 alpha-2). */
+  /** Must exactly match that province's `Country.code` (ISO 3166-1 alpha-2).
+   *  The localized country name is `services.countries.<countryCode>`. */
   countryCode: string;
-  /** Human-readable country name for display copy. */
-  countryName: string;
-  intro: string;
-  faqs: Array<{ question: string; answer: string }>;
+  /** Keys under `knowledge.locations.<slug>.faqs` (each with a `question`
+   *  and an `answer`). The intro is `knowledge.locations.<slug>.intro`. */
+  faqs: readonly string[];
   /** Other location slugs to link to — must also exist in this catalog. */
-  relatedLocationSlugs: string[];
+  relatedLocationSlugs: readonly string[];
 }
 
 export const LOCATION_CONTENT: readonly LocationContent[] = [
   {
     slug: "gandia",
-    cityName: "Gandia",
-    provinceName: "Valencia",
+    cityName: "Gandia", // i18n-ignore: database value / proper noun
+    provinceName: "Valencia", // i18n-ignore: database value / proper noun
     countryCode: "ES",
-    countryName: "España",
-    intro:
-      "Gandia (provincia de Valencia) es la localidad de referencia de MaestroYa. Los clientes en Gandia pueden publicar una solicitud para cualquiera de las categorías de servicio del hogar disponibles en la plataforma, y los profesionales que cubren la zona pueden revisarla y enviar un presupuesto.",
-    faqs: [
-      {
-        question: "¿Qué servicios puedo solicitar en Gandia a través de MaestroYa?",
-        answer:
-          "Puedes publicar una solicitud para cualquiera de las categorías de servicio del hogar disponibles en MaestroYa (fontanería, electricidad, aire acondicionado, pintura, reformas y montaje de muebles). Consulta la página de cada servicio para ver el detalle.",
-      },
-      {
-        question: "¿Cómo contrato a un profesional en Gandia?",
-        answer:
-          "Publicas una solicitud describiendo el trabajo. Los profesionales que cubren esa categoría y la zona de Gandia pueden revisarla y enviarte un presupuesto, que puedes comparar y aceptar antes de que empiece el trabajo.",
-      },
-      {
-        question: "¿MaestroYa está disponible fuera de Gandia?",
-        answer:
-          "Gandia es la localidad con cobertura confirmada hoy en la plataforma. La disponibilidad concreta de profesionales puede variar y depende de quién esté activo en cada momento.",
-      },
-    ],
+    faqs: ["whatServices", "howToHire", "outsideGandia"],
     relatedLocationSlugs: [],
   },
 ] as const;
 
 export function getLocationContentBySlug(slug: string): LocationContent | undefined {
   return LOCATION_CONTENT.find((location) => location.slug === slug);
+}
+
+export interface ResolvedLocationText {
+  intro: string;
+  faqs: FaqEntry[];
+}
+
+/** Resolves a location's prose for one locale; `t` is bound to the
+ *  `knowledge` namespace (see `KnowledgeTranslator` in `./services`). */
+export function resolveLocationContent(content: LocationContent, t: unknown): ResolvedLocationText {
+  const translate = t as (key: string) => string;
+  const base = `locations.${content.slug}`;
+  return {
+    intro: translate(`${base}.intro`),
+    faqs: content.faqs.map((key) => ({
+      question: translate(`${base}.faqs.${key}.question`),
+      answer: translate(`${base}.faqs.${key}.answer`),
+    })),
+  };
+}
+
+/** Localized country display name (`services.countries.<code>`, e.g.
+ *  "España" / "Spain" / "Испания"); `t` is bound to the `services`
+ *  namespace. Falls back to the ISO code for a country without an entry. */
+export function localizeCountryName(t: unknown, countryCode: string): string {
+  const translate = t as ((key: string) => string) & { has(key: string): boolean };
+  const key = `countries.${countryCode}`;
+  return translate.has(key) ? translate(key) : countryCode;
 }

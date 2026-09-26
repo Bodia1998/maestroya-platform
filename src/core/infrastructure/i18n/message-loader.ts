@@ -87,3 +87,40 @@ export function getNamespaceMessages(locale: Locale, namespace: Namespace): Name
 
 export { NAMESPACES };
 export type { Namespace, LocaleCatalog };
+
+/**
+ * Module 120 — Multilingual Localization: namespaces that are only ever
+ * read on the server (Server Components, Route Handlers, email/SMS
+ * rendering) and are therefore never shipped to the browser inside
+ * `NextIntlClientProvider`. Keeping them out is purely a bundle-size
+ * measure — the catalog is ~12x larger than it was in Module 29.
+ *
+ * A Client Component that calls `useTranslations()` on one of these would
+ * hit next-intl's missing-message handling; the rule is simply that these
+ * namespaces are rendered by Server Components, which read the full
+ * catalog through `src/i18n/request.ts`.
+ */
+export const SERVER_ONLY_NAMESPACES: readonly Namespace[] = ["emails", "seo", "knowledge"];
+
+export interface ClientMessageOptions {
+  /** Whether the viewer can reach `/admin` (ADMIN / SUPER_ADMIN). */
+  includeAdmin: boolean;
+}
+
+/**
+ * The subset of a locale's (already fallback-merged) messages handed to
+ * `NextIntlClientProvider`. The admin namespace only reaches browsers of
+ * users who can open the admin panel at all.
+ */
+export function selectClientMessages(
+  messages: LocaleCatalog,
+  options: ClientMessageOptions,
+): Partial<LocaleCatalog> {
+  const selected: Partial<LocaleCatalog> = {};
+  for (const namespace of NAMESPACES) {
+    if (SERVER_ONLY_NAMESPACES.includes(namespace)) continue;
+    if (namespace === "admin" && !options.includeAdmin) continue;
+    selected[namespace] = messages[namespace];
+  }
+  return selected;
+}

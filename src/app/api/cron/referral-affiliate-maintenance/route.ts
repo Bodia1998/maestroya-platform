@@ -41,6 +41,7 @@ export const GET = withApiTracing("/api/cron/referral-affiliate-maintenance", as
       reason: "CRON_SECRET is not configured",
     });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "Cron endpoint is not configured." },
       { status: 503, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
@@ -50,6 +51,7 @@ export const GET = withApiTracing("/api/cron/referral-affiliate-maintenance", as
   if (!isValidCronAuthHeader(authHeader, env.CRON_SECRET)) {
     logger.warn("referral_affiliate_maintenance_cron_unauthorized", { requestId, route });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "Unauthorized." },
       { status: 401, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
@@ -71,6 +73,7 @@ export const GET = withApiTracing("/api/cron/referral-affiliate-maintenance", as
       extra: { requestId },
     });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "Referral/affiliate maintenance sweep failed." },
       { status: 500, headers: { [REQUEST_ID_HEADER]: requestId } },
     );

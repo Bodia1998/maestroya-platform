@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
+import { localizeCategoryName } from "@/presentation/i18n/service-categories";
 import { CategoryGrid } from "./_sections/category-grid";
 import { Hero } from "./_sections/hero";
 import { HowItWorks } from "./_sections/how-it-works";
 import { ProfessionalCta } from "./_sections/professional-cta";
 import { TrustSection } from "./_sections/trust-section";
-
-const TITLE = "MaestroYa — Encuentra profesionales de confianza para tu hogar";
-const DESCRIPTION =
-  "Describe lo que necesitas y conecta con profesionales verificados cerca de ti: fontanería, electricidad, reformas, limpieza y mucho más.";
 
 /** Module 43 — SEO Infrastructure: the homepage's own title/description
  *  already existed (Module 1) — this only adds the canonical URL and
@@ -18,13 +16,20 @@ const DESCRIPTION =
  *  cover per-page (root layout's `openGraph.url`/`title`/`description`
  *  happen to already match the homepage, but declaring them here too
  *  keeps this page correct independent of what the layout defaults to). */
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: "/" },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: "/" },
-  twitter: { title: TITLE, description: DESCRIPTION },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  // Module 120: title/description in the request's locale; canonical/OG
+  // structure unchanged.
+  const t = await getTranslations("marketing");
+  const title = t("meta.home.title");
+  const description = t("meta.home.description");
+  return {
+    title,
+    description,
+    alternates: { canonical: "/" },
+    openGraph: { title, description, url: "/" },
+    twitter: { title, description },
+  };
+}
 
 /**
  * Homepage — Server Component, no client-side data fetching for the
@@ -45,19 +50,26 @@ export const metadata: Metadata = {
  *    profession.
  */
 export default async function HomePage() {
-  const [searchCategories, topLevelCategories] = await Promise.all([
+  const [searchCategories, topLevelCategories, tServices] = await Promise.all([
     new PrismaServiceCategoryRepository().listActive(),
     prisma.serviceCategory.findMany({
       where: { status: "ACTIVE", deletedAt: null, parentId: null },
       select: { id: true, name: true, slug: true, iconUrl: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     }),
+    getTranslations("services"),
   ]);
+  // Module 120: category names are Spanish reference data; show the
+  // catalog name for the active locale (see localizeCategoryName).
+  const localize = <T extends { slug: string; name: string }>(category: T): T => ({
+    ...category,
+    name: localizeCategoryName(tServices, category),
+  });
 
   return (
     <>
-      <Hero categories={searchCategories} />
-      <CategoryGrid categories={topLevelCategories} />
+      <Hero categories={searchCategories.map(localize)} />
+      <CategoryGrid categories={topLevelCategories.map(localize)} />
       <TrustSection />
       <HowItWorks />
       <ProfessionalCta />

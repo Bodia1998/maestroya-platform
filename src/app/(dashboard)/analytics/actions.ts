@@ -1,9 +1,11 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
+
 import { analyticsDateRangeSchema, type CustomerAnalyticsSummaryDTO } from "@/application/dto/analytics.dto";
 import { makeGetCustomerAnalyticsSummaryUseCase } from "@/application/use-cases/analytics/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError, localizeZodError } from "@/presentation/i18n/server";
 
 /**
  * Module 23 — Analytics: customer-facing Server Action, placed at the
@@ -29,16 +31,14 @@ export async function getCustomerAnalyticsSummaryAction(
   const user = await requireAuth();
   const parsed = analyticsDateRangeSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid date range." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const data = await makeGetCustomerAnalyticsSummaryUseCase().execute(user.id, parsed.data);
     return { success: true, data };
   } catch (error) {
-    if (error instanceof DomainError) {
-      return { success: false, error: error.message };
-    }
-    console.error(error);
-    return { success: false, error: "Something went wrong loading your analytics." };
+    // Module 120: domain errors localized; anything else logged + localized fallback.
+    const t = await getTranslations("customer.analytics");
+    return { success: false, error: await localizeActionError(error, t("loadFailed")) };
   }
 }

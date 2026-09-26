@@ -44,6 +44,7 @@ export const GET = withApiTracing("/api/cron/expire-workflows", async function G
       reason: "CRON_SECRET is not configured",
     });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "Cron endpoint is not configured." },
       { status: 503, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
@@ -56,6 +57,7 @@ export const GET = withApiTracing("/api/cron/expire-workflows", async function G
       route: "/api/cron/expire-workflows",
     });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "Unauthorized." },
       { status: 401, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
@@ -90,6 +92,7 @@ export const GET = withApiTracing("/api/cron/expire-workflows", async function G
       extra: { requestId },
     });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "Workflow expiration run failed." },
       { status: 500, headers: { [REQUEST_ID_HEADER]: requestId } },
     );

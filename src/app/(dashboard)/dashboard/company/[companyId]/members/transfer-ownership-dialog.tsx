@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ export function TransferOwnershipDialog({
   candidates: readonly TransferOwnershipCandidate[];
 }) {
   const router = useRouter();
+  const t = useTranslations("company.members.transfer");
   const [newOwnerMemberId, setNewOwnerMemberId] = useState(candidates[0]?.id ?? "");
   const [confirmationText, setConfirmationText] = useState("");
   const selectId = useId();
@@ -41,11 +43,11 @@ export function TransferOwnershipDialog({
 
   return (
     <ConfirmDialog
-      triggerLabel="Transfer ownership"
-      title="Transfer ownership?"
-      description="Only the current owner can transfer ownership. This action is irreversible without the new owner transferring it back."
-      confirmLabel="Yes, transfer ownership"
-      pendingLabel="Transferring…"
+      triggerLabel={t("trigger")}
+      title={t("title")}
+      description={t("description")}
+      confirmLabel={t("confirm")}
+      pendingLabel={t("pending")}
       destructive
       onConfirm={async () => {
         const result = await transferCompanyOwnershipAction(companyId, newOwnerMemberId, confirmationText);
@@ -55,7 +57,7 @@ export function TransferOwnershipDialog({
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={selectId}>New owner</Label>
+          <Label htmlFor={selectId}>{t("newOwner")}</Label>
           <Select
             id={selectId}
             value={newOwnerMemberId}
@@ -69,7 +71,10 @@ export function TransferOwnershipDialog({
           </Select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={confirmationId}>Type TRANSFER to confirm</Label>
+          <Label htmlFor={confirmationId}>
+            {/* The keyword is validated verbatim server-side (transferCompanyOwnershipSchema), so it is never translated. */}
+            {t("confirmationLabel", { keyword: "TRANSFER" })}
+          </Label>
           <Input
             id={confirmationId}
             value={confirmationText}

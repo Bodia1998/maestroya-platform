@@ -1,0 +1,256 @@
+{
+  "services": {
+    "fontaneria": {
+      "nameInSentence": "Plomberie",
+      "intro": "MaestroYa met en relation des clients avec des professionnels pour des travaux de plomberie : réparation de fuites, de robinets, de canalisations et d’installations d’eau dans le logement. Le client décrit le problème et publie une demande ; les professionnels de la plomberie qui couvrent la zone peuvent l’examiner et envoyer un devis.",
+      "commonJobTypes": {
+        "leakRepair": "Réparation de fuites d’eau",
+        "tapRepair": "Remplacement ou réparation de robinets",
+        "pipeUnblocking": "Débouchage de canalisations",
+        "sanitaryInstallation": "Installation de sanitaires (WC, lavabos, douches)",
+        "waterHeaterRepair": "Contrôle ou réparation de chauffe-eau et d’installations d’eau chaude"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Un diagnostic du problème décrit dans la demande",
+        "quote": "Un devis détaillé avant de commencer les travaux",
+        "execution": "La réalisation des travaux convenus dans le devis accepté"
+      },
+      "considerations": {
+        "describe": "Décrivez le problème le plus précisément possible et ajoutez si possible des photos à la demande",
+        "urgency": "Indiquez l’urgence réelle des travaux (le système permet de marquer les demandes comme plus ou moins urgentes)",
+        "compare": "Vous pouvez recevoir et comparer plusieurs devis avant d’en accepter un"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Quels travaux de plomberie puis-je demander sur MaestroYa ?",
+          "answer": "Vous pouvez publier une demande décrivant n’importe quels travaux de plomberie pour le logement, comme une fuite, un robinet qui ne fonctionne pas ou l’installation d’un sanitaire. Les professionnels de la plomberie qui couvrent votre zone peuvent examiner la demande et vous envoyer un devis."
+        },
+        "howQuote": {
+          "question": "Comment fonctionne le devis de plomberie ?",
+          "answer": "Après la publication de votre demande, un ou plusieurs professionnels peuvent vous envoyer un devis. Vous pouvez comparer les devis reçus et accepter celui que vous préférez avant le début des travaux."
+        },
+        "coverage": {
+          "question": "Dans quelles zones le service de plomberie est-il disponible ?",
+          "answer": "La couverture dépend des professionnels actifs dans chaque zone. Consultez la page de votre localité pour voir la disponibilité actuelle dans cette zone."
+        }
+      }
+    },
+    "electricidad": {
+      "nameInSentence": "Électricité",
+      "intro": "MaestroYa met en relation des clients avec des professionnels pour des travaux d’électricité : installations électriques, pannes, tableaux électriques et prises. Le client décrit les travaux et publie une demande ; les professionnels de l’électricité qui couvrent la zone peuvent l’examiner et envoyer un devis.",
+      "commonJobTypes": {
+        "faultRepair": "Réparation de pannes électriques",
+        "socketsSwitches": "Installation ou remplacement de prises et d’interrupteurs",
+        "panelUpgrade": "Contrôle ou mise à niveau du tableau électrique",
+        "lightPoints": "Installation de points lumineux",
+        "smallInstallations": "Installation d’appareillage et petits travaux d’électricité domestique"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Un diagnostic du problème électrique décrit dans la demande",
+        "quote": "Un devis détaillé avant de commencer les travaux",
+        "execution": "La réalisation des travaux convenus dans le devis accepté"
+      },
+      "considerations": {
+        "describe": "Décrivez la panne ou l’installation le plus précisément possible, avec des photos si elles aident à l’expliquer",
+        "urgency": "Indiquez l’urgence réelle des travaux",
+        "compare": "Comparez plusieurs devis avant d’en accepter un"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Quels travaux d’électricité puis-je demander sur MaestroYa ?",
+          "answer": "Vous pouvez publier une demande pour des pannes électriques, l’installation de prises ou de points lumineux, ou le contrôle du tableau électrique, entre autres travaux. Les professionnels de l’électricité qui couvrent votre zone peuvent vous envoyer un devis."
+        },
+        "howToRequest": {
+          "question": "Comment demander un électricien via MaestroYa ?",
+          "answer": "Publiez une demande décrivant les travaux. Les professionnels qui couvrent votre catégorie et votre zone pourront l’examiner et vous envoyer un devis, que vous pouvez accepter ou refuser."
+        },
+        "coverage": {
+          "question": "Dans quelles zones le service d’électricité est-il disponible ?",
+          "answer": "La couverture dépend des professionnels actifs dans chaque zone. Consultez la page de votre localité pour voir la disponibilité actuelle dans cette zone."
+        }
+      }
+    },
+    "aire-acondicionado": {
+      "nameInSentence": "Climatisation",
+      "intro": "MaestroYa met en relation des clients avec des professionnels pour des travaux de climatisation : installation, entretien et réparation de climatiseurs. Le client décrit ce dont il a besoin et publie une demande ; les techniciens en climatisation qui couvrent la zone peuvent l’examiner et envoyer un devis.",
+      "commonJobTypes": {
+        "newInstallation": "Installation d’un nouveau climatiseur",
+        "repair": "Réparation d’un appareil qui ne refroidit pas ou ne fonctionne pas",
+        "maintenance": "Entretien et nettoyage des appareils",
+        "gasRecharge": "Recharge de gaz réfrigérant"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Un diagnostic ou une évaluation de l’appareil ou de l’installation décrits dans la demande",
+        "quote": "Un devis détaillé avant de commencer les travaux",
+        "execution": "La réalisation des travaux convenus dans le devis accepté"
+      },
+      "considerations": {
+        "equipmentType": "Indiquez le type d’appareil (si vous le connaissez) et décrivez le problème ou l’installation souhaitée",
+        "photos": "Ajoutez des photos de l’appareil ou de la pièce si elles aident à expliquer les travaux",
+        "compare": "Comparez plusieurs devis avant d’en accepter un"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Quels travaux de climatisation puis-je demander sur MaestroYa ?",
+          "answer": "Vous pouvez demander l’installation, la réparation ou l’entretien d’un climatiseur. Les techniciens en climatisation qui couvrent votre zone peuvent examiner votre demande et vous envoyer un devis."
+        },
+        "howQuote": {
+          "question": "Comment fonctionne le devis pour installer un climatiseur ?",
+          "answer": "Vous publiez votre demande en décrivant ce dont vous avez besoin ; les professionnels intéressés envoient leur devis et vous décidez lequel accepter."
+        },
+        "coverage": {
+          "question": "Dans quelles zones le service de climatisation est-il disponible ?",
+          "answer": "La couverture dépend des professionnels actifs dans chaque zone. Consultez la page de votre localité pour voir la disponibilité actuelle dans cette zone."
+        }
+      }
+    },
+    "pintura": {
+      "nameInSentence": "Peinture",
+      "intro": "MaestroYa met en relation des clients avec des professionnels de la peinture pour des travaux intérieurs et extérieurs. Le client décrit l’espace à peindre et publie une demande ; les professionnels de la peinture qui couvrent la zone peuvent l’examiner et envoyer un devis.",
+      "commonJobTypes": {
+        "interior": "Peinture intérieure (pièces, couloirs, plafonds)",
+        "exterior": "Peinture de façades et d’extérieurs",
+        "wallPreparation": "Lissage et préparation des murs avant peinture",
+        "touchUps": "Retouches et finitions ponctuelles"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Une évaluation de l’espace et des travaux décrits dans la demande",
+        "quote": "Un devis détaillé avant de commencer les travaux",
+        "execution": "La réalisation des travaux convenus dans le devis accepté"
+      },
+      "considerations": {
+        "surface": "Indiquez la surface approximative et l’état actuel des murs",
+        "photos": "Ajoutez des photos de l’espace à peindre",
+        "compare": "Comparez plusieurs devis avant d’en accepter un"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Quels travaux de peinture puis-je demander sur MaestroYa ?",
+          "answer": "Vous pouvez demander des travaux de peinture intérieure, extérieure ou des retouches ponctuelles. Les professionnels de la peinture qui couvrent votre zone peuvent vous envoyer un devis."
+        },
+        "howQuote": {
+          "question": "Comment fonctionne le devis de peinture ?",
+          "answer": "Vous publiez votre demande en décrivant l’espace et les travaux ; les professionnels intéressés envoient leur devis et vous décidez lequel accepter."
+        },
+        "coverage": {
+          "question": "Dans quelles zones le service de peinture est-il disponible ?",
+          "answer": "La couverture dépend des professionnels actifs dans chaque zone. Consultez la page de votre localité pour voir la disponibilité actuelle dans cette zone."
+        }
+      }
+    },
+    "reformas": {
+      "nameInSentence": "Rénovation",
+      "intro": "MaestroYa met en relation des clients avec des professionnels pour des rénovations complètes ou partielles du logement. Le client décrit l’ampleur de la rénovation et publie une demande ; les professionnels de la rénovation qui couvrent la zone peuvent l’examiner et envoyer un devis.",
+      "commonJobTypes": {
+        "partial": "Rénovations partielles (une pièce, une salle de bains, une cuisine)",
+        "full": "Rénovations complètes de logement",
+        "masonry": "Travaux de maçonnerie liés à une rénovation",
+        "layoutFinishes": "Modifications d’agencement ou de finitions"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Une évaluation de l’ampleur de la rénovation décrite dans la demande",
+        "quote": "Un devis détaillé avant de commencer les travaux",
+        "execution": "La réalisation des travaux convenus dans le devis accepté"
+      },
+      "considerations": {
+        "scope": "Décrivez l’ampleur de la rénovation le plus précisément possible",
+        "photos": "Ajoutez des photos de l’état actuel de l’espace",
+        "compare": "Les rénovations impliquent généralement des devis plus élevés : comparez plusieurs options avant d’accepter"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Quels types de rénovation puis-je demander sur MaestroYa ?",
+          "answer": "Vous pouvez demander des rénovations partielles ou complètes de votre logement. Les professionnels de la rénovation qui couvrent votre zone peuvent examiner votre demande et vous envoyer un devis."
+        },
+        "compareQuotes": {
+          "question": "Puis-je comparer plusieurs devis de rénovation ?",
+          "answer": "Oui. Vous pouvez recevoir des devis de plusieurs professionnels pour la même demande et les comparer avant d’en accepter un."
+        },
+        "coverage": {
+          "question": "Dans quelles zones le service de rénovation est-il disponible ?",
+          "answer": "La couverture dépend des professionnels actifs dans chaque zone. Consultez la page de votre localité pour voir la disponibilité actuelle dans cette zone."
+        }
+      }
+    },
+    "montaje-de-muebles": {
+      "nameInSentence": "Montage de meubles",
+      "intro": "MaestroYa met en relation des clients avec des professionnels pour le montage et l’assemblage de meubles et de mobilier. Le client décrit le ou les meubles à monter et publie une demande ; les professionnels du montage qui couvrent la zone peuvent l’examiner et envoyer un devis.",
+      "commonJobTypes": {
+        "flatPack": "Montage de meubles en kit (armoires, étagères, tables)",
+        "kitchen": "Montage de meubles de cuisine",
+        "wallFixing": "Fixation de meubles au mur",
+        "multiple": "Assemblage de plusieurs meubles lors d’une même visite"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Une évaluation du ou des meubles décrits dans la demande",
+        "quote": "Un devis avant de commencer le montage",
+        "execution": "La réalisation du montage convenu dans le devis accepté"
+      },
+      "considerations": {
+        "typeQuantity": "Indiquez le type et le nombre de meubles à monter",
+        "photos": "Ajoutez des photos des cartons ou de la notice si vous l’avez",
+        "compare": "Comparez plusieurs devis avant d’en accepter un"
+      },
+      "faqs": {
+        "whatFurniture": {
+          "question": "Quels meubles puis-je faire monter via MaestroYa ?",
+          "answer": "Vous pouvez demander le montage de pratiquement n’importe quel meuble en kit, comme des armoires, des étagères ou des meubles de cuisine. Les professionnels du montage qui couvrent votre zone peuvent vous envoyer un devis."
+        },
+        "howQuote": {
+          "question": "Comment fonctionne le devis de montage de meubles ?",
+          "answer": "Vous publiez votre demande en décrivant le ou les meubles à monter ; les professionnels intéressés envoient leur devis et vous décidez lequel accepter."
+        },
+        "coverage": {
+          "question": "Dans quelles zones le service de montage de meubles est-il disponible ?",
+          "answer": "La couverture dépend des professionnels actifs dans chaque zone. Consultez la page de votre localité pour voir la disponibilité actuelle dans cette zone."
+        }
+      }
+    }
+  },
+  "locations": {
+    "gandia": {
+      "intro": "Gandia (province de Valencia) est la localité de référence de MaestroYa. Les clients à Gandia peuvent publier une demande dans n’importe laquelle des catégories de services à domicile disponibles sur la plateforme, et les professionnels qui couvrent la zone peuvent l’examiner et envoyer un devis.",
+      "faqs": {
+        "whatServices": {
+          "question": "Quels services puis-je demander à Gandia via MaestroYa ?",
+          "answer": "Vous pouvez publier une demande dans n’importe laquelle des catégories de services à domicile disponibles sur MaestroYa (plomberie, électricité, climatisation, peinture, rénovation et montage de meubles). Consultez la page de chaque service pour plus de détails."
+        },
+        "howToHire": {
+          "question": "Comment engager un professionnel à Gandia ?",
+          "answer": "Vous publiez une demande décrivant les travaux. Les professionnels qui couvrent cette catégorie et la zone de Gandia peuvent l’examiner et vous envoyer un devis, que vous pouvez comparer et accepter avant le début des travaux."
+        },
+        "outsideGandia": {
+          "question": "MaestroYa est-il disponible en dehors de Gandia ?",
+          "answer": "Gandia est la localité dont la couverture est confirmée aujourd’hui sur la plateforme. La disponibilité effective des professionnels peut varier et dépend de ceux qui sont actifs à chaque instant."
+        }
+      }
+    }
+  },
+  "nationalCoverage": {
+    "intro": "MaestroYa est une place de marché de services à domicile qui met en relation des clients avec des professionnels et des entreprises en Espagne. Toute personne en Espagne peut publier une demande de service ; qu’un professionnel l’examine et envoie un devis dépend des professionnels actifs dans cette catégorie et cette zone à un moment donné.",
+    "coverageStatement": "La portée de MaestroYa en tant que plateforme est nationale : l’objectif de la place de marché est d’opérer dans toute l’Espagne, et pas seulement dans une localité donnée. Cela est différent de la disponibilité réelle des professionnels dans une zone précise, qui dépend des données réelles de la plateforme à chaque instant.",
+    "howLocalAvailabilityWorks": "Lorsque vous publiez une demande, seuls les professionnels qui couvrent cette catégorie de service et votre zone peuvent l’examiner et vous envoyer un devis. MaestroYa ne garantit pas qu’un professionnel soit disponible dans une localité donnée : la disponibilité réelle varie selon la zone. Les localités dont la couverture est confirmée par les données réelles de la plateforme ont leur propre page (voir /ubicaciones).",
+    "faqs": {
+      "wholeSpain": {
+        "question": "MaestroYa opère-t-il dans toute l’Espagne ?",
+        "answer": "MaestroYa est une place de marché conçue pour opérer dans toute l’Espagne. Cela ne signifie pas qu’il y a déjà des professionnels actifs dans chaque localité : la disponibilité réelle des professionnels dépend de chaque zone et peut évoluer dans le temps."
+      },
+      "localAvailability": {
+        "question": "Comment savoir si un service est disponible dans ma localité ?",
+        "answer": "Vous pouvez publier une demande en indiquant votre adresse ; seuls les professionnels qui couvrent votre catégorie et votre zone pourront vous envoyer un devis. Les localités dont la couverture est confirmée par les données réelles de la plateforme sont listées dans la section des emplacements."
+      },
+      "whatServices": {
+        "question": "Quels services MaestroYa propose-t-il ?",
+        "answer": "MaestroYa publie aujourd’hui six catégories de services à domicile : plomberie, électricité, climatisation, peinture, rénovation et montage de meubles. Consultez la page de chaque service pour plus de détails."
+      },
+      "professionalParticipation": {
+        "question": "Comment un professionnel participe-t-il à MaestroYa ?",
+        "answer": "Un professionnel peut créer un compte, indiquer ses catégories de service et la zone qu’il couvre, puis examiner les demandes publiées correspondant à sa catégorie et à sa zone et y répondre par des devis."
+      }
+    },
+    "structuredData": {
+      "name": "Services à domicile via MaestroYa",
+      "description": "Place de marché de services à domicile exploitée par MaestroYa en Espagne. La disponibilité des professionnels varie selon la catégorie de service et la zone."
+    }
+  }
+}

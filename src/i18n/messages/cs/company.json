@@ -1,0 +1,225 @@
+{
+  "tabs": {
+    "ariaLabel": "Sekce firmy",
+    "profile": "Profil",
+    "members": "Členové",
+    "invitations": "Pozvánky",
+    "verification": "Ověření",
+    "selfBilling": "Samofakturace"
+  },
+  "roles": {
+    "OWNER": "Vlastník",
+    "ADMIN": "Správce",
+    "MANAGER": "Manažer",
+    "MEMBER": "Člen"
+  },
+  "memberStatus": {
+    "ACTIVE": "Aktivní",
+    "PENDING": "Čeká",
+    "REMOVED": "Odebrán"
+  },
+  "invitationStatus": {
+    "PENDING": "Čeká",
+    "ACCEPTED": "Přijata",
+    "DECLINED": "Odmítnuta",
+    "EXPIRED": "Vypršela",
+    "CANCELLED": "Zrušena"
+  },
+  "companyStatus": {
+    "PENDING": "Čeká",
+    "ACTIVE": "Aktivní",
+    "SUSPENDED": "Pozastavena",
+    "DEACTIVATED": "Deaktivována"
+  },
+  "errors": {
+    "invalidDetails": "Neplatné údaje o firmě.",
+    "createFailed": "Při vytváření firmy se něco pokazilo.",
+    "updateFailed": "Při aktualizaci firmy se něco pokazilo.",
+    "loadFailed": "Při načítání firmy se něco pokazilo."
+  },
+  "index": {
+    "metaTitle": "Moje firmy",
+    "title": "Moje firmy",
+    "subtitle": "Působte jako firma nebo tým s více profesionály – vedle svého případného individuálního profilu profesionála.",
+    "emptyTitle": "Zatím žádné firmy",
+    "emptyDescription": "Zatím nejste členem žádné firmy. Vytvořte si ji níže a začněte pracovat jako tým.",
+    "manage": "Spravovat",
+    "createTitle": "Vytvořit firmu",
+    "legalNameRequired": "Obchodní firma dle rejstříku (povinné)",
+    "tradeName": "Obchodní / zobrazovaný název",
+    "taxIdRequired": "Daňové identifikační číslo (povinné)",
+    "description": "Popis",
+    "submit": "Vytvořit firmu"
+  },
+  "acceptInvitation": {
+    "metaTitle": "Pozvánka do firmy",
+    "title": "Pozvánka do firmy",
+    "subtitle": "Byli jste pozváni do firmy na MaestroYa. Přijetím se okamžitě stanete aktivním členem.",
+    "missingToken": "V tomto odkazu s pozvánkou chybí token.",
+    "accept": "Přijmout pozvánku",
+    "decline": "Odmítnout",
+    "invalidLink": "Neplatný odkaz s pozvánkou.",
+    "acceptFailed": "Při přijímání této pozvánky se něco pokazilo.",
+    "declineFailed": "Při odmítání této pozvánky se něco pokazilo."
+  },
+  "profile": {
+    "metaTitle": "Profil firmy",
+    "subtitle": "Stav: {status} · {verified}",
+    "verified": "Ověřeno",
+    "notVerified": "Neověřeno",
+    "breadcrumbMyCompanies": "Moje firmy",
+    "detailsTitle": "Údaje o firmě",
+    "legalName": "Obchodní firma dle rejstříku",
+    "tradeName": "Obchodní / zobrazovaný název",
+    "description": "Popis",
+    "contactTitle": "Kontaktní údaje",
+    "website": "Web",
+    "contactEmail": "Kontaktní e-mail",
+    "contactPhone": "Kontaktní telefon",
+    "city": "Město",
+    "province": "Provincie",
+    "save": "Uložit změny"
+  },
+  "members": {
+    "metaTitle": "Členové firmy",
+    "title": "Členové",
+    "activeCount": "{count, plural, one {# aktivní člen.} few {# aktivní členové.} many {# aktivního člena.} other {# aktivních členů.}}",
+    "emptyTitle": "Firma zatím nemá žádné členy",
+    "emptyDescription": "Pozvěte kolegy na kartě Pozvánky a začněte spolupracovat v tomto firemním účtu.",
+    "columns": {
+      "name": "Jméno",
+      "email": "E-mail",
+      "role": "Role",
+      "status": "Stav",
+      "actions": "Akce"
+    },
+    "roleFor": "Role pro {name}",
+    "updateRole": "Aktualizovat roli",
+    "transferTitle": "Převést vlastnictví",
+    "transferNotice": "Vlastnictví může převést pouze současný vlastník. Tuto akci nelze vrátit, pokud vám nový vlastník vlastnictví nepřevede zpět.",
+    "errors": {
+      "loadFailed": "Při načítání členů se něco pokazilo.",
+      "invalidRole": "Neplatná role.",
+      "changeRoleFailed": "Při změně role tohoto člena se něco pokazilo.",
+      "invalidMember": "Neplatný člen.",
+      "removeFailed": "Při odebírání tohoto člena se něco pokazilo.",
+      "invalidRequest": "Neplatný požadavek.",
+      "transferFailed": "Při převodu vlastnictví se něco pokazilo."
+    },
+    "remove": {
+      "trigger": "Odebrat",
+      "title": "Odebrat uživatele {name}?",
+      "description": "Okamžitě ztratí přístup k tomuto firemnímu účtu. Zde to nelze vrátit zpět.",
+      "confirm": "Ano, odebrat",
+      "pending": "Odebírání…"
+    },
+    "transfer": {
+      "trigger": "Převést vlastnictví",
+      "title": "Převést vlastnictví?",
+      "description": "Vlastnictví může převést pouze současný vlastník. Tuto akci nelze vrátit, pokud vám nový vlastník vlastnictví nepřevede zpět.",
+      "confirm": "Ano, převést vlastnictví",
+      "pending": "Převádění…",
+      "newOwner": "Nový vlastník",
+      "confirmationLabel": "Pro potvrzení napište {keyword}"
+    }
+  },
+  "invitations": {
+    "metaTitle": "Pozvánky firmy",
+    "title": "Pozvánky",
+    "inviteTitle": "Pozvat člena",
+    "inviteNotice": "Zatím lze zvát pouze stávající uživatele MaestroYa. Pozvánka platí 14 dní.",
+    "email": "E-mail",
+    "role": "Role",
+    "send": "Odeslat pozvánku",
+    "emptyTitle": "Zatím žádné pozvánky",
+    "emptyDescription": "Odeslané pozvánky se zde zobrazí, dokud nebudou přijaty nebo zrušeny.",
+    "columns": {
+      "email": "E-mail",
+      "role": "Role",
+      "status": "Stav",
+      "expires": "Platnost do",
+      "actions": "Akce"
+    },
+    "errors": {
+      "loadFailed": "Při načítání pozvánek se něco pokazilo.",
+      "invalid": "Neplatná pozvánka.",
+      "createFailed": "Při vytváření pozvánky se něco pokazilo.",
+      "cancelFailed": "Při rušení této pozvánky se něco pokazilo."
+    },
+    "cancel": {
+      "trigger": "Zrušit",
+      "title": "Zrušit tuto pozvánku?",
+      "description": "{email} už nebude moci tuto pozvánku použít ke vstupu do firmy.",
+      "confirm": "Ano, zrušit pozvánku",
+      "pending": "Rušení…",
+      "keep": "Ponechat pozvánku"
+    }
+  },
+  "verification": {
+    "metaTitle": "Ověření firmy",
+    "title": "Ověření",
+    "notStarted": "Tato firma zatím nezahájila ověření.",
+    "start": "Zahájit ověření",
+    "statusCopy": {
+      "DRAFT": "Zatím neodesláno. Nahrajte alespoň jeden firemní dokument a odešlete ke kontrole.",
+      "PENDING": "Odesláno – čeká na kontrolu správcem.",
+      "UNDER_REVIEW": "Správce tuto žádost právě kontroluje.",
+      "APPROVED": "Schváleno – vaše firma má na veřejném profilu odznak ověření.",
+      "REJECTED": "Zamítnuto. Důvod najdete níže; až budete připraveni, odešlete znovu.",
+      "RESUBMISSION_REQUIRED": "Před schválením jsou nutné změny. Viz pokyny níže.",
+      "EXPIRED": "Platnost tohoto schválení vypršela. Zahajte novou žádost o ověření."
+    },
+    "reason": "Důvod",
+    "whatToUpdate": "Co je potřeba upravit",
+    "documents": "Dokumenty",
+    "noDocuments": "Zatím nebyly nahrány žádné dokumenty.",
+    "docTypes": {
+      "BUSINESS_LICENSE": "Živnostenské oprávnění",
+      "TAX_CERTIFICATE": "Daňové potvrzení",
+      "INSURANCE_CERTIFICATE": "Doklad o pojištění",
+      "PROFESSIONAL_CERTIFICATION": "Odborná certifikace",
+      "PROOF_OF_ADDRESS": "Doklad o adrese",
+      "OTHER": "Jiné"
+    },
+    "remove": "Odebrat",
+    "uploadTitle": "Nahrát dokument",
+    "docType": "Typ dokumentu",
+    "file": "Soubor",
+    "upload": "Nahrát dokument",
+    "submit": "Odeslat ke kontrole",
+    "resubmit": "Odeslat znovu",
+    "errors": {
+      "startFailed": "Při zahajování ověření se něco pokazilo.",
+      "invalidDocType": "Vyberte platný typ dokumentu.",
+      "chooseFile": "Vyberte soubor k nahrání.",
+      "invalidFileType": "Dokument musí být obrázek JPEG, PNG, WebP nebo soubor PDF.",
+      "fileTooLarge": "Každý dokument musí mít méně než 10 MB.",
+      "uploadFailed": "Při nahrávání tohoto dokumentu se něco pokazilo.",
+      "invalidDocument": "Neplatný dokument.",
+      "removeFailed": "Při odebírání tohoto dokumentu se něco pokazilo.",
+      "submitFailed": "Při odesílání ke kontrole se něco pokazilo.",
+      "resubmitFailed": "Při opětovném odesílání ke kontrole se něco pokazilo."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Samofakturace firmy",
+    "title": "Firma",
+    "subtitle": "Spravujte oprávnění k samofakturaci a faktury své firmy.",
+    "ownerOnlyTitle": "Pouze vlastník/správce",
+    "ownerOnlyBody": "Stav oprávnění k samofakturaci může zobrazit nebo změnit pouze vlastník firmy nebo správce.",
+    "sectionTitle": "Oprávnění k samofakturaci",
+    "notAuthorized": "Neoprávněno",
+    "activeBody": "Tato firma oprávnila MaestroYa vystavovat jejím jménem faktury v režimu samofakturace („{legalTerm}“) za dokončené zakázky. Toto oprávnění můžete kdykoli odvolat.",
+    "revoke": "Odvolat oprávnění",
+    "inactiveBody": "Bez tohoto oprávnění nemůže MaestroYa vystavovat faktury v režimu samofakturace jménem této firmy.",
+    "grant": "Udělit oprávnění",
+    "invoicesTitle": "Faktury",
+    "noInvoices": "Zatím žádné faktury v režimu samofakturace.",
+    "notYetIssued": "Zatím nevystaveno",
+    "errors": {
+      "invalidCompany": "Neplatná firma.",
+      "grantFailed": "Při udělování oprávnění k samofakturaci se něco pokazilo.",
+      "revokeFailed": "Při odvolávání oprávnění k samofakturaci se něco pokazilo."
+    }
+  }
+}

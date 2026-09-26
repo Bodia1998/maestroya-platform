@@ -1,0 +1,365 @@
+{
+  "requests": {
+    "list": {
+      "title": "Os meus pedidos",
+      "subtitle": "Pedidos que publicou para os profissionais orçamentarem.",
+      "newRequest": "Novo pedido",
+      "empty": {
+        "title": "Ainda sem pedidos",
+        "description": "Ainda não publicou nenhum pedido. Publique um para começar a receber orçamentos de profissionais perto de si."
+      }
+    },
+    "new": {
+      "title": "Novo pedido de serviço",
+      "subtitle": "Descreva o trabalho de que precisa. Será publicado de imediato para os profissionais orçamentarem."
+    },
+    "edit": {
+      "title": "Editar pedido de serviço",
+      "subtitle": "Pode editar este pedido enquanto estiver aberto.",
+      "breadcrumb": "Editar"
+    },
+    "detail": {
+      "metaTitle": "Pedido de serviço",
+      "description": "Descrição",
+      "location": "Localização",
+      "urgency": "Urgência",
+      "budget": "Orçamento previsto",
+      "budgetRange": "{min} – {max}",
+      "budgetUnset": "—",
+      "posted": "Publicado",
+      "lastUpdated": "Última atualização",
+      "photos": "Fotografias",
+      "acceptedNotice": "Aceitou um orçamento para este pedido. Aceda a <appointments>As minhas marcações</appointments> para propor ou confirmar uma hora, ou consulte <jobs>Os meus trabalhos</jobs> para ver o progresso geral.",
+      "editRequest": "Editar pedido"
+    },
+    "form": {
+      "updated": "Pedido atualizado.",
+      "sections": {
+        "job": "O trabalho",
+        "budget": "Orçamento previsto",
+        "budgetDescription": "Dê aos profissionais um valor aproximado para que os orçamentos se ajustem.",
+        "location": "Local do trabalho"
+      },
+      "category": "Categoria de serviço",
+      "selectCategory": "Selecione uma categoria",
+      "title": "Título",
+      "titlePlaceholder": "p. ex. Reparar a torneira da cozinha que pinga",
+      "description": "Descrição",
+      "descriptionPlaceholder": "Descreva o trabalho em detalhe — o que é preciso fazer e qualquer contexto relevante.",
+      "urgency": "Urgência",
+      "budgetMin": "Orçamento mínimo (EUR)",
+      "budgetMax": "Orçamento máximo (EUR)",
+      "address": "Morada",
+      "streetPlaceholder": "Rua e número",
+      "line2Placeholder": "Andar, porta, etc. (opcional)",
+      "cityPlaceholder": "Localidade",
+      "postalCodePlaceholder": "Código postal",
+      "provincePlaceholder": "Província",
+      "countryPlaceholder": "País",
+      "latitudePlaceholder": "Latitude (opcional)",
+      "longitudePlaceholder": "Longitude (opcional)",
+      "coordinatesHelp": "A latitude e a longitude são preenchidas automaticamente sempre que possível — deixe em branco se não tiver a certeza.",
+      "saveChanges": "Guardar alterações",
+      "postRequest": "Publicar pedido"
+    },
+    "cancel": {
+      "trigger": "Cancelar este pedido",
+      "title": "Cancelar este pedido de serviço?",
+      "description": "Os profissionais deixarão de poder orçamentar. Não é possível anular esta ação a partir daqui.",
+      "confirm": "Sim, cancelar pedido",
+      "pending": "A cancelar…",
+      "keep": "Manter pedido"
+    },
+    "photos": {
+      "chooseFirst": "Escolha primeiro uma imagem.",
+      "alt": "Fotografia do pedido",
+      "remove": "Remover",
+      "none": "Não há fotografias anexadas.",
+      "add": "Adicionar fotografia",
+      "uploading": "A carregar…",
+      "maxReached": "Atingiu o máximo de {max, plural, one {# fotografia} other {# fotografias}}."
+    },
+    "errors": {
+      "createFailed": "Ocorreu um erro ao criar o seu pedido.",
+      "updateFailed": "Ocorreu um erro ao atualizar o seu pedido.",
+      "cancelFailed": "Ocorreu um erro ao cancelar o seu pedido.",
+      "photoMissing": "Escolha uma imagem para carregar.",
+      "photoType": "As fotografias têm de ser imagens JPEG, PNG ou WebP.",
+      "photoTooLarge": "Cada fotografia tem de ter menos de 5 MB.",
+      "photoUploadFailed": "Ocorreu um erro ao carregar a sua fotografia.",
+      "photoRemoveFailed": "Ocorreu um erro ao remover essa fotografia."
+    }
+  },
+  "quotes": {
+    "title": "Orçamentos recebidos",
+    "subtitle": "Orçamentos que os profissionais enviaram para este pedido.",
+    "breadcrumb": "Orçamentos",
+    "empty": "Ainda não há orçamentos. Volte a consultar em breve.",
+    "verification": {
+      "UNVERIFIED": "Não verificado",
+      "PENDING": "Verificação pendente",
+      "VERIFIED": "Verificado",
+      "REJECTED": "Verificação rejeitada"
+    },
+    "meta": "Enviado a {created, date, medium} — atualizado a {updated, date, medium}",
+    "metaWithValidity": "Válido até {validUntil, date, medium} — enviado a {created, date, medium} — atualizado a {updated, date, medium}",
+    "messageProfessional": "Enviar mensagem a {name}",
+    "acceptFailed": "Ocorreu um erro ao aceitar este orçamento.",
+    "accept": {
+      "trigger": "Aceitar este orçamento",
+      "title": "Aceitar este orçamento?",
+      "description": "Todos os outros orçamentos deste pedido serão recusados automaticamente. Esta ação não pode ser anulada.",
+      "confirm": "Sim, aceitar orçamento",
+      "pending": "A aceitar…",
+      "cancel": "Ainda não"
+    }
+  },
+  "appointments": {
+    "list": {
+      "title": "As minhas marcações",
+      "subtitle": "Marcações criadas a partir dos orçamentos que aceitou.",
+      "empty": {
+        "title": "Sem marcações próximas",
+        "description": "As marcações aparecem aqui quando aceitar o orçamento de um profissional.",
+        "action": "Ver os meus pedidos"
+      }
+    },
+    "noTimeProposed": "Ainda não foi proposta nenhuma hora",
+    "notSet": "Não definido",
+    "awaitingProposedTime": "A aguardar proposta de hora",
+    "detail": {
+      "title": "Marcação",
+      "confirmedTime": "Hora confirmada",
+      "proposedTime": "Hora proposta",
+      "cancellationReason": "Motivo do cancelamento"
+    },
+    "cancellationReason": {
+      "CUSTOMER_REQUEST": "A pedido do cliente",
+      "PROFESSIONAL_UNAVAILABLE": "Profissional indisponível",
+      "SCHEDULING_CONFLICT": "Conflito de horário",
+      "OTHER": "Outro"
+    },
+    "actions": {
+      "start": "Início",
+      "end": "Fim",
+      "confirming": "A confirmar…",
+      "confirmTime": "Confirmar esta hora",
+      "completing": "A marcar como concluída…",
+      "markCompleted": "Marcar esta visita como concluída",
+      "cancelTrigger": "Cancelar marcação",
+      "cancelTitle": "Cancelar esta marcação?",
+      "confirmCancel": "Sim, cancelar",
+      "cancelling": "A cancelar…",
+      "notNow": "Agora não",
+      "reason": "Motivo",
+      "note": "Nota (opcional)",
+      "proposeTime": "Propor uma hora",
+      "proposeDifferentTime": "Propor outra hora",
+      "reschedule": "Reagendar"
+    },
+    "errors": {
+      "invalidAppointment": "Marcação inválida.",
+      "proposeFailed": "Ocorreu um erro ao propor esta hora.",
+      "confirmFailed": "Ocorreu um erro ao confirmar esta marcação.",
+      "cancelFailed": "Ocorreu um erro ao cancelar esta marcação.",
+      "completeFailed": "Ocorreu um erro ao concluir esta marcação.",
+      "rescheduleFailed": "Ocorreu um erro ao reagendar esta marcação."
+    }
+  },
+  "messages": {
+    "title": "Mensagens",
+    "conversation": "Conversa",
+    "empty": {
+      "title": "Ainda sem conversas",
+      "description": "Quando tiver um orçamento em comum com um cliente ou profissional, podem trocar mensagens aqui."
+    },
+    "participant": "Participante",
+    "unknownParticipant": "Utilizador MaestroYa",
+    "noMessagesYet": "Ainda não há mensagens.",
+    "emptyThread": "Ainda não há mensagens. Diga olá para começar.",
+    "closed": "Esta conversa já não aceita novas mensagens.",
+    "opening": "A abrir…",
+    "messageAction": "Enviar mensagem",
+    "bubble": {
+      "deleted": "Esta mensagem foi eliminada.",
+      "deleting": "A eliminar…",
+      "confirmDelete": "Confirmar eliminação",
+      "cancel": "Cancelar",
+      "delete": "Eliminar"
+    },
+    "composer": {
+      "placeholder": "Escreva uma mensagem…",
+      "ariaLabel": "Mensagem",
+      "sending": "A enviar…",
+      "send": "Enviar"
+    },
+    "errors": {
+      "openFailed": "Ocorreu um erro ao abrir esta conversa.",
+      "sendFailed": "Ocorreu um erro ao enviar a sua mensagem.",
+      "generic": "Ocorreu um erro.",
+      "deleteFailed": "Ocorreu um erro ao eliminar esta mensagem."
+    }
+  },
+  "disputes": {
+    "list": {
+      "metaTitle": "As minhas disputas",
+      "title": "Disputas",
+      "subtitle": "Casos que abriu e casos abertos sobre o seu trabalho.",
+      "openFromJob": "Abrir uma disputa a partir de um trabalho",
+      "openedByMe": "Abertas por mim",
+      "openedAboutMe": "Abertas sobre o meu trabalho",
+      "emptyMine": {
+        "title": "Nenhuma disputa aberta",
+        "description": "Não abriu nenhuma disputa."
+      },
+      "emptyAgainst": {
+        "title": "Nada aqui",
+        "description": "Não foi aberta nenhuma disputa sobre o seu trabalho."
+      }
+    },
+    "detail": {
+      "metaTitle": "Disputa",
+      "subtitle": "{caseNumber} · Estado: {status} · Prioridade: {priority} · Motivo: {reason}",
+      "description": "Descrição",
+      "resolution": "Resolução",
+      "evidence": "Provas",
+      "noEvidence": "Não há provas anexadas.",
+      "messages": "Mensagens",
+      "noMessages": "Ainda não há mensagens."
+    },
+    "messageForm": {
+      "label": "Escreva uma mensagem",
+      "placeholder": "Escreva uma mensagem…",
+      "sending": "A enviar…",
+      "send": "Enviar mensagem"
+    },
+    "new": {
+      "title": "Abrir uma disputa",
+      "subtitle": "Apenas para trabalhos em curso, concluídos ou cancelados — consulte a página de detalhe do seu trabalho."
+    },
+    "form": {
+      "description": "Dê o máximo de detalhes possível — isso ajuda-nos a resolver mais depressa.",
+      "jobId": "ID do trabalho",
+      "reason": "Motivo",
+      "title": "Título",
+      "descriptionLabel": "Descrição",
+      "submitting": "A enviar…",
+      "submit": "Abrir disputa"
+    },
+    "status": {
+      "WAITING_FOR_CUSTOMER": "A aguardar o cliente",
+      "WAITING_FOR_PROFESSIONAL": "A aguardar o profissional"
+    },
+    "priority": {
+      "LOW": "Baixa",
+      "MEDIUM": "Média",
+      "HIGH": "Alta",
+      "URGENT": "Urgente"
+    },
+    "reason": {
+      "SERVICE_NOT_COMPLETED": "Serviço não concluído",
+      "SERVICE_QUALITY": "Qualidade do serviço",
+      "PROPERTY_DAMAGE": "Danos materiais",
+      "PROFESSIONAL_NO_SHOW": "O profissional não compareceu",
+      "CUSTOMER_NO_SHOW": "O cliente não compareceu",
+      "PRICE_DISAGREEMENT": "Desacordo sobre o preço",
+      "SCOPE_OF_WORK": "Âmbito do trabalho",
+      "COMMUNICATION_ISSUE": "Problema de comunicação",
+      "OTHER": "Outro"
+    },
+    "resolution": {
+      "NO_ACTION": "Sem ação",
+      "CUSTOMER_FAVOR": "A favor do cliente",
+      "PROFESSIONAL_FAVOR": "A favor do profissional",
+      "PARTIAL_RESOLUTION": "Resolução parcial",
+      "FINANCIAL_ADJUSTMENT_REQUIRED": "Requer ajuste financeiro",
+      "ESCALATED_EXTERNALLY": "Encaminhada externamente"
+    },
+    "errors": {
+      "openFailed": "Ocorreu um erro ao abrir esta disputa.",
+      "loadMineFailed": "Ocorreu um erro ao carregar as suas disputas.",
+      "loadFailed": "Ocorreu um erro ao carregar as disputas.",
+      "loadOneFailed": "Ocorreu um erro ao carregar esta disputa.",
+      "messageFailed": "Ocorreu um erro ao enviar esta mensagem.",
+      "evidenceFailed": "Ocorreu um erro ao anexar esta prova."
+    }
+  },
+  "support": {
+    "metaTitle": "Pedidos de suporte",
+    "title": "Suporte",
+    "subtitle": "Problemas de conta, de verificação, erros ou perguntas gerais.",
+    "myTickets": "Os meus pedidos",
+    "empty": {
+      "title": "Sem pedidos de suporte",
+      "description": "Não abriu nenhum pedido de suporte."
+    },
+    "detail": {
+      "metaTitle": "Pedido de suporte",
+      "subtitle": "{ticketNumber} · Estado: {status} · Categoria: {category} · Prioridade: {priority}",
+      "resolution": "Resolução"
+    },
+    "form": {
+      "title": "Abrir um novo pedido",
+      "category": "Categoria",
+      "subject": "Assunto",
+      "description": "Descrição",
+      "submitting": "A enviar…",
+      "submit": "Enviar pedido"
+    },
+    "category": {
+      "ACCOUNT": "Conta",
+      "VERIFICATION": "Verificação",
+      "BUG": "Erro da plataforma",
+      "LOGIN": "Início de sessão",
+      "GENERAL": "Geral",
+      "OTHER": "Outro"
+    },
+    "status": {
+      "WAITING_FOR_USER": "A aguardar a sua resposta"
+    },
+    "errors": {
+      "openFailed": "Ocorreu um erro ao abrir este pedido.",
+      "loadFailed": "Ocorreu um erro ao carregar os seus pedidos.",
+      "loadOneFailed": "Ocorreu um erro ao carregar este pedido."
+    }
+  },
+  "reviews": {
+    "errors": {
+      "submitFailed": "Ocorreu um erro ao enviar esta avaliação.",
+      "updateFailed": "Ocorreu um erro ao atualizar esta avaliação.",
+      "deleteFailed": "Ocorreu um erro ao eliminar esta avaliação.",
+      "respondFailed": "Ocorreu um erro ao enviar esta resposta."
+    }
+  },
+  "analytics": {
+    "loadFailed": "Ocorreu um erro ao carregar as suas estatísticas."
+  },
+  "receipts": {
+    "list": {
+      "title": "Os meus recibos",
+      "subtitle": "Recibos dos trabalhos que pagou através da MaestroYa.",
+      "empty": {
+        "title": "Ainda sem recibos",
+        "description": "O recibo aparece aqui quando um trabalho pago é concluído e o pagamento é libertado."
+      }
+    },
+    "notYetIssued": "Ainda não emitido",
+    "detail": {
+      "title": "Recibo",
+      "receiptNumber": "Número do recibo",
+      "date": "Data",
+      "dateUnset": "—",
+      "issuedBy": "Emitido por",
+      "billedTo": "Faturado a",
+      "items": "Itens",
+      "description": "Descrição",
+      "amount": "Montante",
+      "tax": "Impostos",
+      "taxableBase": "Base tributável",
+      "vat": "IVA ({rate})",
+      "total": "Total",
+      "creditNotes": "Notas de crédito",
+      "documentReference": "Referência do documento: {hash}… (apenas soma de verificação contra adulteração — não é uma assinatura eletrónica)."
+    }
+  }
+}

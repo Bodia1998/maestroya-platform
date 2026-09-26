@@ -1,0 +1,13 @@
+{
+  "bookingConfirmed": "Hallo {name}, je boeking op {date} is bevestigd. MaestroYa",
+  "appointmentReminder": "Herinnering: je afspraak is op {date} om {time}. MaestroYa",
+  "professionalAssigned": "{name} is aan je opdracht toegewezen. MaestroYa",
+  "quoteAccepted": "Je offerte van {amount} is geaccepteerd. MaestroYa",
+  "quoteRejected": "Je offerte is afgewezen. MaestroYa",
+  "serviceRequestUpdated": "De status van je aanvraag is gewijzigd naar {status}. MaestroYa",
+  "chatNotification": "Nieuw bericht van {name}: {preview}",
+  "disputeNotification": "Er is een geschil ({caseNumber}) geopend over je opdracht. MaestroYa",
+  "passwordReset": "Je MaestroYa-code om je wachtwoord te herstellen is {code}. Geldig 15 min.",
+  "phoneVerification": "Je MaestroYa-verificatiecode is {code}.",
+  "twoFactorAuthentication": "Je MaestroYa-inlogcode is {code}."
+}

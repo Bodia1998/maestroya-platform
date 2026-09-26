@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   Award,
   Briefcase,
@@ -34,24 +35,27 @@ import { DashboardStatCard } from "./dashboard-stat-card";
 
 /** Customer-side quick actions — every href is an existing, already-linked route. */
 const CUSTOMER_QUICK_ACTIONS = [
-  { href: "/requests/new", label: "New request", icon: FileText },
-  { href: "/appointments", label: "Appointments", icon: CalendarDays },
-  { href: "/messages", label: "Messages", icon: MessageSquare },
-  { href: "/profile", label: "Profile", icon: User },
+  { href: "/requests/new", labelKey: "newRequest", icon: FileText },
+  { href: "/appointments", labelKey: "appointments", icon: CalendarDays },
+  { href: "/messages", labelKey: "messages", icon: MessageSquare },
+  { href: "/profile", labelKey: "profile", icon: User },
 ] as const;
 
 /** Professional-side quick actions — every href is an existing, already-linked route. */
 const PROFESSIONAL_QUICK_ACTIONS = [
-  { href: "/dashboard/professional/requests", label: "Browse requests", icon: Search },
-  { href: "/dashboard/professional/quotes", label: "My quotes", icon: FileSignature },
-  { href: "/dashboard/professional/appointments", label: "Appointments", icon: CalendarDays },
-  { href: "/dashboard/professional", label: "Professional profile", icon: User },
+  { href: "/dashboard/professional/requests", labelKey: "browseRequests", icon: Search },
+  { href: "/dashboard/professional/quotes", labelKey: "myQuotes", icon: FileSignature },
+  { href: "/dashboard/professional/appointments", labelKey: "appointments", icon: CalendarDays },
+  { href: "/dashboard/professional", labelKey: "professionalProfile", icon: User },
 ] as const;
 
 /** Quote statuses that mean "sent to the customer, no answer yet". */
 const QUOTE_AWAITING_RESPONSE_STATUSES = new Set(["SENT", "VIEWED"]);
 
-export const metadata = { title: "Dashboard" };
+export async function generateMetadata() {
+  const t = await getTranslations("dashboard");
+  return { title: t("title") };
+}
 
 const INACTIVE_REQUEST_STATUSES = new Set(["COMPLETED", "CANCELLED", "EXPIRED"]);
 
@@ -83,6 +87,10 @@ const INACTIVE_REQUEST_STATUSES = new Set(["COMPLETED", "CANCELLED", "EXPIRED"])
 export default async function DashboardPage() {
   const user = await requireAuth();
   const isProfessional = user.roles.includes(ROLES.PROVIDER);
+  const [t, tMessages] = await Promise.all([
+    getTranslations("dashboard.overview"),
+    getTranslations("customer.messages"),
+  ]);
 
   const conversations = await makeListConversationsUseCase().execute(user.id);
 
@@ -123,64 +131,62 @@ export default async function DashboardPage() {
   return (
     <PageContainer maxWidth="6xl">
       <PageHeader
-        title={`Welcome back${user.email ? `, ${user.email}` : ""}`}
-        subtitle="Here's an overview of your MaestroYa account."
+        title={user.email ? t("welcomeBack", { name: user.email }) : t("welcomeBackAnonymous")}
+        subtitle={t("subtitle")}
       />
 
       {isProfessional && (
         <section className="flex flex-col gap-4">
           <div>
             <Heading as="h2" level="h6">
-              Professional overview
+              {t("professionalOverview.title")}
             </Heading>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Customer requests you can respond to, and the quotes, appointments, and jobs that follow.
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("professionalOverview.description")}</p>
           </div>
           <ResponsiveGrid cols="1-2-4">
             <DashboardStatCard
               icon={FileText}
-              label="Available requests"
+              label={t("stats.availableRequests")}
               value={availableRequests.length}
               href="/dashboard/professional/requests"
             />
             <DashboardStatCard
               icon={Award}
-              label="Quotes awaiting response"
+              label={t("stats.quotesAwaitingResponse")}
               value={quotesAwaitingResponse}
               href="/dashboard/professional/quotes"
             />
             <DashboardStatCard
               icon={Award}
-              label="Accepted quotes"
+              label={t("stats.acceptedQuotes")}
               value={acceptedQuotes}
               href="/dashboard/professional/quotes"
             />
             <DashboardStatCard
               icon={CalendarDays}
-              label="Upcoming appointments"
+              label={t("stats.upcomingAppointments")}
               value={professionalAppointments.length}
               href="/dashboard/professional/appointments"
             />
             <DashboardStatCard
               icon={Briefcase}
-              label="Active jobs"
+              label={t("stats.activeJobs")}
               value={activeJobs.length}
               href="/dashboard/professional/jobs"
             />
             <DashboardStatCard
               icon={Briefcase}
-              label="Completed jobs"
+              label={t("stats.completedJobs")}
               value={completedJobs.length}
               href="/dashboard/professional/jobs"
             />
           </ResponsiveGrid>
 
-          <nav aria-label="Quick actions" className="flex flex-wrap gap-2">
+          <nav aria-label={t("quickActions.ariaLabel")} className="flex flex-wrap gap-2">
             {PROFESSIONAL_QUICK_ACTIONS.map((action) => (
               <ButtonLink key={action.href} href={action.href} variant="outline" size="sm">
                 <action.icon className="h-4 w-4" aria-hidden />
-                {action.label}
+                {t(`quickActions.${action.labelKey}`)}
               </ButtonLink>
             ))}
           </nav>
@@ -196,27 +202,27 @@ export default async function DashboardPage() {
       {!isProfessional && (
         <>
           <ResponsiveGrid cols="1-2-4">
-            <DashboardStatCard icon={FileText} label="Active requests" value={activeRequestCount} href="/requests" />
+            <DashboardStatCard icon={FileText} label={t("stats.activeRequests")} value={activeRequestCount} href="/requests" />
             <DashboardStatCard
               icon={CalendarDays}
-              label="Upcoming appointments"
+              label={t("stats.upcomingAppointments")}
               value={appointments.length}
               href="/appointments"
             />
-            <DashboardStatCard icon={Briefcase} label="Active jobs" value={jobs.length} href="/jobs" />
+            <DashboardStatCard icon={Briefcase} label={t("stats.activeJobs")} value={jobs.length} href="/jobs" />
             <DashboardStatCard
               icon={MessageSquare}
-              label="Unread messages"
+              label={t("stats.unreadMessages")}
               value={unreadMessages}
               href="/messages"
             />
           </ResponsiveGrid>
 
-          <nav aria-label="Quick actions" className="flex flex-wrap gap-2">
+          <nav aria-label={t("quickActions.ariaLabel")} className="flex flex-wrap gap-2">
             {CUSTOMER_QUICK_ACTIONS.map((action) => (
               <ButtonLink key={action.href} href={action.href} variant="outline" size="sm">
                 <action.icon className="h-4 w-4" aria-hidden />
-                {action.label}
+                {t(`quickActions.${action.labelKey}`)}
               </ButtonLink>
             ))}
           </nav>
@@ -224,20 +230,20 @@ export default async function DashboardPage() {
           <ResponsiveGrid cols="1-2-lg" gap="lg">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                <CardTitle>Your requests</CardTitle>
+                <CardTitle>{t("cards.yourRequests")}</CardTitle>
                 <Link href="/requests" className="text-sm font-medium text-primary hover:underline">
-                  View all
+                  {t("cards.viewAll")}
                 </Link>
               </CardHeader>
               <CardContent>
                 {requests.length === 0 ? (
                   <EmptyState
                     icon={FileText}
-                    title="No service requests yet."
-                    description="Post a request to start getting quotes from professionals near you."
+                    title={t("empty.requests.title")}
+                    description={t("empty.requests.description")}
                     action={
                       <ButtonLink href="/requests/new" size="sm">
-                        New request
+                        {t("quickActions.newRequest")}
                       </ButtonLink>
                     }
                   />
@@ -261,20 +267,20 @@ export default async function DashboardPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                <CardTitle>Upcoming appointments</CardTitle>
+                <CardTitle>{t("cards.upcomingAppointments")}</CardTitle>
                 <Link href="/appointments" className="text-sm font-medium text-primary hover:underline">
-                  View all
+                  {t("cards.viewAll")}
                 </Link>
               </CardHeader>
               <CardContent>
                 {appointments.length === 0 ? (
                   <EmptyState
                     icon={CalendarDays}
-                    title="No upcoming appointments."
-                    description="Appointments appear here once you accept a quote from a professional."
+                    title={t("empty.appointments.title")}
+                    description={t("empty.appointments.description")}
                     action={
                       <ButtonLink href="/requests" size="sm" variant="outline">
-                        View my requests
+                        {t("empty.appointments.action")}
                       </ButtonLink>
                     }
                   />
@@ -302,20 +308,20 @@ export default async function DashboardPage() {
       <ResponsiveGrid cols="1-2-lg" gap="lg">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <CardTitle>Messages</CardTitle>
+            <CardTitle>{t("cards.messages")}</CardTitle>
             <Link href="/messages" className="text-sm font-medium text-primary hover:underline">
-              View all
+              {t("cards.viewAll")}
             </Link>
           </CardHeader>
           <CardContent>
             {conversations.length === 0 ? (
               <EmptyState
                 icon={MessageSquare}
-                title="No new messages."
-                description="Conversations with customers and professionals show up here."
+                title={t("empty.messages.title")}
+                description={t("empty.messages.description")}
                 action={
                   <ButtonLink href="/messages" size="sm" variant="outline">
-                    Go to messages
+                    {t("empty.messages.action")}
                   </ButtonLink>
                 }
               />
@@ -328,7 +334,7 @@ export default async function DashboardPage() {
                       className="flex items-center justify-between gap-3 py-3 text-sm transition-colors hover:bg-muted"
                     >
                       <span className="min-w-0 truncate">
-                        {conversation.otherParticipant.name ?? "Marketplace user"}
+                        {conversation.otherParticipant.name ?? tMessages("unknownParticipant")}
                       </span>
                       {conversation.unreadCount > 0 && (
                         <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
@@ -346,34 +352,34 @@ export default async function DashboardPage() {
         {isProfessional && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>Your quotes</CardTitle>
+              <CardTitle>{t("cards.yourQuotes")}</CardTitle>
               <Link
                 href="/dashboard/professional/quotes"
                 className="text-sm font-medium text-primary hover:underline"
               >
-                View all
+                {t("cards.viewAll")}
               </Link>
             </CardHeader>
             <CardContent>
               {!professional ? (
                 <EmptyState
                   icon={Award}
-                  title="Set up your professional profile."
-                  description="Create your professional profile to start receiving service requests to quote on."
+                  title={t("empty.noProfessionalProfile.title")}
+                  description={t("empty.noProfessionalProfile.description")}
                   action={
                     <ButtonLink href="/dashboard/professional" size="sm">
-                      Get started
+                      {t("empty.noProfessionalProfile.action")}
                     </ButtonLink>
                   }
                 />
               ) : quotes.length === 0 ? (
                 <EmptyState
                   icon={Award}
-                  title="No quotes submitted yet."
-                  description="Browse open service requests and send your first quote."
+                  title={t("empty.quotes.title")}
+                  description={t("empty.quotes.description")}
                   action={
                     <ButtonLink href="/dashboard/professional/requests" size="sm">
-                      Browse requests
+                      {t("quickActions.browseRequests")}
                     </ButtonLink>
                   }
                 />

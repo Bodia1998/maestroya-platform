@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { cn } from "@/shared/utils/cn";
@@ -25,6 +26,8 @@ export function MessageBubble({
   isOwn: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations("customer.messages.bubble");
+  const format = useFormatter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
@@ -50,11 +53,11 @@ export function MessageBubble({
               : "bg-black/5 text-foreground",
         )}
       >
-        {isDeleted ? "This message was deleted." : message.body}
+        {isDeleted ? t("deleted") : message.body}
       </div>
 
       <div className="flex items-center gap-2 text-xs text-foreground/40">
-        <span>{message.createdAt.toLocaleString()}</span>
+        <span>{format.dateTime(message.createdAt, { dateStyle: "medium", timeStyle: "short" })}</span>
         {isOwn && !isDeleted && (
           <>
             {confirming ? (
@@ -65,15 +68,15 @@ export function MessageBubble({
                   onClick={handleDelete}
                   className="text-red-600 hover:underline"
                 >
-                  {isDeleting ? "Deleting…" : "Confirm delete"}
+                  {isDeleting ? t("deleting") : t("confirmDelete")}
                 </button>
                 <button type="button" onClick={() => setConfirming(false)} className="hover:underline">
-                  Cancel
+                  {t("cancel")}
                 </button>
               </span>
             ) : (
               <button type="button" onClick={() => setConfirming(true)} className="hover:underline">
-                Delete
+                {t("delete")}
               </button>
             )}
           </>

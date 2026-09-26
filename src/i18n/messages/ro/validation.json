@@ -12,5 +12,192 @@
   "passwordTooWeak": "Parola trebuie să conțină majuscule, minuscule și cifre.",
   "mismatch": "Valorile nu corespund.",
   "invalid": "Valoarea introdusă nu este validă.",
-  "summary": "Corectează erorile din formular."
+  "summary": "Corectează erorile din formular.",
+  "dto": {
+    "ids": {
+      "action": "Acțiune nevalidă.",
+      "adminUser": "Utilizator administrator nevalid.",
+      "admin": "Administrator nevalid.",
+      "appeal": "Contestație nevalidă.",
+      "appointment": "Programare nevalidă.",
+      "case": "Caz nevalid.",
+      "company": "Companie nevalidă.",
+      "conversation": "Conversație nevalidă.",
+      "dispute": "Dispută nevalidă.",
+      "document": "Document nevalid.",
+      "invitation": "Invitație nevalidă.",
+      "job": "Lucrare nevalidă.",
+      "member": "Membru nevalid.",
+      "notification": "Notificare nevalidă.",
+      "payment": "Plată nevalidă.",
+      "portfolioItem": "Element de portofoliu nevalid.",
+      "professional": "Profesionist nevalid.",
+      "quote": "Ofertă nevalidă.",
+      "recipient": "Destinatar nevalid.",
+      "review": "Recenzie nevalidă.",
+      "reviewer": "Evaluator nevalid.",
+      "serviceCategory": "Categorie de servicii nevalidă.",
+      "serviceRequest": "Cerere nevalidă.",
+      "ticket": "Tichet nevalid.",
+      "user": "Utilizator nevalid.",
+      "verification": "Verificare nevalidă."
+    },
+    "invitation": {
+      "linkInvalid": "Link de invitație nevalid."
+    },
+    "admin": {
+      "roleRequired": "Este necesar cel puțin un rol."
+    },
+    "aiVisibility": {
+      "queryRequired": "Este necesară o interogare.",
+      "unknownQuery": "Interogare necunoscută — trebuie să fie una dintre interogările active de vizibilitate AI."
+    },
+    "analytics": {
+      "dateRange": "Data de început trebuie să fie înaintea datei de sfârșit."
+    },
+    "auth": {
+      "nameRequired": "Introdu numele tău.",
+      "passwordRequired": "Introdu parola.",
+      "passwordsMismatch": "Parolele nu coincid."
+    },
+    "password": {
+      "minLength": "Parola trebuie să aibă cel puțin 10 caractere.",
+      "tooLong": "Parola este prea lungă.",
+      "lowercase": "Parola trebuie să conțină o literă mică.",
+      "uppercase": "Parola trebuie să conțină o literă mare.",
+      "number": "Parola trebuie să conțină o cifră."
+    },
+    "profile": {
+      "currentPasswordRequired": "Introdu parola actuală.",
+      "passwordMustDiffer": "Parola nouă trebuie să fie diferită de cea actuală.",
+      "timezoneRequired": "Selectează un fus orar.",
+      "deleteConfirm": "Scrie \"DELETE\" pentru a confirma."
+    },
+    "professional": {
+      "deactivateConfirm": "Scrie \"DEACTIVATE\" pentru a confirma.",
+      "yearsNegative": "Anii de experiență nu pot fi negativi.",
+      "yearsRealistic": "Introdu un număr realist de ani.",
+      "radiusNegative": "Raza de acțiune nu poate fi negativă.",
+      "radiusRealistic": "Introdu o rază de acțiune realistă.",
+      "descriptionRequired": "Adaugă o scurtă descriere."
+    },
+    "membership": {
+      "transferConfirm": "Scrie \"TRANSFER\" pentru a confirma.",
+      "roleInvalid": "Selectează un rol valid."
+    },
+    "address": {
+      "street": "Introdu o adresă.",
+      "city": "Introdu un oraș.",
+      "postalCode": "Introdu un cod poștal.",
+      "country": "Introdu o țară."
+    },
+    "location": {
+      "cityRequired": "Orașul este obligatoriu.",
+      "latitudeInvalid": "Introdu o latitudine validă.",
+      "longitudeInvalid": "Introdu o longitudine validă.",
+      "latitudeRange": "Latitudinea trebuie să fie între -90 și 90.",
+      "longitudeRange": "Longitudinea trebuie să fie între -180 și 180."
+    },
+    "search": {
+      "coordinatesTogether": "Latitudinea și longitudinea trebuie indicate împreună.",
+      "radiusRequiresLocation": "O rază de căutare necesită latitudine și longitudine.",
+      "radiusInvalid": "Introdu o rază de căutare validă.",
+      "radiusPositive": "Raza de căutare trebuie să fie mai mare decât zero.",
+      "radiusMax": "Raza de căutare nu poate depăși 200 km.",
+      "minRatingInvalid": "Introdu un rating minim valid.",
+      "minRatingRange": "Ratingul minim trebuie să fie între 1 și 5.",
+      "minReviewCountInvalid": "Introdu un număr minim de recenzii valid.",
+      "minReviewCountNegative": "Numărul minim de recenzii nu poate fi negativ.",
+      "minReviewCountTooLarge": "Numărul minim de recenzii este prea mare."
+    },
+    "categories": {
+      "invalid": "Selectează o categorie de servicii validă.",
+      "min": "Selectează cel puțin o categorie de servicii.",
+      "max": "Selectează cel mult 20 de categorii."
+    },
+    "company": {
+      "legalNameRequired": "Denumirea legală este obligatorie.",
+      "taxIdRequired": "Codul fiscal este obligatoriu."
+    },
+    "common": {
+      "wholeNumber": "Introdu un număr întreg.",
+      "cancellationReasonRequired": "Alege un motiv de anulare."
+    },
+    "portfolio": {
+      "mediaUrlInvalid": "Introdu un URL media valid."
+    },
+    "referral": {
+      "codeFormat": "Codul de recomandare poate conține doar litere mici, cifre și caractere de subliniere."
+    },
+    "verification": {
+      "countryCode": "Codul țării trebuie să fie un cod ISO 3166-1 din 2 litere."
+    },
+    "chat": {
+      "messageRequired": "Scrie un mesaj înainte de a-l trimite."
+    },
+    "onboarding": {
+      "termsVersionRequired": "Este necesară o versiune a termenilor.",
+      "privacyVersionRequired": "Este necesară o versiune a politicii de confidențialitate.",
+      "accountHolderRequired": "Introdu numele complet al titularului contului.",
+      "ibanInvalid": "Introdu un IBAN valid."
+    },
+    "dispute": {
+      "reasonRequired": "Motivul este obligatoriu.",
+      "refundAmountRequired": "Pentru o soluționare parțială este necesară o sumă de rambursare.",
+      "amountRequired": "Pentru această soluționare este necesară o sumă.",
+      "adjustmentTypeRequired": "Pentru această soluționare este necesar un tip de ajustare.",
+      "messageEmpty": "Mesajul nu poate fi gol.",
+      "fileUrlInvalid": "URL-ul fișierului nu este valid.",
+      "fileUrlHttp": "URL-ul fișierului trebuie să fie un link http(s).",
+      "resolutionNoteRequired": "Nota de soluționare este obligatorie.",
+      "amountPositive": "Suma trebuie să fie pozitivă."
+    },
+    "review": {
+      "responseEmpty": "Răspunsul nu poate fi gol.",
+      "ratingInteger": "Ratingul trebuie să fie un număr întreg."
+    },
+    "notification": {
+      "actionUrlUnsafe": "URL-ul acțiunii trebuie să fie o cale internă sigură.",
+      "titleRequired": "Titlul este obligatoriu.",
+      "messageRequired": "Mesajul este obligatoriu."
+    },
+    "quote": {
+      "itemsRequired": "Adaugă cel puțin un articol în oferta ta.",
+      "requiredMaterialsMissing": "Adaugă cel puțin un material necesar atunci când materialele sunt cumpărate de client.",
+      "materialsPriced": "Materialele nu pot avea preț în ofertă atunci când clientul le cumpără direct.",
+      "materialNameRequired": "Introdu un nume pentru acest material.",
+      "itemDescriptionRequired": "Introdu o descriere pentru acest articol.",
+      "quantityPositive": "Cantitatea trebuie să fie mai mare decât zero.",
+      "quantityRealistic": "Introdu o cantitate realistă.",
+      "unitPriceNegative": "Prețul unitar nu poate fi negativ.",
+      "unitPriceRealistic": "Introdu un preț unitar realist.",
+      "validUntilFuture": "Data de valabilitate trebuie să fie în viitor.",
+      "itemsMax": "O ofertă poate avea cel mult 20 de articole.",
+      "materialsMax": "O listă de materiale poate avea cel mult 50 de articole."
+    },
+    "financial": {
+      "adjustmentPositive": "Suma ajustării trebuie să fie mai mare decât zero.",
+      "adjustmentRealistic": "Introdu o sumă de ajustare realistă."
+    },
+    "booking": {
+      "startTimeInvalid": "Introdu o oră de început validă.",
+      "endTimeInvalid": "Introdu o oră de sfârșit validă.",
+      "endAfterStart": "Ora de sfârșit trebuie să fie după ora de început."
+    },
+    "job": {
+      "reasonRequired": "Alege un motiv.",
+      "decisionRequired": "Alege o decizie.",
+      "describeProblem": "Descrie problema în cel puțin 20 de caractere."
+    },
+    "serviceRequest": {
+      "titleRequired": "Introdu un titlu.",
+      "descriptionRequired": "Introdu o descriere.",
+      "budgetNegative": "Bugetul nu poate fi negativ.",
+      "budgetRange": "Bugetul minim nu poate depăși bugetul maxim."
+    },
+    "featureFlag": {
+      "keyRequired": "Cheia flag-ului este obligatorie.",
+      "keyFormat": "Cheia flag-ului poate conține doar litere, cifre, '-', '_' și '.'."
+    }
+  }
 }

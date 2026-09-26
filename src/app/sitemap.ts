@@ -56,6 +56,12 @@ import { NATIONAL_COVERAGE_CONTENT } from "@/shared/content/national-coverage";
  * exact file) if either table ever approaches that cap; no other change
  * would be needed since both queries already use `orderBy: { createdAt: "asc" }`
  * pagination-ready ordering.
+ *
+ * Module 120 — Multilingual Localization: single-language by design. Each
+ * public page has ONE URL whose language is negotiated per visitor, so the
+ * sitemap lists each canonical URL exactly once, with no per-locale
+ * variants or hreflang annotations, and never depends on the request
+ * locale.
  */
 
 const MAX_ENTRIES_PER_ENTITY = 45_000;

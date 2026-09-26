@@ -1,0 +1,17 @@
+{
+  "title": "Instellingen",
+  "subtitle": "Stel MaestroYa in zoals jij het wilt.",
+  "language": {
+    "title": "Taal van de interface",
+    "description": "Kies de taal waarin je MaestroYa wilt zien. Dit heeft geen invloed op inhoud die door anderen is geschreven, zoals berichten of beoordelingen.",
+    "label": "Taal",
+    "saved": "Taal bijgewerkt.",
+    "error": "Je taal kon niet worden opgeslagen.",
+    "saving": "Taal opslaan…",
+    "switchTo": "Overschakelen naar {language}",
+    "guestNotice": "Je taal wordt alleen in deze browser opgeslagen. Log in om hem in je account op te slaan."
+  },
+  "notifications": {
+    "title": "Meldingen"
+  }
+}

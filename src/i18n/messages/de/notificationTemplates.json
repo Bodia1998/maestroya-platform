@@ -1,0 +1,281 @@
+{
+  "NEW_QUOTE": {
+    "title": "Neues Angebot erhalten",
+    "message": "Eine Fachkraft hat ein Angebot für deine Anfrage gesendet."
+  },
+  "QUOTE_ACCEPTED": {
+    "title": "Dein Angebot wurde angenommen",
+    "message": "Der Kunde hat dein Angebot angenommen."
+  },
+  "QUOTE_REJECTED": {
+    "title": "Dein Angebot wurde nicht ausgewählt",
+    "message": "Der Kunde hat ein anderes Angebot für diese Anfrage angenommen."
+  },
+  "QUOTE_EXPIRED": {
+    "title": "Dein Angebot ist abgelaufen",
+    "message": "Eines deiner Angebote ist abgelaufen, weil es nicht rechtzeitig angenommen wurde."
+  },
+  "NEW_MESSAGE": {
+    "title": "Neue Nachricht"
+  },
+  "APPOINTMENT_PROPOSED": {
+    "title": "Neue Terminzeit vorgeschlagen",
+    "message": "Es wurde eine neue Terminzeit vorgeschlagen.",
+    "variants": {
+      "byCustomer": {
+        "message": "Der Kunde hat eine neue Terminzeit vorgeschlagen."
+      },
+      "byProfessional": {
+        "message": "Die Fachkraft hat eine neue Terminzeit vorgeschlagen."
+      }
+    }
+  },
+  "APPOINTMENT_CONFIRMED": {
+    "title": "Terminzeit bestätigt",
+    "message": "Die Terminzeit wurde bestätigt.",
+    "variants": {
+      "byCustomer": {
+        "message": "Der Kunde hat die Terminzeit bestätigt."
+      },
+      "byProfessional": {
+        "message": "Die Fachkraft hat die Terminzeit bestätigt."
+      }
+    }
+  },
+  "APPOINTMENT_CANCELLED": {
+    "title": "Termin abgesagt",
+    "message": "Dieser Termin wurde abgesagt.",
+    "variants": {
+      "byCustomer": {
+        "message": "Der Kunde hat diesen Termin abgesagt."
+      },
+      "byProfessional": {
+        "message": "Die Fachkraft hat diesen Termin abgesagt."
+      }
+    }
+  },
+  "JOB_STARTED": {
+    "title": "Die Arbeit hat begonnen",
+    "message": "Die Fachkraft hat mit deinem Auftrag begonnen."
+  },
+  "JOB_CANCELLED": {
+    "title": "Auftrag storniert",
+    "message": "Dieser Auftrag wurde storniert.",
+    "variants": {
+      "byCustomer": {
+        "message": "Der Kunde hat diesen Auftrag storniert."
+      },
+      "byProfessional": {
+        "message": "Die Fachkraft hat diesen Auftrag storniert."
+      }
+    }
+  },
+  "JOB_COMPLETION_CONFIRMATION_REQUESTED": {
+    "title": "Bitte bestätige die erledigte Leistung",
+    "message": "Die Fachkraft hat deinen Auftrag als erledigt markiert. Bitte bestätige, dass die Arbeit ausgeführt wurde, oder gib uns Bescheid, wenn es ein Problem gibt."
+  },
+  "JOB_COMPLETION_CONFIRMATION_REMINDER": {
+    "title": "Bestätige die erledigte Leistung",
+    "message": "Bitte bestätige die erledigte Leistung oder melde ein Problem, bevor die Bestätigungsfrist abläuft."
+  },
+  "JOB_COMPLETION_CONFIRMED": {
+    "title": "Leistung bestätigt",
+    "message": "Der Kunde hat die erledigte Leistung bestätigt."
+  },
+  "JOB_COMPLETION_CONFIRMATION_TIMED_OUT": {
+    "title": "Auftrag in Prüfung",
+    "message": "Der Kunde hat nicht rechtzeitig auf die Abschlussbestätigung reagiert. Der Auftrag wird jetzt manuell geprüft, bevor die Zahlung freigegeben werden kann."
+  },
+  "MATERIALS_PURCHASE_CONFIRMED": {
+    "title": "Materialkauf bestätigt",
+    "message": "Der Kunde hat bestätigt, dass das gesamte benötigte Material gekauft wurde."
+  },
+  "REVIEW_RECEIVED": {
+    "title": "Du hast eine neue Bewertung erhalten",
+    "message": "Ein Kunde hat deinen abgeschlossenen Auftrag bewertet."
+  },
+  "REVIEW_RESPONSE_ADDED": {
+    "title": "Eine Fachkraft hat auf deine Bewertung geantwortet",
+    "message": "Die Fachkraft, die du bewertet hast, hat eine Antwort veröffentlicht."
+  },
+  "SERVICE_REQUEST_EXPIRED": {
+    "title": "Deine Anfrage ist abgelaufen",
+    "message": "Deine Anfrage „{requestTitle}“ ist abgelaufen, ohne abgeschlossen zu werden."
+  },
+  "VERIFICATION_SUBMITTED": {
+    "title": "Verifizierungsanfrage eingereicht",
+    "message": "Wir haben deine Verifizierungsanfrage erhalten und prüfen sie in Kürze.",
+    "variants": {
+      "resubmitted": {
+        "title": "Verifizierungsanfrage erneut eingereicht",
+        "message": "Wir haben deine aktualisierte Verifizierungsanfrage erhalten und prüfen sie in Kürze."
+      }
+    }
+  },
+  "VERIFICATION_APPROVED": {
+    "title": "Du bist jetzt eine verifizierte Fachkraft",
+    "message": "Deine Verifizierung wurde genehmigt. In deinem öffentlichen Profil wird jetzt ein Verifizierungsabzeichen angezeigt.",
+    "variants": {
+      "automated": {
+        "message": "Deine automatische Identitätsprüfung war erfolgreich. In deinem öffentlichen Profil wird jetzt ein Verifizierungsabzeichen angezeigt."
+      }
+    }
+  },
+  "VERIFICATION_REJECTED": {
+    "title": "Verifizierungsanfrage abgelehnt",
+    "message": "Deine Verifizierungsanfrage wurde abgelehnt. Öffne deine Verifizierungsseite, um den Grund zu sehen und es erneut zu versuchen.",
+    "variants": {
+      "automated": {
+        "message": "Deine automatische Identitätsprüfung war nicht erfolgreich. Öffne deine Verifizierungsseite, um den Grund zu sehen und es erneut zu versuchen."
+      }
+    }
+  },
+  "VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Weitere Angaben für die Verifizierung nötig",
+    "message": "Eine prüfende Person hat dich gebeten, deine Verifizierungsanfrage zu aktualisieren. Details findest du auf deiner Verifizierungsseite.",
+    "variants": {
+      "businessRegistration": {
+        "title": "Nachweis der Gewerbeanmeldung erforderlich",
+        "message": "Deine automatische Identitätsprüfung war erfolgreich. Lade einen Nachweis über die Gewerbeanmeldung hoch, um deine Verifizierung als Fachkraft abzuschließen."
+      }
+    }
+  },
+  "VERIFICATION_EXPIRED": {
+    "title": "Deine Verifizierung ist abgelaufen",
+    "message": "Deine Verifizierung als Fachkraft ist abgelaufen. Starte eine neue Verifizierung, um dein Verifizierungsabzeichen zu behalten."
+  },
+  "COMPANY_INVITATION_RECEIVED": {
+    "title": "Du wurdest in ein Unternehmen eingeladen",
+    "message": "Du hast eine ausstehende Einladung von einem Unternehmen."
+  },
+  "COMPANY_INVITATION_ACCEPTED": {
+    "title": "Einladung angenommen",
+    "message": "Eine ausstehende Einladung des Unternehmens wurde angenommen."
+  },
+  "COMPANY_INVITATION_DECLINED": {
+    "title": "Einladung abgelehnt",
+    "message": "Eine ausstehende Einladung des Unternehmens wurde abgelehnt."
+  },
+  "COMPANY_MEMBER_REMOVED": {
+    "title": "Du wurdest aus einem Unternehmen entfernt",
+    "message": "Du bist kein Mitglied dieses Unternehmens mehr."
+  },
+  "COMPANY_MEMBER_ROLE_CHANGED": {
+    "title": "Deine Rolle hat sich geändert",
+    "message": "Deine Rolle im Unternehmen ist jetzt: {role}.",
+    "variants": {
+      "ownershipTransferred": {
+        "title": "Du bist jetzt Inhaber des Unternehmens",
+        "message": "Die Inhaberschaft des Unternehmens wurde auf dich übertragen."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_SUBMITTED": {
+    "title": "Verifizierungsanfrage eingereicht",
+    "message": "Wir haben die Verifizierungsanfrage deines Unternehmens erhalten und prüfen sie in Kürze.",
+    "variants": {
+      "resubmitted": {
+        "title": "Verifizierungsanfrage erneut eingereicht",
+        "message": "Wir haben die aktualisierte Verifizierungsanfrage deines Unternehmens erhalten."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_APPROVED": {
+    "title": "Dein Unternehmen ist jetzt verifiziert",
+    "message": "Die Verifizierung deines Unternehmens wurde genehmigt. In seinem öffentlichen Profil wird jetzt ein Verifizierungsabzeichen angezeigt."
+  },
+  "COMPANY_VERIFICATION_REJECTED": {
+    "title": "Verifizierungsanfrage abgelehnt",
+    "message": "Die Verifizierungsanfrage deines Unternehmens wurde abgelehnt. Den Grund findest du in den Details."
+  },
+  "COMPANY_VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Erneute Einreichung erforderlich",
+    "message": "Die Verifizierungsanfrage deines Unternehmens muss geändert werden, bevor sie genehmigt werden kann."
+  },
+  "COMPANY_VERIFICATION_EXPIRED": {
+    "title": "Die Verifizierung deines Unternehmens ist abgelaufen",
+    "message": "Die Verifizierung deines Unternehmens ist abgelaufen. Starte eine neue Verifizierung, um das Verifizierungsabzeichen zu behalten."
+  },
+  "COMPANY_SUSPENDED": {
+    "title": "Dein Unternehmen wurde gesperrt",
+    "message": "Ein Plattform-Admin hat das Profil deines Unternehmens gesperrt."
+  },
+  "COMPANY_REACTIVATED": {
+    "title": "Dein Unternehmen wurde reaktiviert",
+    "message": "Das Profil deines Unternehmens ist wieder aktiv."
+  },
+  "DISPUTE_CREATED": {
+    "title": "Ein Streitfall wurde eröffnet",
+    "message": "Zu deinem Auftrag wurde ein Streitfall ({caseNumber}) eröffnet."
+  },
+  "DISPUTE_ASSIGNED": {
+    "title": "Dir wurde ein Streitfall zugewiesen",
+    "message": "Dir wurde der Streitfall {caseNumber} zugewiesen."
+  },
+  "DISPUTE_STATUS_CHANGED": {
+    "title": "Status des Streitfalls aktualisiert",
+    "message": "Neuer Status für Streitfall {caseNumber}: {status}.",
+    "variants": {
+      "newMessage": {
+        "title": "Neue Nachricht in deinem Streitfall",
+        "message": "Es gibt eine neue Nachricht im Streitfall {caseNumber}."
+      }
+    }
+  },
+  "DISPUTE_RESPONSE_REQUESTED": {
+    "title": "Deine Antwort im Streitfall wird benötigt",
+    "message": "Neuer Status für Streitfall {caseNumber}: {status}."
+  },
+  "DISPUTE_RESOLVED": {
+    "title": "Dein Streitfall wurde gelöst",
+    "message": "Der Streitfall {caseNumber} wurde gelöst."
+  },
+  "DISPUTE_REJECTED": {
+    "title": "Dein Streitfall wurde abgelehnt",
+    "message": "Der Streitfall {caseNumber} wurde abgelehnt."
+  },
+  "DISPUTE_CLOSED": {
+    "title": "Dein Streitfall wurde geschlossen",
+    "message": "Der Streitfall {caseNumber} wurde geschlossen."
+  },
+  "SUPPORT_TICKET_ASSIGNED": {
+    "title": "Dir wurde ein Support-Ticket zugewiesen",
+    "message": "Dir wurde das Ticket {ticketNumber} zugewiesen."
+  },
+  "SUPPORT_TICKET_STATUS_CHANGED": {
+    "title": "Dein Support-Ticket wurde aktualisiert",
+    "message": "Neuer Status für Ticket {ticketNumber}: {status}."
+  },
+  "SUPPORT_TICKET_RESOLVED": {
+    "title": "Dein Support-Ticket wurde gelöst",
+    "message": "Das Ticket {ticketNumber} wurde gelöst."
+  },
+  "SUPPORT_TICKET_CLOSED": {
+    "title": "Dein Support-Ticket wurde geschlossen",
+    "message": "Das Ticket {ticketNumber} wurde geschlossen."
+  },
+  "labels": {
+    "disputeStatus": {
+      "OPEN": "Offen",
+      "UNDER_REVIEW": "In Prüfung",
+      "WAITING_FOR_CUSTOMER": "Wartet auf den Kunden",
+      "WAITING_FOR_PROFESSIONAL": "Wartet auf die Fachkraft",
+      "RESOLVED": "Gelöst",
+      "REJECTED": "Abgelehnt",
+      "CLOSED": "Geschlossen"
+    },
+    "ticketStatus": {
+      "OPEN": "Offen",
+      "IN_PROGRESS": "In Bearbeitung",
+      "WAITING_FOR_USER": "Wartet auf deine Antwort",
+      "RESOLVED": "Gelöst",
+      "CLOSED": "Geschlossen"
+    },
+    "companyRole": {
+      "OWNER": "Inhaber",
+      "ADMIN": "Admin",
+      "MANAGER": "Manager",
+      "MEMBER": "Mitglied"
+    }
+  }
+}

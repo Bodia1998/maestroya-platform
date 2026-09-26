@@ -1,0 +1,51 @@
+{
+  "legalDocument": {
+    "issuedLanguageNotice": "Этот документ показан на языке, на котором он был выпущен (испанском)."
+  },
+  "close": "Закрыть",
+  "breadcrumb": {
+    "label": "Навигационная цепочка"
+  },
+  "chip": {
+    "remove": "Убрать"
+  },
+  "combobox": {
+    "placeholder": "Выберите вариант",
+    "searchPlaceholder": "Поиск…",
+    "empty": "Ничего не найдено"
+  },
+  "confirmDialog": {
+    "cancel": "Отмена",
+    "genericError": "Что-то пошло не так. Попробуйте ещё раз."
+  },
+  "errorState": {
+    "title": "Что-то пошло не так",
+    "retry": "Повторить"
+  },
+  "loadingState": {
+    "label": "Загрузка…"
+  },
+  "spinner": {
+    "label": "Загрузка"
+  },
+  "pagination": {
+    "label": "Пагинация",
+    "previous": "Назад",
+    "next": "Далее"
+  },
+  "passwordInput": {
+    "show": "Показать пароль",
+    "hide": "Скрыть пароль"
+  },
+  "searchInput": {
+    "clear": "Очистить поиск"
+  },
+  "toast": {
+    "close": "Закрыть уведомление",
+    "region": "Уведомления",
+    "assertiveRegion": "Важные уведомления"
+  },
+  "fieldBadges": {
+    "optional": "Необязательно"
+  }
+}

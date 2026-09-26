@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import {
   cancelAppointmentSchema,
@@ -16,8 +17,8 @@ import {
   makeProposeAppointmentTimeUseCase,
   makeRescheduleAppointmentUseCase,
 } from "@/application/use-cases/booking/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError, localizeZodError } from "@/presentation/i18n/server";
 
 export type ActionResult =
   | { success: true }
@@ -27,12 +28,18 @@ export type ActionResult =
 // quotes/actions.ts): domain errors surface their own safe, user-facing
 // message; anything else is logged server-side and replaced with a
 // generic one.
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+// Module 120 — Multilingual Localization: fallbacks are keys in
+// `customer.appointments.errors`, resolved in the request's locale.
+type FallbackKey = "proposeFailed" | "confirmFailed" | "cancelFailed" | "completeFailed" | "rescheduleFailed";
+
+async function fromDomainError(error: unknown, fallbackKey: FallbackKey): Promise<ActionResult> {
+  const t = await getTranslations("customer.appointments.errors");
+  return { success: false, error: await localizeActionError(error, t(fallbackKey)) };
+}
+
+async function invalidAppointment(): Promise<ActionResult> {
+  const t = await getTranslations("customer.appointments.errors");
+  return { success: false, error: t("invalidAppointment") };
 }
 
 // Both the customer- and professional-side appointment pages import these
@@ -51,7 +58,7 @@ export async function proposeAppointmentTimeAction(
   const user = await requireAuth();
   const parsed = proposeAppointmentTimeSchema.safeParse({ appointmentId, start, end });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid appointment time." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
@@ -62,7 +69,7 @@ export async function proposeAppointmentTimeAction(
     revalidatePath(`/dashboard/professional/appointments/${appointmentId}`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong proposing this time.");
+    return fromDomainError(error, "proposeFailed");
   }
 }
 
@@ -70,7 +77,7 @@ export async function confirmAppointmentAction(appointmentId: string): Promise<A
   const user = await requireAuth();
   const parsed = confirmAppointmentSchema.safeParse({ appointmentId });
   if (!parsed.success) {
-    return { success: false, error: "Invalid appointment." };
+    return invalidAppointment();
   }
 
   try {
@@ -81,7 +88,7 @@ export async function confirmAppointmentAction(appointmentId: string): Promise<A
     revalidatePath(`/dashboard/professional/appointments/${appointmentId}`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong confirming this appointment.");
+    return fromDomainError(error, "confirmFailed");
   }
 }
 
@@ -93,7 +100,7 @@ export async function cancelAppointmentAction(
   const user = await requireAuth();
   const parsed = cancelAppointmentSchema.safeParse({ appointmentId, reason, note });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid cancellation." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
@@ -109,7 +116,7 @@ export async function cancelAppointmentAction(
     revalidatePath(`/dashboard/professional/appointments/${appointmentId}`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong cancelling this appointment.");
+    return fromDomainError(error, "cancelFailed");
   }
 }
 
@@ -117,7 +124,7 @@ export async function completeAppointmentAction(appointmentId: string): Promise<
   const user = await requireAuth();
   const parsed = completeAppointmentSchema.safeParse({ appointmentId });
   if (!parsed.success) {
-    return { success: false, error: "Invalid appointment." };
+    return invalidAppointment();
   }
 
   try {
@@ -128,7 +135,7 @@ export async function completeAppointmentAction(appointmentId: string): Promise<
     revalidatePath(`/dashboard/professional/appointments/${appointmentId}`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong completing this appointment.");
+    return fromDomainError(error, "completeFailed");
   }
 }
 
@@ -140,7 +147,7 @@ export async function rescheduleAppointmentAction(
   const user = await requireAuth();
   const parsed = rescheduleAppointmentSchema.safeParse({ appointmentId, start, end });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid appointment time." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
@@ -158,6 +165,6 @@ export async function rescheduleAppointmentAction(
     revalidatePath(`/dashboard/professional/appointments/${result.next.id}`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong rescheduling this appointment.");
+    return fromDomainError(error, "rescheduleFailed");
   }
 }

@@ -1,0 +1,365 @@
+{
+  "requests": {
+    "list": {
+      "title": "Moje poptávky",
+      "subtitle": "Poptávky, které jste zveřejnili, aby na ně profesionálové podali nabídky.",
+      "newRequest": "Nová poptávka",
+      "empty": {
+        "title": "Zatím žádné poptávky",
+        "description": "Zatím jste nezveřejnili žádnou poptávku. Zadejte ji a začněte dostávat nabídky od profesionálů ve vašem okolí."
+      }
+    },
+    "new": {
+      "title": "Nová poptávka služby",
+      "subtitle": "Popište práci, kterou potřebujete udělat. Poptávka se hned zveřejní, aby na ni profesionálové mohli podat nabídky."
+    },
+    "edit": {
+      "title": "Upravit poptávku",
+      "subtitle": "Tuto poptávku můžete upravovat, dokud je otevřená.",
+      "breadcrumb": "Upravit"
+    },
+    "detail": {
+      "metaTitle": "Poptávka služby",
+      "description": "Popis",
+      "location": "Lokalita",
+      "urgency": "Naléhavost",
+      "budget": "Rozpočet",
+      "budgetRange": "{min} – {max}",
+      "budgetUnset": "—",
+      "posted": "Zveřejněno",
+      "lastUpdated": "Naposledy aktualizováno",
+      "photos": "Fotografie",
+      "acceptedNotice": "Pro tuto poptávku jste přijali nabídku. V sekci <appointments>Moje schůzky</appointments> můžete navrhnout nebo potvrdit termín, celkový postup práce najdete v sekci <jobs>Moje zakázky</jobs>.",
+      "editRequest": "Upravit poptávku"
+    },
+    "form": {
+      "updated": "Poptávka byla aktualizována.",
+      "sections": {
+        "job": "Zakázka",
+        "budget": "Rozpočet",
+        "budgetDescription": "Uveďte profesionálům přibližnou částku, aby nabídky odpovídaly vašim představám.",
+        "location": "Místo zakázky"
+      },
+      "category": "Kategorie služby",
+      "selectCategory": "Vyberte kategorii",
+      "title": "Název",
+      "titlePlaceholder": "např. Oprava kapajícího kuchyňského kohoutku",
+      "description": "Popis",
+      "descriptionPlaceholder": "Popište práci podrobně — co je potřeba udělat a jakékoli důležité souvislosti.",
+      "urgency": "Naléhavost",
+      "budgetMin": "Minimální rozpočet (EUR)",
+      "budgetMax": "Maximální rozpočet (EUR)",
+      "address": "Adresa",
+      "streetPlaceholder": "Ulice a číslo domu",
+      "line2Placeholder": "Byt, patro apod. (nepovinné)",
+      "cityPlaceholder": "Město",
+      "postalCodePlaceholder": "PSČ",
+      "provincePlaceholder": "Provincie",
+      "countryPlaceholder": "Země",
+      "latitudePlaceholder": "Zeměpisná šířka (nepovinné)",
+      "longitudePlaceholder": "Zeměpisná délka (nepovinné)",
+      "coordinatesHelp": "Zeměpisná šířka a délka se doplní automaticky, pokud je to možné — pokud si nejste jisti, nechte je prázdné.",
+      "saveChanges": "Uložit změny",
+      "postRequest": "Zveřejnit poptávku"
+    },
+    "cancel": {
+      "trigger": "Zrušit tuto poptávku",
+      "title": "Zrušit tuto poptávku?",
+      "description": "Profesionálové už na ni nebudou moci podávat nabídky. Odsud to nelze vrátit zpět.",
+      "confirm": "Ano, zrušit poptávku",
+      "pending": "Rušení…",
+      "keep": "Ponechat poptávku"
+    },
+    "photos": {
+      "chooseFirst": "Nejprve vyberte obrázek.",
+      "alt": "Fotografie poptávky",
+      "remove": "Odebrat",
+      "none": "Nejsou přiloženy žádné fotografie.",
+      "add": "Přidat fotografii",
+      "uploading": "Nahrávání…",
+      "maxReached": "Dosažen maximální počet: {max, plural, one {# fotografie} few {# fotografie} many {# fotografie} other {# fotografií}}."
+    },
+    "errors": {
+      "createFailed": "Při vytváření poptávky se něco pokazilo.",
+      "updateFailed": "Při aktualizaci poptávky se něco pokazilo.",
+      "cancelFailed": "Při rušení poptávky se něco pokazilo.",
+      "photoMissing": "Vyberte obrázek k nahrání.",
+      "photoType": "Fotografie musí být ve formátu JPEG, PNG nebo WebP.",
+      "photoTooLarge": "Každá fotografie musí mít méně než 5 MB.",
+      "photoUploadFailed": "Při nahrávání fotografie se něco pokazilo.",
+      "photoRemoveFailed": "Při odebírání fotografie se něco pokazilo."
+    }
+  },
+  "quotes": {
+    "title": "Přijaté nabídky",
+    "subtitle": "Nabídky, které profesionálové k této poptávce podali.",
+    "breadcrumb": "Nabídky",
+    "empty": "Zatím žádné nabídky. Podívejte se sem brzy znovu.",
+    "verification": {
+      "UNVERIFIED": "Neověřeno",
+      "PENDING": "Ověření čeká na vyřízení",
+      "VERIFIED": "Ověřeno",
+      "REJECTED": "Ověření zamítnuto"
+    },
+    "meta": "Odesláno {created, date, medium} — aktualizováno {updated, date, medium}",
+    "metaWithValidity": "Platí do {validUntil, date, medium} — odesláno {created, date, medium} — aktualizováno {updated, date, medium}",
+    "messageProfessional": "Napsat zprávu: {name}",
+    "acceptFailed": "Při přijímání nabídky se něco pokazilo.",
+    "accept": {
+      "trigger": "Přijmout tuto nabídku",
+      "title": "Přijmout tuto nabídku?",
+      "description": "Všechny ostatní nabídky k této poptávce budou automaticky odmítnuty. Tuto akci nelze vrátit zpět.",
+      "confirm": "Ano, přijmout nabídku",
+      "pending": "Přijímání…",
+      "cancel": "Zatím ne"
+    }
+  },
+  "appointments": {
+    "list": {
+      "title": "Moje schůzky",
+      "subtitle": "Schůzky vytvořené z nabídek, které jste přijali.",
+      "empty": {
+        "title": "Žádné nadcházející schůzky",
+        "description": "Schůzky se zde zobrazí, jakmile přijmete nabídku profesionála.",
+        "action": "Zobrazit moje poptávky"
+      }
+    },
+    "noTimeProposed": "Zatím nebyl navržen žádný čas",
+    "notSet": "Nenastaveno",
+    "awaitingProposedTime": "Čeká na návrh času",
+    "detail": {
+      "title": "Schůzka",
+      "confirmedTime": "Potvrzený čas",
+      "proposedTime": "Navržený čas",
+      "cancellationReason": "Důvod zrušení"
+    },
+    "cancellationReason": {
+      "CUSTOMER_REQUEST": "Na žádost zákazníka",
+      "PROFESSIONAL_UNAVAILABLE": "Profesionál není k dispozici",
+      "SCHEDULING_CONFLICT": "Časový konflikt",
+      "OTHER": "Jiné"
+    },
+    "actions": {
+      "start": "Začátek",
+      "end": "Konec",
+      "confirming": "Potvrzování…",
+      "confirmTime": "Potvrdit tento čas",
+      "completing": "Označování jako dokončené…",
+      "markCompleted": "Označit tuto návštěvu jako dokončenou",
+      "cancelTrigger": "Zrušit schůzku",
+      "cancelTitle": "Zrušit tuto schůzku?",
+      "confirmCancel": "Ano, zrušit",
+      "cancelling": "Rušení…",
+      "notNow": "Teď ne",
+      "reason": "Důvod",
+      "note": "Poznámka (nepovinné)",
+      "proposeTime": "Navrhnout čas",
+      "proposeDifferentTime": "Navrhnout jiný čas",
+      "reschedule": "Přeplánovat"
+    },
+    "errors": {
+      "invalidAppointment": "Neplatná schůzka.",
+      "proposeFailed": "Při navrhování času se něco pokazilo.",
+      "confirmFailed": "Při potvrzování schůzky se něco pokazilo.",
+      "cancelFailed": "Při rušení schůzky se něco pokazilo.",
+      "completeFailed": "Při dokončování schůzky se něco pokazilo.",
+      "rescheduleFailed": "Při přeplánování schůzky se něco pokazilo."
+    }
+  },
+  "messages": {
+    "title": "Zprávy",
+    "conversation": "Konverzace",
+    "empty": {
+      "title": "Zatím žádné konverzace",
+      "description": "Jakmile budete mít se zákazníkem nebo profesionálem společnou nabídku, můžete si zde psát."
+    },
+    "participant": "Účastník",
+    "unknownParticipant": "Uživatel MaestroYa",
+    "noMessagesYet": "Zatím žádné zprávy.",
+    "emptyThread": "Zatím žádné zprávy. Pozdravte a začněte konverzaci.",
+    "closed": "Do této konverzace již nelze psát nové zprávy.",
+    "opening": "Otevírání…",
+    "messageAction": "Napsat zprávu",
+    "bubble": {
+      "deleted": "Tato zpráva byla smazána.",
+      "deleting": "Mazání…",
+      "confirmDelete": "Potvrdit smazání",
+      "cancel": "Zrušit",
+      "delete": "Smazat"
+    },
+    "composer": {
+      "placeholder": "Napište zprávu…",
+      "ariaLabel": "Zpráva",
+      "sending": "Odesílání…",
+      "send": "Odeslat"
+    },
+    "errors": {
+      "openFailed": "Při otevírání konverzace se něco pokazilo.",
+      "sendFailed": "Při odesílání zprávy se něco pokazilo.",
+      "generic": "Něco se pokazilo.",
+      "deleteFailed": "Při mazání zprávy se něco pokazilo."
+    }
+  },
+  "disputes": {
+    "list": {
+      "metaTitle": "Moje spory",
+      "title": "Spory",
+      "subtitle": "Případy, které jste otevřeli, a případy otevřené kvůli vaší práci.",
+      "openFromJob": "Otevřít spor ze zakázky",
+      "openedByMe": "Otevřené mnou",
+      "openedAboutMe": "Otevřené kvůli mé práci",
+      "emptyMine": {
+        "title": "Žádné otevřené spory",
+        "description": "Neotevřeli jste žádný spor."
+      },
+      "emptyAgainst": {
+        "title": "Nic tu není",
+        "description": "Kvůli vaší práci nebyl otevřen žádný spor."
+      }
+    },
+    "detail": {
+      "metaTitle": "Spor",
+      "subtitle": "{caseNumber} · Stav: {status} · Priorita: {priority} · Důvod: {reason}",
+      "description": "Popis",
+      "resolution": "Vyřešení",
+      "evidence": "Důkazy",
+      "noEvidence": "Nejsou přiloženy žádné důkazy.",
+      "messages": "Zprávy",
+      "noMessages": "Zatím žádné zprávy."
+    },
+    "messageForm": {
+      "label": "Napište zprávu",
+      "placeholder": "Napište zprávu…",
+      "sending": "Odesílání…",
+      "send": "Odeslat zprávu"
+    },
+    "new": {
+      "title": "Otevřít spor",
+      "subtitle": "Pouze pro zakázky, které probíhají, jsou dokončené nebo zrušené — viz detail vaší zakázky."
+    },
+    "form": {
+      "description": "Uveďte co nejvíce podrobností — pomůže nám to vše vyřešit rychleji.",
+      "jobId": "ID zakázky",
+      "reason": "Důvod",
+      "title": "Název",
+      "descriptionLabel": "Popis",
+      "submitting": "Odesílání…",
+      "submit": "Otevřít spor"
+    },
+    "status": {
+      "WAITING_FOR_CUSTOMER": "Čeká na zákazníka",
+      "WAITING_FOR_PROFESSIONAL": "Čeká na profesionála"
+    },
+    "priority": {
+      "LOW": "Nízká",
+      "MEDIUM": "Střední",
+      "HIGH": "Vysoká",
+      "URGENT": "Naléhavá"
+    },
+    "reason": {
+      "SERVICE_NOT_COMPLETED": "Služba nebyla dokončena",
+      "SERVICE_QUALITY": "Kvalita služby",
+      "PROPERTY_DAMAGE": "Poškození majetku",
+      "PROFESSIONAL_NO_SHOW": "Profesionál se nedostavil",
+      "CUSTOMER_NO_SHOW": "Zákazník se nedostavil",
+      "PRICE_DISAGREEMENT": "Neshoda ohledně ceny",
+      "SCOPE_OF_WORK": "Rozsah práce",
+      "COMMUNICATION_ISSUE": "Problém s komunikací",
+      "OTHER": "Jiné"
+    },
+    "resolution": {
+      "NO_ACTION": "Bez opatření",
+      "CUSTOMER_FAVOR": "Ve prospěch zákazníka",
+      "PROFESSIONAL_FAVOR": "Ve prospěch profesionála",
+      "PARTIAL_RESOLUTION": "Částečné vyřešení",
+      "FINANCIAL_ADJUSTMENT_REQUIRED": "Vyžaduje finanční úpravu",
+      "ESCALATED_EXTERNALLY": "Předáno externě"
+    },
+    "errors": {
+      "openFailed": "Při otevírání sporu se něco pokazilo.",
+      "loadMineFailed": "Při načítání vašich sporů se něco pokazilo.",
+      "loadFailed": "Při načítání sporů se něco pokazilo.",
+      "loadOneFailed": "Při načítání sporu se něco pokazilo.",
+      "messageFailed": "Při odesílání zprávy se něco pokazilo.",
+      "evidenceFailed": "Při přikládání důkazu se něco pokazilo."
+    }
+  },
+  "support": {
+    "metaTitle": "Požadavky na podporu",
+    "title": "Podpora",
+    "subtitle": "Problémy s účtem, s ověřením, chyby nebo obecné dotazy.",
+    "myTickets": "Moje požadavky",
+    "empty": {
+      "title": "Žádné požadavky na podporu",
+      "description": "Neotevřeli jste žádný požadavek na podporu."
+    },
+    "detail": {
+      "metaTitle": "Požadavek na podporu",
+      "subtitle": "{ticketNumber} · Stav: {status} · Kategorie: {category} · Priorita: {priority}",
+      "resolution": "Vyřešení"
+    },
+    "form": {
+      "title": "Otevřít nový požadavek",
+      "category": "Kategorie",
+      "subject": "Předmět",
+      "description": "Popis",
+      "submitting": "Odesílání…",
+      "submit": "Odeslat požadavek"
+    },
+    "category": {
+      "ACCOUNT": "Účet",
+      "VERIFICATION": "Ověření",
+      "BUG": "Chyba",
+      "LOGIN": "Přihlášení",
+      "GENERAL": "Obecné",
+      "OTHER": "Jiné"
+    },
+    "status": {
+      "WAITING_FOR_USER": "Čeká na vaši odpověď"
+    },
+    "errors": {
+      "openFailed": "Při otevírání požadavku se něco pokazilo.",
+      "loadFailed": "Při načítání požadavků se něco pokazilo.",
+      "loadOneFailed": "Při načítání požadavku se něco pokazilo."
+    }
+  },
+  "reviews": {
+    "errors": {
+      "submitFailed": "Při odesílání recenze se něco pokazilo.",
+      "updateFailed": "Při aktualizaci recenze se něco pokazilo.",
+      "deleteFailed": "Při mazání recenze se něco pokazilo.",
+      "respondFailed": "Při odesílání odpovědi se něco pokazilo."
+    }
+  },
+  "analytics": {
+    "loadFailed": "Při načítání statistik se něco pokazilo."
+  },
+  "receipts": {
+    "list": {
+      "title": "Moje potvrzení o platbě",
+      "subtitle": "Potvrzení o platbě za zakázky, které jste zaplatili přes MaestroYa.",
+      "empty": {
+        "title": "Zatím žádná potvrzení o platbě",
+        "description": "Potvrzení o platbě se zde zobrazí, jakmile bude zaplacená zakázka dokončena a platba uvolněna."
+      }
+    },
+    "notYetIssued": "Zatím nevystaveno",
+    "detail": {
+      "title": "Potvrzení o platbě",
+      "receiptNumber": "Číslo potvrzení",
+      "date": "Datum",
+      "dateUnset": "—",
+      "issuedBy": "Vystavil",
+      "billedTo": "Příjemce",
+      "items": "Položky",
+      "description": "Popis",
+      "amount": "Částka",
+      "tax": "Daň",
+      "taxableBase": "Základ daně",
+      "vat": "DPH – IVA ({rate})",
+      "total": "Celkem",
+      "creditNotes": "Dobropisy",
+      "documentReference": "Reference dokumentu: {hash}… (pouze kontrolní součet pro odhalení manipulace — nejde o elektronický podpis)."
+    }
+  }
+}

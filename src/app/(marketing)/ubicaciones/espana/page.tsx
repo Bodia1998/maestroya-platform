@@ -2,16 +2,26 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
 import { JsonLd } from "@/components/seo/json-ld";
-import { buildBreadcrumbJsonLd, buildFaqJsonLd, buildServiceJsonLd } from "@/shared/seo/structured-data";
-import { NATIONAL_COVERAGE_CONTENT } from "@/shared/content/national-coverage";
+import {
+  buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
+  buildServiceJsonLd,
+} from "@/shared/seo/structured-data";
+import {
+  NATIONAL_COVERAGE_CONTENT,
+  resolveNationalCoverageContent,
+} from "@/shared/content/national-coverage";
 import { findVerifiedCountry } from "@/shared/content/verified-country";
 import { listVerifiedTopLevelServiceCategories } from "@/shared/content/verified-service-category";
-import { LOCATION_CONTENT } from "@/shared/content/locations";
+import { LOCATION_CONTENT, localizeCountryName } from "@/shared/content/locations";
 import { findVerifiedCity } from "@/shared/content/verified-location";
+import { toOgLocale } from "@/shared/seo/site";
+import { localizeCategoryName } from "@/presentation/i18n/service-categories";
 
 /**
  * Module 118 (continuation) — Spain-wide geographic coverage.
@@ -29,6 +39,10 @@ import { findVerifiedCity } from "@/shared/content/verified-location";
  * the same way every other page in this module is, against a real
  * database row: the seeded `Country` (`code: "ES"`) — never trusted from
  * the static content catalog alone.
+ *
+ * Module 120: rendered in the visitor's locale (prose from the server-only
+ * `knowledge` namespace); the platform-scope vs. verified-local-availability
+ * distinction is preserved in every language.
  */
 const getVerifiedNationalCoverage = cache(async () => {
   const country = await findVerifiedCountry(NATIONAL_COVERAGE_CONTENT.countryCode);
@@ -36,21 +50,20 @@ const getVerifiedNationalCoverage = cache(async () => {
   return { country, content: NATIONAL_COVERAGE_CONTENT };
 });
 
-const TITLE = "MaestroYa en España — cobertura nacional";
-const DESCRIPTION =
-  "MaestroYa es un marketplace de servicios para el hogar pensado para operar en toda España. La disponibilidad real de profesionales depende de cada zona.";
-
 export async function generateMetadata(): Promise<Metadata> {
   const verified = await getVerifiedNationalCoverage();
   if (!verified) return {};
 
+  const [t, locale] = await Promise.all([getTranslations("seo"), getLocale()]);
+  const title = t("nationalCoverage.title");
+  const description = t("nationalCoverage.description");
   const path = "/ubicaciones/espana";
   return {
-    title: TITLE,
-    description: DESCRIPTION,
+    title,
+    description,
     alternates: { canonical: path },
-    openGraph: { title: TITLE, description: DESCRIPTION, url: path },
-    twitter: { title: TITLE, description: DESCRIPTION },
+    openGraph: { title, description, url: path, locale: toOgLocale(locale) },
+    twitter: { title, description },
   };
 }
 
@@ -60,18 +73,28 @@ export default async function NationalCoveragePage() {
     notFound();
   }
 
-  const { content } = verified;
   const path = "/ubicaciones/espana";
 
-  const [categories, verifiedLocalEntries] = await Promise.all([
+  const [t, tKnowledge, locale, categories, verifiedLocalEntries] = await Promise.all([
+    getTranslations("services"),
+    getTranslations("knowledge"),
+    getLocale(),
     listVerifiedTopLevelServiceCategories(),
     Promise.all(
       LOCATION_CONTENT.map(async (location) => {
-        const verifiedCity = await findVerifiedCity(location.cityName, location.provinceName, location.countryCode);
+        const verifiedCity = await findVerifiedCity(
+          location.cityName,
+          location.provinceName,
+          location.countryCode,
+        );
         return verifiedCity ? location : null;
       }),
-    ).then((entries) => entries.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))),
+    ).then((entries) =>
+      entries.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)),
+    ),
   ]);
+  const content = resolveNationalCoverageContent(verified.content, tKnowledge);
+  const countryName = localizeCountryName(t, verified.content.countryCode);
 
   return (
     <PageContainer maxWidth="3xl" padded>
@@ -87,44 +110,46 @@ export default async function NationalCoveragePage() {
       */}
       <JsonLd
         data={buildServiceJsonLd({
-          name: "Servicios para el hogar a través de MaestroYa",
+          name: content.structuredDataName,
           path,
-          description:
-            "Marketplace de servicios para el hogar operado por MaestroYa en España. La disponibilidad de profesionales varía según la categoría de servicio y la zona.",
-          areaServed: content.displayName,
+          description: content.structuredDataDescription,
+          areaServed: countryName,
+          inLanguage: locale,
         })}
       />
       <JsonLd
         data={buildBreadcrumbJsonLd([
-          { name: "Inicio", path: "/" },
-          { name: "Ubicaciones", path: "/ubicaciones" },
-          { name: content.displayName, path },
+          { name: t("breadcrumbs.home"), path: "/" },
+          { name: t("breadcrumbs.locations"), path: "/ubicaciones" },
+          { name: countryName, path },
         ])}
       />
-      <JsonLd data={buildFaqJsonLd(content.faqs)} />
+      <JsonLd data={buildFaqJsonLd(content.faqs, { inLanguage: locale })} />
 
       <nav className="text-sm text-foreground/60">
         <Link href="/" className="hover:underline">
-          Inicio
+          {t("breadcrumbs.home")}
         </Link>{" "}
         /{" "}
         <Link href="/ubicaciones" className="hover:underline">
-          Ubicaciones
+          {t("breadcrumbs.locations")}
         </Link>{" "}
-        / <span className="text-foreground">{content.displayName}</span>
+        / <span className="text-foreground">{countryName}</span>
       </nav>
 
       <div>
-        <h1 className="text-2xl font-semibold">MaestroYa en {content.displayName}</h1>
+        <h1 className="text-2xl font-semibold">
+          {t("nationalPage.title", { country: countryName })}
+        </h1>
         <p className="mt-2 text-sm text-foreground/80">{content.intro}</p>
       </div>
 
-      <Section title="Alcance de la plataforma" gap="sm">
+      <Section title={t("shared.platformScopeTitle")} gap="sm">
         <p className="text-sm text-foreground/80">{content.coverageStatement}</p>
       </Section>
 
       {categories.length > 0 && (
-        <Section title="Categorías de servicio" gap="sm">
+        <Section title={t("nationalPage.categoriesTitle")} gap="sm">
           <ul className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <li key={category.id}>
@@ -132,7 +157,7 @@ export default async function NationalCoveragePage() {
                   href={`/servicios/${category.slug}`}
                   className="rounded-full border border-border px-3 py-1 text-xs hover:border-primary/40 hover:bg-muted"
                 >
-                  {category.name}
+                  {localizeCategoryName(t, category)}
                 </Link>
               </li>
             ))}
@@ -140,11 +165,11 @@ export default async function NationalCoveragePage() {
         </Section>
       )}
 
-      <Section title="Cómo funciona la disponibilidad local" gap="sm">
+      <Section title={t("nationalPage.localAvailabilityTitle")} gap="sm">
         <p className="text-sm text-foreground/80">{content.howLocalAvailabilityWorks}</p>
       </Section>
 
-      <Section title="Localidades con cobertura confirmada" gap="sm">
+      <Section title={t("shared.confirmedLocalitiesTitle")} gap="sm">
         {verifiedLocalEntries.length > 0 ? (
           <ul className="grid gap-3 sm:grid-cols-2">
             {verifiedLocalEntries.map((location) => (
@@ -155,25 +180,22 @@ export default async function NationalCoveragePage() {
                 >
                   <span className="font-medium text-foreground">{location.cityName}</span>
                   <span className="mt-1 block text-foreground/70">
-                    {location.provinceName}, {location.countryName}
+                    {t("shared.provinceCountry", {
+                      province: location.provinceName,
+                      country: localizeCountryName(t, location.countryCode),
+                    })}
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-foreground/70">
-            Todavía no hay localidades con cobertura confirmada por datos reales de la plataforma.
-          </p>
+          <p className="text-sm text-foreground/70">{t("nationalPage.confirmedEmpty")}</p>
         )}
-        <p className="text-xs text-foreground/60">
-          Esta lista solo incluye localidades cuya cobertura está confirmada por los datos reales de la
-          plataforma. Que una localidad no aparezca aquí no significa que MaestroYa no pueda operar allí en
-          el futuro — significa que, hoy, no hay cobertura confirmada que mostrar.
-        </p>
+        <p className="text-xs text-foreground/60">{t("nationalPage.confirmedNote")}</p>
       </Section>
 
-      <Section title="Preguntas frecuentes" gap="sm">
+      <Section title={t("shared.faqTitle")} gap="sm">
         <dl className="flex flex-col gap-4">
           {content.faqs.map((faq) => (
             <div key={faq.question}>
@@ -185,21 +207,19 @@ export default async function NationalCoveragePage() {
       </Section>
 
       <section className="rounded-md border border-border bg-black/5 p-4">
-        <p className="text-sm text-foreground/70">
-          ¿Listo para empezar? Publica una solicitud describiendo el servicio que necesitas y tu ubicación.
-        </p>
+        <p className="text-sm text-foreground/70">{t("nationalPage.cta")}</p>
         <div className="mt-3 flex flex-wrap gap-3">
           <Link
             href="/search"
             className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
           >
-            Buscar profesionales
+            {t("nationalPage.searchProfessionals")}
           </Link>
           <Link
             href="/auth/register"
             className="inline-flex h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium hover:bg-muted"
           >
-            Unirme como profesional
+            {t("nationalPage.joinAsProfessional")}
           </Link>
         </div>
       </section>

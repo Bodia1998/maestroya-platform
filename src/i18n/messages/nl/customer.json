@@ -1,0 +1,365 @@
+{
+  "requests": {
+    "list": {
+      "title": "Mijn aanvragen",
+      "subtitle": "Aanvragen die je hebt geplaatst zodat vakmensen een offerte kunnen sturen.",
+      "newRequest": "Nieuwe aanvraag",
+      "empty": {
+        "title": "Nog geen aanvragen",
+        "description": "Je hebt nog geen aanvragen geplaatst. Plaats er een om offertes te krijgen van vakmensen bij jou in de buurt."
+      }
+    },
+    "new": {
+      "title": "Nieuwe aanvraag",
+      "subtitle": "Beschrijf de klus die je gedaan wilt hebben. De aanvraag wordt direct geplaatst zodat vakmensen een offerte kunnen sturen."
+    },
+    "edit": {
+      "title": "Aanvraag bewerken",
+      "subtitle": "Je kunt deze aanvraag bewerken zolang hij open staat.",
+      "breadcrumb": "Bewerken"
+    },
+    "detail": {
+      "metaTitle": "Aanvraag",
+      "description": "Omschrijving",
+      "location": "Locatie",
+      "urgency": "Urgentie",
+      "budget": "Budget",
+      "budgetRange": "{min} – {max}",
+      "budgetUnset": "—",
+      "posted": "Geplaatst",
+      "lastUpdated": "Laatst bijgewerkt",
+      "photos": "Foto's",
+      "acceptedNotice": "Je hebt een offerte voor deze aanvraag geaccepteerd. Ga naar <appointments>Mijn afspraken</appointments> om een tijd voor te stellen of te bevestigen, of bekijk <jobs>Mijn opdrachten</jobs> voor de algemene voortgang.",
+      "editRequest": "Aanvraag bewerken"
+    },
+    "form": {
+      "updated": "Aanvraag bijgewerkt.",
+      "sections": {
+        "job": "De klus",
+        "budget": "Budget",
+        "budgetDescription": "Geef vakmensen een indicatie zodat de offertes aansluiten.",
+        "location": "Locatie van de klus"
+      },
+      "category": "Categorie",
+      "selectCategory": "Kies een categorie",
+      "title": "Titel",
+      "titlePlaceholder": "bijv. Lekkende keukenkraan repareren",
+      "description": "Omschrijving",
+      "descriptionPlaceholder": "Beschrijf de klus in detail — wat er moet gebeuren en relevante context.",
+      "urgency": "Urgentie",
+      "budgetMin": "Budget min. (EUR)",
+      "budgetMax": "Budget max. (EUR)",
+      "address": "Adres",
+      "streetPlaceholder": "Straat en huisnummer",
+      "line2Placeholder": "Appartement, verdieping enz. (optioneel)",
+      "cityPlaceholder": "Plaats",
+      "postalCodePlaceholder": "Postcode",
+      "provincePlaceholder": "Provincie",
+      "countryPlaceholder": "Land",
+      "latitudePlaceholder": "Breedtegraad (optioneel)",
+      "longitudePlaceholder": "Lengtegraad (optioneel)",
+      "coordinatesHelp": "Breedte- en lengtegraad worden waar mogelijk automatisch ingevuld — laat ze leeg als je het niet zeker weet.",
+      "saveChanges": "Wijzigingen opslaan",
+      "postRequest": "Aanvraag plaatsen"
+    },
+    "cancel": {
+      "trigger": "Deze aanvraag annuleren",
+      "title": "Deze aanvraag annuleren?",
+      "description": "Vakmensen kunnen er dan geen offerte meer voor sturen. Dit kan hier niet ongedaan worden gemaakt.",
+      "confirm": "Ja, aanvraag annuleren",
+      "pending": "Bezig met annuleren…",
+      "keep": "Aanvraag behouden"
+    },
+    "photos": {
+      "chooseFirst": "Kies eerst een afbeelding.",
+      "alt": "Foto bij aanvraag",
+      "remove": "Verwijderen",
+      "none": "Geen foto's toegevoegd.",
+      "add": "Foto toevoegen",
+      "uploading": "Bezig met uploaden…",
+      "maxReached": "Maximum van {max, plural, one {# foto} other {# foto's}} bereikt."
+    },
+    "errors": {
+      "createFailed": "Er ging iets mis bij het aanmaken van je aanvraag.",
+      "updateFailed": "Er ging iets mis bij het bijwerken van je aanvraag.",
+      "cancelFailed": "Er ging iets mis bij het annuleren van je aanvraag.",
+      "photoMissing": "Kies een afbeelding om te uploaden.",
+      "photoType": "Foto's moeten JPEG-, PNG- of WebP-afbeeldingen zijn.",
+      "photoTooLarge": "Elke foto moet kleiner zijn dan 5 MB.",
+      "photoUploadFailed": "Er ging iets mis bij het uploaden van je foto.",
+      "photoRemoveFailed": "Er ging iets mis bij het verwijderen van die foto."
+    }
+  },
+  "quotes": {
+    "title": "Ontvangen offertes",
+    "subtitle": "Offertes die vakmensen voor deze aanvraag hebben gestuurd.",
+    "breadcrumb": "Offertes",
+    "empty": "Nog geen offertes. Kom snel terug.",
+    "verification": {
+      "UNVERIFIED": "Niet geverifieerd",
+      "PENDING": "Verificatie in behandeling",
+      "VERIFIED": "Geverifieerd",
+      "REJECTED": "Verificatie afgewezen"
+    },
+    "meta": "Verstuurd op {created, date, medium} — bijgewerkt op {updated, date, medium}",
+    "metaWithValidity": "Geldig tot {validUntil, date, medium} — verstuurd op {created, date, medium} — bijgewerkt op {updated, date, medium}",
+    "messageProfessional": "Bericht aan {name}",
+    "acceptFailed": "Er ging iets mis bij het accepteren van deze offerte.",
+    "accept": {
+      "trigger": "Deze offerte accepteren",
+      "title": "Deze offerte accepteren?",
+      "description": "Alle andere offertes voor deze aanvraag worden automatisch afgewezen. Dit kan niet ongedaan worden gemaakt.",
+      "confirm": "Ja, offerte accepteren",
+      "pending": "Bezig met accepteren…",
+      "cancel": "Nog niet"
+    }
+  },
+  "appointments": {
+    "list": {
+      "title": "Mijn afspraken",
+      "subtitle": "Afspraken op basis van offertes die je hebt geaccepteerd.",
+      "empty": {
+        "title": "Geen komende afspraken",
+        "description": "Afspraken verschijnen hier zodra je een offerte van een vakman accepteert.",
+        "action": "Mijn aanvragen bekijken"
+      }
+    },
+    "noTimeProposed": "Nog geen tijd voorgesteld",
+    "notSet": "Niet ingesteld",
+    "awaitingProposedTime": "Wacht op voorgestelde tijd",
+    "detail": {
+      "title": "Afspraak",
+      "confirmedTime": "Bevestigde tijd",
+      "proposedTime": "Voorgestelde tijd",
+      "cancellationReason": "Reden van annulering"
+    },
+    "cancellationReason": {
+      "CUSTOMER_REQUEST": "Op verzoek van de klant",
+      "PROFESSIONAL_UNAVAILABLE": "Vakman niet beschikbaar",
+      "SCHEDULING_CONFLICT": "Planningsconflict",
+      "OTHER": "Overig"
+    },
+    "actions": {
+      "start": "Begin",
+      "end": "Einde",
+      "confirming": "Bezig met bevestigen…",
+      "confirmTime": "Deze tijd bevestigen",
+      "completing": "Bezig met markeren als voltooid…",
+      "markCompleted": "Dit bezoek als voltooid markeren",
+      "cancelTrigger": "Afspraak annuleren",
+      "cancelTitle": "Deze afspraak annuleren?",
+      "confirmCancel": "Ja, annuleren",
+      "cancelling": "Bezig met annuleren…",
+      "notNow": "Nu niet",
+      "reason": "Reden",
+      "note": "Notitie (optioneel)",
+      "proposeTime": "Tijd voorstellen",
+      "proposeDifferentTime": "Andere tijd voorstellen",
+      "reschedule": "Verzetten"
+    },
+    "errors": {
+      "invalidAppointment": "Ongeldige afspraak.",
+      "proposeFailed": "Er ging iets mis bij het voorstellen van deze tijd.",
+      "confirmFailed": "Er ging iets mis bij het bevestigen van deze afspraak.",
+      "cancelFailed": "Er ging iets mis bij het annuleren van deze afspraak.",
+      "completeFailed": "Er ging iets mis bij het afronden van deze afspraak.",
+      "rescheduleFailed": "Er ging iets mis bij het verzetten van deze afspraak."
+    }
+  },
+  "messages": {
+    "title": "Berichten",
+    "conversation": "Gesprek",
+    "empty": {
+      "title": "Nog geen gesprekken",
+      "description": "Zodra jij en een klant of vakman een gemeenschappelijke offerte hebben, kunnen jullie elkaar hier berichten sturen."
+    },
+    "participant": "Deelnemer",
+    "unknownParticipant": "MaestroYa-gebruiker",
+    "noMessagesYet": "Nog geen berichten.",
+    "emptyThread": "Nog geen berichten. Zeg hallo om het gesprek te beginnen.",
+    "closed": "In dit gesprek kunnen geen nieuwe berichten meer worden verstuurd.",
+    "opening": "Bezig met openen…",
+    "messageAction": "Bericht sturen",
+    "bubble": {
+      "deleted": "Dit bericht is verwijderd.",
+      "deleting": "Bezig met verwijderen…",
+      "confirmDelete": "Verwijderen bevestigen",
+      "cancel": "Annuleren",
+      "delete": "Verwijderen"
+    },
+    "composer": {
+      "placeholder": "Schrijf een bericht…",
+      "ariaLabel": "Bericht",
+      "sending": "Bezig met verzenden…",
+      "send": "Versturen"
+    },
+    "errors": {
+      "openFailed": "Er ging iets mis bij het openen van dit gesprek.",
+      "sendFailed": "Er ging iets mis bij het versturen van je bericht.",
+      "generic": "Er ging iets mis.",
+      "deleteFailed": "Er ging iets mis bij het verwijderen van dit bericht."
+    }
+  },
+  "disputes": {
+    "list": {
+      "metaTitle": "Mijn geschillen",
+      "title": "Geschillen",
+      "subtitle": "Zaken die jij hebt geopend en zaken over jouw werk.",
+      "openFromJob": "Een geschil openen vanuit een opdracht",
+      "openedByMe": "Door mij geopend",
+      "openedAboutMe": "Geopend over mijn werk",
+      "emptyMine": {
+        "title": "Geen geschillen geopend",
+        "description": "Je hebt geen geschillen geopend."
+      },
+      "emptyAgainst": {
+        "title": "Hier staat niets",
+        "description": "Er zijn geen geschillen over jouw werk geopend."
+      }
+    },
+    "detail": {
+      "metaTitle": "Geschil",
+      "subtitle": "{caseNumber} · Status: {status} · Prioriteit: {priority} · Reden: {reason}",
+      "description": "Omschrijving",
+      "resolution": "Oplossing",
+      "evidence": "Bewijs",
+      "noEvidence": "Geen bewijs toegevoegd.",
+      "messages": "Berichten",
+      "noMessages": "Nog geen berichten."
+    },
+    "messageForm": {
+      "label": "Schrijf een bericht",
+      "placeholder": "Schrijf een bericht…",
+      "sending": "Bezig met verzenden…",
+      "send": "Bericht versturen"
+    },
+    "new": {
+      "title": "Een geschil openen",
+      "subtitle": "Alleen voor opdrachten die lopen, voltooid of geannuleerd zijn — zie de detailpagina van je opdracht."
+    },
+    "form": {
+      "description": "Geef zoveel mogelijk details — zo kunnen we het sneller oplossen.",
+      "jobId": "Opdracht-ID",
+      "reason": "Reden",
+      "title": "Titel",
+      "descriptionLabel": "Omschrijving",
+      "submitting": "Bezig met versturen…",
+      "submit": "Geschil openen"
+    },
+    "status": {
+      "WAITING_FOR_CUSTOMER": "Wacht op klant",
+      "WAITING_FOR_PROFESSIONAL": "Wacht op vakman"
+    },
+    "priority": {
+      "LOW": "Laag",
+      "MEDIUM": "Gemiddeld",
+      "HIGH": "Hoog",
+      "URGENT": "Dringend"
+    },
+    "reason": {
+      "SERVICE_NOT_COMPLETED": "Dienst niet voltooid",
+      "SERVICE_QUALITY": "Kwaliteit van de dienst",
+      "PROPERTY_DAMAGE": "Schade aan eigendommen",
+      "PROFESSIONAL_NO_SHOW": "Vakman is niet verschenen",
+      "CUSTOMER_NO_SHOW": "Klant is niet verschenen",
+      "PRICE_DISAGREEMENT": "Onenigheid over de prijs",
+      "SCOPE_OF_WORK": "Omvang van het werk",
+      "COMMUNICATION_ISSUE": "Communicatieprobleem",
+      "OTHER": "Overig"
+    },
+    "resolution": {
+      "NO_ACTION": "Geen actie",
+      "CUSTOMER_FAVOR": "In het voordeel van de klant",
+      "PROFESSIONAL_FAVOR": "In het voordeel van de vakman",
+      "PARTIAL_RESOLUTION": "Gedeeltelijke oplossing",
+      "FINANCIAL_ADJUSTMENT_REQUIRED": "Financiële aanpassing vereist",
+      "ESCALATED_EXTERNALLY": "Extern geëscaleerd"
+    },
+    "errors": {
+      "openFailed": "Er ging iets mis bij het openen van dit geschil.",
+      "loadMineFailed": "Er ging iets mis bij het laden van je geschillen.",
+      "loadFailed": "Er ging iets mis bij het laden van geschillen.",
+      "loadOneFailed": "Er ging iets mis bij het laden van dit geschil.",
+      "messageFailed": "Er ging iets mis bij het versturen van dit bericht.",
+      "evidenceFailed": "Er ging iets mis bij het toevoegen van dit bewijs."
+    }
+  },
+  "support": {
+    "metaTitle": "Supporttickets",
+    "title": "Support",
+    "subtitle": "Accountproblemen, verificatieproblemen, bugs of algemene vragen.",
+    "myTickets": "Mijn tickets",
+    "empty": {
+      "title": "Geen supporttickets",
+      "description": "Je hebt nog geen supporttickets geopend."
+    },
+    "detail": {
+      "metaTitle": "Supportticket",
+      "subtitle": "{ticketNumber} · Status: {status} · Categorie: {category} · Prioriteit: {priority}",
+      "resolution": "Oplossing"
+    },
+    "form": {
+      "title": "Nieuw ticket openen",
+      "category": "Categorie",
+      "subject": "Onderwerp",
+      "description": "Omschrijving",
+      "submitting": "Bezig met versturen…",
+      "submit": "Ticket versturen"
+    },
+    "category": {
+      "ACCOUNT": "Account",
+      "VERIFICATION": "Verificatie",
+      "BUG": "Bug",
+      "LOGIN": "Inloggen",
+      "GENERAL": "Algemeen",
+      "OTHER": "Overig"
+    },
+    "status": {
+      "WAITING_FOR_USER": "Wacht op je reactie"
+    },
+    "errors": {
+      "openFailed": "Er ging iets mis bij het openen van dit ticket.",
+      "loadFailed": "Er ging iets mis bij het laden van je tickets.",
+      "loadOneFailed": "Er ging iets mis bij het laden van dit ticket."
+    }
+  },
+  "reviews": {
+    "errors": {
+      "submitFailed": "Er ging iets mis bij het versturen van deze beoordeling.",
+      "updateFailed": "Er ging iets mis bij het bijwerken van deze beoordeling.",
+      "deleteFailed": "Er ging iets mis bij het verwijderen van deze beoordeling.",
+      "respondFailed": "Er ging iets mis bij het versturen van deze reactie."
+    }
+  },
+  "analytics": {
+    "loadFailed": "Er ging iets mis bij het laden van je statistieken."
+  },
+  "receipts": {
+    "list": {
+      "title": "Mijn ontvangstbewijzen",
+      "subtitle": "Ontvangstbewijzen voor opdrachten die je via MaestroYa hebt betaald.",
+      "empty": {
+        "title": "Nog geen ontvangstbewijzen",
+        "description": "Een ontvangstbewijs verschijnt hier zodra een betaalde opdracht is voltooid en de betaling is vrijgegeven."
+      }
+    },
+    "notYetIssued": "Nog niet uitgegeven",
+    "detail": {
+      "title": "Ontvangstbewijs",
+      "receiptNumber": "Nummer ontvangstbewijs",
+      "date": "Datum",
+      "dateUnset": "—",
+      "issuedBy": "Uitgegeven door",
+      "billedTo": "Gefactureerd aan",
+      "items": "Posten",
+      "description": "Omschrijving",
+      "amount": "Bedrag",
+      "tax": "Belasting",
+      "taxableBase": "Belastbare grondslag",
+      "vat": "Btw – IVA ({rate})",
+      "total": "Totaal",
+      "creditNotes": "Creditnota's",
+      "documentReference": "Documentreferentie: {hash}… (alleen een controlegetal tegen manipulatie — geen elektronische handtekening)."
+    }
+  }
+}

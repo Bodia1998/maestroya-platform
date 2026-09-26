@@ -9,5 +9,827 @@
   "reviews": "Reseñas",
   "auditLogs": "Registro de auditoría",
   "analytics": "Analíticas",
-  "accessDenied": "No tienes permiso para acceder a esta sección."
+  "accessDenied": "No tienes permiso para acceder a esta sección.",
+  "nav": {
+    "label": "Navegación de administración",
+    "heading": "Admin",
+    "sidebar": "Barra lateral de administración",
+    "overview": "Resumen",
+    "users": "Usuarios",
+    "professionals": "Profesionales",
+    "verifications": "Verificaciones",
+    "companies": "Empresas",
+    "companyVerifications": "Verificaciones de empresas",
+    "serviceRequests": "Solicitudes",
+    "quotes": "Presupuestos",
+    "jobs": "Citas y trabajos",
+    "reviews": "Reseñas",
+    "portfolio": "Portafolio",
+    "auditLogs": "Registro de auditoría",
+    "aiVisibility": "Visibilidad en IA",
+    "reconciliation": "Conciliación",
+    "partners": "Afiliados"
+  },
+  "overview": {
+    "title": "Resumen de administración",
+    "subtitle": "Recuentos operativos de toda la plataforma.",
+    "marketplaceActivity": "Actividad del marketplace",
+    "cards": {
+      "totalUsers": "Usuarios totales",
+      "totalProfessionals": "Perfiles profesionales",
+      "totalServiceRequests": "Solicitudes",
+      "totalQuotes": "Presupuestos",
+      "totalAppointments": "Citas",
+      "totalJobs": "Trabajos",
+      "totalReviews": "Reseñas",
+      "totalPortfolioItems": "Elementos del portafolio",
+      "totalNotifications": "Notificaciones (activas)",
+      "unreadNotifications": "Notificaciones sin leer"
+    }
+  },
+  "table": {
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "pagination": "Paginación",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page}"
+  },
+  "actionErrors": {
+    "addingThisNote": "No se pudo añadir la nota.",
+    "approvingThisCommission": "No se pudo aprobar esta comisión.",
+    "approvingThisPartner": "No se pudo aprobar a este afiliado.",
+    "approvingThisVerification": "No se pudo aprobar esta verificación.",
+    "assigningThisDispute": "No se pudo asignar esta disputa.",
+    "assigningThisTicket": "No se pudo asignar este ticket.",
+    "banningThisPartner": "No se pudo bloquear a este afiliado.",
+    "cancellingThisCommission": "No se pudo cancelar esta comisión.",
+    "changingThisDisputeStatus": "No se pudo cambiar el estado de esta disputa.",
+    "changingThisTicketStatus": "No se pudo cambiar el estado de este ticket.",
+    "changingThisUserRole": "No se pudo cambiar el rol de este usuario.",
+    "closingThisDispute": "No se pudo cerrar esta disputa.",
+    "closingThisTicket": "No se pudo cerrar este ticket.",
+    "creatingThisPayout": "No se pudo crear este cobro.",
+    "creatingThisRestriction": "No se pudo crear esta restricción.",
+    "liftingThisRestriction": "No se pudo levantar esta restricción.",
+    "loadingAppointmentsJobs": "No se pudieron cargar las citas y los trabajos.",
+    "loadingAuditLogs": "No se pudo cargar el registro de auditoría.",
+    "loadingCategoryAnalytics": "No se pudieron cargar las analíticas por categoría.",
+    "loadingCompanies": "No se pudieron cargar las empresas.",
+    "loadingDiscrepanciesForThisRun": "No se pudieron cargar las discrepancias de esta ejecución.",
+    "loadingDiscrepancies": "No se pudieron cargar las discrepancias.",
+    "loadingDisputes": "No se pudieron cargar las disputas.",
+    "loadingGeographicAnalytics": "No se pudieron cargar las analíticas geográficas.",
+    "loadingPartners": "No se pudieron cargar los afiliados.",
+    "loadingPlatformAnalytics": "No se pudieron cargar las analíticas de la plataforma.",
+    "loadingPortfolioItems": "No se pudieron cargar los elementos del portafolio.",
+    "loadingProfessionals": "No se pudieron cargar los profesionales.",
+    "loadingQuotes": "No se pudieron cargar los presupuestos.",
+    "loadingReconciliationRuns": "No se pudieron cargar las ejecuciones de conciliación.",
+    "loadingReviews": "No se pudieron cargar las reseñas.",
+    "loadingServiceRequests": "No se pudieron cargar las solicitudes.",
+    "loadingTheDashboard": "No se pudo cargar el panel.",
+    "loadingTheReconciliationOverview": "No se pudo cargar el resumen de conciliación.",
+    "loadingTheRequestsTimeSeries": "No se pudo cargar la serie temporal de solicitudes.",
+    "loadingTheServiceFunnel": "No se pudo cargar el embudo de servicios.",
+    "loadingThisCompany": "No se pudo cargar esta empresa.",
+    "loadingThisDiscrepancy": "No se pudo cargar esta discrepancia.",
+    "loadingThisDispute": "No se pudo cargar esta disputa.",
+    "loadingThisJobFinancialSnapshot": "No se pudo cargar la instantánea financiera de este trabajo.",
+    "loadingThisPartner": "No se pudo cargar este afiliado.",
+    "loadingThisReconciliationRun": "No se pudo cargar esta ejecución de conciliación.",
+    "loadingThisRunSeverityBreakdown": "No se pudo cargar el desglose por gravedad de esta ejecución.",
+    "loadingThisTicket": "No se pudo cargar este ticket.",
+    "loadingTickets": "No se pudieron cargar los tickets.",
+    "loadingUnresolvedDiscrepancies": "No se pudieron cargar las discrepancias sin resolver.",
+    "loadingUsers": "No se pudieron cargar los usuarios.",
+    "moderatingThisPortfolioItem": "No se pudo moderar este elemento del portafolio.",
+    "moderatingThisReview": "No se pudo moderar esta reseña.",
+    "reactivatingThisCompany": "No se pudo reactivar esta empresa.",
+    "reactivatingThisProfessional": "No se pudo reactivar a este profesional.",
+    "reactivatingThisUser": "No se pudo reactivar a este usuario.",
+    "rejectingThisDispute": "No se pudo rechazar esta disputa.",
+    "rejectingThisPartner": "No se pudo rechazar a este afiliado.",
+    "rejectingThisVerification": "No se pudo rechazar esta verificación.",
+    "requestingAResubmission": "No se pudo solicitar el reenvío.",
+    "resolvingThisDiscrepancy": "No se pudo resolver esta discrepancia.",
+    "resolvingThisDisputeFinancialOutcome": "No se pudo resolver el resultado financiero de esta disputa.",
+    "resolvingThisDispute": "No se pudo resolver esta disputa.",
+    "resolvingThisFraudFlag": "No se pudo resolver esta alerta de fraude.",
+    "resolvingThisJobPaymentRelease": "No se pudo resolver la liberación del pago de este trabajo.",
+    "resolvingThisTicket": "No se pudo resolver este ticket.",
+    "restoringThisPortfolioItem": "No se pudo restaurar este elemento del portafolio.",
+    "restoringThisReview": "No se pudo restaurar esta reseña.",
+    "startingTheReconciliationRun": "No se pudo iniciar la ejecución de conciliación.",
+    "startingTheReview": "No se pudo iniciar la revisión.",
+    "suspendingThisCompany": "No se pudo suspender esta empresa.",
+    "suspendingThisPartner": "No se pudo suspender a este afiliado.",
+    "suspendingThisProfessional": "No se pudo suspender a este profesional.",
+    "suspendingThisUser": "No se pudo suspender a este usuario.",
+    "invalidRunId": "Identificador de ejecución no válido.",
+    "invalidDiscrepancyId": "Identificador de discrepancia no válido.",
+    "recordingTheObservation": "No se pudo registrar la observación.",
+    "invalidFilters": "Filtros no válidos.",
+    "invalidRestrictionDetails": "Datos de la restricción no válidos.",
+    "invalidPayoutPeriod": "Introduce un periodo de cobro válido (el inicio debe ser anterior o igual al final)."
+  },
+  "common": {
+    "metaTitle": "Admin — {page}",
+    "yes": "Sí",
+    "no": "No",
+    "tryDifferentSearch": "Prueba con otro término de búsqueda.",
+    "tryDifferentFilter": "Prueba con otra búsqueda o filtro.",
+    "allStatuses": "Todos los estados",
+    "filterByStatus": "Filtrar por estado",
+    "columns": {
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "status": "Estado",
+      "actions": "Acciones",
+      "created": "Creado",
+      "owner": "Titular",
+      "rating": "Valoración",
+      "verified": "Verificada",
+      "members": "Miembros",
+      "submitted": "Enviada",
+      "reviewed": "Revisada"
+    },
+    "review": "Revisar",
+    "reviewItem": "Revisar<sr> {name}</sr>",
+    "genericError": "Algo ha salido mal."
+  },
+  "usersPage": {
+    "title": "Usuarios",
+    "subtitle": "{count, plural, one {# usuario en esta página.} other {# usuarios en esta página.}}",
+    "searchLabel": "Buscar usuarios",
+    "searchPlaceholder": "Buscar por nombre o correo electrónico",
+    "empty": "No se encontraron usuarios",
+    "columns": {
+      "roles": "Roles",
+      "isPro": "¿Profesional?"
+    },
+    "suspend": "Suspender<sr> al usuario {name}</sr>",
+    "reactivate": "Reactivar<sr> al usuario {name}</sr>"
+  },
+  "professionals": {
+    "title": "Profesionales",
+    "subtitle": "Supervisión de solo lectura de los perfiles profesionales.",
+    "searchLabel": "Buscar profesionales",
+    "searchPlaceholder": "Buscar por nombre comercial, nombre o correo electrónico",
+    "empty": "No se encontraron profesionales",
+    "columns": {
+      "businessName": "Nombre comercial",
+      "verification": "Verificación",
+      "portfolio": "Portafolio"
+    }
+  },
+  "companiesPage": {
+    "title": "Empresas",
+    "subtitle": "Perfiles de empresa, titulares, verificación y estado.",
+    "searchLabel": "Buscar y filtrar empresas",
+    "searchPlaceholder": "Buscar por razón social o nombre comercial, nombre del titular o correo electrónico",
+    "empty": "No se encontraron empresas",
+    "columns": {
+      "legalName": "Razón social"
+    },
+    "suspend": "Suspender<sr> la empresa {name}</sr>",
+    "reactivate": "Reactivar<sr> la empresa {name}</sr>",
+    "detail": {
+      "metaTitle": "Detalle de la empresa",
+      "details": "Datos de la empresa",
+      "taxId": "NIF",
+      "adminActions": "Acciones de administración",
+      "suspend": "Suspender empresa",
+      "reactivate": "Reactivar empresa"
+    }
+  },
+  "statusOptions": {
+    "PENDING": "Pendiente",
+    "ACTIVE": "Activa",
+    "SUSPENDED": "Suspendida",
+    "DEACTIVATED": "Desactivada"
+  },
+  "documentTypes": {
+    "NATIONAL_ID": "DNI / documento nacional de identidad",
+    "PASSPORT": "Pasaporte",
+    "DRIVER_LICENSE": "Permiso de conducir",
+    "BUSINESS_LICENSE": "Licencia de actividad",
+    "TAX_CERTIFICATE": "Certificado tributario",
+    "INSURANCE_CERTIFICATE": "Certificado de seguro",
+    "PROFESSIONAL_CERTIFICATION": "Certificación profesional",
+    "PROOF_OF_ADDRESS": "Justificante de domicilio",
+    "BUSINESS_REGISTRATION": "Registro mercantil",
+    "OTHER": "Otro"
+  },
+  "verificationReview": {
+    "timeline": "Cronología de la verificación",
+    "submitted": "Enviada",
+    "reviewed": "Revisada",
+    "expires": "Caduca",
+    "rejectionReason": "Motivo del rechazo",
+    "resubmissionInstructions": "Instrucciones para el reenvío",
+    "documents": "Documentos",
+    "noDocuments": "No se subió ningún documento.",
+    "fileSize": "{size} KB",
+    "openDocument": "Abrir<sr> documento {type} (se abre en una pestaña nueva)</sr>",
+    "reviewActions": "Acciones de revisión",
+    "startReview": "Iniciar revisión",
+    "approve": "Aprobar",
+    "rejectReasonLabel": "Motivo del rechazo (obligatorio)",
+    "reject": "Rechazar",
+    "resubmissionLabel": "Instrucciones para el reenvío (obligatorio)",
+    "requestResubmission": "Solicitar reenvío",
+    "noDecision": "No hay ninguna decisión de revisión disponible para una solicitud en estado «{status}»."
+  },
+  "verificationsPage": {
+    "title": "Verificaciones",
+    "subtitle": "Revisa las solicitudes de verificación de identidad y confianza de los profesionales.",
+    "filterLabel": "Filtrar verificaciones",
+    "empty": "No se encontraron solicitudes de verificación",
+    "emptyDescription": "Aquí aparecerán las solicitudes de verificación de identidad de los profesionales.",
+    "columns": {
+      "professional": "Profesional"
+    },
+    "detail": {
+      "metaTitle": "Detalle de la verificación",
+      "fallbackTitle": "Profesional"
+    }
+  },
+  "companyVerifications": {
+    "title": "Verificaciones de empresas",
+    "subtitle": "Revisa las solicitudes de verificación de negocio e identidad de las empresas.",
+    "filterLabel": "Filtrar verificaciones de empresas",
+    "empty": "No se encontraron solicitudes de verificación de empresas",
+    "emptyDescription": "Aquí aparecerán las solicitudes de verificación de empresas.",
+    "columns": {
+      "company": "Empresa"
+    },
+    "detail": {
+      "metaTitle": "Detalle de la verificación de empresa",
+      "owner": "Titular: {name}"
+    }
+  },
+  "serviceRequests": {
+    "title": "Solicitudes",
+    "subtitle": "Supervisión de solo lectura de las solicitudes de los clientes.",
+    "empty": "No se encontraron solicitudes",
+    "emptyDescription": "Aquí aparecerán las solicitudes de los clientes.",
+    "columns": {
+      "title": "Título",
+      "customer": "Cliente",
+      "quotes": "Presupuestos",
+      "jobs": "Trabajos"
+    }
+  },
+  "quotes": {
+    "title": "Presupuestos",
+    "subtitle": "Supervisión de solo lectura de los presupuestos.",
+    "empty": "No se encontraron presupuestos",
+    "emptyDescription": "Aquí aparecerán los presupuestos enviados por los profesionales.",
+    "columns": {
+      "request": "Solicitud",
+      "amount": "Importe"
+    }
+  },
+  "jobsPage": {
+    "title": "Citas y trabajos",
+    "subtitle": "Supervisión de solo lectura del ciclo de ejecución.",
+    "caption": "Citas y trabajos",
+    "empty": "No se encontraron trabajos",
+    "emptyDescription": "Aquí aparecerán los trabajos creados a partir de presupuestos aceptados.",
+    "columns": {
+      "job": "Trabajo",
+      "appointments": "Citas"
+    }
+  },
+  "reviewsPage": {
+    "title": "Reseñas",
+    "subtitle": "Modera las reseñas de clientes sobre los profesionales.",
+    "empty": "No se encontraron reseñas",
+    "emptyDescription": "Aquí aparecerán las reseñas de clientes sobre los profesionales.",
+    "columns": {
+      "comment": "Comentario"
+    },
+    "ratingOutOfFive": "{rating}/5",
+    "hide": "Ocultar",
+    "restore": "Restaurar"
+  },
+  "portfolio": {
+    "title": "Elementos del portafolio",
+    "metaTitle": "Portafolio",
+    "subtitle": "Modera los trabajos que muestran los profesionales.",
+    "empty": "No se encontraron elementos del portafolio",
+    "emptyDescription": "Aquí aparecerán las muestras de trabajo que publican los profesionales.",
+    "columns": {
+      "title": "Título"
+    },
+    "state": {
+      "deleted": "Eliminado (por el titular)",
+      "hidden": "Oculto (por un administrador)",
+      "visible": "Visible"
+    },
+    "hide": "Ocultar<sr> {title}</sr>",
+    "restore": "Restaurar<sr> {title}</sr>"
+  },
+  "auditLogsPage": {
+    "title": "Registro de auditoría",
+    "subtitle": "Registro inalterable de las acciones sensibles de administración.",
+    "empty": "Todavía no hay entradas en el registro de auditoría",
+    "emptyDescription": "Aquí se registrarán las acciones sensibles de administración.",
+    "columns": {
+      "when": "Cuándo",
+      "admin": "Administrador",
+      "action": "Acción",
+      "target": "Objetivo"
+    },
+    "system": "sistema"
+  },
+  "disputesPage": {
+    "title": "Disputas",
+    "subtitle": "Casos de disputa entre clientes y profesionales que requieren revisión.",
+    "searchLabel": "Buscar disputas",
+    "searchPlaceholder": "Buscar por número de caso o título",
+    "empty": "No se encontraron disputas",
+    "emptyDescription": "Aquí aparecerán los casos de disputa.",
+    "columns": {
+      "case": "Caso",
+      "title": "Título",
+      "priority": "Prioridad"
+    },
+    "reason": {
+      "SERVICE_NOT_COMPLETED": "Servicio no completado",
+      "SERVICE_QUALITY": "Calidad del servicio",
+      "PROPERTY_DAMAGE": "Daños en la propiedad",
+      "PROFESSIONAL_NO_SHOW": "El profesional no se presentó",
+      "CUSTOMER_NO_SHOW": "El cliente no se presentó",
+      "PRICE_DISAGREEMENT": "Desacuerdo con el precio",
+      "SCOPE_OF_WORK": "Alcance del trabajo",
+      "COMMUNICATION_ISSUE": "Problema de comunicación",
+      "OTHER": "Otro"
+    },
+    "resolution": {
+      "NO_ACTION": "Sin acción",
+      "CUSTOMER_FAVOR": "A favor del cliente",
+      "PROFESSIONAL_FAVOR": "A favor del profesional",
+      "PARTIAL_RESOLUTION": "Resolución parcial",
+      "FINANCIAL_ADJUSTMENT_REQUIRED": "Requiere ajuste financiero",
+      "ESCALATED_EXTERNALLY": "Escalada externamente"
+    },
+    "statuses": {
+      "UNDER_REVIEW": "En revisión",
+      "WAITING_FOR_CUSTOMER": "Esperando al cliente",
+      "WAITING_FOR_PROFESSIONAL": "Esperando al profesional"
+    },
+    "detail": {
+      "metaTitle": "Disputa",
+      "details": "Detalles de la disputa",
+      "priority": "Prioridad",
+      "reason": "Motivo",
+      "assignedTo": "Asignada a",
+      "unassigned": "Sin asignar",
+      "resolution": "Resolución",
+      "evidence": "Pruebas ({count, number})",
+      "opensInNewTab": " (se abre en una pestaña nueva)",
+      "noEvidence": "No se han aportado pruebas.",
+      "thread": "Conversación (incluidas las notas internas)",
+      "internalNote": "Nota interna",
+      "noMessages": "Todavía no hay mensajes."
+    },
+    "actions": {
+      "title": "Acciones de administración",
+      "moveTo": "Mover a {status}",
+      "internalNoteLabel": "Nota interna (nunca visible para el cliente ni el profesional)",
+      "addInternalNote": "Añadir nota interna",
+      "resolution": "Resolución",
+      "resolve": "Resolver",
+      "reject": "Rechazar",
+      "close": "Cerrar caso"
+    }
+  },
+  "priority": {
+    "LOW": "Baja",
+    "MEDIUM": "Media",
+    "HIGH": "Alta",
+    "URGENT": "Urgente"
+  },
+  "supportTicketsPage": {
+    "title": "Tickets de soporte",
+    "subtitle": "Solicitudes de soporte de clientes y profesionales.",
+    "searchLabel": "Buscar tickets de soporte",
+    "searchPlaceholder": "Buscar por número de ticket o asunto",
+    "empty": "No se encontraron tickets",
+    "emptyDescription": "Aquí aparecerán los tickets de soporte.",
+    "columns": {
+      "ticket": "Ticket",
+      "subject": "Asunto",
+      "category": "Categoría"
+    },
+    "category": {
+      "ACCOUNT": "Cuenta",
+      "VERIFICATION": "Verificación",
+      "BUG": "Error de la plataforma",
+      "LOGIN": "Inicio de sesión",
+      "GENERAL": "General",
+      "OTHER": "Otro"
+    },
+    "statuses": {
+      "IN_PROGRESS": "En curso",
+      "WAITING_FOR_USER": "Esperando al usuario"
+    },
+    "detail": {
+      "metaTitle": "Ticket de soporte",
+      "details": "Detalles del ticket",
+      "category": "Categoría",
+      "priority": "Prioridad",
+      "resolution": "Resolución"
+    },
+    "actions": {
+      "title": "Acciones de administración",
+      "moveTo": "Mover a {status}",
+      "resolutionNote": "Nota de resolución",
+      "resolve": "Resolver",
+      "close": "Cerrar ticket"
+    }
+  },
+  "partners": {
+    "title": "Afiliados",
+    "subtitle": "Afiliados y socios de recomendación: aprobación, estado y rendimiento de las recomendaciones.",
+    "filterLabel": "Filtrar afiliados",
+    "empty": "No se encontraron afiliados",
+    "emptyDescription": "Aquí aparecerán las solicitudes de afiliación.",
+    "columns": {
+      "type": "Tipo",
+      "contact": "Contacto",
+      "payoutMethod": "Método de cobro"
+    },
+    "status": {
+      "PENDING": "Pendiente",
+      "APPROVED": "Aprobado",
+      "REJECTED": "Rechazado",
+      "SUSPENDED": "Suspendido",
+      "BANNED": "Bloqueado"
+    },
+    "type": {
+      "INDIVIDUAL": "Particular",
+      "COMPANY": "Empresa",
+      "AGENCY": "Agencia",
+      "BLOGGER": "Blogger",
+      "TELEGRAM_CHANNEL": "Canal de Telegram",
+      "INSTAGRAM_CREATOR": "Creador de Instagram",
+      "TIKTOK_CREATOR": "Creador de TikTok",
+      "YOUTUBE_CREATOR": "Creador de YouTube",
+      "FACEBOOK_COMMUNITY": "Comunidad de Facebook"
+    },
+    "payoutMethod": {
+      "MANUAL": "Manual",
+      "STRIPE": "Stripe"
+    },
+    "fraudFlagType": {
+      "SELF_REFERRAL": "Autorrecomendación",
+      "DUPLICATE_ACCOUNT": "Cuenta duplicada",
+      "SUSPICIOUS_CONVERSION": "Conversión sospechosa",
+      "REPEATED_IP": "IP repetida",
+      "REPEATED_DEVICE": "Dispositivo repetido",
+      "FAKE_REGISTRATION": "Registro falso"
+    },
+    "detail": {
+      "metaTitle": "Detalle del afiliado",
+      "subtitle": "{type} · {email} · cobro mediante {method}",
+      "status": "Estado",
+      "approve": "Aprobar",
+      "rejectionReason": "Motivo del rechazo",
+      "reject": "Rechazar",
+      "suspensionReason": "Motivo de la suspensión",
+      "reinstate": "Restablecer",
+      "suspend": "Suspender",
+      "banReason": "Motivo del bloqueo",
+      "ban": "Bloquear",
+      "referralLinks": "Enlaces de recomendación ({count, number})",
+      "noReferralLinks": "Todavía no se ha generado ningún enlace de recomendación.",
+      "commissions": "Comisiones de afiliado ({count, number})",
+      "commissionsCaption": "Comisiones de afiliado",
+      "noCommissions": "Todavía no se ha registrado ninguna comisión.",
+      "columns": {
+        "referralCode": "Código de recomendación",
+        "platformCommission": "Comisión de la plataforma",
+        "profitBase": "Base de beneficio",
+        "affiliateAmount": "Importe del afiliado",
+        "reversed": "Revertido",
+        "period": "Periodo",
+        "amount": "Importe",
+        "method": "Método",
+        "reference": "Referencia"
+      },
+      "approveCommission": "Aprobar<sr> la comisión {id}</sr>",
+      "cancelCommission": "Cancelar<sr> la comisión {id}</sr>",
+      "reasonPlaceholder": "Motivo",
+      "createPayout": "Crear cobro",
+      "createPayoutHelp": "Liquida todo el saldo pendiente de comisiones APROBADAS de este afiliado en un único lote de cobro, siempre que alcance su umbral mínimo de cobro. Para un afiliado con método STRIPE, se ejecuta una transferencia real de Stripe Connect a la cuenta registrada de este afiliado, nunca a otra cuenta.",
+      "periodStart": "Inicio del periodo",
+      "periodEnd": "Fin del periodo",
+      "payouts": "Cobros ({count, number})",
+      "payoutsCaption": "Cobros del afiliado",
+      "noPayouts": "Todavía no hay cobros.",
+      "period": "{start} → {end}",
+      "fraudFlags": "Alertas de fraude ({count, number})",
+      "noFraudFlags": "No se ha generado ninguna alerta de fraude.",
+      "resolutionNote": "Nota de resolución",
+      "markReviewed": "Marcar como revisada"
+    }
+  },
+  "reconciliation": {
+    "severity": {
+      "CRITICAL": "Crítica",
+      "ERROR": "Alta",
+      "WARNING": "Media",
+      "INFO": "Baja"
+    },
+    "resolutionStatus": {
+      "OPEN": "Abierta",
+      "RESOLVED": "Resuelta"
+    },
+    "runStatus": {
+      "RUNNING": "En ejecución",
+      "COMPLETED": "Completada",
+      "FAILED": "Fallida"
+    },
+    "scope": {
+      "FULL": "Completa",
+      "PAYMENT": "Pagos",
+      "COMMISSION": "Comisiones",
+      "TAX": "Impuestos",
+      "INVOICE": "Facturas",
+      "PAYOUT": "Cobros",
+      "REFUND": "Reembolsos",
+      "CREDIT_NOTE": "Facturas rectificativas",
+      "PROVIDER": "Proveedor de pagos"
+    },
+    "trigger": {
+      "triggerLabel": "Ejecutar conciliación ahora",
+      "title": "Iniciar una ejecución de conciliación",
+      "description": "Analiza los registros financieros de los trabajos recientes en busca de discrepancias. Nunca modifica ningún registro financiero: solo detecta y registra incoherencias para su revisión. Una ejecución puede tardar con un alcance o límite grandes; puedes salir de la página y consultar su estado en la lista de ejecuciones.",
+      "confirm": "Iniciar ejecución",
+      "pending": "Iniciando…",
+      "started": "Ejecución de conciliación iniciada",
+      "startedDescription": "Discrepancias hasta ahora: {created, number} nuevas, {reconfirmed, number} reconfirmadas.",
+      "failed": "No se pudo iniciar la ejecución de conciliación",
+      "scope": "Alcance",
+      "since": "Solo trabajos con actividad desde (opcional)",
+      "limit": "Límite de trabajos (1–2000)"
+    },
+    "title": "Conciliación",
+    "shortSubtitle": "Ejecuciones de conciliación financiera y discrepancias.",
+    "subtitle": "Ejecuciones de conciliación financiera y discrepancias en pagos, comisiones, impuestos, facturación, cobros, reembolsos y facturas rectificativas.",
+    "unknownProvider": "Desconocido",
+    "investigate": "Investigar discrepancias",
+    "viewAllRuns": "Ver todas las ejecuciones",
+    "overview": {
+      "discrepancies": "Discrepancias",
+      "unresolved": "Discrepancias sin resolver",
+      "resolved": "Discrepancias resueltas",
+      "totalRuns": "Ejecuciones de conciliación totales",
+      "provider": "Adaptador del proveedor",
+      "bySeverity": "Discrepancias abiertas por gravedad",
+      "runStatus": "Estado de las ejecuciones",
+      "latestRun": "Última ejecución",
+      "status": "Estado",
+      "lastSuccessfulRun": "Última ejecución correcta",
+      "lastFailedRun": "Última ejecución fallida",
+      "noneYet": "Todavía ninguna",
+      "byType": "Discrepancias abiertas por tipo",
+      "noOpen": "No se han detectado discrepancias abiertas.",
+      "readOnlyNotice": "La conciliación es de solo lectura respecto a todos los registros financieros que inspecciona: solo detecta y registra aquí las discrepancias para su revisión manual. Resolver una discrepancia nunca modifica un pago, una factura, un cobro, un reembolso ni una factura rectificativa; solo cierra esta investigación."
+    },
+    "discrepancies": {
+      "title": "Discrepancias",
+      "subtitle": "Incoherencias financieras detectadas pendientes de resolución o ya resueltas.",
+      "filterLabel": "Filtrar discrepancias",
+      "any": "Cualquiera",
+      "filters": {
+        "status": "Estado",
+        "severity": "Gravedad",
+        "entityType": "Tipo de entidad",
+        "type": "Tipo",
+        "detectedFrom": "Detectada desde",
+        "detectedTo": "Detectada hasta"
+      },
+      "empty": "No se encontraron discrepancias",
+      "emptyDescription": "Prueba con otro filtro o acota el rango de fechas.",
+      "columns": {
+        "discrepancy": "Discrepancia",
+        "entity": "Entidad",
+        "type": "Tipo",
+        "severity": "Gravedad",
+        "status": "Estado",
+        "difference": "Diferencia",
+        "detected": "Detectada"
+      }
+    },
+    "runs": {
+      "title": "Ejecuciones de conciliación",
+      "breadcrumb": "Ejecuciones",
+      "subtitle": "Todas las ejecuciones del motor de conciliación, de la más reciente a la más antigua.",
+      "filterLabel": "Filtrar ejecuciones de conciliación",
+      "empty": "No se encontraron ejecuciones de conciliación",
+      "emptyDescription": "Las ejecuciones aparecerán aquí cuando se ejecute el motor de conciliación.",
+      "columns": {
+        "run": "Ejecución",
+        "scope": "Alcance",
+        "status": "Estado",
+        "started": "Inicio",
+        "duration": "Duración",
+        "recordsInspected": "Registros inspeccionados",
+        "discrepancies": "Discrepancias"
+      }
+    },
+    "duration": {
+      "ms": "{value, number} ms",
+      "seconds": "{value, number, ::.0} s"
+    },
+    "runDetail": {
+      "metaTitle": "Ejecución de conciliación",
+      "title": "Ejecución {id}…",
+      "scope": "Alcance: {scope}",
+      "summary": "Resumen de la ejecución",
+      "started": "Inicio",
+      "completed": "Finalización",
+      "duration": "Duración",
+      "recordsInspected": "Registros inspeccionados",
+      "discrepancyCount": "Discrepancias (creadas + reconfirmadas)",
+      "triggeredBy": "Iniciada por",
+      "system": "Sistema / programada",
+      "parametersHash": "Hash de parámetros",
+      "failure": "Información del fallo",
+      "severityBreakdown": "Desglose por gravedad",
+      "discrepancies": "Discrepancias detectadas por esta ejecución ({count, number}{more, select, true {+} other {}})",
+      "noDiscrepancies": "Sin discrepancias",
+      "noDiscrepanciesDescription": "Esta ejecución terminó sin detectar ninguna discrepancia.",
+      "caption": "Discrepancias de esta ejecución",
+      "columns": {
+        "category": "Categoría"
+      }
+    },
+    "resolve": {
+      "trigger": "Resolver discrepancia",
+      "title": "Resolver esta discrepancia",
+      "description": "Marca esta discrepancia como resuelta y la atribuye a tu cuenta de administrador. No deshace ni modifica ningún registro financiero: solo cierra la investigación. No se puede deshacer desde esta pantalla.",
+      "confirm": "Resolver",
+      "pending": "Resolviendo…",
+      "reasonTooShort": "Describe por qué se resuelve esta discrepancia (al menos 3 caracteres).",
+      "success": "Discrepancia resuelta",
+      "failed": "No se pudo resolver esta discrepancia",
+      "reasonLabel": "Motivo de la resolución",
+      "reasonPlaceholder": "p. ej., comprobado en el panel de Stripe: era una diferencia temporal y ahora ambos importes coinciden."
+    },
+    "discrepancyDetail": {
+      "metaTitle": "Discrepancia",
+      "title": "Discrepancia {id}…",
+      "identity": "Identificación",
+      "entityType": "Tipo de entidad",
+      "fingerprint": "Huella",
+      "financial": "Información financiera",
+      "internalAmount": "Importe interno",
+      "providerAmount": "Importe del proveedor/real",
+      "difference": "Diferencia",
+      "currency": "Moneda",
+      "references": "Referencias",
+      "job": "Trabajo",
+      "payment": "Pago",
+      "invoice": "Factura",
+      "payout": "Cobro",
+      "refund": "Reembolso",
+      "creditNote": "Factura rectificativa",
+      "entityId": "Id. de entidad",
+      "timeline": "Cronología",
+      "detectedAt": "Detectada el",
+      "lastUpdated": "Última actualización",
+      "detectedByRun": "Detectada en la ejecución",
+      "lastSeenInRun": "Vista por última vez en la ejecución",
+      "resolution": "Resolución",
+      "resolvedBy": "Resuelta por",
+      "resolvedAt": "Resuelta el",
+      "reason": "Motivo",
+      "notResolved": "Esta discrepancia todavía no se ha resuelto.",
+      "snapshot": "Instantánea financiera del trabajo",
+      "snapshotSummary": "Trabajo {jobId}: estado {status}, total del presupuesto {total}.",
+      "viewSnapshot": "Ver la instantánea completa"
+    },
+    "jobSnapshot": {
+      "title": "Instantánea financiera del trabajo",
+      "breadcrumb": "Instantánea del trabajo",
+      "summary": "Resumen del trabajo",
+      "quote": "Presupuesto",
+      "quoteTotal": "Total del presupuesto",
+      "customer": "Cliente",
+      "releaseApproved": "Liberación aprobada",
+      "payments": "Pagos ({count, number})",
+      "noPayments": "No hay pagos registrados.",
+      "noProviderReference": "sin referencia del proveedor",
+      "commission": "Comisión",
+      "rate": "Tipo",
+      "amount": "Importe",
+      "status": "Estado",
+      "settled": "Liquidada",
+      "invoices": "Facturas ({count, number})",
+      "noInvoices": "No hay facturas registradas.",
+      "unissued": "(sin emitir)",
+      "invoiceBreakdown": "IVA {vat} · Comisión {commission}",
+      "payout": "Cobro",
+      "providerReference": "Referencia del proveedor",
+      "failureReason": "Motivo del fallo",
+      "refunds": "Reembolsos ({count, number})",
+      "noRefunds": "No hay reembolsos registrados.",
+      "creditNotes": "Facturas rectificativas ({count, number})",
+      "noCreditNotes": "No hay facturas rectificativas registradas."
+    }
+  },
+  "aiVisibility": {
+    "title": "Visibilidad en IA",
+    "subtitle": "Observaciones objetivas y con fecha de cómo responden los sistemas externos de IA y búsqueda a consultas relacionadas con MaestroYa. Son observaciones individuales, no una clasificación estable: la respuesta de la IA es variable por naturaleza.",
+    "metricsHeading": "Últimos 30 días ({from} – {to}), sin incluir las consultas de intención neutra salvo que se indique",
+    "rateNotApplicable": "n/d (0 observaciones)",
+    "rateValue": "{percent} ({numerator, number}/{denominator, number})",
+    "metrics": {
+      "totalObservations": "Observaciones totales",
+      "mentionRate": "Tasa de menciones",
+      "neutralQueryMentionRate": "Tasa de menciones en consultas neutras",
+      "citationRate": "Cita presente (de las menciones)",
+      "citationCorrectnessRate": "Cita correcta (de las citadas)",
+      "correctIdentityRate": "Identidad correcta (de las menciones)",
+      "correctGeographicRate": "Geografía correcta (de las menciones)",
+      "correctServiceRate": "Servicio correcto (de las menciones)",
+      "urlProvidedRate": "URL facilitada (de las menciones)",
+      "correctUrlRate": "URL correcta (de las facilitadas)"
+    },
+    "byProvider": "Por proveedor",
+    "byProviderEntry": "{provider}: {count, plural, one {# observación} other {# observaciones}}, tasa de menciones {rate}",
+    "empty": "Todavía no se ha registrado ninguna observación",
+    "emptyDescription": "Aquí aparecerán las observaciones de visibilidad en IA registradas.",
+    "caption": "Observaciones de visibilidad en IA",
+    "columns": {
+      "observed": "Observada",
+      "query": "Consulta",
+      "provider": "Proveedor",
+      "mentioned": "Mencionada",
+      "recommendation": "Recomendación",
+      "url": "URL",
+      "citation": "Cita"
+    },
+    "citation": {
+      "correct": "Presente, correcta",
+      "unverified": "Presente, sin verificar/incorrecta",
+      "none": "Ninguna"
+    },
+    "provider": {
+      "MANUAL": "Captura manual",
+      "OPENAI_API": "OpenAI (API oficial)",
+      "ANTHROPIC_API": "Anthropic (API oficial)",
+      "GOOGLE_API": "Google (API oficial)",
+      "PERPLEXITY_API": "Perplexity (API oficial)",
+      "OTHER": "Otro (indica el nombre en las notas)"
+    },
+    "recommendation": {
+      "NOT_MENTIONED": "No mencionada",
+      "MENTIONED_ONLY": "Solo mencionada",
+      "LISTED_AMONG_OPTIONS": "Incluida entre las opciones",
+      "RECOMMENDED": "Recomendada"
+    },
+    "accuracy": {
+      "NOT_APPLICABLE": "No aplica",
+      "NOT_PROVIDED": "No facilitada",
+      "CORRECT": "Correcta",
+      "INCORRECT": "Incorrecta"
+    },
+    "evidenceType": {
+      "MANUAL_TRANSCRIPT_EXCERPT": "Extracto de transcripción manual",
+      "MANUAL_SCREENSHOT_REFERENCE": "Referencia a captura de pantalla manual",
+      "API_RESPONSE_REFERENCE": "Referencia a respuesta de API",
+      "EXTERNAL_ARTICLE_REFERENCE": "Referencia a artículo externo"
+    },
+    "form": {
+      "title": "Registrar una observación manual",
+      "intro": "Captura una respuesta de un sistema de IA fuera de esta aplicación (según el texto de la consulta de abajo) y registra lo que observaste de forma objetiva. Esto nunca contacta con ningún sistema de IA en tu nombre.",
+      "query": "Consulta",
+      "provider": "Proveedor",
+      "providerModel": "Modelo/versión del proveedor (opcional)",
+      "observedAt": "Observada el",
+      "mentioned": "MaestroYa mencionada",
+      "recommendation": "Clasificación de la recomendación",
+      "identityAccuracy": "Exactitud de la identidad",
+      "geographicAccuracy": "Exactitud geográfica",
+      "serviceAccuracy": "Exactitud del servicio",
+      "urlAccuracy": "Exactitud de la URL",
+      "citationPresent": "Cita presente",
+      "citationCorrect": "Cita correcta (solo si está presente)",
+      "evidenceType": "Tipo de evidencia",
+      "evidenceReference": "Referencia de la evidencia (URL/nombre de archivo)",
+      "detectedCompetitors": "Competidores detectados (separados por comas)",
+      "factualIssues": "Errores factuales observados (separados por comas)",
+      "evidenceExcerpt": "Extracto de la evidencia (breve, opcional; nunca una transcripción completa)",
+      "evaluatorNotes": "Notas del evaluador (opcional)",
+      "submit": "Registrar observación",
+      "submitting": "Registrando…",
+      "success": "Observación registrada ({id})."
+    }
+  }
 }

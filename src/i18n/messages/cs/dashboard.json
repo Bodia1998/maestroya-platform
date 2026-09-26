@@ -16,5 +16,115 @@
     "title": "Panel firmy",
     "members": "Členové",
     "invitations": "Pozvánky"
+  },
+  "nav": {
+    "ariaLabel": "Navigace přehledu",
+    "groups": {
+      "professional": "Profesionál",
+      "admin": "Administrace"
+    },
+    "items": {
+      "dashboard": "Přehled",
+      "serviceRequests": "Poptávky",
+      "appointments": "Schůzky",
+      "jobs": "Zakázky",
+      "receipts": "Moje potvrzení o platbě",
+      "messages": "Zprávy",
+      "disputes": "Spory",
+      "support": "Podpora",
+      "professionalDashboard": "Přehled profesionála",
+      "availableRequests": "Dostupné poptávky",
+      "myQuotes": "Moje nabídky",
+      "myAppointments": "Moje schůzky",
+      "myJobs": "Moje zakázky",
+      "selfBilling": "Samofakturace a faktury",
+      "companies": "Firmy",
+      "adminPanel": "Administrace",
+      "profile": "Profil",
+      "professionalProfile": "Profil profesionála",
+      "switchToProfessional": "Přepnout na přehled profesionála"
+    }
+  },
+  "shell": {
+    "skipToContent": "Přejít na hlavní obsah",
+    "sidebar": "Postranní panel",
+    "openMenu": "Otevřít nabídku",
+    "accountMenu": "Nabídka účtu",
+    "account": "Účet",
+    "notifications": "Oznámení",
+    "profile": "Profil",
+    "signOut": "Odhlásit se"
+  },
+  "profileBanner": {
+    "noProfile": "Dokončete svůj profil profesionála, abyste začali dostávat poptávky od zákazníků.",
+    "incomplete": "Váš profil profesionála není úplný. Dokončete ho, aby zákazníci viděli váš profil v nejlepším světle.",
+    "completeProfile": "Dokončit profil profesionála"
+  },
+  "overview": {
+    "welcomeBack": "Vítejte zpět, {name}",
+    "welcomeBackAnonymous": "Vítejte zpět",
+    "subtitle": "Zde je přehled vašeho účtu MaestroYa.",
+    "professionalOverview": {
+      "title": "Přehled profesionála",
+      "description": "Poptávky zákazníků, na které můžete reagovat, a nabídky, schůzky a zakázky, které z nich vzniknou."
+    },
+    "stats": {
+      "availableRequests": "Dostupné poptávky",
+      "quotesAwaitingResponse": "Nabídky čekající na odpověď",
+      "acceptedQuotes": "Přijaté nabídky",
+      "upcomingAppointments": "Nadcházející schůzky",
+      "activeJobs": "Aktivní zakázky",
+      "completedJobs": "Dokončené zakázky",
+      "activeRequests": "Aktivní poptávky",
+      "unreadMessages": "Nepřečtené zprávy"
+    },
+    "quickActions": {
+      "ariaLabel": "Rychlé akce",
+      "newRequest": "Nová poptávka",
+      "appointments": "Schůzky",
+      "messages": "Zprávy",
+      "profile": "Profil",
+      "browseRequests": "Procházet poptávky",
+      "myQuotes": "Moje nabídky",
+      "professionalProfile": "Profil profesionála"
+    },
+    "cards": {
+      "yourRequests": "Vaše poptávky",
+      "upcomingAppointments": "Nadcházející schůzky",
+      "messages": "Zprávy",
+      "yourQuotes": "Vaše nabídky",
+      "viewAll": "Zobrazit vše"
+    },
+    "empty": {
+      "requests": {
+        "title": "Zatím nemáte žádné poptávky.",
+        "description": "Zadejte poptávku a začněte dostávat nabídky od profesionálů ve vašem okolí."
+      },
+      "appointments": {
+        "title": "Žádné nadcházející schůzky.",
+        "description": "Schůzky se zde zobrazí, jakmile přijmete nabídku profesionála.",
+        "action": "Zobrazit moje poptávky"
+      },
+      "messages": {
+        "title": "Žádné nové zprávy.",
+        "description": "Zde se zobrazují konverzace se zákazníky a profesionály.",
+        "action": "Přejít na zprávy"
+      },
+      "noProfessionalProfile": {
+        "title": "Nastavte si profil profesionála.",
+        "description": "Vytvořte si profil profesionála a začněte dostávat poptávky, na které můžete podat nabídku.",
+        "action": "Začít"
+      },
+      "quotes": {
+        "title": "Zatím jste neodeslali žádné nabídky.",
+        "description": "Projděte otevřené poptávky a pošlete svou první nabídku."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "s {name}",
+    "manage": "Spravovat",
+    "requestPosted": "Zveřejněno {created, date, medium} — aktualizováno {updated, date, medium}",
+    "quoteSubmitted": "Odesláno {created, date, medium} — aktualizováno {updated, date, medium}"
   }
 }

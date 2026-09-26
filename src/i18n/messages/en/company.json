@@ -1,0 +1,225 @@
+{
+  "tabs": {
+    "ariaLabel": "Company sections",
+    "profile": "Profile",
+    "members": "Members",
+    "invitations": "Invitations",
+    "verification": "Verification",
+    "selfBilling": "Self-billing"
+  },
+  "roles": {
+    "OWNER": "Owner",
+    "ADMIN": "Admin",
+    "MANAGER": "Manager",
+    "MEMBER": "Member"
+  },
+  "memberStatus": {
+    "ACTIVE": "Active",
+    "PENDING": "Pending",
+    "REMOVED": "Removed"
+  },
+  "invitationStatus": {
+    "PENDING": "Pending",
+    "ACCEPTED": "Accepted",
+    "DECLINED": "Declined",
+    "EXPIRED": "Expired",
+    "CANCELLED": "Cancelled"
+  },
+  "companyStatus": {
+    "PENDING": "Pending",
+    "ACTIVE": "Active",
+    "SUSPENDED": "Suspended",
+    "DEACTIVATED": "Deactivated"
+  },
+  "errors": {
+    "invalidDetails": "Invalid company details.",
+    "createFailed": "Something went wrong creating the company.",
+    "updateFailed": "Something went wrong updating the company.",
+    "loadFailed": "Something went wrong loading the company."
+  },
+  "index": {
+    "metaTitle": "My companies",
+    "title": "My companies",
+    "subtitle": "Operate as a company/team with multiple professionals, alongside any individual professional profile you have.",
+    "emptyTitle": "No companies yet",
+    "emptyDescription": "You are not a member of any company yet. Create one below to start operating as a team.",
+    "manage": "Manage",
+    "createTitle": "Create a company",
+    "legalNameRequired": "Legal name (required)",
+    "tradeName": "Trade / display name",
+    "taxIdRequired": "Tax ID (required)",
+    "description": "Description",
+    "submit": "Create company"
+  },
+  "acceptInvitation": {
+    "metaTitle": "Company invitation",
+    "title": "Company invitation",
+    "subtitle": "You've been invited to join a company on MaestroYa. Accepting will make you an active member immediately.",
+    "missingToken": "This invitation link is missing its token.",
+    "accept": "Accept invitation",
+    "decline": "Decline",
+    "invalidLink": "Invalid invitation link.",
+    "acceptFailed": "Something went wrong accepting this invitation.",
+    "declineFailed": "Something went wrong declining this invitation."
+  },
+  "profile": {
+    "metaTitle": "Company profile",
+    "subtitle": "Status: {status} · {verified}",
+    "verified": "Verified",
+    "notVerified": "Not verified",
+    "breadcrumbMyCompanies": "My companies",
+    "detailsTitle": "Company details",
+    "legalName": "Legal name",
+    "tradeName": "Trade / display name",
+    "description": "Description",
+    "contactTitle": "Contact information",
+    "website": "Website",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "city": "City",
+    "province": "Province",
+    "save": "Save changes"
+  },
+  "members": {
+    "metaTitle": "Company members",
+    "title": "Members",
+    "activeCount": "{count, plural, one {# active member.} other {# active members.}}",
+    "emptyTitle": "No company members yet",
+    "emptyDescription": "Invite teammates from the Invitations tab to start collaborating on this company account.",
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "roleFor": "Role for {name}",
+    "updateRole": "Update role",
+    "transferTitle": "Transfer ownership",
+    "transferNotice": "Only the current owner can transfer ownership. This action is irreversible without the new owner transferring it back.",
+    "errors": {
+      "loadFailed": "Something went wrong loading members.",
+      "invalidRole": "Invalid role.",
+      "changeRoleFailed": "Something went wrong changing this member's role.",
+      "invalidMember": "Invalid member.",
+      "removeFailed": "Something went wrong removing this member.",
+      "invalidRequest": "Invalid request.",
+      "transferFailed": "Something went wrong transferring ownership."
+    },
+    "remove": {
+      "trigger": "Remove",
+      "title": "Remove {name}?",
+      "description": "They will immediately lose access to this company account. This cannot be undone from here.",
+      "confirm": "Yes, remove",
+      "pending": "Removing…"
+    },
+    "transfer": {
+      "trigger": "Transfer ownership",
+      "title": "Transfer ownership?",
+      "description": "Only the current owner can transfer ownership. This action is irreversible without the new owner transferring it back.",
+      "confirm": "Yes, transfer ownership",
+      "pending": "Transferring…",
+      "newOwner": "New owner",
+      "confirmationLabel": "Type {keyword} to confirm"
+    }
+  },
+  "invitations": {
+    "metaTitle": "Company invitations",
+    "title": "Invitations",
+    "inviteTitle": "Invite a member",
+    "inviteNotice": "Only existing MaestroYa users can be invited today. The invitation is valid for 14 days.",
+    "email": "Email",
+    "role": "Role",
+    "send": "Send invitation",
+    "emptyTitle": "No invitations yet",
+    "emptyDescription": "Invitations you send will appear here until they're accepted or cancelled.",
+    "columns": {
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "expires": "Expires",
+      "actions": "Actions"
+    },
+    "errors": {
+      "loadFailed": "Something went wrong loading invitations.",
+      "invalid": "Invalid invitation.",
+      "createFailed": "Something went wrong creating the invitation.",
+      "cancelFailed": "Something went wrong cancelling this invitation."
+    },
+    "cancel": {
+      "trigger": "Cancel",
+      "title": "Cancel this invitation?",
+      "description": "{email} will no longer be able to use this invitation to join the company.",
+      "confirm": "Yes, cancel invitation",
+      "pending": "Cancelling…",
+      "keep": "Keep invitation"
+    }
+  },
+  "verification": {
+    "metaTitle": "Company verification",
+    "title": "Verification",
+    "notStarted": "This company has not started verification yet.",
+    "start": "Start verification",
+    "statusCopy": {
+      "DRAFT": "Not yet submitted. Upload at least one business document and submit for review.",
+      "PENDING": "Submitted — waiting for an admin to review.",
+      "UNDER_REVIEW": "An admin is currently reviewing this request.",
+      "APPROVED": "Approved — your company shows a verified badge on its public profile.",
+      "REJECTED": "Rejected. See the reason below and resubmit when ready.",
+      "RESUBMISSION_REQUIRED": "Changes are required before this can be approved. See the instructions below.",
+      "EXPIRED": "This approval has expired. Start a new verification request."
+    },
+    "reason": "Reason",
+    "whatToUpdate": "What to update",
+    "documents": "Documents",
+    "noDocuments": "No documents uploaded yet.",
+    "docTypes": {
+      "BUSINESS_LICENSE": "Business licence",
+      "TAX_CERTIFICATE": "Tax certificate",
+      "INSURANCE_CERTIFICATE": "Insurance certificate",
+      "PROFESSIONAL_CERTIFICATION": "Professional certification",
+      "PROOF_OF_ADDRESS": "Proof of address",
+      "OTHER": "Other"
+    },
+    "remove": "Remove",
+    "uploadTitle": "Upload a document",
+    "docType": "Document type",
+    "file": "File",
+    "upload": "Upload document",
+    "submit": "Submit for review",
+    "resubmit": "Resubmit",
+    "errors": {
+      "startFailed": "Something went wrong starting verification.",
+      "invalidDocType": "Choose a valid document type.",
+      "chooseFile": "Choose a file to upload.",
+      "invalidFileType": "Documents must be a JPEG, PNG, WebP image or a PDF.",
+      "fileTooLarge": "Each document must be smaller than 10MB.",
+      "uploadFailed": "Something went wrong uploading this document.",
+      "invalidDocument": "Invalid document.",
+      "removeFailed": "Something went wrong removing this document.",
+      "submitFailed": "Something went wrong submitting for review.",
+      "resubmitFailed": "Something went wrong resubmitting for review."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Company self-billing",
+    "title": "Company",
+    "subtitle": "Manage your company's self-billing authorization and invoices.",
+    "ownerOnlyTitle": "Owner/admin only",
+    "ownerOnlyBody": "Only the company owner or an admin can view or change self-billing authorization status.",
+    "sectionTitle": "Self-billing authorization",
+    "notAuthorized": "Not authorized",
+    "activeBody": "This company has authorized MaestroYa to issue self-billed invoices (\"{legalTerm}\") on its behalf for completed jobs. You can revoke this at any time.",
+    "revoke": "Revoke authorization",
+    "inactiveBody": "Without this authorization, MaestroYa cannot issue self-billed invoices on this company's behalf.",
+    "grant": "Grant authorization",
+    "invoicesTitle": "Invoices",
+    "noInvoices": "No self-billed invoices yet.",
+    "notYetIssued": "Not yet issued",
+    "errors": {
+      "invalidCompany": "Invalid company.",
+      "grantFailed": "Something went wrong granting self-billing authorization.",
+      "revokeFailed": "Something went wrong revoking self-billing authorization."
+    }
+  }
+}

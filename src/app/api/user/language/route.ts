@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import type { NextRequest } from "next/server";
 
 import { DomainError } from "@/domain/errors/domain-error";
+import { localizeActionError } from "@/presentation/i18n/server";
 import { getCurrentUser } from "@/infrastructure/auth/rbac";
 import { logger } from "@/infrastructure/observability/logger";
 import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
@@ -49,7 +51,7 @@ export const PATCH = withApiTracing("/api/user/language", async function PATCH(r
     // are an error case for this endpoint, which exists solely to write
     // a row keyed by user id.
     return NextResponse.json(
-      { status: "error", message: "Unauthorized." },
+      { status: "error", message: await errorsT("domain.signInRequired") },
       { status: 401, headers: headersWithRequestId },
     );
   }
@@ -59,7 +61,7 @@ export const PATCH = withApiTracing("/api/user/language", async function PATCH(r
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { status: "error", message: "Invalid JSON body." },
+      { status: "error", message: await errorsT("byCode.VALIDATION_ERROR") },
       { status: 400, headers: headersWithRequestId },
     );
   }
@@ -67,7 +69,7 @@ export const PATCH = withApiTracing("/api/user/language", async function PATCH(r
   const parsed = updateLanguagePreferenceSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { status: "error", message: "Unsupported locale." },
+      { status: "error", message: await errorsT("byCode.VALIDATION_ERROR") },
       { status: 400, headers: headersWithRequestId },
     );
   }
@@ -95,7 +97,7 @@ export const PATCH = withApiTracing("/api/user/language", async function PATCH(r
   } catch (error) {
     if (error instanceof DomainError) {
       return NextResponse.json(
-        { status: "error", message: error.message },
+        { status: "error", message: await localizeActionError(error) },
         { status: 400, headers: headersWithRequestId },
       );
     }
@@ -113,8 +115,18 @@ export const PATCH = withApiTracing("/api/user/language", async function PATCH(r
       user: { id: user.id },
     });
     return NextResponse.json(
-      { status: "error", message: "Could not update language preference." },
+      { status: "error", message: await errorsT("generic") },
       { status: 500, headers: headersWithRequestId },
     );
   }
 });
+
+/**
+ * Module 120 — Multilingual Localization: user-facing error text in the
+ * request's language (`errors` namespace); JSON shape and status codes are
+ * unchanged.
+ */
+async function errorsT(key: "domain.signInRequired" | "byCode.VALIDATION_ERROR" | "generic"): Promise<string> {
+  const t = await getTranslations("errors");
+  return t(key);
+}

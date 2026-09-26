@@ -28,7 +28,7 @@ describe("Chip", () => {
 
   it("does not render a remove affordance unless onRemove is provided", () => {
     render(<Chip>Plumbing</Chip>);
-    expect(screen.queryByRole("button", { name: "Quitar" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Remove" })).toBeNull();
   });
 
   it("renders a remove affordance and fires onRemove without triggering the chip's own onClick", () => {

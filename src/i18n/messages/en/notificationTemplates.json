@@ -1,0 +1,281 @@
+{
+  "NEW_QUOTE": {
+    "title": "New quote received",
+    "message": "A professional sent a quote for your service request."
+  },
+  "QUOTE_ACCEPTED": {
+    "title": "Your quote was accepted",
+    "message": "The customer accepted your quote."
+  },
+  "QUOTE_REJECTED": {
+    "title": "Your quote was not selected",
+    "message": "The customer accepted a different quote for this service request."
+  },
+  "QUOTE_EXPIRED": {
+    "title": "Your quote has expired",
+    "message": "One of your quotes has expired because it was not accepted in time."
+  },
+  "NEW_MESSAGE": {
+    "title": "New message"
+  },
+  "APPOINTMENT_PROPOSED": {
+    "title": "New appointment time proposed",
+    "message": "A new appointment time has been proposed.",
+    "variants": {
+      "byCustomer": {
+        "message": "The customer proposed a new appointment time."
+      },
+      "byProfessional": {
+        "message": "The professional proposed a new appointment time."
+      }
+    }
+  },
+  "APPOINTMENT_CONFIRMED": {
+    "title": "Appointment time confirmed",
+    "message": "The appointment time has been confirmed.",
+    "variants": {
+      "byCustomer": {
+        "message": "The customer confirmed the appointment time."
+      },
+      "byProfessional": {
+        "message": "The professional confirmed the appointment time."
+      }
+    }
+  },
+  "APPOINTMENT_CANCELLED": {
+    "title": "Appointment cancelled",
+    "message": "This appointment has been cancelled.",
+    "variants": {
+      "byCustomer": {
+        "message": "The customer cancelled this appointment."
+      },
+      "byProfessional": {
+        "message": "The professional cancelled this appointment."
+      }
+    }
+  },
+  "JOB_STARTED": {
+    "title": "Work has started",
+    "message": "The professional started work on your job."
+  },
+  "JOB_CANCELLED": {
+    "title": "Job cancelled",
+    "message": "This job has been cancelled.",
+    "variants": {
+      "byCustomer": {
+        "message": "The customer cancelled this job."
+      },
+      "byProfessional": {
+        "message": "The professional cancelled this job."
+      }
+    }
+  },
+  "JOB_COMPLETION_CONFIRMATION_REQUESTED": {
+    "title": "Please confirm your completed service",
+    "message": "The professional marked your job as completed. Please confirm the work was done, or let us know if there's a problem."
+  },
+  "JOB_COMPLETION_CONFIRMATION_REMINDER": {
+    "title": "Confirm your completed service",
+    "message": "Please confirm the completed service, or let us know if there's a problem, before the confirmation window closes."
+  },
+  "JOB_COMPLETION_CONFIRMED": {
+    "title": "Service confirmed",
+    "message": "The customer confirmed the completed service."
+  },
+  "JOB_COMPLETION_CONFIRMATION_TIMED_OUT": {
+    "title": "Job under review",
+    "message": "The customer did not respond to the completion confirmation in time. This job is now under manual review before payment can be released."
+  },
+  "MATERIALS_PURCHASE_CONFIRMED": {
+    "title": "Materials purchase confirmed",
+    "message": "The customer confirmed that all required materials have been purchased."
+  },
+  "REVIEW_RECEIVED": {
+    "title": "You received a new review",
+    "message": "A customer left a review for your completed job."
+  },
+  "REVIEW_RESPONSE_ADDED": {
+    "title": "A professional responded to your review",
+    "message": "The professional you reviewed posted a response."
+  },
+  "SERVICE_REQUEST_EXPIRED": {
+    "title": "Your service request has expired",
+    "message": "Your request “{requestTitle}” has expired without being completed."
+  },
+  "VERIFICATION_SUBMITTED": {
+    "title": "Verification request submitted",
+    "message": "We have received your verification request and will review it shortly.",
+    "variants": {
+      "resubmitted": {
+        "title": "Verification request resubmitted",
+        "message": "We have received your updated verification request and will review it shortly."
+      }
+    }
+  },
+  "VERIFICATION_APPROVED": {
+    "title": "You are now a verified professional",
+    "message": "Your verification has been approved. A verified badge now appears on your public profile.",
+    "variants": {
+      "automated": {
+        "message": "Your automated identity verification passed. A verified badge now appears on your public profile."
+      }
+    }
+  },
+  "VERIFICATION_REJECTED": {
+    "title": "Verification request rejected",
+    "message": "Your verification request was rejected. Open your verification page to see why and try again.",
+    "variants": {
+      "automated": {
+        "message": "Your automated identity verification was not successful. Open your verification page to see why and try again."
+      }
+    }
+  },
+  "VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "More information needed for verification",
+    "message": "A reviewer has asked you to update your verification request. Open your verification page for details.",
+    "variants": {
+      "businessRegistration": {
+        "title": "Business registration document required",
+        "message": "Your automated identity verification passed. Upload a business registration document to complete your professional verification."
+      }
+    }
+  },
+  "VERIFICATION_EXPIRED": {
+    "title": "Your verification has expired",
+    "message": "Your professional verification has expired. Start a new verification to keep your verified badge."
+  },
+  "COMPANY_INVITATION_RECEIVED": {
+    "title": "You've been invited to join a company",
+    "message": "You have a pending company invitation."
+  },
+  "COMPANY_INVITATION_ACCEPTED": {
+    "title": "Invitation accepted",
+    "message": "A pending company invitation was accepted."
+  },
+  "COMPANY_INVITATION_DECLINED": {
+    "title": "Invitation declined",
+    "message": "A pending company invitation was declined."
+  },
+  "COMPANY_MEMBER_REMOVED": {
+    "title": "You have been removed from a company",
+    "message": "You are no longer a member of this company."
+  },
+  "COMPANY_MEMBER_ROLE_CHANGED": {
+    "title": "Your role has changed",
+    "message": "Your role in the company is now: {role}.",
+    "variants": {
+      "ownershipTransferred": {
+        "title": "You are now the company owner",
+        "message": "Ownership of the company has been transferred to you."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_SUBMITTED": {
+    "title": "Verification request submitted",
+    "message": "We have received your company's verification request and will review it shortly.",
+    "variants": {
+      "resubmitted": {
+        "title": "Verification request resubmitted",
+        "message": "We have received your company's updated verification request."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_APPROVED": {
+    "title": "Your company is now verified",
+    "message": "Your company's verification has been approved. A verified badge now appears on its public profile."
+  },
+  "COMPANY_VERIFICATION_REJECTED": {
+    "title": "Verification request rejected",
+    "message": "Your company's verification request was rejected. See the details for the reason."
+  },
+  "COMPANY_VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Resubmission required",
+    "message": "Your company's verification request needs changes before it can be approved."
+  },
+  "COMPANY_VERIFICATION_EXPIRED": {
+    "title": "Your company's verification has expired",
+    "message": "Your company's verification has expired. Start a new verification to keep your verified badge."
+  },
+  "COMPANY_SUSPENDED": {
+    "title": "Your company has been suspended",
+    "message": "Your company profile has been suspended by a platform administrator."
+  },
+  "COMPANY_REACTIVATED": {
+    "title": "Your company has been reactivated",
+    "message": "Your company profile is active again."
+  },
+  "DISPUTE_CREATED": {
+    "title": "A dispute was opened",
+    "message": "A dispute ({caseNumber}) was opened regarding your job."
+  },
+  "DISPUTE_ASSIGNED": {
+    "title": "A dispute was assigned to you",
+    "message": "Dispute {caseNumber} was assigned to you."
+  },
+  "DISPUTE_STATUS_CHANGED": {
+    "title": "Dispute status updated",
+    "message": "New status for dispute {caseNumber}: {status}.",
+    "variants": {
+      "newMessage": {
+        "title": "New message on your dispute",
+        "message": "There's a new message on dispute {caseNumber}."
+      }
+    }
+  },
+  "DISPUTE_RESPONSE_REQUESTED": {
+    "title": "Response requested on your dispute",
+    "message": "New status for dispute {caseNumber}: {status}."
+  },
+  "DISPUTE_RESOLVED": {
+    "title": "Your dispute was resolved",
+    "message": "Dispute {caseNumber} has been resolved."
+  },
+  "DISPUTE_REJECTED": {
+    "title": "Your dispute was rejected",
+    "message": "Dispute {caseNumber} has been rejected."
+  },
+  "DISPUTE_CLOSED": {
+    "title": "Your dispute was closed",
+    "message": "Dispute {caseNumber} has been closed."
+  },
+  "SUPPORT_TICKET_ASSIGNED": {
+    "title": "A support ticket was assigned to you",
+    "message": "Ticket {ticketNumber} was assigned to you."
+  },
+  "SUPPORT_TICKET_STATUS_CHANGED": {
+    "title": "Your support ticket was updated",
+    "message": "New status for ticket {ticketNumber}: {status}."
+  },
+  "SUPPORT_TICKET_RESOLVED": {
+    "title": "Your support ticket was resolved",
+    "message": "Ticket {ticketNumber} has been resolved."
+  },
+  "SUPPORT_TICKET_CLOSED": {
+    "title": "Your support ticket was closed",
+    "message": "Ticket {ticketNumber} has been closed."
+  },
+  "labels": {
+    "disputeStatus": {
+      "OPEN": "Open",
+      "UNDER_REVIEW": "Under review",
+      "WAITING_FOR_CUSTOMER": "Waiting for the customer",
+      "WAITING_FOR_PROFESSIONAL": "Waiting for the professional",
+      "RESOLVED": "Resolved",
+      "REJECTED": "Rejected",
+      "CLOSED": "Closed"
+    },
+    "ticketStatus": {
+      "OPEN": "Open",
+      "IN_PROGRESS": "In progress",
+      "WAITING_FOR_USER": "Waiting for your reply",
+      "RESOLVED": "Resolved",
+      "CLOSED": "Closed"
+    },
+    "companyRole": {
+      "OWNER": "Owner",
+      "ADMIN": "Admin",
+      "MANAGER": "Manager",
+      "MEMBER": "Member"
+    }
+  }
+}

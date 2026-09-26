@@ -1,21 +1,23 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cancelServiceRequestAction } from "../actions";
 
 export function CancelServiceRequestDialog({ requestId }: { requestId: string }) {
   const router = useRouter();
+  const t = useTranslations("customer.requests.cancel");
 
   return (
     <ConfirmDialog
-      triggerLabel="Cancel this request"
-      title="Cancel this service request?"
-      description="Professionals will no longer be able to quote on it. This cannot be undone from here."
-      confirmLabel="Yes, cancel request"
-      pendingLabel="Cancelling…"
-      cancelLabel="Keep request"
+      triggerLabel={t("trigger")}
+      title={t("title")}
+      description={t("description")}
+      confirmLabel={t("confirm")}
+      pendingLabel={t("pending")}
+      cancelLabel={t("keep")}
       destructive
       onConfirm={async () => {
         const result = await cancelServiceRequestAction(requestId);

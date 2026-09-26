@@ -6,7 +6,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 describe("LoadingState", () => {
   it("renders the default label", () => {
     render(<LoadingState />);
-    expect(screen.getAllByText("Cargando…").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Loading…").length).toBeGreaterThan(0);
   });
 
   it("renders a custom label and exposes a status role for the spinner", () => {

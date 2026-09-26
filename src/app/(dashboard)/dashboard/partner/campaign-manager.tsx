@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,12 @@ interface CampaignLink {
  * from the authenticated session server-side — this component never
  * trusts anything it renders as an authorization boundary.
  */
+function isCampaignSource(source: string): source is (typeof CAMPAIGN_SOURCE_OPTIONS)[number] {
+  return (CAMPAIGN_SOURCE_OPTIONS as readonly string[]).includes(source);
+}
+
 export function CampaignManager({ initialLinks }: { initialLinks: CampaignLink[] }) {
+  const t = useTranslations("partner.campaigns");
   const [links, setLinks] = useState(initialLinks);
   const [code, setCode] = useState("");
   const [label, setLabel] = useState("");
@@ -73,43 +79,43 @@ export function CampaignManager({ initialLinks }: { initialLinks: CampaignLink[]
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Campaign links</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <form onSubmit={handleCreate} className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="flex flex-col gap-1">
             <Text size="xs" tone="muted">
-              Code
+              {t("code")}
             </Text>
             <Input
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="e.g. telegram_valencia"
+              placeholder={t("codePlaceholder")}
               required
               maxLength={40}
             />
           </div>
           <div className="flex flex-col gap-1">
             <Text size="xs" tone="muted">
-              Label (optional)
+              {t("label")}
             </Text>
-            <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Your own note" maxLength={120} />
+            <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder={t("labelPlaceholder")} maxLength={120} />
           </div>
           <div className="flex flex-col gap-1">
             <Text size="xs" tone="muted">
-              Source
+              {t("source")}
             </Text>
             <Select value={source} onChange={(e) => setSource(e.target.value)}>
-              <option value="">None</option>
+              <option value="">{t("none")}</option>
               {CAMPAIGN_SOURCE_OPTIONS.map((s) => (
                 <option key={s} value={s}>
-                  {s.charAt(0) + s.slice(1).toLowerCase()}
+                  {t(`sources.${s}`)}
                 </option>
               ))}
             </Select>
           </div>
           <Button type="submit" disabled={isPending || !code.trim()}>
-            {isPending ? "Creating…" : "Create link"}
+            {isPending ? t("creating") : t("create")}
           </Button>
         </form>
         {error && (
@@ -120,7 +126,7 @@ export function CampaignManager({ initialLinks }: { initialLinks: CampaignLink[]
 
         {links.length === 0 ? (
           <Text size="sm" tone="muted">
-            No campaign links yet — create one above to start sharing it.
+            {t("empty")}
           </Text>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -128,18 +134,20 @@ export function CampaignManager({ initialLinks }: { initialLinks: CampaignLink[]
               <li key={link.id} className="flex flex-wrap items-center justify-between gap-2 rounded border p-2 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono">/r/{link.code}</span>
-                  {link.source && <Badge variant="secondary">{link.source}</Badge>}
+                  {link.source && (
+                    <Badge variant="secondary">{isCampaignSource(link.source) ? t(`sources.${link.source}`) : link.source}</Badge>
+                  )}
                   {link.label && (
                     <Text size="xs" tone="muted">
                       {link.label}
                     </Text>
                   )}
-                  <Badge variant={link.isActive ? "default" : "outline"}>{link.isActive ? "Active" : "Inactive"}</Badge>
+                  <Badge variant={link.isActive ? "default" : "outline"}>{link.isActive ? t("active") : t("inactive")}</Badge>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground">{link.visits} visits</span>
+                  <span className="text-muted-foreground">{t("visits", { count: link.visits })}</span>
                   <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => handleToggle(link)}>
-                    {link.isActive ? "Deactivate" : "Activate"}
+                    {link.isActive ? t("deactivate") : t("activate")}
                   </Button>
                 </div>
               </li>

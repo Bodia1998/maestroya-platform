@@ -13,5 +13,63 @@
     "email": "E-mail",
     "timezone": "Fuseau horaire"
   },
-  "memberSince": "Membre depuis le {date, date, long}"
+  "memberSince": "Membre depuis le {date, date, long}",
+  "avatarNote": "Cette photo concerne uniquement votre compte — elle n'a aucun effet sur la vérification d'identité professionnelle. Les professionnels la gèrent séparément depuis Profil professionnel → Gérer la vérification d'identité.",
+  "dangerNote": "La suppression de votre compte n'est réversible qu'en contactant l'assistance — vos données sont désactivées, pas effacées immédiatement.",
+  "avatar": {
+    "chooseFirst": "Choisissez d'abord une image.",
+    "alt": "Votre photo de profil",
+    "chooseLabel": "Choisir une photo de profil",
+    "uploading": "Envoi…",
+    "upload": "Envoyer la photo de profil",
+    "updated": "Photo de profil mise à jour."
+  },
+  "form": {
+    "updated": "Profil mis à jour.",
+    "basics": "Informations de base",
+    "displayName": "Nom affiché",
+    "phone": "Téléphone",
+    "timezone": "Fuseau horaire",
+    "preferredLanguage": "Langue préférée",
+    "noPreference": "Aucune préférence",
+    "address": "Adresse",
+    "street": "Adresse",
+    "line2": "Appartement, étage, etc. (facultatif)",
+    "city": "Ville",
+    "postalCode": "Code postal",
+    "province": "Province",
+    "country": "Pays",
+    "notifications": "Notifications",
+    "emailMarketing": "E-mails marketing",
+    "emailServiceUpdates": "E-mails de suivi des services",
+    "smsAppointmentReminders": "Rappels de rendez-vous par SMS",
+    "save": "Enregistrer les modifications"
+  },
+  "password": {
+    "changed": "Mot de passe modifié. Par sécurité, vous avez été déconnecté partout ailleurs.",
+    "noPassword": "Ce compte se connecte via un réseau social et n'a pas de mot de passe à modifier.",
+    "title": "Modifier le mot de passe",
+    "current": "Mot de passe actuel",
+    "new": "Nouveau mot de passe",
+    "confirm": "Confirmer le nouveau mot de passe",
+    "changing": "Modification…",
+    "submit": "Modifier le mot de passe"
+  },
+  "deleteAccount": {
+    "trigger": "Désactiver le compte",
+    "title": "Cela désactivera votre compte",
+    "password": "Mot de passe",
+    "confirmLabel": "Saisissez {token} pour confirmer",
+    "deactivating": "Désactivation…",
+    "submit": "Désactiver mon compte"
+  },
+  "errors": {
+    "updateFailed": "Une erreur s'est produite lors de la mise à jour de votre profil.",
+    "avatarFailed": "Une erreur s'est produite lors de l'envoi de votre photo de profil.",
+    "passwordFailed": "Une erreur s'est produite lors de la modification de votre mot de passe.",
+    "deleteFailed": "Une erreur s'est produite lors de la suppression de votre compte.",
+    "avatarMissing": "Choisissez une image à envoyer.",
+    "avatarType": "La photo de profil doit être au format JPEG, PNG ou WebP.",
+    "avatarTooLarge": "La photo de profil doit faire moins de 5 Mo."
+  }
 }

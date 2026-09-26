@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetMySelfBillingAuthorizationUseCase } from "@/application/use-cases/invoicing/compose";
@@ -10,7 +12,10 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { grantMySelfBillingAuthorizationFormAction, revokeMySelfBillingAuthorizationFormAction } from "./actions";
 
-export const metadata = { title: "Self-billing authorization" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("professional.selfBilling");
+  return { title: t("metaTitle") };
+}
 
 /**
  * Module 99 — Self-Billing Authorization Entry Point & Financial Document
@@ -34,21 +39,26 @@ export default async function ProfessionalSelfBillingPage() {
   const authorization = await makeGetMySelfBillingAuthorizationUseCase().execute({ userId: user.id });
 
   const isActive = authorization?.status === "ACTIVE";
+  const t = await getTranslations("professional.selfBilling");
+  const statusKey = `status.${authorization?.status ?? ""}`;
 
   return (
     <PageContainer maxWidth="2xl" gap="sm">
       <PageHeader
-        title="Self-billing authorization"
-        subtitle="Control whether MaestroYa may issue self-billed invoices to you on completed jobs."
+        title={t("title")}
+        subtitle={t("subtitle")}
       />
 
       <Section bordered gap="sm">
         <div className="flex items-center gap-3">
           {authorization ? (
-            <StatusBadge status={authorization.status} />
+            <StatusBadge
+              status={authorization.status}
+              label={t.has(statusKey as never) ? t(statusKey as never) : undefined}
+            />
           ) : (
             <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-xs font-medium text-foreground/70">
-              Not authorized
+              {t("notAuthorized")}
             </span>
           )}
         </div>
@@ -56,39 +66,39 @@ export default async function ProfessionalSelfBillingPage() {
         {isActive ? (
           <>
             <p className="text-sm text-foreground/80">
-              You have authorized MaestroYa to issue self-billed invoices (&quot;facturación por el destinatario&quot;) on
-              your behalf for completed jobs. You can revoke this at any time.
+              {t("activeDescription")}
             </p>
             <form action={revokeMySelfBillingAuthorizationFormAction}>
               <Button type="submit" variant="outline">
-                Revoke authorization
+                {t("revoke")}
               </Button>
             </form>
           </>
         ) : (
           <>
             <p className="text-sm text-foreground/80">
-              Without this authorization, MaestroYa cannot issue self-billed invoices on your behalf, and self-billed
-              invoices cannot be drafted for your completed jobs.
+              {t("inactiveDescription")}
             </p>
             {authorization?.status === "REVOKED" && (
-              <Alert variant="warning" title="Previously revoked">
-                <p>You revoked this authorization previously. You can grant it again below.</p>
+              <Alert variant="warning" title={t("previouslyRevokedTitle")}>
+                <p>{t("previouslyRevokedDescription")}</p>
               </Alert>
             )}
             <form action={grantMySelfBillingAuthorizationFormAction}>
-              <Button type="submit">Grant authorization</Button>
+              <Button type="submit">{t("grant")}</Button>
             </form>
           </>
         )}
       </Section>
 
       <p className="text-xs text-foreground/60">
-        View your{" "}
-        <Link href="/dashboard/professional/invoices" className="underline">
-          self-billed invoices
-        </Link>
-        .
+        {t.rich("viewInvoices", {
+          link: (chunks) => (
+            <Link href="/dashboard/professional/invoices" className="underline">
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
     </PageContainer>
   );

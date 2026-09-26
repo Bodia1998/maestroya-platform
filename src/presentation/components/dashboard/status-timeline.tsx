@@ -1,4 +1,5 @@
 import { Check, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/shared/utils/cn";
 
@@ -15,7 +16,13 @@ export type TimelineStepState = "complete" | "current" | "upcoming" | "danger";
 
 export interface TimelineStep {
   key: string;
-  label: string;
+  /**
+   * Module 120 — Multilingual Localization: optional explicit label. When
+   * omitted, the step's `key` is treated as a status enum value and shown
+   * via `enums.status.<key>` in the active locale (falling back to the raw
+   * key) — which is what the quote/appointment step builders rely on.
+   */
+  label?: string;
   state: TimelineStepState;
 }
 
@@ -46,6 +53,9 @@ function Marker({ state }: { state: TimelineStepState }) {
 
 /** Horizontal on wider screens, wraps to a vertical list on mobile — see the `sm:` breakpoint on the connecting line. */
 export function StatusTimeline({ steps, className }: StatusTimelineProps) {
+  const t = useTranslations("enums.status");
+  const labelFor = (step: TimelineStep): string =>
+    step.label ?? (t.has(step.key as never) ? t(step.key as never) : step.key);
   return (
     <ol className={cn("flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-2", className)}>
       {steps.map((step, index) => (
@@ -74,7 +84,7 @@ export function StatusTimeline({ steps, className }: StatusTimelineProps) {
             className={cn("text-sm sm:text-center", LABEL_STYLES[step.state])}
             aria-current={step.state === "current" ? "step" : undefined}
           >
-            {step.label}
+            {labelFor(step)}
           </span>
         </li>
       ))}

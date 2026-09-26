@@ -1,0 +1,365 @@
+{
+  "requests": {
+    "list": {
+      "title": "Mis solicitudes",
+      "subtitle": "Solicitudes que has publicado para que los profesionales te envíen presupuesto.",
+      "newRequest": "Nueva solicitud",
+      "empty": {
+        "title": "Todavía no tienes solicitudes",
+        "description": "Aún no has publicado ninguna solicitud. Publica una para empezar a recibir presupuestos de profesionales cerca de ti."
+      }
+    },
+    "new": {
+      "title": "Nueva solicitud de servicio",
+      "subtitle": "Describe el trabajo que necesitas. Se publicará al momento para que los profesionales te envíen presupuesto."
+    },
+    "edit": {
+      "title": "Editar solicitud de servicio",
+      "subtitle": "Puedes editar esta solicitud mientras siga abierta.",
+      "breadcrumb": "Editar"
+    },
+    "detail": {
+      "metaTitle": "Solicitud de servicio",
+      "description": "Descripción",
+      "location": "Ubicación",
+      "urgency": "Urgencia",
+      "budget": "Presupuesto orientativo",
+      "budgetRange": "{min} – {max}",
+      "budgetUnset": "—",
+      "posted": "Publicada",
+      "lastUpdated": "Última actualización",
+      "photos": "Fotos",
+      "acceptedNotice": "Has aceptado un presupuesto para esta solicitud. Ve a <appointments>Mis citas</appointments> para proponer o confirmar una hora, o consulta <jobs>Mis trabajos</jobs> para ver el progreso general del trabajo.",
+      "editRequest": "Editar solicitud"
+    },
+    "form": {
+      "updated": "Solicitud actualizada.",
+      "sections": {
+        "job": "El trabajo",
+        "budget": "Presupuesto orientativo",
+        "budgetDescription": "Da a los profesionales una cifra aproximada para que sus presupuestos se ajusten.",
+        "location": "Ubicación del trabajo"
+      },
+      "category": "Categoría de servicio",
+      "selectCategory": "Selecciona una categoría",
+      "title": "Título",
+      "titlePlaceholder": "p. ej., Arreglar el grifo de la cocina que gotea",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Describe el trabajo con detalle: qué hay que hacer y cualquier contexto relevante.",
+      "urgency": "Urgencia",
+      "budgetMin": "Presupuesto mínimo (EUR)",
+      "budgetMax": "Presupuesto máximo (EUR)",
+      "address": "Dirección",
+      "streetPlaceholder": "Calle y número",
+      "line2Placeholder": "Piso, puerta, etc. (opcional)",
+      "cityPlaceholder": "Ciudad",
+      "postalCodePlaceholder": "Código postal",
+      "provincePlaceholder": "Provincia",
+      "countryPlaceholder": "País",
+      "latitudePlaceholder": "Latitud (opcional)",
+      "longitudePlaceholder": "Longitud (opcional)",
+      "coordinatesHelp": "La latitud y la longitud se completan automáticamente cuando es posible; déjalas en blanco si no estás seguro.",
+      "saveChanges": "Guardar cambios",
+      "postRequest": "Publicar solicitud"
+    },
+    "cancel": {
+      "trigger": "Cancelar esta solicitud",
+      "title": "¿Cancelar esta solicitud de servicio?",
+      "description": "Los profesionales ya no podrán enviarte presupuesto. Esta acción no se puede deshacer desde aquí.",
+      "confirm": "Sí, cancelar solicitud",
+      "pending": "Cancelando…",
+      "keep": "Mantener solicitud"
+    },
+    "photos": {
+      "chooseFirst": "Primero elige una imagen.",
+      "alt": "Foto de la solicitud",
+      "remove": "Quitar",
+      "none": "No hay fotos adjuntas.",
+      "add": "Añadir foto",
+      "uploading": "Subiendo…",
+      "maxReached": "Has alcanzado el máximo de {max, plural, one {# foto} other {# fotos}}."
+    },
+    "errors": {
+      "createFailed": "Algo salió mal al crear tu solicitud.",
+      "updateFailed": "Algo salió mal al actualizar tu solicitud.",
+      "cancelFailed": "Algo salió mal al cancelar tu solicitud.",
+      "photoMissing": "Elige una imagen para subir.",
+      "photoType": "Las fotos deben ser imágenes JPEG, PNG o WebP.",
+      "photoTooLarge": "Cada foto debe pesar menos de 5 MB.",
+      "photoUploadFailed": "Algo salió mal al subir tu foto.",
+      "photoRemoveFailed": "Algo salió mal al quitar esa foto."
+    }
+  },
+  "quotes": {
+    "title": "Presupuestos recibidos",
+    "subtitle": "Presupuestos que los profesionales han enviado para esta solicitud.",
+    "breadcrumb": "Presupuestos",
+    "empty": "Todavía no hay presupuestos. Vuelve a consultarlo pronto.",
+    "verification": {
+      "UNVERIFIED": "Sin verificar",
+      "PENDING": "Verificación pendiente",
+      "VERIFIED": "Verificado",
+      "REJECTED": "Verificación rechazada"
+    },
+    "meta": "Enviado el {created, date, medium} — actualizado el {updated, date, medium}",
+    "metaWithValidity": "Válido hasta el {validUntil, date, medium} — enviado el {created, date, medium} — actualizado el {updated, date, medium}",
+    "messageProfessional": "Enviar mensaje a {name}",
+    "acceptFailed": "Algo salió mal al aceptar este presupuesto.",
+    "accept": {
+      "trigger": "Aceptar este presupuesto",
+      "title": "¿Aceptar este presupuesto?",
+      "description": "Todos los demás presupuestos de esta solicitud se rechazarán automáticamente. Esta acción no se puede deshacer.",
+      "confirm": "Sí, aceptar presupuesto",
+      "pending": "Aceptando…",
+      "cancel": "Todavía no"
+    }
+  },
+  "appointments": {
+    "list": {
+      "title": "Mis citas",
+      "subtitle": "Citas creadas a partir de los presupuestos que has aceptado.",
+      "empty": {
+        "title": "No tienes citas próximas",
+        "description": "Las citas aparecen aquí cuando aceptas el presupuesto de un profesional.",
+        "action": "Ver mis solicitudes"
+      }
+    },
+    "noTimeProposed": "Todavía no se ha propuesto hora",
+    "notSet": "Sin definir",
+    "awaitingProposedTime": "Pendiente de propuesta de hora",
+    "detail": {
+      "title": "Cita",
+      "confirmedTime": "Hora confirmada",
+      "proposedTime": "Hora propuesta",
+      "cancellationReason": "Motivo de la cancelación"
+    },
+    "cancellationReason": {
+      "CUSTOMER_REQUEST": "A petición del cliente",
+      "PROFESSIONAL_UNAVAILABLE": "Profesional no disponible",
+      "SCHEDULING_CONFLICT": "Conflicto de horario",
+      "OTHER": "Otro"
+    },
+    "actions": {
+      "start": "Inicio",
+      "end": "Fin",
+      "confirming": "Confirmando…",
+      "confirmTime": "Confirmar esta hora",
+      "completing": "Marcando como completada…",
+      "markCompleted": "Marcar esta visita como completada",
+      "cancelTrigger": "Cancelar cita",
+      "cancelTitle": "¿Cancelar esta cita?",
+      "confirmCancel": "Sí, cancelar",
+      "cancelling": "Cancelando…",
+      "notNow": "Ahora no",
+      "reason": "Motivo",
+      "note": "Nota (opcional)",
+      "proposeTime": "Proponer una hora",
+      "proposeDifferentTime": "Proponer otra hora",
+      "reschedule": "Reprogramar"
+    },
+    "errors": {
+      "invalidAppointment": "Cita no válida.",
+      "proposeFailed": "Algo salió mal al proponer esta hora.",
+      "confirmFailed": "Algo salió mal al confirmar esta cita.",
+      "cancelFailed": "Algo salió mal al cancelar esta cita.",
+      "completeFailed": "Algo salió mal al completar esta cita.",
+      "rescheduleFailed": "Algo salió mal al reprogramar esta cita."
+    }
+  },
+  "messages": {
+    "title": "Mensajes",
+    "conversation": "Conversación",
+    "empty": {
+      "title": "Todavía no hay conversaciones",
+      "description": "Cuando tú y un cliente o profesional tengáis un presupuesto en común, podréis escribiros aquí."
+    },
+    "participant": "Participante",
+    "unknownParticipant": "Usuario de MaestroYa",
+    "noMessagesYet": "Todavía no hay mensajes.",
+    "emptyThread": "Todavía no hay mensajes. Saluda para empezar la conversación.",
+    "closed": "Esta conversación ya no admite mensajes nuevos.",
+    "opening": "Abriendo…",
+    "messageAction": "Enviar mensaje",
+    "bubble": {
+      "deleted": "Este mensaje se ha eliminado.",
+      "deleting": "Eliminando…",
+      "confirmDelete": "Confirmar eliminación",
+      "cancel": "Cancelar",
+      "delete": "Eliminar"
+    },
+    "composer": {
+      "placeholder": "Escribe un mensaje…",
+      "ariaLabel": "Mensaje",
+      "sending": "Enviando…",
+      "send": "Enviar"
+    },
+    "errors": {
+      "openFailed": "Algo salió mal al abrir esta conversación.",
+      "sendFailed": "Algo salió mal al enviar tu mensaje.",
+      "generic": "Algo salió mal.",
+      "deleteFailed": "Algo salió mal al eliminar este mensaje."
+    }
+  },
+  "disputes": {
+    "list": {
+      "metaTitle": "Mis disputas",
+      "title": "Disputas",
+      "subtitle": "Casos que has abierto y casos abiertos sobre tu trabajo.",
+      "openFromJob": "Abrir una disputa desde un trabajo",
+      "openedByMe": "Abiertas por mí",
+      "openedAboutMe": "Abiertas sobre mi trabajo",
+      "emptyMine": {
+        "title": "No has abierto disputas",
+        "description": "No has abierto ninguna disputa."
+      },
+      "emptyAgainst": {
+        "title": "No hay nada aquí",
+        "description": "No se ha abierto ninguna disputa sobre tu trabajo."
+      }
+    },
+    "detail": {
+      "metaTitle": "Disputa",
+      "subtitle": "{caseNumber} · Estado: {status} · Prioridad: {priority} · Motivo: {reason}",
+      "description": "Descripción",
+      "resolution": "Resolución",
+      "evidence": "Pruebas",
+      "noEvidence": "No hay pruebas adjuntas.",
+      "messages": "Mensajes",
+      "noMessages": "Todavía no hay mensajes."
+    },
+    "messageForm": {
+      "label": "Escribe un mensaje",
+      "placeholder": "Escribe un mensaje…",
+      "sending": "Enviando…",
+      "send": "Enviar mensaje"
+    },
+    "new": {
+      "title": "Abrir una disputa",
+      "subtitle": "Solo para trabajos en curso, completados o cancelados; consulta la página de detalle de tu trabajo."
+    },
+    "form": {
+      "description": "Da todos los detalles posibles: nos ayuda a resolverlo más rápido.",
+      "jobId": "ID del trabajo",
+      "reason": "Motivo",
+      "title": "Título",
+      "descriptionLabel": "Descripción",
+      "submitting": "Enviando…",
+      "submit": "Abrir disputa"
+    },
+    "status": {
+      "WAITING_FOR_CUSTOMER": "Esperando al cliente",
+      "WAITING_FOR_PROFESSIONAL": "Esperando al profesional"
+    },
+    "priority": {
+      "LOW": "Baja",
+      "MEDIUM": "Media",
+      "HIGH": "Alta",
+      "URGENT": "Urgente"
+    },
+    "reason": {
+      "SERVICE_NOT_COMPLETED": "Servicio no completado",
+      "SERVICE_QUALITY": "Calidad del servicio",
+      "PROPERTY_DAMAGE": "Daños a la propiedad",
+      "PROFESSIONAL_NO_SHOW": "El profesional no se presentó",
+      "CUSTOMER_NO_SHOW": "El cliente no se presentó",
+      "PRICE_DISAGREEMENT": "Desacuerdo sobre el precio",
+      "SCOPE_OF_WORK": "Alcance del trabajo",
+      "COMMUNICATION_ISSUE": "Problema de comunicación",
+      "OTHER": "Otro"
+    },
+    "resolution": {
+      "NO_ACTION": "Sin acciones",
+      "CUSTOMER_FAVOR": "A favor del cliente",
+      "PROFESSIONAL_FAVOR": "A favor del profesional",
+      "PARTIAL_RESOLUTION": "Resolución parcial",
+      "FINANCIAL_ADJUSTMENT_REQUIRED": "Requiere ajuste económico",
+      "ESCALATED_EXTERNALLY": "Derivada a una instancia externa"
+    },
+    "errors": {
+      "openFailed": "Algo salió mal al abrir esta disputa.",
+      "loadMineFailed": "Algo salió mal al cargar tus disputas.",
+      "loadFailed": "Algo salió mal al cargar las disputas.",
+      "loadOneFailed": "Algo salió mal al cargar esta disputa.",
+      "messageFailed": "Algo salió mal al enviar este mensaje.",
+      "evidenceFailed": "Algo salió mal al adjuntar esta prueba."
+    }
+  },
+  "support": {
+    "metaTitle": "Tickets de soporte",
+    "title": "Soporte",
+    "subtitle": "Problemas con la cuenta, incidencias de verificación, errores o preguntas generales.",
+    "myTickets": "Mis tickets",
+    "empty": {
+      "title": "No hay tickets de soporte",
+      "description": "No has abierto ningún ticket de soporte."
+    },
+    "detail": {
+      "metaTitle": "Ticket de soporte",
+      "subtitle": "{ticketNumber} · Estado: {status} · Categoría: {category} · Prioridad: {priority}",
+      "resolution": "Resolución"
+    },
+    "form": {
+      "title": "Abrir un ticket nuevo",
+      "category": "Categoría",
+      "subject": "Asunto",
+      "description": "Descripción",
+      "submitting": "Enviando…",
+      "submit": "Enviar ticket"
+    },
+    "category": {
+      "ACCOUNT": "Cuenta",
+      "VERIFICATION": "Verificación",
+      "BUG": "Error de la plataforma",
+      "LOGIN": "Inicio de sesión",
+      "GENERAL": "General",
+      "OTHER": "Otro"
+    },
+    "status": {
+      "WAITING_FOR_USER": "Esperando tu respuesta"
+    },
+    "errors": {
+      "openFailed": "Algo salió mal al abrir este ticket.",
+      "loadFailed": "Algo salió mal al cargar tus tickets.",
+      "loadOneFailed": "Algo salió mal al cargar este ticket."
+    }
+  },
+  "reviews": {
+    "errors": {
+      "submitFailed": "Algo salió mal al enviar esta reseña.",
+      "updateFailed": "Algo salió mal al actualizar esta reseña.",
+      "deleteFailed": "Algo salió mal al eliminar esta reseña.",
+      "respondFailed": "Algo salió mal al enviar esta respuesta."
+    }
+  },
+  "analytics": {
+    "loadFailed": "Algo salió mal al cargar tus estadísticas."
+  },
+  "receipts": {
+    "list": {
+      "title": "Mis recibos",
+      "subtitle": "Recibos de los trabajos que has pagado a través de MaestroYa.",
+      "empty": {
+        "title": "Todavía no hay recibos",
+        "description": "El recibo aparece aquí cuando un trabajo que has pagado se completa y se libera el pago."
+      }
+    },
+    "notYetIssued": "Aún no emitido",
+    "detail": {
+      "title": "Recibo",
+      "receiptNumber": "Número de recibo",
+      "date": "Fecha",
+      "dateUnset": "—",
+      "issuedBy": "Emitido por",
+      "billedTo": "Facturado a",
+      "items": "Conceptos",
+      "description": "Descripción",
+      "amount": "Importe",
+      "tax": "Impuestos",
+      "taxableBase": "Base imponible",
+      "vat": "IVA ({rate})",
+      "total": "Total",
+      "creditNotes": "Facturas rectificativas",
+      "documentReference": "Referencia del documento: {hash}… (solo suma de verificación contra manipulaciones; no es una firma electrónica)."
+    }
+  }
+}

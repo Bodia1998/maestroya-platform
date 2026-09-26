@@ -1,0 +1,225 @@
+{
+  "tabs": {
+    "ariaLabel": "Sections de l’entreprise",
+    "profile": "Profil",
+    "members": "Membres",
+    "invitations": "Invitations",
+    "verification": "Vérification",
+    "selfBilling": "Autofacturation"
+  },
+  "roles": {
+    "OWNER": "Propriétaire",
+    "ADMIN": "Administrateur",
+    "MANAGER": "Responsable",
+    "MEMBER": "Membre"
+  },
+  "memberStatus": {
+    "ACTIVE": "Actif",
+    "PENDING": "En attente",
+    "REMOVED": "Retiré"
+  },
+  "invitationStatus": {
+    "PENDING": "En attente",
+    "ACCEPTED": "Acceptée",
+    "DECLINED": "Refusée",
+    "EXPIRED": "Expirée",
+    "CANCELLED": "Annulée"
+  },
+  "companyStatus": {
+    "PENDING": "En attente",
+    "ACTIVE": "Active",
+    "SUSPENDED": "Suspendue",
+    "DEACTIVATED": "Désactivée"
+  },
+  "errors": {
+    "invalidDetails": "Informations de l’entreprise invalides.",
+    "createFailed": "Un problème est survenu lors de la création de l’entreprise.",
+    "updateFailed": "Un problème est survenu lors de la mise à jour de l’entreprise.",
+    "loadFailed": "Un problème est survenu lors du chargement de l’entreprise."
+  },
+  "index": {
+    "metaTitle": "Mes entreprises",
+    "title": "Mes entreprises",
+    "subtitle": "Travaillez en tant qu’entreprise ou équipe avec plusieurs professionnels, en plus de votre éventuel profil de professionnel individuel.",
+    "emptyTitle": "Aucune entreprise pour le moment",
+    "emptyDescription": "Vous n’êtes membre d’aucune entreprise pour le moment. Créez-en une ci-dessous pour commencer à travailler en équipe.",
+    "manage": "Gérer",
+    "createTitle": "Créer une entreprise",
+    "legalNameRequired": "Raison sociale (obligatoire)",
+    "tradeName": "Nom commercial / d’affichage",
+    "taxIdRequired": "Numéro fiscal (obligatoire)",
+    "description": "Description",
+    "submit": "Créer l’entreprise"
+  },
+  "acceptInvitation": {
+    "metaTitle": "Invitation d’entreprise",
+    "title": "Invitation d’entreprise",
+    "subtitle": "Vous avez été invité à rejoindre une entreprise sur MaestroYa. En acceptant, vous deviendrez immédiatement membre actif.",
+    "missingToken": "Il manque le jeton dans ce lien d’invitation.",
+    "accept": "Accepter l’invitation",
+    "decline": "Refuser",
+    "invalidLink": "Lien d’invitation invalide.",
+    "acceptFailed": "Un problème est survenu lors de l’acceptation de cette invitation.",
+    "declineFailed": "Un problème est survenu lors du refus de cette invitation."
+  },
+  "profile": {
+    "metaTitle": "Profil de l’entreprise",
+    "subtitle": "Statut : {status} · {verified}",
+    "verified": "Vérifiée",
+    "notVerified": "Non vérifiée",
+    "breadcrumbMyCompanies": "Mes entreprises",
+    "detailsTitle": "Informations de l’entreprise",
+    "legalName": "Raison sociale",
+    "tradeName": "Nom commercial / d’affichage",
+    "description": "Description",
+    "contactTitle": "Coordonnées",
+    "website": "Site web",
+    "contactEmail": "E-mail de contact",
+    "contactPhone": "Téléphone de contact",
+    "city": "Ville",
+    "province": "Province",
+    "save": "Enregistrer les modifications"
+  },
+  "members": {
+    "metaTitle": "Membres de l’entreprise",
+    "title": "Membres",
+    "activeCount": "{count, plural, one {# membre actif.} other {# membres actifs.}}",
+    "emptyTitle": "Aucun membre dans l’entreprise pour le moment",
+    "emptyDescription": "Invitez vos collègues depuis l’onglet Invitations pour commencer à collaborer sur ce compte d’entreprise.",
+    "columns": {
+      "name": "Nom",
+      "email": "E-mail",
+      "role": "Rôle",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "roleFor": "Rôle de {name}",
+    "updateRole": "Mettre à jour le rôle",
+    "transferTitle": "Transférer la propriété",
+    "transferNotice": "Seul le propriétaire actuel peut transférer la propriété. Cette action est irréversible, sauf si le nouveau propriétaire vous la retransfère.",
+    "errors": {
+      "loadFailed": "Un problème est survenu lors du chargement des membres.",
+      "invalidRole": "Rôle invalide.",
+      "changeRoleFailed": "Un problème est survenu lors du changement de rôle de ce membre.",
+      "invalidMember": "Membre invalide.",
+      "removeFailed": "Un problème est survenu lors du retrait de ce membre.",
+      "invalidRequest": "Requête invalide.",
+      "transferFailed": "Un problème est survenu lors du transfert de propriété."
+    },
+    "remove": {
+      "trigger": "Retirer",
+      "title": "Retirer {name} ?",
+      "description": "Cette personne perdra immédiatement l’accès à ce compte d’entreprise. Cette action ne peut pas être annulée ici.",
+      "confirm": "Oui, retirer",
+      "pending": "Retrait…"
+    },
+    "transfer": {
+      "trigger": "Transférer la propriété",
+      "title": "Transférer la propriété ?",
+      "description": "Seul le propriétaire actuel peut transférer la propriété. Cette action est irréversible, sauf si le nouveau propriétaire vous la retransfère.",
+      "confirm": "Oui, transférer la propriété",
+      "pending": "Transfert…",
+      "newOwner": "Nouveau propriétaire",
+      "confirmationLabel": "Saisissez {keyword} pour confirmer"
+    }
+  },
+  "invitations": {
+    "metaTitle": "Invitations de l’entreprise",
+    "title": "Invitations",
+    "inviteTitle": "Inviter un membre",
+    "inviteNotice": "Pour le moment, seuls les utilisateurs MaestroYa existants peuvent être invités. L’invitation est valable 14 jours.",
+    "email": "E-mail",
+    "role": "Rôle",
+    "send": "Envoyer l’invitation",
+    "emptyTitle": "Aucune invitation pour le moment",
+    "emptyDescription": "Les invitations que vous envoyez apparaîtront ici jusqu’à ce qu’elles soient acceptées ou annulées.",
+    "columns": {
+      "email": "E-mail",
+      "role": "Rôle",
+      "status": "Statut",
+      "expires": "Expire le",
+      "actions": "Actions"
+    },
+    "errors": {
+      "loadFailed": "Un problème est survenu lors du chargement des invitations.",
+      "invalid": "Invitation invalide.",
+      "createFailed": "Un problème est survenu lors de la création de l’invitation.",
+      "cancelFailed": "Un problème est survenu lors de l’annulation de cette invitation."
+    },
+    "cancel": {
+      "trigger": "Annuler",
+      "title": "Annuler cette invitation ?",
+      "description": "{email} ne pourra plus utiliser cette invitation pour rejoindre l’entreprise.",
+      "confirm": "Oui, annuler l’invitation",
+      "pending": "Annulation…",
+      "keep": "Conserver l’invitation"
+    }
+  },
+  "verification": {
+    "metaTitle": "Vérification de l’entreprise",
+    "title": "Vérification",
+    "notStarted": "Cette entreprise n’a pas encore commencé la vérification.",
+    "start": "Commencer la vérification",
+    "statusCopy": {
+      "DRAFT": "Pas encore envoyée. Téléversez au moins un document de l’entreprise et envoyez-la pour examen.",
+      "PENDING": "Envoyée — en attente d’examen par un administrateur.",
+      "UNDER_REVIEW": "Un administrateur examine actuellement cette demande.",
+      "APPROVED": "Approuvée — votre entreprise affiche un badge de vérification sur son profil public.",
+      "REJECTED": "Refusée. Consultez le motif ci-dessous et renvoyez-la lorsque vous êtes prêt.",
+      "RESUBMISSION_REQUIRED": "Des modifications sont nécessaires avant l’approbation. Consultez les instructions ci-dessous.",
+      "EXPIRED": "Cette approbation a expiré. Lancez une nouvelle demande de vérification."
+    },
+    "reason": "Motif",
+    "whatToUpdate": "Ce qu’il faut mettre à jour",
+    "documents": "Documents",
+    "noDocuments": "Aucun document téléversé pour le moment.",
+    "docTypes": {
+      "BUSINESS_LICENSE": "Licence d’activité",
+      "TAX_CERTIFICATE": "Attestation fiscale",
+      "INSURANCE_CERTIFICATE": "Attestation d’assurance",
+      "PROFESSIONAL_CERTIFICATION": "Certification professionnelle",
+      "PROOF_OF_ADDRESS": "Justificatif de domicile",
+      "OTHER": "Autre"
+    },
+    "remove": "Supprimer",
+    "uploadTitle": "Téléverser un document",
+    "docType": "Type de document",
+    "file": "Fichier",
+    "upload": "Téléverser le document",
+    "submit": "Envoyer pour examen",
+    "resubmit": "Renvoyer",
+    "errors": {
+      "startFailed": "Un problème est survenu lors du lancement de la vérification.",
+      "invalidDocType": "Choisissez un type de document valide.",
+      "chooseFile": "Choisissez un fichier à téléverser.",
+      "invalidFileType": "Les documents doivent être une image JPEG, PNG ou WebP, ou un PDF.",
+      "fileTooLarge": "Chaque document doit faire moins de 10 Mo.",
+      "uploadFailed": "Un problème est survenu lors du téléversement de ce document.",
+      "invalidDocument": "Document invalide.",
+      "removeFailed": "Un problème est survenu lors de la suppression de ce document.",
+      "submitFailed": "Un problème est survenu lors de l’envoi pour examen.",
+      "resubmitFailed": "Un problème est survenu lors du renvoi pour examen."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Autofacturation de l’entreprise",
+    "title": "Entreprise",
+    "subtitle": "Gérez l’autorisation d’autofacturation et les factures de votre entreprise.",
+    "ownerOnlyTitle": "Propriétaire/administrateur uniquement",
+    "ownerOnlyBody": "Seul le propriétaire de l’entreprise ou un administrateur peut consulter ou modifier le statut de l’autorisation d’autofacturation.",
+    "sectionTitle": "Autorisation d’autofacturation",
+    "notAuthorized": "Non autorisée",
+    "activeBody": "Cette entreprise a autorisé MaestroYa à émettre en son nom des factures en autofacturation (« {legalTerm} ») pour les missions terminées. Vous pouvez révoquer cette autorisation à tout moment.",
+    "revoke": "Révoquer l’autorisation",
+    "inactiveBody": "Sans cette autorisation, MaestroYa ne peut pas émettre de factures en autofacturation au nom de cette entreprise.",
+    "grant": "Accorder l’autorisation",
+    "invoicesTitle": "Factures",
+    "noInvoices": "Aucune facture en autofacturation pour le moment.",
+    "notYetIssued": "Pas encore émise",
+    "errors": {
+      "invalidCompany": "Entreprise invalide.",
+      "grantFailed": "Un problème est survenu lors de l’octroi de l’autorisation d’autofacturation.",
+      "revokeFailed": "Un problème est survenu lors de la révocation de l’autorisation d’autofacturation."
+    }
+  }
+}

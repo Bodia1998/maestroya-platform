@@ -1,0 +1,15 @@
+{
+  "title": "Meldingen",
+  "empty": "Je hebt geen meldingen.",
+  "markAllRead": "Alles als gelezen markeren",
+  "unreadCount": "{count, plural, =0 {Geen nieuwe meldingen} one {# ongelezen melding} other {# ongelezen meldingen}}",
+  "receivedAt": "Ontvangen op {date, date, medium} om {date, time, short}",
+  "types": {
+    "jobUpdate": "Update over opdracht",
+    "newMessage": "Nieuw bericht",
+    "quoteReceived": "Offerte ontvangen",
+    "appointmentProposed": "Afspraak voorgesteld",
+    "verificationExpired": "Verificatie verlopen",
+    "systemMessage": "Systeembericht"
+  }
+}

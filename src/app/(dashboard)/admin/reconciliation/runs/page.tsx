@@ -1,4 +1,5 @@
 import { ListChecks } from "lucide-react";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { listReconciliationRunsAction } from "../actions";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
@@ -11,17 +12,15 @@ import { Select } from "@/components/ui/select";
 import { ButtonLink } from "@/components/ui/button-link";
 import { RunStatusBadge } from "../_components/badges";
 import { TriggerRunDialog } from "../_components/trigger-run-dialog";
+import { formatDuration } from "../_components/format-duration";
 
-export const metadata = { title: "Admin — Reconciliation runs" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("reconciliation.runs.title") }) };
+}
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{ page?: string; status?: string }>;
-
-function formatDuration(durationMs: number | null): string {
-  if (durationMs === null) return "—";
-  if (durationMs < 1000) return `${durationMs} ms`;
-  return `${(durationMs / 1000).toFixed(1)} s`;
-}
 
 /**
  * Module 81 — Reconciliation Admin Dashboard & Operations: the admin Runs
@@ -49,12 +48,19 @@ export default async function AdminReconciliationRunsPage({ searchParams }: { se
     return `/admin/reconciliation/runs?${parts.join("&")}`;
   };
 
+  const t = await getTranslations("admin");
+  const tRecon = await getTranslations("admin.reconciliation");
+  const format = await getFormatter();
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Reconciliation runs"
-        subtitle="Every execution of the reconciliation engine, newest first."
-        breadcrumbs={[{ label: "Reconciliation", href: "/admin/reconciliation" }, { label: "Runs" }]}
+        title={t("reconciliation.runs.title")}
+        subtitle={t("reconciliation.runs.subtitle")}
+        breadcrumbs={[
+          { label: t("reconciliation.title"), href: "/admin/reconciliation" },
+          { label: t("reconciliation.runs.breadcrumb") },
+        ]}
         actions={<TriggerRunDialog />}
       />
 
@@ -64,31 +70,31 @@ export default async function AdminReconciliationRunsPage({ searchParams }: { se
         </p>
       )}
 
-      <AdminFilterForm aria-label="Filter reconciliation runs" submitLabel="Filter">
-        <Select name="status" defaultValue={cleanStatus ?? ""} aria-label="Filter by status" className="h-10 w-auto">
-          <option value="">All statuses</option>
-          <option value="RUNNING">Running</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="FAILED">Failed</option>
+      <AdminFilterForm aria-label={t("reconciliation.runs.filterLabel")} submitLabel={t("table.filter")}>
+        <Select name="status" defaultValue={cleanStatus ?? ""} aria-label={t("common.filterByStatus")} className="h-10 w-auto">
+          <option value="">{t("common.allStatuses")}</option>
+          <option value="RUNNING">{t("reconciliation.runStatus.RUNNING")}</option>
+          <option value="COMPLETED">{t("reconciliation.runStatus.COMPLETED")}</option>
+          <option value="FAILED">{t("reconciliation.runStatus.FAILED")}</option>
         </Select>
       </AdminFilterForm>
 
       {runs.length === 0 ? (
         <EmptyState
           icon={ListChecks}
-          title="No reconciliation runs found"
-          description="Runs will appear here once the reconciliation engine executes."
+          title={t("reconciliation.runs.empty")}
+          description={t("reconciliation.runs.emptyDescription")}
         />
       ) : (
-        <AdminDataTable caption="Reconciliation runs" minWidth={780}>
+        <AdminDataTable caption={t("reconciliation.runs.title")} minWidth={780}>
           <AdminTableHeadRow>
-            <AdminTh>Run</AdminTh>
-            <AdminTh>Scope</AdminTh>
-            <AdminTh>Status</AdminTh>
-            <AdminTh>Started</AdminTh>
-            <AdminTh>Duration</AdminTh>
-            <AdminTh>Records inspected</AdminTh>
-            <AdminTh>Discrepancies</AdminTh>
+            <AdminTh>{t("reconciliation.runs.columns.run")}</AdminTh>
+            <AdminTh>{t("reconciliation.runs.columns.scope")}</AdminTh>
+            <AdminTh>{t("reconciliation.runs.columns.status")}</AdminTh>
+            <AdminTh>{t("reconciliation.runs.columns.started")}</AdminTh>
+            <AdminTh>{t("reconciliation.runs.columns.duration")}</AdminTh>
+            <AdminTh>{t("reconciliation.runs.columns.recordsInspected")}</AdminTh>
+            <AdminTh>{t("reconciliation.runs.columns.discrepancies")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {runs.map((run) => (
@@ -98,14 +104,16 @@ export default async function AdminReconciliationRunsPage({ searchParams }: { se
                     {run.id.slice(0, 8)}…
                   </ButtonLink>
                 </td>
-                <td className="px-4 py-3">{run.scope}</td>
+                <td className="px-4 py-3">
+                  {tRecon.has(`scope.${run.scope}` as never) ? tRecon(`scope.${run.scope}` as never) : run.scope}
+                </td>
                 <td className="px-4 py-3">
                   <RunStatusBadge status={run.status} />
                 </td>
-                <td className="px-4 py-3">{new Date(run.startedAt).toLocaleString()}</td>
-                <td className="px-4 py-3">{formatDuration(run.durationMs)}</td>
-                <td className="px-4 py-3 tabular-nums">{run.recordsInspected}</td>
-                <td className="px-4 py-3 tabular-nums">{run.discrepancyCount}</td>
+                <td className="px-4 py-3">{format.dateTime(new Date(run.startedAt), { dateStyle: "medium", timeStyle: "short" })}</td>
+                <td className="px-4 py-3">{formatDuration(tRecon, run.durationMs)}</td>
+                <td className="px-4 py-3 tabular-nums">{format.number(run.recordsInspected)}</td>
+                <td className="px-4 py-3 tabular-nums">{format.number(run.discrepancyCount)}</td>
               </AdminTableRow>
             ))}
           </AdminTableBody>

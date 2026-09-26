@@ -9,15 +9,15 @@ import { z } from "zod";
  */
 
 export const createCompanyInvitationSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Enter a valid email address."),
+  email: z.string().trim().toLowerCase().email("email"),
   role: z.enum(["ADMIN", "MANAGER", "MEMBER"], {
-    errorMap: () => ({ message: "Select a valid role." }),
+    errorMap: () => ({ message: "dto.membership.roleInvalid" }),
   }),
 });
 export type CreateCompanyInvitationInput = z.infer<typeof createCompanyInvitationSchema>;
 
 export const companyInvitationIdSchema = z.object({
-  invitationId: z.string().uuid("Invalid invitation."),
+  invitationId: z.string().uuid("dto.ids.invitation"),
 });
 export type CompanyInvitationIdInput = z.infer<typeof companyInvitationIdSchema>;
 
@@ -25,7 +25,7 @@ export type CompanyInvitationIdInput = z.infer<typeof companyInvitationIdSchema>
  *  its stored hash. Hashed server-side inside the use case before any
  *  database lookup. */
 export const acceptCompanyInvitationSchema = z.object({
-  token: z.string().trim().min(32, "Invalid invitation link.").max(256),
+  token: z.string().trim().min(32, "dto.invitation.linkInvalid").max(256),
 });
 export type AcceptCompanyInvitationInput = z.infer<typeof acceptCompanyInvitationSchema>;
 

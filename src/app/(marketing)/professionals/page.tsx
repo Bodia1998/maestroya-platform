@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { searchProfessionalsSchema } from "@/application/dto/discovery.dto";
@@ -7,15 +8,12 @@ import { searchCompaniesSchema } from "@/application/dto/company.dto";
 import { makeSearchProfessionalsUseCase, makeSearchCompaniesUseCase } from "@/application/use-cases/discovery/compose";
 import type { SearchProfessionalsResult } from "@/application/use-cases/discovery/search-professionals.use-case";
 import type { SearchCompaniesResult } from "@/application/use-cases/discovery/search-companies.use-case";
-import { DomainError } from "@/domain/errors/domain-error";
 import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
+import { localizeActionError } from "@/presentation/i18n/server";
+import { localizeCategoryName } from "@/presentation/i18n/service-categories";
 import { ProfessionalSearchForm } from "./search-form";
 import { SearchResultsList } from "./search-results-list";
-
-const TITLE = "Encuentra un profesional cerca de ti";
-const DESCRIPTION =
-  "Busca profesionales verificados por categoría de servicio y ubicación, ordenados por distancia.";
 
 /**
  * Module 43 — SEO Infrastructure: `alternates.canonical` is deliberately
@@ -27,13 +25,18 @@ const DESCRIPTION =
  * to crawl. This mirrors `sitemap.ts`'s own decision to list only the
  * base path (see that file's doc comment).
  */
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: "/professionals" },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: "/professionals" },
-  twitter: { title: TITLE, description: DESCRIPTION },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("marketing");
+  const title = t("meta.professionals.title");
+  const description = t("meta.professionals.description");
+  return {
+    title,
+    description,
+    alternates: { canonical: "/professionals" },
+    openGraph: { title, description, url: "/professionals" },
+    twitter: { title, description },
+  };
+}
 
 /**
  * Customer-facing Professional Discovery & Search page.
@@ -55,11 +58,16 @@ export default async function ProfessionalsSearchPage({
   // Static reference data for the category picker — a plain read, not a
   // use case (no business logic), matching the professional dashboard's
   // own category-list read.
-  const categories = await prisma.serviceCategory.findMany({
+  const [t, tServices] = await Promise.all([getTranslations("marketing"), getTranslations("services")]);
+  const categoryRows = await prisma.serviceCategory.findMany({
     where: { status: "ACTIVE", deletedAt: null },
-    select: { id: true, name: true },
+    select: { id: true, name: true, slug: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
+  const categories = categoryRows.map((category) => ({
+    id: category.id,
+    name: localizeCategoryName(tServices, category),
+  }));
   const categoryNamesById = Object.fromEntries(categories.map((c) => [c.id, c.name]));
 
   const rawCategoryId = typeof params.categoryId === "string" ? params.categoryId : undefined;
@@ -86,13 +94,12 @@ export default async function ProfessionalsSearchPage({
     });
 
     if (!parsed.success) {
-      searchError = "That search looks invalid — please try again.";
+      searchError = t("professionals.invalid");
     } else {
       try {
         results = await makeSearchProfessionalsUseCase().execute(parsed.data);
       } catch (error) {
-        searchError =
-          error instanceof DomainError ? error.message : "Something went wrong running that search.";
+        searchError = await localizeActionError(error, t("professionals.failed"));
       }
     }
 
@@ -109,9 +116,9 @@ export default async function ProfessionalsSearchPage({
   return (
     <PageContainer padded>
       <div>
-        <h1 className="text-2xl font-semibold">Find a professional</h1>
+        <h1 className="text-2xl font-semibold">{t("professionals.heading")}</h1>
         <p className="mt-1 text-sm text-foreground/70">
-          Search by service and location to see professionals who cover your area.
+          {t("professionals.subtitle")}
         </p>
       </div>
 
@@ -131,26 +138,27 @@ export default async function ProfessionalsSearchPage({
       )}
 
       {hasSearch && !searchError && results && (
-        <Section title={`${results.total} professional${results.total === 1 ? "" : "s"} found`}>
+        <Section title={t("professionals.found", { count: results.total })}>
           <SearchResultsList results={results.results} categoryNamesById={categoryNamesById} />
         </Section>
       )}
 
       {hasSearch && companyResults && companyResults.total > 0 && (
-        <Section title={`${companyResults.total} compan${companyResults.total === 1 ? "y" : "ies"} found`}>
+        <Section title={t("professionals.companiesFound", { count: companyResults.total })}>
           <ul className="flex flex-col gap-2">
             {companyResults.results.map((company) => (
               <li key={company.id} className="flex items-center justify-between rounded-md border border-border p-3 text-sm">
                 <div>
                   <p className="font-medium">
-                    {company.displayName} {company.isVerified && <span className="text-xs text-green-700">✓ Verified</span>}
+                    {company.displayName} {company.isVerified && <span className="text-xs text-green-700">{t("professionals.verified")}</span>}
                   </p>
                   <p className="text-foreground/60">
-                    {[company.city, company.province].filter(Boolean).join(", ") || "—"} · Team of {company.teamSize}
+                    {[company.city, company.province].filter(Boolean).join(", ") || "—"} ·{" "}
+                    {t("directory.teamOf", { count: company.teamSize })}
                   </p>
                 </div>
                 <Link href={`/companies/${company.id}`} className="underline">
-                  View profile
+                  {t("directory.viewProfile")}
                 </Link>
               </li>
             ))}

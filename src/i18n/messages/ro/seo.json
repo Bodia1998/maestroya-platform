@@ -1,0 +1,30 @@
+{
+  "site": {
+    "defaultTitle": "MaestroYa — Găsește profesioniști de încredere pentru locuința ta",
+    "description": "Intră în legătură cu profesioniști de încredere pentru locuința ta: instalații sanitare, instalații electrice, renovări, curățenie și multe altele."
+  },
+  "servicesIndex": {
+    "title": "Servicii pentru locuință pe MaestroYa",
+    "description": "Consultă categoriile de servicii pentru locuință disponibile pe MaestroYa: instalații sanitare, instalații electrice, aer condiționat, zugrăveli, renovări și montaj mobilă."
+  },
+  "servicePage": {
+    "title": "{service} — MaestroYa",
+    "descriptionFallback": "Solicită un profesionist în categoria „{service}” prin MaestroYa și compară ofertele."
+  },
+  "serviceLocationPage": {
+    "title": "{service} în {city} — MaestroYa",
+    "description": "Solicită un serviciu din categoria „{service}” în {city} ({province}) prin MaestroYa și compară ofertele."
+  },
+  "locationsIndex": {
+    "title": "Locații — MaestroYa în Spania",
+    "description": "MaestroYa este un marketplace de servicii pentru locuință gândit să funcționeze în toată Spania. Consultă aria de acțiune a platformei și localitățile cu acoperire confirmată."
+  },
+  "locationPage": {
+    "title": "Profesioniști în {city} — MaestroYa",
+    "description": "Servicii pentru locuință disponibile în {city} ({province}) prin MaestroYa."
+  },
+  "nationalCoverage": {
+    "title": "MaestroYa în Spania — acoperire națională",
+    "description": "MaestroYa este un marketplace de servicii pentru locuință gândit să funcționeze în toată Spania. Disponibilitatea reală a profesioniștilor depinde de fiecare zonă."
+  }
+}

@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 
 import { PasswordInput } from "@/components/ui/password-input";
 
+import { setTestLocale } from "../../test-utils/intl";
+
 describe("PasswordInput", () => {
   it("renders a password-type input by default", () => {
     render(<PasswordInput aria-label="Password" />);
@@ -15,21 +17,21 @@ describe("PasswordInput", () => {
   it("reveals the value as text when the toggle is clicked", () => {
     render(<PasswordInput aria-label="Password" />);
     const input = screen.getByLabelText("Password");
-    const toggle = screen.getByRole("button", { name: "Mostrar contraseña" });
+    const toggle = screen.getByRole("button", { name: "Show password" });
 
     fireEvent.click(toggle);
 
     expect(input).toHaveAttribute("type", "text");
-    expect(screen.getByRole("button", { name: "Ocultar contraseña" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Hide password" })).toBeTruthy();
   });
 
   it("hides the value again on a second toggle click", () => {
     render(<PasswordInput aria-label="Password" />);
     const input = screen.getByLabelText("Password");
-    const toggle = screen.getByRole("button", { name: "Mostrar contraseña" });
+    const toggle = screen.getByRole("button", { name: "Show password" });
 
     fireEvent.click(toggle);
-    fireEvent.click(screen.getByRole("button", { name: "Ocultar contraseña" }));
+    fireEvent.click(screen.getByRole("button", { name: "Hide password" }));
 
     expect(input).toHaveAttribute("type", "password");
   });
@@ -48,5 +50,16 @@ describe("PasswordInput", () => {
     fireEvent.change(input, { target: { value: "s3cr3t" } });
 
     expect(input.value).toBe("s3cr3t");
+  });
+
+  it("localizes the default toggle label (nl)", () => {
+    setTestLocale("nl");
+    render(<PasswordInput aria-label="Password" />);
+    expect(screen.getByRole("button", { name: "Wachtwoord tonen" })).toBeTruthy();
+  });
+
+  it("keeps a caller-provided toggle label", () => {
+    render(<PasswordInput aria-label="Password" toggleLabel={{ show: "Reveal", hide: "Conceal" }} />);
+    expect(screen.getByRole("button", { name: "Reveal" })).toBeTruthy();
   });
 });

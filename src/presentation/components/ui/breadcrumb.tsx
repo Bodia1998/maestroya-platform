@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
@@ -15,8 +16,9 @@ export interface BreadcrumbProps extends React.HTMLAttributes<HTMLElement> {
 
 /** Server-renderable — plain links, no interactivity. Last item renders as the current page (`aria-current="page"`). */
 export function Breadcrumb({ items, className, ...props }: BreadcrumbProps) {
+  const t = useTranslations("ui");
   return (
-    <nav aria-label="Breadcrumb" className={className} {...props}>
+    <nav aria-label={t("breadcrumb.label")} className={className} {...props}>
       <ol className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
         {items.map((item, i) => {
           const isLast = i === items.length - 1;

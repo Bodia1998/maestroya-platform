@@ -1,5 +1,7 @@
 "use server";
 
+import { adminActionFailure } from "../_lib/action-errors";
+import { localizeZodError } from "@/presentation/i18n/server";
 import { adminCompanyIdSchema, listAdminCompaniesSchema } from "@/application/dto/company.dto";
 import {
   makeGetAdminCompanyUseCase,
@@ -7,7 +9,6 @@ import {
   makeReactivateCompanyUseCase,
   makeSuspendCompanyUseCase,
 } from "@/application/use-cases/admin/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import type { AdminCompanyRecord } from "@/domain/repositories/admin-repository";
 import { ROLES, requireRole } from "@/infrastructure/auth/rbac";
 import { revalidatePath } from "next/cache";
@@ -21,27 +22,19 @@ import { revalidatePath } from "next/cache";
 
 export type ActionResult<T = undefined> = { success: true; data: T } | { success: false; error: string };
 
-function fromDomainError<T>(error: unknown, fallback: string): ActionResult<T> {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
-}
-
 export async function listAdminCompaniesAction(
   input: { limit?: number; offset?: number; search?: string; status?: string } = {},
 ): Promise<ActionResult<AdminCompanyRecord[]>> {
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = listAdminCompaniesSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const companies = await makeListAdminCompaniesUseCase().execute(parsed.data);
     return { success: true, data: companies };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading companies.");
+    return adminActionFailure(error, "loadingCompanies");
   }
 }
 
@@ -49,13 +42,13 @@ export async function getAdminCompanyAction(companyId: string): Promise<ActionRe
   await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminCompanyIdSchema.safeParse({ companyId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid company." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const company = await makeGetAdminCompanyUseCase().execute(parsed.data.companyId);
     return { success: true, data: company };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong loading this company.");
+    return adminActionFailure(error, "loadingThisCompany");
   }
 }
 
@@ -63,7 +56,7 @@ export async function suspendCompanyAction(companyId: string): Promise<ActionRes
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminCompanyIdSchema.safeParse({ companyId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid company." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const company = await makeSuspendCompanyUseCase().execute(admin.id, parsed.data.companyId);
@@ -71,7 +64,7 @@ export async function suspendCompanyAction(companyId: string): Promise<ActionRes
     revalidatePath(`/admin/companies/${parsed.data.companyId}`);
     return { success: true, data: company };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong suspending this company.");
+    return adminActionFailure(error, "suspendingThisCompany");
   }
 }
 
@@ -79,7 +72,7 @@ export async function reactivateCompanyAction(companyId: string): Promise<Action
   const admin = await requireRole(ROLES.ADMIN, ROLES.SUPER_ADMIN);
   const parsed = adminCompanyIdSchema.safeParse({ companyId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid company." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
   try {
     const company = await makeReactivateCompanyUseCase().execute(admin.id, parsed.data.companyId);
@@ -87,7 +80,7 @@ export async function reactivateCompanyAction(companyId: string): Promise<Action
     revalidatePath(`/admin/companies/${parsed.data.companyId}`);
     return { success: true, data: company };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong reactivating this company.");
+    return adminActionFailure(error, "reactivatingThisCompany");
   }
 }
 

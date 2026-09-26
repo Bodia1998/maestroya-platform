@@ -13,5 +13,63 @@
     "email": "E-mail",
     "timezone": "Fus orar"
   },
-  "memberSince": "Membru din {date, date, long}"
+  "memberSince": "Membru din {date, date, long}",
+  "avatarNote": "Această fotografie este doar pentru contul tău — nu influențează verificarea identității de profesionist. Profesioniștii o gestionează separat din Profil de profesionist → Gestionează verificarea identității.",
+  "dangerNote": "Ștergerea contului poate fi anulată doar contactând asistența — datele tale sunt dezactivate, nu șterse imediat.",
+  "avatar": {
+    "chooseFirst": "Alege mai întâi o imagine.",
+    "alt": "Fotografia ta de profil",
+    "chooseLabel": "Alege o imagine de profil",
+    "uploading": "Se încarcă…",
+    "upload": "Încarcă fotografia de profil",
+    "updated": "Fotografia de profil a fost actualizată."
+  },
+  "form": {
+    "updated": "Profilul a fost actualizat.",
+    "basics": "Date de bază",
+    "displayName": "Nume afișat",
+    "phone": "Telefon",
+    "timezone": "Fus orar",
+    "preferredLanguage": "Limba preferată",
+    "noPreference": "Fără preferință",
+    "address": "Adresă",
+    "street": "Stradă și număr",
+    "line2": "Apartament, etaj etc. (opțional)",
+    "city": "Oraș",
+    "postalCode": "Cod poștal",
+    "province": "Provincie",
+    "country": "Țară",
+    "notifications": "Notificări",
+    "emailMarketing": "E-mailuri de marketing",
+    "emailServiceUpdates": "E-mailuri despre actualizările serviciului",
+    "smsAppointmentReminders": "Mementouri SMS pentru programări",
+    "save": "Salvează modificările"
+  },
+  "password": {
+    "changed": "Parola a fost schimbată. Din motive de securitate, ai fost deconectat de pe toate celelalte dispozitive.",
+    "noPassword": "Acest cont se autentifică printr-o rețea socială și nu are o parolă de schimbat.",
+    "title": "Schimbă parola",
+    "current": "Parola actuală",
+    "new": "Parola nouă",
+    "confirm": "Confirmă parola nouă",
+    "changing": "Se schimbă…",
+    "submit": "Schimbă parola"
+  },
+  "deleteAccount": {
+    "trigger": "Dezactivează contul",
+    "title": "Acest lucru îți va dezactiva contul",
+    "password": "Parolă",
+    "confirmLabel": "Scrie {token} pentru a confirma",
+    "deactivating": "Se dezactivează…",
+    "submit": "Dezactivează-mi contul"
+  },
+  "errors": {
+    "updateFailed": "A apărut o eroare la actualizarea profilului.",
+    "avatarFailed": "A apărut o eroare la încărcarea fotografiei de profil.",
+    "passwordFailed": "A apărut o eroare la schimbarea parolei.",
+    "deleteFailed": "A apărut o eroare la ștergerea contului.",
+    "avatarMissing": "Alege o imagine de încărcat.",
+    "avatarType": "Fotografia de profil trebuie să fie o imagine JPEG, PNG sau WebP.",
+    "avatarTooLarge": "Fotografia de profil trebuie să aibă mai puțin de 5 MB."
+  }
 }

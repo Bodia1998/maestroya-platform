@@ -21,19 +21,19 @@ describe("getQuoteTimelineSteps", () => {
   it("renders a two-step danger path for REJECTED", () => {
     const steps = getQuoteTimelineSteps("REJECTED");
     expect(steps).toEqual([
-      { key: "SENT", label: "Sent", state: "complete" },
-      { key: "REJECTED", label: "Rejected", state: "danger" },
+      { key: "SENT", state: "complete" },
+      { key: "REJECTED", state: "danger" },
     ]);
   });
 
   it("renders a two-step danger path for WITHDRAWN", () => {
     const steps = getQuoteTimelineSteps("WITHDRAWN");
-    expect(steps[1]).toEqual({ key: "WITHDRAWN", label: "Withdrawn", state: "danger" });
+    expect(steps[1]).toEqual({ key: "WITHDRAWN", state: "danger" });
   });
 
   it("renders a two-step danger path for EXPIRED", () => {
     const steps = getQuoteTimelineSteps("EXPIRED");
-    expect(steps[1]).toEqual({ key: "EXPIRED", label: "Expired", state: "danger" });
+    expect(steps[1]).toEqual({ key: "EXPIRED", state: "danger" });
   });
 
   it("returns the happy path unmodified for an unrecognized status", () => {

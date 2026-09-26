@@ -1,7 +1,7 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, X } from "lucide-react";
+import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -23,6 +23,7 @@ import {
   type CreateQuoteInput,
   type UpdateQuoteInput,
 } from "@/application/dto/quote.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { createQuoteAction, updateQuoteAction } from "./actions";
 
 interface QuoteItemLike {
@@ -63,6 +64,8 @@ export function QuoteForm({
   requestId?: string;
   quote: QuoteLike | null;
 }) {
+  const t = useTranslations("professional.quotes.form");
+  const format = useFormatter();
   const router = useRouter();
   const isEditing = mode === "edit";
   const [serverError, setServerError] = useState<string | null>(null);
@@ -77,7 +80,7 @@ export function QuoteForm({
     watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: useLocalizedZodResolver(schema),
     defaultValues: {
       ...(isEditing ? {} : { serviceRequestId: requestId ?? "" }),
       notes: quote?.notes ?? "",
@@ -143,7 +146,7 @@ export function QuoteForm({
         </Alert>
       )}
 
-      <FormSection title="Items" description="Break down labor and materials so the customer sees exactly what they're paying for.">
+      <FormSection title={t("itemsTitle")} description={t("itemsDescription")}>
         <div className="flex flex-col gap-3 rounded-lg border border-border p-4">
           <div className="flex items-center justify-end">
             <Button
@@ -153,7 +156,7 @@ export function QuoteForm({
               onClick={() => append({ description: "", quantity: 1, unitPrice: 0, category: "LABOR" })}
             >
               <Plus aria-hidden className="h-4 w-4" />
-              Add item
+              {t("addItem")}
             </Button>
           </div>
 
@@ -165,11 +168,11 @@ export function QuoteForm({
               >
                 <div className="flex flex-col gap-1">
                   <Label htmlFor={`item-${field.id}-description`} className="sm:sr-only">
-                    Description
+                    {t("description")}
                   </Label>
                   <Input
                     id={`item-${field.id}-description`}
-                    placeholder="Description (e.g. Labor, materials)"
+                    placeholder={t("descriptionPlaceholder")}
                     aria-invalid={!!errors.items?.[index]?.description}
                     aria-describedby={
                       errors.items?.[index]?.description ? `item-${field.id}-description-error` : undefined
@@ -182,14 +185,14 @@ export function QuoteForm({
                 </div>
                 <div className="flex flex-col gap-1">
                   <Label htmlFor={`item-${field.id}-quantity`} className="sm:sr-only">
-                    Quantity
+                    {t("quantity")}
                   </Label>
                   <Input
                     id={`item-${field.id}-quantity`}
                     type="number"
                     step="any"
                     min={0}
-                    placeholder="Qty"
+                    placeholder={t("quantityPlaceholder")}
                     aria-invalid={!!errors.items?.[index]?.quantity}
                     aria-describedby={
                       errors.items?.[index]?.quantity ? `item-${field.id}-quantity-error` : undefined
@@ -202,14 +205,14 @@ export function QuoteForm({
                 </div>
                 <div className="flex flex-col gap-1">
                   <Label htmlFor={`item-${field.id}-unitPrice`} className="sm:sr-only">
-                    Unit price
+                    {t("unitPrice")}
                   </Label>
                   <Input
                     id={`item-${field.id}-unitPrice`}
                     type="number"
                     step="0.01"
                     min={0}
-                    placeholder="Unit €"
+                    placeholder={t("unitPricePlaceholder")}
                     aria-invalid={!!errors.items?.[index]?.unitPrice}
                     aria-describedby={
                       errors.items?.[index]?.unitPrice ? `item-${field.id}-unitPrice-error` : undefined
@@ -222,7 +225,7 @@ export function QuoteForm({
                 </div>
                 <div className="flex flex-col gap-1">
                   <Label htmlFor={`item-${field.id}-category`} className="sm:sr-only">
-                    Item type
+                    {t("itemType")}
                   </Label>
                   <Select
                     id={`item-${field.id}-category`}
@@ -232,8 +235,8 @@ export function QuoteForm({
                     }
                     {...register(`items.${index}.category` as const)}
                   >
-                    <option value="LABOR">Labor</option>
-                    <option value="MATERIALS">Materials</option>
+                    <option value="LABOR">{t("categories.LABOR")}</option>
+                    <option value="MATERIALS">{t("categories.MATERIALS")}</option>
                   </Select>
                   <FormFieldError id={`item-${field.id}-category-error`}>
                     {errors.items?.[index]?.category?.message}
@@ -245,7 +248,7 @@ export function QuoteForm({
                   size="sm"
                   disabled={fields.length <= 1}
                   onClick={() => remove(index)}
-                  aria-label="Remove item"
+                  aria-label={t("removeItem")}
                   className="justify-self-end text-danger hover:bg-danger-muted sm:justify-self-auto"
                 >
                   <X aria-hidden className="h-4 w-4" />
@@ -256,20 +259,22 @@ export function QuoteForm({
           <FormFieldError>{errors.items?.message as string | undefined}</FormFieldError>
 
           <p className="text-right text-sm font-medium text-foreground">
-            Estimated total: €{estimatedTotal.toFixed(2)}
+            {t("estimatedTotal", {
+              amount: format.number(estimatedTotal, { style: "currency", currency: "EUR" }),
+            })}
           </p>
         </div>
       </FormSection>
 
-      <FormSection title="Details">
+      <FormSection title={t("detailsTitle")}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="notes">
-            Notes / proposal <OptionalBadge />
+            {t("notes")} <OptionalBadge />
           </Label>
           <Textarea
             id="notes"
             rows={4}
-            placeholder="Describe your proposal, timeline, or anything the customer should know."
+            placeholder={t("notesPlaceholder")}
             aria-invalid={!!errors.notes}
             aria-describedby={errors.notes ? "notes-error" : undefined}
             {...register("notes")}
@@ -279,7 +284,7 @@ export function QuoteForm({
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="validUntil">
-            Valid until <OptionalBadge />
+            {t("validUntil")} <OptionalBadge />
           </Label>
           <Input
             id="validUntil"
@@ -296,7 +301,7 @@ export function QuoteForm({
 
       <FormActions stickyOnMobile>
         <Button type="submit" disabled={isSubmitting} className="sm:min-w-48">
-          {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create quote"}
+          {isSubmitting ? t("saving") : isEditing ? t("saveChanges") : t("create")}
         </Button>
       </FormActions>
     </form>

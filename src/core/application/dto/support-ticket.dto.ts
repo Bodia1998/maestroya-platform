@@ -16,12 +16,12 @@ export const paginationSchema = z.object({
 
 export const createSupportTicketSchema = z.object({
   category: z.enum(SUPPORT_TICKET_CATEGORY_VALUES),
-  subject: z.string().trim().min(5, "Subject must be at least 5 characters.").max(150),
-  description: z.string().trim().min(10, "Description must be at least 10 characters.").max(5000),
+  subject: z.string().trim().min(5, "minLength").max(150),
+  description: z.string().trim().min(10, "minLength").max(5000),
 });
 export type CreateSupportTicketInput = z.infer<typeof createSupportTicketSchema>;
 
-export const getSupportTicketSchema = z.object({ ticketId: z.string().uuid("Invalid ticket.") });
+export const getSupportTicketSchema = z.object({ ticketId: z.string().uuid("dto.ids.ticket") });
 export type GetSupportTicketInput = z.infer<typeof getSupportTicketSchema>;
 
 export const listMySupportTicketsSchema = paginationSchema.extend({
@@ -39,26 +39,26 @@ export const listAdminSupportTicketsSchema = paginationSchema.extend({
 export type ListAdminSupportTicketsInput = z.infer<typeof listAdminSupportTicketsSchema>;
 
 export const assignSupportTicketSchema = z.object({
-  ticketId: z.string().uuid("Invalid ticket."),
-  adminUserId: z.string().uuid("Invalid admin.").nullable(),
+  ticketId: z.string().uuid("dto.ids.ticket"),
+  adminUserId: z.string().uuid("dto.ids.admin").nullable(),
 });
 export type AssignSupportTicketInput = z.infer<typeof assignSupportTicketSchema>;
 
 export const changeSupportTicketStatusSchema = z.object({
-  ticketId: z.string().uuid("Invalid ticket."),
+  ticketId: z.string().uuid("dto.ids.ticket"),
   status: z.enum(SUPPORT_TICKET_STATUS_VALUES),
 });
 export type ChangeSupportTicketStatusInput = z.infer<typeof changeSupportTicketStatusSchema>;
 
 export const resolveSupportTicketSchema = z.object({
-  ticketId: z.string().uuid("Invalid ticket."),
+  ticketId: z.string().uuid("dto.ids.ticket"),
   resolutionNote: z
     .string()
     .trim()
-    .min(1, "Resolution note is required.")
-    .max(MAX_RESOLUTION_NOTE_LENGTH, `Resolution note must be ${MAX_RESOLUTION_NOTE_LENGTH} characters or fewer.`),
+    .min(1, "dto.dispute.resolutionNoteRequired")
+    .max(MAX_RESOLUTION_NOTE_LENGTH, "maxLength"),
 });
 export type ResolveSupportTicketInput = z.infer<typeof resolveSupportTicketSchema>;
 
-export const closeSupportTicketSchema = z.object({ ticketId: z.string().uuid("Invalid ticket.") });
+export const closeSupportTicketSchema = z.object({ ticketId: z.string().uuid("dto.ids.ticket") });
 export type CloseSupportTicketInput = z.infer<typeof closeSupportTicketSchema>;

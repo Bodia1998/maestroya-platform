@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { setTestLocale } from "../../../test-utils/intl";
+
 afterEach(() => {
   vi.doUnmock("@/infrastructure/database/prisma/client");
   vi.resetModules();
@@ -13,6 +15,7 @@ const GANDIA_ROW = {
 
 describe("location page generateMetadata", () => {
   it("builds title/description/canonical for the verified Gandia location", async () => {
+    setTestLocale("es");
     vi.doMock("@/infrastructure/database/prisma/client", () => ({
       prisma: { city: { findFirst: vi.fn().mockResolvedValue(GANDIA_ROW) } },
     }));
@@ -22,6 +25,12 @@ describe("location page generateMetadata", () => {
 
     expect(metadata.title).toBe("Profesionales en Gandia — MaestroYa");
     expect(metadata.alternates).toMatchObject({ canonical: "/ubicaciones/gandia" });
+
+    setTestLocale("ru");
+    const ru = await generateMetadata({ params: Promise.resolve({ slug: "gandia" }) });
+    expect(ru.title).toMatch(/Gandia/);
+    expect(ru.title).toMatch(/[а-яё]/i);
+    expect(ru.alternates).toMatchObject({ canonical: "/ubicaciones/gandia" });
   });
 
   it("returns empty metadata when the City table has no matching row", async () => {

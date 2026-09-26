@@ -1,0 +1,344 @@
+{
+  "errors": {
+    "fixErrors": "Corectează erorile de mai jos.",
+    "createProfile": "A apărut o problemă la crearea profilului tău de profesionist.",
+    "onboarding": "A apărut o problemă la configurarea profilului tău de profesionist.",
+    "updateProfile": "A apărut o problemă la actualizarea profilului tău de profesionist.",
+    "updateServices": "A apărut o problemă la actualizarea categoriilor tale de servicii.",
+    "deactivate": "A apărut o problemă la dezactivarea profilului tău de profesionist.",
+    "submitQuote": "A apărut o problemă la trimiterea ofertei tale.",
+    "updateQuote": "A apărut o problemă la actualizarea ofertei tale.",
+    "withdrawQuote": "A apărut o problemă la retragerea ofertei tale.",
+    "acceptInvoice": "A apărut o problemă la acceptarea acestei facturi.",
+    "invalidInvoice": "Factură nevalidă.",
+    "grantSelfBilling": "A apărut o problemă la acordarea autorizării de autofacturare.",
+    "revokeSelfBilling": "A apărut o problemă la revocarea autorizării de autofacturare.",
+    "startVerification": "A apărut o problemă la inițierea cererii tale de verificare.",
+    "uploadDocument": "A apărut o problemă la încărcarea documentului.",
+    "removeDocument": "A apărut o problemă la eliminarea documentului.",
+    "submitVerification": "A apărut o problemă la trimiterea cererii tale de verificare.",
+    "resubmitVerification": "A apărut o problemă la retrimiterea cererii tale de verificare.",
+    "invalidDocumentType": "Alege un tip de document valid.",
+    "fileRequired": "Alege un fișier de încărcat.",
+    "invalidFileType": "Documentele trebuie să fie imagini JPEG, PNG sau WebP ori fișiere PDF.",
+    "fileTooLarge": "Fiecare document trebuie să aibă mai puțin de {maxMb, number} MB.",
+    "invalidDocument": "Document nevalid.",
+    "createPortfolioItem": "A apărut o problemă la crearea acestui element de portofoliu.",
+    "updatePortfolioItem": "A apărut o problemă la actualizarea acestui element de portofoliu.",
+    "deletePortfolioItem": "A apărut o problemă la ștergerea acestui element de portofoliu.",
+    "invalidDateRange": "Interval de date nevalid.",
+    "loadAnalytics": "A apărut o problemă la încărcarea statisticilor tale."
+  },
+  "servicesForm": {
+    "success": "Categoriile de servicii au fost actualizate.",
+    "title": "Categorii de servicii",
+    "description": "Clienții te găsesc după aceste categorii — bifează-le pe toate cele potrivite.",
+    "empty": "Nu există încă categorii de servicii disponibile.",
+    "saving": "Se salvează…",
+    "submit": "Salvează categoriile de servicii"
+  },
+  "deactivate": {
+    "success": "Profilul tău de profesionist a fost dezactivat.",
+    "trigger": "Dezactivează profilul de profesionist",
+    "title": "Clienții noi nu te vor mai putea găsi",
+    "description": "Ofertele, programările și recenziile existente se păstrează. Dacă este nevoie, echipa de asistență te poate reactiva ulterior.",
+    "confirmLabel": "Scrie {word} pentru a confirma",
+    "pending": "Se dezactivează…",
+    "confirm": "Dezactivează-mi profilul de profesionist"
+  },
+  "profileForm": {
+    "updated": "Profilul de profesionist a fost actualizat.",
+    "created": "Profilul de profesionist a fost creat.",
+    "aboutSection": "Despre afacerea ta",
+    "businessName": "Denumire comercială",
+    "headline": "Titlu",
+    "headlinePlaceholder": "ex.: Electrician autorizat, peste 10 ani de experiență",
+    "bio": "Descriere",
+    "yearsExperience": "Ani de experiență",
+    "serviceRadius": "Rază de acțiune (km)",
+    "contactSection": "Date de contact",
+    "contactEmail": "E-mail de contact",
+    "contactPhone": "Telefon de contact",
+    "websiteUrl": "Adresa site-ului",
+    "taxId": "Cod fiscal (NIF/CIF)",
+    "availabilitySection": "Disponibilitate",
+    "acceptingRequests": "Accept în prezent cereri noi",
+    "saving": "Se salvează…",
+    "saveChanges": "Salvează modificările",
+    "create": "Creează profilul de profesionist"
+  },
+  "onboarding": {
+    "form": {
+      "categoriesTitle": "Profesie / categorie principală",
+      "categoriesDescription": "Alege toate categoriile care descriu munca pe care o faci.",
+      "noCategories": "Nu există încă categorii de servicii disponibile.",
+      "contactTitle": "Contact",
+      "phone": "Număr de telefon",
+      "locationTitle": "Locația de bază",
+      "locationDescription": "Unde îți desfășori activitatea — o folosim ca să-ți propunem cereri din apropiere.",
+      "address": "Adresă",
+      "line1Placeholder": "Strada și numărul",
+      "line2Placeholder": "Apartament, etaj etc. (opțional)",
+      "cityPlaceholder": "Oraș",
+      "provincePlaceholder": "Provincie (opțional)",
+      "postalCodePlaceholder": "Cod poștal",
+      "countryPlaceholder": "Țară",
+      "coverageTitle": "Zonă acoperită și despre tine",
+      "serviceRadius": "Rază de acțiune (km)",
+      "bio": "Scurtă descriere profesională",
+      "pending": "Se configurează…",
+      "submit": "Finalizează configurarea profilului meu de profesionist"
+    },
+    "metaTitle": "Înregistrare ca profesionist",
+    "title": "Configurează-ți profilul de profesionist",
+    "subtitle": "Câteva date ca să te poată găsi și contacta clienții. Poți adăuga mai multe ulterior din panoul tău de profesionist.",
+    "photoTitle": "Fotografie de profil (opțional)"
+  },
+  "quotes": {
+    "form": {
+      "itemsTitle": "Poziții",
+      "itemsDescription": "Detaliază manopera și materialele, ca clientul să vadă exact ce plătește.",
+      "addItem": "Adaugă poziție",
+      "description": "Descriere",
+      "descriptionPlaceholder": "Descriere (ex.: manoperă, materiale)",
+      "quantity": "Cantitate",
+      "quantityPlaceholder": "Cant.",
+      "unitPrice": "Preț unitar",
+      "unitPricePlaceholder": "€ pe unitate",
+      "itemType": "Tip poziție",
+      "categories": {
+        "LABOR": "Manoperă",
+        "MATERIALS": "Materiale"
+      },
+      "removeItem": "Elimină poziția",
+      "estimatedTotal": "Total estimat: {amount}",
+      "detailsTitle": "Detalii",
+      "notes": "Note / propunere",
+      "notesPlaceholder": "Descrie propunerea ta, termenele sau orice ar trebui să știe clientul.",
+      "validUntil": "Valabilă până la",
+      "saving": "Se salvează…",
+      "saveChanges": "Salvează modificările",
+      "create": "Creează oferta"
+    },
+    "withdraw": {
+      "trigger": "Retrage această ofertă",
+      "title": "Retragi această ofertă?",
+      "description": "Clientul nu o va mai putea accepta. Acțiunea nu poate fi anulată.",
+      "confirm": "Da, retrage oferta",
+      "pending": "Se retrage…",
+      "cancel": "Păstrează oferta"
+    },
+    "list": {
+      "metaTitle": "Ofertele mele",
+      "title": "Ofertele mele",
+      "subtitle": "Ofertele pe care le-ai trimis la cererile clienților.",
+      "findRequests": "Găsește cereri",
+      "emptyTitle": "Nu ai trimis încă nicio ofertă",
+      "emptyDescription": "Răsfoiește cererile deschise și trimite prima ta ofertă.",
+      "browseRequests": "Vezi cererile"
+    },
+    "detail": {
+      "metaTitle": "Detaliile ofertei",
+      "notes": "Note / propunere",
+      "items": "Poziții",
+      "validUntil": "Valabilă până la",
+      "noExpiry": "Fără dată de expirare",
+      "submitted": "Trimisă",
+      "lastUpdated": "Ultima actualizare",
+      "edit": "Editează oferta",
+      "messageCustomer": "Scrie-i clientului"
+    },
+    "edit": {
+      "metaTitle": "Editează oferta",
+      "title": "Editează oferta",
+      "subtitle": "Actualizează prețurile sau detaliile propunerii."
+    }
+  },
+  "dashboard": {
+    "metaTitle": "Profil de profesionist",
+    "title": "Profil de profesionist",
+    "subtitle": "Gestionează cum te văd clienții ca profesionist independent.",
+    "createTitle": "Creează-ți profilul de profesionist",
+    "statusTitle": "Stare",
+    "profileStatus": "Stare: {status}",
+    "selfBillingLink": "Autofacturare și facturi",
+    "verificationLink": "Gestionează verificarea identității",
+    "profileDetails": "Detaliile profilului",
+    "serviceCategories": "Categorii de servicii",
+    "dangerZone": "Zonă periculoasă",
+    "dangerZoneDescription": "Dezactivarea profilului îl elimină din căutările clienților până la reactivare."
+  },
+  "requests": {
+    "distance": "La {distance, number} km",
+    "postedOn": "Publicată pe {date}",
+    "urgency": {
+      "LOW": "Scăzută",
+      "MEDIUM": "Medie",
+      "HIGH": "Ridicată",
+      "EMERGENCY": "Urgență"
+    },
+    "list": {
+      "metaTitle": "Cereri disponibile",
+      "title": "Cereri disponibile",
+      "subtitle": "Cereri ale clienților care se potrivesc categoriilor și razei tale de acțiune. Deschide una și creează o ofertă pentru a răspunde.",
+      "empty": "Momentan nu există cereri potrivite. Asigură-te că profilul tău de profesionist este activ și are configurate categoriile de servicii și raza de acțiune."
+    },
+    "detail": {
+      "metaTitle": "Cerere",
+      "intro": "Aceasta este o cerere de la un client. Consultă detaliile de mai jos, apoi creează o ofertă dacă vrei să propui un preț pentru lucrare.",
+      "description": "Descriere",
+      "location": "Locație",
+      "urgency": "Urgență",
+      "posted": "Publicată",
+      "createQuote": "Creează ofertă"
+    },
+    "createQuote": {
+      "metaTitle": "Creează ofertă",
+      "title": "Creează ofertă",
+      "intro": "Aceasta este cererea unui client. Creează o ofertă care descrie lucrarea și materialele propuse, precum și prețul cu care te oferi să o realizezi."
+    }
+  },
+  "jobs": {
+    "list": {
+      "metaTitle": "Lucrările mele",
+      "title": "Lucrările mele",
+      "subtitle": "Lucrări create din ofertele acceptate de clienții tăi.",
+      "empty": "Nu ai lucrări active.",
+      "withCounterparty": "cu {name}"
+    },
+    "detail": {
+      "metaTitle": "Lucrare",
+      "title": "Lucrare",
+      "started": "Începută",
+      "completed": "Finalizată",
+      "cancellationReason": "Motivul anulării",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "La cererea clientului",
+        "PROFESSIONAL_UNABLE_TO_COMPLETE": "Profesionistul nu poate finaliza lucrarea",
+        "SERVICE_REQUEST_ISSUE": "Problemă cu cererea",
+        "OTHER": "Altul"
+      },
+      "appointmentsTitle": "Programări pentru această lucrare",
+      "noAppointments": "Încă nu există programări.",
+      "notScheduled": "Încă neprogramată"
+    }
+  },
+  "appointments": {
+    "window": "{start} – {end}",
+    "list": {
+      "metaTitle": "Programările mele",
+      "title": "Programările mele",
+      "subtitle": "Programări din ofertele acceptate de clienții tăi.",
+      "emptyTitle": "Nu ai programări viitoare",
+      "emptyDescription": "Programările apar aici după ce un client acceptă una dintre ofertele tale.",
+      "noTimeProposed": "Încă nu s-a propus o oră"
+    },
+    "detail": {
+      "metaTitle": "Programare",
+      "title": "Programare",
+      "confirmedTime": "Ora confirmată",
+      "proposedTime": "Ora propusă",
+      "notSet": "Nestabilită",
+      "cancellationReason": "Motivul anulării",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "La cererea clientului",
+        "PROFESSIONAL_UNAVAILABLE": "Profesionist indisponibil",
+        "SCHEDULING_CONFLICT": "Suprapunere în program",
+        "OTHER": "Altul"
+      }
+    }
+  },
+  "invoices": {
+    "list": {
+      "metaTitle": "Facturile mele",
+      "title": "Facturile mele",
+      "subtitle": "Facturi emise de MaestroYa în numele tău prin autofacturare.",
+      "emptyTitle": "Încă nu ai facturi",
+      "emptyDescription": "O ciornă de factură se creează automat după ce plata pentru o lucrare finalizată îți este eliberată — este necesară o autorizare de autofacturare activă.",
+      "notYetIssued": "Încă neemisă"
+    },
+    "detail": {
+      "metaTitle": "Factură",
+      "title": "Factură",
+      "acceptIntro": "MaestroYa a întocmit această factură în numele tău prin autofacturare. Verifică detaliile de mai jos și accept-o pentru a confirma că sunt corecte.",
+      "accept": "Acceptă această factură",
+      "documentReference": "Referința documentului: {reference}… (doar o sumă de control împotriva modificărilor — nu o semnătură electronică)."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Autorizare de autofacturare",
+    "title": "Autorizare de autofacturare",
+    "subtitle": "Stabilește dacă MaestroYa poate emite facturi în numele tău pentru lucrările finalizate.",
+    "status": {
+      "ACTIVE": "Activă",
+      "REVOKED": "Revocată"
+    },
+    "notAuthorized": "Neautorizat",
+    "activeDescription": "Ai autorizat MaestroYa să emită facturi în numele tău („facturación por el destinatario”) pentru lucrările finalizate. Poți revoca oricând această autorizare.",
+    "revoke": "Revocă autorizarea",
+    "inactiveDescription": "Fără această autorizare, MaestroYa nu poate emite facturi în numele tău și nu se pot întocmi ciorne de factură pentru lucrările tale finalizate.",
+    "previouslyRevokedTitle": "Revocată anterior",
+    "previouslyRevokedDescription": "Ai revocat anterior această autorizare. O poți acorda din nou mai jos.",
+    "grant": "Acordă autorizarea",
+    "viewInvoices": "Vezi <link>facturile emise prin autofacturare</link>."
+  },
+  "verification": {
+    "metaTitle": "Verificarea profesionistului",
+    "title": "Verificare",
+    "subtitle": "Verifică-ți identitatea pentru a primi insigna „Profesionist verificat” pe profilul public.",
+    "noProfile": "Ai nevoie de un profil de profesionist înainte de a cere verificarea. <link>Creează-ți profilul de profesionist</link>.",
+    "notStarted": "Nu ai inițiat încă o cerere de verificare.",
+    "start": "Începe verificarea",
+    "validUntil": "Valabilă până la {date}",
+    "status": {
+      "DRAFT": {
+        "label": "Netrimisă",
+        "description": "Încarcă cel puțin un act de identitate (carte de identitate, pașaport sau permis de conducere) și eventualele documente justificative, apoi trimite-le spre analiză."
+      },
+      "PENDING": {
+        "label": "În așteptarea analizei",
+        "description": "Cererea ta este în coada de analiză. Te anunțăm după ce un evaluator o examinează."
+      },
+      "UNDER_REVIEW": {
+        "label": "În analiză",
+        "description": "Un evaluator îți verifică acum documentele. Deocamdată nu trebuie să faci nimic."
+      },
+      "APPROVED": {
+        "label": "Aprobată",
+        "description": "Ești profesionist verificat. Pe profilul tău public apare o insignă de verificare."
+      },
+      "REJECTED": {
+        "label": "Respinsă",
+        "description": "Cererea ta nu a fost aprobată. Vezi motivul mai jos — îl poți remedia și poți retrimite cererea."
+      },
+      "RESUBMISSION_REQUIRED": {
+        "label": "Retrimitere necesară",
+        "description": "Un evaluator îți cere să actualizezi cererea. Urmează instrucțiunile de mai jos, apoi retrimite-o."
+      }
+    },
+    "rejectionReasonTitle": "Motiv",
+    "resubmissionReasonTitle": "Ce trebuie actualizat",
+    "documentsTitle": "Documente",
+    "noDocuments": "Încă nu ai încărcat documente.",
+    "remove": "Elimină",
+    "uploadTitle": "Încarcă un document",
+    "documentType": "Tip de document",
+    "fileLabel": "Fișier (JPEG, PNG, WebP sau PDF, max. {maxMb, number} MB)",
+    "upload": "Încarcă",
+    "submit": "Trimite spre analiză",
+    "resubmit": "Retrimite spre analiză",
+    "submitHint": "Înainte de trimitere trebuie să ai încărcat cel puțin un act de identitate.",
+    "documentTypes": {
+      "NATIONAL_ID": "Carte de identitate",
+      "PASSPORT": "Pașaport",
+      "DRIVER_LICENSE": "Permis de conducere",
+      "BUSINESS_LICENSE": "Autorizație de funcționare",
+      "TAX_CERTIFICATE": "Certificat fiscal",
+      "INSURANCE_CERTIFICATE": "Certificat de asigurare",
+      "PROFESSIONAL_CERTIFICATION": "Certificare profesională",
+      "PROOF_OF_ADDRESS": "Dovadă a adresei",
+      "BUSINESS_REGISTRATION": "Înregistrare la registrul comerțului",
+      "OTHER": "Altul"
+    }
+  }
+}

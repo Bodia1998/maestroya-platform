@@ -1,0 +1,16 @@
+{
+  "home": "Главная",
+  "search": "Найти специалистов",
+  "professionals": "Специалисты",
+  "services": "Услуги",
+  "locations": "Регионы",
+  "howItWorks": "Как это работает",
+  "dashboard": "Моя панель",
+  "account": "Мой аккаунт",
+  "login": "Войти",
+  "register": "Создать аккаунт",
+  "logout": "Выйти",
+  "language": "Язык",
+  "professionalCta": "Я специалист",
+  "mainNavLabel": "Основная навигация"
+}

@@ -3,17 +3,20 @@
     "greeting": "Olá {name},",
     "signature": "A equipa MaestroYa",
     "footer": "Recebeu este e-mail porque tem uma conta no MaestroYa.",
-    "ignoreNotice": "Se não solicitou isto, pode ignorar este e-mail."
+    "ignoreNotice": "Se não solicitou isto, pode ignorar este e-mail.",
+    "linkFallback": "Se o botão não funcionar, copie e cole esta ligação no seu navegador:"
   },
   "verifyEmail": {
     "subject": "Verifique o seu endereço de e-mail",
     "body": "Confirme o seu e-mail para ativar a sua conta MaestroYa.",
-    "cta": "Verificar o meu e-mail"
+    "cta": "Verificar o meu e-mail",
+    "expiresIn": "Esta ligação expira dentro de {hours, plural, one {# hora} other {# horas}}."
   },
   "resetPassword": {
     "subject": "Redefina a sua palavra-passe",
     "body": "Recebemos um pedido para redefinir a palavra-passe da sua conta.",
     "cta": "Definir nova palavra-passe",
-    "expiry": "Esta ligação expira a {date, date, medium} às {date, time, short}."
+    "expiry": "Esta ligação expira a {date, date, medium} às {date, time, short}.",
+    "expiresIn": "Esta ligação expira dentro de {hours, plural, one {# hora} other {# horas}}."
   }
 }

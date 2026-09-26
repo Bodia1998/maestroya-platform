@@ -1,0 +1,365 @@
+{
+  "requests": {
+    "list": {
+      "title": "My requests",
+      "subtitle": "Service requests you've posted for professionals to quote on.",
+      "newRequest": "New request",
+      "empty": {
+        "title": "No service requests yet",
+        "description": "You haven't posted any service requests yet. Post one to start getting quotes from professionals near you."
+      }
+    },
+    "new": {
+      "title": "New service request",
+      "subtitle": "Describe the job you need done. It will be posted immediately for professionals to quote on."
+    },
+    "edit": {
+      "title": "Edit service request",
+      "subtitle": "You can edit this request while it's still open.",
+      "breadcrumb": "Edit"
+    },
+    "detail": {
+      "metaTitle": "Service request",
+      "description": "Description",
+      "location": "Location",
+      "urgency": "Urgency",
+      "budget": "Budget",
+      "budgetRange": "{min} – {max}",
+      "budgetUnset": "—",
+      "posted": "Posted",
+      "lastUpdated": "Last updated",
+      "photos": "Photos",
+      "acceptedNotice": "You've accepted a quote for this request. Head to <appointments>My appointments</appointments> to propose or confirm a time, or check <jobs>My jobs</jobs> for the work's overall progress.",
+      "editRequest": "Edit request"
+    },
+    "form": {
+      "updated": "Service request updated.",
+      "sections": {
+        "job": "The job",
+        "budget": "Budget",
+        "budgetDescription": "Give professionals a ballpark so quotes come in on target.",
+        "location": "Job location"
+      },
+      "category": "Service category",
+      "selectCategory": "Select a category",
+      "title": "Title",
+      "titlePlaceholder": "e.g. Fix leaking kitchen tap",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe the job in detail — what needs doing, any relevant context.",
+      "urgency": "Urgency",
+      "budgetMin": "Budget min (EUR)",
+      "budgetMax": "Budget max (EUR)",
+      "address": "Address",
+      "streetPlaceholder": "Street address",
+      "line2Placeholder": "Apartment, floor, etc. (optional)",
+      "cityPlaceholder": "City",
+      "postalCodePlaceholder": "Postal code",
+      "provincePlaceholder": "Province",
+      "countryPlaceholder": "Country",
+      "latitudePlaceholder": "Latitude (optional)",
+      "longitudePlaceholder": "Longitude (optional)",
+      "coordinatesHelp": "Latitude/longitude are filled in automatically where possible — leave blank if unsure.",
+      "saveChanges": "Save changes",
+      "postRequest": "Post request"
+    },
+    "cancel": {
+      "trigger": "Cancel this request",
+      "title": "Cancel this service request?",
+      "description": "Professionals will no longer be able to quote on it. This cannot be undone from here.",
+      "confirm": "Yes, cancel request",
+      "pending": "Cancelling…",
+      "keep": "Keep request"
+    },
+    "photos": {
+      "chooseFirst": "Choose an image first.",
+      "alt": "Request photo",
+      "remove": "Remove",
+      "none": "No photos attached.",
+      "add": "Add photo",
+      "uploading": "Uploading…",
+      "maxReached": "Maximum of {max, plural, one {# photo} other {# photos}} reached."
+    },
+    "errors": {
+      "createFailed": "Something went wrong creating your service request.",
+      "updateFailed": "Something went wrong updating your service request.",
+      "cancelFailed": "Something went wrong cancelling your service request.",
+      "photoMissing": "Choose an image to upload.",
+      "photoType": "Photos must be a JPEG, PNG, or WebP image.",
+      "photoTooLarge": "Each photo must be smaller than 5MB.",
+      "photoUploadFailed": "Something went wrong uploading your photo.",
+      "photoRemoveFailed": "Something went wrong removing that photo."
+    }
+  },
+  "quotes": {
+    "title": "Received quotes",
+    "subtitle": "Quotes professionals have submitted for this request.",
+    "breadcrumb": "Quotes",
+    "empty": "No quotes yet. Check back soon.",
+    "verification": {
+      "UNVERIFIED": "Not verified",
+      "PENDING": "Verification pending",
+      "VERIFIED": "Verified",
+      "REJECTED": "Verification rejected"
+    },
+    "meta": "Submitted {created, date, medium} — updated {updated, date, medium}",
+    "metaWithValidity": "Valid until {validUntil, date, medium} — submitted {created, date, medium} — updated {updated, date, medium}",
+    "messageProfessional": "Message {name}",
+    "acceptFailed": "Something went wrong accepting this quote.",
+    "accept": {
+      "trigger": "Accept this quote",
+      "title": "Accept this quote?",
+      "description": "Every other quote for this request will be automatically declined. This cannot be undone.",
+      "confirm": "Yes, accept quote",
+      "pending": "Accepting…",
+      "cancel": "Not yet"
+    }
+  },
+  "appointments": {
+    "list": {
+      "title": "My appointments",
+      "subtitle": "Appointments created from quotes you've accepted.",
+      "empty": {
+        "title": "No upcoming appointments",
+        "description": "Appointments appear here once you accept a quote from a professional.",
+        "action": "View my requests"
+      }
+    },
+    "noTimeProposed": "No time proposed yet",
+    "notSet": "Not set",
+    "awaitingProposedTime": "Awaiting a proposed time",
+    "detail": {
+      "title": "Appointment",
+      "confirmedTime": "Confirmed time",
+      "proposedTime": "Proposed time",
+      "cancellationReason": "Cancellation reason"
+    },
+    "cancellationReason": {
+      "CUSTOMER_REQUEST": "Customer request",
+      "PROFESSIONAL_UNAVAILABLE": "Professional unavailable",
+      "SCHEDULING_CONFLICT": "Scheduling conflict",
+      "OTHER": "Other"
+    },
+    "actions": {
+      "start": "Start",
+      "end": "End",
+      "confirming": "Confirming…",
+      "confirmTime": "Confirm this time",
+      "completing": "Marking completed…",
+      "markCompleted": "Mark this visit completed",
+      "cancelTrigger": "Cancel appointment",
+      "cancelTitle": "Cancel this appointment?",
+      "confirmCancel": "Yes, cancel",
+      "cancelling": "Cancelling…",
+      "notNow": "Not now",
+      "reason": "Reason",
+      "note": "Note (optional)",
+      "proposeTime": "Propose a time",
+      "proposeDifferentTime": "Propose a different time",
+      "reschedule": "Reschedule"
+    },
+    "errors": {
+      "invalidAppointment": "Invalid appointment.",
+      "proposeFailed": "Something went wrong proposing this time.",
+      "confirmFailed": "Something went wrong confirming this appointment.",
+      "cancelFailed": "Something went wrong cancelling this appointment.",
+      "completeFailed": "Something went wrong completing this appointment.",
+      "rescheduleFailed": "Something went wrong rescheduling this appointment."
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "conversation": "Conversation",
+    "empty": {
+      "title": "No conversations yet",
+      "description": "Once you and a customer or professional have a quote in common, you can message each other here."
+    },
+    "participant": "Participant",
+    "unknownParticipant": "Marketplace user",
+    "noMessagesYet": "No messages yet.",
+    "emptyThread": "No messages yet. Say hello to get things started.",
+    "closed": "This conversation is no longer open for new messages.",
+    "opening": "Opening…",
+    "messageAction": "Message",
+    "bubble": {
+      "deleted": "This message was deleted.",
+      "deleting": "Deleting…",
+      "confirmDelete": "Confirm delete",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    },
+    "composer": {
+      "placeholder": "Write a message…",
+      "ariaLabel": "Message",
+      "sending": "Sending…",
+      "send": "Send"
+    },
+    "errors": {
+      "openFailed": "Something went wrong opening this conversation.",
+      "sendFailed": "Something went wrong sending your message.",
+      "generic": "Something went wrong.",
+      "deleteFailed": "Something went wrong deleting this message."
+    }
+  },
+  "disputes": {
+    "list": {
+      "metaTitle": "My disputes",
+      "title": "Disputes",
+      "subtitle": "Cases you've opened, and cases opened about your work.",
+      "openFromJob": "Open a dispute from a job",
+      "openedByMe": "Opened by me",
+      "openedAboutMe": "Opened about my work",
+      "emptyMine": {
+        "title": "No disputes opened",
+        "description": "You haven't opened any disputes."
+      },
+      "emptyAgainst": {
+        "title": "Nothing here",
+        "description": "No disputes have been opened about your work."
+      }
+    },
+    "detail": {
+      "metaTitle": "Dispute",
+      "subtitle": "{caseNumber} · Status: {status} · Priority: {priority} · Reason: {reason}",
+      "description": "Description",
+      "resolution": "Resolution",
+      "evidence": "Evidence",
+      "noEvidence": "No evidence attached.",
+      "messages": "Messages",
+      "noMessages": "No messages yet."
+    },
+    "messageForm": {
+      "label": "Write a message",
+      "placeholder": "Write a message…",
+      "sending": "Sending…",
+      "send": "Send message"
+    },
+    "new": {
+      "title": "Open a dispute",
+      "subtitle": "Only for jobs that are in progress, completed, or cancelled — see your job's detail page."
+    },
+    "form": {
+      "description": "Give as much detail as possible — this helps us resolve it faster.",
+      "jobId": "Job ID",
+      "reason": "Reason",
+      "title": "Title",
+      "descriptionLabel": "Description",
+      "submitting": "Submitting…",
+      "submit": "Open dispute"
+    },
+    "status": {
+      "WAITING_FOR_CUSTOMER": "Waiting for customer",
+      "WAITING_FOR_PROFESSIONAL": "Waiting for professional"
+    },
+    "priority": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "URGENT": "Urgent"
+    },
+    "reason": {
+      "SERVICE_NOT_COMPLETED": "Service not completed",
+      "SERVICE_QUALITY": "Service quality",
+      "PROPERTY_DAMAGE": "Property damage",
+      "PROFESSIONAL_NO_SHOW": "Professional no-show",
+      "CUSTOMER_NO_SHOW": "Customer no-show",
+      "PRICE_DISAGREEMENT": "Price disagreement",
+      "SCOPE_OF_WORK": "Scope of work",
+      "COMMUNICATION_ISSUE": "Communication issue",
+      "OTHER": "Other"
+    },
+    "resolution": {
+      "NO_ACTION": "No action",
+      "CUSTOMER_FAVOR": "In the customer's favour",
+      "PROFESSIONAL_FAVOR": "In the professional's favour",
+      "PARTIAL_RESOLUTION": "Partial resolution",
+      "FINANCIAL_ADJUSTMENT_REQUIRED": "Financial adjustment required",
+      "ESCALATED_EXTERNALLY": "Escalated externally"
+    },
+    "errors": {
+      "openFailed": "Something went wrong opening this dispute.",
+      "loadMineFailed": "Something went wrong loading your disputes.",
+      "loadFailed": "Something went wrong loading disputes.",
+      "loadOneFailed": "Something went wrong loading this dispute.",
+      "messageFailed": "Something went wrong sending this message.",
+      "evidenceFailed": "Something went wrong attaching this evidence."
+    }
+  },
+  "support": {
+    "metaTitle": "Support tickets",
+    "title": "Support",
+    "subtitle": "Account problems, verification issues, bugs, or general questions.",
+    "myTickets": "My tickets",
+    "empty": {
+      "title": "No support tickets",
+      "description": "You haven't opened any support tickets."
+    },
+    "detail": {
+      "metaTitle": "Support ticket",
+      "subtitle": "{ticketNumber} · Status: {status} · Category: {category} · Priority: {priority}",
+      "resolution": "Resolution"
+    },
+    "form": {
+      "title": "Open a new ticket",
+      "category": "Category",
+      "subject": "Subject",
+      "description": "Description",
+      "submitting": "Submitting…",
+      "submit": "Submit ticket"
+    },
+    "category": {
+      "ACCOUNT": "Account",
+      "VERIFICATION": "Verification",
+      "BUG": "Bug",
+      "LOGIN": "Login",
+      "GENERAL": "General",
+      "OTHER": "Other"
+    },
+    "status": {
+      "WAITING_FOR_USER": "Waiting for your reply"
+    },
+    "errors": {
+      "openFailed": "Something went wrong opening this ticket.",
+      "loadFailed": "Something went wrong loading your tickets.",
+      "loadOneFailed": "Something went wrong loading this ticket."
+    }
+  },
+  "reviews": {
+    "errors": {
+      "submitFailed": "Something went wrong submitting this review.",
+      "updateFailed": "Something went wrong updating this review.",
+      "deleteFailed": "Something went wrong deleting this review.",
+      "respondFailed": "Something went wrong submitting this response."
+    }
+  },
+  "analytics": {
+    "loadFailed": "Something went wrong loading your analytics."
+  },
+  "receipts": {
+    "list": {
+      "title": "My receipts",
+      "subtitle": "Receipts for jobs you've paid for through MaestroYa.",
+      "empty": {
+        "title": "No receipts yet",
+        "description": "A receipt appears here once a job you've paid for is completed and the payment is released."
+      }
+    },
+    "notYetIssued": "Not yet issued",
+    "detail": {
+      "title": "Receipt",
+      "receiptNumber": "Receipt number",
+      "date": "Date",
+      "dateUnset": "—",
+      "issuedBy": "Issued by",
+      "billedTo": "Billed to",
+      "items": "Items",
+      "description": "Description",
+      "amount": "Amount",
+      "tax": "Tax",
+      "taxableBase": "Taxable base",
+      "vat": "VAT – IVA ({rate})",
+      "total": "Total",
+      "creditNotes": "Credit notes",
+      "documentReference": "Document reference: {hash}… (tamper-evidence checksum only — not an electronic signature)."
+    }
+  }
+}

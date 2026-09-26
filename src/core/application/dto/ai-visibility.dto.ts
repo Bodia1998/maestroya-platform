@@ -16,8 +16,8 @@ const accuracySchema = z.enum(["CORRECT", "INCORRECT", "NOT_APPLICABLE"]);
 const urlAccuracySchema = z.enum(["CORRECT", "INCORRECT", "NOT_PROVIDED"]);
 
 export const recordAiVisibilityObservationSchema = z.object({
-  queryId: z.string().min(1, "A query is required.").refine(isKnownAiVisibilityQueryId, {
-    message: "Unknown query id — must be one of the active AI visibility queries.",
+  queryId: z.string().min(1, "dto.aiVisibility.queryRequired").refine(isKnownAiVisibilityQueryId, {
+    message: "dto.aiVisibility.unknownQuery",
   }),
   provider: z.enum(["MANUAL", "OPENAI_API", "ANTHROPIC_API", "GOOGLE_API", "PERPLEXITY_API", "OTHER"]),
   providerModel: z.string().trim().max(200).optional().nullable(),

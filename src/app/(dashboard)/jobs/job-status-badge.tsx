@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { StatusBadge } from "@/components/dashboard/status-badge";
 
 /**
@@ -9,5 +11,6 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
  * call site across the app keeps working unchanged.
  */
 export function JobStatusBadge({ status }: { status: string }) {
-  return <StatusBadge status={status} label={status === "CREATED" ? "Not started" : undefined} />;
+  const t = useTranslations("jobs");
+  return <StatusBadge status={status} label={status === "CREATED" ? t("notStarted") : undefined} />;
 }

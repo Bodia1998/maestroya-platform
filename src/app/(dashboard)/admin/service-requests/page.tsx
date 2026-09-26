@@ -1,4 +1,5 @@
 import { FileText } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { makeListAdminServiceRequestsUseCase } from "@/application/use-cases/admin/compose";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
@@ -8,7 +9,10 @@ import { AdminDataTable, AdminTableHeadRow, AdminTh, AdminTableBody, AdminTableR
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 
-export const metadata = { title: "Admin — Service requests" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("serviceRequests.title") }) };
+}
 
 type SearchParams = Promise<{ page?: string }>;
 
@@ -21,20 +25,22 @@ export default async function AdminServiceRequestsPage({ searchParams }: { searc
 
   const requests = await makeListAdminServiceRequestsUseCase().execute({ limit: DEFAULT_PAGE_SIZE, offset });
 
+  const t = await getTranslations("admin");
+
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Service requests" subtitle="Read-only oversight of customer service requests." />
+      <PageHeader title={t("serviceRequests.title")} subtitle={t("serviceRequests.subtitle")} />
 
       {requests.length === 0 ? (
-        <EmptyState icon={FileText} title="No service requests found" description="Customer service requests will appear here." />
+        <EmptyState icon={FileText} title={t("serviceRequests.empty")} description={t("serviceRequests.emptyDescription")} />
       ) : (
-        <AdminDataTable caption="Service requests" minWidth={600}>
+        <AdminDataTable caption={t("serviceRequests.title")} minWidth={600}>
           <AdminTableHeadRow>
-            <AdminTh>Title</AdminTh>
-            <AdminTh>Customer</AdminTh>
-            <AdminTh>Status</AdminTh>
-            <AdminTh>Quotes</AdminTh>
-            <AdminTh>Jobs</AdminTh>
+            <AdminTh>{t("serviceRequests.columns.title")}</AdminTh>
+            <AdminTh>{t("serviceRequests.columns.customer")}</AdminTh>
+            <AdminTh>{t("common.columns.status")}</AdminTh>
+            <AdminTh>{t("serviceRequests.columns.quotes")}</AdminTh>
+            <AdminTh>{t("serviceRequests.columns.jobs")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {requests.map((request) => (

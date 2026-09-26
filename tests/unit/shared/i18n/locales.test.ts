@@ -10,7 +10,7 @@ import {
 } from "@/shared/i18n/locales";
 
 describe("supported locales", () => {
-  it("ships exactly the ten languages this module specifies, Spanish first", () => {
+  it("ships exactly the twelve supported languages (Module 120 added ru, nl), Spanish first", () => {
     expect([...SUPPORTED_LOCALES]).toEqual([
       "es",
       "en",
@@ -22,6 +22,8 @@ describe("supported locales", () => {
       "pt",
       "ro",
       "pl",
+      "ru",
+      "nl",
     ]);
     expect(DEFAULT_LOCALE).toBe("es");
   });
@@ -35,6 +37,19 @@ describe("supported locales", () => {
       expect(descriptor.nativeName.length).toBeGreaterThan(0);
       expect(descriptor.englishName.length).toBeGreaterThan(0);
     }
+  });
+
+  it("registers Russian and Dutch with their native names (Module 120)", () => {
+    expect(getLocaleDescriptor("ru")).toEqual({
+      code: "ru",
+      nativeName: "Русский",
+      englishName: "Russian",
+    });
+    expect(getLocaleDescriptor("nl")).toEqual({
+      code: "nl",
+      nativeName: "Nederlands",
+      englishName: "Dutch",
+    });
   });
 
   it("resolves a descriptor by code", () => {

@@ -1,0 +1,281 @@
+{
+  "NEW_QUOTE": {
+    "title": "Ofertă nouă primită",
+    "message": "Un profesionist a trimis o ofertă pentru cererea ta."
+  },
+  "QUOTE_ACCEPTED": {
+    "title": "Oferta ta a fost acceptată",
+    "message": "Clientul a acceptat oferta ta."
+  },
+  "QUOTE_REJECTED": {
+    "title": "Oferta ta nu a fost aleasă",
+    "message": "Clientul a acceptat o altă ofertă pentru această cerere."
+  },
+  "QUOTE_EXPIRED": {
+    "title": "Oferta ta a expirat",
+    "message": "Una dintre ofertele tale a expirat pentru că nu a fost acceptată la timp."
+  },
+  "NEW_MESSAGE": {
+    "title": "Mesaj nou"
+  },
+  "APPOINTMENT_PROPOSED": {
+    "title": "A fost propusă o nouă oră pentru programare",
+    "message": "A fost propusă o nouă oră pentru programare.",
+    "variants": {
+      "byCustomer": {
+        "message": "Clientul a propus o nouă oră pentru programare."
+      },
+      "byProfessional": {
+        "message": "Profesionistul a propus o nouă oră pentru programare."
+      }
+    }
+  },
+  "APPOINTMENT_CONFIRMED": {
+    "title": "Ora programării a fost confirmată",
+    "message": "Ora programării a fost confirmată.",
+    "variants": {
+      "byCustomer": {
+        "message": "Clientul a confirmat ora programării."
+      },
+      "byProfessional": {
+        "message": "Profesionistul a confirmat ora programării."
+      }
+    }
+  },
+  "APPOINTMENT_CANCELLED": {
+    "title": "Programare anulată",
+    "message": "Această programare a fost anulată.",
+    "variants": {
+      "byCustomer": {
+        "message": "Clientul a anulat această programare."
+      },
+      "byProfessional": {
+        "message": "Profesionistul a anulat această programare."
+      }
+    }
+  },
+  "JOB_STARTED": {
+    "title": "Lucrarea a început",
+    "message": "Profesionistul a început lucrarea ta."
+  },
+  "JOB_CANCELLED": {
+    "title": "Lucrare anulată",
+    "message": "Această lucrare a fost anulată.",
+    "variants": {
+      "byCustomer": {
+        "message": "Clientul a anulat această lucrare."
+      },
+      "byProfessional": {
+        "message": "Profesionistul a anulat această lucrare."
+      }
+    }
+  },
+  "JOB_COMPLETION_CONFIRMATION_REQUESTED": {
+    "title": "Confirmă serviciul finalizat",
+    "message": "Profesionistul a marcat lucrarea ta ca finalizată. Confirmă că lucrarea a fost făcută sau anunță-ne dacă există o problemă."
+  },
+  "JOB_COMPLETION_CONFIRMATION_REMINDER": {
+    "title": "Confirmă serviciul finalizat",
+    "message": "Confirmă serviciul finalizat sau anunță-ne dacă există o problemă înainte să expire termenul de confirmare."
+  },
+  "JOB_COMPLETION_CONFIRMED": {
+    "title": "Serviciu confirmat",
+    "message": "Clientul a confirmat serviciul finalizat."
+  },
+  "JOB_COMPLETION_CONFIRMATION_TIMED_OUT": {
+    "title": "Lucrare în analiză",
+    "message": "Clientul nu a răspuns la timp la cererea de confirmare. Lucrarea este acum în analiză manuală înainte de eliberarea plății."
+  },
+  "MATERIALS_PURCHASE_CONFIRMED": {
+    "title": "Achiziția materialelor a fost confirmată",
+    "message": "Clientul a confirmat că a cumpărat toate materialele necesare."
+  },
+  "REVIEW_RECEIVED": {
+    "title": "Ai primit o recenzie nouă",
+    "message": "Un client a lăsat o recenzie pentru lucrarea ta finalizată."
+  },
+  "REVIEW_RESPONSE_ADDED": {
+    "title": "Un profesionist a răspuns la recenzia ta",
+    "message": "Profesionistul pentru care ai lăsat o recenzie a publicat un răspuns."
+  },
+  "SERVICE_REQUEST_EXPIRED": {
+    "title": "Cererea ta a expirat",
+    "message": "Cererea ta „{requestTitle}” a expirat fără să fie finalizată."
+  },
+  "VERIFICATION_SUBMITTED": {
+    "title": "Cerere de verificare trimisă",
+    "message": "Am primit cererea ta de verificare și o vom analiza în curând.",
+    "variants": {
+      "resubmitted": {
+        "title": "Cerere de verificare retrimisă",
+        "message": "Am primit cererea ta de verificare actualizată și o vom analiza în curând."
+      }
+    }
+  },
+  "VERIFICATION_APPROVED": {
+    "title": "Acum ești profesionist verificat",
+    "message": "Verificarea ta a fost aprobată. Pe profilul tău public apare acum insigna de verificare.",
+    "variants": {
+      "automated": {
+        "message": "Ai trecut de verificarea automată a identității. Pe profilul tău public apare acum insigna de verificare."
+      }
+    }
+  },
+  "VERIFICATION_REJECTED": {
+    "title": "Cerere de verificare respinsă",
+    "message": "Cererea ta de verificare a fost respinsă. Deschide pagina de verificare pentru a vedea motivul și a încerca din nou.",
+    "variants": {
+      "automated": {
+        "message": "Nu ai trecut de verificarea automată a identității. Deschide pagina de verificare pentru a vedea motivul și a încerca din nou."
+      }
+    }
+  },
+  "VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Sunt necesare mai multe informații pentru verificare",
+    "message": "Un evaluator ți-a cerut să actualizezi cererea de verificare. Deschide pagina de verificare pentru detalii.",
+    "variants": {
+      "businessRegistration": {
+        "title": "Este necesar un document de înregistrare a activității",
+        "message": "Ai trecut de verificarea automată a identității. Încarcă un document de înregistrare a activității pentru a finaliza verificarea de profesionist."
+      }
+    }
+  },
+  "VERIFICATION_EXPIRED": {
+    "title": "Verificarea ta a expirat",
+    "message": "Verificarea ta de profesionist a expirat. Începe o nouă verificare pentru a păstra insigna de verificare."
+  },
+  "COMPANY_INVITATION_RECEIVED": {
+    "title": "Ai fost invitat într-o companie",
+    "message": "Ai o invitație în așteptare de la o companie."
+  },
+  "COMPANY_INVITATION_ACCEPTED": {
+    "title": "Invitație acceptată",
+    "message": "O invitație în așteptare a companiei a fost acceptată."
+  },
+  "COMPANY_INVITATION_DECLINED": {
+    "title": "Invitație refuzată",
+    "message": "O invitație în așteptare a companiei a fost refuzată."
+  },
+  "COMPANY_MEMBER_REMOVED": {
+    "title": "Ai fost eliminat dintr-o companie",
+    "message": "Nu mai ești membru al acestei companii."
+  },
+  "COMPANY_MEMBER_ROLE_CHANGED": {
+    "title": "Rolul tău s-a schimbat",
+    "message": "Rolul tău în companie este acum: {role}.",
+    "variants": {
+      "ownershipTransferred": {
+        "title": "Acum ești proprietarul companiei",
+        "message": "Proprietatea companiei ți-a fost transferată."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_SUBMITTED": {
+    "title": "Cerere de verificare trimisă",
+    "message": "Am primit cererea de verificare a companiei tale și o vom analiza în curând.",
+    "variants": {
+      "resubmitted": {
+        "title": "Cerere de verificare retrimisă",
+        "message": "Am primit cererea de verificare actualizată a companiei tale."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_APPROVED": {
+    "title": "Compania ta este acum verificată",
+    "message": "Verificarea companiei tale a fost aprobată. Pe profilul ei public apare acum insigna de verificare."
+  },
+  "COMPANY_VERIFICATION_REJECTED": {
+    "title": "Cerere de verificare respinsă",
+    "message": "Cererea de verificare a companiei tale a fost respinsă. Vezi detaliile pentru motiv."
+  },
+  "COMPANY_VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Este necesară retrimiterea",
+    "message": "Cererea de verificare a companiei tale are nevoie de modificări înainte de a putea fi aprobată."
+  },
+  "COMPANY_VERIFICATION_EXPIRED": {
+    "title": "Verificarea companiei tale a expirat",
+    "message": "Verificarea companiei tale a expirat. Începe o nouă verificare pentru a păstra insigna de verificare."
+  },
+  "COMPANY_SUSPENDED": {
+    "title": "Compania ta a fost suspendată",
+    "message": "Un administrator al platformei a suspendat profilul companiei tale."
+  },
+  "COMPANY_REACTIVATED": {
+    "title": "Compania ta a fost reactivată",
+    "message": "Profilul companiei tale este din nou activ."
+  },
+  "DISPUTE_CREATED": {
+    "title": "A fost deschisă o dispută",
+    "message": "A fost deschisă o dispută ({caseNumber}) privind lucrarea ta."
+  },
+  "DISPUTE_ASSIGNED": {
+    "title": "Ți-a fost atribuită o dispută",
+    "message": "Ți-a fost atribuită disputa {caseNumber}."
+  },
+  "DISPUTE_STATUS_CHANGED": {
+    "title": "Starea disputei a fost actualizată",
+    "message": "Noua stare a disputei {caseNumber}: {status}.",
+    "variants": {
+      "newMessage": {
+        "title": "Mesaj nou în disputa ta",
+        "message": "Există un mesaj nou în disputa {caseNumber}."
+      }
+    }
+  },
+  "DISPUTE_RESPONSE_REQUESTED": {
+    "title": "Se așteaptă răspunsul tău într-o dispută",
+    "message": "Noua stare a disputei {caseNumber}: {status}."
+  },
+  "DISPUTE_RESOLVED": {
+    "title": "Disputa ta a fost soluționată",
+    "message": "Disputa {caseNumber} a fost soluționată."
+  },
+  "DISPUTE_REJECTED": {
+    "title": "Disputa ta a fost respinsă",
+    "message": "Disputa {caseNumber} a fost respinsă."
+  },
+  "DISPUTE_CLOSED": {
+    "title": "Disputa ta a fost închisă",
+    "message": "Disputa {caseNumber} a fost închisă."
+  },
+  "SUPPORT_TICKET_ASSIGNED": {
+    "title": "Ți-a fost atribuit un tichet de asistență",
+    "message": "Ți-a fost atribuit tichetul {ticketNumber}."
+  },
+  "SUPPORT_TICKET_STATUS_CHANGED": {
+    "title": "Tichetul tău de asistență a fost actualizat",
+    "message": "Noua stare a tichetului {ticketNumber}: {status}."
+  },
+  "SUPPORT_TICKET_RESOLVED": {
+    "title": "Tichetul tău de asistență a fost rezolvat",
+    "message": "Tichetul {ticketNumber} a fost rezolvat."
+  },
+  "SUPPORT_TICKET_CLOSED": {
+    "title": "Tichetul tău de asistență a fost închis",
+    "message": "Tichetul {ticketNumber} a fost închis."
+  },
+  "labels": {
+    "disputeStatus": {
+      "OPEN": "Deschisă",
+      "UNDER_REVIEW": "În analiză",
+      "WAITING_FOR_CUSTOMER": "Se așteaptă clientul",
+      "WAITING_FOR_PROFESSIONAL": "Se așteaptă profesionistul",
+      "RESOLVED": "Soluționată",
+      "REJECTED": "Respinsă",
+      "CLOSED": "Închisă"
+    },
+    "ticketStatus": {
+      "OPEN": "Deschis",
+      "IN_PROGRESS": "În lucru",
+      "WAITING_FOR_USER": "Se așteaptă răspunsul tău",
+      "RESOLVED": "Rezolvat",
+      "CLOSED": "Închis"
+    },
+    "companyRole": {
+      "OWNER": "Proprietar",
+      "ADMIN": "Administrator",
+      "MANAGER": "Manager",
+      "MEMBER": "Membru"
+    }
+  }
+}

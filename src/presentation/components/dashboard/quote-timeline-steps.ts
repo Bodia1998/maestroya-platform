@@ -8,31 +8,26 @@ import type { TimelineStep } from "./status-timeline";
  * this file; a quote can reach `ACCEPTED` from `SENT` directly (skipping
  * `VIEWED`) and this still renders sensibly, marking `Viewed` complete
  * rather than requiring it to have literally happened.
+ *
+ * Module 120 — Multilingual Localization: steps carry only the status
+ * `key`; `StatusTimeline` renders the localized `enums.status.<key>` label.
  */
 export function getQuoteTimelineSteps(status: string): TimelineStep[] {
-  const happyPath: TimelineStep[] = [
-    { key: "SENT", label: "Sent", state: "upcoming" },
-    { key: "VIEWED", label: "Viewed", state: "upcoming" },
-    { key: "ACCEPTED", label: "Accepted", state: "upcoming" },
-  ];
+  const order = ["SENT", "VIEWED", "ACCEPTED"];
+  const happyPath: TimelineStep[] = order.map((key) => ({ key, state: "upcoming" }));
 
-  const negativeTerminalLabel: Record<string, string> = {
-    REJECTED: "Rejected",
-    WITHDRAWN: "Withdrawn",
-    EXPIRED: "Expired",
-  };
+  const negativeTerminalStatuses = new Set(["REJECTED", "WITHDRAWN", "EXPIRED"]);
 
-  if (status in negativeTerminalLabel) {
+  if (negativeTerminalStatuses.has(status)) {
     // A negative terminal outcome replaces whichever step it interrupted —
     // Sent always happened (a quote can't be withdrawn/rejected/expired
     // before it was sent), so that much of the happy path stays "complete".
     return [
-      { key: "SENT", label: "Sent", state: "complete" },
-      { key: status, label: negativeTerminalLabel[status]!, state: "danger" },
+      { key: "SENT", state: "complete" },
+      { key: status, state: "danger" },
     ];
   }
 
-  const order = ["SENT", "VIEWED", "ACCEPTED"];
   const currentIndex = order.indexOf(status);
 
   return happyPath.map((step, index) => {

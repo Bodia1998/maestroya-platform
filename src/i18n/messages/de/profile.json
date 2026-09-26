@@ -13,5 +13,63 @@
     "email": "E-Mail",
     "timezone": "Zeitzone"
   },
-  "memberSince": "Mitglied seit {date, date, long}"
+  "memberSince": "Mitglied seit {date, date, long}",
+  "avatarNote": "Dieses Foto gilt nur für dein Konto — es hat keinen Einfluss auf die Identitätsverifizierung als Fachkraft. Fachkräfte verwalten diese separat unter Fachkraft-Profil → Identitätsverifizierung verwalten.",
+  "dangerNote": "Das Löschen deines Kontos lässt sich nur über den Support rückgängig machen — deine Daten werden deaktiviert, nicht sofort gelöscht.",
+  "avatar": {
+    "chooseFirst": "Wähle zuerst ein Bild aus.",
+    "alt": "Dein Profilbild",
+    "chooseLabel": "Profilbild auswählen",
+    "uploading": "Wird hochgeladen…",
+    "upload": "Profilbild hochladen",
+    "updated": "Profilbild aktualisiert."
+  },
+  "form": {
+    "updated": "Profil aktualisiert.",
+    "basics": "Grunddaten",
+    "displayName": "Anzeigename",
+    "phone": "Telefon",
+    "timezone": "Zeitzone",
+    "preferredLanguage": "Bevorzugte Sprache",
+    "noPreference": "Keine Präferenz",
+    "address": "Adresse",
+    "street": "Straße und Hausnummer",
+    "line2": "Wohnung, Etage usw. (optional)",
+    "city": "Ort",
+    "postalCode": "Postleitzahl",
+    "province": "Provinz",
+    "country": "Land",
+    "notifications": "Benachrichtigungen",
+    "emailMarketing": "Marketing-E-Mails",
+    "emailServiceUpdates": "E-Mails zu Auftragsupdates",
+    "smsAppointmentReminders": "SMS-Terminerinnerungen",
+    "save": "Änderungen speichern"
+  },
+  "password": {
+    "changed": "Passwort geändert. Aus Sicherheitsgründen wurdest du überall sonst abgemeldet.",
+    "noPassword": "Dieses Konto meldet sich über einen Social Login an und hat kein Passwort, das geändert werden kann.",
+    "title": "Passwort ändern",
+    "current": "Aktuelles Passwort",
+    "new": "Neues Passwort",
+    "confirm": "Neues Passwort bestätigen",
+    "changing": "Wird geändert…",
+    "submit": "Passwort ändern"
+  },
+  "deleteAccount": {
+    "trigger": "Konto deaktivieren",
+    "title": "Dadurch wird dein Konto deaktiviert",
+    "password": "Passwort",
+    "confirmLabel": "Gib {token} ein, um zu bestätigen",
+    "deactivating": "Wird deaktiviert…",
+    "submit": "Mein Konto deaktivieren"
+  },
+  "errors": {
+    "updateFailed": "Beim Aktualisieren deines Profils ist etwas schiefgelaufen.",
+    "avatarFailed": "Beim Hochladen deines Profilbilds ist etwas schiefgelaufen.",
+    "passwordFailed": "Beim Ändern deines Passworts ist etwas schiefgelaufen.",
+    "deleteFailed": "Beim Löschen deines Kontos ist etwas schiefgelaufen.",
+    "avatarMissing": "Wähle ein Bild zum Hochladen aus.",
+    "avatarType": "Das Profilbild muss im Format JPEG, PNG oder WebP sein.",
+    "avatarTooLarge": "Das Profilbild muss kleiner als 5 MB sein."
+  }
 }

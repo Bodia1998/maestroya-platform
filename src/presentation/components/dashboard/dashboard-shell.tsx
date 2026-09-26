@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
   AlertTriangle,
@@ -60,14 +61,43 @@ const ICONS = {
 
 export type DashboardNavIcon = keyof typeof ICONS;
 
+/**
+ * Module 120 — Multilingual Localization: nav labels are catalog keys
+ * (`dashboard.nav.items.<key>` / `dashboard.nav.groups.<key>`), resolved
+ * in the active locale by `NavLinks`, so the same nav definitions work
+ * for every role and every language.
+ */
+export type DashboardNavLabelKey =
+  | "dashboard"
+  | "serviceRequests"
+  | "appointments"
+  | "jobs"
+  | "receipts"
+  | "messages"
+  | "disputes"
+  | "support"
+  | "professionalDashboard"
+  | "availableRequests"
+  | "myQuotes"
+  | "myAppointments"
+  | "myJobs"
+  | "selfBilling"
+  | "companies"
+  | "adminPanel"
+  | "profile"
+  | "professionalProfile"
+  | "switchToProfessional";
+
+export type DashboardNavGroupTitleKey = "professional" | "admin";
+
 export interface DashboardNavItem {
   href: string;
-  label: string;
+  labelKey: DashboardNavLabelKey;
   icon: DashboardNavIcon;
 }
 
 export interface DashboardNavGroup {
-  title?: string;
+  titleKey?: DashboardNavGroupTitleKey;
   /**
    * Which side of the marketplace this group belongs to. `undefined` means
    * "always relevant regardless of context" (Admin, Profile). See
@@ -202,7 +232,7 @@ export function resolveVisibleNavGroups(navGroups: DashboardNavGroup[], pathname
       ...group,
       items: group.items.map((item) =>
         activeContext === "professional" && item.href === "/profile"
-          ? { href: "/dashboard/professional", label: "Professional Profile", icon: "professional" as const }
+          ? { href: "/dashboard/professional", labelKey: "professionalProfile" as const, icon: "professional" as const }
           : item,
       ),
     }));
@@ -216,19 +246,22 @@ export function resolveVisibleNavGroups(navGroups: DashboardNavGroup[], pathname
   // that direction.
   const switchGroup: DashboardNavGroup | null =
     activeContext === "customer" && hasProfessionalGroup
-      ? { items: [{ href: "/dashboard/professional", label: "Switch to Professional dashboard", icon: "professional" }] }
+      ? { items: [{ href: "/dashboard/professional", labelKey: "switchToProfessional", icon: "professional" }] }
       : null;
 
   return [...contextualGroups, ...(switchGroup ? [switchGroup] : []), ...sharedGroups];
 }
 
 function NavLinks({ navGroups, pathname, onNavigate }: { navGroups: DashboardNavGroup[]; pathname: string; onNavigate?: () => void }) {
+  const t = useTranslations("dashboard.nav");
   return (
-    <nav className="flex flex-col gap-6" aria-label="Dashboard navigation">
+    <nav className="flex flex-col gap-6" aria-label={t("ariaLabel")}>
       {navGroups.map((group, groupIndex) => (
-        <div key={group.title ?? `group-${groupIndex}`} className="flex flex-col gap-1">
-          {group.title && (
-            <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-foreground/50">{group.title}</p>
+        <div key={group.titleKey ?? `group-${groupIndex}`} className="flex flex-col gap-1">
+          {group.titleKey && (
+            <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-foreground/50">
+              {t(`groups.${group.titleKey}`)}
+            </p>
           )}
           {group.items.map((item) => {
             const Icon = ICONS[item.icon];
@@ -254,7 +287,7 @@ function NavLinks({ navGroups, pathname, onNavigate }: { navGroups: DashboardNav
                   )}
                   aria-hidden
                 />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{t(`items.${item.labelKey}`)}</span>
               </Link>
             );
           })}
@@ -273,6 +306,7 @@ function BrandMark() {
 }
 
 function SignOutButton({ className }: { className?: string }) {
+  const t = useTranslations("dashboard.shell");
   return (
     <form action={logoutAction}>
       <button
@@ -283,7 +317,7 @@ function SignOutButton({ className }: { className?: string }) {
         )}
       >
         <LogOut className="h-[18px] w-[18px] shrink-0 text-foreground/50" aria-hidden />
-        Sign out
+        {t("signOut")}
       </button>
     </form>
   );
@@ -291,16 +325,17 @@ function SignOutButton({ className }: { className?: string }) {
 
 function UserMenuTrigger({ userEmail }: { userEmail: string | null }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("dashboard.shell");
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label="Account menu"
+          aria-label={t("accountMenu")}
           className="flex h-10 items-center gap-2 rounded-full px-1.5 outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring sm:pr-3"
         >
-          <Avatar alt={userEmail ?? "Account"} size="sm" />
+          <Avatar alt={userEmail ?? t("account")} size="sm" />
           {userEmail && (
             <span className="hidden max-w-[12rem] truncate text-sm font-medium text-foreground/80 sm:inline">
               {userEmail}
@@ -324,13 +359,13 @@ function UserMenuTrigger({ userEmail }: { userEmail: string | null }) {
           className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <User className="h-4 w-4" aria-hidden />
-          Profile
+          {t("profile")}
         </Link>
         <DropdownMenuSeparator />
         <form action={logoutAction}>
           <DropdownMenuItem type="submit" destructive className="flex items-center gap-2">
             <LogOut className="h-4 w-4" aria-hidden />
-            Sign out
+            {t("signOut")}
           </DropdownMenuItem>
         </form>
       </DropdownMenuContent>
@@ -349,6 +384,7 @@ function UserMenuTrigger({ userEmail }: { userEmail: string | null }) {
 export function DashboardShell({ navGroups, userEmail, banner, children }: DashboardShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const t = useTranslations("dashboard.shell");
   const visibleNavGroups = resolveVisibleNavGroups(navGroups, pathname);
 
   return (
@@ -357,16 +393,17 @@ export function DashboardShell({ navGroups, userEmail, banner, children }: Dashb
         href="#main-content"
         className="sr-only rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-modal"
       >
-        Skip to main content
+        {t("skipToContent")}
       </a>
 
       {/* Desktop sidebar */}
       <aside
         className="fixed inset-y-0 hidden w-64 flex-col border-r border-border bg-card/60 px-3 py-6 lg:flex"
-        aria-label="Sidebar"
+        aria-label={t("sidebar")}
       >
         <Link href="/dashboard" className="mb-6 flex items-center gap-2 px-3 text-lg font-bold tracking-tight text-foreground">
           <BrandMark />
+          {/* i18n-ignore: brand name */}
           MaestroYa
         </Link>
         <div className="flex-1 overflow-y-auto">
@@ -387,6 +424,7 @@ export function DashboardShell({ navGroups, userEmail, banner, children }: Dashb
             className="flex items-center gap-2 text-lg font-bold tracking-tight text-foreground"
           >
             <BrandMark />
+            {/* i18n-ignore: brand name */}
             MaestroYa
           </Link>
         </DrawerHeader>
@@ -403,7 +441,7 @@ export function DashboardShell({ navGroups, userEmail, banner, children }: Dashb
         <header className="sticky top-0 z-sticky flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background/90 px-4 backdrop-blur sm:px-6 lg:px-8">
           <IconButton
             variant="ghost"
-            aria-label="Open menu"
+            aria-label={t("openMenu")}
             onClick={() => setMobileOpen(true)}
             className="lg:hidden"
           >
@@ -415,13 +453,14 @@ export function DashboardShell({ navGroups, userEmail, banner, children }: Dashb
             className="flex items-center gap-2 text-base font-bold tracking-tight text-foreground lg:hidden"
           >
             <BrandMark />
+            {/* i18n-ignore: brand name */}
             <span>MaestroYa</span>
           </Link>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <LanguageSwitcher compact />
-            <Tooltip content="Notifications">
-              <IconButton variant="ghost" aria-label="Notifications">
+            <Tooltip content={t("notifications")}>
+              <IconButton variant="ghost" aria-label={t("notifications")}>
                 <Bell className="h-[18px] w-[18px]" aria-hidden />
               </IconButton>
             </Tooltip>

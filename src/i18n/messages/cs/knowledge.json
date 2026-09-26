@@ -1,0 +1,256 @@
+{
+  "services": {
+    "fontaneria": {
+      "nameInSentence": "Instalatérské práce",
+      "intro": "MaestroYa propojuje zákazníky s profesionály pro instalatérské práce: opravy úniků vody, kohoutků, potrubí a vodovodních instalací v domácnosti. Zákazník popíše problém a zveřejní poptávku; instalatéři, kteří působí v dané oblasti, ji mohou prohlédnout a poslat nabídku.",
+      "commonJobTypes": {
+        "leakRepair": "Opravy úniků vody",
+        "tapRepair": "Výměna nebo oprava kohoutků a baterií",
+        "pipeUnblocking": "Čištění ucpaného potrubí",
+        "sanitaryInstallation": "Instalace sanitárního vybavení (toalet, umyvadel, sprch)",
+        "waterHeaterRepair": "Kontrola nebo oprava ohřívačů vody a rozvodů teplé vody"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Diagnostiku problému popsaného v poptávce",
+        "quote": "Podrobnou nabídku před zahájením prací",
+        "execution": "Provedení prací dohodnutých v přijaté nabídce"
+      },
+      "considerations": {
+        "describe": "Popište problém co nejpodrobněji a pokud možno přidejte k poptávce fotografie",
+        "urgency": "Uveďte skutečnou naléhavost prací (systém umožňuje označit poptávky jako více či méně naléhavé)",
+        "compare": "Můžete získat a porovnat několik nabídek, než jednu z nich přijmete"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Jaké instalatérské práce mohu přes MaestroYa poptat?",
+          "answer": "Můžete zveřejnit poptávku s popisem jakékoli instalatérské práce v domácnosti, například úniku vody, nefunkčního kohoutku nebo instalace sanitárního vybavení. Instalatéři, kteří působí ve vaší oblasti, mohou poptávku prohlédnout a poslat vám nabídku."
+        },
+        "howQuote": {
+          "question": "Jak funguje nabídka na instalatérské práce?",
+          "answer": "Po zveřejnění poptávky vám jeden nebo více profesionálů může poslat nabídku. Obdržené nabídky můžete porovnat a přijmout tu, která vám vyhovuje, ještě před zahájením prací."
+        },
+        "coverage": {
+          "question": "V jakých oblastech jsou instalatérské práce dostupné?",
+          "answer": "Pokrytí závisí na profesionálech aktivních v jednotlivých oblastech. Na stránce své lokality zjistíte aktuální dostupnost v dané oblasti."
+        }
+      }
+    },
+    "electricidad": {
+      "nameInSentence": "Elektroinstalace",
+      "intro": "MaestroYa propojuje zákazníky s profesionály pro elektroinstalační práce: elektroinstalace, poruchy, rozvaděče a zásuvky. Zákazník popíše práci a zveřejní poptávku; elektrikáři, kteří působí v dané oblasti, ji mohou prohlédnout a poslat nabídku.",
+      "commonJobTypes": {
+        "faultRepair": "Opravy elektrických poruch",
+        "socketsSwitches": "Instalace nebo výměna zásuvek a vypínačů",
+        "panelUpgrade": "Kontrola nebo modernizace rozvaděče",
+        "lightPoints": "Instalace světelných vývodů",
+        "smallInstallations": "Instalace přístrojů a drobné domácí elektroinstalační práce"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "Diagnostiku elektrického problému popsaného v poptávce",
+        "quote": "Podrobnou nabídku před zahájením prací",
+        "execution": "Provedení prací dohodnutých v přijaté nabídce"
+      },
+      "considerations": {
+        "describe": "Popište poruchu nebo instalaci co nejpodrobněji, s fotografiemi, pokud pomohou ji vysvětlit",
+        "urgency": "Uveďte skutečnou naléhavost prací",
+        "compare": "Porovnejte několik nabídek, než jednu z nich přijmete"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Jaké elektroinstalační práce mohu přes MaestroYa poptat?",
+          "answer": "Můžete zveřejnit poptávku mimo jiné na opravu elektrických poruch, instalaci zásuvek nebo světelných vývodů či kontrolu rozvaděče. Elektrikáři, kteří působí ve vaší oblasti, vám mohou poslat nabídku."
+        },
+        "howToRequest": {
+          "question": "Jak přes MaestroYa poptám elektrikáře?",
+          "answer": "Zveřejněte poptávku s popisem práce. Profesionálové, kteří pokrývají vaši kategorii a oblast, ji budou moci prohlédnout a poslat vám nabídku, kterou můžete přijmout nebo odmítnout."
+        },
+        "coverage": {
+          "question": "V jakých oblastech jsou elektroinstalační práce dostupné?",
+          "answer": "Pokrytí závisí na profesionálech aktivních v jednotlivých oblastech. Na stránce své lokality zjistíte aktuální dostupnost v dané oblasti."
+        }
+      }
+    },
+    "aire-acondicionado": {
+      "nameInSentence": "Klimatizace",
+      "intro": "MaestroYa propojuje zákazníky s profesionály pro práce na klimatizaci: instalaci, údržbu a opravy klimatizací. Zákazník popíše, co potřebuje, a zveřejní poptávku; technici klimatizací, kteří působí v dané oblasti, ji mohou prohlédnout a poslat nabídku.",
+      "commonJobTypes": {
+        "newInstallation": "Instalace nové klimatizační jednotky",
+        "repair": "Oprava jednotky, která nechladí nebo nefunguje",
+        "maintenance": "Údržba a čištění jednotek",
+        "gasRecharge": "Doplnění chladiva"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Diagnostiku nebo posouzení jednotky či instalace popsané v poptávce",
+        "quote": "Podrobnou nabídku před zahájením prací",
+        "execution": "Provedení prací dohodnutých v přijaté nabídce"
+      },
+      "considerations": {
+        "equipmentType": "Uveďte typ zařízení (pokud ho znáte) a popište problém nebo požadovanou instalaci",
+        "photos": "Přidejte fotografie zařízení nebo prostoru, pokud pomohou práci vysvětlit",
+        "compare": "Porovnejte několik nabídek, než jednu z nich přijmete"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Jaké práce na klimatizaci mohu přes MaestroYa poptat?",
+          "answer": "Můžete poptat instalaci, opravu nebo údržbu klimatizace. Technici klimatizací, kteří působí ve vaší oblasti, mohou vaši poptávku prohlédnout a poslat vám nabídku."
+        },
+        "howQuote": {
+          "question": "Jak funguje nabídka na instalaci klimatizace?",
+          "answer": "Zveřejníte poptávku s popisem toho, co potřebujete; zájemci z řad profesionálů pošlou své nabídky a vy se rozhodnete, kterou přijmete."
+        },
+        "coverage": {
+          "question": "V jakých oblastech jsou služby klimatizace dostupné?",
+          "answer": "Pokrytí závisí na profesionálech aktivních v jednotlivých oblastech. Na stránce své lokality zjistíte aktuální dostupnost v dané oblasti."
+        }
+      }
+    },
+    "pintura": {
+      "nameInSentence": "Malířské práce",
+      "intro": "MaestroYa propojuje zákazníky s malíři pro vnitřní i venkovní práce. Zákazník popíše prostor, který je třeba vymalovat, a zveřejní poptávku; malíři, kteří působí v dané oblasti, ji mohou prohlédnout a poslat nabídku.",
+      "commonJobTypes": {
+        "interior": "Malování interiérů (pokojů, chodeb, stropů)",
+        "exterior": "Nátěry fasád a venkovních ploch",
+        "wallPreparation": "Vyrovnání a příprava stěn před malováním",
+        "touchUps": "Opravy a drobné dokončovací práce"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Posouzení prostoru a práce popsané v poptávce",
+        "quote": "Podrobnou nabídku před zahájením prací",
+        "execution": "Provedení prací dohodnutých v přijaté nabídce"
+      },
+      "considerations": {
+        "surface": "Uveďte přibližnou plochu a současný stav stěn",
+        "photos": "Přidejte fotografie prostoru, který je třeba vymalovat",
+        "compare": "Porovnejte několik nabídek, než jednu z nich přijmete"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Jaké malířské práce mohu přes MaestroYa poptat?",
+          "answer": "Můžete poptat malování interiérů, nátěry exteriérů nebo drobné opravy. Malíři, kteří působí ve vaší oblasti, vám mohou poslat nabídku."
+        },
+        "howQuote": {
+          "question": "Jak funguje nabídka na malířské práce?",
+          "answer": "Zveřejníte poptávku s popisem prostoru a práce; zájemci z řad profesionálů pošlou své nabídky a vy se rozhodnete, kterou přijmete."
+        },
+        "coverage": {
+          "question": "V jakých oblastech jsou malířské práce dostupné?",
+          "answer": "Pokrytí závisí na profesionálech aktivních v jednotlivých oblastech. Na stránce své lokality zjistíte aktuální dostupnost v dané oblasti."
+        }
+      }
+    },
+    "reformas": {
+      "nameInSentence": "Rekonstrukce",
+      "intro": "MaestroYa propojuje zákazníky s profesionály pro kompletní i částečné rekonstrukce domácností. Zákazník popíše rozsah rekonstrukce a zveřejní poptávku; profesionálové na rekonstrukce, kteří působí v dané oblasti, ji mohou prohlédnout a poslat nabídku.",
+      "commonJobTypes": {
+        "partial": "Částečné rekonstrukce (pokoje, koupelny, kuchyně)",
+        "full": "Kompletní rekonstrukce bytu či domu",
+        "masonry": "Zednické práce spojené s rekonstrukcí",
+        "layoutFinishes": "Změny dispozice nebo povrchových úprav"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Posouzení rozsahu rekonstrukce popsané v poptávce",
+        "quote": "Podrobnou nabídku před zahájením prací",
+        "execution": "Provedení prací dohodnutých v přijaté nabídce"
+      },
+      "considerations": {
+        "scope": "Popište rozsah rekonstrukce co nejpodrobněji",
+        "photos": "Přidejte fotografie současného stavu prostoru",
+        "compare": "Rekonstrukce obvykle znamenají vyšší nabídky: porovnejte několik možností, než jednu přijmete"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Jaké rekonstrukce mohu přes MaestroYa poptat?",
+          "answer": "Můžete poptat částečnou nebo kompletní rekonstrukci domácnosti. Profesionálové na rekonstrukce, kteří působí ve vaší oblasti, mohou vaši poptávku prohlédnout a poslat vám nabídku."
+        },
+        "compareQuotes": {
+          "question": "Mohu porovnat několik nabídek na rekonstrukci?",
+          "answer": "Ano. Na stejnou poptávku můžete získat nabídky od více profesionálů a porovnat je, než jednu přijmete."
+        },
+        "coverage": {
+          "question": "V jakých oblastech jsou rekonstrukce dostupné?",
+          "answer": "Pokrytí závisí na profesionálech aktivních v jednotlivých oblastech. Na stránce své lokality zjistíte aktuální dostupnost v dané oblasti."
+        }
+      }
+    },
+    "montaje-de-muebles": {
+      "nameInSentence": "Montáž nábytku",
+      "intro": "MaestroYa propojuje zákazníky s profesionály pro montáž a sestavení nábytku a vybavení. Zákazník popíše kus nebo kusy nábytku k sestavení a zveřejní poptávku; montážníci, kteří působí v dané oblasti, ji mohou prohlédnout a poslat nabídku.",
+      "commonJobTypes": {
+        "flatPack": "Montáž nábytku ze stavebnice (skříní, regálů, stolů)",
+        "kitchen": "Montáž kuchyňského nábytku",
+        "wallFixing": "Připevnění nábytku ke zdi",
+        "multiple": "Sestavení více kusů nábytku během jedné návštěvy"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "Posouzení kusu nebo kusů nábytku popsaných v poptávce",
+        "quote": "Nabídku před zahájením montáže",
+        "execution": "Provedení montáže dohodnuté v přijaté nabídce"
+      },
+      "considerations": {
+        "typeQuantity": "Uveďte druh a počet kusů nábytku k sestavení",
+        "photos": "Přidejte fotografie krabic nebo návodu, pokud ho máte",
+        "compare": "Porovnejte několik nabídek, než jednu z nich přijmete"
+      },
+      "faqs": {
+        "whatFurniture": {
+          "question": "Jaký nábytek si mohu přes MaestroYa nechat smontovat?",
+          "answer": "Můžete poptat montáž prakticky jakéhokoli nábytku ze stavebnice, například skříní, regálů nebo kuchyňského nábytku. Montážníci, kteří působí ve vaší oblasti, vám mohou poslat nabídku."
+        },
+        "howQuote": {
+          "question": "Jak funguje nabídka na montáž nábytku?",
+          "answer": "Zveřejníte poptávku s popisem kusu nebo kusů nábytku k sestavení; zájemci z řad profesionálů pošlou své nabídky a vy se rozhodnete, kterou přijmete."
+        },
+        "coverage": {
+          "question": "V jakých oblastech je montáž nábytku dostupná?",
+          "answer": "Pokrytí závisí na profesionálech aktivních v jednotlivých oblastech. Na stránce své lokality zjistíte aktuální dostupnost v dané oblasti."
+        }
+      }
+    }
+  },
+  "locations": {
+    "gandia": {
+      "intro": "Gandia (provincie Valencia) je referenční lokalitou MaestroYa. Zákazníci v Gandii mohou zveřejnit poptávku v kterékoli z kategorií služeb pro domácnost dostupných na platformě a profesionálové, kteří v oblasti působí, ji mohou prohlédnout a poslat nabídku.",
+      "faqs": {
+        "whatServices": {
+          "question": "Jaké služby mohu v Gandii přes MaestroYa poptat?",
+          "answer": "Můžete zveřejnit poptávku v kterékoli z kategorií služeb pro domácnost dostupných v MaestroYa (instalatérské práce, elektroinstalace, klimatizace, malířské práce, rekonstrukce a montáž nábytku). Podrobnosti najdete na stránce každé služby."
+        },
+        "howToHire": {
+          "question": "Jak si v Gandii najmu profesionála?",
+          "answer": "Zveřejníte poptávku s popisem práce. Profesionálové, kteří pokrývají danou kategorii a oblast Gandie, ji mohou prohlédnout a poslat vám nabídku, kterou můžete porovnat a přijmout před zahájením prací."
+        },
+        "outsideGandia": {
+          "question": "Je MaestroYa dostupná i mimo Gandii?",
+          "answer": "Gandia je lokalita s dnes potvrzeným pokrytím na platformě. Konkrétní dostupnost profesionálů se může měnit a závisí na tom, kdo je v danou chvíli aktivní."
+        }
+      }
+    }
+  },
+  "nationalCoverage": {
+    "intro": "MaestroYa je tržiště služeb pro domácnost, které propojuje zákazníky s profesionály a firmami ve Španělsku. Poptávku na službu může ve Španělsku zveřejnit kdokoli; zda ji profesionál prohlédne a pošle nabídku, závisí na tom, kteří profesionálové jsou v dané kategorii a oblasti v danou chvíli aktivní.",
+    "coverageStatement": "Působnost MaestroYa jako platformy je celostátní: cílem tržiště je fungovat v celém Španělsku, nejen v jedné konkrétní lokalitě. To je něco jiného než skutečná dostupnost profesionálů v určité oblasti, která závisí na reálných datech platformy v daném okamžiku.",
+    "howLocalAvailabilityWorks": "Když zveřejníte poptávku, mohou ji prohlédnout a poslat vám nabídku pouze profesionálové, kteří pokrývají danou kategorii služeb a vaši oblast. MaestroYa nezaručuje, že v určité lokalitě bude dostupný profesionál: skutečná dostupnost se liší podle oblasti. Lokality s pokrytím potvrzeným reálnými daty platformy mají vlastní stránku (viz /ubicaciones).",
+    "faqs": {
+      "wholeSpain": {
+        "question": "Působí MaestroYa v celém Španělsku?",
+        "answer": "MaestroYa je tržiště navržené tak, aby fungovalo v celém Španělsku. To neznamená, že už v každé lokalitě jsou aktivní profesionálové: skutečná dostupnost profesionálů závisí na dané oblasti a může se v čase měnit."
+      },
+      "localAvailability": {
+        "question": "Jak zjistím, zda je služba dostupná v mé lokalitě?",
+        "answer": "Můžete zveřejnit poptávku s uvedením své adresy; nabídku vám budou moci poslat jen profesionálové, kteří pokrývají vaši kategorii a vaši oblast. Lokality s pokrytím potvrzeným reálnými daty platformy jsou uvedeny v sekci lokalit."
+      },
+      "whatServices": {
+        "question": "Jaké služby MaestroYa nabízí?",
+        "answer": "MaestroYa dnes zveřejňuje šest kategorií služeb pro domácnost: instalatérské práce, elektroinstalace, klimatizace, malířské práce, rekonstrukce a montáž nábytku. Více podrobností najdete na stránce každé služby."
+      },
+      "professionalParticipation": {
+        "question": "Jak se profesionál zapojí do MaestroYa?",
+        "answer": "Profesionál si může vytvořit účet, uvést své kategorie služeb a oblast, kterou pokrývá, a poté prohlížet zveřejněné poptávky odpovídající jeho kategorii a oblasti a posílat na ně nabídky."
+      }
+    },
+    "structuredData": {
+      "name": "Služby pro domácnost přes MaestroYa",
+      "description": "Tržiště služeb pro domácnost provozované MaestroYa ve Španělsku. Dostupnost profesionálů se liší podle kategorie služeb a oblasti."
+    }
+  }
+}

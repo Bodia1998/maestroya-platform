@@ -12,5 +12,192 @@
   "passwordTooWeak": "A palavra-passe deve incluir maiúsculas, minúsculas e números.",
   "mismatch": "Os valores não coincidem.",
   "invalid": "O valor introduzido não é válido.",
-  "summary": "Corrija os erros do formulário."
+  "summary": "Corrija os erros do formulário.",
+  "dto": {
+    "ids": {
+      "action": "Ação inválida.",
+      "adminUser": "Utilizador administrador inválido.",
+      "admin": "Administrador inválido.",
+      "appeal": "Recurso inválido.",
+      "appointment": "Marcação inválida.",
+      "case": "Caso inválido.",
+      "company": "Empresa inválida.",
+      "conversation": "Conversa inválida.",
+      "dispute": "Disputa inválida.",
+      "document": "Documento inválido.",
+      "invitation": "Convite inválido.",
+      "job": "Trabalho inválido.",
+      "member": "Membro inválido.",
+      "notification": "Notificação inválida.",
+      "payment": "Pagamento inválido.",
+      "portfolioItem": "Item do portefólio inválido.",
+      "professional": "Profissional inválido.",
+      "quote": "Orçamento inválido.",
+      "recipient": "Destinatário inválido.",
+      "review": "Avaliação inválida.",
+      "reviewer": "Revisor inválido.",
+      "serviceCategory": "Categoria de serviço inválida.",
+      "serviceRequest": "Pedido inválido.",
+      "ticket": "Pedido de suporte inválido.",
+      "user": "Utilizador inválido.",
+      "verification": "Verificação inválida."
+    },
+    "invitation": {
+      "linkInvalid": "Ligação de convite inválida."
+    },
+    "admin": {
+      "roleRequired": "É necessária pelo menos uma função."
+    },
+    "aiVisibility": {
+      "queryRequired": "É necessária uma consulta.",
+      "unknownQuery": "Consulta desconhecida: tem de ser uma das consultas ativas de visibilidade em IA."
+    },
+    "analytics": {
+      "dateRange": "A data de início tem de ser anterior à data de fim."
+    },
+    "auth": {
+      "nameRequired": "Introduza o seu nome.",
+      "passwordRequired": "Introduza a sua palavra-passe.",
+      "passwordsMismatch": "As palavras-passe não coincidem."
+    },
+    "password": {
+      "minLength": "A palavra-passe tem de ter pelo menos 10 caracteres.",
+      "tooLong": "A palavra-passe é demasiado longa.",
+      "lowercase": "A palavra-passe tem de incluir uma letra minúscula.",
+      "uppercase": "A palavra-passe tem de incluir uma letra maiúscula.",
+      "number": "A palavra-passe tem de incluir um número."
+    },
+    "profile": {
+      "currentPasswordRequired": "Introduza a sua palavra-passe atual.",
+      "passwordMustDiffer": "A nova palavra-passe tem de ser diferente da atual.",
+      "timezoneRequired": "Selecione um fuso horário.",
+      "deleteConfirm": "Escreva \"DELETE\" para confirmar."
+    },
+    "professional": {
+      "deactivateConfirm": "Escreva \"DEACTIVATE\" para confirmar.",
+      "yearsNegative": "Os anos de experiência não podem ser negativos.",
+      "yearsRealistic": "Introduza um número de anos realista.",
+      "radiusNegative": "O raio de serviço não pode ser negativo.",
+      "radiusRealistic": "Introduza um raio de serviço realista.",
+      "descriptionRequired": "Adicione uma breve descrição."
+    },
+    "membership": {
+      "transferConfirm": "Escreva \"TRANSFER\" para confirmar.",
+      "roleInvalid": "Selecione uma função válida."
+    },
+    "address": {
+      "street": "Introduza uma morada.",
+      "city": "Introduza uma cidade.",
+      "postalCode": "Introduza um código postal.",
+      "country": "Introduza um país."
+    },
+    "location": {
+      "cityRequired": "A cidade é obrigatória.",
+      "latitudeInvalid": "Introduza uma latitude válida.",
+      "longitudeInvalid": "Introduza uma longitude válida.",
+      "latitudeRange": "A latitude tem de estar entre -90 e 90.",
+      "longitudeRange": "A longitude tem de estar entre -180 e 180."
+    },
+    "search": {
+      "coordinatesTogether": "A latitude e a longitude têm de ser indicadas em conjunto.",
+      "radiusRequiresLocation": "Um raio de pesquisa requer latitude e longitude.",
+      "radiusInvalid": "Introduza um raio de pesquisa válido.",
+      "radiusPositive": "O raio de pesquisa tem de ser superior a zero.",
+      "radiusMax": "O raio de pesquisa não pode exceder 200 km.",
+      "minRatingInvalid": "Introduza uma classificação mínima válida.",
+      "minRatingRange": "A classificação mínima tem de estar entre 1 e 5.",
+      "minReviewCountInvalid": "Introduza um número mínimo de avaliações válido.",
+      "minReviewCountNegative": "O número mínimo de avaliações não pode ser negativo.",
+      "minReviewCountTooLarge": "O número mínimo de avaliações é demasiado elevado."
+    },
+    "categories": {
+      "invalid": "Selecione uma categoria de serviço válida.",
+      "min": "Selecione pelo menos uma categoria de serviço.",
+      "max": "Selecione no máximo 20 categorias."
+    },
+    "company": {
+      "legalNameRequired": "A denominação social é obrigatória.",
+      "taxIdRequired": "O NIF é obrigatório."
+    },
+    "common": {
+      "wholeNumber": "Introduza um número inteiro.",
+      "cancellationReasonRequired": "Escolha um motivo de cancelamento."
+    },
+    "portfolio": {
+      "mediaUrlInvalid": "Introduza um URL de multimédia válido."
+    },
+    "referral": {
+      "codeFormat": "O código de indicação só pode conter letras minúsculas, algarismos e sublinhados."
+    },
+    "verification": {
+      "countryCode": "O código do país tem de ser um código ISO 3166-1 de 2 letras."
+    },
+    "chat": {
+      "messageRequired": "Escreva uma mensagem antes de enviar."
+    },
+    "onboarding": {
+      "termsVersionRequired": "É necessária uma versão dos termos.",
+      "privacyVersionRequired": "É necessária uma versão da política de privacidade.",
+      "accountHolderRequired": "Introduza o nome completo do titular da conta.",
+      "ibanInvalid": "Introduza um IBAN válido."
+    },
+    "dispute": {
+      "reasonRequired": "É necessário um motivo.",
+      "refundAmountRequired": "É necessário um montante de reembolso para uma resolução parcial.",
+      "amountRequired": "Esta resolução requer um montante.",
+      "adjustmentTypeRequired": "Esta resolução requer um tipo de ajuste.",
+      "messageEmpty": "A mensagem não pode estar vazia.",
+      "fileUrlInvalid": "URL do ficheiro inválido.",
+      "fileUrlHttp": "O URL do ficheiro tem de ser uma ligação http(s).",
+      "resolutionNoteRequired": "A nota de resolução é obrigatória.",
+      "amountPositive": "O montante tem de ser positivo."
+    },
+    "review": {
+      "responseEmpty": "A resposta não pode estar vazia.",
+      "ratingInteger": "A classificação tem de ser um número inteiro."
+    },
+    "notification": {
+      "actionUrlUnsafe": "O URL da ação tem de ser um caminho interno seguro.",
+      "titleRequired": "O título é obrigatório.",
+      "messageRequired": "A mensagem é obrigatória."
+    },
+    "quote": {
+      "itemsRequired": "Adicione pelo menos um item ao seu orçamento.",
+      "requiredMaterialsMissing": "Adicione pelo menos um material necessário quando os materiais são comprados pelo cliente.",
+      "materialsPriced": "Os materiais não podem ter preço no orçamento quando o cliente os compra diretamente.",
+      "materialNameRequired": "Introduza um nome para este material.",
+      "itemDescriptionRequired": "Introduza uma descrição para este item.",
+      "quantityPositive": "A quantidade tem de ser superior a zero.",
+      "quantityRealistic": "Introduza uma quantidade realista.",
+      "unitPriceNegative": "O preço unitário não pode ser negativo.",
+      "unitPriceRealistic": "Introduza um preço unitário realista.",
+      "validUntilFuture": "A data de validade tem de ser futura.",
+      "itemsMax": "Um orçamento pode ter no máximo 20 itens.",
+      "materialsMax": "Uma lista de materiais pode ter no máximo 50 itens."
+    },
+    "financial": {
+      "adjustmentPositive": "O montante do ajuste tem de ser superior a zero.",
+      "adjustmentRealistic": "Introduza um montante de ajuste realista."
+    },
+    "booking": {
+      "startTimeInvalid": "Introduza uma hora de início válida.",
+      "endTimeInvalid": "Introduza uma hora de fim válida.",
+      "endAfterStart": "A hora de fim tem de ser posterior à hora de início."
+    },
+    "job": {
+      "reasonRequired": "Escolha um motivo.",
+      "decisionRequired": "Escolha uma decisão.",
+      "describeProblem": "Descreva o problema em pelo menos 20 caracteres."
+    },
+    "serviceRequest": {
+      "titleRequired": "Introduza um título.",
+      "descriptionRequired": "Introduza uma descrição.",
+      "budgetNegative": "O orçamento disponível não pode ser negativo.",
+      "budgetRange": "O orçamento mínimo não pode exceder o máximo."
+    },
+    "featureFlag": {
+      "keyRequired": "A chave da flag é obrigatória.",
+      "keyFormat": "A chave da flag só pode conter letras, números, '-', '_' e '.'."
+    }
+  }
 }

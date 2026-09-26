@@ -1,0 +1,30 @@
+{
+  "site": {
+    "defaultTitle": "MaestroYa — Encuentra profesionales de confianza para tu hogar",
+    "description": "Conecta con profesionales de confianza para tu hogar: fontanería, electricidad, reformas, limpieza y mucho más."
+  },
+  "servicesIndex": {
+    "title": "Servicios para el hogar en MaestroYa",
+    "description": "Consulta las categorías de servicio para el hogar disponibles en MaestroYa: fontanería, electricidad, aire acondicionado, pintura, reformas y montaje de muebles."
+  },
+  "servicePage": {
+    "title": "{service} — MaestroYa",
+    "descriptionFallback": "Solicita un profesional de {service} a través de MaestroYa y compara presupuestos."
+  },
+  "serviceLocationPage": {
+    "title": "{service} en {city} — MaestroYa",
+    "description": "Solicita {service} en {city} ({province}) a través de MaestroYa y compara presupuestos."
+  },
+  "locationsIndex": {
+    "title": "Ubicaciones — MaestroYa en España",
+    "description": "MaestroYa es un marketplace de servicios para el hogar pensado para operar en toda España. Consulta el alcance de la plataforma y las localidades con cobertura confirmada."
+  },
+  "locationPage": {
+    "title": "Profesionales en {city} — MaestroYa",
+    "description": "Servicios para el hogar disponibles en {city} ({province}) a través de MaestroYa."
+  },
+  "nationalCoverage": {
+    "title": "MaestroYa en España — cobertura nacional",
+    "description": "MaestroYa es un marketplace de servicios para el hogar pensado para operar en toda España. La disponibilidad real de profesionales depende de cada zona."
+  }
+}

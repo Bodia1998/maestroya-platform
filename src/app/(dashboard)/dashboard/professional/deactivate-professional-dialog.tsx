@@ -1,6 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -15,9 +15,12 @@ import {
   deactivateProfessionalSchema,
   type DeactivateProfessionalInput,
 } from "@/application/dto/professional.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { deactivateProfessionalAction } from "./actions";
 
 export function DeactivateProfessionalDialog() {
+  const t = useTranslations("professional.deactivate");
+  const tCommon = useTranslations("common");
   const [isOpen, setIsOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isDeactivated, setIsDeactivated] = useState(false);
@@ -27,7 +30,7 @@ export function DeactivateProfessionalDialog() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<DeactivateProfessionalInput>({
-    resolver: zodResolver(deactivateProfessionalSchema),
+    resolver: useLocalizedZodResolver(deactivateProfessionalSchema),
     defaultValues: { confirmationText: "DEACTIVATE" },
   });
 
@@ -46,7 +49,7 @@ export function DeactivateProfessionalDialog() {
   if (isDeactivated) {
     return (
       <Alert variant="success" role="status">
-        Your professional profile has been deactivated.
+        {t("success")}
       </Alert>
     );
   }
@@ -54,15 +57,12 @@ export function DeactivateProfessionalDialog() {
   return (
     <>
       <Button type="button" variant="outline" onClick={() => setIsOpen(true)}>
-        Deactivate professional profile
+        {t("trigger")}
       </Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogHeader>
-          <DialogTitle className="text-danger">This will stop new customers from finding you</DialogTitle>
-          <DialogDescription>
-            Existing quotes, appointments, and reviews are kept. You can be reactivated later by
-            support if needed.
-          </DialogDescription>
+          <DialogTitle className="text-danger">{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
@@ -73,7 +73,7 @@ export function DeactivateProfessionalDialog() {
           )}
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="deactivate-confirmation">Type DEACTIVATE to confirm</Label>
+            <Label htmlFor="deactivate-confirmation">{t("confirmLabel", { word: "DEACTIVATE" })}</Label>
             <Input
               id="deactivate-confirmation"
               aria-invalid={!!errors.confirmationText}
@@ -87,10 +87,10 @@ export function DeactivateProfessionalDialog() {
 
           <FormActions>
             <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
-              Cancel
+              {tCommon("actions.cancel")}
             </Button>
             <Button type="submit" variant="outline" disabled={isSubmitting}>
-              {isSubmitting ? "Deactivating…" : "Deactivate my professional profile"}
+              {isSubmitting ? t("pending") : t("confirm")}
             </Button>
           </FormActions>
         </form>

@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buildBreadcrumbJsonLd } from "@/shared/seo/structured-data";
-import { LOCATION_CONTENT } from "@/shared/content/locations";
+import { LOCATION_CONTENT, localizeCountryName } from "@/shared/content/locations";
 import { findVerifiedCity } from "@/shared/content/verified-location";
-
-const TITLE = "Ubicaciones — MaestroYa en España";
-const DESCRIPTION =
-  "MaestroYa es un marketplace de servicios para el hogar pensado para operar en toda España. Consulta el alcance de la plataforma y las localidades con cobertura confirmada.";
+import { NATIONAL_COVERAGE_CONTENT } from "@/shared/content/national-coverage";
+import { toOgLocale } from "@/shared/seo/site";
 
 /**
  * Module 118 (continuation) — Spain-wide geographic coverage.
@@ -23,56 +22,71 @@ const DESCRIPTION =
  * list: platform scope and verified local availability are different
  * claims (see the Module 118 report, "Platform Coverage vs. Verified
  * Local Availability").
+ *
+ * Module 120: rendered in the visitor's locale; one canonical URL.
  */
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: "/ubicaciones" },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: "/ubicaciones" },
-  twitter: { title: TITLE, description: DESCRIPTION },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const [t, locale] = await Promise.all([getTranslations("seo"), getLocale()]);
+  const title = t("locationsIndex.title");
+  const description = t("locationsIndex.description");
+  return {
+    title,
+    description,
+    alternates: { canonical: "/ubicaciones" },
+    openGraph: { title, description, url: "/ubicaciones", locale: toOgLocale(locale) },
+    twitter: { title, description },
+  };
+}
 
 export default async function LocationsIndexPage() {
-  const verifiedEntries = (
-    await Promise.all(
+  const [t, verifiedEntries] = await Promise.all([
+    getTranslations("services"),
+    Promise.all(
       LOCATION_CONTENT.map(async (location) => {
-        const verified = await findVerifiedCity(location.cityName, location.provinceName, location.countryCode);
+        const verified = await findVerifiedCity(
+          location.cityName,
+          location.provinceName,
+          location.countryCode,
+        );
         return verified ? location : null;
       }),
-    )
-  ).filter((location): location is NonNullable<typeof location> => Boolean(location));
+    ).then((entries) =>
+      entries.filter((location): location is NonNullable<typeof location> => Boolean(location)),
+    ),
+  ]);
+  const countryName = (countryCode: string) => localizeCountryName(t, countryCode);
 
   return (
     <PageContainer maxWidth="3xl" padded>
       <JsonLd
         data={buildBreadcrumbJsonLd([
-          { name: "Inicio", path: "/" },
-          { name: "Ubicaciones", path: "/ubicaciones" },
+          { name: t("breadcrumbs.home"), path: "/" },
+          { name: t("breadcrumbs.locations"), path: "/ubicaciones" },
         ])}
       />
 
       <div>
-        <h1 className="text-2xl font-semibold">Ubicaciones</h1>
-        <p className="mt-1 text-sm text-foreground/70">
-          MaestroYa es un marketplace de servicios para el hogar pensado para operar en toda España. La
-          disponibilidad real de profesionales depende de cada zona.
-        </p>
+        <h1 className="text-2xl font-semibold">{t("locationsIndex.title")}</h1>
+        <p className="mt-1 text-sm text-foreground/70">{t("locationsIndex.intro")}</p>
       </div>
 
-      <Section title="Alcance de la plataforma" gap="sm">
+      <Section title={t("shared.platformScopeTitle")} gap="sm">
         <Link
           href="/ubicaciones/espana"
           className="block rounded-md border border-border p-4 text-sm hover:border-primary/40 hover:bg-muted"
         >
-          <span className="font-medium text-foreground">MaestroYa en España</span>
+          <span className="font-medium text-foreground">
+            {t("locationsIndex.nationalCardTitle", {
+              country: countryName(NATIONAL_COVERAGE_CONTENT.countryCode),
+            })}
+          </span>
           <span className="mt-1 block text-foreground/70">
-            Qué significa que MaestroYa sea un marketplace de alcance nacional y cómo funciona la
-            disponibilidad local.
+            {t("locationsIndex.nationalCardDescription")}
           </span>
         </Link>
       </Section>
 
-      <Section title="Localidades con cobertura confirmada" gap="sm">
+      <Section title={t("shared.confirmedLocalitiesTitle")} gap="sm">
         {verifiedEntries.length > 0 ? (
           <ul className="grid gap-3 sm:grid-cols-2">
             {verifiedEntries.map((location) => (
@@ -83,29 +97,29 @@ export default async function LocationsIndexPage() {
                 >
                   <span className="font-medium text-foreground">{location.cityName}</span>
                   <span className="mt-1 block text-foreground/70">
-                    {location.provinceName}, {location.countryName}
+                    {t("shared.provinceCountry", {
+                      province: location.provinceName,
+                      country: countryName(location.countryCode),
+                    })}
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-foreground/70">
-            No hay localidades con cobertura confirmada publicadas en este momento.
-          </p>
+          <p className="text-sm text-foreground/70">{t("locationsIndex.confirmedEmpty")}</p>
         )}
-        <p className="text-xs text-foreground/60">
-          Esta lista solo incluye localidades cuya cobertura está confirmada por los datos reales de la
-          plataforma — no es la lista completa de zonas donde MaestroYa puede llegar a operar.
-        </p>
+        <p className="text-xs text-foreground/60">{t("locationsIndex.confirmedNote")}</p>
       </Section>
 
       <p className="text-sm text-foreground/70">
-        ¿Buscas por tipo de servicio?{" "}
-        <Link href="/servicios" className="underline">
-          Consulta las categorías disponibles
-        </Link>
-        .
+        {t.rich("locationsIndex.servicesPrompt", {
+          link: (chunks) => (
+            <Link href="/servicios" className="underline">
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
     </PageContainer>
   );

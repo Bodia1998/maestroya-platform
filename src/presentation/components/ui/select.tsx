@@ -39,4 +39,4 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     );
   },
 );
-Select.displayName = "Select";
+Select.displayName = "Select"; // i18n-ignore

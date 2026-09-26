@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Activity, AlertOctagon, CheckCircle2, ListChecks, PlugZap, XCircle } from "lucide-react";
+import { useFormatter, useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 import { getReconciliationOverviewAction, getReconciliationProviderBindingAction } from "./actions";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -12,17 +14,17 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { RunStatusBadge } from "./_components/badges";
 import { TriggerRunDialog } from "./_components/trigger-run-dialog";
 
-export const metadata = { title: "Admin — Reconciliation" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("reconciliation.title") }) };
+}
 export const dynamic = "force-dynamic";
 
-const SEVERITY_ROWS: Array<{ key: "CRITICAL" | "ERROR" | "WARNING" | "INFO"; label: string }> = [
-  { key: "CRITICAL", label: "Critical" },
-  { key: "ERROR", label: "High" },
-  { key: "WARNING", label: "Medium" },
-  { key: "INFO", label: "Low" },
-];
+const SEVERITY_ROWS = ["CRITICAL", "ERROR", "WARNING", "INFO"] as const;
 
 function RunSummaryLine({ label, run }: { label: string; run: { id: string; startedAt: Date } | null }) {
+  const t = useTranslations("admin.reconciliation.overview");
+  const format = useFormatter();
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
       <span className="text-muted-foreground">{label}</span>
@@ -31,10 +33,10 @@ function RunSummaryLine({ label, run }: { label: string; run: { id: string; star
           href={`/admin/reconciliation/runs/${run.id}`}
           className="font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
         >
-          {new Date(run.startedAt).toLocaleString()}
+          {format.dateTime(new Date(run.startedAt), { dateStyle: "medium", timeStyle: "short" })}
         </Link>
       ) : (
-        <span className="text-muted-foreground">None yet</span>
+        <span className="text-muted-foreground">{t("noneYet")}</span>
       )}
     </div>
   );
@@ -55,11 +57,12 @@ export default async function AdminReconciliationOverviewPage() {
     getReconciliationOverviewAction(),
     getReconciliationProviderBindingAction(),
   ]);
+  const t = await getTranslations("admin.reconciliation");
 
   if (!overviewResult.success) {
     return (
       <div className="flex flex-col gap-6">
-        <PageHeader title="Reconciliation" subtitle="Financial reconciliation runs and discrepancies." />
+        <PageHeader title={t("title")} subtitle={t("shortSubtitle")} />
         <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
           {overviewResult.error}
         </p>
@@ -68,20 +71,20 @@ export default async function AdminReconciliationOverviewPage() {
   }
 
   const overview = overviewResult.data;
-  const providerLabel = providerResult.success ? providerResult.data.label : "Unknown";
+  const providerLabel = providerResult.success ? providerResult.data.label : t("unknownProvider");
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title="Reconciliation"
-        subtitle="Financial reconciliation runs and discrepancies across Payments, Commission, Tax, Invoicing, Payouts, Refunds, and Credit Notes."
+        title={t("title")}
+        subtitle={t("subtitle")}
         actions={
           <>
             <ButtonLink href="/admin/reconciliation/discrepancies" variant="outline">
-              Investigate discrepancies
+              {t("investigate")}
             </ButtonLink>
             <ButtonLink href="/admin/reconciliation/runs" variant="outline">
-              View all runs
+              {t("viewAllRuns")}
             </ButtonLink>
             <TriggerRunDialog />
           </>
@@ -90,50 +93,50 @@ export default async function AdminReconciliationOverviewPage() {
 
       <section className="flex flex-col gap-4">
         <Heading as="h2" level="h6">
-          Discrepancies
+          {t("overview.discrepancies")}
         </Heading>
         <ResponsiveGrid cols="1-2-4">
-          <KPICard icon={AlertOctagon} label="Unresolved discrepancies" value={overview.discrepancies.open} href="/admin/reconciliation/discrepancies?resolutionStatus=OPEN" />
-          <KPICard icon={CheckCircle2} label="Resolved discrepancies" value={overview.discrepancies.resolved} href="/admin/reconciliation/discrepancies?resolutionStatus=RESOLVED" />
-          <KPICard icon={ListChecks} label="Total reconciliation runs" value={overview.totalRuns} href="/admin/reconciliation/runs" />
-          <KPICard icon={PlugZap} label="Provider adapter" value={providerLabel} />
+          <KPICard icon={AlertOctagon} label={t("overview.unresolved")} value={overview.discrepancies.open} href="/admin/reconciliation/discrepancies?resolutionStatus=OPEN" />
+          <KPICard icon={CheckCircle2} label={t("overview.resolved")} value={overview.discrepancies.resolved} href="/admin/reconciliation/discrepancies?resolutionStatus=RESOLVED" />
+          <KPICard icon={ListChecks} label={t("overview.totalRuns")} value={overview.totalRuns} href="/admin/reconciliation/runs" />
+          <KPICard icon={PlugZap} label={t("overview.provider")} value={providerLabel} />
         </ResponsiveGrid>
       </section>
 
       <section className="flex flex-col gap-4">
         <Heading as="h2" level="h6">
-          Open discrepancies by severity
+          {t("overview.bySeverity")}
         </Heading>
         <ResponsiveGrid cols="1-2-4">
-          {SEVERITY_ROWS.map((row) => (
+          {SEVERITY_ROWS.map((severity) => (
             <KPICard
-              key={row.key}
-              icon={row.key === "CRITICAL" || row.key === "ERROR" ? XCircle : Activity}
-              label={row.label}
-              value={overview.discrepancies.bySeverity[row.key]}
-              href={`/admin/reconciliation/discrepancies?resolutionStatus=OPEN&severity=${row.key}`}
+              key={severity}
+              icon={severity === "CRITICAL" || severity === "ERROR" ? XCircle : Activity}
+              label={t(`severity.${severity}`)}
+              value={overview.discrepancies.bySeverity[severity]}
+              href={`/admin/reconciliation/discrepancies?resolutionStatus=OPEN&severity=${severity}`}
             />
           ))}
         </ResponsiveGrid>
       </section>
 
       <ResponsiveGrid cols="1-2-lg" gap="lg">
-        <Section title="Run status" bordered>
-          <RunSummaryLine label="Latest run" run={overview.latestRun} />
+        <Section title={t("overview.runStatus")} bordered>
+          <RunSummaryLine label={t("overview.latestRun")} run={overview.latestRun} />
           {overview.latestRun && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Status</span>
+              <span className="text-muted-foreground">{t("overview.status")}</span>
               <RunStatusBadge status={overview.latestRun.status} />
             </div>
           )}
-          <RunSummaryLine label="Last successful run" run={overview.lastSuccessfulRun} />
-          <RunSummaryLine label="Last failed run" run={overview.lastFailedRun} />
+          <RunSummaryLine label={t("overview.lastSuccessfulRun")} run={overview.lastSuccessfulRun} />
+          <RunSummaryLine label={t("overview.lastFailedRun")} run={overview.lastFailedRun} />
         </Section>
 
-        <Section title="Open discrepancies by type" bordered>
+        <Section title={t("overview.byType")} bordered>
           {overview.discrepancies.byCategory.length === 0 ? (
             <Text size="sm" tone="muted">
-              No open discrepancies detected.
+              {t("overview.noOpen")}
             </Text>
           ) : (
             <ul className="flex flex-col gap-1.5">
@@ -150,9 +153,7 @@ export default async function AdminReconciliationOverviewPage() {
 
       <Card>
         <CardContent className="p-5 text-sm text-muted-foreground">
-          Reconciliation is read-only with respect to every financial record it inspects — it only detects and
-          records discrepancies here for manual review. Resolving a discrepancy never changes a Payment, Invoice,
-          Payout, Refund, or Credit Note; it only closes this investigation.
+          {t("overview.readOnlyNotice")}
         </CardContent>
       </Card>
     </div>

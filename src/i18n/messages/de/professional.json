@@ -1,0 +1,344 @@
+{
+  "errors": {
+    "fixErrors": "Bitte korrigiere die Fehler unten.",
+    "createProfile": "Beim Erstellen deines Fachkraft-Profils ist ein Fehler aufgetreten.",
+    "onboarding": "Beim Einrichten deines Fachkraft-Profils ist ein Fehler aufgetreten.",
+    "updateProfile": "Beim Aktualisieren deines Fachkraft-Profils ist ein Fehler aufgetreten.",
+    "updateServices": "Beim Aktualisieren deiner Dienstleistungskategorien ist ein Fehler aufgetreten.",
+    "deactivate": "Beim Deaktivieren deines Fachkraft-Profils ist ein Fehler aufgetreten.",
+    "submitQuote": "Beim Senden deines Angebots ist ein Fehler aufgetreten.",
+    "updateQuote": "Beim Aktualisieren deines Angebots ist ein Fehler aufgetreten.",
+    "withdrawQuote": "Beim Zurückziehen deines Angebots ist ein Fehler aufgetreten.",
+    "acceptInvoice": "Beim Akzeptieren dieser Rechnung ist ein Fehler aufgetreten.",
+    "invalidInvoice": "Ungültige Rechnung.",
+    "grantSelfBilling": "Beim Erteilen der Zustimmung zum Gutschriftverfahren ist ein Fehler aufgetreten.",
+    "revokeSelfBilling": "Beim Widerrufen der Zustimmung zum Gutschriftverfahren ist ein Fehler aufgetreten.",
+    "startVerification": "Beim Starten deiner Verifizierungsanfrage ist ein Fehler aufgetreten.",
+    "uploadDocument": "Beim Hochladen deines Dokuments ist ein Fehler aufgetreten.",
+    "removeDocument": "Beim Entfernen deines Dokuments ist ein Fehler aufgetreten.",
+    "submitVerification": "Beim Einreichen deiner Verifizierungsanfrage ist ein Fehler aufgetreten.",
+    "resubmitVerification": "Beim erneuten Einreichen deiner Verifizierungsanfrage ist ein Fehler aufgetreten.",
+    "invalidDocumentType": "Wähle einen gültigen Dokumenttyp.",
+    "fileRequired": "Wähle eine Datei zum Hochladen.",
+    "invalidFileType": "Dokumente müssen ein JPEG-, PNG- oder WebP-Bild oder eine PDF-Datei sein.",
+    "fileTooLarge": "Jedes Dokument muss kleiner als {maxMb, number} MB sein.",
+    "invalidDocument": "Ungültiges Dokument.",
+    "createPortfolioItem": "Beim Erstellen dieses Portfolio-Eintrags ist ein Fehler aufgetreten.",
+    "updatePortfolioItem": "Beim Aktualisieren dieses Portfolio-Eintrags ist ein Fehler aufgetreten.",
+    "deletePortfolioItem": "Beim Löschen dieses Portfolio-Eintrags ist ein Fehler aufgetreten.",
+    "invalidDateRange": "Ungültiger Zeitraum.",
+    "loadAnalytics": "Beim Laden deiner Statistiken ist ein Fehler aufgetreten."
+  },
+  "servicesForm": {
+    "success": "Dienstleistungskategorien aktualisiert.",
+    "title": "Dienstleistungskategorien",
+    "description": "Kunden finden dich über diese Kategorien – wähle alle aus, die zutreffen.",
+    "empty": "Es sind noch keine Dienstleistungskategorien verfügbar.",
+    "saving": "Wird gespeichert …",
+    "submit": "Dienstleistungskategorien speichern"
+  },
+  "deactivate": {
+    "success": "Dein Fachkraft-Profil wurde deaktiviert.",
+    "trigger": "Fachkraft-Profil deaktivieren",
+    "title": "Neue Kunden können dich dann nicht mehr finden",
+    "description": "Bestehende Angebote, Termine und Bewertungen bleiben erhalten. Bei Bedarf kann der Support dich später wieder aktivieren.",
+    "confirmLabel": "Gib {word} ein, um zu bestätigen",
+    "pending": "Wird deaktiviert …",
+    "confirm": "Mein Fachkraft-Profil deaktivieren"
+  },
+  "profileForm": {
+    "updated": "Fachkraft-Profil aktualisiert.",
+    "created": "Fachkraft-Profil erstellt.",
+    "aboutSection": "Über dein Unternehmen",
+    "businessName": "Firmenname",
+    "headline": "Kurzprofil",
+    "headlinePlaceholder": "z. B. Zugelassener Elektriker, über 10 Jahre Erfahrung",
+    "bio": "Beschreibung",
+    "yearsExperience": "Jahre Berufserfahrung",
+    "serviceRadius": "Einsatzradius (km)",
+    "contactSection": "Kontaktdaten",
+    "contactEmail": "Kontakt-E-Mail",
+    "contactPhone": "Kontakttelefon",
+    "websiteUrl": "Website-URL",
+    "taxId": "Steuernummer (NIF/CIF)",
+    "availabilitySection": "Verfügbarkeit",
+    "acceptingRequests": "Nehme derzeit neue Anfragen an",
+    "saving": "Wird gespeichert …",
+    "saveChanges": "Änderungen speichern",
+    "create": "Fachkraft-Profil erstellen"
+  },
+  "onboarding": {
+    "form": {
+      "categoriesTitle": "Hauptberuf / Kategorie",
+      "categoriesDescription": "Wähle alle Kategorien aus, die deine Arbeit beschreiben.",
+      "noCategories": "Es sind noch keine Dienstleistungskategorien verfügbar.",
+      "contactTitle": "Kontakt",
+      "phone": "Telefonnummer",
+      "locationTitle": "Standort",
+      "locationDescription": "Wo du ansässig bist – damit ordnen wir dir Anfragen in der Nähe zu.",
+      "address": "Adresse",
+      "line1Placeholder": "Straße und Hausnummer",
+      "line2Placeholder": "Wohnung, Etage usw. (optional)",
+      "cityPlaceholder": "Ort",
+      "provincePlaceholder": "Provinz (optional)",
+      "postalCodePlaceholder": "Postleitzahl",
+      "countryPlaceholder": "Land",
+      "coverageTitle": "Einsatzgebiet & über dich",
+      "serviceRadius": "Einsatzradius (km)",
+      "bio": "Kurze berufliche Beschreibung",
+      "pending": "Wird eingerichtet …",
+      "submit": "Einrichtung meines Fachkraft-Profils abschließen"
+    },
+    "metaTitle": "Einrichtung als Fachkraft",
+    "title": "Richte dein Fachkraft-Profil ein",
+    "subtitle": "Ein paar Angaben, damit Kunden dich finden und kontaktieren können. Weiteres kannst du später in deinem Fachkraft-Dashboard ergänzen.",
+    "photoTitle": "Profilfoto (optional)"
+  },
+  "quotes": {
+    "form": {
+      "itemsTitle": "Positionen",
+      "itemsDescription": "Schlüssle Arbeitsleistung und Material auf, damit der Kunde genau sieht, wofür er bezahlt.",
+      "addItem": "Position hinzufügen",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Beschreibung (z. B. Arbeitsleistung, Material)",
+      "quantity": "Menge",
+      "quantityPlaceholder": "Menge",
+      "unitPrice": "Einzelpreis",
+      "unitPricePlaceholder": "€ pro Einheit",
+      "itemType": "Positionsart",
+      "categories": {
+        "LABOR": "Arbeitsleistung",
+        "MATERIALS": "Material"
+      },
+      "removeItem": "Position entfernen",
+      "estimatedTotal": "Voraussichtliche Summe: {amount}",
+      "detailsTitle": "Details",
+      "notes": "Notizen / Angebotstext",
+      "notesPlaceholder": "Beschreibe dein Angebot, den Zeitplan oder alles, was der Kunde wissen sollte.",
+      "validUntil": "Gültig bis",
+      "saving": "Wird gespeichert …",
+      "saveChanges": "Änderungen speichern",
+      "create": "Angebot erstellen"
+    },
+    "withdraw": {
+      "trigger": "Dieses Angebot zurückziehen",
+      "title": "Dieses Angebot zurückziehen?",
+      "description": "Der Kunde kann es dann nicht mehr annehmen. Das kann nicht rückgängig gemacht werden.",
+      "confirm": "Ja, Angebot zurückziehen",
+      "pending": "Wird zurückgezogen …",
+      "cancel": "Angebot behalten"
+    },
+    "list": {
+      "metaTitle": "Meine Angebote",
+      "title": "Meine Angebote",
+      "subtitle": "Angebote, die du auf Anfragen von Kunden abgegeben hast.",
+      "findRequests": "Anfragen finden",
+      "emptyTitle": "Noch keine Angebote abgegeben",
+      "emptyDescription": "Sieh dir offene Anfragen an und sende dein erstes Angebot.",
+      "browseRequests": "Anfragen ansehen"
+    },
+    "detail": {
+      "metaTitle": "Angebotsdetails",
+      "notes": "Notizen / Angebotstext",
+      "items": "Positionen",
+      "validUntil": "Gültig bis",
+      "noExpiry": "Kein Ablaufdatum festgelegt",
+      "submitted": "Gesendet",
+      "lastUpdated": "Zuletzt aktualisiert",
+      "edit": "Angebot bearbeiten",
+      "messageCustomer": "Kunden kontaktieren"
+    },
+    "edit": {
+      "metaTitle": "Angebot bearbeiten",
+      "title": "Angebot bearbeiten",
+      "subtitle": "Aktualisiere deine Preise oder die Details deines Angebots."
+    }
+  },
+  "dashboard": {
+    "metaTitle": "Fachkraft-Profil",
+    "title": "Fachkraft-Profil",
+    "subtitle": "Lege fest, wie Kunden dich als selbstständige Fachkraft sehen.",
+    "createTitle": "Erstelle dein Fachkraft-Profil",
+    "statusTitle": "Status",
+    "profileStatus": "Status: {status}",
+    "selfBillingLink": "Gutschriftverfahren & Rechnungen",
+    "verificationLink": "Identitätsverifizierung verwalten",
+    "profileDetails": "Profildaten",
+    "serviceCategories": "Dienstleistungskategorien",
+    "dangerZone": "Gefahrenbereich",
+    "dangerZoneDescription": "Wenn du dein Profil deaktivierst, erscheint es nicht mehr in der Kundensuche, bis es wieder aktiviert wird."
+  },
+  "requests": {
+    "distance": "{distance, number} km entfernt",
+    "postedOn": "Veröffentlicht am {date}",
+    "urgency": {
+      "LOW": "Niedrig",
+      "MEDIUM": "Mittel",
+      "HIGH": "Hoch",
+      "EMERGENCY": "Notfall"
+    },
+    "list": {
+      "metaTitle": "Verfügbare Anfragen",
+      "title": "Verfügbare Anfragen",
+      "subtitle": "Anfragen von Kunden, die zu deinen Kategorien und deinem Einsatzradius passen. Sieh dir eine an und erstelle ein Angebot, um zu antworten.",
+      "empty": "Derzeit gibt es keine passenden Anfragen. Stelle sicher, dass dein Fachkraft-Profil aktiv ist und Dienstleistungskategorien sowie ein Einsatzradius eingerichtet sind."
+    },
+    "detail": {
+      "metaTitle": "Anfrage",
+      "intro": "Dies ist eine Anfrage eines Kunden. Sieh dir die Details unten an und erstelle ein Angebot, wenn du einen Preis für die Arbeit vorschlagen möchtest.",
+      "description": "Beschreibung",
+      "location": "Standort",
+      "urgency": "Dringlichkeit",
+      "posted": "Veröffentlicht",
+      "createQuote": "Angebot erstellen"
+    },
+    "createQuote": {
+      "metaTitle": "Angebot erstellen",
+      "title": "Angebot erstellen",
+      "intro": "Dies ist die Anfrage eines Kunden. Erstelle ein Angebot, das die vorgeschlagene Arbeit und das Material beschreibt, sowie den Preis, zu dem du den Auftrag ausführen würdest."
+    }
+  },
+  "jobs": {
+    "list": {
+      "metaTitle": "Meine Aufträge",
+      "title": "Meine Aufträge",
+      "subtitle": "Aufträge aus Angeboten, die deine Kunden angenommen haben.",
+      "empty": "Du hast keine aktiven Aufträge.",
+      "withCounterparty": "mit {name}"
+    },
+    "detail": {
+      "metaTitle": "Auftrag",
+      "title": "Auftrag",
+      "started": "Begonnen",
+      "completed": "Abgeschlossen",
+      "cancellationReason": "Stornierungsgrund",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "Auf Wunsch des Kunden",
+        "PROFESSIONAL_UNABLE_TO_COMPLETE": "Fachkraft kann den Auftrag nicht abschließen",
+        "SERVICE_REQUEST_ISSUE": "Problem mit der Anfrage",
+        "OTHER": "Sonstiges"
+      },
+      "appointmentsTitle": "Termine zu diesem Auftrag",
+      "noAppointments": "Noch keine Termine.",
+      "notScheduled": "Noch nicht geplant"
+    }
+  },
+  "appointments": {
+    "window": "{start} – {end}",
+    "list": {
+      "metaTitle": "Meine Termine",
+      "title": "Meine Termine",
+      "subtitle": "Termine aus Angeboten, die deine Kunden angenommen haben.",
+      "emptyTitle": "Keine anstehenden Termine",
+      "emptyDescription": "Termine erscheinen hier, sobald ein Kunde eines deiner Angebote annimmt.",
+      "noTimeProposed": "Noch keine Uhrzeit vorgeschlagen"
+    },
+    "detail": {
+      "metaTitle": "Termin",
+      "title": "Termin",
+      "confirmedTime": "Bestätigte Zeit",
+      "proposedTime": "Vorgeschlagene Zeit",
+      "notSet": "Nicht festgelegt",
+      "cancellationReason": "Stornierungsgrund",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "Auf Wunsch des Kunden",
+        "PROFESSIONAL_UNAVAILABLE": "Fachkraft nicht verfügbar",
+        "SCHEDULING_CONFLICT": "Terminkonflikt",
+        "OTHER": "Sonstiges"
+      }
+    }
+  },
+  "invoices": {
+    "list": {
+      "metaTitle": "Meine Rechnungen",
+      "title": "Meine Rechnungen",
+      "subtitle": "Rechnungen, die MaestroYa im Gutschriftverfahren für dich ausgestellt hat.",
+      "emptyTitle": "Noch keine Rechnungen",
+      "emptyDescription": "Ein Rechnungsentwurf wird automatisch erstellt, sobald die Zahlung für einen abgeschlossenen Auftrag an dich freigegeben wird – dafür ist eine aktive Zustimmung zum Gutschriftverfahren erforderlich.",
+      "notYetIssued": "Noch nicht ausgestellt"
+    },
+    "detail": {
+      "metaTitle": "Rechnung",
+      "title": "Rechnung",
+      "acceptIntro": "MaestroYa hat diese Rechnung im Gutschriftverfahren in deinem Namen erstellt. Prüfe die Angaben unten und akzeptiere sie, um zu bestätigen, dass sie korrekt sind.",
+      "accept": "Diese Rechnung akzeptieren",
+      "documentReference": "Dokumentreferenz: {reference}… (nur eine Prüfsumme zum Manipulationsnachweis – keine elektronische Signatur)."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Zustimmung zum Gutschriftverfahren",
+    "title": "Zustimmung zum Gutschriftverfahren",
+    "subtitle": "Lege fest, ob MaestroYa für abgeschlossene Aufträge Rechnungen in deinem Namen ausstellen darf.",
+    "status": {
+      "ACTIVE": "Aktiv",
+      "REVOKED": "Widerrufen"
+    },
+    "notAuthorized": "Nicht erteilt",
+    "activeDescription": "Du hast MaestroYa erlaubt, für abgeschlossene Aufträge Rechnungen in deinem Namen auszustellen („facturación por el destinatario“). Du kannst diese Zustimmung jederzeit widerrufen.",
+    "revoke": "Zustimmung widerrufen",
+    "inactiveDescription": "Ohne diese Zustimmung kann MaestroYa keine Rechnungen in deinem Namen ausstellen, und für deine abgeschlossenen Aufträge können keine Rechnungsentwürfe erstellt werden.",
+    "previouslyRevokedTitle": "Zuvor widerrufen",
+    "previouslyRevokedDescription": "Du hast diese Zustimmung zuvor widerrufen. Du kannst sie unten erneut erteilen.",
+    "grant": "Zustimmung erteilen",
+    "viewInvoices": "Sieh dir deine <link>im Gutschriftverfahren ausgestellten Rechnungen</link> an."
+  },
+  "verification": {
+    "metaTitle": "Verifizierung als Fachkraft",
+    "title": "Verifizierung",
+    "subtitle": "Bestätige deine Identität, um das Abzeichen „Verifizierte Fachkraft“ in deinem öffentlichen Profil zu erhalten.",
+    "noProfile": "Du brauchst ein Fachkraft-Profil, bevor du eine Verifizierung beantragen kannst. <link>Erstelle dein Fachkraft-Profil</link>.",
+    "notStarted": "Du hast noch keine Verifizierungsanfrage gestartet.",
+    "start": "Verifizierung starten",
+    "validUntil": "Gültig bis {date}",
+    "status": {
+      "DRAFT": {
+        "label": "Nicht eingereicht",
+        "description": "Lade mindestens ein Ausweisdokument (Personalausweis, Reisepass oder Führerschein) und gegebenenfalls weitere Nachweise hoch und reiche sie dann zur Prüfung ein."
+      },
+      "PENDING": {
+        "label": "Prüfung ausstehend",
+        "description": "Deine Anfrage steht in der Prüfwarteschlange. Wir melden uns, sobald sie geprüft wurde."
+      },
+      "UNDER_REVIEW": {
+        "label": "In Prüfung",
+        "description": "Deine Dokumente werden gerade geprüft. Du musst im Moment nichts tun."
+      },
+      "APPROVED": {
+        "label": "Genehmigt",
+        "description": "Du bist eine verifizierte Fachkraft. In deinem öffentlichen Profil wird ein Verifizierungsabzeichen angezeigt."
+      },
+      "REJECTED": {
+        "label": "Abgelehnt",
+        "description": "Deine Anfrage wurde nicht genehmigt. Den Grund findest du unten – du kannst ihn beheben und die Anfrage erneut einreichen."
+      },
+      "RESUBMISSION_REQUIRED": {
+        "label": "Erneute Einreichung erforderlich",
+        "description": "Bitte aktualisiere deine Anfrage. Folge den Hinweisen unten und reiche sie dann erneut ein."
+      }
+    },
+    "rejectionReasonTitle": "Grund",
+    "resubmissionReasonTitle": "Was du aktualisieren musst",
+    "documentsTitle": "Dokumente",
+    "noDocuments": "Noch keine Dokumente hochgeladen.",
+    "remove": "Entfernen",
+    "uploadTitle": "Dokument hochladen",
+    "documentType": "Dokumenttyp",
+    "fileLabel": "Datei (JPEG, PNG, WebP oder PDF, max. {maxMb, number} MB)",
+    "upload": "Hochladen",
+    "submit": "Zur Prüfung einreichen",
+    "resubmit": "Erneut zur Prüfung einreichen",
+    "submitHint": "Vor dem Einreichen musst du mindestens ein Ausweisdokument hochgeladen haben.",
+    "documentTypes": {
+      "NATIONAL_ID": "Personalausweis",
+      "PASSPORT": "Reisepass",
+      "DRIVER_LICENSE": "Führerschein",
+      "BUSINESS_LICENSE": "Gewerbeerlaubnis",
+      "TAX_CERTIFICATE": "Steuerbescheinigung",
+      "INSURANCE_CERTIFICATE": "Versicherungsnachweis",
+      "PROFESSIONAL_CERTIFICATION": "Berufliche Zertifizierung",
+      "PROOF_OF_ADDRESS": "Adressnachweis",
+      "BUSINESS_REGISTRATION": "Gewerbeanmeldung / Handelsregistereintrag",
+      "OTHER": "Sonstiges"
+    }
+  }
+}

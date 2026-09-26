@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -6,7 +8,10 @@ import { makeGetProfessionalQuoteUseCase } from "@/application/use-cases/quotes/
 import { PageHeader } from "@/components/dashboard/page-header";
 import { QuoteForm } from "../../quote-form";
 
-export const metadata = { title: "Edit quote" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("professional.quotes.edit");
+  return { title: t("metaTitle") };
+}
 
 /**
  * Only ever rendered for a quote in an editable (SENT/VIEWED) status — this
@@ -33,17 +38,22 @@ export default async function EditQuotePage({
     notFound();
   }
 
-  const quoteLabel = `${quote.currency} ${quote.totalAmount.toFixed(2)}`;
+  const [t, tList, format] = await Promise.all([
+    getTranslations("professional.quotes.edit"),
+    getTranslations("professional.quotes.list"),
+    getFormatter(),
+  ]);
+  const quoteLabel = format.number(quote.totalAmount, { style: "currency", currency: quote.currency });
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title="Edit quote"
-        subtitle="Update your pricing or proposal details."
+        title={t("title")}
+        subtitle={t("subtitle")}
         breadcrumbs={[
-          { label: "My quotes", href: "/dashboard/professional/quotes" },
+          { label: tList("title"), href: "/dashboard/professional/quotes" },
           { label: quoteLabel, href: `/dashboard/professional/quotes/${quote.id}` },
-          { label: "Edit quote" },
+          { label: t("title") },
         ]}
       />
 

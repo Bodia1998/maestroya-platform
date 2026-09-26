@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { LinkCard } from "@/components/ui/card";
 
@@ -13,6 +15,7 @@ export interface QuoteCardProps {
 
 /** Quote list-item card — same data every "My quotes" list already rendered inline, just restyled. */
 export function QuoteCard({ href, title, status, categoryName, amountLabel, createdAt, updatedAt }: QuoteCardProps) {
+  const t = useTranslations("dashboard.cards");
   return (
     <LinkCard href={href} cardClassName="flex flex-col gap-2 p-4">
       <div className="flex items-center justify-between gap-4">
@@ -23,7 +26,7 @@ export function QuoteCard({ href, title, status, categoryName, amountLabel, crea
       {amountLabel && <p className="text-sm font-medium text-foreground">{amountLabel}</p>}
       {createdAt && updatedAt && (
         <p className="text-xs text-muted-foreground/80">
-          Submitted {createdAt.toLocaleDateString()} — updated {updatedAt.toLocaleDateString()}
+          {t("quoteSubmitted", { created: createdAt, updated: updatedAt })}
         </p>
       )}
     </LinkCard>

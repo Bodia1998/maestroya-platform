@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { AI_VISIBILITY_QUERIES } from "@/shared/content/ai-visibility-queries";
 import { recordAiVisibilityObservationAction } from "./actions";
@@ -20,6 +21,7 @@ import { recordAiVisibilityObservationAction } from "./actions";
  * client-side state as the source of truth.
  */
 export function RecordObservationForm() {
+  const t = useTranslations("admin.aiVisibility");
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const activeQueries = AI_VISIBILITY_QUERIES.filter((q) => q.active);
@@ -61,7 +63,7 @@ export function RecordObservationForm() {
     startTransition(async () => {
       const result = await recordAiVisibilityObservationAction(input);
       if (result.success) {
-        setMessage({ kind: "success", text: `Observation recorded (${result.data.id}).` });
+        setMessage({ kind: "success", text: t("form.success", { id: result.data.id }) });
       } else {
         setMessage({ kind: "error", text: result.error });
       }
@@ -70,14 +72,13 @@ export function RecordObservationForm() {
 
   return (
     <section className="rounded-xl border border-border p-4">
-      <h2 className="mb-3 text-sm font-medium">Record a manual observation</h2>
+      <h2 className="mb-3 text-sm font-medium">{t("form.title")}</h2>
       <p className="mb-4 text-xs text-muted-foreground">
-        Capture a response from an AI system outside this application (per the query text below), then record what you objectively observed. This
-        never contacts any AI system on your behalf.
+        {t("form.intro")}
       </p>
       <form action={handleSubmit} className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
         <label className="flex flex-col gap-1">
-          Query
+          {t("form.query")}
           <select name="queryId" required className="rounded border border-border bg-background px-2 py-1">
             {activeQueries.map((q) => (
               <option key={q.id} value={q.id}>
@@ -87,101 +88,101 @@ export function RecordObservationForm() {
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          Provider
+          {t("form.provider")}
           <select name="provider" className="rounded border border-border bg-background px-2 py-1">
-            <option value="MANUAL">Manual capture</option>
-            <option value="OPENAI_API">OpenAI (official API)</option>
-            <option value="ANTHROPIC_API">Anthropic (official API)</option>
-            <option value="GOOGLE_API">Google (official API)</option>
-            <option value="PERPLEXITY_API">Perplexity (official API)</option>
-            <option value="OTHER">Other (name in notes)</option>
+            <option value="MANUAL">{t("provider.MANUAL")}</option>
+            <option value="OPENAI_API">{t("provider.OPENAI_API")}</option>
+            <option value="ANTHROPIC_API">{t("provider.ANTHROPIC_API")}</option>
+            <option value="GOOGLE_API">{t("provider.GOOGLE_API")}</option>
+            <option value="PERPLEXITY_API">{t("provider.PERPLEXITY_API")}</option>
+            <option value="OTHER">{t("provider.OTHER")}</option>
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          Provider model/version (optional)
+          {t("form.providerModel")}
           <input name="providerModel" className="rounded border border-border bg-background px-2 py-1" />
         </label>
         <label className="flex flex-col gap-1">
-          Observed at
+          {t("form.observedAt")}
           <input name="observedAt" type="datetime-local" required className="rounded border border-border bg-background px-2 py-1" />
         </label>
         <label className="flex items-center gap-2">
-          <input name="mentioned" type="checkbox" /> MaestroYa mentioned
+          <input name="mentioned" type="checkbox" /> {t("form.mentioned")}
         </label>
         <label className="flex flex-col gap-1">
-          Recommendation classification
+          {t("form.recommendation")}
           <select name="recommendationClassification" className="rounded border border-border bg-background px-2 py-1">
-            <option value="NOT_MENTIONED">Not mentioned</option>
-            <option value="MENTIONED_ONLY">Mentioned only</option>
-            <option value="LISTED_AMONG_OPTIONS">Listed among options</option>
-            <option value="RECOMMENDED">Recommended</option>
+            <option value="NOT_MENTIONED">{t("recommendation.NOT_MENTIONED")}</option>
+            <option value="MENTIONED_ONLY">{t("recommendation.MENTIONED_ONLY")}</option>
+            <option value="LISTED_AMONG_OPTIONS">{t("recommendation.LISTED_AMONG_OPTIONS")}</option>
+            <option value="RECOMMENDED">{t("recommendation.RECOMMENDED")}</option>
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          Identity accuracy
+          {t("form.identityAccuracy")}
           <select name="identityAccuracy" className="rounded border border-border bg-background px-2 py-1">
-            <option value="NOT_APPLICABLE">Not applicable</option>
-            <option value="CORRECT">Correct</option>
-            <option value="INCORRECT">Incorrect</option>
+            <option value="NOT_APPLICABLE">{t("accuracy.NOT_APPLICABLE")}</option>
+            <option value="CORRECT">{t("accuracy.CORRECT")}</option>
+            <option value="INCORRECT">{t("accuracy.INCORRECT")}</option>
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          Geographic accuracy
+          {t("form.geographicAccuracy")}
           <select name="geographicAccuracy" className="rounded border border-border bg-background px-2 py-1">
-            <option value="NOT_APPLICABLE">Not applicable</option>
-            <option value="CORRECT">Correct</option>
-            <option value="INCORRECT">Incorrect</option>
+            <option value="NOT_APPLICABLE">{t("accuracy.NOT_APPLICABLE")}</option>
+            <option value="CORRECT">{t("accuracy.CORRECT")}</option>
+            <option value="INCORRECT">{t("accuracy.INCORRECT")}</option>
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          Service accuracy
+          {t("form.serviceAccuracy")}
           <select name="serviceAccuracy" className="rounded border border-border bg-background px-2 py-1">
-            <option value="NOT_APPLICABLE">Not applicable</option>
-            <option value="CORRECT">Correct</option>
-            <option value="INCORRECT">Incorrect</option>
+            <option value="NOT_APPLICABLE">{t("accuracy.NOT_APPLICABLE")}</option>
+            <option value="CORRECT">{t("accuracy.CORRECT")}</option>
+            <option value="INCORRECT">{t("accuracy.INCORRECT")}</option>
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          URL accuracy
+          {t("form.urlAccuracy")}
           <select name="urlAccuracy" className="rounded border border-border bg-background px-2 py-1">
-            <option value="NOT_PROVIDED">Not provided</option>
-            <option value="CORRECT">Correct</option>
-            <option value="INCORRECT">Incorrect</option>
+            <option value="NOT_PROVIDED">{t("accuracy.NOT_PROVIDED")}</option>
+            <option value="CORRECT">{t("accuracy.CORRECT")}</option>
+            <option value="INCORRECT">{t("accuracy.INCORRECT")}</option>
           </select>
         </label>
         <label className="flex items-center gap-2">
-          <input name="citationPresent" type="checkbox" /> Citation present
+          <input name="citationPresent" type="checkbox" /> {t("form.citationPresent")}
         </label>
         <label className="flex items-center gap-2">
-          <input name="citationCorrect" type="checkbox" /> Citation correct (only if present)
+          <input name="citationCorrect" type="checkbox" /> {t("form.citationCorrect")}
         </label>
         <label className="flex flex-col gap-1">
-          Evidence type
+          {t("form.evidenceType")}
           <select name="evidenceType" className="rounded border border-border bg-background px-2 py-1">
-            <option value="MANUAL_TRANSCRIPT_EXCERPT">Manual transcript excerpt</option>
-            <option value="MANUAL_SCREENSHOT_REFERENCE">Manual screenshot reference</option>
-            <option value="API_RESPONSE_REFERENCE">API response reference</option>
-            <option value="EXTERNAL_ARTICLE_REFERENCE">External article reference</option>
+            <option value="MANUAL_TRANSCRIPT_EXCERPT">{t("evidenceType.MANUAL_TRANSCRIPT_EXCERPT")}</option>
+            <option value="MANUAL_SCREENSHOT_REFERENCE">{t("evidenceType.MANUAL_SCREENSHOT_REFERENCE")}</option>
+            <option value="API_RESPONSE_REFERENCE">{t("evidenceType.API_RESPONSE_REFERENCE")}</option>
+            <option value="EXTERNAL_ARTICLE_REFERENCE">{t("evidenceType.EXTERNAL_ARTICLE_REFERENCE")}</option>
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          Evidence reference (URL/filename)
+          {t("form.evidenceReference")}
           <input name="evidenceReference" className="rounded border border-border bg-background px-2 py-1" />
         </label>
         <label className="flex flex-col gap-1 sm:col-span-2">
-          Detected competitors (comma-separated)
+          {t("form.detectedCompetitors")}
           <input name="detectedCompetitors" className="rounded border border-border bg-background px-2 py-1" />
         </label>
         <label className="flex flex-col gap-1 sm:col-span-2">
-          Factual issues observed (comma-separated)
+          {t("form.factualIssues")}
           <input name="factualIssues" className="rounded border border-border bg-background px-2 py-1" />
         </label>
         <label className="flex flex-col gap-1 sm:col-span-2">
-          Evidence excerpt (short, optional — never a full transcript)
+          {t("form.evidenceExcerpt")}
           <textarea name="evidenceExcerpt" maxLength={1000} rows={3} className="rounded border border-border bg-background px-2 py-1" />
         </label>
         <label className="flex flex-col gap-1 sm:col-span-2">
-          Evaluator notes (optional)
+          {t("form.evaluatorNotes")}
           <textarea name="evaluatorNotes" maxLength={2000} rows={2} className="rounded border border-border bg-background px-2 py-1" />
         </label>
         <div className="sm:col-span-2">
@@ -190,7 +191,7 @@ export function RecordObservationForm() {
             disabled={isPending}
             className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
-            {isPending ? "Recording…" : "Record observation"}
+            {isPending ? t("form.submitting") : t("form.submit")}
           </button>
           {message ? (
             <p className={message.kind === "success" ? "mt-2 text-sm text-green-600" : "mt-2 text-sm text-destructive"}>{message.text}</p>

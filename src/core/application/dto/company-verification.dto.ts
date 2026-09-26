@@ -36,7 +36,7 @@ export const uploadCompanyVerificationDocumentSchema = z.object({
 export type UploadCompanyVerificationDocumentInput = z.infer<typeof uploadCompanyVerificationDocumentSchema>;
 
 export const companyVerificationDocumentIdSchema = z.object({
-  documentId: z.string().uuid("Invalid document."),
+  documentId: z.string().uuid("dto.ids.document"),
 });
 export type CompanyVerificationDocumentIdInput = z.infer<typeof companyVerificationDocumentIdSchema>;
 
@@ -48,24 +48,24 @@ export const listAdminCompanyVerificationsSchema = paginationSchema.extend({
 export type ListAdminCompanyVerificationsInput = z.infer<typeof listAdminCompanyVerificationsSchema>;
 
 export const adminCompanyVerificationIdSchema = z.object({
-  verificationId: z.string().uuid("Invalid verification."),
+  verificationId: z.string().uuid("dto.ids.verification"),
 });
 export type AdminCompanyVerificationIdInput = z.infer<typeof adminCompanyVerificationIdSchema>;
 
 const reviewReasonSchema = z
   .string()
   .trim()
-  .min(MIN_REVIEW_REASON_LENGTH, `Reason must be at least ${MIN_REVIEW_REASON_LENGTH} characters.`)
-  .max(MAX_REVIEW_REASON_LENGTH, `Reason must be ${MAX_REVIEW_REASON_LENGTH} characters or fewer.`);
+  .min(MIN_REVIEW_REASON_LENGTH, "minLength")
+  .max(MAX_REVIEW_REASON_LENGTH, "maxLength");
 
 export const rejectCompanyVerificationSchema = z.object({
-  verificationId: z.string().uuid("Invalid verification."),
+  verificationId: z.string().uuid("dto.ids.verification"),
   reason: reviewReasonSchema,
 });
 export type RejectCompanyVerificationInput = z.infer<typeof rejectCompanyVerificationSchema>;
 
 export const requestCompanyVerificationResubmissionSchema = z.object({
-  verificationId: z.string().uuid("Invalid verification."),
+  verificationId: z.string().uuid("dto.ids.verification"),
   reason: reviewReasonSchema,
 });
 export type RequestCompanyVerificationResubmissionInput = z.infer<

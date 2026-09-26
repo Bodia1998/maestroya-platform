@@ -1,25 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
-import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeAcceptQuoteUseCase } from "@/application/use-cases/quotes/compose";
+import { localizeActionError } from "@/presentation/i18n/server";
 
 export type ActionResult =
   | { success: true }
   | { success: false; error: string };
 
-// Same translation convention as every other module's actions.ts: domain
-// errors surface their own (safe, user-facing) message, anything else is
-// logged server-side and replaced with a generic message.
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
-}
 
 /**
  * Accepts one of the Quotes on the *authenticated* customer's own
@@ -38,6 +29,8 @@ export async function acceptQuoteAction(requestId: string, quoteId: string): Pro
     revalidatePath(`/requests/${requestId}/quotes`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong accepting this quote.");
+    // Module 120: domain errors localized, anything else logged + localized fallback.
+    const t = await getTranslations("customer");
+    return { success: false, error: await localizeActionError(error, t("quotes.acceptFailed")) };
   }
 }

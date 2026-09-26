@@ -5,6 +5,7 @@ import type {
 } from "@/application/ports/notification-channel";
 import { RealtimeChannel } from "@/domain/value-objects/realtime-channel";
 import type { PublishToChannelUseCase } from "@/application/use-cases/realtime/publish-to-channel.use-case";
+import type { RecipientNotificationLocalizer } from "@/infrastructure/notifications/recipient-notification-localizer";
 
 /**
  * Module 32 originally shipped this as a documented no-op stub — "no
@@ -30,18 +31,24 @@ import type { PublishToChannelUseCase } from "@/application/use-cases/realtime/p
 export class RealTimeNotificationChannel implements NotificationChannelAdapter {
   readonly channel: NotificationChannel = "REALTIME";
 
-  constructor(private readonly publishToChannel: PublishToChannelUseCase) {}
+  constructor(
+    private readonly publishToChannel: PublishToChannelUseCase,
+    private readonly localizer?: RecipientNotificationLocalizer,
+  ) {}
 
   async send(payload: NotificationChannelPayload): Promise<void> {
     const channel = RealtimeChannel.of("user", payload.userId);
+    const { title, message } = this.localizer
+      ? await this.localizer.localize(payload)
+      : { title: payload.title, message: payload.message };
     this.publishToChannel.execute({
       channel: channel.toString(),
       type: "notification",
       payload: {
         category: payload.category,
         type: payload.type,
-        title: payload.title,
-        message: payload.message,
+        title,
+        message,
         resourceType: payload.resourceType ?? null,
         resourceId: payload.resourceId ?? null,
         actionUrl: payload.actionUrl ?? null,

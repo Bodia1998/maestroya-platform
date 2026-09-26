@@ -14,22 +14,22 @@ import { z } from "zod";
  */
 
 export const searchProfessionalsSchema = z.object({
-  categoryId: z.string().uuid("Select a valid service category."),
+  categoryId: z.string().uuid("dto.categories.invalid"),
   latitude: z.coerce
-    .number({ invalid_type_error: "Enter a valid latitude." })
-    .min(-90, "Latitude must be between -90 and 90.")
-    .max(90, "Latitude must be between -90 and 90."),
+    .number({ invalid_type_error: "dto.location.latitudeInvalid" })
+    .min(-90, "dto.location.latitudeRange")
+    .max(90, "dto.location.latitudeRange"),
   longitude: z.coerce
-    .number({ invalid_type_error: "Enter a valid longitude." })
-    .min(-180, "Longitude must be between -180 and 180.")
-    .max(180, "Longitude must be between -180 and 180."),
+    .number({ invalid_type_error: "dto.location.longitudeInvalid" })
+    .min(-180, "dto.location.longitudeRange")
+    .max(180, "dto.location.longitudeRange"),
   page: z.coerce.number().int().min(1).max(1000).optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(50).optional().default(20),
 });
 export type SearchProfessionalsInput = z.infer<typeof searchProfessionalsSchema>;
 
 export const getProfessionalPublicProfileSchema = z.object({
-  professionalId: z.string().uuid("Invalid professional id."),
+  professionalId: z.string().uuid("dto.ids.professional"),
 });
 export type GetProfessionalPublicProfileInput = z.infer<
   typeof getProfessionalPublicProfileSchema

@@ -1,0 +1,203 @@
+{
+  "required": "Dit veld is verplicht.",
+  "email": "Vul een geldig e-mailadres in.",
+  "url": "Vul een geldige URL in.",
+  "minLength": "Moet minimaal {min, plural, one {# teken} other {# tekens}} bevatten.",
+  "maxLength": "Mag maximaal {max, plural, one {# teken} other {# tekens}} bevatten.",
+  "tooSmall": "De minimumwaarde is {min, number}.",
+  "tooBig": "De maximumwaarde is {max, number}.",
+  "number": "Vul een geldig getal in.",
+  "date": "Vul een geldige datum in.",
+  "phone": "Vul een geldig telefoonnummer in.",
+  "passwordTooWeak": "Het wachtwoord moet hoofdletters, kleine letters en cijfers bevatten.",
+  "mismatch": "De waarden komen niet overeen.",
+  "invalid": "De ingevulde waarde is ongeldig.",
+  "summary": "Controleer de fouten in het formulier.",
+  "dto": {
+    "ids": {
+      "action": "Ongeldige actie.",
+      "adminUser": "Ongeldige beheerder.",
+      "admin": "Ongeldige beheerder.",
+      "appeal": "Ongeldig bezwaar.",
+      "appointment": "Ongeldige afspraak.",
+      "case": "Ongeldige zaak.",
+      "company": "Ongeldig bedrijf.",
+      "conversation": "Ongeldig gesprek.",
+      "dispute": "Ongeldig geschil.",
+      "document": "Ongeldig document.",
+      "invitation": "Ongeldige uitnodiging.",
+      "job": "Ongeldige opdracht.",
+      "member": "Ongeldig lid.",
+      "notification": "Ongeldige melding.",
+      "payment": "Ongeldige betaling.",
+      "portfolioItem": "Ongeldig portfolio-item.",
+      "professional": "Ongeldige vakman.",
+      "quote": "Ongeldige offerte.",
+      "recipient": "Ongeldige ontvanger.",
+      "review": "Ongeldige beoordeling.",
+      "reviewer": "Ongeldige beoordelaar.",
+      "serviceCategory": "Ongeldige dienstcategorie.",
+      "serviceRequest": "Ongeldige aanvraag.",
+      "ticket": "Ongeldig ticket.",
+      "user": "Ongeldige gebruiker.",
+      "verification": "Ongeldige verificatie."
+    },
+    "invitation": {
+      "linkInvalid": "Ongeldige uitnodigingslink."
+    },
+    "admin": {
+      "roleRequired": "Er is minstens één rol vereist."
+    },
+    "aiVisibility": {
+      "queryRequired": "Er is een zoekvraag vereist.",
+      "unknownQuery": "Onbekende zoekvraag — deze moet een van de actieve AI-zichtbaarheidsvragen zijn."
+    },
+    "analytics": {
+      "dateRange": "De begindatum moet vóór de einddatum liggen."
+    },
+    "auth": {
+      "nameRequired": "Vul je naam in.",
+      "passwordRequired": "Vul je wachtwoord in.",
+      "passwordsMismatch": "De wachtwoorden komen niet overeen."
+    },
+    "password": {
+      "minLength": "Het wachtwoord moet minstens 10 tekens bevatten.",
+      "tooLong": "Het wachtwoord is te lang.",
+      "lowercase": "Het wachtwoord moet een kleine letter bevatten.",
+      "uppercase": "Het wachtwoord moet een hoofdletter bevatten.",
+      "number": "Het wachtwoord moet een cijfer bevatten."
+    },
+    "profile": {
+      "currentPasswordRequired": "Vul je huidige wachtwoord in.",
+      "passwordMustDiffer": "Het nieuwe wachtwoord moet verschillen van je huidige wachtwoord.",
+      "timezoneRequired": "Kies een tijdzone.",
+      "deleteConfirm": "Typ \"DELETE\" om te bevestigen."
+    },
+    "professional": {
+      "deactivateConfirm": "Typ \"DEACTIVATE\" om te bevestigen.",
+      "yearsNegative": "Het aantal jaren ervaring mag niet negatief zijn.",
+      "yearsRealistic": "Vul een realistisch aantal jaren in.",
+      "radiusNegative": "De werkstraal mag niet negatief zijn.",
+      "radiusRealistic": "Vul een realistische werkstraal in.",
+      "descriptionRequired": "Voeg een korte omschrijving toe."
+    },
+    "membership": {
+      "transferConfirm": "Typ \"TRANSFER\" om te bevestigen.",
+      "roleInvalid": "Kies een geldige rol."
+    },
+    "address": {
+      "street": "Vul een adres in.",
+      "city": "Vul een plaats in.",
+      "postalCode": "Vul een postcode in.",
+      "country": "Vul een land in."
+    },
+    "location": {
+      "cityRequired": "Plaats is verplicht.",
+      "latitudeInvalid": "Vul een geldige breedtegraad in.",
+      "longitudeInvalid": "Vul een geldige lengtegraad in.",
+      "latitudeRange": "De breedtegraad moet tussen -90 en 90 liggen.",
+      "longitudeRange": "De lengtegraad moet tussen -180 en 180 liggen."
+    },
+    "search": {
+      "coordinatesTogether": "Breedte- en lengtegraad moeten samen worden opgegeven.",
+      "radiusRequiresLocation": "Voor een zoekstraal zijn breedte- en lengtegraad nodig.",
+      "radiusInvalid": "Vul een geldige zoekstraal in.",
+      "radiusPositive": "De zoekstraal moet groter dan nul zijn.",
+      "radiusMax": "De zoekstraal mag maximaal 200 km zijn.",
+      "minRatingInvalid": "Vul een geldige minimale score in.",
+      "minRatingRange": "De minimale score moet tussen 1 en 5 liggen.",
+      "minReviewCountInvalid": "Vul een geldig minimumaantal beoordelingen in.",
+      "minReviewCountNegative": "Het minimumaantal beoordelingen mag niet negatief zijn.",
+      "minReviewCountTooLarge": "Het minimumaantal beoordelingen is te hoog."
+    },
+    "categories": {
+      "invalid": "Kies een geldige dienstcategorie.",
+      "min": "Kies minstens één dienstcategorie.",
+      "max": "Kies maximaal 20 categorieën."
+    },
+    "company": {
+      "legalNameRequired": "De statutaire naam is verplicht.",
+      "taxIdRequired": "Het fiscaal nummer is verplicht."
+    },
+    "common": {
+      "wholeNumber": "Vul een geheel getal in.",
+      "cancellationReasonRequired": "Kies een reden voor annulering."
+    },
+    "portfolio": {
+      "mediaUrlInvalid": "Vul een geldige media-URL in."
+    },
+    "referral": {
+      "codeFormat": "De doorverwijzingscode mag alleen kleine letters, cijfers en underscores bevatten."
+    },
+    "verification": {
+      "countryCode": "De landcode moet een ISO 3166-1-code van 2 letters zijn."
+    },
+    "chat": {
+      "messageRequired": "Schrijf een bericht voordat je het verstuurt."
+    },
+    "onboarding": {
+      "termsVersionRequired": "Er is een versie van de voorwaarden vereist.",
+      "privacyVersionRequired": "Er is een versie van het privacybeleid vereist.",
+      "accountHolderRequired": "Vul de volledige naam van de rekeninghouder in.",
+      "ibanInvalid": "Vul een geldig IBAN in."
+    },
+    "dispute": {
+      "reasonRequired": "Een reden is verplicht.",
+      "refundAmountRequired": "Voor een gedeeltelijke oplossing is een terugbetalingsbedrag vereist.",
+      "amountRequired": "Voor deze oplossing is een bedrag vereist.",
+      "adjustmentTypeRequired": "Voor deze oplossing is een type aanpassing vereist.",
+      "messageEmpty": "Het bericht mag niet leeg zijn.",
+      "fileUrlInvalid": "Ongeldige bestands-URL.",
+      "fileUrlHttp": "De bestands-URL moet een http(s)-link zijn.",
+      "resolutionNoteRequired": "Een toelichting bij de oplossing is verplicht.",
+      "amountPositive": "Het bedrag moet positief zijn."
+    },
+    "review": {
+      "responseEmpty": "De reactie mag niet leeg zijn.",
+      "ratingInteger": "De score moet een geheel getal zijn."
+    },
+    "notification": {
+      "actionUrlUnsafe": "De actie-URL moet een veilig intern pad zijn.",
+      "titleRequired": "Titel is verplicht.",
+      "messageRequired": "Bericht is verplicht."
+    },
+    "quote": {
+      "itemsRequired": "Voeg minstens één regel toe aan je offerte.",
+      "requiredMaterialsMissing": "Voeg minstens één benodigd materiaal toe als de klant de materialen koopt.",
+      "materialsPriced": "Materialen mogen geen prijs hebben in een offerte als de klant ze zelf koopt.",
+      "materialNameRequired": "Vul een naam in voor dit materiaal.",
+      "itemDescriptionRequired": "Vul een omschrijving in voor deze regel.",
+      "quantityPositive": "De hoeveelheid moet groter dan nul zijn.",
+      "quantityRealistic": "Vul een realistische hoeveelheid in.",
+      "unitPriceNegative": "De eenheidsprijs mag niet negatief zijn.",
+      "unitPriceRealistic": "Vul een realistische eenheidsprijs in.",
+      "validUntilFuture": "De geldigheidsdatum moet in de toekomst liggen.",
+      "itemsMax": "Een offerte kan maximaal 20 regels bevatten.",
+      "materialsMax": "Een materiaallijst kan maximaal 50 items bevatten."
+    },
+    "financial": {
+      "adjustmentPositive": "Het aanpassingsbedrag moet groter dan nul zijn.",
+      "adjustmentRealistic": "Vul een realistisch aanpassingsbedrag in."
+    },
+    "booking": {
+      "startTimeInvalid": "Vul een geldige begintijd in.",
+      "endTimeInvalid": "Vul een geldige eindtijd in.",
+      "endAfterStart": "De eindtijd moet na de begintijd liggen."
+    },
+    "job": {
+      "reasonRequired": "Kies een reden.",
+      "decisionRequired": "Kies een beslissing.",
+      "describeProblem": "Beschrijf het probleem in minstens 20 tekens."
+    },
+    "serviceRequest": {
+      "titleRequired": "Vul een titel in.",
+      "descriptionRequired": "Vul een omschrijving in.",
+      "budgetNegative": "Het budget mag niet negatief zijn.",
+      "budgetRange": "Het minimumbudget mag het maximumbudget niet overschrijden."
+    },
+    "featureFlag": {
+      "keyRequired": "De flag-sleutel is verplicht.",
+      "keyFormat": "De flag-sleutel mag alleen letters, cijfers, '-', '_' en '.' bevatten."
+    }
+  }
+}

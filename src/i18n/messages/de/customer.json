@@ -1,0 +1,365 @@
+{
+  "requests": {
+    "list": {
+      "title": "Meine Anfragen",
+      "subtitle": "Anfragen, die du veröffentlicht hast, damit Fachkräfte Angebote abgeben.",
+      "newRequest": "Neue Anfrage",
+      "empty": {
+        "title": "Noch keine Anfragen",
+        "description": "Du hast noch keine Anfrage veröffentlicht. Stelle eine, um Angebote von Fachkräften in deiner Nähe zu erhalten."
+      }
+    },
+    "new": {
+      "title": "Neue Anfrage",
+      "subtitle": "Beschreibe den Auftrag, den du erledigt haben möchtest. Er wird sofort veröffentlicht, damit Fachkräfte Angebote abgeben können."
+    },
+    "edit": {
+      "title": "Anfrage bearbeiten",
+      "subtitle": "Du kannst diese Anfrage bearbeiten, solange sie offen ist.",
+      "breadcrumb": "Bearbeiten"
+    },
+    "detail": {
+      "metaTitle": "Anfrage",
+      "description": "Beschreibung",
+      "location": "Standort",
+      "urgency": "Dringlichkeit",
+      "budget": "Budget",
+      "budgetRange": "{min} – {max}",
+      "budgetUnset": "—",
+      "posted": "Veröffentlicht",
+      "lastUpdated": "Zuletzt aktualisiert",
+      "photos": "Fotos",
+      "acceptedNotice": "Du hast ein Angebot für diese Anfrage angenommen. Unter <appointments>Meine Termine</appointments> kannst du einen Termin vorschlagen oder bestätigen, unter <jobs>Meine Aufträge</jobs> siehst du den Gesamtfortschritt.",
+      "editRequest": "Anfrage bearbeiten"
+    },
+    "form": {
+      "updated": "Anfrage aktualisiert.",
+      "sections": {
+        "job": "Der Auftrag",
+        "budget": "Budget",
+        "budgetDescription": "Nenne Fachkräften einen ungefähren Rahmen, damit die Angebote passen.",
+        "location": "Auftragsort"
+      },
+      "category": "Kategorie",
+      "selectCategory": "Kategorie auswählen",
+      "title": "Titel",
+      "titlePlaceholder": "z. B. Tropfenden Küchenhahn reparieren",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Beschreibe den Auftrag im Detail — was zu tun ist und alles Relevante.",
+      "urgency": "Dringlichkeit",
+      "budgetMin": "Budget min. (EUR)",
+      "budgetMax": "Budget max. (EUR)",
+      "address": "Adresse",
+      "streetPlaceholder": "Straße und Hausnummer",
+      "line2Placeholder": "Wohnung, Etage usw. (optional)",
+      "cityPlaceholder": "Ort",
+      "postalCodePlaceholder": "Postleitzahl",
+      "provincePlaceholder": "Provinz",
+      "countryPlaceholder": "Land",
+      "latitudePlaceholder": "Breitengrad (optional)",
+      "longitudePlaceholder": "Längengrad (optional)",
+      "coordinatesHelp": "Breiten- und Längengrad werden nach Möglichkeit automatisch ausgefüllt — lass sie leer, wenn du unsicher bist.",
+      "saveChanges": "Änderungen speichern",
+      "postRequest": "Anfrage veröffentlichen"
+    },
+    "cancel": {
+      "trigger": "Diese Anfrage stornieren",
+      "title": "Diese Anfrage stornieren?",
+      "description": "Fachkräfte können dann keine Angebote mehr abgeben. Das lässt sich hier nicht rückgängig machen.",
+      "confirm": "Ja, Anfrage stornieren",
+      "pending": "Wird storniert…",
+      "keep": "Anfrage behalten"
+    },
+    "photos": {
+      "chooseFirst": "Wähle zuerst ein Bild aus.",
+      "alt": "Foto zur Anfrage",
+      "remove": "Entfernen",
+      "none": "Keine Fotos angehängt.",
+      "add": "Foto hinzufügen",
+      "uploading": "Wird hochgeladen…",
+      "maxReached": "Maximal {max, plural, one {# Foto} other {# Fotos}} erreicht."
+    },
+    "errors": {
+      "createFailed": "Beim Erstellen deiner Anfrage ist etwas schiefgelaufen.",
+      "updateFailed": "Beim Aktualisieren deiner Anfrage ist etwas schiefgelaufen.",
+      "cancelFailed": "Beim Stornieren deiner Anfrage ist etwas schiefgelaufen.",
+      "photoMissing": "Wähle ein Bild zum Hochladen aus.",
+      "photoType": "Fotos müssen im Format JPEG, PNG oder WebP sein.",
+      "photoTooLarge": "Jedes Foto muss kleiner als 5 MB sein.",
+      "photoUploadFailed": "Beim Hochladen deines Fotos ist etwas schiefgelaufen.",
+      "photoRemoveFailed": "Beim Entfernen des Fotos ist etwas schiefgelaufen."
+    }
+  },
+  "quotes": {
+    "title": "Erhaltene Angebote",
+    "subtitle": "Angebote, die Fachkräfte für diese Anfrage abgegeben haben.",
+    "breadcrumb": "Angebote",
+    "empty": "Noch keine Angebote. Schau bald wieder vorbei.",
+    "verification": {
+      "UNVERIFIED": "Nicht verifiziert",
+      "PENDING": "Verifizierung ausstehend",
+      "VERIFIED": "Verifiziert",
+      "REJECTED": "Verifizierung abgelehnt"
+    },
+    "meta": "Gesendet am {created, date, medium} — aktualisiert am {updated, date, medium}",
+    "metaWithValidity": "Gültig bis {validUntil, date, medium} — gesendet am {created, date, medium} — aktualisiert am {updated, date, medium}",
+    "messageProfessional": "Nachricht an {name}",
+    "acceptFailed": "Beim Annehmen dieses Angebots ist etwas schiefgelaufen.",
+    "accept": {
+      "trigger": "Dieses Angebot annehmen",
+      "title": "Dieses Angebot annehmen?",
+      "description": "Alle anderen Angebote für diese Anfrage werden automatisch abgelehnt. Das kann nicht rückgängig gemacht werden.",
+      "confirm": "Ja, Angebot annehmen",
+      "pending": "Wird angenommen…",
+      "cancel": "Noch nicht"
+    }
+  },
+  "appointments": {
+    "list": {
+      "title": "Meine Termine",
+      "subtitle": "Termine aus Angeboten, die du angenommen hast.",
+      "empty": {
+        "title": "Keine anstehenden Termine",
+        "description": "Termine erscheinen hier, sobald du das Angebot einer Fachkraft annimmst.",
+        "action": "Meine Anfragen anzeigen"
+      }
+    },
+    "noTimeProposed": "Noch keine Uhrzeit vorgeschlagen",
+    "notSet": "Nicht festgelegt",
+    "awaitingProposedTime": "Wartet auf Terminvorschlag",
+    "detail": {
+      "title": "Termin",
+      "confirmedTime": "Bestätigte Uhrzeit",
+      "proposedTime": "Vorgeschlagene Uhrzeit",
+      "cancellationReason": "Stornierungsgrund"
+    },
+    "cancellationReason": {
+      "CUSTOMER_REQUEST": "Auf Wunsch des Kunden",
+      "PROFESSIONAL_UNAVAILABLE": "Fachkraft nicht verfügbar",
+      "SCHEDULING_CONFLICT": "Terminkonflikt",
+      "OTHER": "Sonstiges"
+    },
+    "actions": {
+      "start": "Beginn",
+      "end": "Ende",
+      "confirming": "Wird bestätigt…",
+      "confirmTime": "Diese Uhrzeit bestätigen",
+      "completing": "Wird als erledigt markiert…",
+      "markCompleted": "Diesen Besuch als erledigt markieren",
+      "cancelTrigger": "Termin stornieren",
+      "cancelTitle": "Diesen Termin stornieren?",
+      "confirmCancel": "Ja, stornieren",
+      "cancelling": "Wird storniert…",
+      "notNow": "Jetzt nicht",
+      "reason": "Grund",
+      "note": "Notiz (optional)",
+      "proposeTime": "Uhrzeit vorschlagen",
+      "proposeDifferentTime": "Andere Uhrzeit vorschlagen",
+      "reschedule": "Verschieben"
+    },
+    "errors": {
+      "invalidAppointment": "Ungültiger Termin.",
+      "proposeFailed": "Beim Vorschlagen dieser Uhrzeit ist etwas schiefgelaufen.",
+      "confirmFailed": "Beim Bestätigen dieses Termins ist etwas schiefgelaufen.",
+      "cancelFailed": "Beim Stornieren dieses Termins ist etwas schiefgelaufen.",
+      "completeFailed": "Beim Abschließen dieses Termins ist etwas schiefgelaufen.",
+      "rescheduleFailed": "Beim Verschieben dieses Termins ist etwas schiefgelaufen."
+    }
+  },
+  "messages": {
+    "title": "Nachrichten",
+    "conversation": "Unterhaltung",
+    "empty": {
+      "title": "Noch keine Unterhaltungen",
+      "description": "Sobald du mit einem Kunden oder einer Fachkraft ein gemeinsames Angebot hast, könnt ihr euch hier schreiben."
+    },
+    "participant": "Teilnehmer",
+    "unknownParticipant": "MaestroYa-Nutzer",
+    "noMessagesYet": "Noch keine Nachrichten.",
+    "emptyThread": "Noch keine Nachrichten. Sag Hallo, um loszulegen.",
+    "closed": "In dieser Unterhaltung können keine neuen Nachrichten mehr gesendet werden.",
+    "opening": "Wird geöffnet…",
+    "messageAction": "Nachricht senden",
+    "bubble": {
+      "deleted": "Diese Nachricht wurde gelöscht.",
+      "deleting": "Wird gelöscht…",
+      "confirmDelete": "Löschen bestätigen",
+      "cancel": "Abbrechen",
+      "delete": "Löschen"
+    },
+    "composer": {
+      "placeholder": "Schreib eine Nachricht…",
+      "ariaLabel": "Nachricht",
+      "sending": "Wird gesendet…",
+      "send": "Senden"
+    },
+    "errors": {
+      "openFailed": "Beim Öffnen dieser Unterhaltung ist etwas schiefgelaufen.",
+      "sendFailed": "Beim Senden deiner Nachricht ist etwas schiefgelaufen.",
+      "generic": "Etwas ist schiefgelaufen.",
+      "deleteFailed": "Beim Löschen dieser Nachricht ist etwas schiefgelaufen."
+    }
+  },
+  "disputes": {
+    "list": {
+      "metaTitle": "Meine Streitfälle",
+      "title": "Streitfälle",
+      "subtitle": "Fälle, die du eröffnet hast, und Fälle zu deiner Arbeit.",
+      "openFromJob": "Streitfall aus einem Auftrag eröffnen",
+      "openedByMe": "Von mir eröffnet",
+      "openedAboutMe": "Zu meiner Arbeit eröffnet",
+      "emptyMine": {
+        "title": "Keine Streitfälle eröffnet",
+        "description": "Du hast keinen Streitfall eröffnet."
+      },
+      "emptyAgainst": {
+        "title": "Hier ist nichts",
+        "description": "Zu deiner Arbeit wurde kein Streitfall eröffnet."
+      }
+    },
+    "detail": {
+      "metaTitle": "Streitfall",
+      "subtitle": "{caseNumber} · Status: {status} · Priorität: {priority} · Grund: {reason}",
+      "description": "Beschreibung",
+      "resolution": "Lösung",
+      "evidence": "Nachweise",
+      "noEvidence": "Keine Nachweise angehängt.",
+      "messages": "Nachrichten",
+      "noMessages": "Noch keine Nachrichten."
+    },
+    "messageForm": {
+      "label": "Schreib eine Nachricht",
+      "placeholder": "Schreib eine Nachricht…",
+      "sending": "Wird gesendet…",
+      "send": "Nachricht senden"
+    },
+    "new": {
+      "title": "Streitfall eröffnen",
+      "subtitle": "Nur für laufende, abgeschlossene oder stornierte Aufträge — siehe die Detailseite deines Auftrags."
+    },
+    "form": {
+      "description": "Gib so viele Details wie möglich an — so können wir den Fall schneller lösen.",
+      "jobId": "Auftrags-ID",
+      "reason": "Grund",
+      "title": "Titel",
+      "descriptionLabel": "Beschreibung",
+      "submitting": "Wird gesendet…",
+      "submit": "Streitfall eröffnen"
+    },
+    "status": {
+      "WAITING_FOR_CUSTOMER": "Wartet auf Kunden",
+      "WAITING_FOR_PROFESSIONAL": "Wartet auf Fachkraft"
+    },
+    "priority": {
+      "LOW": "Niedrig",
+      "MEDIUM": "Mittel",
+      "HIGH": "Hoch",
+      "URGENT": "Dringend"
+    },
+    "reason": {
+      "SERVICE_NOT_COMPLETED": "Dienstleistung nicht erbracht",
+      "SERVICE_QUALITY": "Qualität der Dienstleistung",
+      "PROPERTY_DAMAGE": "Sachschaden",
+      "PROFESSIONAL_NO_SHOW": "Fachkraft nicht erschienen",
+      "CUSTOMER_NO_SHOW": "Kunde nicht erschienen",
+      "PRICE_DISAGREEMENT": "Uneinigkeit über den Preis",
+      "SCOPE_OF_WORK": "Leistungsumfang",
+      "COMMUNICATION_ISSUE": "Kommunikationsproblem",
+      "OTHER": "Sonstiges"
+    },
+    "resolution": {
+      "NO_ACTION": "Keine Maßnahme",
+      "CUSTOMER_FAVOR": "Zugunsten des Kunden",
+      "PROFESSIONAL_FAVOR": "Zugunsten der Fachkraft",
+      "PARTIAL_RESOLUTION": "Teilweise Lösung",
+      "FINANCIAL_ADJUSTMENT_REQUIRED": "Finanzielle Anpassung erforderlich",
+      "ESCALATED_EXTERNALLY": "Extern eskaliert"
+    },
+    "errors": {
+      "openFailed": "Beim Eröffnen dieses Streitfalls ist etwas schiefgelaufen.",
+      "loadMineFailed": "Beim Laden deiner Streitfälle ist etwas schiefgelaufen.",
+      "loadFailed": "Beim Laden der Streitfälle ist etwas schiefgelaufen.",
+      "loadOneFailed": "Beim Laden dieses Streitfalls ist etwas schiefgelaufen.",
+      "messageFailed": "Beim Senden dieser Nachricht ist etwas schiefgelaufen.",
+      "evidenceFailed": "Beim Anhängen dieses Nachweises ist etwas schiefgelaufen."
+    }
+  },
+  "support": {
+    "metaTitle": "Support-Tickets",
+    "title": "Support",
+    "subtitle": "Kontoprobleme, Fragen zur Verifizierung, Fehler oder allgemeine Fragen.",
+    "myTickets": "Meine Tickets",
+    "empty": {
+      "title": "Keine Support-Tickets",
+      "description": "Du hast noch kein Support-Ticket eröffnet."
+    },
+    "detail": {
+      "metaTitle": "Support-Ticket",
+      "subtitle": "{ticketNumber} · Status: {status} · Kategorie: {category} · Priorität: {priority}",
+      "resolution": "Lösung"
+    },
+    "form": {
+      "title": "Neues Ticket eröffnen",
+      "category": "Kategorie",
+      "subject": "Betreff",
+      "description": "Beschreibung",
+      "submitting": "Wird gesendet…",
+      "submit": "Ticket senden"
+    },
+    "category": {
+      "ACCOUNT": "Konto",
+      "VERIFICATION": "Verifizierung",
+      "BUG": "Fehler",
+      "LOGIN": "Anmeldung",
+      "GENERAL": "Allgemein",
+      "OTHER": "Sonstiges"
+    },
+    "status": {
+      "WAITING_FOR_USER": "Wartet auf deine Antwort"
+    },
+    "errors": {
+      "openFailed": "Beim Eröffnen dieses Tickets ist etwas schiefgelaufen.",
+      "loadFailed": "Beim Laden deiner Tickets ist etwas schiefgelaufen.",
+      "loadOneFailed": "Beim Laden dieses Tickets ist etwas schiefgelaufen."
+    }
+  },
+  "reviews": {
+    "errors": {
+      "submitFailed": "Beim Senden dieser Bewertung ist etwas schiefgelaufen.",
+      "updateFailed": "Beim Aktualisieren dieser Bewertung ist etwas schiefgelaufen.",
+      "deleteFailed": "Beim Löschen dieser Bewertung ist etwas schiefgelaufen.",
+      "respondFailed": "Beim Senden dieser Antwort ist etwas schiefgelaufen."
+    }
+  },
+  "analytics": {
+    "loadFailed": "Beim Laden deiner Statistiken ist etwas schiefgelaufen."
+  },
+  "receipts": {
+    "list": {
+      "title": "Meine Belege",
+      "subtitle": "Belege für Aufträge, die du über MaestroYa bezahlt hast.",
+      "empty": {
+        "title": "Noch keine Belege",
+        "description": "Ein Beleg erscheint hier, sobald ein bezahlter Auftrag abgeschlossen und die Zahlung freigegeben ist."
+      }
+    },
+    "notYetIssued": "Noch nicht ausgestellt",
+    "detail": {
+      "title": "Beleg",
+      "receiptNumber": "Belegnummer",
+      "date": "Datum",
+      "dateUnset": "—",
+      "issuedBy": "Ausgestellt von",
+      "billedTo": "Rechnungsempfänger",
+      "items": "Positionen",
+      "description": "Beschreibung",
+      "amount": "Betrag",
+      "tax": "Steuer",
+      "taxableBase": "Bemessungsgrundlage",
+      "vat": "MwSt. – IVA ({rate})",
+      "total": "Gesamt",
+      "creditNotes": "Gutschriften",
+      "documentReference": "Dokumentreferenz: {hash}… (nur eine Prüfsumme zum Erkennen von Manipulationen — keine elektronische Signatur)."
+    }
+  }
+}

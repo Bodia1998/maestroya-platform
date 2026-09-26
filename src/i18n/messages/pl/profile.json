@@ -13,5 +13,63 @@
     "email": "E-mail",
     "timezone": "Strefa czasowa"
   },
-  "memberSince": "Członek od {date, date, long}"
+  "memberSince": "Członek od {date, date, long}",
+  "avatarNote": "To zdjęcie dotyczy tylko Twojego konta — nie wpływa na weryfikację tożsamości specjalisty. Specjaliści zarządzają nią osobno w sekcji Profil specjalisty → Zarządzaj weryfikacją tożsamości.",
+  "dangerNote": "Usunięcie konta można cofnąć tylko przez kontakt z pomocą — Twoje dane są dezaktywowane, a nie od razu kasowane.",
+  "avatar": {
+    "chooseFirst": "Najpierw wybierz obraz.",
+    "alt": "Twoje zdjęcie profilowe",
+    "chooseLabel": "Wybierz zdjęcie profilowe",
+    "uploading": "Przesyłanie…",
+    "upload": "Prześlij zdjęcie profilowe",
+    "updated": "Zdjęcie profilowe zostało zaktualizowane."
+  },
+  "form": {
+    "updated": "Profil został zaktualizowany.",
+    "basics": "Podstawowe dane",
+    "displayName": "Wyświetlana nazwa",
+    "phone": "Telefon",
+    "timezone": "Strefa czasowa",
+    "preferredLanguage": "Preferowany język",
+    "noPreference": "Brak preferencji",
+    "address": "Adres",
+    "street": "Ulica i numer",
+    "line2": "Mieszkanie, piętro itp. (opcjonalnie)",
+    "city": "Miasto",
+    "postalCode": "Kod pocztowy",
+    "province": "Prowincja",
+    "country": "Kraj",
+    "notifications": "Powiadomienia",
+    "emailMarketing": "E-maile marketingowe",
+    "emailServiceUpdates": "E-maile o aktualizacjach usług",
+    "smsAppointmentReminders": "Przypomnienia SMS o wizytach",
+    "save": "Zapisz zmiany"
+  },
+  "password": {
+    "changed": "Hasło zostało zmienione. Ze względów bezpieczeństwa wylogowaliśmy Cię na wszystkich innych urządzeniach.",
+    "noPassword": "To konto loguje się przez serwis społecznościowy i nie ma hasła do zmiany.",
+    "title": "Zmień hasło",
+    "current": "Obecne hasło",
+    "new": "Nowe hasło",
+    "confirm": "Potwierdź nowe hasło",
+    "changing": "Zmienianie…",
+    "submit": "Zmień hasło"
+  },
+  "deleteAccount": {
+    "trigger": "Dezaktywuj konto",
+    "title": "To dezaktywuje Twoje konto",
+    "password": "Hasło",
+    "confirmLabel": "Wpisz {token}, aby potwierdzić",
+    "deactivating": "Dezaktywowanie…",
+    "submit": "Dezaktywuj moje konto"
+  },
+  "errors": {
+    "updateFailed": "Coś poszło nie tak podczas aktualizowania profilu.",
+    "avatarFailed": "Coś poszło nie tak podczas przesyłania zdjęcia profilowego.",
+    "passwordFailed": "Coś poszło nie tak podczas zmiany hasła.",
+    "deleteFailed": "Coś poszło nie tak podczas usuwania konta.",
+    "avatarMissing": "Wybierz obraz do przesłania.",
+    "avatarType": "Zdjęcie profilowe musi być w formacie JPEG, PNG lub WebP.",
+    "avatarTooLarge": "Zdjęcie profilowe musi mieć mniej niż 5 MB."
+  }
 }

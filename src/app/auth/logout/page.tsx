@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+
 import { LogoutRedirect } from "./logout-redirect";
 
-export const metadata = { title: "Log out" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth");
+  return { title: t("meta.logout") };
+}
 
 /**
  * This route's Server Component body never touches `signOut()` or any

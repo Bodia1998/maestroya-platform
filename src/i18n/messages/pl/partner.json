@@ -1,0 +1,92 @@
+{
+  "metaTitle": "Panel partnera",
+  "title": "Panel partnera",
+  "subtitle": "Śledź swoje linki polecające, kliknięcia i zarobki partnera afiliacyjnego.",
+  "noAccount": {
+    "title": "Nie masz jeszcze konta partnera",
+    "description": "Konta partnerów są przeznaczone dla partnerów afiliacyjnych, którzy polecają klientów MaestroYa w zamian za udział w zysku platformy. Skontaktuj się z MaestroYa, aby zarejestrować się jako partner."
+  },
+  "statusMessage": {
+    "PENDING": "Twoje zgłoszenie partnerskie czeka na rozpatrzenie",
+    "REJECTED": "Twoje zgłoszenie partnerskie nie zostało zatwierdzone",
+    "SUSPENDED": "Twoje konto partnera jest obecnie zawieszone",
+    "BANNED": "Twoje konto partnera zostało zablokowane",
+    "other": "Twoje konto partnera nie jest aktywne"
+  },
+  "locked": {
+    "description": "Twój panel odblokuje się automatycznie, gdy tylko twoje konto partnera zostanie zatwierdzone."
+  },
+  "welcome": "Witaj ponownie, {name}. Oto jak radzą sobie twoje linki polecające.",
+  "stats": {
+    "clicks": "Kliknięcia",
+    "visits": "Wizyty",
+    "registrations": "Rejestracje",
+    "bookingsCreated": "Utworzone rezerwacje",
+    "completedJobs": "Zakończone zlecenia",
+    "conversionRate": "Współczynnik konwersji",
+    "platformCommissionGenerated": "Wygenerowana prowizja platformy",
+    "pendingEarnings": "Oczekujące zarobki",
+    "approvedPayable": "Zatwierdzone (do wypłaty)",
+    "paidToDate": "Wypłacono do tej pory"
+  },
+  "topCampaigns": {
+    "title": "Najlepsze kampanie",
+    "empty": "Nie zarejestrowano jeszcze kliknięć w kampaniach."
+  },
+  "topReferralLinks": {
+    "title": "Najlepsze linki polecające",
+    "empty": "Nie zarejestrowano jeszcze kliknięć w linki polecające."
+  },
+  "visitsCount": "{count, plural, one {# wizyta} few {# wizyty} many {# wizyt} other {# wizyty}}",
+  "errors": {
+    "createLinkFailed": "Coś poszło nie tak podczas tworzenia tego linku polecającego.",
+    "updateLinkFailed": "Coś poszło nie tak podczas aktualizowania tego linku polecającego.",
+    "payoutFailed": "Coś poszło nie tak podczas zlecania tej wypłaty."
+  },
+  "campaigns": {
+    "title": "Linki kampanii",
+    "code": "Kod",
+    "codePlaceholder": "np. telegram_valencia",
+    "label": "Etykieta (opcjonalnie)",
+    "labelPlaceholder": "Twoja własna notatka",
+    "source": "Źródło",
+    "none": "Brak",
+    "sources": {
+      "TELEGRAM": "Telegram",
+      "INSTAGRAM": "Instagram",
+      "TIKTOK": "TikTok",
+      "YOUTUBE": "YouTube",
+      "BLOG": "Blog",
+      "WEBSITE": "Strona internetowa"
+    },
+    "creating": "Tworzenie…",
+    "create": "Utwórz link",
+    "empty": "Brak linków kampanii — utwórz link powyżej, aby zacząć go udostępniać.",
+    "active": "Aktywny",
+    "inactive": "Nieaktywny",
+    "visits": "{count, plural, one {# wizyta} few {# wizyty} many {# wizyt} other {# wizyty}}",
+    "deactivate": "Dezaktywuj",
+    "activate": "Aktywuj"
+  },
+  "payout": {
+    "balanceTitle": "Saldo partnera afiliacyjnego",
+    "available": "Dostępne saldo",
+    "reserved": "Zarezerwowane na wypłatę",
+    "paidToDate": "Wypłacono do tej pory",
+    "minimum": "Minimalna wypłata: {amount}",
+    "eligible": "Można zlecić wypłatę",
+    "moreNeeded": "Brakuje jeszcze {amount}",
+    "requesting": "Zlecanie…",
+    "request": "Zleć wypłatę",
+    "requested": "Zlecono wypłatę — jej status sprawdzisz w historii poniżej.",
+    "historyTitle": "Historia wypłat",
+    "empty": "Brak wypłat.",
+    "status": {
+      "PENDING": "Oczekująca",
+      "PROCESSING": "W realizacji",
+      "PAID": "Wypłacona",
+      "FAILED": "Nieudana",
+      "CANCELLED": "Anulowana"
+    }
+  }
+}

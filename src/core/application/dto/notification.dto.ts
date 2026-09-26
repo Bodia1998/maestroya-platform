@@ -46,36 +46,36 @@ const notificationTypeSchema = z.enum([
 const actionUrlSchema = z
   .string()
   .trim()
-  .max(MAX_ACTION_URL_LENGTH, `Action URL must be ${MAX_ACTION_URL_LENGTH} characters or fewer.`)
-  .refine(isSafeActionUrl, "Action URL must be a safe, internal path.")
+  .max(MAX_ACTION_URL_LENGTH, "maxLength")
+  .refine(isSafeActionUrl, "dto.notification.actionUrlUnsafe")
   .nullable()
   .optional();
 
 /** Internal-only — see this file's own doc comment. Never exposed as a
  *  public Server Action. */
 export const createNotificationSchema = z.object({
-  userId: z.string().uuid("Invalid recipient."),
+  userId: z.string().uuid("dto.ids.recipient"),
   type: notificationTypeSchema,
   title: z
     .string()
     .trim()
-    .min(1, "Title is required.")
-    .max(MAX_TITLE_LENGTH, `Title must be ${MAX_TITLE_LENGTH} characters or fewer.`),
+    .min(1, "dto.notification.titleRequired")
+    .max(MAX_TITLE_LENGTH, "maxLength"),
   message: z
     .string()
     .trim()
-    .min(1, "Message is required.")
-    .max(MAX_MESSAGE_LENGTH, `Message must be ${MAX_MESSAGE_LENGTH} characters or fewer.`),
+    .min(1, "dto.notification.messageRequired")
+    .max(MAX_MESSAGE_LENGTH, "maxLength"),
   resourceType: z
     .string()
     .trim()
-    .max(MAX_RESOURCE_TYPE_LENGTH, `Resource type must be ${MAX_RESOURCE_TYPE_LENGTH} characters or fewer.`)
+    .max(MAX_RESOURCE_TYPE_LENGTH, "maxLength")
     .nullable()
     .optional(),
   resourceId: z
     .string()
     .trim()
-    .max(MAX_RESOURCE_ID_LENGTH, `Resource id must be ${MAX_RESOURCE_ID_LENGTH} characters or fewer.`)
+    .max(MAX_RESOURCE_ID_LENGTH, "maxLength")
     .nullable()
     .optional(),
   actionUrl: actionUrlSchema,
@@ -90,16 +90,16 @@ export const listNotificationsSchema = z.object({
 export type ListNotificationsInput = z.infer<typeof listNotificationsSchema>;
 
 export const getNotificationSchema = z.object({
-  id: z.string().uuid("Invalid notification."),
+  id: z.string().uuid("dto.ids.notification"),
 });
 export type GetNotificationInput = z.infer<typeof getNotificationSchema>;
 
 export const markNotificationAsReadSchema = z.object({
-  id: z.string().uuid("Invalid notification."),
+  id: z.string().uuid("dto.ids.notification"),
 });
 export type MarkNotificationAsReadInput = z.infer<typeof markNotificationAsReadSchema>;
 
 export const dismissNotificationSchema = z.object({
-  id: z.string().uuid("Invalid notification."),
+  id: z.string().uuid("dto.ids.notification"),
 });
 export type DismissNotificationInput = z.infer<typeof dismissNotificationSchema>;

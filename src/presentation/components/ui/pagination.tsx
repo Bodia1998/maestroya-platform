@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 
@@ -30,10 +31,11 @@ function getPageList(page: number, totalPages: number): (number | "ellipsis")[] 
 /** Numbered pagination control with ellipsis collapsing for long ranges. Fully keyboard-navigable buttons. */
 export function Pagination({ page, totalPages, onPageChange, className, labels }: PaginationProps) {
   const items = getPageList(page, totalPages);
-  const t = labels ?? { previous: "Anterior", next: "Siguiente" };
+  const tr = useTranslations("ui");
+  const t = labels ?? { previous: tr("pagination.previous"), next: tr("pagination.next") };
 
   return (
-    <nav aria-label="Paginación" className={cn("flex items-center gap-1", className)}>
+    <nav aria-label={tr("pagination.label")} className={cn("flex items-center gap-1", className)}>
       <button
         type="button"
         aria-label={t.previous}

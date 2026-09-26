@@ -16,5 +16,115 @@
     "title": "Unternehmensbereich",
     "members": "Mitglieder",
     "invitations": "Einladungen"
+  },
+  "nav": {
+    "ariaLabel": "Dashboard-Navigation",
+    "groups": {
+      "professional": "Fachkraft",
+      "admin": "Verwaltung"
+    },
+    "items": {
+      "dashboard": "Dashboard",
+      "serviceRequests": "Anfragen",
+      "appointments": "Termine",
+      "jobs": "Aufträge",
+      "receipts": "Meine Belege",
+      "messages": "Nachrichten",
+      "disputes": "Streitfälle",
+      "support": "Support",
+      "professionalDashboard": "Dashboard für Fachkräfte",
+      "availableRequests": "Verfügbare Anfragen",
+      "myQuotes": "Meine Angebote",
+      "myAppointments": "Meine Termine",
+      "myJobs": "Meine Aufträge",
+      "selfBilling": "Gutschriftverfahren & Rechnungen",
+      "companies": "Unternehmen",
+      "adminPanel": "Verwaltungsbereich",
+      "profile": "Profil",
+      "professionalProfile": "Fachkraft-Profil",
+      "switchToProfessional": "Zum Dashboard für Fachkräfte wechseln"
+    }
+  },
+  "shell": {
+    "skipToContent": "Zum Hauptinhalt springen",
+    "sidebar": "Seitenleiste",
+    "openMenu": "Menü öffnen",
+    "accountMenu": "Kontomenü",
+    "account": "Konto",
+    "notifications": "Benachrichtigungen",
+    "profile": "Profil",
+    "signOut": "Abmelden"
+  },
+  "profileBanner": {
+    "noProfile": "Vervollständige dein Fachkraft-Profil, um Anfragen von Kunden zu erhalten.",
+    "incomplete": "Dein Fachkraft-Profil ist unvollständig. Vervollständige es, damit Kunden dein bestes Profil sehen.",
+    "completeProfile": "Fachkraft-Profil vervollständigen"
+  },
+  "overview": {
+    "welcomeBack": "Willkommen zurück, {name}",
+    "welcomeBackAnonymous": "Willkommen zurück",
+    "subtitle": "Hier ist eine Übersicht über dein MaestroYa-Konto.",
+    "professionalOverview": {
+      "title": "Übersicht für Fachkräfte",
+      "description": "Kundenanfragen, auf die du antworten kannst, und die daraus folgenden Angebote, Termine und Aufträge."
+    },
+    "stats": {
+      "availableRequests": "Verfügbare Anfragen",
+      "quotesAwaitingResponse": "Angebote ohne Antwort",
+      "acceptedQuotes": "Angenommene Angebote",
+      "upcomingAppointments": "Anstehende Termine",
+      "activeJobs": "Aktive Aufträge",
+      "completedJobs": "Abgeschlossene Aufträge",
+      "activeRequests": "Aktive Anfragen",
+      "unreadMessages": "Ungelesene Nachrichten"
+    },
+    "quickActions": {
+      "ariaLabel": "Schnellaktionen",
+      "newRequest": "Neue Anfrage",
+      "appointments": "Termine",
+      "messages": "Nachrichten",
+      "profile": "Profil",
+      "browseRequests": "Anfragen durchsuchen",
+      "myQuotes": "Meine Angebote",
+      "professionalProfile": "Fachkraft-Profil"
+    },
+    "cards": {
+      "yourRequests": "Deine Anfragen",
+      "upcomingAppointments": "Anstehende Termine",
+      "messages": "Nachrichten",
+      "yourQuotes": "Deine Angebote",
+      "viewAll": "Alle anzeigen"
+    },
+    "empty": {
+      "requests": {
+        "title": "Noch keine Anfragen.",
+        "description": "Stelle eine Anfrage, um Angebote von Fachkräften in deiner Nähe zu erhalten."
+      },
+      "appointments": {
+        "title": "Keine anstehenden Termine.",
+        "description": "Termine erscheinen hier, sobald du das Angebot einer Fachkraft annimmst.",
+        "action": "Meine Anfragen anzeigen"
+      },
+      "messages": {
+        "title": "Keine neuen Nachrichten.",
+        "description": "Hier erscheinen Unterhaltungen mit Kunden und Fachkräften.",
+        "action": "Zu den Nachrichten"
+      },
+      "noProfessionalProfile": {
+        "title": "Richte dein Fachkraft-Profil ein.",
+        "description": "Erstelle dein Fachkraft-Profil, um Anfragen zu erhalten, für die du Angebote abgeben kannst.",
+        "action": "Loslegen"
+      },
+      "quotes": {
+        "title": "Noch keine Angebote abgegeben.",
+        "description": "Durchsuche offene Anfragen und sende dein erstes Angebot."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "mit {name}",
+    "manage": "Verwalten",
+    "requestPosted": "Veröffentlicht am {created, date, medium} — aktualisiert am {updated, date, medium}",
+    "quoteSubmitted": "Gesendet am {created, date, medium} — aktualisiert am {updated, date, medium}"
   }
 }

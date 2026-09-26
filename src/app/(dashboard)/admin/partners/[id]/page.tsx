@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import {
   approveAffiliateCommissionFormAction,
@@ -21,7 +22,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/typography";
 
-export const metadata = { title: "Admin — Partner detail" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("partners.detail.metaTitle") }) };
+}
 
 /**
  * Module 96 — Referral & Affiliate Production Wiring: the admin's single
@@ -41,51 +45,61 @@ export default async function AdminPartnerDetailPage({ params }: { params: Promi
     notFound();
   }
   const { partner, referralCodes, affiliateCommissions, payouts, fraudFlags } = result.data;
+  const t = await getTranslations("admin");
+  const format = await getFormatter();
+  const enumLabel = (group: string, value: string) =>
+    t.has(`${group}.${value}` as never) ? t(`${group}.${value}` as never) : value;
+  const srOnly = (chunks: React.ReactNode) => <span className="sr-only">{chunks}</span>;
+  const periodDate = (date: Date) => format.dateTime(date, { dateStyle: "medium", timeZone: "UTC" });
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         title={partner.displayName}
-        subtitle={`${partner.type} · ${partner.contactEmail} · payout via ${partner.payoutMethod}`}
+        subtitle={t("partners.detail.subtitle", {
+          type: enumLabel("partners.type", partner.type),
+          email: partner.contactEmail,
+          method: enumLabel("partners.payoutMethod", partner.payoutMethod),
+        })}
         actions={<StatusBadge status={partner.status} />}
       />
 
       <Card>
         <CardHeader>
-          <CardTitle>Status</CardTitle>
+          <CardTitle>{t("partners.detail.status")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           {partner.status === "PENDING" && (
             <>
               <form action={approvePartnerFormAction.bind(null, partner.id)}>
                 <Button type="submit" variant="default">
-                  Approve
+                  {t("partners.detail.approve")}
                 </Button>
               </form>
               <form action={rejectPartnerFormAction.bind(null, partner.id)} className="flex flex-col gap-2">
-                <Label htmlFor="reject-reason">Rejection reason</Label>
+                <Label htmlFor="reject-reason">{t("partners.detail.rejectionReason")}</Label>
                 <Textarea id="reject-reason" name="reason" required minLength={5} maxLength={1000} rows={2} />
                 <Button type="submit" variant="danger" className="w-fit">
-                  Reject
+                  {t("partners.detail.reject")}
                 </Button>
               </form>
             </>
           )}
           {(partner.status === "APPROVED" || partner.status === "SUSPENDED") && (
             <form action={suspendPartnerFormAction.bind(null, partner.id)} className="flex flex-col gap-2">
-              <Label htmlFor="suspend-reason">Suspension reason</Label>
+              <Label htmlFor="suspend-reason">{t("partners.detail.suspensionReason")}</Label>
               <Textarea id="suspend-reason" name="reason" required minLength={5} maxLength={1000} rows={2} />
               <Button type="submit" variant="outline" className="w-fit">
-                {partner.status === "SUSPENDED" ? "Reinstate" : "Suspend"}
+                {partner.status === "SUSPENDED" ? t("partners.detail.reinstate") : t("partners.detail.suspend")}
               </Button>
             </form>
           )}
           {partner.status !== "BANNED" && (
             <form action={banPartnerFormAction.bind(null, partner.id)} className="flex flex-col gap-2">
-              <Label htmlFor="ban-reason">Ban reason</Label>
+              <Label htmlFor="ban-reason">{t("partners.detail.banReason")}</Label>
               <Textarea id="ban-reason" name="reason" required minLength={5} maxLength={1000} rows={2} />
               <Button type="submit" variant="danger" className="w-fit">
-                Ban
+                {t("partners.detail.ban")}
               </Button>
             </form>
           )}
@@ -94,12 +108,12 @@ export default async function AdminPartnerDetailPage({ params }: { params: Promi
 
       <Card>
         <CardHeader>
-          <CardTitle>Referral links ({referralCodes.length})</CardTitle>
+          <CardTitle>{t("partners.detail.referralLinks", { count: referralCodes.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           {referralCodes.length === 0 ? (
             <Text size="sm" tone="muted">
-              No referral links generated yet.
+              {t("partners.detail.noReferralLinks")}
             </Text>
           ) : (
             <ul className="flex flex-col gap-1">
@@ -115,31 +129,31 @@ export default async function AdminPartnerDetailPage({ params }: { params: Promi
 
       <section>
         <Text size="sm" weight="semibold" className="mb-2">
-          Affiliate commissions ({affiliateCommissions.length})
+          {t("partners.detail.commissions", { count: affiliateCommissions.length })}
         </Text>
         {affiliateCommissions.length === 0 ? (
           <Text size="sm" tone="muted">
-            No commissions recorded yet.
+            {t("partners.detail.noCommissions")}
           </Text>
         ) : (
-          <AdminDataTable caption="Affiliate commissions" minWidth={760}>
+          <AdminDataTable caption={t("partners.detail.commissionsCaption")} minWidth={760}>
             <AdminTableHeadRow>
-              <AdminTh>Referral code</AdminTh>
-              <AdminTh>Platform commission</AdminTh>
-              <AdminTh>Profit base</AdminTh>
-              <AdminTh>Affiliate amount</AdminTh>
-              <AdminTh>Reversed</AdminTh>
-              <AdminTh>Status</AdminTh>
-              <AdminTh>Actions</AdminTh>
+              <AdminTh>{t("partners.detail.columns.referralCode")}</AdminTh>
+              <AdminTh>{t("partners.detail.columns.platformCommission")}</AdminTh>
+              <AdminTh>{t("partners.detail.columns.profitBase")}</AdminTh>
+              <AdminTh>{t("partners.detail.columns.affiliateAmount")}</AdminTh>
+              <AdminTh>{t("partners.detail.columns.reversed")}</AdminTh>
+              <AdminTh>{t("common.columns.status")}</AdminTh>
+              <AdminTh>{t("common.columns.actions")}</AdminTh>
             </AdminTableHeadRow>
             <AdminTableBody>
               {affiliateCommissions.map((commission) => (
                 <AdminTableRow key={commission.id}>
                   <td className="px-4 py-3 font-mono text-xs">{commission.referralCode}</td>
-                  <td className="px-4 py-3">€{commission.platformCommissionAmount.toFixed(2)}</td>
-                  <td className="px-4 py-3">€{commission.profitBaseAmount.toFixed(2)}</td>
-                  <td className="px-4 py-3">€{commission.affiliateAmount.toFixed(2)}</td>
-                  <td className="px-4 py-3">{commission.reversedAmount > 0 ? `€${commission.reversedAmount.toFixed(2)}` : "—"}</td>
+                  <td className="px-4 py-3">{format.number(commission.platformCommissionAmount, { style: "currency", currency: "EUR" })}</td>
+                  <td className="px-4 py-3">{format.number(commission.profitBaseAmount, { style: "currency", currency: "EUR" })}</td>
+                  <td className="px-4 py-3">{format.number(commission.affiliateAmount, { style: "currency", currency: "EUR" })}</td>
+                  <td className="px-4 py-3">{commission.reversedAmount > 0 ? format.number(commission.reversedAmount, { style: "currency", currency: "EUR" }) : "—"}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={commission.status} />
                   </td>
@@ -148,7 +162,7 @@ export default async function AdminPartnerDetailPage({ params }: { params: Promi
                       {commission.status === "PENDING" && (
                         <form action={approveAffiliateCommissionFormAction.bind(null, commission.id, partner.id)}>
                           <AdminRowActionButton>
-                            Approve<span className="sr-only"> commission {commission.id}</span>
+                            {t.rich("partners.detail.approveCommission", { id: commission.id, sr: srOnly })}
                           </AdminRowActionButton>
                         </form>
                       )}
@@ -157,9 +171,9 @@ export default async function AdminPartnerDetailPage({ params }: { params: Promi
                           action={cancelAffiliateCommissionFormAction.bind(null, commission.id, partner.id)}
                           className="flex items-center gap-2"
                         >
-                          <input type="text" name="reason" placeholder="Reason" required maxLength={500} className="h-8 w-32 rounded-md border border-border px-2 text-xs" />
+                          <input type="text" name="reason" placeholder={t("partners.detail.reasonPlaceholder")} required maxLength={500} className="h-8 w-32 rounded-md border border-border px-2 text-xs" />
                           <AdminRowActionButton>
-                            Cancel<span className="sr-only"> commission {commission.id}</span>
+                            {t.rich("partners.detail.cancelCommission", { id: commission.id, sr: srOnly })}
                           </AdminRowActionButton>
                         </form>
                       )}
@@ -174,25 +188,23 @@ export default async function AdminPartnerDetailPage({ params }: { params: Promi
 
       <Card>
         <CardHeader>
-          <CardTitle>Create payout</CardTitle>
+          <CardTitle>{t("partners.detail.createPayout")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Text size="sm" tone="muted" className="mb-3">
-            Settles this partner&apos;s entire outstanding APPROVED commission balance into one payout batch, gated on
-            their minimum payout threshold. For a STRIPE-method partner this executes a real Stripe Connect transfer to
-            the account on file for this partner — never to any other account.
+            {t("partners.detail.createPayoutHelp")}
           </Text>
           <form action={createPartnerPayoutFormAction.bind(null, partner.id)} className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
-              <Label htmlFor="payout-period-start">Period start</Label>
+              <Label htmlFor="payout-period-start">{t("partners.detail.periodStart")}</Label>
               <input id="payout-period-start" name="periodStart" type="date" required className="h-9 rounded-md border border-border px-2 text-sm" />
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="payout-period-end">Period end</Label>
+              <Label htmlFor="payout-period-end">{t("partners.detail.periodEnd")}</Label>
               <input id="payout-period-end" name="periodEnd" type="date" required className="h-9 rounded-md border border-border px-2 text-sm" />
             </div>
             <Button type="submit" variant="default">
-              Create payout
+              {t("partners.detail.createPayout")}
             </Button>
           </form>
         </CardContent>
@@ -200,29 +212,29 @@ export default async function AdminPartnerDetailPage({ params }: { params: Promi
 
       <section>
         <Text size="sm" weight="semibold" className="mb-2">
-          Payouts ({payouts.length})
+          {t("partners.detail.payouts", { count: payouts.length })}
         </Text>
         {payouts.length === 0 ? (
           <Text size="sm" tone="muted">
-            No payouts yet.
+            {t("partners.detail.noPayouts")}
           </Text>
         ) : (
-          <AdminDataTable caption="Partner payouts" minWidth={640}>
+          <AdminDataTable caption={t("partners.detail.payoutsCaption")} minWidth={640}>
             <AdminTableHeadRow>
-              <AdminTh>Period</AdminTh>
-              <AdminTh>Amount</AdminTh>
-              <AdminTh>Method</AdminTh>
-              <AdminTh>Reference</AdminTh>
-              <AdminTh>Status</AdminTh>
+              <AdminTh>{t("partners.detail.columns.period")}</AdminTh>
+              <AdminTh>{t("partners.detail.columns.amount")}</AdminTh>
+              <AdminTh>{t("partners.detail.columns.method")}</AdminTh>
+              <AdminTh>{t("partners.detail.columns.reference")}</AdminTh>
+              <AdminTh>{t("common.columns.status")}</AdminTh>
             </AdminTableHeadRow>
             <AdminTableBody>
               {payouts.map((payout) => (
                 <AdminTableRow key={payout.id}>
                   <td className="px-4 py-3 text-xs">
-                    {payout.periodStart.toISOString().slice(0, 10)} → {payout.periodEnd.toISOString().slice(0, 10)}
+                    {t("partners.detail.period", { start: periodDate(payout.periodStart), end: periodDate(payout.periodEnd) })}
                   </td>
-                  <td className="px-4 py-3">€{payout.amount.toFixed(2)}</td>
-                  <td className="px-4 py-3">{payout.method}</td>
+                  <td className="px-4 py-3">{format.number(payout.amount, { style: "currency", currency: "EUR" })}</td>
+                  <td className="px-4 py-3">{enumLabel("partners.payoutMethod", payout.method)}</td>
                   <td className="px-4 py-3 font-mono text-xs">{payout.reference ?? "—"}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={payout.status} />
@@ -236,18 +248,18 @@ export default async function AdminPartnerDetailPage({ params }: { params: Promi
 
       <section>
         <Text size="sm" weight="semibold" className="mb-2">
-          Fraud flags ({fraudFlags.length})
+          {t("partners.detail.fraudFlags", { count: fraudFlags.length })}
         </Text>
         {fraudFlags.length === 0 ? (
           <Text size="sm" tone="muted">
-            No fraud flags raised.
+            {t("partners.detail.noFraudFlags")}
           </Text>
         ) : (
           <ul className="flex flex-col gap-3">
             {fraudFlags.map((flag) => (
               <li key={flag.id} className="rounded-md border border-border p-3">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-medium">{flag.type}</span>
+                  <span className="text-sm font-medium">{enumLabel("partners.fraudFlagType", flag.type)}</span>
                   <StatusBadge status={flag.status} />
                 </div>
                 <Text size="sm" tone="muted" className="mt-1">
@@ -258,12 +270,12 @@ export default async function AdminPartnerDetailPage({ params }: { params: Promi
                     <input
                       type="text"
                       name="resolution"
-                      placeholder="Resolution note"
+                      placeholder={t("partners.detail.resolutionNote")}
                       required
                       maxLength={500}
                       className="h-8 flex-1 rounded-md border border-border px-2 text-xs"
                     />
-                    <AdminRowActionButton>Mark reviewed</AdminRowActionButton>
+                    <AdminRowActionButton>{t("partners.detail.markReviewed")}</AdminRowActionButton>
                   </form>
                 )}
               </li>

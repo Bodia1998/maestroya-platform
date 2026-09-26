@@ -1,0 +1,365 @@
+{
+  "requests": {
+    "list": {
+      "title": "Mes demandes",
+      "subtitle": "Les demandes que vous avez publiées pour recevoir des devis de professionnels.",
+      "newRequest": "Nouvelle demande",
+      "empty": {
+        "title": "Aucune demande pour le moment",
+        "description": "Vous n'avez encore publié aucune demande. Publiez-en une pour commencer à recevoir des devis de professionnels près de chez vous."
+      }
+    },
+    "new": {
+      "title": "Nouvelle demande de service",
+      "subtitle": "Décrivez les travaux dont vous avez besoin. La demande sera publiée immédiatement pour que les professionnels puissent envoyer un devis."
+    },
+    "edit": {
+      "title": "Modifier la demande de service",
+      "subtitle": "Vous pouvez modifier cette demande tant qu'elle est ouverte.",
+      "breadcrumb": "Modifier"
+    },
+    "detail": {
+      "metaTitle": "Demande de service",
+      "description": "Description",
+      "location": "Emplacement",
+      "urgency": "Urgence",
+      "budget": "Budget",
+      "budgetRange": "{min} – {max}",
+      "budgetUnset": "—",
+      "posted": "Publiée",
+      "lastUpdated": "Dernière mise à jour",
+      "photos": "Photos",
+      "acceptedNotice": "Vous avez accepté un devis pour cette demande. Rendez-vous dans <appointments>Mes rendez-vous</appointments> pour proposer ou confirmer un créneau, ou consultez <jobs>Mes missions</jobs> pour suivre l'avancement global.",
+      "editRequest": "Modifier la demande"
+    },
+    "form": {
+      "updated": "Demande mise à jour.",
+      "sections": {
+        "job": "Les travaux",
+        "budget": "Budget",
+        "budgetDescription": "Donnez aux professionnels un ordre de grandeur pour que les devis correspondent à vos attentes.",
+        "location": "Lieu des travaux"
+      },
+      "category": "Catégorie de service",
+      "selectCategory": "Sélectionnez une catégorie",
+      "title": "Titre",
+      "titlePlaceholder": "p. ex. Réparer le robinet de cuisine qui fuit",
+      "description": "Description",
+      "descriptionPlaceholder": "Décrivez les travaux en détail : ce qu'il faut faire et tout contexte utile.",
+      "urgency": "Urgence",
+      "budgetMin": "Budget min. (EUR)",
+      "budgetMax": "Budget max. (EUR)",
+      "address": "Adresse",
+      "streetPlaceholder": "Adresse",
+      "line2Placeholder": "Appartement, étage, etc. (facultatif)",
+      "cityPlaceholder": "Ville",
+      "postalCodePlaceholder": "Code postal",
+      "provincePlaceholder": "Province",
+      "countryPlaceholder": "Pays",
+      "latitudePlaceholder": "Latitude (facultatif)",
+      "longitudePlaceholder": "Longitude (facultatif)",
+      "coordinatesHelp": "La latitude et la longitude sont remplies automatiquement lorsque c'est possible — laissez vide en cas de doute.",
+      "saveChanges": "Enregistrer les modifications",
+      "postRequest": "Publier la demande"
+    },
+    "cancel": {
+      "trigger": "Annuler cette demande",
+      "title": "Annuler cette demande de service ?",
+      "description": "Les professionnels ne pourront plus envoyer de devis. Cette action ne peut pas être annulée d'ici.",
+      "confirm": "Oui, annuler la demande",
+      "pending": "Annulation…",
+      "keep": "Conserver la demande"
+    },
+    "photos": {
+      "chooseFirst": "Choisissez d'abord une image.",
+      "alt": "Photo de la demande",
+      "remove": "Retirer",
+      "none": "Aucune photo jointe.",
+      "add": "Ajouter une photo",
+      "uploading": "Envoi…",
+      "maxReached": "Maximum de {max, plural, one {# photo} other {# photos}} atteint."
+    },
+    "errors": {
+      "createFailed": "Une erreur s'est produite lors de la création de votre demande.",
+      "updateFailed": "Une erreur s'est produite lors de la mise à jour de votre demande.",
+      "cancelFailed": "Une erreur s'est produite lors de l'annulation de votre demande.",
+      "photoMissing": "Choisissez une image à envoyer.",
+      "photoType": "Les photos doivent être au format JPEG, PNG ou WebP.",
+      "photoTooLarge": "Chaque photo doit faire moins de 5 Mo.",
+      "photoUploadFailed": "Une erreur s'est produite lors de l'envoi de votre photo.",
+      "photoRemoveFailed": "Une erreur s'est produite lors de la suppression de cette photo."
+    }
+  },
+  "quotes": {
+    "title": "Devis reçus",
+    "subtitle": "Les devis envoyés par des professionnels pour cette demande.",
+    "breadcrumb": "Devis",
+    "empty": "Aucun devis pour le moment. Revenez bientôt.",
+    "verification": {
+      "UNVERIFIED": "Non vérifié",
+      "PENDING": "Vérification en attente",
+      "VERIFIED": "Vérifié",
+      "REJECTED": "Vérification refusée"
+    },
+    "meta": "Envoyé le {created, date, medium} — mis à jour le {updated, date, medium}",
+    "metaWithValidity": "Valable jusqu'au {validUntil, date, medium} — envoyé le {created, date, medium} — mis à jour le {updated, date, medium}",
+    "messageProfessional": "Écrire à {name}",
+    "acceptFailed": "Une erreur s'est produite lors de l'acceptation de ce devis.",
+    "accept": {
+      "trigger": "Accepter ce devis",
+      "title": "Accepter ce devis ?",
+      "description": "Tous les autres devis de cette demande seront automatiquement refusés. Cette action est irréversible.",
+      "confirm": "Oui, accepter le devis",
+      "pending": "Acceptation…",
+      "cancel": "Pas encore"
+    }
+  },
+  "appointments": {
+    "list": {
+      "title": "Mes rendez-vous",
+      "subtitle": "Rendez-vous créés à partir des devis que vous avez acceptés.",
+      "empty": {
+        "title": "Aucun rendez-vous à venir",
+        "description": "Les rendez-vous apparaissent ici dès que vous acceptez le devis d'un professionnel.",
+        "action": "Voir mes demandes"
+      }
+    },
+    "noTimeProposed": "Aucun créneau proposé pour le moment",
+    "notSet": "Non défini",
+    "awaitingProposedTime": "En attente d'un créneau proposé",
+    "detail": {
+      "title": "Rendez-vous",
+      "confirmedTime": "Créneau confirmé",
+      "proposedTime": "Créneau proposé",
+      "cancellationReason": "Motif d'annulation"
+    },
+    "cancellationReason": {
+      "CUSTOMER_REQUEST": "À la demande du client",
+      "PROFESSIONAL_UNAVAILABLE": "Professionnel indisponible",
+      "SCHEDULING_CONFLICT": "Conflit d'horaire",
+      "OTHER": "Autre"
+    },
+    "actions": {
+      "start": "Début",
+      "end": "Fin",
+      "confirming": "Confirmation…",
+      "confirmTime": "Confirmer ce créneau",
+      "completing": "Marquage comme terminé…",
+      "markCompleted": "Marquer cette visite comme terminée",
+      "cancelTrigger": "Annuler le rendez-vous",
+      "cancelTitle": "Annuler ce rendez-vous ?",
+      "confirmCancel": "Oui, annuler",
+      "cancelling": "Annulation…",
+      "notNow": "Pas maintenant",
+      "reason": "Motif",
+      "note": "Note (facultatif)",
+      "proposeTime": "Proposer un créneau",
+      "proposeDifferentTime": "Proposer un autre créneau",
+      "reschedule": "Reprogrammer"
+    },
+    "errors": {
+      "invalidAppointment": "Rendez-vous non valide.",
+      "proposeFailed": "Une erreur s'est produite lors de la proposition de ce créneau.",
+      "confirmFailed": "Une erreur s'est produite lors de la confirmation de ce rendez-vous.",
+      "cancelFailed": "Une erreur s'est produite lors de l'annulation de ce rendez-vous.",
+      "completeFailed": "Une erreur s'est produite lors de la finalisation de ce rendez-vous.",
+      "rescheduleFailed": "Une erreur s'est produite lors de la reprogrammation de ce rendez-vous."
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "conversation": "Conversation",
+    "empty": {
+      "title": "Aucune conversation pour le moment",
+      "description": "Dès que vous avez un devis en commun avec un client ou un professionnel, vous pouvez échanger des messages ici."
+    },
+    "participant": "Participant",
+    "unknownParticipant": "Utilisateur MaestroYa",
+    "noMessagesYet": "Aucun message pour le moment.",
+    "emptyThread": "Aucun message pour le moment. Dites bonjour pour lancer la conversation.",
+    "closed": "Cette conversation n'accepte plus de nouveaux messages.",
+    "opening": "Ouverture…",
+    "messageAction": "Envoyer un message",
+    "bubble": {
+      "deleted": "Ce message a été supprimé.",
+      "deleting": "Suppression…",
+      "confirmDelete": "Confirmer la suppression",
+      "cancel": "Annuler",
+      "delete": "Supprimer"
+    },
+    "composer": {
+      "placeholder": "Écrivez un message…",
+      "ariaLabel": "Message",
+      "sending": "Envoi…",
+      "send": "Envoyer"
+    },
+    "errors": {
+      "openFailed": "Une erreur s'est produite lors de l'ouverture de cette conversation.",
+      "sendFailed": "Une erreur s'est produite lors de l'envoi de votre message.",
+      "generic": "Une erreur s'est produite.",
+      "deleteFailed": "Une erreur s'est produite lors de la suppression de ce message."
+    }
+  },
+  "disputes": {
+    "list": {
+      "metaTitle": "Mes litiges",
+      "title": "Litiges",
+      "subtitle": "Les dossiers que vous avez ouverts et ceux ouverts à propos de votre travail.",
+      "openFromJob": "Ouvrir un litige depuis une mission",
+      "openedByMe": "Ouverts par moi",
+      "openedAboutMe": "Ouverts à propos de mon travail",
+      "emptyMine": {
+        "title": "Aucun litige ouvert",
+        "description": "Vous n'avez ouvert aucun litige."
+      },
+      "emptyAgainst": {
+        "title": "Rien ici",
+        "description": "Aucun litige n'a été ouvert à propos de votre travail."
+      }
+    },
+    "detail": {
+      "metaTitle": "Litige",
+      "subtitle": "{caseNumber} · Statut : {status} · Priorité : {priority} · Motif : {reason}",
+      "description": "Description",
+      "resolution": "Résolution",
+      "evidence": "Preuves",
+      "noEvidence": "Aucune preuve jointe.",
+      "messages": "Messages",
+      "noMessages": "Aucun message pour le moment."
+    },
+    "messageForm": {
+      "label": "Écrivez un message",
+      "placeholder": "Écrivez un message…",
+      "sending": "Envoi…",
+      "send": "Envoyer le message"
+    },
+    "new": {
+      "title": "Ouvrir un litige",
+      "subtitle": "Uniquement pour les missions en cours, terminées ou annulées — consultez la page de détail de votre mission."
+    },
+    "form": {
+      "description": "Donnez le plus de détails possible : cela nous aide à le résoudre plus vite.",
+      "jobId": "ID de la mission",
+      "reason": "Motif",
+      "title": "Titre",
+      "descriptionLabel": "Description",
+      "submitting": "Envoi…",
+      "submit": "Ouvrir le litige"
+    },
+    "status": {
+      "WAITING_FOR_CUSTOMER": "En attente du client",
+      "WAITING_FOR_PROFESSIONAL": "En attente du professionnel"
+    },
+    "priority": {
+      "LOW": "Basse",
+      "MEDIUM": "Moyenne",
+      "HIGH": "Haute",
+      "URGENT": "Urgente"
+    },
+    "reason": {
+      "SERVICE_NOT_COMPLETED": "Service non terminé",
+      "SERVICE_QUALITY": "Qualité du service",
+      "PROPERTY_DAMAGE": "Dommages matériels",
+      "PROFESSIONAL_NO_SHOW": "Le professionnel ne s'est pas présenté",
+      "CUSTOMER_NO_SHOW": "Le client ne s'est pas présenté",
+      "PRICE_DISAGREEMENT": "Désaccord sur le prix",
+      "SCOPE_OF_WORK": "Étendue des travaux",
+      "COMMUNICATION_ISSUE": "Problème de communication",
+      "OTHER": "Autre"
+    },
+    "resolution": {
+      "NO_ACTION": "Aucune action",
+      "CUSTOMER_FAVOR": "En faveur du client",
+      "PROFESSIONAL_FAVOR": "En faveur du professionnel",
+      "PARTIAL_RESOLUTION": "Résolution partielle",
+      "FINANCIAL_ADJUSTMENT_REQUIRED": "Ajustement financier requis",
+      "ESCALATED_EXTERNALLY": "Transmis à un organisme externe"
+    },
+    "errors": {
+      "openFailed": "Une erreur s'est produite lors de l'ouverture de ce litige.",
+      "loadMineFailed": "Une erreur s'est produite lors du chargement de vos litiges.",
+      "loadFailed": "Une erreur s'est produite lors du chargement des litiges.",
+      "loadOneFailed": "Une erreur s'est produite lors du chargement de ce litige.",
+      "messageFailed": "Une erreur s'est produite lors de l'envoi de ce message.",
+      "evidenceFailed": "Une erreur s'est produite lors de l'ajout de cette preuve."
+    }
+  },
+  "support": {
+    "metaTitle": "Demandes d'assistance",
+    "title": "Assistance",
+    "subtitle": "Problèmes de compte, de vérification, bugs ou questions générales.",
+    "myTickets": "Mes demandes",
+    "empty": {
+      "title": "Aucune demande d'assistance",
+      "description": "Vous n'avez ouvert aucune demande d'assistance."
+    },
+    "detail": {
+      "metaTitle": "Demande d'assistance",
+      "subtitle": "{ticketNumber} · Statut : {status} · Catégorie : {category} · Priorité : {priority}",
+      "resolution": "Résolution"
+    },
+    "form": {
+      "title": "Ouvrir une nouvelle demande",
+      "category": "Catégorie",
+      "subject": "Objet",
+      "description": "Description",
+      "submitting": "Envoi…",
+      "submit": "Envoyer la demande"
+    },
+    "category": {
+      "ACCOUNT": "Compte",
+      "VERIFICATION": "Vérification",
+      "BUG": "Bug",
+      "LOGIN": "Connexion",
+      "GENERAL": "Général",
+      "OTHER": "Autre"
+    },
+    "status": {
+      "WAITING_FOR_USER": "En attente de votre réponse"
+    },
+    "errors": {
+      "openFailed": "Une erreur s'est produite lors de l'ouverture de cette demande.",
+      "loadFailed": "Une erreur s'est produite lors du chargement de vos demandes.",
+      "loadOneFailed": "Une erreur s'est produite lors du chargement de cette demande."
+    }
+  },
+  "reviews": {
+    "errors": {
+      "submitFailed": "Une erreur s'est produite lors de l'envoi de cet avis.",
+      "updateFailed": "Une erreur s'est produite lors de la mise à jour de cet avis.",
+      "deleteFailed": "Une erreur s'est produite lors de la suppression de cet avis.",
+      "respondFailed": "Une erreur s'est produite lors de l'envoi de cette réponse."
+    }
+  },
+  "analytics": {
+    "loadFailed": "Une erreur s'est produite lors du chargement de vos statistiques."
+  },
+  "receipts": {
+    "list": {
+      "title": "Mes reçus",
+      "subtitle": "Les reçus des missions que vous avez payées via MaestroYa.",
+      "empty": {
+        "title": "Aucun reçu pour le moment",
+        "description": "Un reçu apparaît ici dès qu'une mission payée est terminée et que le paiement est libéré."
+      }
+    },
+    "notYetIssued": "Pas encore émis",
+    "detail": {
+      "title": "Reçu",
+      "receiptNumber": "Numéro de reçu",
+      "date": "Date",
+      "dateUnset": "—",
+      "issuedBy": "Émis par",
+      "billedTo": "Facturé à",
+      "items": "Lignes",
+      "description": "Description",
+      "amount": "Montant",
+      "tax": "Taxes",
+      "taxableBase": "Base imposable",
+      "vat": "TVA – IVA ({rate})",
+      "total": "Total",
+      "creditNotes": "Avoirs",
+      "documentReference": "Référence du document : {hash}… (simple somme de contrôle anti-falsification — pas une signature électronique)."
+    }
+  }
+}

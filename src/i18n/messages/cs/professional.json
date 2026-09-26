@@ -1,0 +1,344 @@
+{
+  "errors": {
+    "fixErrors": "Opravte prosím chyby níže.",
+    "createProfile": "Při vytváření profilu profesionála se něco pokazilo.",
+    "onboarding": "Při nastavování profilu profesionála se něco pokazilo.",
+    "updateProfile": "Při aktualizaci profilu profesionála se něco pokazilo.",
+    "updateServices": "Při aktualizaci kategorií služeb se něco pokazilo.",
+    "deactivate": "Při deaktivaci profilu profesionála se něco pokazilo.",
+    "submitQuote": "Při odesílání nabídky se něco pokazilo.",
+    "updateQuote": "Při aktualizaci nabídky se něco pokazilo.",
+    "withdrawQuote": "Při stahování nabídky se něco pokazilo.",
+    "acceptInvoice": "Při přijímání této faktury se něco pokazilo.",
+    "invalidInvoice": "Neplatná faktura.",
+    "grantSelfBilling": "Při udělování souhlasu se samofakturací se něco pokazilo.",
+    "revokeSelfBilling": "Při odvolávání souhlasu se samofakturací se něco pokazilo.",
+    "startVerification": "Při zahajování žádosti o ověření se něco pokazilo.",
+    "uploadDocument": "Při nahrávání dokumentu se něco pokazilo.",
+    "removeDocument": "Při odstraňování dokumentu se něco pokazilo.",
+    "submitVerification": "Při odesílání žádosti o ověření se něco pokazilo.",
+    "resubmitVerification": "Při opětovném odesílání žádosti o ověření se něco pokazilo.",
+    "invalidDocumentType": "Vyberte platný typ dokumentu.",
+    "fileRequired": "Vyberte soubor k nahrání.",
+    "invalidFileType": "Dokument musí být obrázek JPEG, PNG nebo WebP, nebo soubor PDF.",
+    "fileTooLarge": "Každý dokument musí mít méně než {maxMb, number} MB.",
+    "invalidDocument": "Neplatný dokument.",
+    "createPortfolioItem": "Při vytváření této položky portfolia se něco pokazilo.",
+    "updatePortfolioItem": "Při aktualizaci této položky portfolia se něco pokazilo.",
+    "deletePortfolioItem": "Při mazání této položky portfolia se něco pokazilo.",
+    "invalidDateRange": "Neplatné časové období.",
+    "loadAnalytics": "Při načítání statistik se něco pokazilo."
+  },
+  "servicesForm": {
+    "success": "Kategorie služeb byly aktualizovány.",
+    "title": "Kategorie služeb",
+    "description": "Zákazníci vás najdou podle těchto kategorií — vyberte všechny, které odpovídají.",
+    "empty": "Zatím nejsou k dispozici žádné kategorie služeb.",
+    "saving": "Ukládání…",
+    "submit": "Uložit kategorie služeb"
+  },
+  "deactivate": {
+    "success": "Váš profil profesionála byl deaktivován.",
+    "trigger": "Deaktivovat profil profesionála",
+    "title": "Noví zákazníci vás pak nenajdou",
+    "description": "Stávající nabídky, schůzky a recenze zůstanou zachovány. V případě potřeby vás podpora může později znovu aktivovat.",
+    "confirmLabel": "Pro potvrzení napište {word}",
+    "pending": "Deaktivace…",
+    "confirm": "Deaktivovat můj profil profesionála"
+  },
+  "profileForm": {
+    "updated": "Profil profesionála byl aktualizován.",
+    "created": "Profil profesionála byl vytvořen.",
+    "aboutSection": "O vaší firmě",
+    "businessName": "Obchodní název",
+    "headline": "Titulek",
+    "headlinePlaceholder": "např. Elektrikář s oprávněním, více než 10 let praxe",
+    "bio": "Popis",
+    "yearsExperience": "Roky praxe",
+    "serviceRadius": "Dosah služeb (km)",
+    "contactSection": "Kontaktní údaje",
+    "contactEmail": "Kontaktní e-mail",
+    "contactPhone": "Kontaktní telefon",
+    "websiteUrl": "Adresa webu",
+    "taxId": "Daňové identifikační číslo (NIF/CIF)",
+    "availabilitySection": "Dostupnost",
+    "acceptingRequests": "Momentálně přijímám nové poptávky",
+    "saving": "Ukládání…",
+    "saveChanges": "Uložit změny",
+    "create": "Vytvořit profil profesionála"
+  },
+  "onboarding": {
+    "form": {
+      "categoriesTitle": "Hlavní profese / kategorie",
+      "categoriesDescription": "Vyberte všechny kategorie, které popisují vaši práci.",
+      "noCategories": "Zatím nejsou k dispozici žádné kategorie služeb.",
+      "contactTitle": "Kontakt",
+      "phone": "Telefonní číslo",
+      "locationTitle": "Výchozí lokalita",
+      "locationDescription": "Kde působíte — podle toho vám přiřazujeme poptávky v okolí.",
+      "address": "Adresa",
+      "line1Placeholder": "Ulice a číslo domu",
+      "line2Placeholder": "Byt, patro apod. (nepovinné)",
+      "cityPlaceholder": "Město",
+      "provincePlaceholder": "Provincie (nepovinné)",
+      "postalCodePlaceholder": "PSČ",
+      "countryPlaceholder": "Země",
+      "coverageTitle": "Oblast působení a o vás",
+      "serviceRadius": "Dosah služeb (km)",
+      "bio": "Krátký profesní popis",
+      "pending": "Nastavování…",
+      "submit": "Dokončit nastavení mého profilu profesionála"
+    },
+    "metaTitle": "Registrace profesionála",
+    "title": "Nastavte si profil profesionála",
+    "subtitle": "Pár údajů, aby vás zákazníci mohli najít a kontaktovat. Další můžete doplnit později ve svém přehledu profesionála.",
+    "photoTitle": "Profilová fotka (nepovinné)"
+  },
+  "quotes": {
+    "form": {
+      "itemsTitle": "Položky",
+      "itemsDescription": "Rozepište práci a materiál, aby zákazník přesně viděl, za co platí.",
+      "addItem": "Přidat položku",
+      "description": "Popis",
+      "descriptionPlaceholder": "Popis (např. práce, materiál)",
+      "quantity": "Množství",
+      "quantityPlaceholder": "Množ.",
+      "unitPrice": "Jednotková cena",
+      "unitPricePlaceholder": "€ za jednotku",
+      "itemType": "Typ položky",
+      "categories": {
+        "LABOR": "Práce",
+        "MATERIALS": "Materiál"
+      },
+      "removeItem": "Odebrat položku",
+      "estimatedTotal": "Odhadovaný součet: {amount}",
+      "detailsTitle": "Podrobnosti",
+      "notes": "Poznámky / návrh",
+      "notesPlaceholder": "Popište svůj návrh, harmonogram nebo cokoli, co by měl zákazník vědět.",
+      "validUntil": "Platí do",
+      "saving": "Ukládání…",
+      "saveChanges": "Uložit změny",
+      "create": "Vytvořit nabídku"
+    },
+    "withdraw": {
+      "trigger": "Stáhnout tuto nabídku",
+      "title": "Stáhnout tuto nabídku?",
+      "description": "Zákazník ji už nebude moci přijmout. Tuto akci nelze vrátit zpět.",
+      "confirm": "Ano, stáhnout nabídku",
+      "pending": "Stahování…",
+      "cancel": "Ponechat nabídku"
+    },
+    "list": {
+      "metaTitle": "Moje nabídky",
+      "title": "Moje nabídky",
+      "subtitle": "Nabídky, které jste poslali na poptávky zákazníků.",
+      "findRequests": "Najít poptávky",
+      "emptyTitle": "Zatím jste neposlali žádnou nabídku",
+      "emptyDescription": "Projděte otevřené poptávky a pošlete svou první nabídku.",
+      "browseRequests": "Procházet poptávky"
+    },
+    "detail": {
+      "metaTitle": "Detail nabídky",
+      "notes": "Poznámky / návrh",
+      "items": "Položky",
+      "validUntil": "Platí do",
+      "noExpiry": "Bez data platnosti",
+      "submitted": "Odesláno",
+      "lastUpdated": "Naposledy upraveno",
+      "edit": "Upravit nabídku",
+      "messageCustomer": "Napsat zákazníkovi"
+    },
+    "edit": {
+      "metaTitle": "Úprava nabídky",
+      "title": "Úprava nabídky",
+      "subtitle": "Aktualizujte ceny nebo podrobnosti svého návrhu."
+    }
+  },
+  "dashboard": {
+    "metaTitle": "Profil profesionála",
+    "title": "Profil profesionála",
+    "subtitle": "Spravujte, jak vás zákazníci vidí jako samostatného profesionála.",
+    "createTitle": "Vytvořte si profil profesionála",
+    "statusTitle": "Stav",
+    "profileStatus": "Stav: {status}",
+    "selfBillingLink": "Samofakturace a faktury",
+    "verificationLink": "Spravovat ověření totožnosti",
+    "profileDetails": "Údaje profilu",
+    "serviceCategories": "Kategorie služeb",
+    "dangerZone": "Nebezpečná zóna",
+    "dangerZoneDescription": "Po deaktivaci se váš profil nebude zobrazovat ve vyhledávání zákazníků, dokud nebude znovu aktivován."
+  },
+  "requests": {
+    "distance": "{distance, number} km od vás",
+    "postedOn": "Zveřejněno {date}",
+    "urgency": {
+      "LOW": "Nízká",
+      "MEDIUM": "Střední",
+      "HIGH": "Vysoká",
+      "EMERGENCY": "Havárie"
+    },
+    "list": {
+      "metaTitle": "Dostupné poptávky",
+      "title": "Dostupné poptávky",
+      "subtitle": "Poptávky zákazníků odpovídající vašim kategoriím a dosahu služeb. Otevřete některou a reagujte vytvořením nabídky.",
+      "empty": "Momentálně nejsou žádné odpovídající poptávky. Ujistěte se, že je váš profil profesionála aktivní a má nastavené kategorie služeb a dosah služeb."
+    },
+    "detail": {
+      "metaTitle": "Poptávka",
+      "intro": "Toto je poptávka zákazníka. Prohlédněte si podrobnosti níže a vytvořte nabídku, pokud chcete za práci navrhnout cenu.",
+      "description": "Popis",
+      "location": "Lokalita",
+      "urgency": "Naléhavost",
+      "posted": "Zveřejněno",
+      "createQuote": "Vytvořit nabídku"
+    },
+    "createQuote": {
+      "metaTitle": "Vytvoření nabídky",
+      "title": "Vytvoření nabídky",
+      "intro": "Toto je poptávka zákazníka. Vytvořte nabídku s popisem navrhované práce a materiálu a s cenou, za kterou zakázku provedete."
+    }
+  },
+  "jobs": {
+    "list": {
+      "metaTitle": "Moje zakázky",
+      "title": "Moje zakázky",
+      "subtitle": "Zakázky vytvořené z nabídek, které vaši zákazníci přijali.",
+      "empty": "Nemáte žádné aktivní zakázky.",
+      "withCounterparty": "s: {name}"
+    },
+    "detail": {
+      "metaTitle": "Zakázka",
+      "title": "Zakázka",
+      "started": "Zahájeno",
+      "completed": "Dokončeno",
+      "cancellationReason": "Důvod zrušení",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "Na žádost zákazníka",
+        "PROFESSIONAL_UNABLE_TO_COMPLETE": "Profesionál nemůže zakázku dokončit",
+        "SERVICE_REQUEST_ISSUE": "Problém s poptávkou",
+        "OTHER": "Jiné"
+      },
+      "appointmentsTitle": "Schůzky k této zakázce",
+      "noAppointments": "Zatím žádné schůzky.",
+      "notScheduled": "Zatím nenaplánováno"
+    }
+  },
+  "appointments": {
+    "window": "{start} – {end}",
+    "list": {
+      "metaTitle": "Moje schůzky",
+      "title": "Moje schůzky",
+      "subtitle": "Schůzky z nabídek, které vaši zákazníci přijali.",
+      "emptyTitle": "Žádné nadcházející schůzky",
+      "emptyDescription": "Schůzky se zde zobrazí, jakmile zákazník přijme některou z vašich nabídek.",
+      "noTimeProposed": "Zatím nebyl navržen čas"
+    },
+    "detail": {
+      "metaTitle": "Schůzka",
+      "title": "Schůzka",
+      "confirmedTime": "Potvrzený čas",
+      "proposedTime": "Navržený čas",
+      "notSet": "Nenastaveno",
+      "cancellationReason": "Důvod zrušení",
+      "cancellationReasons": {
+        "CUSTOMER_REQUEST": "Na žádost zákazníka",
+        "PROFESSIONAL_UNAVAILABLE": "Profesionál není k dispozici",
+        "SCHEDULING_CONFLICT": "Časová kolize",
+        "OTHER": "Jiné"
+      }
+    }
+  },
+  "invoices": {
+    "list": {
+      "metaTitle": "Moje faktury",
+      "title": "Moje faktury",
+      "subtitle": "Faktury, které MaestroYa vystavila vaším jménem v rámci samofakturace.",
+      "emptyTitle": "Zatím žádné faktury",
+      "emptyDescription": "Koncept faktury se vytvoří automaticky, jakmile vám bude uvolněna platba za dokončenou zakázku — vyžaduje to aktivní souhlas se samofakturací.",
+      "notYetIssued": "Zatím nevystaveno"
+    },
+    "detail": {
+      "metaTitle": "Faktura",
+      "title": "Faktura",
+      "acceptIntro": "MaestroYa připravila tuto fakturu vaším jménem v rámci samofakturace. Zkontrolujte údaje níže a fakturu přijměte, abyste potvrdili, že jsou správné.",
+      "accept": "Přijmout tuto fakturu",
+      "documentReference": "Reference dokumentu: {reference}… (pouze kontrolní součet proti neoprávněným změnám — nejde o elektronický podpis)."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Souhlas se samofakturací",
+    "title": "Souhlas se samofakturací",
+    "subtitle": "Rozhodněte, zda smí MaestroYa za dokončené zakázky vystavovat faktury vaším jménem.",
+    "status": {
+      "ACTIVE": "Aktivní",
+      "REVOKED": "Odvolán"
+    },
+    "notAuthorized": "Neudělen",
+    "activeDescription": "Udělili jste MaestroYa souhlas vystavovat vaším jménem faktury („facturación por el destinatario“) za dokončené zakázky. Tento souhlas můžete kdykoli odvolat.",
+    "revoke": "Odvolat souhlas",
+    "inactiveDescription": "Bez tohoto souhlasu nemůže MaestroYa vystavovat faktury vaším jménem a pro vaše dokončené zakázky nelze připravit koncepty faktur.",
+    "previouslyRevokedTitle": "Dříve odvolán",
+    "previouslyRevokedDescription": "Tento souhlas jste dříve odvolali. Níže ho můžete udělit znovu.",
+    "grant": "Udělit souhlas",
+    "viewInvoices": "Zobrazit <link>faktury vystavené v rámci samofakturace</link>."
+  },
+  "verification": {
+    "metaTitle": "Ověření profesionála",
+    "title": "Ověření",
+    "subtitle": "Ověřte svou totožnost a získejte ve veřejném profilu odznak „Ověřený profesionál“.",
+    "noProfile": "Než budete moci požádat o ověření, potřebujete profil profesionála. <link>Vytvořte si profil profesionála</link>.",
+    "notStarted": "Zatím jste nezahájili žádost o ověření.",
+    "start": "Zahájit ověření",
+    "validUntil": "Platí do {date}",
+    "status": {
+      "DRAFT": {
+        "label": "Neodesláno",
+        "description": "Nahrajte alespoň jeden doklad totožnosti (občanský průkaz, cestovní pas nebo řidičský průkaz) a případné podpůrné dokumenty a poté je odešlete ke kontrole."
+      },
+      "PENDING": {
+        "label": "Čeká na kontrolu",
+        "description": "Vaše žádost je ve frontě na kontrolu. Dáme vám vědět, jakmile ji kontrolor posoudí."
+      },
+      "UNDER_REVIEW": {
+        "label": "Probíhá kontrola",
+        "description": "Kontrolor právě prověřuje vaše dokumenty. Momentálně nemusíte nic dělat."
+      },
+      "APPROVED": {
+        "label": "Schváleno",
+        "description": "Jste ověřený profesionál. Ve vašem veřejném profilu se zobrazuje odznak ověření."
+      },
+      "REJECTED": {
+        "label": "Zamítnuto",
+        "description": "Vaše žádost nebyla schválena. Důvod najdete níže — můžete ho odstranit a žádost odeslat znovu."
+      },
+      "RESUBMISSION_REQUIRED": {
+        "label": "Nutné opětovné odeslání",
+        "description": "Kontrolor potřebuje, abyste žádost aktualizovali. Postupujte podle pokynů níže a poté ji odešlete znovu."
+      }
+    },
+    "rejectionReasonTitle": "Důvod",
+    "resubmissionReasonTitle": "Co je třeba aktualizovat",
+    "documentsTitle": "Dokumenty",
+    "noDocuments": "Zatím nebyly nahrány žádné dokumenty.",
+    "remove": "Odstranit",
+    "uploadTitle": "Nahrát dokument",
+    "documentType": "Typ dokumentu",
+    "fileLabel": "Soubor (JPEG, PNG, WebP nebo PDF, max. {maxMb, number} MB)",
+    "upload": "Nahrát",
+    "submit": "Odeslat ke kontrole",
+    "resubmit": "Znovu odeslat ke kontrole",
+    "submitHint": "Před odesláním musíte mít nahraný alespoň jeden doklad totožnosti.",
+    "documentTypes": {
+      "NATIONAL_ID": "Občanský průkaz",
+      "PASSPORT": "Cestovní pas",
+      "DRIVER_LICENSE": "Řidičský průkaz",
+      "BUSINESS_LICENSE": "Živnostenské oprávnění",
+      "TAX_CERTIFICATE": "Potvrzení finančního úřadu",
+      "INSURANCE_CERTIFICATE": "Doklad o pojištění",
+      "PROFESSIONAL_CERTIFICATION": "Odborná certifikace",
+      "PROOF_OF_ADDRESS": "Doklad o adrese",
+      "BUSINESS_REGISTRATION": "Zápis do obchodního rejstříku",
+      "OTHER": "Jiné"
+    }
+  }
+}

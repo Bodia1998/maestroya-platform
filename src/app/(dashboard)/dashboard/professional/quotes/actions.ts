@@ -1,9 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
+import type { ZodError } from "zod";
 
 import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError, localizeZodFieldErrors } from "@/presentation/i18n/server";
 import { createQuoteSchema, updateQuoteSchema } from "@/application/dto/quote.dto";
 import {
   makeCreateQuoteUseCase,
@@ -21,15 +24,26 @@ export type CreateQuoteActionResult =
   | { success: true; id: string }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
-// Same translation convention as Service Request/Professional's actions.ts:
-// domain errors surface their own (safe, user-facing) message, anything
-// else is logged server-side and replaced with a generic message.
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+// Module 120 — errors are localised at the edge (`localizeActionError`):
+// domain errors map to their catalog sentence, anything else is logged
+// server-side and replaced with the localised fallback.
+type FallbackKey =
+  | "submitQuote"
+  | "updateQuote"
+  | "withdrawQuote";
+
+async function fromDomainError(error: unknown, fallbackKey: FallbackKey): Promise<ActionResult> {
+  const t = await getTranslations("professional.errors");
+  return { success: false, error: await localizeActionError(error, t(fallbackKey)) };
+}
+
+async function invalid(error: ZodError): Promise<ActionResult> {
+  const t = await getTranslations("professional.errors");
+  return {
+    success: false,
+    error: t("fixErrors"),
+    fieldErrors: await localizeZodFieldErrors(error),
+  };
 }
 
 /**
@@ -47,11 +61,7 @@ export async function createQuoteAction(
 
   const parsed = createQuoteSchema.safeParse({ ...(formData as Record<string, unknown>), serviceRequestId: requestId });
   if (!parsed.success) {
-    return {
-      success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return (await invalid(parsed.error)) as CreateQuoteActionResult;
   }
 
   const antiAbuse = makeAntiAbuseService();
@@ -60,7 +70,7 @@ export async function createQuoteAction(
     await antiAbuse.enforceRateLimit("QUOTE_CREATE_BY_USER", { userId: user.id }, "QUOTE_RATE_LIMITED");
   } catch (error) {
     if (error instanceof DomainError) {
-      return { success: false, error: error.message } as CreateQuoteActionResult;
+      return { success: false, error: await localizeActionError(error) } as CreateQuoteActionResult;
     }
     throw error;
   }
@@ -72,7 +82,7 @@ export async function createQuoteAction(
     revalidatePath(`/requests/${requestId}/quotes`);
     return { success: true, id: created.id };
   } catch (error) {
-    const result = fromDomainError(error, "Something went wrong submitting your quote.");
+    const result = await fromDomainError(error, "submitQuote");
     return result as CreateQuoteActionResult;
   }
 }
@@ -82,11 +92,7 @@ export async function updateQuoteAction(quoteId: string, formData: unknown): Pro
 
   const parsed = updateQuoteSchema.safeParse(formData);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return invalid(parsed.error);
   }
 
   try {
@@ -96,7 +102,7 @@ export async function updateQuoteAction(quoteId: string, formData: unknown): Pro
     revalidatePath(`/requests/${updated.serviceRequestId}/quotes`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong updating your quote.");
+    return fromDomainError(error, "updateQuote");
   }
 }
 
@@ -114,6 +120,6 @@ export async function withdrawQuoteAction(quoteId: string): Promise<ActionResult
     revalidatePath(`/requests/${quote.serviceRequestId}/quotes`);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong withdrawing your quote.");
+    return fromDomainError(error, "withdrawQuote");
   }
 }

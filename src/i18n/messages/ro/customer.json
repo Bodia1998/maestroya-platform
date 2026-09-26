@@ -1,0 +1,365 @@
+{
+  "requests": {
+    "list": {
+      "title": "Cererile mele",
+      "subtitle": "Cererile pe care le-ai publicat pentru ca profesioniștii să trimită oferte.",
+      "newRequest": "Cerere nouă",
+      "empty": {
+        "title": "Nicio cerere încă",
+        "description": "Nu ai publicat încă nicio cerere. Publică una ca să începi să primești oferte de la profesioniști din apropiere."
+      }
+    },
+    "new": {
+      "title": "Cerere nouă de serviciu",
+      "subtitle": "Descrie lucrarea de care ai nevoie. Va fi publicată imediat, ca profesioniștii să poată trimite oferte."
+    },
+    "edit": {
+      "title": "Editează cererea de serviciu",
+      "subtitle": "Poți edita această cerere cât timp este deschisă.",
+      "breadcrumb": "Editează"
+    },
+    "detail": {
+      "metaTitle": "Cerere de serviciu",
+      "description": "Descriere",
+      "location": "Locație",
+      "urgency": "Urgență",
+      "budget": "Buget",
+      "budgetRange": "{min} – {max}",
+      "budgetUnset": "—",
+      "posted": "Publicată",
+      "lastUpdated": "Ultima actualizare",
+      "photos": "Fotografii",
+      "acceptedNotice": "Ai acceptat o ofertă pentru această cerere. Mergi la <appointments>Programările mele</appointments> ca să propui sau să confirmi o oră, sau verifică <jobs>Lucrările mele</jobs> pentru progresul general.",
+      "editRequest": "Editează cererea"
+    },
+    "form": {
+      "updated": "Cererea a fost actualizată.",
+      "sections": {
+        "job": "Lucrarea",
+        "budget": "Buget",
+        "budgetDescription": "Oferă profesioniștilor o sumă orientativă, ca ofertele să se încadreze.",
+        "location": "Locația lucrării"
+      },
+      "category": "Categoria serviciului",
+      "selectCategory": "Selectează o categorie",
+      "title": "Titlu",
+      "titlePlaceholder": "ex. Repară robinetul de la bucătărie care picură",
+      "description": "Descriere",
+      "descriptionPlaceholder": "Descrie lucrarea în detaliu — ce trebuie făcut și orice context relevant.",
+      "urgency": "Urgență",
+      "budgetMin": "Buget minim (EUR)",
+      "budgetMax": "Buget maxim (EUR)",
+      "address": "Adresă",
+      "streetPlaceholder": "Stradă și număr",
+      "line2Placeholder": "Apartament, etaj etc. (opțional)",
+      "cityPlaceholder": "Oraș",
+      "postalCodePlaceholder": "Cod poștal",
+      "provincePlaceholder": "Provincie",
+      "countryPlaceholder": "Țară",
+      "latitudePlaceholder": "Latitudine (opțional)",
+      "longitudePlaceholder": "Longitudine (opțional)",
+      "coordinatesHelp": "Latitudinea și longitudinea se completează automat când este posibil — lasă câmpurile goale dacă nu ești sigur.",
+      "saveChanges": "Salvează modificările",
+      "postRequest": "Publică cererea"
+    },
+    "cancel": {
+      "trigger": "Anulează această cerere",
+      "title": "Anulezi această cerere de serviciu?",
+      "description": "Profesioniștii nu vor mai putea trimite oferte. Acțiunea nu poate fi anulată de aici.",
+      "confirm": "Da, anulează cererea",
+      "pending": "Se anulează…",
+      "keep": "Păstrează cererea"
+    },
+    "photos": {
+      "chooseFirst": "Alege mai întâi o imagine.",
+      "alt": "Fotografia cererii",
+      "remove": "Elimină",
+      "none": "Nu sunt fotografii atașate.",
+      "add": "Adaugă fotografie",
+      "uploading": "Se încarcă…",
+      "maxReached": "Ai atins numărul maxim de {max, plural, one {# fotografie} few {# fotografii} other {# de fotografii}}."
+    },
+    "errors": {
+      "createFailed": "A apărut o eroare la crearea cererii.",
+      "updateFailed": "A apărut o eroare la actualizarea cererii.",
+      "cancelFailed": "A apărut o eroare la anularea cererii.",
+      "photoMissing": "Alege o imagine de încărcat.",
+      "photoType": "Fotografiile trebuie să fie imagini JPEG, PNG sau WebP.",
+      "photoTooLarge": "Fiecare fotografie trebuie să aibă mai puțin de 5 MB.",
+      "photoUploadFailed": "A apărut o eroare la încărcarea fotografiei.",
+      "photoRemoveFailed": "A apărut o eroare la eliminarea fotografiei."
+    }
+  },
+  "quotes": {
+    "title": "Oferte primite",
+    "subtitle": "Ofertele trimise de profesioniști pentru această cerere.",
+    "breadcrumb": "Oferte",
+    "empty": "Nicio ofertă încă. Revino în curând.",
+    "verification": {
+      "UNVERIFIED": "Neverificat",
+      "PENDING": "Verificare în așteptare",
+      "VERIFIED": "Verificat",
+      "REJECTED": "Verificare respinsă"
+    },
+    "meta": "Trimisă pe {created, date, medium} — actualizată pe {updated, date, medium}",
+    "metaWithValidity": "Valabilă până pe {validUntil, date, medium} — trimisă pe {created, date, medium} — actualizată pe {updated, date, medium}",
+    "messageProfessional": "Trimite mesaj către {name}",
+    "acceptFailed": "A apărut o eroare la acceptarea ofertei.",
+    "accept": {
+      "trigger": "Acceptă această ofertă",
+      "title": "Accepți această ofertă?",
+      "description": "Toate celelalte oferte pentru această cerere vor fi refuzate automat. Acțiunea nu poate fi anulată.",
+      "confirm": "Da, acceptă oferta",
+      "pending": "Se acceptă…",
+      "cancel": "Nu încă"
+    }
+  },
+  "appointments": {
+    "list": {
+      "title": "Programările mele",
+      "subtitle": "Programări create din ofertele pe care le-ai acceptat.",
+      "empty": {
+        "title": "Nicio programare viitoare",
+        "description": "Programările apar aici după ce accepți oferta unui profesionist.",
+        "action": "Vezi cererile mele"
+      }
+    },
+    "noTimeProposed": "Nicio oră propusă încă",
+    "notSet": "Nesetat",
+    "awaitingProposedTime": "Se așteaptă o oră propusă",
+    "detail": {
+      "title": "Programare",
+      "confirmedTime": "Ora confirmată",
+      "proposedTime": "Ora propusă",
+      "cancellationReason": "Motivul anulării"
+    },
+    "cancellationReason": {
+      "CUSTOMER_REQUEST": "La cererea clientului",
+      "PROFESSIONAL_UNAVAILABLE": "Profesionist indisponibil",
+      "SCHEDULING_CONFLICT": "Conflict de program",
+      "OTHER": "Altul"
+    },
+    "actions": {
+      "start": "Început",
+      "end": "Sfârșit",
+      "confirming": "Se confirmă…",
+      "confirmTime": "Confirmă această oră",
+      "completing": "Se marchează ca finalizată…",
+      "markCompleted": "Marchează această vizită ca finalizată",
+      "cancelTrigger": "Anulează programarea",
+      "cancelTitle": "Anulezi această programare?",
+      "confirmCancel": "Da, anulează",
+      "cancelling": "Se anulează…",
+      "notNow": "Nu acum",
+      "reason": "Motiv",
+      "note": "Notă (opțional)",
+      "proposeTime": "Propune o oră",
+      "proposeDifferentTime": "Propune altă oră",
+      "reschedule": "Reprogramează"
+    },
+    "errors": {
+      "invalidAppointment": "Programare nevalidă.",
+      "proposeFailed": "A apărut o eroare la propunerea orei.",
+      "confirmFailed": "A apărut o eroare la confirmarea programării.",
+      "cancelFailed": "A apărut o eroare la anularea programării.",
+      "completeFailed": "A apărut o eroare la finalizarea programării.",
+      "rescheduleFailed": "A apărut o eroare la reprogramarea programării."
+    }
+  },
+  "messages": {
+    "title": "Mesaje",
+    "conversation": "Conversație",
+    "empty": {
+      "title": "Nicio conversație încă",
+      "description": "După ce tu și un client sau profesionist aveți o ofertă în comun, vă puteți scrie aici."
+    },
+    "participant": "Participant",
+    "unknownParticipant": "Utilizator MaestroYa",
+    "noMessagesYet": "Niciun mesaj încă.",
+    "emptyThread": "Niciun mesaj încă. Salută ca să începeți conversația.",
+    "closed": "Această conversație nu mai acceptă mesaje noi.",
+    "opening": "Se deschide…",
+    "messageAction": "Trimite mesaj",
+    "bubble": {
+      "deleted": "Acest mesaj a fost șters.",
+      "deleting": "Se șterge…",
+      "confirmDelete": "Confirmă ștergerea",
+      "cancel": "Anulează",
+      "delete": "Șterge"
+    },
+    "composer": {
+      "placeholder": "Scrie un mesaj…",
+      "ariaLabel": "Mesaj",
+      "sending": "Se trimite…",
+      "send": "Trimite"
+    },
+    "errors": {
+      "openFailed": "A apărut o eroare la deschiderea conversației.",
+      "sendFailed": "A apărut o eroare la trimiterea mesajului.",
+      "generic": "A apărut o eroare.",
+      "deleteFailed": "A apărut o eroare la ștergerea mesajului."
+    }
+  },
+  "disputes": {
+    "list": {
+      "metaTitle": "Disputele mele",
+      "title": "Dispute",
+      "subtitle": "Cazurile deschise de tine și cele deschise cu privire la munca ta.",
+      "openFromJob": "Deschide o dispută dintr-o lucrare",
+      "openedByMe": "Deschise de mine",
+      "openedAboutMe": "Deschise cu privire la munca mea",
+      "emptyMine": {
+        "title": "Nicio dispută deschisă",
+        "description": "Nu ai deschis nicio dispută."
+      },
+      "emptyAgainst": {
+        "title": "Nimic aici",
+        "description": "Nu a fost deschisă nicio dispută cu privire la munca ta."
+      }
+    },
+    "detail": {
+      "metaTitle": "Dispută",
+      "subtitle": "{caseNumber} · Stare: {status} · Prioritate: {priority} · Motiv: {reason}",
+      "description": "Descriere",
+      "resolution": "Soluționare",
+      "evidence": "Dovezi",
+      "noEvidence": "Nu sunt dovezi atașate.",
+      "messages": "Mesaje",
+      "noMessages": "Niciun mesaj încă."
+    },
+    "messageForm": {
+      "label": "Scrie un mesaj",
+      "placeholder": "Scrie un mesaj…",
+      "sending": "Se trimite…",
+      "send": "Trimite mesajul"
+    },
+    "new": {
+      "title": "Deschide o dispută",
+      "subtitle": "Doar pentru lucrări în desfășurare, finalizate sau anulate — vezi pagina de detalii a lucrării."
+    },
+    "form": {
+      "description": "Oferă cât mai multe detalii — ne ajută să o rezolvăm mai repede.",
+      "jobId": "ID-ul lucrării",
+      "reason": "Motiv",
+      "title": "Titlu",
+      "descriptionLabel": "Descriere",
+      "submitting": "Se trimite…",
+      "submit": "Deschide disputa"
+    },
+    "status": {
+      "WAITING_FOR_CUSTOMER": "Se așteaptă clientul",
+      "WAITING_FOR_PROFESSIONAL": "Se așteaptă profesionistul"
+    },
+    "priority": {
+      "LOW": "Scăzută",
+      "MEDIUM": "Medie",
+      "HIGH": "Ridicată",
+      "URGENT": "Urgentă"
+    },
+    "reason": {
+      "SERVICE_NOT_COMPLETED": "Serviciu neefectuat",
+      "SERVICE_QUALITY": "Calitatea serviciului",
+      "PROPERTY_DAMAGE": "Daune materiale",
+      "PROFESSIONAL_NO_SHOW": "Profesionistul nu s-a prezentat",
+      "CUSTOMER_NO_SHOW": "Clientul nu s-a prezentat",
+      "PRICE_DISAGREEMENT": "Dezacord privind prețul",
+      "SCOPE_OF_WORK": "Sfera lucrării",
+      "COMMUNICATION_ISSUE": "Problemă de comunicare",
+      "OTHER": "Altul"
+    },
+    "resolution": {
+      "NO_ACTION": "Nicio acțiune",
+      "CUSTOMER_FAVOR": "În favoarea clientului",
+      "PROFESSIONAL_FAVOR": "În favoarea profesionistului",
+      "PARTIAL_RESOLUTION": "Soluționare parțială",
+      "FINANCIAL_ADJUSTMENT_REQUIRED": "Necesită ajustare financiară",
+      "ESCALATED_EXTERNALLY": "Escaladată extern"
+    },
+    "errors": {
+      "openFailed": "A apărut o eroare la deschiderea disputei.",
+      "loadMineFailed": "A apărut o eroare la încărcarea disputelor tale.",
+      "loadFailed": "A apărut o eroare la încărcarea disputelor.",
+      "loadOneFailed": "A apărut o eroare la încărcarea disputei.",
+      "messageFailed": "A apărut o eroare la trimiterea mesajului.",
+      "evidenceFailed": "A apărut o eroare la atașarea dovezii."
+    }
+  },
+  "support": {
+    "metaTitle": "Tichete de asistență",
+    "title": "Asistență",
+    "subtitle": "Probleme cu contul, cu verificarea, erori sau întrebări generale.",
+    "myTickets": "Tichetele mele",
+    "empty": {
+      "title": "Niciun tichet de asistență",
+      "description": "Nu ai deschis niciun tichet de asistență."
+    },
+    "detail": {
+      "metaTitle": "Tichet de asistență",
+      "subtitle": "{ticketNumber} · Stare: {status} · Categorie: {category} · Prioritate: {priority}",
+      "resolution": "Soluționare"
+    },
+    "form": {
+      "title": "Deschide un tichet nou",
+      "category": "Categorie",
+      "subject": "Subiect",
+      "description": "Descriere",
+      "submitting": "Se trimite…",
+      "submit": "Trimite tichetul"
+    },
+    "category": {
+      "ACCOUNT": "Cont",
+      "VERIFICATION": "Verificare",
+      "BUG": "Eroare",
+      "LOGIN": "Autentificare",
+      "GENERAL": "General",
+      "OTHER": "Altele"
+    },
+    "status": {
+      "WAITING_FOR_USER": "Se așteaptă răspunsul tău"
+    },
+    "errors": {
+      "openFailed": "A apărut o eroare la deschiderea tichetului.",
+      "loadFailed": "A apărut o eroare la încărcarea tichetelor.",
+      "loadOneFailed": "A apărut o eroare la încărcarea tichetului."
+    }
+  },
+  "reviews": {
+    "errors": {
+      "submitFailed": "A apărut o eroare la trimiterea recenziei.",
+      "updateFailed": "A apărut o eroare la actualizarea recenziei.",
+      "deleteFailed": "A apărut o eroare la ștergerea recenziei.",
+      "respondFailed": "A apărut o eroare la trimiterea răspunsului."
+    }
+  },
+  "analytics": {
+    "loadFailed": "A apărut o eroare la încărcarea statisticilor."
+  },
+  "receipts": {
+    "list": {
+      "title": "Chitanțele mele",
+      "subtitle": "Chitanțele pentru lucrările plătite prin MaestroYa.",
+      "empty": {
+        "title": "Nicio chitanță încă",
+        "description": "Chitanța apare aici după ce o lucrare plătită este finalizată și plata este eliberată."
+      }
+    },
+    "notYetIssued": "Neemisă încă",
+    "detail": {
+      "title": "Chitanță",
+      "receiptNumber": "Numărul chitanței",
+      "date": "Data",
+      "dateUnset": "—",
+      "issuedBy": "Emisă de",
+      "billedTo": "Facturat către",
+      "items": "Articole",
+      "description": "Descriere",
+      "amount": "Sumă",
+      "tax": "Taxe",
+      "taxableBase": "Baza de impozitare",
+      "vat": "TVA – IVA ({rate})",
+      "total": "Total",
+      "creditNotes": "Note de credit",
+      "documentReference": "Referința documentului: {hash}… (doar sumă de control pentru detectarea modificărilor — nu este o semnătură electronică)."
+    }
+  }
+}

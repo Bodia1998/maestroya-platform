@@ -1,14 +1,16 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/application/dto/auth.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { forgotPasswordAction } from "../actions";
 
 export function ForgotPasswordForm() {
+  const t = useTranslations("auth");
   const [serverError, setServerError] = useState<string | null>(null);
   const [succeeded, setSucceeded] = useState(false);
 
@@ -17,7 +19,7 @@ export function ForgotPasswordForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<ForgotPasswordInput>({
-    resolver: zodResolver(forgotPasswordSchema),
+    resolver: useLocalizedZodResolver(forgotPasswordSchema),
     defaultValues: { email: "" },
   });
 
@@ -34,7 +36,7 @@ export function ForgotPasswordForm() {
   if (succeeded) {
     return (
       <p role="status" className="rounded-md bg-green-50 px-3 py-3 text-sm text-green-700">
-        If an account exists for that email, a reset link is on its way.
+        {t("forgotPassword.success")}
       </p>
     );
   }
@@ -49,7 +51,7 @@ export function ForgotPasswordForm() {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="email" className="text-sm font-medium">
-          Email
+          {t("forgotPassword.emailLabel")}
         </label>
         <input
           id="email"
@@ -62,7 +64,7 @@ export function ForgotPasswordForm() {
       </div>
 
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Sending…" : "Send reset link"}
+        {isSubmitting ? t("forgotPassword.submitting") : t("forgotPassword.submit")}
       </Button>
     </form>
   );

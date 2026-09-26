@@ -1,0 +1,51 @@
+{
+  "legalDocument": {
+    "issuedLanguageNotice": "Este documento é apresentado no idioma em que foi emitido (espanhol)."
+  },
+  "close": "Fechar",
+  "breadcrumb": {
+    "label": "Trilho de navegação"
+  },
+  "chip": {
+    "remove": "Remover"
+  },
+  "combobox": {
+    "placeholder": "Selecione uma opção",
+    "searchPlaceholder": "Pesquisar…",
+    "empty": "Sem resultados"
+  },
+  "confirmDialog": {
+    "cancel": "Cancelar",
+    "genericError": "Algo correu mal. Tente novamente."
+  },
+  "errorState": {
+    "title": "Algo correu mal",
+    "retry": "Tentar novamente"
+  },
+  "loadingState": {
+    "label": "A carregar…"
+  },
+  "spinner": {
+    "label": "A carregar"
+  },
+  "pagination": {
+    "label": "Paginação",
+    "previous": "Anterior",
+    "next": "Seguinte"
+  },
+  "passwordInput": {
+    "show": "Mostrar palavra-passe",
+    "hide": "Ocultar palavra-passe"
+  },
+  "searchInput": {
+    "clear": "Limpar pesquisa"
+  },
+  "toast": {
+    "close": "Fechar notificação",
+    "region": "Notificações",
+    "assertiveRegion": "Notificações importantes"
+  },
+  "fieldBadges": {
+    "optional": "Opcional"
+  }
+}

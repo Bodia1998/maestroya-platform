@@ -22,6 +22,7 @@ import { cn } from "@/shared/utils/cn";
  * itself so a reduced-motion user sees no positional shift at all.
  */
 export const cardHoverClassName =
+  // i18n-ignore — Tailwind classes
   "shadow-sm transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0";
 
 export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
@@ -36,7 +37,7 @@ export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
     />
   ),
 );
-Card.displayName = "Card";
+Card.displayName = "Card"; // i18n-ignore
 
 export const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (

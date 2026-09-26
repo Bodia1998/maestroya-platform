@@ -1,5 +1,6 @@
 import { Receipt } from "lucide-react";
 import Link from "next/link";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 
 import { makeListInvoicesForCustomerUseCase } from "@/application/use-cases/invoicing/compose";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -9,7 +10,10 @@ import { formatMoney } from "@/components/dashboard/quote-items-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageContainer } from "@/components/layout/page-container";
 
-export const metadata = { title: "My receipts" };
+export async function generateMetadata() {
+  const t = await getTranslations("customer.receipts");
+  return { title: t("list.title") };
+}
 
 /**
  * Module 99 — Self-Billing Authorization Entry Point & Financial Document
@@ -26,17 +30,22 @@ export const metadata = { title: "My receipts" };
  */
 export default async function ReceiptsPage() {
   const user = await requireAuth();
-  const receipts = await makeListInvoicesForCustomerUseCase().execute(user.id);
+  const [receipts, t, format, locale] = await Promise.all([
+    makeListInvoicesForCustomerUseCase().execute(user.id),
+    getTranslations("customer.receipts"),
+    getFormatter(),
+    getLocale(),
+  ]);
 
   return (
     <PageContainer maxWidth="3xl" gap="sm">
-      <PageHeader title="My receipts" subtitle="Receipts for jobs you've paid for through MaestroYa." />
+      <PageHeader title={t("list.title")} subtitle={t("list.subtitle")} />
 
       {receipts.length === 0 ? (
         <EmptyState
           icon={Receipt}
-          title="No receipts yet"
-          description="A receipt appears here once a job you've paid for is completed and the payment is released."
+          title={t("list.empty.title")}
+          description={t("list.empty.description")}
         />
       ) : (
         <ul className="flex flex-col gap-3">
@@ -47,11 +56,11 @@ export default async function ReceiptsPage() {
                 className="flex items-center justify-between gap-4 rounded-md border border-border p-4 hover:bg-black/5"
               >
                 <div className="flex flex-col gap-1">
-                  <span className="font-medium">{receipt.invoiceNumber ?? "Not yet issued"}</span>
-                  <span className="text-xs text-foreground/60">{receipt.invoiceDate.toLocaleDateString()}</span>
+                  <span className="font-medium">{receipt.invoiceNumber ?? t("notYetIssued")}</span>
+                  <span className="text-xs text-foreground/60">{format.dateTime(receipt.invoiceDate, { dateStyle: "medium" })}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium">{formatMoney(receipt.totalAmount, receipt.currency)}</span>
+                  <span className="text-sm font-medium">{formatMoney(receipt.totalAmount, receipt.currency, locale)}</span>
                   <StatusBadge status={receipt.status} />
                 </div>
               </Link>

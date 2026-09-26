@@ -25,4 +25,4 @@ export const Separator = React.forwardRef<HTMLDivElement, SeparatorProps>(
     );
   },
 );
-Separator.displayName = "Separator";
+Separator.displayName = "Separator"; // i18n-ignore

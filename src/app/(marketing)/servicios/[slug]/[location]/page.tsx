@@ -2,16 +2,26 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
 import { JsonLd } from "@/components/seo/json-ld";
-import { buildBreadcrumbJsonLd, buildFaqJsonLd, buildServiceJsonLd } from "@/shared/seo/structured-data";
+import {
+  buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
+  buildServiceJsonLd,
+} from "@/shared/seo/structured-data";
 import { findVerifiedTopLevelServiceCategory } from "@/shared/content/verified-service-category";
-import { getServiceContentBySlug } from "@/shared/content/services";
+import { getServiceContentBySlug, resolveServiceContent } from "@/shared/content/services";
 import { findVerifiedCity } from "@/shared/content/verified-location";
 import { getLocationContentBySlug } from "@/shared/content/locations";
 import { isJustifiedServiceLocationPair } from "@/shared/content/service-location-pairs";
+import { toOgLocale } from "@/shared/seo/site";
+import {
+  localizeCategoryDescription,
+  localizeCategoryName,
+} from "@/presentation/i18n/service-categories";
 
 type ServiceLocationPageProps = { params: Promise<{ slug: string; location: string }> };
 
@@ -32,6 +42,10 @@ type ServiceLocationPageProps = { params: Promise<{ slug: string; location: stri
  * ever becoming a doorway-page generator: adding a new city later does
  * NOT automatically create six new pages, because step 3 still requires
  * a deliberate addition to the pairs list.
+ *
+ * Module 120: rendered in the visitor's locale (curated prose from the
+ * server-only `knowledge` namespace, chrome from `services`); city and
+ * province names are proper nouns and never translated.
  */
 const getVerifiedPair = cache(async (serviceSlug: string, locationSlug: string) => {
   if (!isJustifiedServiceLocationPair(serviceSlug, locationSlug)) return null;
@@ -42,7 +56,11 @@ const getVerifiedPair = cache(async (serviceSlug: string, locationSlug: string) 
 
   const [category, city] = await Promise.all([
     findVerifiedTopLevelServiceCategory(serviceSlug),
-    findVerifiedCity(locationContent.cityName, locationContent.provinceName, locationContent.countryCode),
+    findVerifiedCity(
+      locationContent.cityName,
+      locationContent.provinceName,
+      locationContent.countryCode,
+    ),
   ]);
   if (!category || !city) return null;
 
@@ -54,16 +72,29 @@ export async function generateMetadata({ params }: ServiceLocationPageProps): Pr
   const verified = await getVerifiedPair(slug, location);
   if (!verified) return {};
 
-  const { category, locationContent } = verified;
-  const title = `${category.name} en ${locationContent.cityName} — MaestroYa`;
-  const description = `Solicita ${category.name.toLowerCase()} en ${locationContent.cityName} (${locationContent.provinceName}) a través de MaestroYa y compara presupuestos.`;
+  const { category, locationContent, serviceContent } = verified;
+  const [t, tServices, tKnowledge, locale] = await Promise.all([
+    getTranslations("seo"),
+    getTranslations("services"),
+    getTranslations("knowledge"),
+    getLocale(),
+  ]);
+  const title = t("serviceLocationPage.title", {
+    service: localizeCategoryName(tServices, category),
+    city: locationContent.cityName,
+  });
+  const description = t("serviceLocationPage.description", {
+    service: resolveServiceContent(serviceContent, tKnowledge).nameInSentence,
+    city: locationContent.cityName,
+    province: locationContent.provinceName,
+  });
   const path = `/servicios/${category.slug}/${locationContent.slug}`;
 
   return {
     title,
     description,
     alternates: { canonical: path },
-    openGraph: { title, description, url: path },
+    openGraph: { title, description, url: path, locale: toOgLocale(locale) },
     twitter: { title, description },
   };
 }
@@ -75,9 +106,19 @@ export default async function ServiceInLocationPage({ params }: ServiceLocationP
     notFound();
   }
 
-  const { category, locationContent, serviceContent } = verified;
+  const { category, locationContent } = verified;
   const path = `/servicios/${category.slug}/${locationContent.slug}`;
-  const serviceLower = category.name.toLowerCase();
+  const [t, tKnowledge, locale] = await Promise.all([
+    getTranslations("services"),
+    getTranslations("knowledge"),
+    getLocale(),
+  ]);
+  const serviceContent = resolveServiceContent(verified.serviceContent, tKnowledge);
+  const serviceName = localizeCategoryName(t, category);
+  const serviceInSentence = serviceContent.nameInSentence;
+  const city = locationContent.cityName;
+  const province = locationContent.provinceName;
+  const serviceInCity = t("shared.serviceInCity", { service: serviceName, city });
 
   // Merged FAQ: the service's own FAQ plus one location-specific question,
   // never a duplicate of either page's full FAQ set verbatim — this is
@@ -85,8 +126,12 @@ export default async function ServiceInLocationPage({ params }: ServiceLocationP
   // templated duplication).
   const faqs = [
     {
-      question: `¿Puedo solicitar ${serviceLower} en ${locationContent.cityName}?`,
-      answer: `Sí. Puedes publicar una solicitud de ${serviceLower} indicando una dirección en ${locationContent.cityName} (${locationContent.provinceName}). Los profesionales de esta categoría que cubran la zona podrán revisarla y enviarte un presupuesto.`,
+      question: t("serviceLocationPage.localFaq.question", { service: serviceInSentence, city }),
+      answer: t("serviceLocationPage.localFaq.answer", {
+        service: serviceInSentence,
+        city,
+        province,
+      }),
     },
     ...serviceContent.faqs.slice(0, 2),
   ];
@@ -95,49 +140,46 @@ export default async function ServiceInLocationPage({ params }: ServiceLocationP
     <PageContainer maxWidth="3xl" padded>
       <JsonLd
         data={buildServiceJsonLd({
-          name: `${category.name} en ${locationContent.cityName}`,
+          name: serviceInCity,
           path,
-          description: category.description,
-          areaServed: locationContent.cityName,
+          description: localizeCategoryDescription(t, category),
+          areaServed: city,
+          inLanguage: locale,
         })}
       />
       <JsonLd
         data={buildBreadcrumbJsonLd([
-          { name: "Inicio", path: "/" },
-          { name: "Servicios", path: "/servicios" },
-          { name: category.name, path: `/servicios/${category.slug}` },
-          { name: locationContent.cityName, path },
+          { name: t("breadcrumbs.home"), path: "/" },
+          { name: t("breadcrumbs.services"), path: "/servicios" },
+          { name: serviceName, path: `/servicios/${category.slug}` },
+          { name: city, path },
         ])}
       />
-      <JsonLd data={buildFaqJsonLd(faqs)} />
+      <JsonLd data={buildFaqJsonLd(faqs, { inLanguage: locale })} />
 
       <nav className="text-sm text-foreground/60">
         <Link href="/" className="hover:underline">
-          Inicio
+          {t("breadcrumbs.home")}
         </Link>{" "}
         /{" "}
         <Link href="/servicios" className="hover:underline">
-          Servicios
+          {t("breadcrumbs.services")}
         </Link>{" "}
         /{" "}
         <Link href={`/servicios/${category.slug}`} className="hover:underline">
-          {category.name}
+          {serviceName}
         </Link>{" "}
-        / <span className="text-foreground">{locationContent.cityName}</span>
+        / <span className="text-foreground">{city}</span>
       </nav>
 
       <div>
-        <h1 className="text-2xl font-semibold">
-          {category.name} en {locationContent.cityName}
-        </h1>
+        <h1 className="text-2xl font-semibold">{serviceInCity}</h1>
         <p className="mt-2 text-sm text-foreground/80">
-          {serviceContent.intro} MaestroYa tiene cobertura confirmada en {locationContent.cityName} (
-          {locationContent.provinceName}), por lo que puedes publicar tu solicitud indicando una dirección
-          en esta localidad.
+          {serviceContent.intro} {t("serviceLocationPage.confirmedCoverage", { city, province })}
         </p>
       </div>
 
-      <Section title="Qué puedes solicitar" gap="sm">
+      <Section title={t("servicePage.whatYouCanRequestTitle")} gap="sm">
         <ul className="list-disc pl-5 text-sm text-foreground/80">
           {serviceContent.commonJobTypes.map((jobType) => (
             <li key={jobType}>{jobType}</li>
@@ -145,15 +187,15 @@ export default async function ServiceInLocationPage({ params }: ServiceLocationP
         </ul>
       </Section>
 
-      <Section title={`Cómo funciona en ${locationContent.cityName}`} gap="sm">
+      <Section title={t("serviceLocationPage.howItWorksTitle", { city })} gap="sm">
         <ol className="list-decimal pl-5 text-sm text-foreground/80">
-          <li>Publicas una solicitud de {serviceLower} con una dirección en {locationContent.cityName}.</li>
-          <li>Los profesionales de esta categoría que cubren la zona pueden enviarte un presupuesto.</li>
-          <li>Comparas los presupuestos y aceptas el que prefieras.</li>
+          <li>{t("serviceLocationPage.howItWorks.step1", { service: serviceInSentence, city })}</li>
+          <li>{t("serviceLocationPage.howItWorks.step2")}</li>
+          <li>{t("serviceLocationPage.howItWorks.step3")}</li>
         </ol>
       </Section>
 
-      <Section title="Preguntas frecuentes" gap="sm">
+      <Section title={t("shared.faqTitle")} gap="sm">
         <dl className="flex flex-col gap-4">
           {faqs.map((faq) => (
             <div key={faq.question}>
@@ -166,23 +208,23 @@ export default async function ServiceInLocationPage({ params }: ServiceLocationP
 
       <section className="rounded-md border border-border bg-black/5 p-4">
         <p className="text-sm text-foreground/70">
-          ¿Listo para empezar? Publica tu solicitud de {serviceLower} en {locationContent.cityName}.
+          {t("serviceLocationPage.cta", { service: serviceInSentence, city })}
         </p>
         <div className="mt-3 flex flex-wrap gap-3">
           <Link
             href={{
               pathname: "/requests/new",
-              query: { categoryId: category.id, city: locationContent.cityName },
+              query: { categoryId: category.id, city },
             }}
             className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
           >
-            Solicitar este servicio
+            {t("shared.requestThisService")}
           </Link>
           <Link
-            href={{ pathname: "/search", query: { categoryId: category.id, city: locationContent.cityName } }}
+            href={{ pathname: "/search", query: { categoryId: category.id, city } }}
             className="inline-flex h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium hover:bg-muted"
           >
-            Ver profesionales
+            {t("shared.viewProfessionals")}
           </Link>
         </div>
       </section>

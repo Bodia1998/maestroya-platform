@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cancelCompanyInvitationAction } from "./actions";
@@ -20,17 +21,18 @@ export function CancelInvitationButton({
   email: string;
 }) {
   const router = useRouter();
+  const t = useTranslations("company.invitations.cancel");
 
   return (
     <ConfirmDialog
-      triggerLabel="Cancel"
+      triggerLabel={t("trigger")}
       triggerVariant="outline"
       triggerClassName="h-8 text-xs"
-      title="Cancel this invitation?"
-      description={`${email} will no longer be able to use this invitation to join the company.`}
-      confirmLabel="Yes, cancel invitation"
-      pendingLabel="Cancelling…"
-      cancelLabel="Keep invitation"
+      title={t("title")}
+      description={t("description", { email })}
+      confirmLabel={t("confirm")}
+      pendingLabel={t("pending")}
+      cancelLabel={t("keep")}
       destructive
       onConfirm={async () => {
         const result = await cancelCompanyInvitationAction(companyId, invitationId);

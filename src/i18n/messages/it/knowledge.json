@@ -1,0 +1,256 @@
+{
+  "services": {
+    "fontaneria": {
+      "nameInSentence": "Idraulica",
+      "intro": "MaestroYa mette in contatto i clienti con professionisti per lavori di idraulica: riparazione di perdite, rubinetti, tubature e impianti idrici in casa. Il cliente descrive il problema e pubblica una richiesta; gli idraulici che coprono la zona possono esaminarla e inviare un preventivo.",
+      "commonJobTypes": {
+        "leakRepair": "Riparazione di perdite d’acqua",
+        "tapRepair": "Sostituzione o riparazione di rubinetti",
+        "pipeUnblocking": "Disostruzione di tubature",
+        "sanitaryInstallation": "Installazione di sanitari (WC, lavabi, docce)",
+        "waterHeaterRepair": "Controllo o riparazione di scaldabagni e impianti di acqua calda"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "La diagnosi del problema descritto nella richiesta",
+        "quote": "Un preventivo dettagliato prima di iniziare il lavoro",
+        "execution": "L’esecuzione del lavoro concordato nel preventivo accettato"
+      },
+      "considerations": {
+        "describe": "Descrivi il problema nel modo più dettagliato possibile e, se puoi, aggiungi delle foto alla richiesta",
+        "urgency": "Indica l’effettiva urgenza del lavoro (il sistema permette di segnare le richieste come più o meno urgenti)",
+        "compare": "Puoi ricevere e confrontare più preventivi prima di accettarne uno"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Che tipo di lavori di idraulica posso richiedere su MaestroYa?",
+          "answer": "Puoi pubblicare una richiesta descrivendo qualsiasi lavoro di idraulica per la casa, come una perdita, un rubinetto che non funziona o l’installazione di un sanitario. Gli idraulici che coprono la tua zona possono esaminare la richiesta e inviarti un preventivo."
+        },
+        "howQuote": {
+          "question": "Come funziona il preventivo per lavori di idraulica?",
+          "answer": "Dopo aver pubblicato la richiesta, uno o più professionisti possono inviarti un preventivo. Puoi confrontare i preventivi ricevuti e accettare quello che preferisci prima che inizi il lavoro."
+        },
+        "coverage": {
+          "question": "In quali zone è disponibile il servizio di idraulica?",
+          "answer": "La copertura dipende dai professionisti attivi in ciascuna zona. Consulta la pagina della tua località per vedere la disponibilità attuale in quella zona."
+        }
+      }
+    },
+    "electricidad": {
+      "nameInSentence": "Impianti elettrici",
+      "intro": "MaestroYa mette in contatto i clienti con professionisti per lavori elettrici: impianti elettrici, guasti, quadri elettrici e prese. Il cliente descrive il lavoro e pubblica una richiesta; gli elettricisti che coprono la zona possono esaminarla e inviare un preventivo.",
+      "commonJobTypes": {
+        "faultRepair": "Riparazione di guasti elettrici",
+        "socketsSwitches": "Installazione o sostituzione di prese e interruttori",
+        "panelUpgrade": "Controllo o adeguamento del quadro elettrico",
+        "lightPoints": "Installazione di punti luce",
+        "smallInstallations": "Installazione di frutti e piccoli lavori elettrici domestici"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "La diagnosi del problema elettrico descritto nella richiesta",
+        "quote": "Un preventivo dettagliato prima di iniziare il lavoro",
+        "execution": "L’esecuzione del lavoro concordato nel preventivo accettato"
+      },
+      "considerations": {
+        "describe": "Descrivi il guasto o l’impianto nel modo più dettagliato possibile, con foto se aiutano a spiegarlo",
+        "urgency": "Indica l’effettiva urgenza del lavoro",
+        "compare": "Confronta più preventivi prima di accettarne uno"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Che tipo di lavori elettrici posso richiedere su MaestroYa?",
+          "answer": "Puoi pubblicare una richiesta per guasti elettrici, installazione di prese o punti luce, o controllo del quadro elettrico, tra gli altri lavori. Gli elettricisti che coprono la tua zona possono inviarti un preventivo."
+        },
+        "howToRequest": {
+          "question": "Come richiedo un elettricista tramite MaestroYa?",
+          "answer": "Pubblica una richiesta descrivendo il lavoro. I professionisti che coprono la tua categoria e la tua zona potranno esaminarla e inviarti un preventivo, che puoi accettare o rifiutare."
+        },
+        "coverage": {
+          "question": "In quali zone è disponibile il servizio di impianti elettrici?",
+          "answer": "La copertura dipende dai professionisti attivi in ciascuna zona. Consulta la pagina della tua località per vedere la disponibilità attuale in quella zona."
+        }
+      }
+    },
+    "aire-acondicionado": {
+      "nameInSentence": "Aria condizionata",
+      "intro": "MaestroYa mette in contatto i clienti con professionisti per lavori di climatizzazione: installazione, manutenzione e riparazione di condizionatori. Il cliente descrive ciò di cui ha bisogno e pubblica una richiesta; i tecnici della climatizzazione che coprono la zona possono esaminarla e inviare un preventivo.",
+      "commonJobTypes": {
+        "newInstallation": "Installazione di un nuovo condizionatore",
+        "repair": "Riparazione di un apparecchio che non raffredda o non funziona",
+        "maintenance": "Manutenzione e pulizia degli apparecchi",
+        "gasRecharge": "Ricarica del gas refrigerante"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "La diagnosi o valutazione dell’apparecchio o dell’impianto descritto nella richiesta",
+        "quote": "Un preventivo dettagliato prima di iniziare il lavoro",
+        "execution": "L’esecuzione del lavoro concordato nel preventivo accettato"
+      },
+      "considerations": {
+        "equipmentType": "Indica il tipo di apparecchio (se lo conosci) e descrivi il problema o l’installazione desiderata",
+        "photos": "Aggiungi foto dell’apparecchio o dell’ambiente se aiutano a spiegare il lavoro",
+        "compare": "Confronta più preventivi prima di accettarne uno"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Quali lavori di climatizzazione posso richiedere su MaestroYa?",
+          "answer": "Puoi richiedere installazione, riparazione o manutenzione di condizionatori. I tecnici della climatizzazione che coprono la tua zona possono esaminare la tua richiesta e inviarti un preventivo."
+        },
+        "howQuote": {
+          "question": "Come funziona il preventivo per installare un condizionatore?",
+          "answer": "Pubblichi la tua richiesta descrivendo ciò di cui hai bisogno; i professionisti interessati inviano il loro preventivo e tu decidi quale accettare."
+        },
+        "coverage": {
+          "question": "In quali zone è disponibile il servizio di aria condizionata?",
+          "answer": "La copertura dipende dai professionisti attivi in ciascuna zona. Consulta la pagina della tua località per vedere la disponibilità attuale in quella zona."
+        }
+      }
+    },
+    "pintura": {
+      "nameInSentence": "Tinteggiatura",
+      "intro": "MaestroYa mette in contatto i clienti con imbianchini per lavori interni ed esterni. Il cliente descrive lo spazio da tinteggiare e pubblica una richiesta; gli imbianchini che coprono la zona possono esaminarla e inviare un preventivo.",
+      "commonJobTypes": {
+        "interior": "Tinteggiatura di interni (stanze, corridoi, soffitti)",
+        "exterior": "Tinteggiatura di facciate ed esterni",
+        "wallPreparation": "Rasatura e preparazione delle pareti prima della tinteggiatura",
+        "touchUps": "Ritocchi e finiture puntuali"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "La valutazione dello spazio e del lavoro descritto nella richiesta",
+        "quote": "Un preventivo dettagliato prima di iniziare il lavoro",
+        "execution": "L’esecuzione del lavoro concordato nel preventivo accettato"
+      },
+      "considerations": {
+        "surface": "Indica la superficie approssimativa e lo stato attuale delle pareti",
+        "photos": "Aggiungi foto dello spazio da tinteggiare",
+        "compare": "Confronta più preventivi prima di accettarne uno"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Quali lavori di tinteggiatura posso richiedere su MaestroYa?",
+          "answer": "Puoi richiedere la tinteggiatura di interni, di esterni o ritocchi puntuali. Gli imbianchini che coprono la tua zona possono inviarti un preventivo."
+        },
+        "howQuote": {
+          "question": "Come funziona il preventivo per la tinteggiatura?",
+          "answer": "Pubblichi la tua richiesta descrivendo lo spazio e il lavoro; i professionisti interessati inviano il loro preventivo e tu decidi quale accettare."
+        },
+        "coverage": {
+          "question": "In quali zone è disponibile il servizio di tinteggiatura?",
+          "answer": "La copertura dipende dai professionisti attivi in ciascuna zona. Consulta la pagina della tua località per vedere la disponibilità attuale in quella zona."
+        }
+      }
+    },
+    "reformas": {
+      "nameInSentence": "Ristrutturazioni",
+      "intro": "MaestroYa mette in contatto i clienti con professionisti per ristrutturazioni complete e parziali della casa. Il cliente descrive l’entità della ristrutturazione e pubblica una richiesta; i professionisti delle ristrutturazioni che coprono la zona possono esaminarla e inviare un preventivo.",
+      "commonJobTypes": {
+        "partial": "Ristrutturazioni parziali (una stanza, un bagno, una cucina)",
+        "full": "Ristrutturazioni complete dell’abitazione",
+        "masonry": "Lavori di muratura legati a una ristrutturazione",
+        "layoutFinishes": "Modifiche alla distribuzione degli spazi o alle finiture"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "La valutazione dell’entità della ristrutturazione descritta nella richiesta",
+        "quote": "Un preventivo dettagliato prima di iniziare il lavoro",
+        "execution": "L’esecuzione del lavoro concordato nel preventivo accettato"
+      },
+      "considerations": {
+        "scope": "Descrivi l’entità della ristrutturazione nel modo più dettagliato possibile",
+        "photos": "Aggiungi foto dello stato attuale dello spazio",
+        "compare": "Le ristrutturazioni comportano di solito preventivi più elevati: confronta più opzioni prima di accettare"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "Che tipo di ristrutturazioni posso richiedere su MaestroYa?",
+          "answer": "Puoi richiedere ristrutturazioni parziali o complete della casa. I professionisti delle ristrutturazioni che coprono la tua zona possono esaminare la tua richiesta e inviarti un preventivo."
+        },
+        "compareQuotes": {
+          "question": "Posso confrontare più preventivi di ristrutturazione?",
+          "answer": "Sì. Puoi ricevere preventivi da più professionisti per la stessa richiesta e confrontarli prima di accettarne uno."
+        },
+        "coverage": {
+          "question": "In quali zone è disponibile il servizio di ristrutturazioni?",
+          "answer": "La copertura dipende dai professionisti attivi in ciascuna zona. Consulta la pagina della tua località per vedere la disponibilità attuale in quella zona."
+        }
+      }
+    },
+    "montaje-de-muebles": {
+      "nameInSentence": "Montaggio mobili",
+      "intro": "MaestroYa mette in contatto i clienti con professionisti per il montaggio e l’assemblaggio di mobili e arredi. Il cliente descrive il mobile o i mobili da montare e pubblica una richiesta; i montatori che coprono la zona possono esaminarla e inviare un preventivo.",
+      "commonJobTypes": {
+        "flatPack": "Montaggio di mobili in kit (armadi, scaffali, tavoli)",
+        "kitchen": "Montaggio di mobili da cucina",
+        "wallFixing": "Fissaggio di mobili alla parete",
+        "multiple": "Assemblaggio di più mobili in un’unica visita"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "La valutazione del mobile o dei mobili descritti nella richiesta",
+        "quote": "Un preventivo prima di iniziare il montaggio",
+        "execution": "L’esecuzione del montaggio concordato nel preventivo accettato"
+      },
+      "considerations": {
+        "typeQuantity": "Indica il tipo e la quantità di mobili da montare",
+        "photos": "Aggiungi foto delle scatole o del manuale, se lo hai",
+        "compare": "Confronta più preventivi prima di accettarne uno"
+      },
+      "faqs": {
+        "whatFurniture": {
+          "question": "Quali mobili posso farmi montare tramite MaestroYa?",
+          "answer": "Puoi richiedere il montaggio di praticamente qualsiasi mobile in kit, come armadi, scaffali o mobili da cucina. I montatori che coprono la tua zona possono inviarti un preventivo."
+        },
+        "howQuote": {
+          "question": "Come funziona il preventivo per il montaggio di mobili?",
+          "answer": "Pubblichi la tua richiesta descrivendo il mobile o i mobili da montare; i professionisti interessati inviano il loro preventivo e tu decidi quale accettare."
+        },
+        "coverage": {
+          "question": "In quali zone è disponibile il servizio di montaggio mobili?",
+          "answer": "La copertura dipende dai professionisti attivi in ciascuna zona. Consulta la pagina della tua località per vedere la disponibilità attuale in quella zona."
+        }
+      }
+    }
+  },
+  "locations": {
+    "gandia": {
+      "intro": "Gandia (provincia di Valencia) è la località di riferimento di MaestroYa. I clienti a Gandia possono pubblicare una richiesta per una qualsiasi delle categorie di servizi per la casa disponibili sulla piattaforma, e i professionisti che coprono la zona possono esaminarla e inviare un preventivo.",
+      "faqs": {
+        "whatServices": {
+          "question": "Quali servizi posso richiedere a Gandia tramite MaestroYa?",
+          "answer": "Puoi pubblicare una richiesta per una qualsiasi delle categorie di servizi per la casa disponibili su MaestroYa (idraulica, impianti elettrici, aria condizionata, tinteggiatura, ristrutturazioni e montaggio mobili). Consulta la pagina di ciascun servizio per i dettagli."
+        },
+        "howToHire": {
+          "question": "Come ingaggio un professionista a Gandia?",
+          "answer": "Pubblichi una richiesta descrivendo il lavoro. I professionisti che coprono quella categoria e la zona di Gandia possono esaminarla e inviarti un preventivo, che puoi confrontare e accettare prima che inizi il lavoro."
+        },
+        "outsideGandia": {
+          "question": "MaestroYa è disponibile al di fuori di Gandia?",
+          "answer": "Gandia è la località con copertura confermata oggi sulla piattaforma. La disponibilità effettiva di professionisti può variare e dipende da chi è attivo in ogni momento."
+        }
+      }
+    }
+  },
+  "nationalCoverage": {
+    "intro": "MaestroYa è un marketplace di servizi per la casa che mette in contatto i clienti con professionisti e aziende in Spagna. Chiunque in Spagna può pubblicare una richiesta di servizio; che un professionista la esamini e invii un preventivo dipende da quali professionisti sono attivi in quella categoria e in quella zona in un dato momento.",
+    "coverageStatement": "La portata di MaestroYa come piattaforma è nazionale: l’obiettivo del marketplace è operare in tutta la Spagna, non solo in una località specifica. Questo è diverso dalla disponibilità effettiva di professionisti in una determinata zona, che dipende dai dati reali della piattaforma in ogni momento.",
+    "howLocalAvailabilityWorks": "Quando pubblichi una richiesta, solo i professionisti che coprono quella categoria di servizio e la tua zona possono esaminarla e inviarti un preventivo. MaestroYa non garantisce che ci sia un professionista disponibile in una qualsiasi località specifica: la disponibilità effettiva varia a seconda della zona. Le località con copertura confermata dai dati reali della piattaforma hanno una propria pagina (vedi /ubicaciones).",
+    "faqs": {
+      "wholeSpain": {
+        "question": "MaestroYa opera in tutta la Spagna?",
+        "answer": "MaestroYa è un marketplace pensato per operare in tutta la Spagna. Ciò non significa che ci siano già professionisti attivi in ogni località: la disponibilità effettiva di professionisti dipende da ciascuna zona e può variare nel tempo."
+      },
+      "localAvailability": {
+        "question": "Come faccio a sapere se un servizio è disponibile nella mia località?",
+        "answer": "Puoi pubblicare una richiesta indicando il tuo indirizzo; solo i professionisti che coprono la tua categoria e la tua zona potranno inviarti un preventivo. Le località con copertura confermata dai dati reali della piattaforma sono elencate nella sezione località."
+      },
+      "whatServices": {
+        "question": "Quali servizi offre MaestroYa?",
+        "answer": "MaestroYa pubblica oggi sei categorie di servizi per la casa: idraulica, impianti elettrici, aria condizionata, tinteggiatura, ristrutturazioni e montaggio mobili. Consulta la pagina di ciascun servizio per maggiori dettagli."
+      },
+      "professionalParticipation": {
+        "question": "Come partecipa un professionista a MaestroYa?",
+        "answer": "Un professionista può creare un account, indicare le proprie categorie di servizio e la zona che copre e, da quel momento, esaminare le richieste pubblicate che corrispondono alla sua categoria e alla sua zona e inviare preventivi."
+      }
+    },
+    "structuredData": {
+      "name": "Servizi per la casa tramite MaestroYa",
+      "description": "Marketplace di servizi per la casa gestito da MaestroYa in Spagna. La disponibilità di professionisti varia in base alla categoria di servizio e alla zona."
+    }
+  }
+}

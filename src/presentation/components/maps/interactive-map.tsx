@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 /**
  * Module 42 — Geocoding & Maps.
@@ -133,7 +134,10 @@ export function InteractiveMap({
   const containerId = useId();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const t = useTranslations("services");
+  // Module 120: the underlying error (a Leaflet CDN load failure) is
+  // developer detail — the user sees a localized message instead.
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -147,6 +151,7 @@ export function InteractiveMap({
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 19,
+          // i18n-ignore: OpenStreetMap's required licence attribution, kept verbatim
           attribution: "&copy; OpenStreetMap contributors",
         }).addTo(map);
 
@@ -160,6 +165,7 @@ export function InteractiveMap({
             const color = MARKER_COLORS[marker.variant ?? "customer"];
             const icon = L.divIcon({
               className: "",
+              // i18n-ignore: marker HTML, no text
               html: `<span style="display:block;width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 0 2px rgba(0,0,0,0.4);"></span>`,
               iconSize: [14, 14],
             });
@@ -177,7 +183,10 @@ export function InteractiveMap({
         }
       })
       .catch((error: unknown) => {
-        if (!cancelled) setLoadError(error instanceof Error ? error.message : "Couldn't load the map.");
+        if (!cancelled) {
+          console.error("InteractiveMap: failed to load the map", error);
+          setLoadFailed(true);
+        }
       });
 
     return () => {
@@ -192,10 +201,10 @@ export function InteractiveMap({
     // than a premature optimization.
   }, [markers, fallbackCenter.latitude, fallbackCenter.longitude, zoom, onMapClick]);
 
-  if (loadError) {
+  if (loadFailed) {
     return (
       <div className={`flex ${heightClassName} items-center justify-center rounded-md border border-border bg-foreground/5 text-sm text-foreground/60 ${className ?? ""}`}>
-        Map unavailable — {loadError}
+        {t("map.unavailable")}
       </div>
     );
   }
@@ -205,7 +214,7 @@ export function InteractiveMap({
       id={containerId}
       ref={containerRef}
       role="application"
-      aria-label="Map"
+      aria-label={t("map.ariaLabel")}
       className={`w-full ${heightClassName} rounded-md border border-border ${className ?? ""}`}
     />
   );

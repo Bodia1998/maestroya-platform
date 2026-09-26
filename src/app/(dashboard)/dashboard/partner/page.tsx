@@ -1,4 +1,5 @@
 import { Handshake } from "lucide-react";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import {
@@ -16,7 +17,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Text } from "@/components/ui/typography";
 
-export const metadata = { title: "Partner dashboard" };
+export async function generateMetadata() {
+  const t = await getTranslations("partner");
+  return { title: t("metaTitle") };
+}
+
+const PARTNER_STATUS_KEYS = ["PENDING", "REJECTED", "SUSPENDED", "BANNED"] as const;
+type PartnerStatusKey = (typeof PARTNER_STATUS_KEYS)[number];
+function isPartnerStatusKey(status: string): status is PartnerStatusKey {
+  return (PARTNER_STATUS_KEYS as readonly string[]).includes(status);
+}
 
 /**
  * Module 96 — Referral & Affiliate Production Wiring.
@@ -40,15 +50,18 @@ export const metadata = { title: "Partner dashboard" };
 export default async function PartnerDashboardPage() {
   const user = await requireAuth();
   const partner = await makeGetPartnerByUserIdUseCase().execute(user.id);
+  const t = await getTranslations("partner");
+  const format = await getFormatter();
+  const euro = (amount: number) => format.number(amount, { style: "currency", currency: "EUR" });
 
   if (!partner) {
     return (
       <PageContainer maxWidth="3xl">
-        <PageHeader title="Partner dashboard" subtitle="Track your referral links, clicks, and affiliate earnings." />
+        <PageHeader title={t("title")} subtitle={t("subtitle")} />
         <EmptyState
           icon={Handshake}
-          title="You don't have a partner account yet"
-          description="Partner accounts are for affiliates who refer customers to MaestroYa in exchange for a share of the platform's profit. Contact MaestroYa to register as a partner."
+          title={t("noAccount.title")}
+          description={t("noAccount.description")}
         />
       </PageContainer>
     );
@@ -57,11 +70,13 @@ export default async function PartnerDashboardPage() {
   if (partner.status !== "APPROVED") {
     return (
       <PageContainer maxWidth="3xl">
-        <PageHeader title="Partner dashboard" subtitle="Track your referral links, clicks, and affiliate earnings." />
+        <PageHeader title={t("title")} subtitle={t("subtitle")} />
         <EmptyState
           icon={Handshake}
-          title={partnerStatusMessage(partner.status)}
-          description="Your dashboard will unlock automatically once your partner account is approved."
+          title={
+            isPartnerStatusKey(partner.status) ? t(`statusMessage.${partner.status}`) : t("statusMessage.other")
+          }
+          description={t("locked.description")}
         />
       </PageContainer>
     );
@@ -76,42 +91,49 @@ export default async function PartnerDashboardPage() {
   return (
     <PageContainer maxWidth="6xl">
       <PageHeader
-        title="Partner dashboard"
-        subtitle={`Welcome back, ${partner.displayName}. Here's how your referral links are performing.`}
+        title={t("title")}
+        subtitle={t("welcome", { name: partner.displayName })}
       />
 
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        <StatCard label="Clicks" value={stats.clicks.toLocaleString()} />
-        <StatCard label="Visits" value={stats.visits.toLocaleString()} />
-        <StatCard label="Registrations" value={stats.registrations.toLocaleString()} />
-        <StatCard label="Bookings created" value={stats.bookingsCreated.toLocaleString()} />
-        <StatCard label="Completed jobs" value={stats.completedJobs.toLocaleString()} />
-        <StatCard label="Conversion rate" value={`${(stats.conversionRate * 100).toFixed(1)}%`} />
-        <StatCard label="Platform commission generated" value={`€${stats.platformCommissionGenerated.toFixed(2)}`} />
+        <StatCard label={t("stats.clicks")} value={format.number(stats.clicks)} />
+        <StatCard label={t("stats.visits")} value={format.number(stats.visits)} />
+        <StatCard label={t("stats.registrations")} value={format.number(stats.registrations)} />
+        <StatCard label={t("stats.bookingsCreated")} value={format.number(stats.bookingsCreated)} />
+        <StatCard label={t("stats.completedJobs")} value={format.number(stats.completedJobs)} />
+        <StatCard
+          label={t("stats.conversionRate")}
+          value={format.number(stats.conversionRate, {
+            style: "percent",
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          })}
+        />
+        <StatCard label={t("stats.platformCommissionGenerated")} value={euro(stats.platformCommissionGenerated)} />
       </section>
 
       <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Pending earnings" value={`€${stats.affiliateEarnings.pendingTotal.toFixed(2)}`} tone="muted" />
-        <StatCard label="Approved (payable)" value={`€${stats.affiliateEarnings.approvedTotal.toFixed(2)}`} tone="accent" />
-        <StatCard label="Paid to date" value={`€${stats.affiliateEarnings.paidTotal.toFixed(2)}`} />
+        <StatCard label={t("stats.pendingEarnings")} value={euro(stats.affiliateEarnings.pendingTotal)} tone="muted" />
+        <StatCard label={t("stats.approvedPayable")} value={euro(stats.affiliateEarnings.approvedTotal)} tone="accent" />
+        <StatCard label={t("stats.paidToDate")} value={euro(stats.affiliateEarnings.paidTotal)} />
       </section>
 
       <section className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Top campaigns</CardTitle>
+            <CardTitle>{t("topCampaigns.title")}</CardTitle>
           </CardHeader>
           <CardContent>
             {stats.topCampaigns.length === 0 ? (
               <Text size="sm" tone="muted">
-                No campaign clicks recorded yet.
+                {t("topCampaigns.empty")}
               </Text>
             ) : (
               <ul className="flex flex-col gap-2">
                 {stats.topCampaigns.map((c) => (
                   <li key={c.campaign} className="flex items-center justify-between text-sm">
                     <span className="truncate">{c.campaign}</span>
-                    <span className="text-muted-foreground">{c.visits} visits</span>
+                    <span className="text-muted-foreground">{t("visitsCount", { count: c.visits })}</span>
                   </li>
                 ))}
               </ul>
@@ -121,19 +143,19 @@ export default async function PartnerDashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top referral links</CardTitle>
+            <CardTitle>{t("topReferralLinks.title")}</CardTitle>
           </CardHeader>
           <CardContent>
             {stats.topReferralCodes.length === 0 ? (
               <Text size="sm" tone="muted">
-                No referral link clicks recorded yet.
+                {t("topReferralLinks.empty")}
               </Text>
             ) : (
               <ul className="flex flex-col gap-2">
                 {stats.topReferralCodes.map((r) => (
                   <li key={r.referralCode} className="flex items-center justify-between text-sm">
                     <span className="truncate font-mono">/r/{r.referralCode}</span>
-                    <span className="text-muted-foreground">{r.visits} visits</span>
+                    <span className="text-muted-foreground">{t("visitsCount", { count: r.visits })}</span>
                   </li>
                 ))}
               </ul>
@@ -151,21 +173,6 @@ export default async function PartnerDashboardPage() {
       </section>
     </PageContainer>
   );
-}
-
-function partnerStatusMessage(status: string): string {
-  switch (status) {
-    case "PENDING":
-      return "Your partner application is pending review";
-    case "REJECTED":
-      return "Your partner application was not approved";
-    case "SUSPENDED":
-      return "Your partner account is currently suspended";
-    case "BANNED":
-      return "Your partner account has been banned";
-    default:
-      return "Your partner account isn't active";
-  }
 }
 
 function StatCard({ label, value, tone }: { label: string; value: string; tone?: "muted" | "accent" }) {

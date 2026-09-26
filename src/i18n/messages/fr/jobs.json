@@ -16,5 +16,74 @@
   },
   "quotes": {
     "title": "Devis"
+  },
+  "quoteItems": {
+    "columns": {
+      "description": "Description",
+      "type": "Type",
+      "quantity": "Qté",
+      "unitPrice": "Prix unitaire",
+      "amount": "Montant"
+    },
+    "total": "Total",
+    "category": {
+      "MATERIALS": "Matériaux",
+      "LABOR": "Main-d'œuvre"
+    }
+  },
+  "urgency": {
+    "LOW": "Faible",
+    "MEDIUM": "Moyenne",
+    "HIGH": "Élevée",
+    "EMERGENCY": "Urgence"
+  },
+  "list": {
+    "title": "Mes missions",
+    "subtitle": "L'avancement global des travaux pour lesquels vous avez accepté un devis.",
+    "empty": {
+      "title": "Aucune mission en cours",
+      "description": "Les missions apparaissent ici dès que vous acceptez le devis d'un professionnel et que les travaux commencent.",
+      "action": "Voir mes demandes"
+    }
+  },
+  "notStarted": "Non commencée",
+  "detail": {
+    "title": "Mission",
+    "started": "Commencée",
+    "completed": "Terminée",
+    "cancellationReason": "Motif d'annulation",
+    "appointments": "Rendez-vous de cette mission",
+    "noAppointments": "Aucun rendez-vous pour le moment.",
+    "notScheduled": "Pas encore planifié",
+    "dateUnset": "—"
+  },
+  "cancellationReason": {
+    "CUSTOMER_REQUEST": "À la demande du client",
+    "PROFESSIONAL_UNABLE_TO_COMPLETE": "Le professionnel ne peut pas terminer",
+    "SERVICE_REQUEST_ISSUE": "Problème avec la demande",
+    "OTHER": "Autre"
+  },
+  "actions": {
+    "startWork": "Commencer les travaux",
+    "starting": "Démarrage…",
+    "markCompleted": "Marquer la mission comme terminée",
+    "completing": "Finalisation…",
+    "openAppointmentsWarning": "Cette mission a encore un rendez-vous non résolu. Confirmez et terminez (ou annulez) tous les rendez-vous de cette mission avant de la marquer comme terminée.",
+    "cancelJob": "Annuler la mission",
+    "cancelTitle": "Annuler cette mission ?",
+    "reason": "Motif",
+    "note": "Note (facultatif)",
+    "cancelling": "Annulation…",
+    "confirmCancel": "Oui, annuler",
+    "notNow": "Pas maintenant"
+  },
+  "errors": {
+    "invalidJob": "Mission non valide.",
+    "startFailed": "Une erreur s'est produite lors du démarrage de cette mission.",
+    "completeFailed": "Une erreur s'est produite lors de la finalisation de cette mission.",
+    "cancelFailed": "Une erreur s'est produite lors de l'annulation de cette mission.",
+    "confirmFailed": "Une erreur s'est produite lors de la confirmation de cette mission.",
+    "disputeFailed": "Une erreur s'est produite lors de la contestation de la fin de cette mission.",
+    "paymentFailed": "Une erreur s'est produite lors du lancement de votre paiement. Veuillez réessayer."
   }
 }

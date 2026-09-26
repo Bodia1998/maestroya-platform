@@ -1,0 +1,30 @@
+{
+  "site": {
+    "defaultTitle": "MaestroYa — Vind betrouwbare vakmensen voor je huis",
+    "description": "Kom in contact met betrouwbare vakmensen voor je huis: loodgieterswerk, elektra, verbouwingen, schoonmaak en nog veel meer."
+  },
+  "servicesIndex": {
+    "title": "Huishoudelijke diensten op MaestroYa",
+    "description": "Bekijk de categorieën huishoudelijke diensten die op MaestroYa beschikbaar zijn: loodgieterswerk, elektra, airconditioning, schilderwerk, verbouwingen en meubelmontage."
+  },
+  "servicePage": {
+    "title": "{service} — MaestroYa",
+    "descriptionFallback": "Vraag via MaestroYa een vakman aan in de categorie ‘{service}’ en vergelijk offertes."
+  },
+  "serviceLocationPage": {
+    "title": "{service} in {city} — MaestroYa",
+    "description": "Vraag in {city} ({province}) via MaestroYa een dienst aan in de categorie ‘{service}’ en vergelijk offertes."
+  },
+  "locationsIndex": {
+    "title": "Locaties — MaestroYa in Spanje",
+    "description": "MaestroYa is een marktplaats voor huishoudelijke diensten die is opgezet om in heel Spanje actief te zijn. Bekijk het bereik van het platform en de plaatsen met bevestigde dekking."
+  },
+  "locationPage": {
+    "title": "Vakmensen in {city} — MaestroYa",
+    "description": "Huishoudelijke diensten die in {city} ({province}) via MaestroYa beschikbaar zijn."
+  },
+  "nationalCoverage": {
+    "title": "MaestroYa in Spanje — landelijk bereik",
+    "description": "MaestroYa is een marktplaats voor huishoudelijke diensten die is opgezet om in heel Spanje actief te zijn. De daadwerkelijke beschikbaarheid van vakmensen hangt af van het gebied."
+  }
+}

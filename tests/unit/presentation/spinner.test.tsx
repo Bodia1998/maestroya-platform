@@ -9,7 +9,7 @@ describe("Spinner", () => {
   it("exposes a status role with a default accessible label", () => {
     render(<Spinner />);
     const status = screen.getByRole("status");
-    expect(status).toHaveTextContent("Cargando");
+    expect(status).toHaveTextContent("Loading");
   });
 
   it("uses a custom accessible label", () => {

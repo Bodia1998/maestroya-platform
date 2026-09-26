@@ -1,0 +1,30 @@
+{
+  "site": {
+    "defaultTitle": "MaestroYa — надёжные специалисты для вашего дома",
+    "description": "Найдите надёжных специалистов для вашего дома: сантехника, электрика, ремонт, уборка и многое другое."
+  },
+  "servicesIndex": {
+    "title": "Бытовые услуги в MaestroYa",
+    "description": "Категории бытовых услуг, доступные в MaestroYa: сантехника, электрика, кондиционирование, малярные работы, ремонт и сборка мебели."
+  },
+  "servicePage": {
+    "title": "{service} — MaestroYa",
+    "descriptionFallback": "Найдите специалиста в категории «{service}» через MaestroYa и сравните сметы."
+  },
+  "serviceLocationPage": {
+    "title": "{service} в городе {city} — MaestroYa",
+    "description": "Закажите услугу в категории «{service}» в городе {city} ({province}) через MaestroYa и сравните сметы."
+  },
+  "locationsIndex": {
+    "title": "Регионы — MaestroYa в Испании",
+    "description": "MaestroYa — маркетплейс бытовых услуг, рассчитанный на работу по всей Испании. Узнайте об охвате платформы и о населённых пунктах с подтверждённым охватом."
+  },
+  "locationPage": {
+    "title": "Специалисты в городе {city} — MaestroYa",
+    "description": "Бытовые услуги, доступные в городе {city} ({province}) через MaestroYa."
+  },
+  "nationalCoverage": {
+    "title": "MaestroYa в Испании — общенациональный охват",
+    "description": "MaestroYa — маркетплейс бытовых услуг, рассчитанный на работу по всей Испании. Фактическая доступность специалистов зависит от района."
+  }
+}

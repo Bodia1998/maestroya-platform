@@ -1,0 +1,256 @@
+{
+  "services": {
+    "fontaneria": {
+      "nameInSentence": "plumbing",
+      "intro": "MaestroYa connects customers with professionals for plumbing work: repairing leaks, taps, pipes and water installations in the home. The customer describes the problem and publishes a request; plumbing professionals who cover the area can review it and send a quote.",
+      "commonJobTypes": {
+        "leakRepair": "Repairing water leaks",
+        "tapRepair": "Replacing or repairing taps",
+        "pipeUnblocking": "Unblocking pipes",
+        "sanitaryInstallation": "Installing bathroom fixtures (toilets, washbasins, showers)",
+        "waterHeaterRepair": "Inspecting or repairing water heaters and hot-water installations"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "A diagnosis of the problem described in the request",
+        "quote": "A detailed quote before starting the work",
+        "execution": "Carrying out the work agreed in the accepted quote"
+      },
+      "considerations": {
+        "describe": "Describe the problem in as much detail as you can and add photos to the request if possible",
+        "urgency": "Indicate how urgent the job really is (the system lets you mark requests as more or less urgent)",
+        "compare": "You can receive and compare several quotes before accepting one"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "What kind of plumbing work can I request on MaestroYa?",
+          "answer": "You can publish a request describing any household plumbing job, such as a leak, a tap that doesn't work or installing a bathroom fixture. Plumbing professionals who cover your area can review the request and send you a quote."
+        },
+        "howQuote": {
+          "question": "How does a plumbing quote work?",
+          "answer": "After you publish your request, one or more professionals can send you a quote. You can compare the quotes you receive and accept the one you prefer before the work starts."
+        },
+        "coverage": {
+          "question": "In which areas is the plumbing service available?",
+          "answer": "Coverage depends on the professionals active in each area. Check your locality's page to see current availability in that area."
+        }
+      }
+    },
+    "electricidad": {
+      "nameInSentence": "electrical",
+      "intro": "MaestroYa connects customers with professionals for electrical work: electrical installations, faults, electrical panels and sockets. The customer describes the job and publishes a request; electrical professionals who cover the area can review it and send a quote.",
+      "commonJobTypes": {
+        "faultRepair": "Repairing electrical faults",
+        "socketsSwitches": "Installing or replacing sockets and switches",
+        "panelUpgrade": "Inspecting or upgrading the electrical panel",
+        "lightPoints": "Installing light points",
+        "smallInstallations": "Installing fittings and small household electrical work"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "diagnosis": "A diagnosis of the electrical problem described in the request",
+        "quote": "A detailed quote before starting the work",
+        "execution": "Carrying out the work agreed in the accepted quote"
+      },
+      "considerations": {
+        "describe": "Describe the fault or installation in as much detail as you can, with photos if they help explain it",
+        "urgency": "Indicate how urgent the job really is",
+        "compare": "Compare several quotes before accepting one"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "What kind of electrical work can I request on MaestroYa?",
+          "answer": "You can publish a request for electrical faults, installing sockets or light points, or inspecting the electrical panel, among other jobs. Electrical professionals who cover your area can send you a quote."
+        },
+        "howToRequest": {
+          "question": "How do I request an electrician through MaestroYa?",
+          "answer": "Publish a request describing the job. Professionals who cover your category and area will be able to review it and send you a quote, which you can accept or decline."
+        },
+        "coverage": {
+          "question": "In which areas is the electrical service available?",
+          "answer": "Coverage depends on the professionals active in each area. Check your locality's page to see current availability in that area."
+        }
+      }
+    },
+    "aire-acondicionado": {
+      "nameInSentence": "air conditioning",
+      "intro": "MaestroYa connects customers with professionals for climate-control work: installing, maintaining and repairing air conditioning. The customer describes what they need and publishes a request; climate-control technicians who cover the area can review it and send a quote.",
+      "commonJobTypes": {
+        "newInstallation": "Installing a new air conditioning unit",
+        "repair": "Repairing a unit that doesn't cool or doesn't work",
+        "maintenance": "Maintaining and cleaning units",
+        "gasRecharge": "Recharging refrigerant gas"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "A diagnosis or assessment of the unit or installation described in the request",
+        "quote": "A detailed quote before starting the work",
+        "execution": "Carrying out the work agreed in the accepted quote"
+      },
+      "considerations": {
+        "equipmentType": "State the type of unit (if you know it) and describe the problem or the installation you want",
+        "photos": "Add photos of the unit or the space if they help explain the job",
+        "compare": "Compare several quotes before accepting one"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "What climate-control work can I request on MaestroYa?",
+          "answer": "You can request air conditioning installation, repair or maintenance. Climate-control technicians who cover your area can review your request and send you a quote."
+        },
+        "howQuote": {
+          "question": "How does a quote for installing air conditioning work?",
+          "answer": "You publish your request describing what you need; interested professionals send their quote and you decide which one to accept."
+        },
+        "coverage": {
+          "question": "In which areas is the air conditioning service available?",
+          "answer": "Coverage depends on the professionals active in each area. Check your locality's page to see current availability in that area."
+        }
+      }
+    },
+    "pintura": {
+      "nameInSentence": "painting",
+      "intro": "MaestroYa connects customers with painting professionals for interior and exterior work. The customer describes the space to be painted and publishes a request; painting professionals who cover the area can review it and send a quote.",
+      "commonJobTypes": {
+        "interior": "Interior painting (rooms, hallways, ceilings)",
+        "exterior": "Painting façades and exteriors",
+        "wallPreparation": "Smoothing and preparing walls before painting",
+        "touchUps": "Touch-ups and one-off finishes"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "An assessment of the space and the job described in the request",
+        "quote": "A detailed quote before starting the work",
+        "execution": "Carrying out the work agreed in the accepted quote"
+      },
+      "considerations": {
+        "surface": "State the approximate surface area and the current condition of the walls",
+        "photos": "Add photos of the space to be painted",
+        "compare": "Compare several quotes before accepting one"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "What painting work can I request on MaestroYa?",
+          "answer": "You can request interior or exterior painting or one-off touch-ups. Painting professionals who cover your area can send you a quote."
+        },
+        "howQuote": {
+          "question": "How does a painting quote work?",
+          "answer": "You publish your request describing the space and the job; interested professionals send their quote and you decide which one to accept."
+        },
+        "coverage": {
+          "question": "In which areas is the painting service available?",
+          "answer": "Coverage depends on the professionals active in each area. Check your locality's page to see current availability in that area."
+        }
+      }
+    },
+    "reformas": {
+      "nameInSentence": "renovation",
+      "intro": "MaestroYa connects customers with professionals for full and partial home renovations. The customer describes the scope of the renovation and publishes a request; renovation professionals who cover the area can review it and send a quote.",
+      "commonJobTypes": {
+        "partial": "Partial renovations (a room, a bathroom, a kitchen)",
+        "full": "Full home renovations",
+        "masonry": "Building work associated with a renovation",
+        "layoutFinishes": "Layout changes or finishes"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "An assessment of the scope of the renovation described in the request",
+        "quote": "A detailed quote before starting the work",
+        "execution": "Carrying out the work agreed in the accepted quote"
+      },
+      "considerations": {
+        "scope": "Describe the scope of the renovation in as much detail as you can",
+        "photos": "Add photos of the current state of the space",
+        "compare": "Renovations usually involve larger quotes: compare several options before accepting"
+      },
+      "faqs": {
+        "whatJobs": {
+          "question": "What kind of renovations can I request on MaestroYa?",
+          "answer": "You can request partial or full home renovations. Renovation professionals who cover your area can review your request and send you a quote."
+        },
+        "compareQuotes": {
+          "question": "Can I compare several renovation quotes?",
+          "answer": "Yes. You can receive quotes from several professionals for the same request and compare them before accepting one."
+        },
+        "coverage": {
+          "question": "In which areas is the renovation service available?",
+          "answer": "Coverage depends on the professionals active in each area. Check your locality's page to see current availability in that area."
+        }
+      }
+    },
+    "montaje-de-muebles": {
+      "nameInSentence": "furniture assembly",
+      "intro": "MaestroYa connects customers with professionals for assembling furniture and furnishings. The customer describes the piece or pieces of furniture to be assembled and publishes a request; assembly professionals who cover the area can review it and send a quote.",
+      "commonJobTypes": {
+        "flatPack": "Assembling flat-pack furniture (wardrobes, shelving units, tables)",
+        "kitchen": "Assembling kitchen furniture",
+        "wallFixing": "Fixing furniture to the wall",
+        "multiple": "Assembling several pieces of furniture in a single visit"
+      },
+      "whatProfessionalsTypicallyProvide": {
+        "assessment": "An assessment of the piece or pieces of furniture described in the request",
+        "quote": "A quote before starting the assembly",
+        "execution": "Carrying out the assembly agreed in the accepted quote"
+      },
+      "considerations": {
+        "typeQuantity": "State the type and number of pieces of furniture to be assembled",
+        "photos": "Add photos of the boxes or the manual if you have it",
+        "compare": "Compare several quotes before accepting one"
+      },
+      "faqs": {
+        "whatFurniture": {
+          "question": "What furniture can I ask to have assembled on MaestroYa?",
+          "answer": "You can request assembly of practically any flat-pack furniture, such as wardrobes, shelving units or kitchen furniture. Assembly professionals who cover your area can send you a quote."
+        },
+        "howQuote": {
+          "question": "How does a furniture assembly quote work?",
+          "answer": "You publish your request describing the piece or pieces of furniture to be assembled; interested professionals send their quote and you decide which one to accept."
+        },
+        "coverage": {
+          "question": "In which areas is the furniture assembly service available?",
+          "answer": "Coverage depends on the professionals active in each area. Check your locality's page to see current availability in that area."
+        }
+      }
+    }
+  },
+  "locations": {
+    "gandia": {
+      "intro": "Gandia (province of Valencia) is MaestroYa's reference locality. Customers in Gandia can publish a request for any of the home service categories available on the platform, and professionals who cover the area can review it and send a quote.",
+      "faqs": {
+        "whatServices": {
+          "question": "What services can I request in Gandia through MaestroYa?",
+          "answer": "You can publish a request for any of the home service categories available on MaestroYa (plumbing, electrical work, air conditioning, painting, renovations and furniture assembly). Check each service's page for details."
+        },
+        "howToHire": {
+          "question": "How do I hire a professional in Gandia?",
+          "answer": "You publish a request describing the job. Professionals who cover that category and the Gandia area can review it and send you a quote, which you can compare and accept before the work starts."
+        },
+        "outsideGandia": {
+          "question": "Is MaestroYa available outside Gandia?",
+          "answer": "Gandia is the locality with confirmed coverage on the platform today. The actual availability of professionals may vary and depends on who is active at any given time."
+        }
+      }
+    }
+  },
+  "nationalCoverage": {
+    "intro": "MaestroYa is a home services marketplace that connects customers with professionals and companies in Spain. Anyone in Spain can publish a service request; whether a professional reviews it and sends a quote depends on which professionals are active in that category and that area at any given time.",
+    "coverageStatement": "MaestroYa's scope as a platform is national: the marketplace's goal is to operate across all of Spain, not just in one particular locality. This is different from the actual availability of professionals in a given area, which depends on the platform's real data at any given time.",
+    "howLocalAvailabilityWorks": "When you publish a request, only the professionals who cover that service category and your area can review it and send you a quote. MaestroYa does not guarantee that a professional is available in any particular locality: actual availability varies by area. Localities with coverage confirmed by the platform's real data have their own page (see /ubicaciones).",
+    "faqs": {
+      "wholeSpain": {
+        "question": "Does MaestroYa operate across all of Spain?",
+        "answer": "MaestroYa is a marketplace designed to operate across all of Spain. That does not mean there are already active professionals in every locality: the actual availability of professionals depends on each area and may change over time."
+      },
+      "localAvailability": {
+        "question": "How do I know whether a service is available in my locality?",
+        "answer": "You can publish a request stating your address; only professionals who cover your category and your area will be able to send you a quote. Localities with coverage confirmed by the platform's real data are listed in the locations section."
+      },
+      "whatServices": {
+        "question": "What services does MaestroYa offer?",
+        "answer": "MaestroYa currently publishes six home service categories: plumbing, electrical work, air conditioning, painting, renovations and furniture assembly. Check each service's page for more details."
+      },
+      "professionalParticipation": {
+        "question": "How does a professional take part in MaestroYa?",
+        "answer": "A professional can create an account, specify their service categories and the area they cover, and from then on review and send quotes for published requests that match their category and their area."
+      }
+    },
+    "structuredData": {
+      "name": "Home services through MaestroYa",
+      "description": "Home services marketplace operated by MaestroYa in Spain. The availability of professionals varies by service category and area."
+    }
+  }
+}

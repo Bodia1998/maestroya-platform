@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import type { NextRequest } from "next/server";
 
 import { DomainError } from "@/domain/errors/domain-error";
+import { localizeActionError } from "@/presentation/i18n/server";
 import { getCurrentUser } from "@/infrastructure/auth/rbac";
 import { logger } from "@/infrastructure/observability/logger";
 import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
@@ -25,7 +27,7 @@ export const GET = withApiTracing("/api/realtime/presence/[userId]", async funct
 
   const user = await getCurrentUser();
   if (!user) {
-    return NextResponse.json({ status: "error", message: "Unauthorized." }, { status: 401, headers });
+    return NextResponse.json({ status: "error", message: await errorsT("domain.signInRequired") }, { status: 401, headers });
   }
 
   try {
@@ -38,7 +40,7 @@ export const GET = withApiTracing("/api/realtime/presence/[userId]", async funct
   } catch (error) {
     if (error instanceof DomainError) {
       const status = error.code === "UNAUTHORIZED" ? 403 : 400;
-      return NextResponse.json({ status: "error", message: error.message }, { status, headers });
+      return NextResponse.json({ status: "error", message: await localizeActionError(error) }, { status, headers });
     }
     logger.error("realtime_presence_lookup_failed", { requestId, route: "/api/realtime/presence/[userId]", error });
     createErrorReporter().reportException(error, {
@@ -46,6 +48,16 @@ export const GET = withApiTracing("/api/realtime/presence/[userId]", async funct
       extra: { requestId, targetUserId: userId },
       user: { id: user.id },
     });
-    return NextResponse.json({ status: "error", message: "Could not load presence." }, { status: 500, headers });
+    return NextResponse.json({ status: "error", message: await errorsT("generic") }, { status: 500, headers });
   }
 });
+
+/**
+ * Module 120 — Multilingual Localization: user-facing error text in the
+ * request's language (`errors` namespace); JSON shape and status codes are
+ * unchanged.
+ */
+async function errorsT(key: "domain.signInRequired" | "byCode.VALIDATION_ERROR" | "generic"): Promise<string> {
+  const t = await getTranslations("errors");
+  return t(key);
+}

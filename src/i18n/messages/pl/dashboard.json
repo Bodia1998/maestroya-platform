@@ -16,5 +16,115 @@
     "title": "Panel firmy",
     "members": "Członkowie",
     "invitations": "Zaproszenia"
+  },
+  "nav": {
+    "ariaLabel": "Nawigacja panelu",
+    "groups": {
+      "professional": "Specjalista",
+      "admin": "Administracja"
+    },
+    "items": {
+      "dashboard": "Panel",
+      "serviceRequests": "Zapytania",
+      "appointments": "Wizyty",
+      "jobs": "Zlecenia",
+      "receipts": "Moje potwierdzenia płatności",
+      "messages": "Wiadomości",
+      "disputes": "Spory",
+      "support": "Pomoc",
+      "professionalDashboard": "Panel specjalisty",
+      "availableRequests": "Dostępne zapytania",
+      "myQuotes": "Moje wyceny",
+      "myAppointments": "Moje wizyty",
+      "myJobs": "Moje zlecenia",
+      "selfBilling": "Samofakturowanie i faktury",
+      "companies": "Firmy",
+      "adminPanel": "Panel administracyjny",
+      "profile": "Profil",
+      "professionalProfile": "Profil specjalisty",
+      "switchToProfessional": "Przełącz na panel specjalisty"
+    }
+  },
+  "shell": {
+    "skipToContent": "Przejdź do treści głównej",
+    "sidebar": "Pasek boczny",
+    "openMenu": "Otwórz menu",
+    "accountMenu": "Menu konta",
+    "account": "Konto",
+    "notifications": "Powiadomienia",
+    "profile": "Profil",
+    "signOut": "Wyloguj się"
+  },
+  "profileBanner": {
+    "noProfile": "Uzupełnij profil specjalisty, aby zacząć otrzymywać zapytania od klientów.",
+    "incomplete": "Twój profil specjalisty jest niekompletny. Uzupełnij go, aby klienci widzieli Twój najlepszy profil.",
+    "completeProfile": "Uzupełnij profil specjalisty"
+  },
+  "overview": {
+    "welcomeBack": "Witaj ponownie, {name}",
+    "welcomeBackAnonymous": "Witaj ponownie",
+    "subtitle": "Oto przegląd Twojego konta MaestroYa.",
+    "professionalOverview": {
+      "title": "Przegląd specjalisty",
+      "description": "Zapytania klientów, na które możesz odpowiedzieć, oraz wynikające z nich wyceny, wizyty i zlecenia."
+    },
+    "stats": {
+      "availableRequests": "Dostępne zapytania",
+      "quotesAwaitingResponse": "Wyceny czekające na odpowiedź",
+      "acceptedQuotes": "Zaakceptowane wyceny",
+      "upcomingAppointments": "Nadchodzące wizyty",
+      "activeJobs": "Aktywne zlecenia",
+      "completedJobs": "Zakończone zlecenia",
+      "activeRequests": "Aktywne zapytania",
+      "unreadMessages": "Nieprzeczytane wiadomości"
+    },
+    "quickActions": {
+      "ariaLabel": "Szybkie akcje",
+      "newRequest": "Nowe zapytanie",
+      "appointments": "Wizyty",
+      "messages": "Wiadomości",
+      "profile": "Profil",
+      "browseRequests": "Przeglądaj zapytania",
+      "myQuotes": "Moje wyceny",
+      "professionalProfile": "Profil specjalisty"
+    },
+    "cards": {
+      "yourRequests": "Twoje zapytania",
+      "upcomingAppointments": "Nadchodzące wizyty",
+      "messages": "Wiadomości",
+      "yourQuotes": "Twoje wyceny",
+      "viewAll": "Zobacz wszystko"
+    },
+    "empty": {
+      "requests": {
+        "title": "Nie masz jeszcze zapytań.",
+        "description": "Dodaj zapytanie, aby zacząć otrzymywać wyceny od specjalistów w pobliżu."
+      },
+      "appointments": {
+        "title": "Brak nadchodzących wizyt.",
+        "description": "Wizyty pojawią się tutaj, gdy zaakceptujesz wycenę specjalisty.",
+        "action": "Zobacz moje zapytania"
+      },
+      "messages": {
+        "title": "Brak nowych wiadomości.",
+        "description": "Tutaj pojawiają się rozmowy z klientami i specjalistami.",
+        "action": "Przejdź do wiadomości"
+      },
+      "noProfessionalProfile": {
+        "title": "Skonfiguruj profil specjalisty.",
+        "description": "Utwórz profil specjalisty, aby otrzymywać zapytania, na które możesz przygotować wycenę.",
+        "action": "Zacznij"
+      },
+      "quotes": {
+        "title": "Nie wysłano jeszcze żadnych wycen.",
+        "description": "Przejrzyj otwarte zapytania i wyślij swoją pierwszą wycenę."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "z {name}",
+    "manage": "Zarządzaj",
+    "requestPosted": "Opublikowano {created, date, medium} — zaktualizowano {updated, date, medium}",
+    "quoteSubmitted": "Wysłano {created, date, medium} — zaktualizowano {updated, date, medium}"
   }
 }

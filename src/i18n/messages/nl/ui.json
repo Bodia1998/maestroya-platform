@@ -1,0 +1,51 @@
+{
+  "legalDocument": {
+    "issuedLanguageNotice": "Dit document wordt getoond in de taal waarin het is uitgegeven (Spaans)."
+  },
+  "close": "Sluiten",
+  "breadcrumb": {
+    "label": "Kruimelpad"
+  },
+  "chip": {
+    "remove": "Verwijderen"
+  },
+  "combobox": {
+    "placeholder": "Kies een optie",
+    "searchPlaceholder": "Zoeken…",
+    "empty": "Geen resultaten"
+  },
+  "confirmDialog": {
+    "cancel": "Annuleren",
+    "genericError": "Er is iets misgegaan. Probeer het opnieuw."
+  },
+  "errorState": {
+    "title": "Er is iets misgegaan",
+    "retry": "Opnieuw proberen"
+  },
+  "loadingState": {
+    "label": "Laden…"
+  },
+  "spinner": {
+    "label": "Laden"
+  },
+  "pagination": {
+    "label": "Paginering",
+    "previous": "Vorige",
+    "next": "Volgende"
+  },
+  "passwordInput": {
+    "show": "Wachtwoord tonen",
+    "hide": "Wachtwoord verbergen"
+  },
+  "searchInput": {
+    "clear": "Zoekopdracht wissen"
+  },
+  "toast": {
+    "close": "Melding sluiten",
+    "region": "Meldingen",
+    "assertiveRegion": "Belangrijke meldingen"
+  },
+  "fieldBadges": {
+    "optional": "Optioneel"
+  }
+}

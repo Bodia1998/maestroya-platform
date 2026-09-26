@@ -18,59 +18,66 @@
  * It never states or implies that professionals/companies are currently
  * active in every Spanish municipality, a specific coverage percentage,
  * or any count of professionals, jobs, or customers.
+ *
+ * Module 120 — Multilingual Localization: the prose (intro, coverage
+ * statement, local-availability explanation, FAQ, and the Service JSON-LD
+ * name/description) lives in the server-only `knowledge` namespace
+ * (`nationalCoverage.…`, Spanish = the original copy) and is resolved per
+ * locale by `resolveNationalCoverageContent()`. Every translation keeps
+ * the platform-scope vs. verified-local-availability distinction exactly.
  */
+
+import type { FaqEntry } from "./services";
 
 export interface NationalCoverageContent {
   slug: string;
-  /** Must exactly match the seeded `Country.code` (ISO 3166-1 alpha-2). */
+  /** Must exactly match the seeded `Country.code` (ISO 3166-1 alpha-2).
+   *  The localized display name is `services.countries.<countryCode>`
+   *  ("España", "Spain", "Испания", …) — distinct from `Country.name`,
+   *  so page copy reads naturally without renaming the database value. */
   countryCode: string;
   /** Must exactly match the seeded `Country.name`. */
   countryName: string;
-  /** Display name for Spanish-language copy — the country's own common
-   *  name in Spanish, distinct from `Country.name` ("Spain" in English,
-   *  as seeded) so page copy reads naturally without renaming the
-   *  underlying database value. */
-  displayName: string;
+  /** Keys under `knowledge.nationalCoverage.faqs`. */
+  faqs: readonly string[];
+}
+
+export const NATIONAL_COVERAGE_CONTENT: NationalCoverageContent = {
+  slug: "espana",
+  countryCode: "ES",
+  countryName: "Spain", // i18n-ignore: database value / proper noun
+  faqs: ["wholeSpain", "localAvailability", "whatServices", "professionalParticipation"],
+};
+
+export interface ResolvedNationalCoverageText {
   intro: string;
   /** The platform-scope statement, phrased so it can never be read as a
    *  guarantee of current local supply — see the module's non-negotiable
    *  rule 8/9. */
   coverageStatement: string;
   howLocalAvailabilityWorks: string;
-  faqs: Array<{ question: string; answer: string }>;
+  faqs: FaqEntry[];
+  /** `Service` JSON-LD name/description for the page (never LocalBusiness). */
+  structuredDataName: string;
+  structuredDataDescription: string;
 }
 
-export const NATIONAL_COVERAGE_CONTENT: NationalCoverageContent = {
-  slug: "espana",
-  countryCode: "ES",
-  countryName: "Spain",
-  displayName: "España",
-  intro:
-    "MaestroYa es un marketplace de servicios para el hogar que conecta a clientes con profesionales y empresas en España. Cualquier persona en España puede publicar una solicitud de servicio; que un profesional la revise y envíe presupuesto depende de qué profesionales estén activos en esa categoría y esa zona en cada momento.",
-  coverageStatement:
-    "El alcance de MaestroYa como plataforma es nacional: el objetivo del marketplace es operar en toda España, no solo en una localidad concreta. Esto es distinto de la disponibilidad real de profesionales en una zona determinada, que depende de los datos reales de la plataforma en cada momento.",
-  howLocalAvailabilityWorks:
-    "Cuando publicas una solicitud, únicamente los profesionales que cubren esa categoría de servicio y tu zona pueden revisarla y enviarte un presupuesto. MaestroYa no garantiza que exista un profesional disponible en cualquier localidad concreta: la disponibilidad real varía según la zona. Las localidades con cobertura confirmada por datos reales de la plataforma tienen su propia página (ver /ubicaciones).",
-  faqs: [
-    {
-      question: "¿MaestroYa opera en toda España?",
-      answer:
-        "MaestroYa es un marketplace pensado para operar en toda España. Eso no significa que haya profesionales activos ya en cada localidad: la disponibilidad real de profesionales depende de cada zona y puede variar con el tiempo.",
-    },
-    {
-      question: "¿Cómo sé si un servicio está disponible en mi localidad?",
-      answer:
-        "Puedes publicar una solicitud indicando tu dirección; solo los profesionales que cubran tu categoría y tu zona podrán enviarte un presupuesto. Las localidades con cobertura confirmada por datos reales de la plataforma se listan en la sección de ubicaciones.",
-    },
-    {
-      question: "¿Qué servicios ofrece MaestroYa?",
-      answer:
-        "MaestroYa publica hoy seis categorías de servicio para el hogar: fontanería, electricidad, aire acondicionado, pintura, reformas y montaje de muebles. Consulta la página de cada servicio para más detalle.",
-    },
-    {
-      question: "¿Cómo participa un profesional en MaestroYa?",
-      answer:
-        "Un profesional puede crear una cuenta, indicar sus categorías de servicio y la zona que cubre, y a partir de ahí revisar y enviar presupuestos para las solicitudes publicadas que coincidan con su categoría y su zona.",
-    },
-  ],
-};
+/** Resolves the national-coverage prose for one locale; `t` is bound to
+ *  the `knowledge` namespace. */
+export function resolveNationalCoverageContent(
+  content: NationalCoverageContent,
+  t: unknown,
+): ResolvedNationalCoverageText {
+  const translate = t as (key: string) => string;
+  return {
+    intro: translate("nationalCoverage.intro"),
+    coverageStatement: translate("nationalCoverage.coverageStatement"),
+    howLocalAvailabilityWorks: translate("nationalCoverage.howLocalAvailabilityWorks"),
+    faqs: content.faqs.map((key) => ({
+      question: translate(`nationalCoverage.faqs.${key}.question`),
+      answer: translate(`nationalCoverage.faqs.${key}.answer`),
+    })),
+    structuredDataName: translate("nationalCoverage.structuredData.name"),
+    structuredDataDescription: translate("nationalCoverage.structuredData.description"),
+  };
+}

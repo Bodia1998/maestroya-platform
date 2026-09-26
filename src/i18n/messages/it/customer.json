@@ -1,0 +1,365 @@
+{
+  "requests": {
+    "list": {
+      "title": "Le mie richieste",
+      "subtitle": "Le richieste che hai pubblicato per ricevere preventivi dai professionisti.",
+      "newRequest": "Nuova richiesta",
+      "empty": {
+        "title": "Nessuna richiesta per ora",
+        "description": "Non hai ancora pubblicato nessuna richiesta. Pubblicane una per iniziare a ricevere preventivi da professionisti vicino a te."
+      }
+    },
+    "new": {
+      "title": "Nuova richiesta di servizio",
+      "subtitle": "Descrivi il lavoro di cui hai bisogno. Verrà pubblicato subito perché i professionisti ti inviino un preventivo."
+    },
+    "edit": {
+      "title": "Modifica la richiesta di servizio",
+      "subtitle": "Puoi modificare questa richiesta finché è aperta.",
+      "breadcrumb": "Modifica"
+    },
+    "detail": {
+      "metaTitle": "Richiesta di servizio",
+      "description": "Descrizione",
+      "location": "Località",
+      "urgency": "Urgenza",
+      "budget": "Budget",
+      "budgetRange": "{min} – {max}",
+      "budgetUnset": "—",
+      "posted": "Pubblicata",
+      "lastUpdated": "Ultimo aggiornamento",
+      "photos": "Foto",
+      "acceptedNotice": "Hai accettato un preventivo per questa richiesta. Vai su <appointments>I miei appuntamenti</appointments> per proporre o confermare un orario, oppure controlla <jobs>I miei lavori</jobs> per l'avanzamento complessivo.",
+      "editRequest": "Modifica la richiesta"
+    },
+    "form": {
+      "updated": "Richiesta aggiornata.",
+      "sections": {
+        "job": "Il lavoro",
+        "budget": "Budget",
+        "budgetDescription": "Indica ai professionisti una cifra indicativa perché i preventivi siano in linea.",
+        "location": "Luogo del lavoro"
+      },
+      "category": "Categoria di servizio",
+      "selectCategory": "Seleziona una categoria",
+      "title": "Titolo",
+      "titlePlaceholder": "es. Riparare il rubinetto della cucina che perde",
+      "description": "Descrizione",
+      "descriptionPlaceholder": "Descrivi il lavoro nel dettaglio: cosa c'è da fare ed eventuali informazioni utili.",
+      "urgency": "Urgenza",
+      "budgetMin": "Budget minimo (EUR)",
+      "budgetMax": "Budget massimo (EUR)",
+      "address": "Indirizzo",
+      "streetPlaceholder": "Via e numero civico",
+      "line2Placeholder": "Interno, piano, ecc. (facoltativo)",
+      "cityPlaceholder": "Città",
+      "postalCodePlaceholder": "CAP",
+      "provincePlaceholder": "Provincia",
+      "countryPlaceholder": "Paese",
+      "latitudePlaceholder": "Latitudine (facoltativo)",
+      "longitudePlaceholder": "Longitudine (facoltativo)",
+      "coordinatesHelp": "Latitudine e longitudine vengono compilate automaticamente quando possibile: lasciale vuote se non sei sicuro.",
+      "saveChanges": "Salva le modifiche",
+      "postRequest": "Pubblica la richiesta"
+    },
+    "cancel": {
+      "trigger": "Annulla questa richiesta",
+      "title": "Annullare questa richiesta di servizio?",
+      "description": "I professionisti non potranno più inviare preventivi. L'operazione non può essere annullata da qui.",
+      "confirm": "Sì, annulla la richiesta",
+      "pending": "Annullamento…",
+      "keep": "Mantieni la richiesta"
+    },
+    "photos": {
+      "chooseFirst": "Scegli prima un'immagine.",
+      "alt": "Foto della richiesta",
+      "remove": "Rimuovi",
+      "none": "Nessuna foto allegata.",
+      "add": "Aggiungi foto",
+      "uploading": "Caricamento…",
+      "maxReached": "Hai raggiunto il massimo di {max, plural, one {# foto} other {# foto}}."
+    },
+    "errors": {
+      "createFailed": "Si è verificato un errore durante la creazione della richiesta.",
+      "updateFailed": "Si è verificato un errore durante l'aggiornamento della richiesta.",
+      "cancelFailed": "Si è verificato un errore durante l'annullamento della richiesta.",
+      "photoMissing": "Scegli un'immagine da caricare.",
+      "photoType": "Le foto devono essere immagini JPEG, PNG o WebP.",
+      "photoTooLarge": "Ogni foto deve essere inferiore a 5 MB.",
+      "photoUploadFailed": "Si è verificato un errore durante il caricamento della foto.",
+      "photoRemoveFailed": "Si è verificato un errore durante la rimozione della foto."
+    }
+  },
+  "quotes": {
+    "title": "Preventivi ricevuti",
+    "subtitle": "I preventivi che i professionisti hanno inviato per questa richiesta.",
+    "breadcrumb": "Preventivi",
+    "empty": "Ancora nessun preventivo. Ricontrolla presto.",
+    "verification": {
+      "UNVERIFIED": "Non verificato",
+      "PENDING": "Verifica in corso",
+      "VERIFIED": "Verificato",
+      "REJECTED": "Verifica respinta"
+    },
+    "meta": "Inviato il {created, date, medium} — aggiornato il {updated, date, medium}",
+    "metaWithValidity": "Valido fino al {validUntil, date, medium} — inviato il {created, date, medium} — aggiornato il {updated, date, medium}",
+    "messageProfessional": "Scrivi a {name}",
+    "acceptFailed": "Si è verificato un errore durante l'accettazione del preventivo.",
+    "accept": {
+      "trigger": "Accetta questo preventivo",
+      "title": "Accettare questo preventivo?",
+      "description": "Tutti gli altri preventivi per questa richiesta verranno rifiutati automaticamente. L'operazione non può essere annullata.",
+      "confirm": "Sì, accetta il preventivo",
+      "pending": "Accettazione…",
+      "cancel": "Non ancora"
+    }
+  },
+  "appointments": {
+    "list": {
+      "title": "I miei appuntamenti",
+      "subtitle": "Appuntamenti creati dai preventivi che hai accettato.",
+      "empty": {
+        "title": "Nessun appuntamento in programma",
+        "description": "Gli appuntamenti compaiono qui quando accetti il preventivo di un professionista.",
+        "action": "Vedi le mie richieste"
+      }
+    },
+    "noTimeProposed": "Nessun orario ancora proposto",
+    "notSet": "Non impostato",
+    "awaitingProposedTime": "In attesa di un orario proposto",
+    "detail": {
+      "title": "Appuntamento",
+      "confirmedTime": "Orario confermato",
+      "proposedTime": "Orario proposto",
+      "cancellationReason": "Motivo dell'annullamento"
+    },
+    "cancellationReason": {
+      "CUSTOMER_REQUEST": "Richiesta del cliente",
+      "PROFESSIONAL_UNAVAILABLE": "Professionista non disponibile",
+      "SCHEDULING_CONFLICT": "Conflitto di orario",
+      "OTHER": "Altro"
+    },
+    "actions": {
+      "start": "Inizio",
+      "end": "Fine",
+      "confirming": "Conferma in corso…",
+      "confirmTime": "Conferma questo orario",
+      "completing": "Segnalazione come completato…",
+      "markCompleted": "Segna questa visita come completata",
+      "cancelTrigger": "Annulla appuntamento",
+      "cancelTitle": "Annullare questo appuntamento?",
+      "confirmCancel": "Sì, annulla",
+      "cancelling": "Annullamento…",
+      "notNow": "Non ora",
+      "reason": "Motivo",
+      "note": "Nota (facoltativa)",
+      "proposeTime": "Proponi un orario",
+      "proposeDifferentTime": "Proponi un altro orario",
+      "reschedule": "Riprogramma"
+    },
+    "errors": {
+      "invalidAppointment": "Appuntamento non valido.",
+      "proposeFailed": "Si è verificato un errore durante la proposta dell'orario.",
+      "confirmFailed": "Si è verificato un errore durante la conferma dell'appuntamento.",
+      "cancelFailed": "Si è verificato un errore durante l'annullamento dell'appuntamento.",
+      "completeFailed": "Si è verificato un errore durante il completamento dell'appuntamento.",
+      "rescheduleFailed": "Si è verificato un errore durante la riprogrammazione dell'appuntamento."
+    }
+  },
+  "messages": {
+    "title": "Messaggi",
+    "conversation": "Conversazione",
+    "empty": {
+      "title": "Ancora nessuna conversazione",
+      "description": "Quando tu e un cliente o un professionista avete un preventivo in comune, potete scrivervi qui."
+    },
+    "participant": "Partecipante",
+    "unknownParticipant": "Utente MaestroYa",
+    "noMessagesYet": "Ancora nessun messaggio.",
+    "emptyThread": "Ancora nessun messaggio. Saluta per iniziare.",
+    "closed": "Questa conversazione non accetta più nuovi messaggi.",
+    "opening": "Apertura…",
+    "messageAction": "Scrivi",
+    "bubble": {
+      "deleted": "Questo messaggio è stato eliminato.",
+      "deleting": "Eliminazione…",
+      "confirmDelete": "Conferma eliminazione",
+      "cancel": "Annulla",
+      "delete": "Elimina"
+    },
+    "composer": {
+      "placeholder": "Scrivi un messaggio…",
+      "ariaLabel": "Messaggio",
+      "sending": "Invio…",
+      "send": "Invia"
+    },
+    "errors": {
+      "openFailed": "Si è verificato un errore durante l'apertura della conversazione.",
+      "sendFailed": "Si è verificato un errore durante l'invio del messaggio.",
+      "generic": "Si è verificato un errore.",
+      "deleteFailed": "Si è verificato un errore durante l'eliminazione del messaggio."
+    }
+  },
+  "disputes": {
+    "list": {
+      "metaTitle": "Le mie controversie",
+      "title": "Controversie",
+      "subtitle": "I casi che hai aperto e quelli aperti sul tuo lavoro.",
+      "openFromJob": "Apri una controversia da un lavoro",
+      "openedByMe": "Aperte da me",
+      "openedAboutMe": "Aperte sul mio lavoro",
+      "emptyMine": {
+        "title": "Nessuna controversia aperta",
+        "description": "Non hai aperto nessuna controversia."
+      },
+      "emptyAgainst": {
+        "title": "Niente da mostrare",
+        "description": "Non è stata aperta nessuna controversia sul tuo lavoro."
+      }
+    },
+    "detail": {
+      "metaTitle": "Controversia",
+      "subtitle": "{caseNumber} · Stato: {status} · Priorità: {priority} · Motivo: {reason}",
+      "description": "Descrizione",
+      "resolution": "Risoluzione",
+      "evidence": "Prove",
+      "noEvidence": "Nessuna prova allegata.",
+      "messages": "Messaggi",
+      "noMessages": "Ancora nessun messaggio."
+    },
+    "messageForm": {
+      "label": "Scrivi un messaggio",
+      "placeholder": "Scrivi un messaggio…",
+      "sending": "Invio…",
+      "send": "Invia messaggio"
+    },
+    "new": {
+      "title": "Apri una controversia",
+      "subtitle": "Solo per lavori in corso, completati o annullati: consulta la pagina di dettaglio del lavoro."
+    },
+    "form": {
+      "description": "Fornisci più dettagli possibile: ci aiuta a risolverla più in fretta.",
+      "jobId": "ID del lavoro",
+      "reason": "Motivo",
+      "title": "Titolo",
+      "descriptionLabel": "Descrizione",
+      "submitting": "Invio…",
+      "submit": "Apri controversia"
+    },
+    "status": {
+      "WAITING_FOR_CUSTOMER": "In attesa del cliente",
+      "WAITING_FOR_PROFESSIONAL": "In attesa del professionista"
+    },
+    "priority": {
+      "LOW": "Bassa",
+      "MEDIUM": "Media",
+      "HIGH": "Alta",
+      "URGENT": "Urgente"
+    },
+    "reason": {
+      "SERVICE_NOT_COMPLETED": "Servizio non completato",
+      "SERVICE_QUALITY": "Qualità del servizio",
+      "PROPERTY_DAMAGE": "Danni alla proprietà",
+      "PROFESSIONAL_NO_SHOW": "Il professionista non si è presentato",
+      "CUSTOMER_NO_SHOW": "Il cliente non si è presentato",
+      "PRICE_DISAGREEMENT": "Disaccordo sul prezzo",
+      "SCOPE_OF_WORK": "Ambito del lavoro",
+      "COMMUNICATION_ISSUE": "Problema di comunicazione",
+      "OTHER": "Altro"
+    },
+    "resolution": {
+      "NO_ACTION": "Nessuna azione",
+      "CUSTOMER_FAVOR": "A favore del cliente",
+      "PROFESSIONAL_FAVOR": "A favore del professionista",
+      "PARTIAL_RESOLUTION": "Risoluzione parziale",
+      "FINANCIAL_ADJUSTMENT_REQUIRED": "Richiesto un adeguamento economico",
+      "ESCALATED_EXTERNALLY": "Inoltrata all'esterno"
+    },
+    "errors": {
+      "openFailed": "Si è verificato un errore durante l'apertura della controversia.",
+      "loadMineFailed": "Si è verificato un errore durante il caricamento delle tue controversie.",
+      "loadFailed": "Si è verificato un errore durante il caricamento delle controversie.",
+      "loadOneFailed": "Si è verificato un errore durante il caricamento della controversia.",
+      "messageFailed": "Si è verificato un errore durante l'invio del messaggio.",
+      "evidenceFailed": "Si è verificato un errore durante l'allegato della prova."
+    }
+  },
+  "support": {
+    "metaTitle": "Ticket di assistenza",
+    "title": "Assistenza",
+    "subtitle": "Problemi con l'account, con la verifica, bug o domande generali.",
+    "myTickets": "I miei ticket",
+    "empty": {
+      "title": "Nessun ticket di assistenza",
+      "description": "Non hai aperto nessun ticket di assistenza."
+    },
+    "detail": {
+      "metaTitle": "Ticket di assistenza",
+      "subtitle": "{ticketNumber} · Stato: {status} · Categoria: {category} · Priorità: {priority}",
+      "resolution": "Risoluzione"
+    },
+    "form": {
+      "title": "Apri un nuovo ticket",
+      "category": "Categoria",
+      "subject": "Oggetto",
+      "description": "Descrizione",
+      "submitting": "Invio…",
+      "submit": "Invia ticket"
+    },
+    "category": {
+      "ACCOUNT": "Account",
+      "VERIFICATION": "Verifica",
+      "BUG": "Bug",
+      "LOGIN": "Accesso",
+      "GENERAL": "Generale",
+      "OTHER": "Altro"
+    },
+    "status": {
+      "WAITING_FOR_USER": "In attesa della tua risposta"
+    },
+    "errors": {
+      "openFailed": "Si è verificato un errore durante l'apertura del ticket.",
+      "loadFailed": "Si è verificato un errore durante il caricamento dei tuoi ticket.",
+      "loadOneFailed": "Si è verificato un errore durante il caricamento del ticket."
+    }
+  },
+  "reviews": {
+    "errors": {
+      "submitFailed": "Si è verificato un errore durante l'invio della recensione.",
+      "updateFailed": "Si è verificato un errore durante l'aggiornamento della recensione.",
+      "deleteFailed": "Si è verificato un errore durante l'eliminazione della recensione.",
+      "respondFailed": "Si è verificato un errore durante l'invio della risposta."
+    }
+  },
+  "analytics": {
+    "loadFailed": "Si è verificato un errore durante il caricamento delle tue statistiche."
+  },
+  "receipts": {
+    "list": {
+      "title": "Le mie ricevute",
+      "subtitle": "Le ricevute dei lavori che hai pagato tramite MaestroYa.",
+      "empty": {
+        "title": "Ancora nessuna ricevuta",
+        "description": "La ricevuta compare qui quando un lavoro pagato viene completato e il pagamento viene sbloccato."
+      }
+    },
+    "notYetIssued": "Non ancora emessa",
+    "detail": {
+      "title": "Ricevuta",
+      "receiptNumber": "Numero della ricevuta",
+      "date": "Data",
+      "dateUnset": "—",
+      "issuedBy": "Emessa da",
+      "billedTo": "Intestata a",
+      "items": "Voci",
+      "description": "Descrizione",
+      "amount": "Importo",
+      "tax": "Imposte",
+      "taxableBase": "Imponibile",
+      "vat": "IVA ({rate})",
+      "total": "Totale",
+      "creditNotes": "Note di credito",
+      "documentReference": "Riferimento del documento: {hash}… (solo checksum anti-manomissione, non è una firma elettronica)."
+    }
+  }
+}

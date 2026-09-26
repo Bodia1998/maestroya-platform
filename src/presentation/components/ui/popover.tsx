@@ -113,6 +113,7 @@ export function PopoverContent({ className, align = "start", side = "bottom", ..
   const { open } = usePopoverContext();
   if (!open) return null;
 
+  // i18n-ignore — Tailwind classes
   const alignClass = { start: "left-0", center: "left-1/2 -translate-x-1/2", end: "right-0" }[align];
   const sideClass = side === "bottom" ? "top-full mt-2" : "bottom-full mb-2";
 

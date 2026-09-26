@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
@@ -108,6 +109,7 @@ const iconTone: Record<ToastVariant, string> = {
 
 /** Mount once near the root (see `src/app/providers.tsx`). Renders queued toasts bottom-right via a portal. */
 export function Toaster() {
+  const tr = useTranslations("ui");
   const [toasts, setToasts] = React.useState<ToastItem[]>([]);
   const [mounted, setMounted] = React.useState(false);
 
@@ -150,7 +152,7 @@ export function Toaster() {
         </div>
         <button
           type="button"
-          aria-label="Cerrar notificación"
+          aria-label={tr("toast.close")}
           onClick={() => store.dismiss(t.id)}
           className="rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
@@ -164,14 +166,14 @@ export function Toaster() {
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-toast flex flex-col items-end gap-2 p-4 sm:inset-x-auto sm:right-0">
       <div
         aria-live="polite"
-        aria-label="Notificaciones"
+        aria-label={tr("toast.region")}
         className="flex flex-col items-end gap-2"
       >
         {politeToasts.map(renderToast)}
       </div>
       <div
         aria-live="assertive"
-        aria-label="Notificaciones importantes"
+        aria-label={tr("toast.assertiveRegion")}
         className="flex flex-col items-end gap-2"
       >
         {assertiveToasts.map(renderToast)}

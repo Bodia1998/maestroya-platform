@@ -2,18 +2,28 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
 import { JsonLd } from "@/components/seo/json-ld";
-import { buildBreadcrumbJsonLd, buildFaqJsonLd, buildServiceJsonLd } from "@/shared/seo/structured-data";
+import {
+  buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
+  buildServiceJsonLd,
+} from "@/shared/seo/structured-data";
 import {
   findVerifiedTopLevelServiceCategory,
   listVerifiedTopLevelServiceCategories,
 } from "@/shared/content/verified-service-category";
-import { getServiceContentBySlug } from "@/shared/content/services";
+import { getServiceContentBySlug, resolveServiceContent } from "@/shared/content/services";
 import { LOCATION_CONTENT } from "@/shared/content/locations";
 import { JUSTIFIED_SERVICE_LOCATION_PAIRS } from "@/shared/content/service-location-pairs";
+import { toOgLocale } from "@/shared/seo/site";
+import {
+  localizeCategoryDescription,
+  localizeCategoryName,
+} from "@/presentation/i18n/service-categories";
 
 type ServicePageProps = { params: Promise<{ slug: string }> };
 
@@ -31,6 +41,11 @@ type ServicePageProps = { params: Promise<{ slug: string }> };
  * `(marketing)/professionals/[id]/page.tsx` wraps its own lookup —
  * `generateMetadata` and the page component would otherwise run this
  * query twice per request.
+ *
+ * Module 120: every visible string (and the FAQ/Service JSON-LD built
+ * from it) is rendered in the visitor's locale — curated prose from the
+ * server-only `knowledge` namespace, page chrome from `services`. The
+ * canonical URL is the same for every language.
  */
 const getVerifiedService = cache(async (slug: string) => {
   const category = await findVerifiedTopLevelServiceCategory(slug);
@@ -44,18 +59,26 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
   const verified = await getVerifiedService(slug);
   if (!verified) return {};
 
-  const { category } = verified;
-  const title = `${category.name} — MaestroYa`;
+  const { category, content } = verified;
+  const [t, tServices, tKnowledge, locale] = await Promise.all([
+    getTranslations("seo"),
+    getTranslations("services"),
+    getTranslations("knowledge"),
+    getLocale(),
+  ]);
+  const title = t("servicePage.title", { service: localizeCategoryName(tServices, category) });
   const description =
-    category.description ??
-    `Solicita un profesional de ${category.name.toLowerCase()} a través de MaestroYa y compara presupuestos.`;
+    localizeCategoryDescription(tServices, category) ??
+    t("servicePage.descriptionFallback", {
+      service: resolveServiceContent(content, tKnowledge).nameInSentence,
+    });
   const path = `/servicios/${category.slug}`;
 
   return {
     title,
     description,
     alternates: { canonical: path },
-    openGraph: { title, description, url: path },
+    openGraph: { title, description, url: path, locale: toOgLocale(locale) },
     twitter: { title, description },
   };
 }
@@ -67,15 +90,24 @@ export default async function ServiceCategoryPage({ params }: ServicePageProps) 
     notFound();
   }
 
-  const { category, content } = verified;
+  const { category } = verified;
   const path = `/servicios/${category.slug}`;
+
+  const [t, tKnowledge, locale, allCategories] = await Promise.all([
+    getTranslations("services"),
+    getTranslations("knowledge"),
+    getLocale(),
+    listVerifiedTopLevelServiceCategories(),
+  ]);
+  const content = resolveServiceContent(verified.content, tKnowledge);
+  const serviceName = localizeCategoryName(t, category);
+  const serviceDescription = localizeCategoryDescription(t, category);
 
   const relatedServices = content.relatedServiceSlugs
     .map((relatedSlug) => getServiceContentBySlug(relatedSlug))
     .filter((related): related is NonNullable<typeof related> => Boolean(related));
 
-  const allCategories = await listVerifiedTopLevelServiceCategories();
-  const nameBySlug = Object.fromEntries(allCategories.map((c) => [c.slug, c.name]));
+  const categoryBySlug = new Map(allCategories.map((c) => [c.slug, c]));
 
   const availableLocations = JUSTIFIED_SERVICE_LOCATION_PAIRS.filter(
     (pair) => pair.serviceSlug === category.slug,
@@ -87,37 +119,38 @@ export default async function ServiceCategoryPage({ params }: ServicePageProps) 
     <PageContainer maxWidth="3xl" padded>
       <JsonLd
         data={buildServiceJsonLd({
-          name: category.name,
+          name: serviceName,
           path,
-          description: category.description,
+          description: serviceDescription,
+          inLanguage: locale,
         })}
       />
       <JsonLd
         data={buildBreadcrumbJsonLd([
-          { name: "Inicio", path: "/" },
-          { name: "Servicios", path: "/servicios" },
-          { name: category.name, path },
+          { name: t("breadcrumbs.home"), path: "/" },
+          { name: t("breadcrumbs.services"), path: "/servicios" },
+          { name: serviceName, path },
         ])}
       />
-      <JsonLd data={buildFaqJsonLd(content.faqs)} />
+      <JsonLd data={buildFaqJsonLd(content.faqs, { inLanguage: locale })} />
 
       <nav className="text-sm text-foreground/60">
         <Link href="/" className="hover:underline">
-          Inicio
+          {t("breadcrumbs.home")}
         </Link>{" "}
         /{" "}
         <Link href="/servicios" className="hover:underline">
-          Servicios
+          {t("breadcrumbs.services")}
         </Link>{" "}
-        / <span className="text-foreground">{category.name}</span>
+        / <span className="text-foreground">{serviceName}</span>
       </nav>
 
       <div>
-        <h1 className="text-2xl font-semibold">{category.name}</h1>
+        <h1 className="text-2xl font-semibold">{serviceName}</h1>
         <p className="mt-2 text-sm text-foreground/80">{content.intro}</p>
       </div>
 
-      <Section title="Qué puedes solicitar" gap="sm">
+      <Section title={t("servicePage.whatYouCanRequestTitle")} gap="sm">
         <ul className="list-disc pl-5 text-sm text-foreground/80">
           {content.commonJobTypes.map((jobType) => (
             <li key={jobType}>{jobType}</li>
@@ -125,7 +158,7 @@ export default async function ServiceCategoryPage({ params }: ServicePageProps) 
         </ul>
       </Section>
 
-      <Section title="Qué suele aportar el profesional" gap="sm">
+      <Section title={t("servicePage.whatProfessionalsProvideTitle")} gap="sm">
         <ul className="list-disc pl-5 text-sm text-foreground/80">
           {content.whatProfessionalsTypicallyProvide.map((item) => (
             <li key={item}>{item}</li>
@@ -133,17 +166,17 @@ export default async function ServiceCategoryPage({ params }: ServicePageProps) 
         </ul>
       </Section>
 
-      <Section title="Cómo funciona en MaestroYa" gap="sm">
+      <Section title={t("servicePage.howItWorksTitle")} gap="sm">
         <ol className="list-decimal pl-5 text-sm text-foreground/80">
-          <li>Publicas una solicitud describiendo el trabajo de {category.name.toLowerCase()}.</li>
-          <li>Los profesionales que cubren esta categoría y tu zona pueden revisarla y enviarte un presupuesto.</li>
-          <li>Comparas los presupuestos recibidos y aceptas el que prefieras.</li>
-          <li>El trabajo se agenda y se realiza según lo acordado en el presupuesto aceptado.</li>
+          <li>{t("servicePage.howItWorks.step1", { service: content.nameInSentence })}</li>
+          <li>{t("servicePage.howItWorks.step2")}</li>
+          <li>{t("servicePage.howItWorks.step3")}</li>
+          <li>{t("servicePage.howItWorks.step4")}</li>
         </ol>
       </Section>
 
       {availableLocations.length > 0 && (
-        <Section title="Zonas con este servicio" gap="sm">
+        <Section title={t("servicePage.areasTitle")} gap="sm">
           <ul className="flex flex-wrap gap-2">
             {availableLocations.map((location) => (
               <li key={location.slug}>
@@ -151,7 +184,7 @@ export default async function ServiceCategoryPage({ params }: ServicePageProps) 
                   href={`/servicios/${category.slug}/${location.slug}`}
                   className="rounded-full border border-border px-3 py-1 text-xs hover:border-primary/40 hover:bg-muted"
                 >
-                  {category.name} en {location.cityName}
+                  {t("shared.serviceInCity", { service: serviceName, city: location.cityName })}
                 </Link>
               </li>
             ))}
@@ -159,7 +192,7 @@ export default async function ServiceCategoryPage({ params }: ServicePageProps) 
         </Section>
       )}
 
-      <Section title="Antes de solicitar" gap="sm">
+      <Section title={t("servicePage.beforeRequestingTitle")} gap="sm">
         <ul className="list-disc pl-5 text-sm text-foreground/80">
           {content.considerations.map((item) => (
             <li key={item}>{item}</li>
@@ -167,7 +200,7 @@ export default async function ServiceCategoryPage({ params }: ServicePageProps) 
         </ul>
       </Section>
 
-      <Section title="Preguntas frecuentes" gap="sm">
+      <Section title={t("shared.faqTitle")} gap="sm">
         <dl className="flex flex-col gap-4">
           {content.faqs.map((faq) => (
             <div key={faq.question}>
@@ -179,32 +212,34 @@ export default async function ServiceCategoryPage({ params }: ServicePageProps) 
       </Section>
 
       {relatedServices.length > 0 && (
-        <Section title="Servicios relacionados" gap="sm">
+        <Section title={t("servicePage.relatedTitle")} gap="sm">
           <ul className="flex flex-wrap gap-2">
-            {relatedServices.map((related) => (
-              <li key={related.slug}>
-                <Link
-                  href={`/servicios/${related.slug}`}
-                  className="rounded-full border border-border px-3 py-1 text-xs hover:border-primary/40 hover:bg-muted"
-                >
-                  {nameBySlug[related.slug] ?? related.slug}
-                </Link>
-              </li>
-            ))}
+            {relatedServices.map((related) => {
+              const relatedCategory = categoryBySlug.get(related.slug);
+              return (
+                <li key={related.slug}>
+                  <Link
+                    href={`/servicios/${related.slug}`}
+                    className="rounded-full border border-border px-3 py-1 text-xs hover:border-primary/40 hover:bg-muted"
+                  >
+                    {relatedCategory ? localizeCategoryName(t, relatedCategory) : related.slug}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </Section>
       )}
 
       <section className="rounded-md border border-border bg-black/5 p-4">
         <p className="text-sm text-foreground/70">
-          ¿Listo para empezar? Publica una solicitud de {category.name.toLowerCase()} y los profesionales
-          que la cubran podrán enviarte un presupuesto.
+          {t("servicePage.cta", { service: content.nameInSentence })}
         </p>
         <Link
           href={{ pathname: "/requests/new", query: { categoryId: category.id } }}
           className="mt-3 inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
-          Solicitar este servicio
+          {t("shared.requestThisService")}
         </Link>
       </section>
     </PageContainer>

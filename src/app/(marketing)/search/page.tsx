@@ -1,32 +1,35 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { searchDirectorySchema } from "@/application/dto/search.dto";
 import { makeSearchDirectoryUseCase } from "@/application/use-cases/search/compose";
 import type { SearchDirectoryResult } from "@/application/use-cases/search/search-directory.use-case";
-import { DomainError } from "@/domain/errors/domain-error";
 import { SEARCH_SORT_OPTIONS } from "@/domain/value-objects/search-sort-option";
 import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
 import { SearchResultsMap } from "@/components/maps/search-results-map";
+import { localizeActionError } from "@/presentation/i18n/server";
+import { localizeCategoryName } from "@/presentation/i18n/service-categories";
 import { DirectorySearchForm } from "./search-form";
 import { DirectorySearchResultsList } from "./results-list";
-
-const TITLE = "Buscar profesionales y empresas";
-const DESCRIPTION =
-  "Filtra por categoría, ciudad, valoración y verificación para encontrar el profesional o empresa adecuado para tu proyecto.";
 
 /** Module 43 — SEO Infrastructure: see `(marketing)/professionals/page.tsx`'s
  *  own doc comment on why `alternates.canonical` is the bare path — same
  *  reasoning applies here for `/search`'s own query-string filters. */
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: "/search" },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: "/search" },
-  twitter: { title: TITLE, description: DESCRIPTION },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("marketing");
+  const title = t("meta.search.title");
+  const description = t("meta.search.description");
+  return {
+    title,
+    description,
+    alternates: { canonical: "/search" },
+    openGraph: { title, description, url: "/search" },
+    twitter: { title, description },
+  };
+}
 
 /**
  * Search & Ranking module (Module 19) — unified, customer-facing directory
@@ -46,12 +49,21 @@ export default async function DirectorySearchPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const [t, tCommon, tServices] = await Promise.all([
+    getTranslations("marketing"),
+    getTranslations("common"),
+    getTranslations("services"),
+  ]);
 
-  const categories = await prisma.serviceCategory.findMany({
+  const categoryRows = await prisma.serviceCategory.findMany({
     where: { status: "ACTIVE", deletedAt: null },
-    select: { id: true, name: true },
+    select: { id: true, name: true, slug: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
+  const categories = categoryRows.map((category) => ({
+    id: category.id,
+    name: localizeCategoryName(tServices, category),
+  }));
 
   const raw = (key: string) => (typeof params[key] === "string" ? (params[key] as string) : undefined);
 
@@ -84,12 +96,12 @@ export default async function DirectorySearchPage({
 
   if (hasAnyFilter) {
     if (!parsed.success) {
-      searchError = "That search looks invalid — please adjust the filters and try again.";
+      searchError = t("search.invalid");
     } else {
       try {
         results = await makeSearchDirectoryUseCase().execute(parsed.data);
       } catch (error) {
-        searchError = error instanceof DomainError ? error.message : "Something went wrong running that search.";
+        searchError = await localizeActionError(error, t("search.failed"));
       }
     }
   }
@@ -97,9 +109,9 @@ export default async function DirectorySearchPage({
   return (
     <PageContainer maxWidth="3xl" padded>
       <div>
-        <h1 className="text-2xl font-semibold">Find a professional or company</h1>
+        <h1 className="text-2xl font-semibold">{t("search.heading")}</h1>
         <p className="mt-1 text-sm text-foreground/70">
-          Search by service, city, rating, and verification — professionals and companies ranked together.
+          {t("search.subtitle")}
         </p>
       </div>
 
@@ -124,7 +136,7 @@ export default async function DirectorySearchPage({
       )}
 
       {hasAnyFilter && !searchError && results && (
-        <Section title={`${results.total} result${results.total === 1 ? "" : "s"} found`}>
+        <Section title={t("search.resultsFound", { count: results.total })}>
           {/* Module 42 — Geocoding & Maps: renders alongside the list, not
               instead of it — the map is a visual complement to
               DirectorySearchResultsList, which remains the primary,
@@ -135,15 +147,18 @@ export default async function DirectorySearchPage({
             <nav className="flex items-center justify-between text-sm">
               {results.page > 1 && (
                 <Link href={buildPageHref(params, results.page - 1)} className="underline">
-                  Previous
+                  {tCommon("pagination.previous")}
                 </Link>
               )}
               <span className="text-foreground/60">
-                Page {results.page} of {Math.ceil(results.total / results.pageSize)}
+                {tCommon("pagination.pageOf", {
+                  page: results.page,
+                  total: Math.ceil(results.total / results.pageSize),
+                })}
               </span>
               {results.page * results.pageSize < results.total && (
                 <Link href={buildPageHref(params, results.page + 1)} className="underline">
-                  Next
+                  {tCommon("pagination.next")}
                 </Link>
               )}
             </nav>

@@ -1,0 +1,92 @@
+{
+  "metaTitle": "Pannello partner",
+  "title": "Pannello partner",
+  "subtitle": "Monitora i tuoi link di segnalazione, i clic e i guadagni da affiliato.",
+  "noAccount": {
+    "title": "Non hai ancora un account partner",
+    "description": "Gli account partner sono destinati agli affiliati che segnalano clienti a MaestroYa in cambio di una quota del profitto della piattaforma. Contatta MaestroYa per registrarti come partner."
+  },
+  "statusMessage": {
+    "PENDING": "La tua candidatura come partner è in attesa di revisione",
+    "REJECTED": "La tua candidatura come partner non è stata approvata",
+    "SUSPENDED": "Il tuo account partner è attualmente sospeso",
+    "BANNED": "Il tuo account partner è stato bloccato",
+    "other": "Il tuo account partner non è attivo"
+  },
+  "locked": {
+    "description": "Il tuo pannello si sbloccherà automaticamente non appena il tuo account partner sarà approvato."
+  },
+  "welcome": "Bentornato, {name}. Ecco come stanno andando i tuoi link di segnalazione.",
+  "stats": {
+    "clicks": "Clic",
+    "visits": "Visite",
+    "registrations": "Registrazioni",
+    "bookingsCreated": "Prenotazioni create",
+    "completedJobs": "Lavori completati",
+    "conversionRate": "Tasso di conversione",
+    "platformCommissionGenerated": "Commissione generata per la piattaforma",
+    "pendingEarnings": "Guadagni in sospeso",
+    "approvedPayable": "Approvati (pagabili)",
+    "paidToDate": "Pagato finora"
+  },
+  "topCampaigns": {
+    "title": "Campagne migliori",
+    "empty": "Nessun clic sulle campagne registrato per ora."
+  },
+  "topReferralLinks": {
+    "title": "Link di segnalazione migliori",
+    "empty": "Nessun clic sui link di segnalazione registrato per ora."
+  },
+  "visitsCount": "{count, plural, one {# visita} other {# visite}}",
+  "errors": {
+    "createLinkFailed": "Si è verificato un problema durante la creazione di questo link di segnalazione.",
+    "updateLinkFailed": "Si è verificato un problema durante l’aggiornamento di questo link di segnalazione.",
+    "payoutFailed": "Si è verificato un problema durante la richiesta di questo accredito."
+  },
+  "campaigns": {
+    "title": "Link delle campagne",
+    "code": "Codice",
+    "codePlaceholder": "es. telegram_valencia",
+    "label": "Etichetta (facoltativa)",
+    "labelPlaceholder": "Una tua nota",
+    "source": "Fonte",
+    "none": "Nessuna",
+    "sources": {
+      "TELEGRAM": "Telegram",
+      "INSTAGRAM": "Instagram",
+      "TIKTOK": "TikTok",
+      "YOUTUBE": "YouTube",
+      "BLOG": "Blog",
+      "WEBSITE": "Sito web"
+    },
+    "creating": "Creazione…",
+    "create": "Crea link",
+    "empty": "Nessun link di campagna per ora — creane uno qui sopra per iniziare a condividerlo.",
+    "active": "Attivo",
+    "inactive": "Inattivo",
+    "visits": "{count, plural, one {# visita} other {# visite}}",
+    "deactivate": "Disattiva",
+    "activate": "Attiva"
+  },
+  "payout": {
+    "balanceTitle": "Saldo affiliato",
+    "available": "Saldo disponibile",
+    "reserved": "Riservato per l’accredito",
+    "paidToDate": "Pagato finora",
+    "minimum": "Accredito minimo: {amount}",
+    "eligible": "Idoneo all’accredito",
+    "moreNeeded": "Mancano {amount}",
+    "requesting": "Richiesta in corso…",
+    "request": "Richiedi accredito",
+    "requested": "Accredito richiesto — controlla lo stato nella cronologia qui sotto.",
+    "historyTitle": "Cronologia degli accrediti",
+    "empty": "Nessun accredito per ora.",
+    "status": {
+      "PENDING": "In attesa",
+      "PROCESSING": "In elaborazione",
+      "PAID": "Pagato",
+      "FAILED": "Non riuscito",
+      "CANCELLED": "Annullato"
+    }
+  }
+}

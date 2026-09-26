@@ -37,17 +37,23 @@ import type { DashboardNavGroup } from "@/components/dashboard/dashboard-shell";
  * `context` (Admin, Profile) are unaffected — they're relevant regardless
  * of which side of the marketplace the user is currently looking at.
  */
+/*
+ * Module 120 — Multilingual Localization: items carry a `labelKey` /
+ * `titleKey` into the `dashboard.nav.items.*` / `dashboard.nav.groups.*`
+ * catalog entries rather than English prose; `DashboardShell` resolves
+ * them in the active locale when rendering.
+ */
 const BASE_NAV_GROUP: DashboardNavGroup = {
   context: "customer",
   items: [
-    { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
-    { href: "/requests", label: "Service requests", icon: "requests" },
-    { href: "/appointments", label: "Appointments", icon: "appointments" },
-    { href: "/jobs", label: "Jobs", icon: "jobs" },
-    { href: "/receipts", label: "My receipts", icon: "receipts" },
-    { href: "/messages", label: "Messages", icon: "messages" },
-    { href: "/disputes", label: "Disputes", icon: "disputes" },
-    { href: "/support-tickets", label: "Support", icon: "support" },
+    { href: "/dashboard", labelKey: "dashboard", icon: "dashboard" },
+    { href: "/requests", labelKey: "serviceRequests", icon: "requests" },
+    { href: "/appointments", labelKey: "appointments", icon: "appointments" },
+    { href: "/jobs", labelKey: "jobs", icon: "jobs" },
+    { href: "/receipts", labelKey: "receipts", icon: "receipts" },
+    { href: "/messages", labelKey: "messages", icon: "messages" },
+    { href: "/disputes", labelKey: "disputes", icon: "disputes" },
+    { href: "/support-tickets", labelKey: "support", icon: "support" },
   ],
 };
 
@@ -73,16 +79,16 @@ const BASE_NAV_GROUP: DashboardNavGroup = {
  * bottom-of-sidebar afterthought).
  */
 const PROFESSIONAL_NAV_GROUP: DashboardNavGroup = {
-  title: "Professional",
+  titleKey: "professional",
   context: "professional",
   items: [
-    { href: "/dashboard", label: "Professional dashboard", icon: "dashboard" },
-    { href: "/dashboard/professional/requests", label: "Available requests", icon: "requests" },
-    { href: "/dashboard/professional/quotes", label: "My quotes", icon: "quotes" },
-    { href: "/dashboard/professional/appointments", label: "My appointments", icon: "appointments" },
-    { href: "/dashboard/professional/jobs", label: "My jobs", icon: "jobs" },
-    { href: "/dashboard/professional/self-billing", label: "Self-billing & invoices", icon: "invoices" },
-    { href: "/dashboard/company", label: "Companies", icon: "companies" },
+    { href: "/dashboard", labelKey: "professionalDashboard", icon: "dashboard" },
+    { href: "/dashboard/professional/requests", labelKey: "availableRequests", icon: "requests" },
+    { href: "/dashboard/professional/quotes", labelKey: "myQuotes", icon: "quotes" },
+    { href: "/dashboard/professional/appointments", labelKey: "myAppointments", icon: "appointments" },
+    { href: "/dashboard/professional/jobs", labelKey: "myJobs", icon: "jobs" },
+    { href: "/dashboard/professional/self-billing", labelKey: "selfBilling", icon: "invoices" },
+    { href: "/dashboard/company", labelKey: "companies", icon: "companies" },
   ],
 };
 
@@ -108,19 +114,19 @@ const PROFESSIONAL_NAV_GROUP: DashboardNavGroup = {
 const PROFESSIONAL_COMMUNICATION_NAV_GROUP: DashboardNavGroup = {
   context: "professional",
   items: [
-    { href: "/messages", label: "Messages", icon: "messages" },
-    { href: "/disputes", label: "Disputes", icon: "disputes" },
-    { href: "/support-tickets", label: "Support", icon: "support" },
+    { href: "/messages", labelKey: "messages", icon: "messages" },
+    { href: "/disputes", labelKey: "disputes", icon: "disputes" },
+    { href: "/support-tickets", labelKey: "support", icon: "support" },
   ],
 };
 
 const ADMIN_NAV_GROUP: DashboardNavGroup = {
-  title: "Admin",
-  items: [{ href: "/admin", label: "Admin panel", icon: "admin" }],
+  titleKey: "admin",
+  items: [{ href: "/admin", labelKey: "adminPanel", icon: "admin" }],
 };
 
 const PROFILE_NAV_GROUP: DashboardNavGroup = {
-  items: [{ href: "/profile", label: "Profile", icon: "profile" }],
+  items: [{ href: "/profile", labelKey: "profile", icon: "profile" }],
 };
 
 export interface BuildDashboardNavGroupsOptions {

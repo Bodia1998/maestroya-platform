@@ -1,0 +1,281 @@
+{
+  "NEW_QUOTE": {
+    "title": "Nieuwe offerte ontvangen",
+    "message": "Een vakman heeft een offerte gestuurd voor je aanvraag."
+  },
+  "QUOTE_ACCEPTED": {
+    "title": "Je offerte is geaccepteerd",
+    "message": "De klant heeft je offerte geaccepteerd."
+  },
+  "QUOTE_REJECTED": {
+    "title": "Je offerte is niet gekozen",
+    "message": "De klant heeft een andere offerte voor deze aanvraag geaccepteerd."
+  },
+  "QUOTE_EXPIRED": {
+    "title": "Je offerte is verlopen",
+    "message": "Een van je offertes is verlopen omdat die niet op tijd is geaccepteerd."
+  },
+  "NEW_MESSAGE": {
+    "title": "Nieuw bericht"
+  },
+  "APPOINTMENT_PROPOSED": {
+    "title": "Nieuw tijdstip voor afspraak voorgesteld",
+    "message": "Er is een nieuw tijdstip voor de afspraak voorgesteld.",
+    "variants": {
+      "byCustomer": {
+        "message": "De klant heeft een nieuw tijdstip voor de afspraak voorgesteld."
+      },
+      "byProfessional": {
+        "message": "De vakman heeft een nieuw tijdstip voor de afspraak voorgesteld."
+      }
+    }
+  },
+  "APPOINTMENT_CONFIRMED": {
+    "title": "Tijdstip van afspraak bevestigd",
+    "message": "Het tijdstip van de afspraak is bevestigd.",
+    "variants": {
+      "byCustomer": {
+        "message": "De klant heeft het tijdstip van de afspraak bevestigd."
+      },
+      "byProfessional": {
+        "message": "De vakman heeft het tijdstip van de afspraak bevestigd."
+      }
+    }
+  },
+  "APPOINTMENT_CANCELLED": {
+    "title": "Afspraak geannuleerd",
+    "message": "Deze afspraak is geannuleerd.",
+    "variants": {
+      "byCustomer": {
+        "message": "De klant heeft deze afspraak geannuleerd."
+      },
+      "byProfessional": {
+        "message": "De vakman heeft deze afspraak geannuleerd."
+      }
+    }
+  },
+  "JOB_STARTED": {
+    "title": "Het werk is begonnen",
+    "message": "De vakman is begonnen aan je opdracht."
+  },
+  "JOB_CANCELLED": {
+    "title": "Opdracht geannuleerd",
+    "message": "Deze opdracht is geannuleerd.",
+    "variants": {
+      "byCustomer": {
+        "message": "De klant heeft deze opdracht geannuleerd."
+      },
+      "byProfessional": {
+        "message": "De vakman heeft deze opdracht geannuleerd."
+      }
+    }
+  },
+  "JOB_COMPLETION_CONFIRMATION_REQUESTED": {
+    "title": "Bevestig de afgeronde dienst",
+    "message": "De vakman heeft je opdracht als afgerond gemarkeerd. Bevestig dat het werk is uitgevoerd, of laat het ons weten als er een probleem is."
+  },
+  "JOB_COMPLETION_CONFIRMATION_REMINDER": {
+    "title": "Bevestig de afgeronde dienst",
+    "message": "Bevestig de afgeronde dienst, of laat ons weten of er een probleem is, voordat de bevestigingstermijn verloopt."
+  },
+  "JOB_COMPLETION_CONFIRMED": {
+    "title": "Dienst bevestigd",
+    "message": "De klant heeft de afgeronde dienst bevestigd."
+  },
+  "JOB_COMPLETION_CONFIRMATION_TIMED_OUT": {
+    "title": "Opdracht in controle",
+    "message": "De klant heeft niet op tijd gereageerd op de afrondingsbevestiging. Deze opdracht wordt nu handmatig gecontroleerd voordat de betaling kan worden vrijgegeven."
+  },
+  "MATERIALS_PURCHASE_CONFIRMED": {
+    "title": "Aankoop materialen bevestigd",
+    "message": "De klant heeft bevestigd dat alle benodigde materialen zijn gekocht."
+  },
+  "REVIEW_RECEIVED": {
+    "title": "Je hebt een nieuwe beoordeling",
+    "message": "Een klant heeft een beoordeling gegeven voor je afgeronde opdracht."
+  },
+  "REVIEW_RESPONSE_ADDED": {
+    "title": "Een vakman heeft op je beoordeling gereageerd",
+    "message": "De vakman die je hebt beoordeeld, heeft een reactie geplaatst."
+  },
+  "SERVICE_REQUEST_EXPIRED": {
+    "title": "Je aanvraag is verlopen",
+    "message": "Je aanvraag ‘{requestTitle}’ is verlopen zonder te zijn afgerond."
+  },
+  "VERIFICATION_SUBMITTED": {
+    "title": "Verificatieaanvraag ingediend",
+    "message": "We hebben je verificatieaanvraag ontvangen en beoordelen die binnenkort.",
+    "variants": {
+      "resubmitted": {
+        "title": "Verificatieaanvraag opnieuw ingediend",
+        "message": "We hebben je bijgewerkte verificatieaanvraag ontvangen en beoordelen die binnenkort."
+      }
+    }
+  },
+  "VERIFICATION_APPROVED": {
+    "title": "Je bent nu een geverifieerde vakman",
+    "message": "Je verificatie is goedgekeurd. Op je openbare profiel staat nu een verificatiebadge.",
+    "variants": {
+      "automated": {
+        "message": "Je automatische identiteitscontrole is geslaagd. Op je openbare profiel staat nu een verificatiebadge."
+      }
+    }
+  },
+  "VERIFICATION_REJECTED": {
+    "title": "Verificatieaanvraag afgewezen",
+    "message": "Je verificatieaanvraag is afgewezen. Open je verificatiepagina om te zien waarom en probeer het opnieuw.",
+    "variants": {
+      "automated": {
+        "message": "Je automatische identiteitscontrole is niet geslaagd. Open je verificatiepagina om te zien waarom en probeer het opnieuw."
+      }
+    }
+  },
+  "VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Meer informatie nodig voor verificatie",
+    "message": "Een beoordelaar heeft gevraagd om je verificatieaanvraag bij te werken. Open je verificatiepagina voor de details.",
+    "variants": {
+      "businessRegistration": {
+        "title": "Bewijs van bedrijfsregistratie vereist",
+        "message": "Je automatische identiteitscontrole is geslaagd. Upload een bewijs van bedrijfsregistratie om je verificatie als vakman af te ronden."
+      }
+    }
+  },
+  "VERIFICATION_EXPIRED": {
+    "title": "Je verificatie is verlopen",
+    "message": "Je verificatie als vakman is verlopen. Start een nieuwe verificatie om je verificatiebadge te behouden."
+  },
+  "COMPANY_INVITATION_RECEIVED": {
+    "title": "Je bent uitgenodigd voor een bedrijf",
+    "message": "Je hebt een openstaande uitnodiging van een bedrijf."
+  },
+  "COMPANY_INVITATION_ACCEPTED": {
+    "title": "Uitnodiging geaccepteerd",
+    "message": "Een openstaande uitnodiging van het bedrijf is geaccepteerd."
+  },
+  "COMPANY_INVITATION_DECLINED": {
+    "title": "Uitnodiging geweigerd",
+    "message": "Een openstaande uitnodiging van het bedrijf is geweigerd."
+  },
+  "COMPANY_MEMBER_REMOVED": {
+    "title": "Je bent uit een bedrijf verwijderd",
+    "message": "Je bent geen lid meer van dit bedrijf."
+  },
+  "COMPANY_MEMBER_ROLE_CHANGED": {
+    "title": "Je rol is gewijzigd",
+    "message": "Je rol in het bedrijf is nu: {role}.",
+    "variants": {
+      "ownershipTransferred": {
+        "title": "Je bent nu eigenaar van het bedrijf",
+        "message": "Het eigendom van het bedrijf is aan jou overgedragen."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_SUBMITTED": {
+    "title": "Verificatieaanvraag ingediend",
+    "message": "We hebben de verificatieaanvraag van je bedrijf ontvangen en beoordelen die binnenkort.",
+    "variants": {
+      "resubmitted": {
+        "title": "Verificatieaanvraag opnieuw ingediend",
+        "message": "We hebben de bijgewerkte verificatieaanvraag van je bedrijf ontvangen."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_APPROVED": {
+    "title": "Je bedrijf is nu geverifieerd",
+    "message": "De verificatie van je bedrijf is goedgekeurd. Op het openbare profiel staat nu een verificatiebadge."
+  },
+  "COMPANY_VERIFICATION_REJECTED": {
+    "title": "Verificatieaanvraag afgewezen",
+    "message": "De verificatieaanvraag van je bedrijf is afgewezen. Bekijk de details voor de reden."
+  },
+  "COMPANY_VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Opnieuw indienen vereist",
+    "message": "De verificatieaanvraag van je bedrijf moet worden aangepast voordat die kan worden goedgekeurd."
+  },
+  "COMPANY_VERIFICATION_EXPIRED": {
+    "title": "De verificatie van je bedrijf is verlopen",
+    "message": "De verificatie van je bedrijf is verlopen. Start een nieuwe verificatie om de verificatiebadge te behouden."
+  },
+  "COMPANY_SUSPENDED": {
+    "title": "Je bedrijf is geschorst",
+    "message": "Een beheerder van het platform heeft het profiel van je bedrijf geschorst."
+  },
+  "COMPANY_REACTIVATED": {
+    "title": "Je bedrijf is weer actief",
+    "message": "Het profiel van je bedrijf is weer actief."
+  },
+  "DISPUTE_CREATED": {
+    "title": "Er is een geschil geopend",
+    "message": "Er is een geschil ({caseNumber}) geopend over je opdracht."
+  },
+  "DISPUTE_ASSIGNED": {
+    "title": "Er is een geschil aan je toegewezen",
+    "message": "Geschil {caseNumber} is aan je toegewezen."
+  },
+  "DISPUTE_STATUS_CHANGED": {
+    "title": "Status van geschil bijgewerkt",
+    "message": "Nieuwe status van geschil {caseNumber}: {status}.",
+    "variants": {
+      "newMessage": {
+        "title": "Nieuw bericht in je geschil",
+        "message": "Er is een nieuw bericht in geschil {caseNumber}."
+      }
+    }
+  },
+  "DISPUTE_RESPONSE_REQUESTED": {
+    "title": "Je reactie in een geschil is nodig",
+    "message": "Nieuwe status van geschil {caseNumber}: {status}."
+  },
+  "DISPUTE_RESOLVED": {
+    "title": "Je geschil is opgelost",
+    "message": "Geschil {caseNumber} is opgelost."
+  },
+  "DISPUTE_REJECTED": {
+    "title": "Je geschil is afgewezen",
+    "message": "Geschil {caseNumber} is afgewezen."
+  },
+  "DISPUTE_CLOSED": {
+    "title": "Je geschil is gesloten",
+    "message": "Geschil {caseNumber} is gesloten."
+  },
+  "SUPPORT_TICKET_ASSIGNED": {
+    "title": "Er is een supportticket aan je toegewezen",
+    "message": "Ticket {ticketNumber} is aan je toegewezen."
+  },
+  "SUPPORT_TICKET_STATUS_CHANGED": {
+    "title": "Je supportticket is bijgewerkt",
+    "message": "Nieuwe status van ticket {ticketNumber}: {status}."
+  },
+  "SUPPORT_TICKET_RESOLVED": {
+    "title": "Je supportticket is opgelost",
+    "message": "Ticket {ticketNumber} is opgelost."
+  },
+  "SUPPORT_TICKET_CLOSED": {
+    "title": "Je supportticket is gesloten",
+    "message": "Ticket {ticketNumber} is gesloten."
+  },
+  "labels": {
+    "disputeStatus": {
+      "OPEN": "Open",
+      "UNDER_REVIEW": "In behandeling",
+      "WAITING_FOR_CUSTOMER": "Wacht op de klant",
+      "WAITING_FOR_PROFESSIONAL": "Wacht op de vakman",
+      "RESOLVED": "Opgelost",
+      "REJECTED": "Afgewezen",
+      "CLOSED": "Gesloten"
+    },
+    "ticketStatus": {
+      "OPEN": "Open",
+      "IN_PROGRESS": "In behandeling",
+      "WAITING_FOR_USER": "Wacht op je reactie",
+      "RESOLVED": "Opgelost",
+      "CLOSED": "Gesloten"
+    },
+    "companyRole": {
+      "OWNER": "Eigenaar",
+      "ADMIN": "Beheerder",
+      "MANAGER": "Manager",
+      "MEMBER": "Lid"
+    }
+  }
+}

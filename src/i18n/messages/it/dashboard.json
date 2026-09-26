@@ -16,5 +16,115 @@
     "title": "Area azienda",
     "members": "Membri",
     "invitations": "Inviti"
+  },
+  "nav": {
+    "ariaLabel": "Navigazione del pannello",
+    "groups": {
+      "professional": "Professionista",
+      "admin": "Amministrazione"
+    },
+    "items": {
+      "dashboard": "Pannello",
+      "serviceRequests": "Richieste",
+      "appointments": "Appuntamenti",
+      "jobs": "Lavori",
+      "receipts": "Le mie ricevute",
+      "messages": "Messaggi",
+      "disputes": "Controversie",
+      "support": "Assistenza",
+      "professionalDashboard": "Pannello professionista",
+      "availableRequests": "Richieste disponibili",
+      "myQuotes": "I miei preventivi",
+      "myAppointments": "I miei appuntamenti",
+      "myJobs": "I miei lavori",
+      "selfBilling": "Autofatturazione e fatture",
+      "companies": "Aziende",
+      "adminPanel": "Pannello di amministrazione",
+      "profile": "Profilo",
+      "professionalProfile": "Profilo professionale",
+      "switchToProfessional": "Passa al pannello professionista"
+    }
+  },
+  "shell": {
+    "skipToContent": "Vai al contenuto principale",
+    "sidebar": "Barra laterale",
+    "openMenu": "Apri il menu",
+    "accountMenu": "Menu dell'account",
+    "account": "Account",
+    "notifications": "Notifiche",
+    "profile": "Profilo",
+    "signOut": "Esci"
+  },
+  "profileBanner": {
+    "noProfile": "Completa il tuo profilo professionale per iniziare a ricevere richieste dai clienti.",
+    "incomplete": "Il tuo profilo professionale è incompleto. Completalo perché i clienti vedano il tuo profilo migliore.",
+    "completeProfile": "Completa il profilo professionale"
+  },
+  "overview": {
+    "welcomeBack": "Bentornato, {name}",
+    "welcomeBackAnonymous": "Bentornato",
+    "subtitle": "Ecco una panoramica del tuo account MaestroYa.",
+    "professionalOverview": {
+      "title": "Panoramica professionista",
+      "description": "Richieste dei clienti a cui puoi rispondere, e i preventivi, gli appuntamenti e i lavori che ne seguono."
+    },
+    "stats": {
+      "availableRequests": "Richieste disponibili",
+      "quotesAwaitingResponse": "Preventivi in attesa di risposta",
+      "acceptedQuotes": "Preventivi accettati",
+      "upcomingAppointments": "Prossimi appuntamenti",
+      "activeJobs": "Lavori attivi",
+      "completedJobs": "Lavori completati",
+      "activeRequests": "Richieste attive",
+      "unreadMessages": "Messaggi non letti"
+    },
+    "quickActions": {
+      "ariaLabel": "Azioni rapide",
+      "newRequest": "Nuova richiesta",
+      "appointments": "Appuntamenti",
+      "messages": "Messaggi",
+      "profile": "Profilo",
+      "browseRequests": "Sfoglia le richieste",
+      "myQuotes": "I miei preventivi",
+      "professionalProfile": "Profilo professionale"
+    },
+    "cards": {
+      "yourRequests": "Le tue richieste",
+      "upcomingAppointments": "Prossimi appuntamenti",
+      "messages": "Messaggi",
+      "yourQuotes": "I tuoi preventivi",
+      "viewAll": "Vedi tutto"
+    },
+    "empty": {
+      "requests": {
+        "title": "Nessuna richiesta per ora.",
+        "description": "Pubblica una richiesta per iniziare a ricevere preventivi da professionisti vicino a te."
+      },
+      "appointments": {
+        "title": "Nessun appuntamento in programma.",
+        "description": "Gli appuntamenti compaiono qui quando accetti il preventivo di un professionista.",
+        "action": "Vedi le mie richieste"
+      },
+      "messages": {
+        "title": "Nessun nuovo messaggio.",
+        "description": "Qui compaiono le conversazioni con clienti e professionisti.",
+        "action": "Vai ai messaggi"
+      },
+      "noProfessionalProfile": {
+        "title": "Configura il tuo profilo professionale.",
+        "description": "Crea il tuo profilo professionale per iniziare a ricevere richieste a cui inviare un preventivo.",
+        "action": "Inizia"
+      },
+      "quotes": {
+        "title": "Nessun preventivo inviato finora.",
+        "description": "Sfoglia le richieste aperte e invia il tuo primo preventivo."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "con {name}",
+    "manage": "Gestisci",
+    "requestPosted": "Pubblicata il {created, date, medium} — aggiornata il {updated, date, medium}",
+    "quoteSubmitted": "Inviato il {created, date, medium} — aggiornato il {updated, date, medium}"
   }
 }

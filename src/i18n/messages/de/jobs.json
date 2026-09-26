@@ -16,5 +16,74 @@
   },
   "quotes": {
     "title": "Angebote"
+  },
+  "quoteItems": {
+    "columns": {
+      "description": "Beschreibung",
+      "type": "Art",
+      "quantity": "Menge",
+      "unitPrice": "Einzelpreis",
+      "amount": "Betrag"
+    },
+    "total": "Gesamt",
+    "category": {
+      "MATERIALS": "Material",
+      "LABOR": "Arbeitsleistung"
+    }
+  },
+  "urgency": {
+    "LOW": "Niedrig",
+    "MEDIUM": "Mittel",
+    "HIGH": "Hoch",
+    "EMERGENCY": "Notfall"
+  },
+  "list": {
+    "title": "Meine Aufträge",
+    "subtitle": "Der Gesamtfortschritt der Aufträge, für die du ein Angebot angenommen hast.",
+    "empty": {
+      "title": "Keine aktiven Aufträge",
+      "description": "Aufträge erscheinen hier, sobald du das Angebot einer Fachkraft annimmst und die Arbeit beginnt.",
+      "action": "Meine Anfragen anzeigen"
+    }
+  },
+  "notStarted": "Nicht begonnen",
+  "detail": {
+    "title": "Auftrag",
+    "started": "Begonnen",
+    "completed": "Abgeschlossen",
+    "cancellationReason": "Stornierungsgrund",
+    "appointments": "Termine zu diesem Auftrag",
+    "noAppointments": "Noch keine Termine.",
+    "notScheduled": "Noch nicht geplant",
+    "dateUnset": "—"
+  },
+  "cancellationReason": {
+    "CUSTOMER_REQUEST": "Auf Wunsch des Kunden",
+    "PROFESSIONAL_UNABLE_TO_COMPLETE": "Fachkraft kann den Auftrag nicht abschließen",
+    "SERVICE_REQUEST_ISSUE": "Problem mit der Anfrage",
+    "OTHER": "Sonstiges"
+  },
+  "actions": {
+    "startWork": "Arbeit beginnen",
+    "starting": "Wird gestartet…",
+    "markCompleted": "Auftrag als abgeschlossen markieren",
+    "completing": "Wird abgeschlossen…",
+    "openAppointmentsWarning": "Dieser Auftrag hat noch einen offenen Termin. Bestätige und schließe alle Termine dieses Auftrags ab (oder storniere sie), bevor du ihn als abgeschlossen markierst.",
+    "cancelJob": "Auftrag stornieren",
+    "cancelTitle": "Diesen Auftrag stornieren?",
+    "reason": "Grund",
+    "note": "Notiz (optional)",
+    "cancelling": "Wird storniert…",
+    "confirmCancel": "Ja, stornieren",
+    "notNow": "Jetzt nicht"
+  },
+  "errors": {
+    "invalidJob": "Ungültiger Auftrag.",
+    "startFailed": "Beim Starten dieses Auftrags ist etwas schiefgelaufen.",
+    "completeFailed": "Beim Abschließen dieses Auftrags ist etwas schiefgelaufen.",
+    "cancelFailed": "Beim Stornieren dieses Auftrags ist etwas schiefgelaufen.",
+    "confirmFailed": "Beim Bestätigen dieses Auftrags ist etwas schiefgelaufen.",
+    "disputeFailed": "Beim Anfechten des Abschlusses dieses Auftrags ist etwas schiefgelaufen.",
+    "paymentFailed": "Beim Starten deiner Zahlung ist etwas schiefgelaufen. Bitte versuche es erneut."
   }
 }

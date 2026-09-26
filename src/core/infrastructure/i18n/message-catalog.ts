@@ -11,136 +11,39 @@
  * touches translations, and a typo in a locale/namespace would only ever
  * surface at runtime.
  *
- * Adding a language is exactly two mechanical steps — add the code to
- * `SUPPORTED_LOCALES` (src/shared/i18n/locales.ts) and add its block
- * here — plus dropping the JSON files in. Nothing else in the codebase
+ * Module 120 — Multilingual Localization moved the per-namespace imports
+ * into one static `src/i18n/messages/<locale>/index.ts` per locale (still
+ * plain static imports — same bundler visibility, 12 lines here instead
+ * of ~280). Adding a language is: add the code to `SUPPORTED_LOCALES`
+ * (src/shared/i18n/locales.ts), add its `index.ts` + JSON files, and add
+ * one line to `MESSAGE_CATALOG` below. Nothing else in the codebase
  * changes. `messages-completeness.test.ts` fails the build if the two
  * lists ever drift apart or a namespace file is missing a key that the
  * default locale has. See docs/MODULE_29_INTERNATIONALIZATION.md §7.
  */
 
-import es_common from "@/i18n/messages/es/common.json";
-import es_nav from "@/i18n/messages/es/nav.json";
-import es_auth from "@/i18n/messages/es/auth.json";
-import es_validation from "@/i18n/messages/es/validation.json";
-import es_dashboard from "@/i18n/messages/es/dashboard.json";
-import es_jobs from "@/i18n/messages/es/jobs.json";
-import es_profile from "@/i18n/messages/es/profile.json";
-import es_settings from "@/i18n/messages/es/settings.json";
-import es_notifications from "@/i18n/messages/es/notifications.json";
-import es_admin from "@/i18n/messages/es/admin.json";
-import es_emails from "@/i18n/messages/es/emails.json";
-import es_marketing from "@/i18n/messages/es/marketing.json";
-import en_common from "@/i18n/messages/en/common.json";
-import en_nav from "@/i18n/messages/en/nav.json";
-import en_auth from "@/i18n/messages/en/auth.json";
-import en_validation from "@/i18n/messages/en/validation.json";
-import en_dashboard from "@/i18n/messages/en/dashboard.json";
-import en_jobs from "@/i18n/messages/en/jobs.json";
-import en_profile from "@/i18n/messages/en/profile.json";
-import en_settings from "@/i18n/messages/en/settings.json";
-import en_notifications from "@/i18n/messages/en/notifications.json";
-import en_admin from "@/i18n/messages/en/admin.json";
-import en_emails from "@/i18n/messages/en/emails.json";
-import en_marketing from "@/i18n/messages/en/marketing.json";
-import uk_common from "@/i18n/messages/uk/common.json";
-import uk_nav from "@/i18n/messages/uk/nav.json";
-import uk_auth from "@/i18n/messages/uk/auth.json";
-import uk_validation from "@/i18n/messages/uk/validation.json";
-import uk_dashboard from "@/i18n/messages/uk/dashboard.json";
-import uk_jobs from "@/i18n/messages/uk/jobs.json";
-import uk_profile from "@/i18n/messages/uk/profile.json";
-import uk_settings from "@/i18n/messages/uk/settings.json";
-import uk_notifications from "@/i18n/messages/uk/notifications.json";
-import uk_admin from "@/i18n/messages/uk/admin.json";
-import uk_emails from "@/i18n/messages/uk/emails.json";
-import uk_marketing from "@/i18n/messages/uk/marketing.json";
-import cs_common from "@/i18n/messages/cs/common.json";
-import cs_nav from "@/i18n/messages/cs/nav.json";
-import cs_auth from "@/i18n/messages/cs/auth.json";
-import cs_validation from "@/i18n/messages/cs/validation.json";
-import cs_dashboard from "@/i18n/messages/cs/dashboard.json";
-import cs_jobs from "@/i18n/messages/cs/jobs.json";
-import cs_profile from "@/i18n/messages/cs/profile.json";
-import cs_settings from "@/i18n/messages/cs/settings.json";
-import cs_notifications from "@/i18n/messages/cs/notifications.json";
-import cs_admin from "@/i18n/messages/cs/admin.json";
-import cs_emails from "@/i18n/messages/cs/emails.json";
-import cs_marketing from "@/i18n/messages/cs/marketing.json";
-import de_common from "@/i18n/messages/de/common.json";
-import de_nav from "@/i18n/messages/de/nav.json";
-import de_auth from "@/i18n/messages/de/auth.json";
-import de_validation from "@/i18n/messages/de/validation.json";
-import de_dashboard from "@/i18n/messages/de/dashboard.json";
-import de_jobs from "@/i18n/messages/de/jobs.json";
-import de_profile from "@/i18n/messages/de/profile.json";
-import de_settings from "@/i18n/messages/de/settings.json";
-import de_notifications from "@/i18n/messages/de/notifications.json";
-import de_admin from "@/i18n/messages/de/admin.json";
-import de_emails from "@/i18n/messages/de/emails.json";
-import de_marketing from "@/i18n/messages/de/marketing.json";
-import fr_common from "@/i18n/messages/fr/common.json";
-import fr_nav from "@/i18n/messages/fr/nav.json";
-import fr_auth from "@/i18n/messages/fr/auth.json";
-import fr_validation from "@/i18n/messages/fr/validation.json";
-import fr_dashboard from "@/i18n/messages/fr/dashboard.json";
-import fr_jobs from "@/i18n/messages/fr/jobs.json";
-import fr_profile from "@/i18n/messages/fr/profile.json";
-import fr_settings from "@/i18n/messages/fr/settings.json";
-import fr_notifications from "@/i18n/messages/fr/notifications.json";
-import fr_admin from "@/i18n/messages/fr/admin.json";
-import fr_emails from "@/i18n/messages/fr/emails.json";
-import fr_marketing from "@/i18n/messages/fr/marketing.json";
-import it_common from "@/i18n/messages/it/common.json";
-import it_nav from "@/i18n/messages/it/nav.json";
-import it_auth from "@/i18n/messages/it/auth.json";
-import it_validation from "@/i18n/messages/it/validation.json";
-import it_dashboard from "@/i18n/messages/it/dashboard.json";
-import it_jobs from "@/i18n/messages/it/jobs.json";
-import it_profile from "@/i18n/messages/it/profile.json";
-import it_settings from "@/i18n/messages/it/settings.json";
-import it_notifications from "@/i18n/messages/it/notifications.json";
-import it_admin from "@/i18n/messages/it/admin.json";
-import it_emails from "@/i18n/messages/it/emails.json";
-import it_marketing from "@/i18n/messages/it/marketing.json";
-import pt_common from "@/i18n/messages/pt/common.json";
-import pt_nav from "@/i18n/messages/pt/nav.json";
-import pt_auth from "@/i18n/messages/pt/auth.json";
-import pt_validation from "@/i18n/messages/pt/validation.json";
-import pt_dashboard from "@/i18n/messages/pt/dashboard.json";
-import pt_jobs from "@/i18n/messages/pt/jobs.json";
-import pt_profile from "@/i18n/messages/pt/profile.json";
-import pt_settings from "@/i18n/messages/pt/settings.json";
-import pt_notifications from "@/i18n/messages/pt/notifications.json";
-import pt_admin from "@/i18n/messages/pt/admin.json";
-import pt_emails from "@/i18n/messages/pt/emails.json";
-import pt_marketing from "@/i18n/messages/pt/marketing.json";
-import ro_common from "@/i18n/messages/ro/common.json";
-import ro_nav from "@/i18n/messages/ro/nav.json";
-import ro_auth from "@/i18n/messages/ro/auth.json";
-import ro_validation from "@/i18n/messages/ro/validation.json";
-import ro_dashboard from "@/i18n/messages/ro/dashboard.json";
-import ro_jobs from "@/i18n/messages/ro/jobs.json";
-import ro_profile from "@/i18n/messages/ro/profile.json";
-import ro_settings from "@/i18n/messages/ro/settings.json";
-import ro_notifications from "@/i18n/messages/ro/notifications.json";
-import ro_admin from "@/i18n/messages/ro/admin.json";
-import ro_emails from "@/i18n/messages/ro/emails.json";
-import ro_marketing from "@/i18n/messages/ro/marketing.json";
-import pl_common from "@/i18n/messages/pl/common.json";
-import pl_nav from "@/i18n/messages/pl/nav.json";
-import pl_auth from "@/i18n/messages/pl/auth.json";
-import pl_validation from "@/i18n/messages/pl/validation.json";
-import pl_dashboard from "@/i18n/messages/pl/dashboard.json";
-import pl_jobs from "@/i18n/messages/pl/jobs.json";
-import pl_profile from "@/i18n/messages/pl/profile.json";
-import pl_settings from "@/i18n/messages/pl/settings.json";
-import pl_notifications from "@/i18n/messages/pl/notifications.json";
-import pl_admin from "@/i18n/messages/pl/admin.json";
-import pl_emails from "@/i18n/messages/pl/emails.json";
-import pl_marketing from "@/i18n/messages/pl/marketing.json";
+import esCatalog from "@/i18n/messages/es";
+import enCatalog from "@/i18n/messages/en";
+import ukCatalog from "@/i18n/messages/uk";
+import csCatalog from "@/i18n/messages/cs";
+import deCatalog from "@/i18n/messages/de";
+import frCatalog from "@/i18n/messages/fr";
+import itCatalog from "@/i18n/messages/it";
+import ptCatalog from "@/i18n/messages/pt";
+import roCatalog from "@/i18n/messages/ro";
+import plCatalog from "@/i18n/messages/pl";
+import ruCatalog from "@/i18n/messages/ru";
+import nlCatalog from "@/i18n/messages/nl";
 
 import { SUPPORTED_LOCALES, type Locale } from "@/shared/i18n/locales";
+
+/**
+ * The default locale's catalog *type*. Module 120 uses it as next-intl's
+ * `AppConfig["Messages"]` (see src/i18n/next-intl.d.ts), which makes
+ * every `t("some.key")` call a compile-time check against the Spanish
+ * (default, complete) catalog.
+ */
+export type DefaultLocaleMessages = typeof esCatalog;
 
 /**
  * A namespace file: nested objects bottoming out in message strings.
@@ -171,6 +74,17 @@ export const NAMESPACES = [
   "admin",
   "emails",
   "marketing",
+  "errors",
+  "enums",
+  "ui",
+  "customer",
+  "professional",
+  "company",
+  "partner",
+  "services",
+  "knowledge",
+  "seo",
+  "notificationTemplates",
 ] as const;
 
 export type Namespace = (typeof NAMESPACES)[number];
@@ -184,146 +98,18 @@ export type LocaleCatalog = Record<Namespace, NamespaceMessages>;
  * than a runtime `undefined`.
  */
 export const MESSAGE_CATALOG: Record<Locale, LocaleCatalog> = {
-  es: {
-    common: es_common,
-    nav: es_nav,
-    auth: es_auth,
-    validation: es_validation,
-    dashboard: es_dashboard,
-    jobs: es_jobs,
-    profile: es_profile,
-    settings: es_settings,
-    notifications: es_notifications,
-    admin: es_admin,
-    emails: es_emails,
-    marketing: es_marketing,
-  },
-  en: {
-    common: en_common,
-    nav: en_nav,
-    auth: en_auth,
-    validation: en_validation,
-    dashboard: en_dashboard,
-    jobs: en_jobs,
-    profile: en_profile,
-    settings: en_settings,
-    notifications: en_notifications,
-    admin: en_admin,
-    emails: en_emails,
-    marketing: en_marketing,
-  },
-  uk: {
-    common: uk_common,
-    nav: uk_nav,
-    auth: uk_auth,
-    validation: uk_validation,
-    dashboard: uk_dashboard,
-    jobs: uk_jobs,
-    profile: uk_profile,
-    settings: uk_settings,
-    notifications: uk_notifications,
-    admin: uk_admin,
-    emails: uk_emails,
-    marketing: uk_marketing,
-  },
-  cs: {
-    common: cs_common,
-    nav: cs_nav,
-    auth: cs_auth,
-    validation: cs_validation,
-    dashboard: cs_dashboard,
-    jobs: cs_jobs,
-    profile: cs_profile,
-    settings: cs_settings,
-    notifications: cs_notifications,
-    admin: cs_admin,
-    emails: cs_emails,
-    marketing: cs_marketing,
-  },
-  de: {
-    common: de_common,
-    nav: de_nav,
-    auth: de_auth,
-    validation: de_validation,
-    dashboard: de_dashboard,
-    jobs: de_jobs,
-    profile: de_profile,
-    settings: de_settings,
-    notifications: de_notifications,
-    admin: de_admin,
-    emails: de_emails,
-    marketing: de_marketing,
-  },
-  fr: {
-    common: fr_common,
-    nav: fr_nav,
-    auth: fr_auth,
-    validation: fr_validation,
-    dashboard: fr_dashboard,
-    jobs: fr_jobs,
-    profile: fr_profile,
-    settings: fr_settings,
-    notifications: fr_notifications,
-    admin: fr_admin,
-    emails: fr_emails,
-    marketing: fr_marketing,
-  },
-  it: {
-    common: it_common,
-    nav: it_nav,
-    auth: it_auth,
-    validation: it_validation,
-    dashboard: it_dashboard,
-    jobs: it_jobs,
-    profile: it_profile,
-    settings: it_settings,
-    notifications: it_notifications,
-    admin: it_admin,
-    emails: it_emails,
-    marketing: it_marketing,
-  },
-  pt: {
-    common: pt_common,
-    nav: pt_nav,
-    auth: pt_auth,
-    validation: pt_validation,
-    dashboard: pt_dashboard,
-    jobs: pt_jobs,
-    profile: pt_profile,
-    settings: pt_settings,
-    notifications: pt_notifications,
-    admin: pt_admin,
-    emails: pt_emails,
-    marketing: pt_marketing,
-  },
-  ro: {
-    common: ro_common,
-    nav: ro_nav,
-    auth: ro_auth,
-    validation: ro_validation,
-    dashboard: ro_dashboard,
-    jobs: ro_jobs,
-    profile: ro_profile,
-    settings: ro_settings,
-    notifications: ro_notifications,
-    admin: ro_admin,
-    emails: ro_emails,
-    marketing: ro_marketing,
-  },
-  pl: {
-    common: pl_common,
-    nav: pl_nav,
-    auth: pl_auth,
-    validation: pl_validation,
-    dashboard: pl_dashboard,
-    jobs: pl_jobs,
-    profile: pl_profile,
-    settings: pl_settings,
-    notifications: pl_notifications,
-    admin: pl_admin,
-    emails: pl_emails,
-    marketing: pl_marketing,
-  },
+  es: esCatalog,
+  en: enCatalog,
+  uk: ukCatalog,
+  cs: csCatalog,
+  de: deCatalog,
+  fr: frCatalog,
+  it: itCatalog,
+  pt: ptCatalog,
+  ro: roCatalog,
+  pl: plCatalog,
+  ru: ruCatalog,
+  nl: nlCatalog,
 };
 
 /**

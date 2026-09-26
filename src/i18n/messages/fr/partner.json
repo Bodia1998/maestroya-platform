@@ -1,0 +1,92 @@
+{
+  "metaTitle": "Tableau de bord partenaire",
+  "title": "Tableau de bord partenaire",
+  "subtitle": "Suivez vos liens de parrainage, vos clics et vos gains d’affilié.",
+  "noAccount": {
+    "title": "Vous n’avez pas encore de compte partenaire",
+    "description": "Les comptes partenaires sont destinés aux affiliés qui recommandent des clients à MaestroYa en échange d’une part du bénéfice de la plateforme. Contactez MaestroYa pour vous inscrire en tant que partenaire."
+  },
+  "statusMessage": {
+    "PENDING": "Votre candidature de partenaire est en attente d’examen",
+    "REJECTED": "Votre candidature de partenaire n’a pas été approuvée",
+    "SUSPENDED": "Votre compte partenaire est actuellement suspendu",
+    "BANNED": "Votre compte partenaire a été banni",
+    "other": "Votre compte partenaire n’est pas actif"
+  },
+  "locked": {
+    "description": "Votre tableau de bord se débloquera automatiquement dès que votre compte partenaire sera approuvé."
+  },
+  "welcome": "Bon retour, {name}. Voici les performances de vos liens de parrainage.",
+  "stats": {
+    "clicks": "Clics",
+    "visits": "Visites",
+    "registrations": "Inscriptions",
+    "bookingsCreated": "Réservations créées",
+    "completedJobs": "Missions terminées",
+    "conversionRate": "Taux de conversion",
+    "platformCommissionGenerated": "Commission générée pour la plateforme",
+    "pendingEarnings": "Gains en attente",
+    "approvedPayable": "Approuvés (payables)",
+    "paidToDate": "Versé à ce jour"
+  },
+  "topCampaigns": {
+    "title": "Meilleures campagnes",
+    "empty": "Aucun clic sur une campagne enregistré pour le moment."
+  },
+  "topReferralLinks": {
+    "title": "Meilleurs liens de parrainage",
+    "empty": "Aucun clic sur un lien de parrainage enregistré pour le moment."
+  },
+  "visitsCount": "{count, plural, one {# visite} other {# visites}}",
+  "errors": {
+    "createLinkFailed": "Un problème est survenu lors de la création de ce lien de parrainage.",
+    "updateLinkFailed": "Un problème est survenu lors de la mise à jour de ce lien de parrainage.",
+    "payoutFailed": "Un problème est survenu lors de la demande de ce versement."
+  },
+  "campaigns": {
+    "title": "Liens de campagne",
+    "code": "Code",
+    "codePlaceholder": "ex. telegram_valencia",
+    "label": "Libellé (facultatif)",
+    "labelPlaceholder": "Votre note personnelle",
+    "source": "Source",
+    "none": "Aucune",
+    "sources": {
+      "TELEGRAM": "Telegram",
+      "INSTAGRAM": "Instagram",
+      "TIKTOK": "TikTok",
+      "YOUTUBE": "YouTube",
+      "BLOG": "Blog",
+      "WEBSITE": "Site web"
+    },
+    "creating": "Création…",
+    "create": "Créer le lien",
+    "empty": "Aucun lien de campagne pour le moment — créez-en un ci-dessus pour commencer à le partager.",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "visits": "{count, plural, one {# visite} other {# visites}}",
+    "deactivate": "Désactiver",
+    "activate": "Activer"
+  },
+  "payout": {
+    "balanceTitle": "Solde d’affilié",
+    "available": "Solde disponible",
+    "reserved": "Réservé pour versement",
+    "paidToDate": "Versé à ce jour",
+    "minimum": "Versement minimum : {amount}",
+    "eligible": "Éligible au versement",
+    "moreNeeded": "Encore {amount} nécessaires",
+    "requesting": "Demande en cours…",
+    "request": "Demander un versement",
+    "requested": "Versement demandé — consultez l’historique ci-dessous pour suivre son statut.",
+    "historyTitle": "Historique des versements",
+    "empty": "Aucun versement pour le moment.",
+    "status": {
+      "PENDING": "En attente",
+      "PROCESSING": "En cours",
+      "PAID": "Versé",
+      "FAILED": "Échoué",
+      "CANCELLED": "Annulé"
+    }
+  }
+}

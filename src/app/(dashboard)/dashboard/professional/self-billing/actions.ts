@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 
 import {
@@ -8,8 +9,8 @@ import {
   makeRevokeMySelfBillingAuthorizationUseCase,
 } from "@/application/use-cases/invoicing/compose";
 import { CURRENT_SELF_BILLING_AGREEMENT_VERSION } from "@/domain/services/self-billing-agreement";
-import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError } from "@/presentation/i18n/server";
 
 /**
  * Module 99 — Self-Billing Authorization Entry Point & Financial Document
@@ -26,12 +27,16 @@ import { requireAuth } from "@/infrastructure/auth/rbac";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+// Module 120 — errors are localised at the edge (`localizeActionError`):
+// domain errors map to their catalog sentence, anything else is logged
+// server-side and replaced with the localised fallback.
+type FallbackKey =
+  | "grantSelfBilling"
+  | "revokeSelfBilling";
+
+async function fromDomainError(error: unknown, fallbackKey: FallbackKey): Promise<ActionResult> {
+  const t = await getTranslations("professional.errors");
+  return { success: false, error: await localizeActionError(error, t(fallbackKey)) };
 }
 
 const PATH = "/dashboard/professional/self-billing";
@@ -63,7 +68,7 @@ export async function grantMySelfBillingAuthorizationAction(): Promise<ActionRes
     revalidatePath(PATH);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong granting self-billing authorization.");
+    return fromDomainError(error, "grantSelfBilling");
   }
 }
 
@@ -75,7 +80,7 @@ export async function revokeMySelfBillingAuthorizationAction(): Promise<ActionRe
     revalidatePath(PATH);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong revoking self-billing authorization.");
+    return fromDomainError(error, "revokeSelfBilling");
   }
 }
 

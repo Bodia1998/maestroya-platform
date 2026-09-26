@@ -1,0 +1,92 @@
+{
+  "metaTitle": "Painel de parceiro",
+  "title": "Painel de parceiro",
+  "subtitle": "Acompanhe os seus links de indicação, os cliques e os ganhos como afiliado.",
+  "noAccount": {
+    "title": "Ainda não tem uma conta de parceiro",
+    "description": "As contas de parceiro destinam-se a afiliados que indicam clientes à MaestroYa em troca de uma parte do lucro da plataforma. Contacte a MaestroYa para se registar como parceiro."
+  },
+  "statusMessage": {
+    "PENDING": "A sua candidatura a parceiro aguarda análise",
+    "REJECTED": "A sua candidatura a parceiro não foi aprovada",
+    "SUSPENDED": "A sua conta de parceiro está atualmente suspensa",
+    "BANNED": "A sua conta de parceiro foi banida",
+    "other": "A sua conta de parceiro não está ativa"
+  },
+  "locked": {
+    "description": "O seu painel será desbloqueado automaticamente assim que a sua conta de parceiro for aprovada."
+  },
+  "welcome": "Bem-vindo de volta, {name}. Eis o desempenho dos seus links de indicação.",
+  "stats": {
+    "clicks": "Cliques",
+    "visits": "Visitas",
+    "registrations": "Registos",
+    "bookingsCreated": "Reservas criadas",
+    "completedJobs": "Trabalhos concluídos",
+    "conversionRate": "Taxa de conversão",
+    "platformCommissionGenerated": "Comissão gerada para a plataforma",
+    "pendingEarnings": "Ganhos pendentes",
+    "approvedPayable": "Aprovados (a pagar)",
+    "paidToDate": "Pago até à data"
+  },
+  "topCampaigns": {
+    "title": "Principais campanhas",
+    "empty": "Ainda não foram registados cliques em campanhas."
+  },
+  "topReferralLinks": {
+    "title": "Principais links de indicação",
+    "empty": "Ainda não foram registados cliques em links de indicação."
+  },
+  "visitsCount": "{count, plural, one {# visita} other {# visitas}}",
+  "errors": {
+    "createLinkFailed": "Ocorreu um problema ao criar este link de indicação.",
+    "updateLinkFailed": "Ocorreu um problema ao atualizar este link de indicação.",
+    "payoutFailed": "Ocorreu um problema ao pedir esta transferência."
+  },
+  "campaigns": {
+    "title": "Links de campanha",
+    "code": "Código",
+    "codePlaceholder": "p. ex. telegram_valencia",
+    "label": "Etiqueta (opcional)",
+    "labelPlaceholder": "Uma nota sua",
+    "source": "Origem",
+    "none": "Nenhuma",
+    "sources": {
+      "TELEGRAM": "Telegram",
+      "INSTAGRAM": "Instagram",
+      "TIKTOK": "TikTok",
+      "YOUTUBE": "YouTube",
+      "BLOG": "Blogue",
+      "WEBSITE": "Website"
+    },
+    "creating": "A criar…",
+    "create": "Criar link",
+    "empty": "Ainda não há links de campanha — crie um acima para começar a partilhá-lo.",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "visits": "{count, plural, one {# visita} other {# visitas}}",
+    "deactivate": "Desativar",
+    "activate": "Ativar"
+  },
+  "payout": {
+    "balanceTitle": "Saldo de afiliado",
+    "available": "Saldo disponível",
+    "reserved": "Reservado para transferência",
+    "paidToDate": "Pago até à data",
+    "minimum": "Transferência mínima: {amount}",
+    "eligible": "Elegível para transferência",
+    "moreNeeded": "Faltam {amount}",
+    "requesting": "A pedir…",
+    "request": "Pedir transferência",
+    "requested": "Transferência pedida — consulte o estado no histórico abaixo.",
+    "historyTitle": "Histórico de transferências",
+    "empty": "Ainda não há transferências.",
+    "status": {
+      "PENDING": "Pendente",
+      "PROCESSING": "Em processamento",
+      "PAID": "Paga",
+      "FAILED": "Falhada",
+      "CANCELLED": "Cancelada"
+    }
+  }
+}

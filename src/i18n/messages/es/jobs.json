@@ -16,5 +16,74 @@
   },
   "quotes": {
     "title": "Presupuestos"
+  },
+  "quoteItems": {
+    "columns": {
+      "description": "Descripción",
+      "type": "Tipo",
+      "quantity": "Cant.",
+      "unitPrice": "Precio unitario",
+      "amount": "Importe"
+    },
+    "total": "Total",
+    "category": {
+      "MATERIALS": "Materiales",
+      "LABOR": "Mano de obra"
+    }
+  },
+  "urgency": {
+    "LOW": "Baja",
+    "MEDIUM": "Media",
+    "HIGH": "Alta",
+    "EMERGENCY": "Emergencia"
+  },
+  "list": {
+    "title": "Mis trabajos",
+    "subtitle": "El progreso general de los trabajos cuyo presupuesto has aceptado.",
+    "empty": {
+      "title": "No hay trabajos activos",
+      "description": "Los trabajos aparecen aquí cuando aceptas el presupuesto de un profesional y empieza el trabajo.",
+      "action": "Ver mis solicitudes"
+    }
+  },
+  "notStarted": "Sin empezar",
+  "detail": {
+    "title": "Trabajo",
+    "started": "Iniciado",
+    "completed": "Completado",
+    "cancellationReason": "Motivo de la cancelación",
+    "appointments": "Citas de este trabajo",
+    "noAppointments": "Todavía no hay citas.",
+    "notScheduled": "Sin programar todavía",
+    "dateUnset": "—"
+  },
+  "cancellationReason": {
+    "CUSTOMER_REQUEST": "A petición del cliente",
+    "PROFESSIONAL_UNABLE_TO_COMPLETE": "El profesional no puede completarlo",
+    "SERVICE_REQUEST_ISSUE": "Problema con la solicitud",
+    "OTHER": "Otro"
+  },
+  "actions": {
+    "startWork": "Empezar el trabajo",
+    "starting": "Iniciando…",
+    "markCompleted": "Marcar el trabajo como completado",
+    "completing": "Completando…",
+    "openAppointmentsWarning": "Este trabajo aún tiene una cita sin resolver. Confirma y completa (o cancela) todas las citas de este trabajo antes de marcarlo como completado.",
+    "cancelJob": "Cancelar trabajo",
+    "cancelTitle": "¿Cancelar este trabajo?",
+    "reason": "Motivo",
+    "note": "Nota (opcional)",
+    "cancelling": "Cancelando…",
+    "confirmCancel": "Sí, cancelar",
+    "notNow": "Ahora no"
+  },
+  "errors": {
+    "invalidJob": "Trabajo no válido.",
+    "startFailed": "Algo salió mal al iniciar este trabajo.",
+    "completeFailed": "Algo salió mal al completar este trabajo.",
+    "cancelFailed": "Algo salió mal al cancelar este trabajo.",
+    "confirmFailed": "Algo salió mal al confirmar este trabajo.",
+    "disputeFailed": "Algo salió mal al disputar la finalización de este trabajo.",
+    "paymentFailed": "Algo salió mal al iniciar el pago. Inténtalo de nuevo."
   }
 }

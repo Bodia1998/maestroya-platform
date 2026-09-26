@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import {
   getReconciliationRunAction,
@@ -13,15 +14,13 @@ import { AdminDataTable, AdminTableHeadRow, AdminTh, AdminTableBody, AdminTableR
 import { EmptyState } from "@/components/ui/empty-state";
 import { CheckCircle2 } from "lucide-react";
 import { RunStatusBadge, SeverityBadge, ResolutionStatusBadge } from "../../_components/badges";
+import { formatDuration } from "../../_components/format-duration";
 
-export const metadata = { title: "Admin — Reconciliation run" };
-export const dynamic = "force-dynamic";
-
-function formatDuration(durationMs: number | null): string {
-  if (durationMs === null) return "—";
-  if (durationMs < 1000) return `${durationMs} ms`;
-  return `${(durationMs / 1000).toFixed(1)} s`;
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("reconciliation.runDetail.metaTitle") }) };
 }
+export const dynamic = "force-dynamic";
 
 const SEVERITY_ORDER = ["CRITICAL", "ERROR", "WARNING", "INFO"] as const;
 
@@ -52,82 +51,91 @@ export default async function AdminReconciliationRunDetailPage({ params }: { par
   const run = runResult.data;
   const severityBreakdown = severityResult.success ? severityResult.data : null;
   const discrepancies = discrepanciesResult.success ? discrepanciesResult.data : [];
+  const t = await getTranslations("admin.reconciliation");
+  const format = await getFormatter();
+  const dateTime = (value: Date) => format.dateTime(new Date(value), { dateStyle: "medium", timeStyle: "short" });
+  const scopeLabel = t.has(`scope.${run.scope}` as never) ? t(`scope.${run.scope}` as never) : run.scope;
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={`Run ${run.id.slice(0, 8)}…`}
-        subtitle={`Scope: ${run.scope}`}
+        title={t("runDetail.title", { id: run.id.slice(0, 8) })}
+        subtitle={t("runDetail.scope", { scope: scopeLabel })}
         breadcrumbs={[
-          { label: "Reconciliation", href: "/admin/reconciliation" },
-          { label: "Runs", href: "/admin/reconciliation/runs" },
+          { label: t("title"), href: "/admin/reconciliation" },
+          { label: t("runs.breadcrumb"), href: "/admin/reconciliation/runs" },
           { label: run.id.slice(0, 8) },
         ]}
         actions={<RunStatusBadge status={run.status} />}
       />
 
-      <ResponsiveGrid cols="1-2-4" bordered aria-label="Run summary">
+      <ResponsiveGrid cols="1-2-4" bordered aria-label={t("runDetail.summary")}>
         <div>
-          <p className="text-muted-foreground">Started</p>
-          <p className="font-medium">{new Date(run.startedAt).toLocaleString()}</p>
+          <p className="text-muted-foreground">{t("runDetail.started")}</p>
+          <p className="font-medium">{dateTime(run.startedAt)}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Completed</p>
-          <p className="font-medium">{run.completedAt ? new Date(run.completedAt).toLocaleString() : "—"}</p>
+          <p className="text-muted-foreground">{t("runDetail.completed")}</p>
+          <p className="font-medium">{run.completedAt ? dateTime(run.completedAt) : "—"}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Duration</p>
-          <p className="font-medium">{formatDuration(run.durationMs)}</p>
+          <p className="text-muted-foreground">{t("runDetail.duration")}</p>
+          <p className="font-medium">{formatDuration(t, run.durationMs)}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Records inspected</p>
-          <p className="font-medium tabular-nums">{run.recordsInspected}</p>
+          <p className="text-muted-foreground">{t("runDetail.recordsInspected")}</p>
+          <p className="font-medium tabular-nums">{format.number(run.recordsInspected)}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Discrepancies (created + reconfirmed)</p>
-          <p className="font-medium tabular-nums">{run.discrepancyCount}</p>
+          <p className="text-muted-foreground">{t("runDetail.discrepancyCount")}</p>
+          <p className="font-medium tabular-nums">{format.number(run.discrepancyCount)}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Triggered by</p>
-          <p className="font-medium">{run.triggeredByUserId ?? "System / scheduled"}</p>
+          <p className="text-muted-foreground">{t("runDetail.triggeredBy")}</p>
+          <p className="font-medium">{run.triggeredByUserId ?? t("runDetail.system")}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Parameters hash</p>
+          <p className="text-muted-foreground">{t("runDetail.parametersHash")}</p>
           <p className="font-mono text-xs">{run.parametersHash}</p>
         </div>
       </ResponsiveGrid>
 
       {run.status === "FAILED" && run.errorMessage && (
-        <Section title="Failure information" bordered titleTone="danger" className="border-danger/30 bg-danger-muted/30">
+        <Section title={t("runDetail.failure")} bordered titleTone="danger" className="border-danger/30 bg-danger-muted/30">
           <p className="whitespace-pre-wrap text-sm text-danger">{run.errorMessage}</p>
         </Section>
       )}
 
       {severityBreakdown && (
-        <Section title="Severity breakdown">
+        <Section title={t("runDetail.severityBreakdown")}>
           <ResponsiveGrid cols="1-2-4">
             {SEVERITY_ORDER.map((severity) => (
               <div key={severity} className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm">
                 <SeverityBadge severity={severity} />
-                <span className="font-medium tabular-nums">{severityBreakdown[severity]}</span>
+                <span className="font-medium tabular-nums">{format.number(severityBreakdown[severity])}</span>
               </div>
             ))}
           </ResponsiveGrid>
         </Section>
       )}
 
-      <Section title={`Discrepancies detected by this run (${discrepancies.length}${discrepancies.length === 100 ? "+" : ""})`}>
+      <Section
+        title={t("runDetail.discrepancies", {
+          count: discrepancies.length,
+          more: discrepancies.length === 100 ? "true" : "false",
+        })}
+      >
         {discrepancies.length === 0 ? (
-          <EmptyState icon={CheckCircle2} title="No discrepancies" description="This run completed without detecting any discrepancy." />
+          <EmptyState icon={CheckCircle2} title={t("runDetail.noDiscrepancies")} description={t("runDetail.noDiscrepanciesDescription")} />
         ) : (
-          <AdminDataTable caption="Discrepancies for this run" minWidth={720}>
+          <AdminDataTable caption={t("runDetail.caption")} minWidth={720}>
             <AdminTableHeadRow>
-              <AdminTh>Discrepancy</AdminTh>
-              <AdminTh>Type</AdminTh>
-              <AdminTh>Category</AdminTh>
-              <AdminTh>Severity</AdminTh>
-              <AdminTh>Status</AdminTh>
-              <AdminTh>Detected</AdminTh>
+              <AdminTh>{t("discrepancies.columns.discrepancy")}</AdminTh>
+              <AdminTh>{t("discrepancies.columns.type")}</AdminTh>
+              <AdminTh>{t("runDetail.columns.category")}</AdminTh>
+              <AdminTh>{t("discrepancies.columns.severity")}</AdminTh>
+              <AdminTh>{t("discrepancies.columns.status")}</AdminTh>
+              <AdminTh>{t("discrepancies.columns.detected")}</AdminTh>
             </AdminTableHeadRow>
             <AdminTableBody>
               {discrepancies.map((d) => (
@@ -148,7 +156,7 @@ export default async function AdminReconciliationRunDetailPage({ params }: { par
                   <td className="px-4 py-3">
                     <ResolutionStatusBadge status={d.resolutionStatus} />
                   </td>
-                  <td className="px-4 py-3">{new Date(d.detectedAt).toLocaleString()}</td>
+                  <td className="px-4 py-3">{dateTime(d.detectedAt)}</td>
                 </AdminTableRow>
               ))}
             </AdminTableBody>

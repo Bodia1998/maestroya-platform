@@ -1,0 +1,134 @@
+{
+  "categories": {
+    "fontaneria": {
+      "name": "Plumbing",
+      "description": "Repairs of leaks, taps, pipes and water installations."
+    },
+    "electricidad": {
+      "name": "Electrical work",
+      "description": "Electrical installations, faults, fuse boxes and sockets."
+    },
+    "aire-acondicionado": {
+      "name": "Air conditioning",
+      "description": "Installation, maintenance and repair of air conditioning."
+    },
+    "pintura": {
+      "name": "Painting",
+      "description": "Interior and exterior painting, wall smoothing and finishes."
+    },
+    "reformas": {
+      "name": "Renovations",
+      "description": "Full and partial home renovations."
+    },
+    "montaje-de-muebles": {
+      "name": "Furniture assembly",
+      "description": "Assembly of furniture and fittings."
+    },
+    "fontanero": {
+      "name": "Plumber"
+    },
+    "electricista": {
+      "name": "Electrician"
+    },
+    "tecnico-climatizacion": {
+      "name": "HVAC technician"
+    },
+    "pintor": {
+      "name": "Painter"
+    },
+    "reformista": {
+      "name": "Renovation specialist"
+    },
+    "montador-de-muebles": {
+      "name": "Furniture assembler"
+    }
+  },
+  "countries": {
+    "ES": "Spain"
+  },
+  "breadcrumbs": {
+    "home": "Home",
+    "services": "Services",
+    "locations": "Locations"
+  },
+  "shared": {
+    "faqTitle": "Frequently asked questions",
+    "provinceCountry": "{province}, {country}",
+    "serviceInCity": "{service} in {city}",
+    "requestThisService": "Request this service",
+    "viewProfessionals": "View professionals",
+    "platformScopeTitle": "Platform scope",
+    "confirmedLocalitiesTitle": "Localities with confirmed coverage"
+  },
+  "index": {
+    "title": "Home services",
+    "intro": "These are the service categories available on MaestroYa today. Choose one to see what you can request and how the quote process works.",
+    "empty": "No service categories are published at the moment.",
+    "locationsPrompt": "Looking for coverage by area? <link>See the available localities</link>."
+  },
+  "servicePage": {
+    "whatYouCanRequestTitle": "What you can request",
+    "whatProfessionalsProvideTitle": "What the professional usually provides",
+    "howItWorksTitle": "How it works on MaestroYa",
+    "howItWorks": {
+      "step1": "You publish a request describing the {service} job.",
+      "step2": "Professionals who cover this category and your area can review it and send you a quote.",
+      "step3": "You compare the quotes you receive and accept the one you prefer.",
+      "step4": "The job is scheduled and carried out as agreed in the accepted quote."
+    },
+    "areasTitle": "Areas with this service",
+    "beforeRequestingTitle": "Before you request",
+    "relatedTitle": "Related services",
+    "cta": "Ready to start? Publish a {service} request and the professionals who cover it can send you a quote."
+  },
+  "serviceLocationPage": {
+    "confirmedCoverage": "MaestroYa has confirmed coverage in {city} ({province}), so you can publish your request with an address in this locality.",
+    "localFaq": {
+      "question": "Can I request {service} services in {city}?",
+      "answer": "Yes. You can publish a {service} request with an address in {city} ({province}). Professionals in this category who cover the area will be able to review it and send you a quote."
+    },
+    "howItWorksTitle": "How it works in {city}",
+    "howItWorks": {
+      "step1": "You publish a {service} request with an address in {city}.",
+      "step2": "Professionals in this category who cover the area can send you a quote.",
+      "step3": "You compare the quotes and accept the one you prefer."
+    },
+    "cta": "Ready to start? Publish your {service} request in {city}."
+  },
+  "locationsIndex": {
+    "title": "Locations",
+    "intro": "MaestroYa is a home services marketplace designed to operate across all of Spain. The actual availability of professionals depends on each area.",
+    "nationalCardTitle": "MaestroYa in {country}",
+    "nationalCardDescription": "What it means for MaestroYa to be a nationwide marketplace and how local availability works.",
+    "confirmedEmpty": "No localities with confirmed coverage are published at the moment.",
+    "confirmedNote": "This list only includes localities whose coverage is confirmed by the platform's real data — it is not the complete list of areas where MaestroYa may come to operate.",
+    "servicesPrompt": "Looking by type of service? <link>See the available categories</link>."
+  },
+  "locationPage": {
+    "title": "MaestroYa in {city}",
+    "servicesTitle": "Services available in {city}",
+    "howItWorksTitle": "How it works in your area",
+    "howItWorks": {
+      "step1": "You publish a request describing the job and your address in {city}.",
+      "step2": "Professionals who cover that category and this area can review it and send you a quote.",
+      "step3": "You compare the quotes you receive and accept the one you prefer."
+    },
+    "relatedTitle": "Other localities",
+    "cta": "Ready to start? Publish a request and the professionals who cover {city} will be able to send you a quote.",
+    "viewProfessionalsIn": "View professionals in {city}"
+  },
+  "nationalPage": {
+    "title": "MaestroYa in {country}",
+    "categoriesTitle": "Service categories",
+    "localAvailabilityTitle": "How local availability works",
+    "confirmedEmpty": "There are no localities with coverage confirmed by the platform's real data yet.",
+    "confirmedNote": "This list only includes localities whose coverage is confirmed by the platform's real data. A locality not appearing here does not mean MaestroYa cannot operate there in the future — it means that, today, there is no confirmed coverage to show.",
+    "cta": "Ready to start? Publish a request describing the service you need and your location.",
+    "searchProfessionals": "Search for professionals",
+    "joinAsProfessional": "Join as a professional"
+  },
+  "map": {
+    "ariaLabel": "Map",
+    "unavailable": "The map is not available right now."
+  }
+}

@@ -1,24 +1,252 @@
 {
   "hero": {
     "title": "Trova professionisti affidabili per la tua casa",
-    "subtitle": "Pubblica ciò di cui hai bisogno e ricevi preventivi da professionisti verificati vicino a te.",
+    "subtitle": "Descrivi ciò di cui hai bisogno, confronta i preventivi e scegli il professionista giusto vicino a te, tutto su MaestroYa.",
     "ctaPrimary": "Pubblica una richiesta",
-    "ctaSecondary": "Esplora i professionisti"
+    "ctaSecondary": "Esplora i professionisti",
+    "or": "oppure",
+    "highlights": {
+      "verified": "Professionisti verificati",
+      "reviews": "Recensioni di clienti reali",
+      "audience": "Privati e aziende"
+    },
+    "search": {
+      "serviceLabel": "Di quale servizio hai bisogno?",
+      "locationLabel": "Dove ti serve?",
+      "locationPlaceholder": "Città o CAP",
+      "submit": "Trova professionisti"
+    }
   },
   "howItWorks": {
     "title": "Come funziona",
     "step1": "Descrivi ciò di cui hai bisogno",
     "step2": "Ricevi preventivi",
-    "step3": "Scegli il tuo professionista"
+    "step3": "Scegli il tuo professionista",
+    "subtitle": "Dalla richiesta al lavoro finito, in quattro passaggi.",
+    "steps": {
+      "one": {
+        "title": "Raccontaci di cosa hai bisogno",
+        "description": "Descrivi il lavoro, scegli la categoria e pubblica la tua richiesta in pochi minuti."
+      },
+      "two": {
+        "title": "Ricevi preventivi",
+        "description": "I professionisti interessati e disponibili nella tua zona ti inviano i loro preventivi."
+      },
+      "three": {
+        "title": "Confronta e scegli",
+        "description": "Consulta profili, recensioni e preventivi e parla con il professionista prima di decidere."
+      },
+      "four": {
+        "title": "Prenota e valuta il servizio",
+        "description": "Fissa l'appuntamento, segui il lavoro fino alla fine e lascia la tua recensione."
+      }
+    },
+    "cta": "Inizia ora"
   },
   "professionals": {
-    "title": "Professionisti"
+    "title": "Professionisti",
+    "heading": "Trova un professionista",
+    "subtitle": "Cerca per servizio e località per vedere i professionisti che operano nella tua zona.",
+    "invalid": "Questa ricerca non è valida: riprova.",
+    "failed": "Si è verificato un problema durante la ricerca.",
+    "found": "{count, plural, one {# professionista trovato} other {# professionisti trovati}}",
+    "companiesFound": "{count, plural, one {# azienda trovata} other {# aziende trovate}}",
+    "verified": "✓ Verificata",
+    "form": {
+      "serviceLabel": "Servizio",
+      "selectService": "Seleziona un servizio…",
+      "latitude": "Latitudine",
+      "longitude": "Longitudine",
+      "latitudePlaceholder": "es. 38.9665",
+      "longitudePlaceholder": "es. -0.1817",
+      "useMyLocation": "Usa la mia posizione attuale",
+      "locating": "Localizzazione…",
+      "notSupported": "Il tuo browser non supporta i servizi di localizzazione.",
+      "locationFailed": "Impossibile ottenere la tua posizione. Inseriscila manualmente qui sotto.",
+      "submit": "Cerca professionisti",
+      "submitting": "Ricerca in corso…"
+    },
+    "results": {
+      "empty": "Ancora nessun professionista trovato per questo servizio vicino a quella località.",
+      "distance": "a {distance} km"
+    },
+    "verification": {
+      "UNVERIFIED": "Non verificato",
+      "PENDING": "Verifica in attesa",
+      "VERIFIED": "Professionista verificato",
+      "REJECTED": "Verifica rifiutata"
+    },
+    "profile": {
+      "about": "Chi sono",
+      "experience": "Esperienza",
+      "experienceYears": "{count, plural, one {# anno} other {# anni}}",
+      "serviceArea": "Zona di servizio",
+      "withinKm": "Entro {km} km",
+      "readyText": "Pronto a iniziare? Pubblica una richiesta di servizio: {name}, insieme a tutti gli altri professionisti idonei della zona, potrà esaminarla e inviarti un preventivo.",
+      "requestService": "Richiedi questo servizio"
+    }
   },
   "search": {
     "title": "Trova professionisti",
-    "resultCount": "{count, plural, =0 {Nessun risultato} one {# professionista} other {# professionisti}}"
+    "resultCount": "{count, plural, =0 {Nessun risultato} one {# professionista} other {# professionisti}}",
+    "heading": "Trova un professionista o un'azienda",
+    "subtitle": "Cerca per servizio, città, valutazione e verifica: professionisti e aziende in un'unica classifica.",
+    "invalid": "Questa ricerca non è valida: modifica i filtri e riprova.",
+    "failed": "Si è verificato un problema durante la ricerca.",
+    "resultsFound": "{count, plural, one {# risultato trovato} other {# risultati trovati}}",
+    "form": {
+      "queryLabel": "Di cosa hai bisogno?",
+      "queryPlaceholder": "es. elettricista, aria condizionata…",
+      "serviceLabel": "Servizio",
+      "anyService": "Qualsiasi servizio",
+      "cityLabel": "Città",
+      "cityPlaceholder": "es. Gandia",
+      "minRatingLabel": "Valutazione minima",
+      "anyRating": "Qualsiasi valutazione",
+      "ratingOption": "{rating}+ stelle",
+      "sortByLabel": "Ordina per",
+      "sort": {
+        "RELEVANCE": "Più pertinenti",
+        "RATING": "Più votati",
+        "REVIEWS": "Più recensiti",
+        "NEWEST": "Più recenti",
+        "VERIFIED": "Prima i verificati"
+      },
+      "verifiedOnly": "Solo verificati",
+      "nearLocation": "Cerca vicino a una località (facoltativo)",
+      "submit": "Cerca"
+    },
+    "location": {
+      "useMyLocation": "Usa la mia posizione",
+      "locating": "Localizzazione…",
+      "clear": "Cancella",
+      "unknownAddress": "Indirizzo sconosciuto vicino a questo punto",
+      "notSupported": "Il tuo browser non supporta i servizi di localizzazione.",
+      "failed": "Impossibile ottenere la tua posizione. Fai clic su un punto della mappa.",
+      "near": "Vicino a {address}",
+      "radiusLabel": "Raggio di ricerca (km)",
+      "radiusPlaceholder": "es. 25",
+      "invalid": "Questa posizione non sembra valida.",
+      "reverseGeocodeFailed": "Impossibile trovare un indirizzo per questa posizione."
+    },
+    "results": {
+      "empty": "Ancora nessun risultato corrisponde a questi filtri.",
+      "kindProfessional": "Professionista",
+      "kindCompany": "Azienda",
+      "reasons": {
+        "verified": "Professionista verificato",
+        "highlyRated": "Molto apprezzato ({rating}/5 su {count, plural, one {# recensione} other {# recensioni}})",
+        "manyJobs": "Molti lavori completati",
+        "inCity": "Si trova nella città cercata",
+        "inRegion": "Si trova nella regione cercata",
+        "categoryMatch": "Corrisponde alla categoria di servizio cercata",
+        "portfolio": "Portfolio disponibile ({count, plural, one {# elemento} other {# elementi}})",
+        "completeProfile": "Profilo solido e completo"
+      }
+    }
   },
   "footer": {
-    "rights": "© {year, number} MaestroYa. Tutti i diritti riservati."
+    "rights": "© {year} MaestroYa. Tutti i diritti riservati.",
+    "tagline": "Mettiamo in contatto chi ha bisogno di un servizio per la casa con professionisti affidabili nelle vicinanze.",
+    "madeIn": "Fatto in Spagna per le case spagnole.",
+    "customers": "Clienti",
+    "professionals": "Professionisti",
+    "account": "Account",
+    "directory": "Elenco dei professionisti",
+    "joinAsProfessional": "Unisciti come professionista",
+    "professionalDashboard": "Accedi al mio pannello",
+    "forgotPassword": "Recupera password"
+  },
+  "meta": {
+    "home": {
+      "title": "MaestroYa — Professionisti affidabili per la tua casa",
+      "description": "Descrivi ciò di cui hai bisogno e trova professionisti verificati vicino a te: idraulica, impianti elettrici, ristrutturazioni, pulizie e molto altro."
+    },
+    "search": {
+      "title": "Cerca professionisti e aziende",
+      "description": "Filtra per categoria, città, valutazione e verifica per trovare il professionista o l'azienda giusta per il tuo progetto."
+    },
+    "professionals": {
+      "title": "Trova un professionista vicino a te",
+      "description": "Cerca professionisti verificati per categoria di servizio e località, ordinati per distanza."
+    },
+    "professionalProfile": {
+      "descriptionWithLocation": "Professionista verificato a {location}. Consulta il profilo e richiedi un preventivo su MaestroYa.",
+      "description": "Consulta il profilo di questo professionista e richiedi un preventivo su MaestroYa."
+    },
+    "companyProfile": {
+      "descriptionWithLocation": "Azienda di servizi per la casa a {location}. Consulta il profilo su MaestroYa.",
+      "description": "Consulta il profilo di questa azienda e richiedi un preventivo su MaestroYa."
+    }
+  },
+  "categories": {
+    "title": "Servizi più richiesti",
+    "subtitle": "Scegli una categoria per vedere i professionisti verificati vicino a te."
+  },
+  "trust": {
+    "title": "Pensato per farti fidare di ogni incarico",
+    "subtitle": "Con MaestroYa sai sempre con chi stai parlando e cosa stai commissionando.",
+    "verified": {
+      "title": "Professionisti verificati",
+      "description": "I professionisti possono verificare la propria identità e, nel caso delle aziende, la documentazione, prima di operare sulla piattaforma."
+    },
+    "quotes": {
+      "title": "Preventivi chiari",
+      "description": "Ricevi preventivi dettagliati da più professionisti e confrontali prima di decidere."
+    },
+    "communication": {
+      "title": "Comunicazione sulla piattaforma",
+      "description": "Parla con il professionista direttamente su MaestroYa prima e durante il servizio."
+    },
+    "reviews": {
+      "title": "Recensioni reali",
+      "description": "Ogni lavoro completato può ricevere una recensione, visibile sul profilo del professionista."
+    },
+    "tracking": {
+      "title": "Monitoraggio del lavoro",
+      "description": "Controlla in qualsiasi momento lo stato della tua richiesta, dell'appuntamento e del lavoro dal tuo pannello."
+    },
+    "support": {
+      "title": "Assistenza se qualcosa va storto",
+      "description": "Se sorge un problema, puoi aprire una segnalazione e il nostro team di assistenza ti aiuterà."
+    }
+  },
+  "professionalCta": {
+    "badge": "Per i professionisti",
+    "title": "Sei un professionista? Trova nuovi clienti con MaestroYa",
+    "benefits": {
+      "leads": "Ricevi richieste da clienti che cercano la tua categoria di servizio",
+      "profile": "Crea il tuo profilo professionale e mostra la tua esperienza e il tuo portfolio",
+      "quotes": "Invia preventivi direttamente dal tuo pannello",
+      "schedule": "Gestisci appuntamenti e lavori dall'inizio alla fine",
+      "reputation": "Costruisci la tua reputazione con le recensioni dei tuoi clienti"
+    },
+    "join": "Unisciti come professionista",
+    "haveAccount": "Ho già un account"
+  },
+  "errorPage": {
+    "title": "Si è verificato un problema",
+    "retry": "Riprova"
+  },
+  "notFound": {
+    "message": "Impossibile trovare questa pagina.",
+    "backHome": "Torna alla home"
+  },
+  "directory": {
+    "backToSearch": "← Torna alla ricerca",
+    "viewProfile": "Vedi profilo",
+    "about": "Chi siamo",
+    "services": "Servizi",
+    "basedNear": "Zona",
+    "locationNotSet": "Località non indicata",
+    "teamOf": "{count, plural, one {Team di # persona} other {Team di # persone}}",
+    "verifiedCompany": "✓ Azienda verificata"
+  },
+  "companies": {
+    "profile": {
+      "teamSize": "Dimensione del team",
+      "rating": "Valutazione",
+      "portfolio": "Portfolio"
+    }
   }
 }

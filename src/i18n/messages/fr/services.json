@@ -1,0 +1,134 @@
+{
+  "categories": {
+    "fontaneria": {
+      "name": "Plomberie",
+      "description": "Réparation de fuites, robinets, canalisations et installations d'eau."
+    },
+    "electricidad": {
+      "name": "Électricité",
+      "description": "Installations électriques, pannes, tableaux et prises."
+    },
+    "aire-acondicionado": {
+      "name": "Climatisation",
+      "description": "Installation, entretien et réparation de la climatisation."
+    },
+    "pintura": {
+      "name": "Peinture",
+      "description": "Peinture intérieure et extérieure, lissage des murs et finitions."
+    },
+    "reformas": {
+      "name": "Rénovation",
+      "description": "Rénovations complètes et partielles du logement."
+    },
+    "montaje-de-muebles": {
+      "name": "Montage de meubles",
+      "description": "Montage et assemblage de meubles."
+    },
+    "fontanero": {
+      "name": "Plombier"
+    },
+    "electricista": {
+      "name": "Électricien"
+    },
+    "tecnico-climatizacion": {
+      "name": "Technicien en climatisation"
+    },
+    "pintor": {
+      "name": "Peintre"
+    },
+    "reformista": {
+      "name": "Spécialiste en rénovation"
+    },
+    "montador-de-muebles": {
+      "name": "Monteur de meubles"
+    }
+  },
+  "countries": {
+    "ES": "Espagne"
+  },
+  "breadcrumbs": {
+    "home": "Accueil",
+    "services": "Services",
+    "locations": "Emplacements"
+  },
+  "shared": {
+    "faqTitle": "Questions fréquentes",
+    "provinceCountry": "{province}, {country}",
+    "serviceInCity": "{service} à {city}",
+    "requestThisService": "Demander ce service",
+    "viewProfessionals": "Voir les professionnels",
+    "platformScopeTitle": "Portée de la plateforme",
+    "confirmedLocalitiesTitle": "Localités à couverture confirmée"
+  },
+  "index": {
+    "title": "Services à domicile",
+    "intro": "Voici les catégories de service disponibles aujourd’hui sur MaestroYa. Choisissez-en une pour découvrir ce que vous pouvez demander et comment fonctionne le processus de devis.",
+    "empty": "Aucune catégorie de service n’est publiée pour le moment.",
+    "locationsPrompt": "Vous cherchez la couverture par zone ? <link>Consultez les localités disponibles</link>."
+  },
+  "servicePage": {
+    "whatYouCanRequestTitle": "Ce que vous pouvez demander",
+    "whatProfessionalsProvideTitle": "Ce que le professionnel fournit généralement",
+    "howItWorksTitle": "Comment ça marche sur MaestroYa",
+    "howItWorks": {
+      "step1": "Vous publiez une demande décrivant vos travaux dans la catégorie « {service} ».",
+      "step2": "Les professionnels qui couvrent cette catégorie et votre zone peuvent l’examiner et vous envoyer un devis.",
+      "step3": "Vous comparez les devis reçus et acceptez celui que vous préférez.",
+      "step4": "La mission est planifiée et réalisée conformément au devis accepté."
+    },
+    "areasTitle": "Zones proposant ce service",
+    "beforeRequestingTitle": "Avant de faire une demande",
+    "relatedTitle": "Services associés",
+    "cta": "Prêt à commencer ? Publiez une demande dans la catégorie « {service} » et les professionnels qui la couvrent pourront vous envoyer un devis."
+  },
+  "serviceLocationPage": {
+    "confirmedCoverage": "MaestroYa dispose d’une couverture confirmée à {city} ({province}) : vous pouvez donc publier votre demande en indiquant une adresse dans cette localité.",
+    "localFaq": {
+      "question": "Puis-je faire une demande dans la catégorie « {service} » à {city} ?",
+      "answer": "Oui. Vous pouvez publier une demande dans la catégorie « {service} » en indiquant une adresse à {city} ({province}). Les professionnels de cette catégorie qui couvrent la zone pourront l’examiner et vous envoyer un devis."
+    },
+    "howItWorksTitle": "Comment ça marche à {city}",
+    "howItWorks": {
+      "step1": "Vous publiez une demande dans la catégorie « {service} » avec une adresse à {city}.",
+      "step2": "Les professionnels de cette catégorie qui couvrent la zone peuvent vous envoyer un devis.",
+      "step3": "Vous comparez les devis et acceptez celui que vous préférez."
+    },
+    "cta": "Prêt à commencer ? Publiez votre demande dans la catégorie « {service} » à {city}."
+  },
+  "locationsIndex": {
+    "title": "Emplacements",
+    "intro": "MaestroYa est une place de marché de services à domicile conçue pour opérer dans toute l’Espagne. La disponibilité réelle des professionnels dépend de chaque zone.",
+    "nationalCardTitle": "MaestroYa en {country}",
+    "nationalCardDescription": "Ce que signifie pour MaestroYa d’être une place de marché à portée nationale et comment fonctionne la disponibilité locale.",
+    "confirmedEmpty": "Aucune localité à couverture confirmée n’est publiée pour le moment.",
+    "confirmedNote": "Cette liste ne comprend que les localités dont la couverture est confirmée par les données réelles de la plateforme — ce n’est pas la liste complète des zones où MaestroYa peut être amené à opérer.",
+    "servicesPrompt": "Vous cherchez par type de service ? <link>Consultez les catégories disponibles</link>."
+  },
+  "locationPage": {
+    "title": "MaestroYa à {city}",
+    "servicesTitle": "Services disponibles à {city}",
+    "howItWorksTitle": "Comment ça marche dans votre zone",
+    "howItWorks": {
+      "step1": "Vous publiez une demande décrivant les travaux et votre adresse à {city}.",
+      "step2": "Les professionnels qui couvrent cette catégorie et cette zone peuvent l’examiner et vous envoyer un devis.",
+      "step3": "Vous comparez les devis reçus et acceptez celui que vous préférez."
+    },
+    "relatedTitle": "Autres localités",
+    "cta": "Prêt à commencer ? Publiez une demande et les professionnels qui couvrent {city} pourront vous envoyer un devis.",
+    "viewProfessionalsIn": "Voir les professionnels à {city}"
+  },
+  "nationalPage": {
+    "title": "MaestroYa en {country}",
+    "categoriesTitle": "Catégories de service",
+    "localAvailabilityTitle": "Comment fonctionne la disponibilité locale",
+    "confirmedEmpty": "Il n’y a pas encore de localités dont la couverture est confirmée par les données réelles de la plateforme.",
+    "confirmedNote": "Cette liste ne comprend que les localités dont la couverture est confirmée par les données réelles de la plateforme. Qu’une localité n’y figure pas ne signifie pas que MaestroYa ne pourra pas y opérer à l’avenir — cela signifie qu’aujourd’hui, il n’y a pas de couverture confirmée à afficher.",
+    "cta": "Prêt à commencer ? Publiez une demande décrivant le service dont vous avez besoin et votre emplacement.",
+    "searchProfessionals": "Rechercher des professionnels",
+    "joinAsProfessional": "Rejoindre en tant que professionnel"
+  },
+  "map": {
+    "ariaLabel": "Carte",
+    "unavailable": "La carte n’est pas disponible pour le moment."
+  }
+}

@@ -92,7 +92,59 @@ export function translateValidationMessage(
   message: string,
   values?: Record<string, string | number>,
 ): string {
-  return isValidationKey(message) ? t(message, values) : message;
+  return isValidationKey(message) || isScopedValidationKey(message) ? t(message, values) : message;
+}
+
+/**
+ * Module 120 — Multilingual Localization: DTO-specific validation keys.
+ *
+ * The fixed `VALIDATION_KEYS` set covers generic rules. Rules that need a
+ * specific sentence ("Choose at least one service category") carry a
+ * *dotted* key in the DTO's message slot instead of prose — e.g.
+ * `"dto.serviceRequest.categoryRequired"` — resolved against the same
+ * `validation` namespace. The dot is what distinguishes a key from prose:
+ * no human sentence in any locale is a dotted camelCase identifier, and
+ * every such key is asserted to exist in `es/validation.json` by
+ * `validation-keys-coverage.test.ts`, so a typo is a test failure rather
+ * than a raw key on screen.
+ */
+const SCOPED_KEY_PATTERN = /^[a-z][A-Za-z0-9]*(\.[A-Za-z0-9]+)+$/;
+
+export function isScopedValidationKey(value: string): boolean {
+  return SCOPED_KEY_PATTERN.test(value);
+}
+
+/**
+ * The first issue of a failed parse, localised — the drop-in replacement
+ * for the `parsed.error.issues[0]?.message ?? "…"` idiom used by Server
+ * Actions. `fallback` is returned (already localised by the caller) when
+ * there is no issue at all.
+ */
+export function firstLocalizedIssue(error: z.ZodError, t: Translator, fallback?: string): string {
+  const issue = error.issues[0];
+  if (!issue) return fallback ?? t(VALIDATION_KEYS.invalid);
+  return localizeIssue(issue, t);
+}
+
+/** One Zod issue, localised — whichever DTO generation produced it. */
+export function localizeIssue(issue: z.ZodIssue, t: Translator): string {
+  const { key, values } = mapIssue(issue as z.ZodIssueOptionalMessage);
+  if (!issue.message || isZodDefaultMessage(issue)) return t(key, values);
+  return translateValidationMessage(t, issue.message, values);
+}
+
+/**
+ * Zod's own built-in English messages ("Required", "Invalid email",
+ * "String must contain at least 2 character(s)", …) are produced when a
+ * schema supplied no message and no error map was installed. They are
+ * never shown to a user as-is: they are re-derived from the issue code.
+ */
+function isZodDefaultMessage(issue: z.ZodIssue): boolean {
+  const fallback = z.defaultErrorMap(issue as z.ZodIssueOptionalMessage, {
+    data: undefined,
+    defaultError: "",
+  }).message;
+  return issue.message === fallback;
 }
 
 /** Map a Zod issue onto a `validation` namespace key plus its ICU values. */
@@ -201,7 +253,7 @@ export function toTranslatedFieldErrors(
     // where the key arrives here with no values attached. Deriving them
     // here means both patterns produce "at least 2 characters" and never
     // a raw "# characters".
-    const message = translateValidationMessage(t, issue.message, mapIssue(issue).values);
+    const message = localizeIssue(issue, t);
     const existing = fieldErrors[path];
     if (existing) existing.push(message);
     else fieldErrors[path] = [message];

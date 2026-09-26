@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/shared/utils/cn";
 
@@ -24,29 +25,31 @@ export interface AdminTablePagerProps {
  * any use case/repository here.
  */
 export function AdminTablePager({ page, hasNextPage, buildHref, className }: AdminTablePagerProps) {
+  const t = useTranslations("admin.table");
   if (page <= 1 && !hasNextPage) return null;
 
   return (
-    <nav aria-label="Pagination" className={cn("flex items-center justify-between gap-2", className)}>
+    <nav aria-label={t("pagination")} className={cn("flex items-center justify-between gap-2", className)}>
       {page > 1 ? (
         <Link
           href={buildHref(page - 1)}
           className="inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ChevronLeft className="h-4 w-4" aria-hidden />
-          Previous
+          {t("previous")}
         </Link>
       ) : (
         <span aria-hidden />
       )}
-      <span className="text-sm text-muted-foreground">Page {page}</span>
+      <span className="text-sm text-muted-foreground">{t("page", { page })}</span>
       {hasNextPage ? (
         <Link
           href={buildHref(page + 1)}
           className="inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          Next
-          <ChevronRight className="h-4 w-4" aria-hidden />
+          {t("next")}
+          <ChevronRight
+ className="h-4 w-4" aria-hidden />
         </Link>
       ) : (
         <span aria-hidden />

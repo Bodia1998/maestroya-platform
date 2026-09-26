@@ -14,6 +14,11 @@ import { SITE_DESCRIPTION, SITE_NAME } from "@/shared/seo/site";
  * Icons point at the generated `/icon` and `/apple-icon` routes (see
  * those files' own doc comments for why they're generated rather than
  * static assets) rather than duplicating a second icon pipeline here.
+ *
+ * Module 120: the manifest is a static, cacheable file fetched without the
+ * visitor's language context, so it uses the canonical Spanish
+ * `SITE_DESCRIPTION` (read from the `es` `seo` catalog), not the request
+ * locale.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {

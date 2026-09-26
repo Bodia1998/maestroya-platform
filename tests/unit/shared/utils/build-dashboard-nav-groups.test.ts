@@ -15,7 +15,7 @@ describe("buildDashboardNavGroups", () => {
     const groups = buildDashboardNavGroups({ isProfessional: false, isAdmin: false });
 
     expect(groups).toHaveLength(2);
-    expect(groups[0]?.title).toBeUndefined();
+    expect(groups[0]?.titleKey).toBeUndefined();
     expect(groups[0]?.items.map((item) => item.href)).toEqual([
       "/dashboard",
       "/requests",
@@ -26,7 +26,7 @@ describe("buildDashboardNavGroups", () => {
       "/disputes",
       "/support-tickets",
     ]);
-    expect(groups.at(-1)?.items).toEqual([{ href: "/profile", label: "Profile", icon: "profile" }]);
+    expect(groups.at(-1)?.items).toEqual([{ href: "/profile", labelKey: "profile", icon: "profile" }]);
   });
 
   it("keeps the base (customer) group completely unchanged for a PROVIDER account", () => {
@@ -38,7 +38,7 @@ describe("buildDashboardNavGroups", () => {
 
   it("adds a 'Professional' group containing the main workspace destinations, with Companies directly after My jobs and no embedded Professional profile item", () => {
     const groups = buildDashboardNavGroups({ isProfessional: true, isAdmin: false });
-    const professionalGroup = groups.find((group) => group.title === "Professional");
+    const professionalGroup = groups.find((group) => group.titleKey === "professional");
 
     expect(professionalGroup).toBeDefined();
     expect(professionalGroup?.items.map((item) => item.href)).toEqual([
@@ -58,10 +58,10 @@ describe("buildDashboardNavGroups", () => {
 
   it("adds a separate, untitled communication group (Messages/Disputes/Support) immediately after the Professional group, for visual spacing", () => {
     const groups = buildDashboardNavGroups({ isProfessional: true, isAdmin: false });
-    const professionalIndex = groups.findIndex((group) => group.title === "Professional");
+    const professionalIndex = groups.findIndex((group) => group.titleKey === "professional");
     const communicationGroup = groups[professionalIndex + 1];
 
-    expect(communicationGroup?.title).toBeUndefined();
+    expect(communicationGroup?.titleKey).toBeUndefined();
     expect(communicationGroup?.context).toBe("professional");
     expect(communicationGroup?.items.map((item) => item.href)).toEqual(["/messages", "/disputes", "/support-tickets"]);
   });
@@ -79,7 +79,7 @@ describe("buildDashboardNavGroups", () => {
   it("never shows the 'Professional' group to a non-professional account", () => {
     const groups = buildDashboardNavGroups({ isProfessional: false, isAdmin: false });
 
-    expect(groups.some((group) => group.title === "Professional")).toBe(false);
+    expect(groups.some((group) => group.titleKey === "professional")).toBe(false);
     expect(groups.some((group) => group.items.some((item) => item.href === "/dashboard/professional"))).toBe(false);
   });
 
@@ -87,12 +87,12 @@ describe("buildDashboardNavGroups", () => {
     const adminOnly = buildDashboardNavGroups({ isProfessional: false, isAdmin: true });
     const adminAndProfessional = buildDashboardNavGroups({ isProfessional: true, isAdmin: true });
 
-    expect(adminOnly.some((group) => group.title === "Admin")).toBe(true);
-    expect(adminAndProfessional.map((group) => group.title)).toEqual([
+    expect(adminOnly.some((group) => group.titleKey === "admin")).toBe(true);
+    expect(adminAndProfessional.map((group) => group.titleKey)).toEqual([
       undefined,
-      "Professional",
+      "professional",
       undefined,
-      "Admin",
+      "admin",
       undefined,
     ]);
   });
@@ -100,6 +100,6 @@ describe("buildDashboardNavGroups", () => {
   it("always ends with the Profile group regardless of role combination", () => {
     const groups = buildDashboardNavGroups({ isProfessional: true, isAdmin: true });
 
-    expect(groups.at(-1)?.items).toEqual([{ href: "/profile", label: "Profile", icon: "profile" }]);
+    expect(groups.at(-1)?.items).toEqual([{ href: "/profile", labelKey: "profile", icon: "profile" }]);
   });
 });

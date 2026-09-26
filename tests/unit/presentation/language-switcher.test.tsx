@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "@/components/shared/i18n-provider";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { getMessages } from "@/infrastructure/i18n/message-loader";
-import { LOCALE_STORAGE_KEY, type Locale } from "@/shared/i18n/locales";
+import { LOCALE_STORAGE_KEY, SUPPORTED_LOCALES, type Locale } from "@/shared/i18n/locales";
 
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -42,7 +42,10 @@ describe("rendering", () => {
       "true",
     );
     expect(screen.getByText("Українська")).toBeTruthy();
-    expect(screen.getAllByRole("menuitemradio")).toHaveLength(10);
+    // Module 120: Russian and Dutch are offered alongside the original ten.
+    expect(screen.getByText("Русский")).toBeTruthy();
+    expect(screen.getByText("Nederlands")).toBeTruthy();
+    expect(screen.getAllByRole("menuitemradio")).toHaveLength(SUPPORTED_LOCALES.length);
   });
 
   it("renders its own labels in the active language", () => {

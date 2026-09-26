@@ -10,11 +10,11 @@ import { z } from "zod";
  * schema is to *produce* one.
  */
 export const geocodeCitySchema = z.object({
-  city: z.string().trim().min(1, "City is required.").max(100, "City must be 100 characters or fewer."),
+  city: z.string().trim().min(1, "dto.location.cityRequired").max(100, "maxLength"),
   province: z
     .string()
     .trim()
-    .max(100, "Province must be 100 characters or fewer.")
+    .max(100, "maxLength")
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined)),
 });
@@ -32,13 +32,13 @@ export type GeocodeCityInput = z.infer<typeof geocodeCitySchema>;
  */
 export const reverseGeocodeSchema = z.object({
   latitude: z.coerce
-    .number({ invalid_type_error: "Enter a valid latitude." })
-    .min(-90, "Latitude must be between -90 and 90.")
-    .max(90, "Latitude must be between -90 and 90."),
+    .number({ invalid_type_error: "dto.location.latitudeInvalid" })
+    .min(-90, "dto.location.latitudeRange")
+    .max(90, "dto.location.latitudeRange"),
   longitude: z.coerce
-    .number({ invalid_type_error: "Enter a valid longitude." })
-    .min(-180, "Longitude must be between -180 and 180.")
-    .max(180, "Longitude must be between -180 and 180."),
+    .number({ invalid_type_error: "dto.location.longitudeInvalid" })
+    .min(-180, "dto.location.longitudeRange")
+    .max(180, "dto.location.longitudeRange"),
 });
 
 export type ReverseGeocodeInput = z.infer<typeof reverseGeocodeSchema>;

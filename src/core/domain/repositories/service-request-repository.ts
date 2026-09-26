@@ -50,6 +50,13 @@ export interface ServiceRequestRecord {
   customerId: string;
   categoryId: string;
   categoryName: string;
+  /**
+   * Module 120 — Multilingual Localization: the category's stable slug, so
+   * the UI can show the localized name (`services.categories.<slug>.name`)
+   * instead of the Spanish database value. Optional so existing fakes keep
+   * compiling; always populated by PrismaServiceRequestRepository.
+   */
+  categorySlug?: string | null;
   title: string;
   description: string;
   status: ServiceRequestStatusValue;

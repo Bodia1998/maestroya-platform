@@ -17,6 +17,8 @@
  * competing source of configuration, just a boundary-safe re-read of it.
  */
 
+import canonicalSeoMessages from "@/i18n/messages/es/seo.json";
+
 const FALLBACK_SITE_URL = "http://localhost:3000";
 
 function readSiteUrl(): string {
@@ -34,13 +36,24 @@ export const SITE_NAME = "MaestroYa";
 
 /** Spanish is this platform's default/complete locale — see
  *  `shared/i18n/locales.ts`'s own `DEFAULT_LOCALE` doc comment. Mirrored
- *  here as the default SEO description/OG locale for the same reason. */
-export const SITE_DESCRIPTION =
-  "Conecta con profesionales de confianza para tu hogar: fontanería, electricidad, reformas, limpieza y mucho más.";
+ *  here as the default SEO description/OG locale for the same reason.
+ *
+ *  Module 120: this is the CANONICAL (Spanish) description, read straight
+ *  from the `es` `seo` catalog so there is one source of truth. It is used
+ *  only by producers that must not vary per visitor — `llms.txt`,
+ *  `manifest.webmanifest`, the default Open Graph image. Per-visitor page
+ *  metadata reads `seo.site.description` in the active locale instead
+ *  (see the root layout's `generateMetadata`). */
+export const SITE_DESCRIPTION: string = canonicalSeoMessages.site.description;
 
+/** Search keywords for the Spanish market the platform serves — kept in
+ *  Spanish for every visitor (they describe what people in Spain search
+ *  for, not UI text; `<meta name="keywords">` is ignored by major search
+ *  engines anyway). */
+// i18n-ignore: Spanish-market search keywords, not UI copy (see above)
 export const SITE_KEYWORDS = [
-  "profesionales del hogar",
-  "servicios para el hogar",
+  "profesionales del hogar", // i18n-ignore: search keyword
+  "servicios para el hogar", // i18n-ignore: search keyword
   "fontanero",
   "electricista",
   "reformas",
@@ -64,6 +77,8 @@ const OG_LOCALE_BY_LOCALE: Record<string, string> = {
   pt: "pt_PT",
   ro: "ro_RO",
   pl: "pl_PL",
+  ru: "ru_RU",
+  nl: "nl_NL",
 };
 
 export function toOgLocale(locale: string): string {

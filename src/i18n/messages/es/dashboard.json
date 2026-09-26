@@ -16,5 +16,115 @@
     "title": "Panel de empresa",
     "members": "Miembros",
     "invitations": "Invitaciones"
+  },
+  "nav": {
+    "ariaLabel": "Navegación del panel",
+    "groups": {
+      "professional": "Profesional",
+      "admin": "Administración"
+    },
+    "items": {
+      "dashboard": "Panel",
+      "serviceRequests": "Solicitudes",
+      "appointments": "Citas",
+      "jobs": "Trabajos",
+      "receipts": "Mis recibos",
+      "messages": "Mensajes",
+      "disputes": "Disputas",
+      "support": "Soporte",
+      "professionalDashboard": "Panel profesional",
+      "availableRequests": "Solicitudes disponibles",
+      "myQuotes": "Mis presupuestos",
+      "myAppointments": "Mis citas",
+      "myJobs": "Mis trabajos",
+      "selfBilling": "Autofacturación y facturas",
+      "companies": "Empresas",
+      "adminPanel": "Panel de administración",
+      "profile": "Perfil",
+      "professionalProfile": "Perfil profesional",
+      "switchToProfessional": "Cambiar al panel profesional"
+    }
+  },
+  "shell": {
+    "skipToContent": "Saltar al contenido principal",
+    "sidebar": "Barra lateral",
+    "openMenu": "Abrir menú",
+    "accountMenu": "Menú de la cuenta",
+    "account": "Cuenta",
+    "notifications": "Notificaciones",
+    "profile": "Perfil",
+    "signOut": "Cerrar sesión"
+  },
+  "profileBanner": {
+    "noProfile": "Completa tu perfil profesional para empezar a recibir solicitudes de clientes.",
+    "incomplete": "Tu perfil profesional está incompleto. Complétalo para que los clientes vean tu mejor perfil.",
+    "completeProfile": "Completar perfil profesional"
+  },
+  "overview": {
+    "welcomeBack": "Hola de nuevo, {name}",
+    "welcomeBackAnonymous": "Hola de nuevo",
+    "subtitle": "Este es un resumen de tu cuenta de MaestroYa.",
+    "professionalOverview": {
+      "title": "Resumen profesional",
+      "description": "Solicitudes de clientes a las que puedes responder, y los presupuestos, citas y trabajos que siguen."
+    },
+    "stats": {
+      "availableRequests": "Solicitudes disponibles",
+      "quotesAwaitingResponse": "Presupuestos pendientes de respuesta",
+      "acceptedQuotes": "Presupuestos aceptados",
+      "upcomingAppointments": "Próximas citas",
+      "activeJobs": "Trabajos activos",
+      "completedJobs": "Trabajos completados",
+      "activeRequests": "Solicitudes activas",
+      "unreadMessages": "Mensajes sin leer"
+    },
+    "quickActions": {
+      "ariaLabel": "Acciones rápidas",
+      "newRequest": "Nueva solicitud",
+      "appointments": "Citas",
+      "messages": "Mensajes",
+      "profile": "Perfil",
+      "browseRequests": "Ver solicitudes",
+      "myQuotes": "Mis presupuestos",
+      "professionalProfile": "Perfil profesional"
+    },
+    "cards": {
+      "yourRequests": "Tus solicitudes",
+      "upcomingAppointments": "Próximas citas",
+      "messages": "Mensajes",
+      "yourQuotes": "Tus presupuestos",
+      "viewAll": "Ver todo"
+    },
+    "empty": {
+      "requests": {
+        "title": "Todavía no tienes solicitudes.",
+        "description": "Publica una solicitud para empezar a recibir presupuestos de profesionales cerca de ti."
+      },
+      "appointments": {
+        "title": "No tienes citas próximas.",
+        "description": "Las citas aparecen aquí cuando aceptas el presupuesto de un profesional.",
+        "action": "Ver mis solicitudes"
+      },
+      "messages": {
+        "title": "No hay mensajes nuevos.",
+        "description": "Aquí aparecen las conversaciones con clientes y profesionales.",
+        "action": "Ir a mensajes"
+      },
+      "noProfessionalProfile": {
+        "title": "Configura tu perfil profesional.",
+        "description": "Crea tu perfil profesional para empezar a recibir solicitudes a las que enviar presupuesto.",
+        "action": "Empezar"
+      },
+      "quotes": {
+        "title": "Todavía no has enviado presupuestos.",
+        "description": "Consulta las solicitudes abiertas y envía tu primer presupuesto."
+      }
+    }
+  },
+  "cards": {
+    "withCounterparty": "con {name}",
+    "manage": "Gestionar",
+    "requestPosted": "Publicada el {created, date, medium} — actualizada el {updated, date, medium}",
+    "quoteSubmitted": "Enviado el {created, date, medium} — actualizado el {updated, date, medium}"
   }
 }

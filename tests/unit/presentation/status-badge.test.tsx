@@ -1,7 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { StatusBadge } from "@/components/dashboard/status-badge";
+import { KNOWN_STATUSES, StatusBadge } from "@/components/dashboard/status-badge";
+import { getNamespaceMessages } from "@/infrastructure/i18n/message-loader";
+import { SUPPORTED_LOCALES } from "@/shared/i18n/locales";
+
+import { setTestLocale } from "../../test-utils/intl";
 
 describe("StatusBadge", () => {
   it.each([
@@ -31,7 +35,7 @@ describe("StatusBadge", () => {
     ["VERIFIED", "Verified"],
     ["UNDER_REVIEW", "Under review"],
     ["APPROVED", "Approved"],
-    ["RESUBMISSION_REQUIRED", "Resubmission Required"],
+    ["RESUBMISSION_REQUIRED", "Resubmission required"],
     ["OPEN", "Open"],
     ["RESOLVED", "Resolved"],
     ["CLOSED", "Closed"],
@@ -56,5 +60,26 @@ describe("StatusBadge", () => {
     render(<StatusBadge status="PUBLISHED" label="Custom label" />);
     expect(screen.getByText("Custom label")).toBeTruthy();
     expect(screen.queryByText("Open")).toBeNull();
+  });
+
+  // Module 120 — Multilingual Localization.
+  it("has a translated label for every status it knows how to colour, in every locale", () => {
+    for (const locale of SUPPORTED_LOCALES) {
+      const labels = (getNamespaceMessages(locale, "enums") as { status?: Record<string, string> })
+        .status;
+      for (const status of KNOWN_STATUSES) {
+        expect(labels?.[status], `${locale} enums.status.${status}`).toBeTruthy();
+      }
+    }
+  });
+
+  it.each([
+    ["es", "En curso"],
+    ["ru", "В работе"],
+    ["nl", "Bezig"],
+  ] as const)("renders the %s label in the active locale", (locale, expected) => {
+    setTestLocale(locale);
+    render(<StatusBadge status="IN_PROGRESS" />);
+    expect(screen.getByText(expected)).toBeTruthy();
   });
 });

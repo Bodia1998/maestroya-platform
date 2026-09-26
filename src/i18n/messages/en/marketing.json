@@ -1,24 +1,252 @@
 {
   "hero": {
-    "title": "Connect with trusted professionals for your home",
-    "subtitle": "Post what you need and get quotes from verified professionals near you.",
+    "title": "Find trusted professionals for your home",
+    "subtitle": "Describe what you need, compare quotes and hire the right professional near you — all on MaestroYa.",
     "ctaPrimary": "Post a request",
-    "ctaSecondary": "Browse professionals"
+    "ctaSecondary": "Browse professionals",
+    "or": "or",
+    "highlights": {
+      "verified": "Verified professionals",
+      "reviews": "Reviews from real customers",
+      "audience": "Individuals and companies"
+    },
+    "search": {
+      "serviceLabel": "What service do you need?",
+      "locationLabel": "Where do you need it?",
+      "locationPlaceholder": "City or postcode",
+      "submit": "Find professionals"
+    }
   },
   "howItWorks": {
     "title": "How it works",
     "step1": "Describe what you need",
     "step2": "Receive quotes",
-    "step3": "Choose your professional"
+    "step3": "Choose your professional",
+    "subtitle": "From request to finished job, in four steps.",
+    "steps": {
+      "one": {
+        "title": "Tell us what you need",
+        "description": "Describe the job, choose the category and post your request in a few minutes."
+      },
+      "two": {
+        "title": "Receive quotes",
+        "description": "Interested professionals available in your area send you their quotes."
+      },
+      "three": {
+        "title": "Compare and choose",
+        "description": "Review profiles, reviews and quotes, and talk to the professional before you decide."
+      },
+      "four": {
+        "title": "Book and review the service",
+        "description": "Schedule the appointment, follow the job until it's done and leave your review."
+      }
+    },
+    "cta": "Get started"
   },
   "professionals": {
-    "title": "Professionals"
+    "title": "Professionals",
+    "heading": "Find a professional",
+    "subtitle": "Search by service and location to see professionals who cover your area.",
+    "invalid": "That search looks invalid — please try again.",
+    "failed": "Something went wrong running that search.",
+    "found": "{count, plural, one {# professional found} other {# professionals found}}",
+    "companiesFound": "{count, plural, one {# company found} other {# companies found}}",
+    "verified": "✓ Verified",
+    "form": {
+      "serviceLabel": "Service",
+      "selectService": "Select a service…",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "latitudePlaceholder": "e.g. 38.9665",
+      "longitudePlaceholder": "e.g. -0.1817",
+      "useMyLocation": "Use my current location",
+      "locating": "Locating…",
+      "notSupported": "Your browser does not support location services.",
+      "locationFailed": "Couldn't get your location. Enter it manually below.",
+      "submit": "Search professionals",
+      "submitting": "Searching…"
+    },
+    "results": {
+      "empty": "No professionals found for this service near that location yet.",
+      "distance": "{distance} km away"
+    },
+    "verification": {
+      "UNVERIFIED": "Not verified",
+      "PENDING": "Verification pending",
+      "VERIFIED": "Verified professional",
+      "REJECTED": "Verification rejected"
+    },
+    "profile": {
+      "about": "About",
+      "experience": "Experience",
+      "experienceYears": "{count, plural, one {# year} other {# years}}",
+      "serviceArea": "Service area",
+      "withinKm": "Within {km} km",
+      "readyText": "Ready to get started? Post a service request and {name} — along with every other eligible professional nearby — will be able to review it and send you a quote.",
+      "requestService": "Request this service"
+    }
   },
   "search": {
     "title": "Find professionals",
-    "resultCount": "{count, plural, =0 {No results} one {# professional} other {# professionals}}"
+    "resultCount": "{count, plural, =0 {No results} one {# professional} other {# professionals}}",
+    "heading": "Find a professional or company",
+    "subtitle": "Search by service, city, rating, and verification — professionals and companies ranked together.",
+    "invalid": "That search looks invalid — please adjust the filters and try again.",
+    "failed": "Something went wrong running that search.",
+    "resultsFound": "{count, plural, one {# result found} other {# results found}}",
+    "form": {
+      "queryLabel": "What do you need?",
+      "queryPlaceholder": "e.g. electrician, air conditioning…",
+      "serviceLabel": "Service",
+      "anyService": "Any service",
+      "cityLabel": "City",
+      "cityPlaceholder": "e.g. Gandia",
+      "minRatingLabel": "Minimum rating",
+      "anyRating": "Any rating",
+      "ratingOption": "{rating}+ stars",
+      "sortByLabel": "Sort by",
+      "sort": {
+        "RELEVANCE": "Best match",
+        "RATING": "Highest rated",
+        "REVIEWS": "Most reviewed",
+        "NEWEST": "Newest",
+        "VERIFIED": "Verified first"
+      },
+      "verifiedOnly": "Verified only",
+      "nearLocation": "Search near a location (optional)",
+      "submit": "Search"
+    },
+    "location": {
+      "useMyLocation": "Use my location",
+      "locating": "Locating…",
+      "clear": "Clear",
+      "unknownAddress": "Unknown address near this point",
+      "notSupported": "Your browser does not support location services.",
+      "failed": "Couldn't get your location. Click a point on the map instead.",
+      "near": "Near {address}",
+      "radiusLabel": "Search radius (km)",
+      "radiusPlaceholder": "e.g. 25",
+      "invalid": "That location looks invalid.",
+      "reverseGeocodeFailed": "Couldn't resolve an address for that location."
+    },
+    "results": {
+      "empty": "No results match those filters yet.",
+      "kindProfessional": "Professional",
+      "kindCompany": "Company",
+      "reasons": {
+        "verified": "Verified professional",
+        "highlyRated": "Highly rated ({rating}/5 from {count, plural, one {# review} other {# reviews}})",
+        "manyJobs": "Many completed jobs",
+        "inCity": "Located in the requested city",
+        "inRegion": "Located in the requested region",
+        "categoryMatch": "Matches the requested service category",
+        "portfolio": "Portfolio available ({count, plural, one {# item} other {# items}})",
+        "completeProfile": "Strong, complete profile"
+      }
+    }
   },
   "footer": {
-    "rights": "© {year, number} MaestroYa. All rights reserved."
+    "rights": "© {year} MaestroYa. All rights reserved.",
+    "tagline": "We connect people who need a home service with trusted professionals near them.",
+    "madeIn": "Made in Spain for Spanish homes.",
+    "customers": "Customers",
+    "professionals": "Professionals",
+    "account": "Account",
+    "directory": "Professional directory",
+    "joinAsProfessional": "Join as a professional",
+    "professionalDashboard": "Go to my dashboard",
+    "forgotPassword": "Recover password"
+  },
+  "meta": {
+    "home": {
+      "title": "MaestroYa — Find trusted professionals for your home",
+      "description": "Describe what you need and connect with verified professionals near you: plumbing, electrical work, renovations, cleaning and much more."
+    },
+    "search": {
+      "title": "Find professionals and companies",
+      "description": "Filter by category, city, rating and verification to find the right professional or company for your project."
+    },
+    "professionals": {
+      "title": "Find a professional near you",
+      "description": "Search for verified professionals by service category and location, sorted by distance."
+    },
+    "professionalProfile": {
+      "descriptionWithLocation": "Verified professional in {location}. View their profile and request a quote on MaestroYa.",
+      "description": "View this professional's profile and request a quote on MaestroYa."
+    },
+    "companyProfile": {
+      "descriptionWithLocation": "Home services company in {location}. View its profile on MaestroYa.",
+      "description": "View this company's profile and request a quote on MaestroYa."
+    }
+  },
+  "categories": {
+    "title": "Most requested services",
+    "subtitle": "Choose a category to see verified professionals near you."
+  },
+  "trust": {
+    "title": "Built so you can trust every hire",
+    "subtitle": "MaestroYa is designed so you always know who you're talking to and what you're hiring.",
+    "verified": {
+      "title": "Verified professionals",
+      "description": "Professionals can verify their identity — and companies their documentation — before working on the platform."
+    },
+    "quotes": {
+      "title": "Clear quotes",
+      "description": "Get detailed quotes from several professionals and compare them before you decide."
+    },
+    "communication": {
+      "title": "On-platform messaging",
+      "description": "Talk to the professional directly on MaestroYa before and during the service."
+    },
+    "reviews": {
+      "title": "Real reviews",
+      "description": "Every completed job can receive a review, shown on the professional's profile."
+    },
+    "tracking": {
+      "title": "Job tracking",
+      "description": "Check the status of your request, appointment and job at any time from your dashboard."
+    },
+    "support": {
+      "title": "Support if something goes wrong",
+      "description": "If a problem comes up, you can open a support ticket and our support team will help you."
+    }
+  },
+  "professionalCta": {
+    "badge": "For professionals",
+    "title": "Are you a professional? Win new customers with MaestroYa",
+    "benefits": {
+      "leads": "Receive requests from customers looking for your service category",
+      "profile": "Create your professional profile and showcase your experience and portfolio",
+      "quotes": "Send quotes straight from your dashboard",
+      "schedule": "Manage appointments and jobs from start to finish",
+      "reputation": "Build your reputation with reviews from your customers"
+    },
+    "join": "Join as a professional",
+    "haveAccount": "I already have an account"
+  },
+  "errorPage": {
+    "title": "Something went wrong",
+    "retry": "Try again"
+  },
+  "notFound": {
+    "message": "This page could not be found.",
+    "backHome": "Back to home"
+  },
+  "directory": {
+    "backToSearch": "← Back to search",
+    "viewProfile": "View profile",
+    "about": "About",
+    "services": "Services",
+    "basedNear": "Based near",
+    "locationNotSet": "Location not set",
+    "teamOf": "{count, plural, one {Team of #} other {Team of #}}",
+    "verifiedCompany": "✓ Verified company"
+  },
+  "companies": {
+    "profile": {
+      "teamSize": "Team size",
+      "rating": "Rating",
+      "portfolio": "Portfolio"
+    }
   }
 }

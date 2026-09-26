@@ -1,12 +1,13 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { searchProfessionalsSchema } from "@/application/dto/discovery.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 
 const searchFormSchema = searchProfessionalsSchema.pick({
   categoryId: true,
@@ -43,6 +44,7 @@ export function ProfessionalSearchForm({
   categories: CategoryOption[];
   defaultValues?: Partial<SearchFormInput>;
 }) {
+  const t = useTranslations("marketing");
   const router = useRouter();
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
@@ -53,7 +55,7 @@ export function ProfessionalSearchForm({
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<SearchFormInput>({
-    resolver: zodResolver(searchFormSchema),
+    resolver: useLocalizedZodResolver(searchFormSchema) as unknown as Resolver<SearchFormInput>,
     defaultValues: {
       categoryId: defaultValues?.categoryId ?? "",
       latitude: defaultValues?.latitude,
@@ -64,7 +66,7 @@ export function ProfessionalSearchForm({
   function useMyLocation() {
     setLocationError(null);
     if (!navigator.geolocation) {
-      setLocationError("Your browser does not support location services.");
+      setLocationError(t("professionals.form.notSupported"));
       return;
     }
     setLocating(true);
@@ -75,7 +77,7 @@ export function ProfessionalSearchForm({
         setLocating(false);
       },
       () => {
-        setLocationError("Couldn't get your location. Enter it manually below.");
+        setLocationError(t("professionals.form.locationFailed"));
         setLocating(false);
       },
     );
@@ -94,14 +96,14 @@ export function ProfessionalSearchForm({
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
       <div className="flex flex-col gap-1">
         <label htmlFor="categoryId" className="text-sm font-medium">
-          Service
+          {t("professionals.form.serviceLabel")}
         </label>
         <select
           id="categoryId"
           className="h-10 rounded-md border border-border px-3 text-sm"
           {...register("categoryId")}
         >
-          <option value="">Select a service…</option>
+          <option value="">{t("professionals.form.selectService")}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -114,13 +116,13 @@ export function ProfessionalSearchForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <label htmlFor="latitude" className="text-sm font-medium">
-            Latitude
+            {t("professionals.form.latitude")}
           </label>
           <input
             id="latitude"
             type="number"
             step="any"
-            placeholder="e.g. 38.9665"
+            placeholder={t("professionals.form.latitudePlaceholder")}
             className="h-10 rounded-md border border-border px-3 text-sm"
             {...register("latitude")}
           />
@@ -129,13 +131,13 @@ export function ProfessionalSearchForm({
 
         <div className="flex flex-col gap-1">
           <label htmlFor="longitude" className="text-sm font-medium">
-            Longitude
+            {t("professionals.form.longitude")}
           </label>
           <input
             id="longitude"
             type="number"
             step="any"
-            placeholder="e.g. -0.1817"
+            placeholder={t("professionals.form.longitudePlaceholder")}
             className="h-10 rounded-md border border-border px-3 text-sm"
             {...register("longitude")}
           />
@@ -145,13 +147,13 @@ export function ProfessionalSearchForm({
 
       <div className="flex items-center gap-3">
         <Button type="button" variant="outline" size="sm" onClick={useMyLocation} disabled={locating}>
-          {locating ? "Locating…" : "Use my current location"}
+          {locating ? t("professionals.form.locating") : t("professionals.form.useMyLocation")}
         </Button>
         {locationError && <p className="text-xs text-red-600">{locationError}</p>}
       </div>
 
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Searching…" : "Search professionals"}
+        {isSubmitting ? t("professionals.form.submitting") : t("professionals.form.submit")}
       </Button>
     </form>
   );

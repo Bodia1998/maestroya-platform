@@ -63,6 +63,7 @@ export const GET = withApiTracing(
           "Content-Type": document.mimeType,
           "Content-Length": String(body.byteLength),
           "Content-Disposition": `inline; filename="${safeFilename}"`,
+          // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
           "Cache-Control": "private, no-store",
           "X-Content-Type-Options": "nosniff",
         },

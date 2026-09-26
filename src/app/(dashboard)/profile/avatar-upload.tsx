@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { ALLOWED_AVATAR_MIME_TYPES } from "@/application/dto/profile.dto";
 import { uploadAvatarAction } from "./actions";
 
 export function AvatarUpload({ currentImageUrl }: { currentImageUrl: string | null }) {
+  const t = useTranslations("profile.avatar");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl);
   const [isUploading, setIsUploading] = useState(false);
@@ -45,7 +47,7 @@ export function AvatarUpload({ currentImageUrl }: { currentImageUrl: string | nu
   async function handleUpload() {
     const file = fileInputRef.current?.files?.[0];
     if (!file) {
-      setError("Choose an image first.");
+      setError(t("chooseFirst"));
       return;
     }
 
@@ -71,7 +73,7 @@ export function AvatarUpload({ currentImageUrl }: { currentImageUrl: string | nu
         {previewUrl && (
           <Image
             src={previewUrl}
-            alt="Your avatar"
+            alt={t("alt")}
             width={80}
             height={80}
             className="h-full w-full object-cover"
@@ -82,7 +84,7 @@ export function AvatarUpload({ currentImageUrl }: { currentImageUrl: string | nu
 
       <div className="flex flex-col gap-2">
         <Label htmlFor={inputId} className="sr-only">
-          Choose an avatar image
+          {t("chooseLabel")}
         </Label>
         <input
           ref={fileInputRef}
@@ -94,11 +96,11 @@ export function AvatarUpload({ currentImageUrl }: { currentImageUrl: string | nu
           className="text-sm"
         />
         <Button type="button" size="sm" disabled={isUploading} onClick={handleUpload}>
-          {isUploading ? "Uploading…" : "Upload avatar"}
+          {isUploading ? t("uploading") : t("upload")}
         </Button>
         <div id={statusId} aria-live="polite">
           {error && <p role="alert" className="text-xs text-danger">{error}</p>}
-          {success && <p role="status" className="text-xs text-success">Avatar updated.</p>}
+          {success && <p role="status" className="text-xs text-success">{t("updated")}</p>}
         </div>
       </div>
     </div>

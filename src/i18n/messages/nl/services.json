@@ -1,0 +1,134 @@
+{
+  "categories": {
+    "fontaneria": {
+      "name": "Loodgieterswerk",
+      "description": "Reparatie van lekkages, kranen, leidingen en waterinstallaties."
+    },
+    "electricidad": {
+      "name": "Elektra",
+      "description": "Elektrische installaties, storingen, meterkasten en stopcontacten."
+    },
+    "aire-acondicionado": {
+      "name": "Airconditioning",
+      "description": "Installatie, onderhoud en reparatie van airconditioning."
+    },
+    "pintura": {
+      "name": "Schilderwerk",
+      "description": "Binnen- en buitenschilderwerk, wanden egaliseren en afwerking."
+    },
+    "reformas": {
+      "name": "Verbouwingen",
+      "description": "Volledige en gedeeltelijke verbouwingen van woningen."
+    },
+    "montaje-de-muebles": {
+      "name": "Meubelmontage",
+      "description": "Montage van meubels en inrichting."
+    },
+    "fontanero": {
+      "name": "Loodgieter"
+    },
+    "electricista": {
+      "name": "Elektricien"
+    },
+    "tecnico-climatizacion": {
+      "name": "Klimaattechnicus"
+    },
+    "pintor": {
+      "name": "Schilder"
+    },
+    "reformista": {
+      "name": "Verbouwingsspecialist"
+    },
+    "montador-de-muebles": {
+      "name": "Meubelmonteur"
+    }
+  },
+  "countries": {
+    "ES": "Spanje"
+  },
+  "breadcrumbs": {
+    "home": "Home",
+    "services": "Diensten",
+    "locations": "Locaties"
+  },
+  "shared": {
+    "faqTitle": "Veelgestelde vragen",
+    "provinceCountry": "{province}, {country}",
+    "serviceInCity": "{service} in {city}",
+    "requestThisService": "Deze dienst aanvragen",
+    "viewProfessionals": "Vakmensen bekijken",
+    "platformScopeTitle": "Bereik van het platform",
+    "confirmedLocalitiesTitle": "Plaatsen met bevestigde dekking"
+  },
+  "index": {
+    "title": "Huishoudelijke diensten",
+    "intro": "Dit zijn de dienstcategorieën die vandaag op MaestroYa beschikbaar zijn. Kies er een om te zien wat je kunt aanvragen en hoe het offerteproces werkt.",
+    "empty": "Er zijn op dit moment geen dienstcategorieën gepubliceerd.",
+    "locationsPrompt": "Zoek je dekking per gebied? <link>Bekijk de beschikbare plaatsen</link>."
+  },
+  "servicePage": {
+    "whatYouCanRequestTitle": "Wat je kunt aanvragen",
+    "whatProfessionalsProvideTitle": "Wat de vakman meestal levert",
+    "howItWorksTitle": "Zo werkt het op MaestroYa",
+    "howItWorks": {
+      "step1": "Je plaatst een aanvraag waarin je het werk in de categorie ‘{service}’ beschrijft.",
+      "step2": "Vakmensen die deze categorie en jouw gebied bedienen, kunnen de aanvraag bekijken en je een offerte sturen.",
+      "step3": "Je vergelijkt de ontvangen offertes en accepteert de offerte van je voorkeur.",
+      "step4": "De opdracht wordt ingepland en uitgevoerd zoals afgesproken in de geaccepteerde offerte."
+    },
+    "areasTitle": "Gebieden met deze dienst",
+    "beforeRequestingTitle": "Voordat je aanvraagt",
+    "relatedTitle": "Gerelateerde diensten",
+    "cta": "Klaar om te beginnen? Plaats een aanvraag in de categorie ‘{service}’ en de vakmensen die deze categorie bedienen, kunnen je een offerte sturen."
+  },
+  "serviceLocationPage": {
+    "confirmedCoverage": "MaestroYa heeft bevestigde dekking in {city} ({province}), dus je kunt je aanvraag plaatsen met een adres in deze plaats.",
+    "localFaq": {
+      "question": "Kan ik in {city} een aanvraag plaatsen in de categorie ‘{service}’?",
+      "answer": "Ja. Je kunt een aanvraag in de categorie ‘{service}’ plaatsen met een adres in {city} ({province}). Vakmensen in deze categorie die het gebied bedienen, kunnen de aanvraag bekijken en je een offerte sturen."
+    },
+    "howItWorksTitle": "Zo werkt het in {city}",
+    "howItWorks": {
+      "step1": "Je plaatst een aanvraag in de categorie ‘{service}’ met een adres in {city}.",
+      "step2": "Vakmensen in deze categorie die het gebied bedienen, kunnen je een offerte sturen.",
+      "step3": "Je vergelijkt de offertes en accepteert de offerte van je voorkeur."
+    },
+    "cta": "Klaar om te beginnen? Plaats je aanvraag in de categorie ‘{service}’ in {city}."
+  },
+  "locationsIndex": {
+    "title": "Locaties",
+    "intro": "MaestroYa is een marktplaats voor huishoudelijke diensten die is opgezet om in heel Spanje actief te zijn. De daadwerkelijke beschikbaarheid van vakmensen hangt af van het gebied.",
+    "nationalCardTitle": "MaestroYa in {country}",
+    "nationalCardDescription": "Wat het betekent dat MaestroYa een landelijke marktplaats is en hoe lokale beschikbaarheid werkt.",
+    "confirmedEmpty": "Er zijn op dit moment geen plaatsen met bevestigde dekking gepubliceerd.",
+    "confirmedNote": "Deze lijst bevat alleen plaatsen waarvan de dekking door de werkelijke gegevens van het platform is bevestigd — het is geen volledige lijst van gebieden waar MaestroYa actief kan worden.",
+    "servicesPrompt": "Zoek je op type dienst? <link>Bekijk de beschikbare categorieën</link>."
+  },
+  "locationPage": {
+    "title": "MaestroYa in {city}",
+    "servicesTitle": "Beschikbare diensten in {city}",
+    "howItWorksTitle": "Zo werkt het in jouw gebied",
+    "howItWorks": {
+      "step1": "Je plaatst een aanvraag waarin je het werk en je adres in {city} beschrijft.",
+      "step2": "Vakmensen die die categorie en dit gebied bedienen, kunnen de aanvraag bekijken en je een offerte sturen.",
+      "step3": "Je vergelijkt de ontvangen offertes en accepteert de offerte van je voorkeur."
+    },
+    "relatedTitle": "Andere plaatsen",
+    "cta": "Klaar om te beginnen? Plaats een aanvraag en de vakmensen die {city} bedienen, kunnen je een offerte sturen.",
+    "viewProfessionalsIn": "Vakmensen in {city} bekijken"
+  },
+  "nationalPage": {
+    "title": "MaestroYa in {country}",
+    "categoriesTitle": "Dienstcategorieën",
+    "localAvailabilityTitle": "Zo werkt lokale beschikbaarheid",
+    "confirmedEmpty": "Er zijn nog geen plaatsen met dekking die door de werkelijke gegevens van het platform is bevestigd.",
+    "confirmedNote": "Deze lijst bevat alleen plaatsen waarvan de dekking door de werkelijke gegevens van het platform is bevestigd. Dat een plaats hier niet staat, betekent niet dat MaestroYa daar in de toekomst niet actief kan zijn — het betekent dat er vandaag geen bevestigde dekking is om te tonen.",
+    "cta": "Klaar om te beginnen? Plaats een aanvraag waarin je de dienst die je nodig hebt en je locatie beschrijft.",
+    "searchProfessionals": "Vakmensen zoeken",
+    "joinAsProfessional": "Aanmelden als vakman"
+  },
+  "map": {
+    "ariaLabel": "Kaart",
+    "unavailable": "De kaart is op dit moment niet beschikbaar."
+  }
+}

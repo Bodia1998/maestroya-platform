@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import {
   ALLOWED_COMPANY_VERIFICATION_DOCUMENT_MIME_TYPES,
@@ -15,19 +16,22 @@ import {
   makeSubmitCompanyVerificationUseCase,
   makeUploadCompanyVerificationDocumentUseCase,
 } from "@/application/use-cases/company-verification/compose";
-import { DomainError, RateLimitedError } from "@/domain/errors/domain-error";
+import { RateLimitedError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
+import { localizeActionError, localizeZodError } from "@/presentation/i18n/server";
 
 /** Module 18 — Company Professional: company verification Server Actions —
  *  mirrors dashboard/professional/verification/actions.ts (Module 17). */
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) return { success: false, error: error.message };
-  console.error(error);
-  return { success: false, error: fallback };
+async function fromDomainError(error: unknown, fallback: string): Promise<ActionResult> {
+  return { success: false, error: await localizeActionError(error, fallback) };
+}
+
+function translator() {
+  return getTranslations("company.verification.errors");
 }
 
 function path(companyId: string) {
@@ -41,21 +45,22 @@ export async function requestCompanyVerificationAction(companyId: string): Promi
     revalidatePath(path(companyId));
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong starting verification.");
+    return fromDomainError(error, (await translator())("startFailed"));
   }
 }
 
 export async function uploadCompanyVerificationDocumentAction(companyId: string, formData: FormData): Promise<ActionResult> {
   const user = await requireAuth();
+  const t = await translator();
   const parsed = uploadCompanyVerificationDocumentSchema.safeParse({ type: formData.get("type") });
-  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Choose a valid document type." };
+  if (!parsed.success) return { success: false, error: await localizeZodError(parsed.error, t("invalidDocType")) };
 
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return { success: false, error: "Choose a file to upload." };
+  if (!(file instanceof File) || file.size === 0) return { success: false, error: t("chooseFile") };
   if (!ALLOWED_COMPANY_VERIFICATION_DOCUMENT_MIME_TYPES.includes(file.type as (typeof ALLOWED_COMPANY_VERIFICATION_DOCUMENT_MIME_TYPES)[number])) {
-    return { success: false, error: "Documents must be a JPEG, PNG, WebP image or a PDF." };
+    return { success: false, error: t("invalidFileType") };
   }
-  if (file.size > MAX_COMPANY_VERIFICATION_DOCUMENT_BYTES) return { success: false, error: "Each document must be smaller than 10MB." };
+  if (file.size > MAX_COMPANY_VERIFICATION_DOCUMENT_BYTES) return { success: false, error: t("fileTooLarge") };
 
   // Module 33 — Security Hardening: see FILE_UPLOAD_BY_USER's doc comment
   // (rate-limit-policies.ts) — uploads were previously unrestricted in
@@ -68,7 +73,7 @@ export async function uploadCompanyVerificationDocumentAction(companyId: string,
     );
   } catch (error) {
     if (error instanceof RateLimitedError) {
-      return { success: false, error: error.message };
+      return { success: false, error: await localizeActionError(error) };
     }
     throw error;
   }
@@ -85,20 +90,22 @@ export async function uploadCompanyVerificationDocumentAction(companyId: string,
     revalidatePath(path(companyId));
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong uploading this document.");
+    return fromDomainError(error, t("uploadFailed"));
   }
 }
 
 export async function removeCompanyVerificationDocumentAction(companyId: string, documentId: string): Promise<ActionResult> {
   const user = await requireAuth();
   const parsed = companyVerificationDocumentIdSchema.safeParse({ documentId });
-  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid document." };
+  if (!parsed.success) {
+    return { success: false, error: await localizeZodError(parsed.error, (await translator())("invalidDocument")) };
+  }
   try {
     await makeRemoveCompanyVerificationDocumentUseCase().execute(user.id, companyId, parsed.data.documentId);
     revalidatePath(path(companyId));
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong removing this document.");
+    return fromDomainError(error, (await translator())("removeFailed"));
   }
 }
 
@@ -109,7 +116,7 @@ export async function submitCompanyVerificationAction(companyId: string): Promis
     revalidatePath(path(companyId));
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong submitting for review.");
+    return fromDomainError(error, (await translator())("submitFailed"));
   }
 }
 
@@ -120,7 +127,7 @@ export async function resubmitCompanyVerificationAction(companyId: string): Prom
     revalidatePath(path(companyId));
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong resubmitting for review.");
+    return fromDomainError(error, (await translator())("resubmitFailed"));
   }
 }
 

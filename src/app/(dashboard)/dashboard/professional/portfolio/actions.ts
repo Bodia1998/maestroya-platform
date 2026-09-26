@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
+import type { ZodError } from "zod";
 
 import { createPortfolioItemSchema, updatePortfolioItemSchema } from "@/application/dto/portfolio.dto";
 import {
@@ -8,23 +10,33 @@ import {
   makeDeletePortfolioItemUseCase,
   makeUpdatePortfolioItemUseCase,
 } from "@/application/use-cases/portfolio/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError, localizeZodFieldErrors } from "@/presentation/i18n/server";
 
 export type ActionResult =
   | { success: true }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
-// Same translation convention as every other module's actions.ts (see
-// reviews/actions.ts, dashboard/professional/actions.ts): domain errors
-// surface their own safe, user-facing message; anything else is logged
-// server-side and replaced with a generic one.
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+// Module 120 — errors are localised at the edge (`localizeActionError`):
+// domain errors map to their catalog sentence, anything else is logged
+// server-side and replaced with the localised fallback.
+type FallbackKey =
+  | "createPortfolioItem"
+  | "updatePortfolioItem"
+  | "deletePortfolioItem";
+
+async function fromDomainError(error: unknown, fallbackKey: FallbackKey): Promise<ActionResult> {
+  const t = await getTranslations("professional.errors");
+  return { success: false, error: await localizeActionError(error, t(fallbackKey)) };
+}
+
+async function invalid(error: ZodError): Promise<ActionResult> {
+  const t = await getTranslations("professional.errors");
+  return {
+    success: false,
+    error: t("fixErrors"),
+    fieldErrors: await localizeZodFieldErrors(error),
+  };
 }
 
 /**
@@ -40,11 +52,7 @@ export async function createPortfolioItemAction(formData: unknown): Promise<Acti
 
   const parsed = createPortfolioItemSchema.safeParse(formData);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return invalid(parsed.error);
   }
 
   try {
@@ -57,7 +65,7 @@ export async function createPortfolioItemAction(formData: unknown): Promise<Acti
     revalidatePath("/dashboard/professional/portfolio");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong creating this portfolio item.");
+    return fromDomainError(error, "createPortfolioItem");
   }
 }
 
@@ -71,11 +79,7 @@ export async function updatePortfolioItemAction(portfolioItemId: string, formDat
 
   const parsed = updatePortfolioItemSchema.safeParse(formData);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return invalid(parsed.error);
   }
 
   try {
@@ -88,7 +92,7 @@ export async function updatePortfolioItemAction(portfolioItemId: string, formDat
     revalidatePath("/dashboard/professional/portfolio");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong updating this portfolio item.");
+    return fromDomainError(error, "updatePortfolioItem");
   }
 }
 
@@ -100,6 +104,6 @@ export async function deletePortfolioItemAction(portfolioItemId: string): Promis
     revalidatePath("/dashboard/professional/portfolio");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong deleting this portfolio item.");
+    return fromDomainError(error, "deletePortfolioItem");
   }
 }

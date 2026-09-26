@@ -1,15 +1,17 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/application/dto/auth.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { resetPasswordAction } from "../actions";
 
 export function ResetPasswordForm({ token }: { token: string }) {
+  const t = useTranslations("auth");
   const [serverError, setServerError] = useState<string | null>(null);
   const [succeeded, setSucceeded] = useState(false);
 
@@ -18,7 +20,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<ResetPasswordInput>({
-    resolver: zodResolver(resetPasswordSchema),
+    resolver: useLocalizedZodResolver(resetPasswordSchema),
     defaultValues: { token, password: "", confirmPassword: "" },
   });
 
@@ -36,11 +38,10 @@ export function ResetPasswordForm({ token }: { token: string }) {
     return (
       <div className="flex flex-col gap-4">
         <p role="status" className="rounded-md bg-green-50 px-3 py-3 text-sm text-green-700">
-          Password reset. You&apos;ve been signed out everywhere for security — log in with your
-          new password.
+          {t("resetPassword.success")}
         </p>
         <Link href="/auth/login">
-          <Button className="w-full">Go to login</Button>
+          <Button className="w-full">{t("goToLogin")}</Button>
         </Link>
       </div>
     );
@@ -58,7 +59,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="password" className="text-sm font-medium">
-          New password
+          {t("resetPassword.newPasswordLabel")}
         </label>
         <input
           id="password"
@@ -72,7 +73,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="confirmPassword" className="text-sm font-medium">
-          Confirm new password
+          {t("resetPassword.confirmNewPasswordLabel")}
         </label>
         <input
           id="confirmPassword"
@@ -87,7 +88,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       </div>
 
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Resetting…" : "Reset password"}
+        {isSubmitting ? t("resetPassword.submitting") : t("resetPassword.submit")}
       </Button>
     </form>
   );

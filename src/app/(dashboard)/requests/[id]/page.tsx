@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { makeGetServiceRequestUseCase } from "@/application/use-cases/service-request/compose";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { formatMoney } from "@/components/dashboard/quote-items-table";
+import { localizeCategoryName } from "@/presentation/i18n/service-categories";
 import { PageContainer } from "@/components/layout/page-container";
 import { Section } from "@/components/layout/section";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
@@ -13,7 +16,10 @@ import { RequestStatusBadge } from "../request-status-badge";
 import { CancelServiceRequestDialog } from "./cancel-service-request-dialog";
 import { ServiceRequestPhotoManager } from "./service-request-photo-manager";
 
-export const metadata = { title: "Service request" };
+export async function generateMetadata() {
+  const t = await getTranslations("customer.requests");
+  return { title: t("detail.metaTitle") };
+}
 
 /**
  * Customer-facing detail page for one of *their own* service requests only
@@ -42,23 +48,32 @@ export default async function ServiceRequestDetailPage({
   }
 
   const isEditable = request.status === "PUBLISHED";
+  const [t, tJobs, tServices, format, locale] = await Promise.all([
+    getTranslations("customer.requests"),
+    getTranslations("jobs"),
+    getTranslations("services"),
+    getFormatter(),
+    getLocale(),
+  ]);
+  const budgetValue = (value: number | null) =>
+    value !== null ? formatMoney(value, "EUR", locale) : t("detail.budgetUnset");
 
   return (
     <PageContainer>
       <PageHeader
         title={request.title}
-        subtitle={request.categoryName}
-        breadcrumbs={[{ label: "My requests", href: "/requests" }, { label: request.title }]}
+        subtitle={localizeCategoryName(tServices, { slug: request.categorySlug, name: request.categoryName })}
+        breadcrumbs={[{ label: t("list.title"), href: "/requests" }, { label: request.title }]}
         actions={<RequestStatusBadge status={request.status} />}
       />
 
-      <Section title="Description" gap="sm">
+      <Section title={t("detail.description")} gap="sm">
         <p className="whitespace-pre-line text-sm text-foreground/80">{request.description}</p>
       </Section>
 
       <ResponsiveGrid cols="2" gap="md" bordered>
         <div>
-          <p className="text-foreground/60">Location</p>
+          <p className="text-foreground/60">{t("detail.location")}</p>
           <p className="font-medium">
             {request.location.line1}
             {request.location.line2 ? `, ${request.location.line2}` : ""}
@@ -71,30 +86,30 @@ export default async function ServiceRequestDetailPage({
           <p className="text-foreground/70">{request.location.country}</p>
         </div>
         <div>
-          <p className="text-foreground/60">Urgency</p>
-          <p className="font-medium">{request.urgency}</p>
+          <p className="text-foreground/60">{t("detail.urgency")}</p>
+          <p className="font-medium">
+            {tJobs.has(`urgency.${request.urgency}` as never) ? tJobs(`urgency.${request.urgency}` as never) : request.urgency}
+          </p>
         </div>
         {(request.budgetMin !== null || request.budgetMax !== null) && (
           <div>
-            <p className="text-foreground/60">Budget</p>
+            <p className="text-foreground/60">{t("detail.budget")}</p>
             <p className="font-medium">
-              {request.budgetMin !== null ? `€${request.budgetMin.toFixed(2)}` : "—"}
-              {" – "}
-              {request.budgetMax !== null ? `€${request.budgetMax.toFixed(2)}` : "—"}
+              {t("detail.budgetRange", { min: budgetValue(request.budgetMin), max: budgetValue(request.budgetMax) })}
             </p>
           </div>
         )}
         <div>
-          <p className="text-foreground/60">Posted</p>
-          <p className="font-medium">{request.createdAt.toLocaleString()}</p>
+          <p className="text-foreground/60">{t("detail.posted")}</p>
+          <p className="font-medium">{format.dateTime(request.createdAt, { dateStyle: "medium", timeStyle: "short" })}</p>
         </div>
         <div>
-          <p className="text-foreground/60">Last updated</p>
-          <p className="font-medium">{request.updatedAt.toLocaleString()}</p>
+          <p className="text-foreground/60">{t("detail.lastUpdated")}</p>
+          <p className="font-medium">{format.dateTime(request.updatedAt, { dateStyle: "medium", timeStyle: "short" })}</p>
         </div>
       </ResponsiveGrid>
 
-      <Section title="Photos">
+      <Section title={t("detail.photos")}>
         <ServiceRequestPhotoManager
           requestId={request.id}
           photos={request.photos}
@@ -105,15 +120,18 @@ export default async function ServiceRequestDetailPage({
       {request.status === "ACCEPTED" && (
         <section className="rounded-md border border-border bg-black/5 p-4">
           <p className="text-sm">
-            You&apos;ve accepted a quote for this request. Head to{" "}
-            <Link href="/appointments" className="font-medium underline">
-              My appointments
-            </Link>{" "}
-            to propose or confirm a time, or check{" "}
-            <Link href="/jobs" className="font-medium underline">
-              My jobs
-            </Link>{" "}
-            for the work&apos;s overall progress.
+            {t.rich("detail.acceptedNotice", {
+              appointments: (chunks) => (
+                <Link href="/appointments" className="font-medium underline">
+                  {chunks}
+                </Link>
+              ),
+              jobs: (chunks) => (
+                <Link href="/jobs" className="font-medium underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         </section>
       )}
@@ -124,7 +142,7 @@ export default async function ServiceRequestDetailPage({
             href={`/requests/${request.id}/edit`}
             className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-transparent px-4 text-sm font-medium hover:bg-black/5"
           >
-            Edit request
+            {t("detail.editRequest")}
           </Link>
           <CancelServiceRequestDialog requestId={request.id} />
         </ActionBar>

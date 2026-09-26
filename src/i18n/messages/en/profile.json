@@ -13,5 +13,63 @@
     "email": "Email",
     "timezone": "Time zone"
   },
-  "memberSince": "Member since {date, date, long}"
+  "memberSince": "Member since {date, date, long}",
+  "avatarNote": "This photo is just for your account — it has no effect on professional identity verification. Professionals manage that separately from Professional profile → Manage identity verification.",
+  "dangerNote": "Deleting your account is reversible only by contacting support — your data is deactivated, not immediately erased.",
+  "avatar": {
+    "chooseFirst": "Choose an image first.",
+    "alt": "Your avatar",
+    "chooseLabel": "Choose an avatar image",
+    "uploading": "Uploading…",
+    "upload": "Upload avatar",
+    "updated": "Avatar updated."
+  },
+  "form": {
+    "updated": "Profile updated.",
+    "basics": "Basics",
+    "displayName": "Display name",
+    "phone": "Phone",
+    "timezone": "Timezone",
+    "preferredLanguage": "Preferred language",
+    "noPreference": "No preference",
+    "address": "Address",
+    "street": "Street address",
+    "line2": "Apartment, floor, etc. (optional)",
+    "city": "City",
+    "postalCode": "Postal code",
+    "province": "Province",
+    "country": "Country",
+    "notifications": "Notifications",
+    "emailMarketing": "Marketing emails",
+    "emailServiceUpdates": "Service update emails",
+    "smsAppointmentReminders": "SMS appointment reminders",
+    "save": "Save changes"
+  },
+  "password": {
+    "changed": "Password changed. You've been signed out everywhere else for security.",
+    "noPassword": "This account signs in via a social login and has no password to change.",
+    "title": "Change password",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "changing": "Changing…",
+    "submit": "Change password"
+  },
+  "deleteAccount": {
+    "trigger": "Deactivate account",
+    "title": "This will deactivate your account",
+    "password": "Password",
+    "confirmLabel": "Type {token} to confirm",
+    "deactivating": "Deactivating…",
+    "submit": "Deactivate my account"
+  },
+  "errors": {
+    "updateFailed": "Something went wrong updating your profile.",
+    "avatarFailed": "Something went wrong uploading your avatar.",
+    "passwordFailed": "Something went wrong changing your password.",
+    "deleteFailed": "Something went wrong deleting your account.",
+    "avatarMissing": "Choose an image to upload.",
+    "avatarType": "Avatar must be a JPEG, PNG, or WebP image.",
+    "avatarTooLarge": "Avatar must be smaller than 5MB."
+  }
 }

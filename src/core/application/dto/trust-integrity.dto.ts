@@ -17,7 +17,7 @@ export const MAX_MANUAL_REVIEW_SUMMARY_LENGTH = 2000;
 export const MAX_DETECTION_TEXT_LENGTH = 20000;
 
 export const detectOffPlatformCommunicationSchema = z.object({
-  userId: z.string().uuid("Invalid user."),
+  userId: z.string().uuid("dto.ids.user"),
   text: z.string().min(1).max(MAX_DETECTION_TEXT_LENGTH),
   sourceType: z.enum(["MESSAGE", "QUOTE", "REVIEW", "SERVICE_REQUEST"]),
   sourceId: z.string().min(1),
@@ -25,7 +25,7 @@ export const detectOffPlatformCommunicationSchema = z.object({
 export type DetectOffPlatformCommunicationInput = z.infer<typeof detectOffPlatformCommunicationSchema>;
 
 export const openManualReviewCaseSchema = z.object({
-  userId: z.string().uuid("Invalid user."),
+  userId: z.string().uuid("dto.ids.user"),
   reason: z.string().min(1),
   summary: z.string().min(1).max(MAX_MANUAL_REVIEW_SUMMARY_LENGTH),
 });
@@ -34,16 +34,16 @@ export type OpenManualReviewCaseInput = z.infer<typeof openManualReviewCaseSchem
 export const manualReviewTransitionTargetSchema = z.enum(["UNDER_REVIEW", "ESCALATED", "RESOLVED", "REJECTED"]);
 
 export const transitionManualReviewCaseSchema = z.object({
-  manualReviewCaseId: z.string().uuid("Invalid case."),
+  manualReviewCaseId: z.string().uuid("dto.ids.case"),
   targetState: manualReviewTransitionTargetSchema,
-  actingAdminUserId: z.string().uuid("Invalid admin user."),
+  actingAdminUserId: z.string().uuid("dto.ids.adminUser"),
   resolutionNotes: z.string().max(MAX_REVIEW_NOTES_LENGTH).optional(),
 });
 export type TransitionManualReviewCaseInput = z.infer<typeof transitionManualReviewCaseSchema>;
 
 export const submitAppealSchema = z.object({
-  userId: z.string().uuid("Invalid user."),
-  automatedActionId: z.string().uuid("Invalid action."),
+  userId: z.string().uuid("dto.ids.user"),
+  automatedActionId: z.string().uuid("dto.ids.action"),
   userStatement: z.string().min(1).max(MAX_APPEAL_STATEMENT_LENGTH),
 });
 export type SubmitAppealInput = z.infer<typeof submitAppealSchema>;
@@ -51,14 +51,14 @@ export type SubmitAppealInput = z.infer<typeof submitAppealSchema>;
 export const reviewAppealDecisionSchema = z.enum(["APPROVED", "REJECTED"]);
 
 export const reviewAppealSchema = z.object({
-  appealId: z.string().uuid("Invalid appeal."),
+  appealId: z.string().uuid("dto.ids.appeal"),
   decision: reviewAppealDecisionSchema,
-  reviewedByUserId: z.string().uuid("Invalid reviewer."),
+  reviewedByUserId: z.string().uuid("dto.ids.reviewer"),
   reviewNotes: z.string().max(MAX_REVIEW_NOTES_LENGTH).optional(),
 });
 export type ReviewAppealInput = z.infer<typeof reviewAppealSchema>;
 
 export const getUserTrustProfileSchema = z.object({
-  userId: z.string().uuid("Invalid user."),
+  userId: z.string().uuid("dto.ids.user"),
 });
 export type GetUserTrustProfileInput = z.infer<typeof getUserTrustProfileSchema>;

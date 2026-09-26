@@ -30,4 +30,4 @@ export const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
     );
   },
 );
-Progress.displayName = "Progress";
+Progress.displayName = "Progress"; // i18n-ignore

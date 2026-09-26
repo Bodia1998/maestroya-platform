@@ -1,8 +1,13 @@
+import { getTranslations } from "next-intl/server";
+
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { NewDisputeForm } from "./new-dispute-form";
 
-export const metadata = { title: "Open a dispute" };
+export async function generateMetadata() {
+  const t = await getTranslations("customer.disputes");
+  return { title: t("new.title") };
+}
 
 /** Module 21 — Disputes & Support: minimal "open a dispute" page, reached
  *  from a job's detail page with `?jobId=<id>`. `jobId` is only a UX
@@ -11,13 +16,14 @@ export const metadata = { title: "Open a dispute" };
 export default async function NewDisputePage({ searchParams }: { searchParams: Promise<{ jobId?: string }> }) {
   await requireAuth();
   const { jobId } = await searchParams;
+  const t = await getTranslations("customer.disputes");
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Open a dispute"
-        subtitle="Only for jobs that are in progress, completed, or cancelled — see your job's detail page."
-        breadcrumbs={[{ label: "My disputes", href: "/disputes" }, { label: "Open a dispute" }]}
+        title={t("new.title")}
+        subtitle={t("new.subtitle")}
+        breadcrumbs={[{ label: t("list.metaTitle"), href: "/disputes" }, { label: t("new.title") }]}
       />
       <NewDisputeForm initialJobId={jobId ?? ""} />
     </div>

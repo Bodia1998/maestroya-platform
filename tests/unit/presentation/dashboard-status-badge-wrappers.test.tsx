@@ -88,7 +88,8 @@ describe("JobStatusBadge", () => {
 describe("StatusBadges", () => {
   it("renders both the profile status (prefixed) and the verification status badges", () => {
     render(<StatusBadges status="ACTIVE" verificationStatus="VERIFIED" />);
-    expect(screen.getByText("Status: ACTIVE")).toBeTruthy();
+    // Module 120: the profile status is now the localised enum label.
+    expect(screen.getByText("Status: Active")).toBeTruthy();
     expect(screen.getByText("Verified")).toBeTruthy();
   });
 

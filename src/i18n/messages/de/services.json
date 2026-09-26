@@ -1,0 +1,134 @@
+{
+  "categories": {
+    "fontaneria": {
+      "name": "Sanitär",
+      "description": "Reparatur von Lecks, Wasserhähnen, Rohren und Wasserinstallationen."
+    },
+    "electricidad": {
+      "name": "Elektroarbeiten",
+      "description": "Elektroinstallationen, Störungen, Sicherungskästen und Steckdosen."
+    },
+    "aire-acondicionado": {
+      "name": "Klimaanlagen",
+      "description": "Installation, Wartung und Reparatur von Klimaanlagen."
+    },
+    "pintura": {
+      "name": "Malerarbeiten",
+      "description": "Innen- und Außenanstrich, Wandglättung und Oberflächen."
+    },
+    "reformas": {
+      "name": "Renovierungen",
+      "description": "Komplett- und Teilrenovierungen im Haushalt."
+    },
+    "montaje-de-muebles": {
+      "name": "Möbelmontage",
+      "description": "Aufbau und Montage von Möbeln."
+    },
+    "fontanero": {
+      "name": "Installateur"
+    },
+    "electricista": {
+      "name": "Elektriker"
+    },
+    "tecnico-climatizacion": {
+      "name": "Klimatechniker"
+    },
+    "pintor": {
+      "name": "Maler"
+    },
+    "reformista": {
+      "name": "Renovierungsfachkraft"
+    },
+    "montador-de-muebles": {
+      "name": "Möbelmonteur"
+    }
+  },
+  "countries": {
+    "ES": "Spanien"
+  },
+  "breadcrumbs": {
+    "home": "Startseite",
+    "services": "Dienstleistungen",
+    "locations": "Standorte"
+  },
+  "shared": {
+    "faqTitle": "Häufig gestellte Fragen",
+    "provinceCountry": "{province}, {country}",
+    "serviceInCity": "{service} in {city}",
+    "requestThisService": "Diese Dienstleistung anfragen",
+    "viewProfessionals": "Fachleute ansehen",
+    "platformScopeTitle": "Reichweite der Plattform",
+    "confirmedLocalitiesTitle": "Orte mit bestätigter Abdeckung"
+  },
+  "index": {
+    "title": "Haushaltsdienstleistungen",
+    "intro": "Dies sind die Dienstleistungskategorien, die heute auf MaestroYa verfügbar sind. Wähle eine aus, um zu sehen, was du anfragen kannst und wie der Angebotsprozess funktioniert.",
+    "empty": "Derzeit sind keine Dienstleistungskategorien veröffentlicht.",
+    "locationsPrompt": "Suchst du nach Abdeckung in deiner Gegend? <link>Sieh dir die verfügbaren Orte an</link>."
+  },
+  "servicePage": {
+    "whatYouCanRequestTitle": "Was du anfragen kannst",
+    "whatProfessionalsProvideTitle": "Was die Fachkraft üblicherweise leistet",
+    "howItWorksTitle": "So funktioniert es bei MaestroYa",
+    "howItWorks": {
+      "step1": "Du veröffentlichst eine Anfrage und beschreibst die Arbeit in der Kategorie „{service}“.",
+      "step2": "Fachleute, die diese Kategorie und dein Gebiet abdecken, können sie prüfen und dir ein Angebot senden.",
+      "step3": "Du vergleichst die erhaltenen Angebote und nimmst das bevorzugte an.",
+      "step4": "Der Auftrag wird terminiert und so ausgeführt, wie im angenommenen Angebot vereinbart."
+    },
+    "areasTitle": "Gebiete mit dieser Dienstleistung",
+    "beforeRequestingTitle": "Bevor du anfragst",
+    "relatedTitle": "Ähnliche Dienstleistungen",
+    "cta": "Bereit? Veröffentliche eine Anfrage in der Kategorie „{service}“, und die Fachleute, die sie abdecken, können dir ein Angebot senden."
+  },
+  "serviceLocationPage": {
+    "confirmedCoverage": "MaestroYa hat eine bestätigte Abdeckung in {city} ({province}), du kannst deine Anfrage also mit einer Adresse an diesem Ort veröffentlichen.",
+    "localFaq": {
+      "question": "Kann ich in {city} eine Anfrage in der Kategorie „{service}“ stellen?",
+      "answer": "Ja. Du kannst eine Anfrage in der Kategorie „{service}“ mit einer Adresse in {city} ({province}) veröffentlichen. Fachleute dieser Kategorie, die das Gebiet abdecken, können sie prüfen und dir ein Angebot senden."
+    },
+    "howItWorksTitle": "So funktioniert es in {city}",
+    "howItWorks": {
+      "step1": "Du veröffentlichst eine Anfrage in der Kategorie „{service}“ mit einer Adresse in {city}.",
+      "step2": "Fachleute dieser Kategorie, die das Gebiet abdecken, können dir ein Angebot senden.",
+      "step3": "Du vergleichst die Angebote und nimmst das bevorzugte an."
+    },
+    "cta": "Bereit? Veröffentliche deine Anfrage in der Kategorie „{service}“ in {city}."
+  },
+  "locationsIndex": {
+    "title": "Standorte",
+    "intro": "MaestroYa ist ein Marktplatz für Haushaltsdienstleistungen, der darauf ausgelegt ist, in ganz Spanien tätig zu sein. Die tatsächliche Verfügbarkeit von Fachleuten hängt vom jeweiligen Gebiet ab.",
+    "nationalCardTitle": "MaestroYa in {country}",
+    "nationalCardDescription": "Was es bedeutet, dass MaestroYa ein landesweiter Marktplatz ist, und wie die lokale Verfügbarkeit funktioniert.",
+    "confirmedEmpty": "Derzeit sind keine Orte mit bestätigter Abdeckung veröffentlicht.",
+    "confirmedNote": "Diese Liste enthält nur Orte, deren Abdeckung durch reale Daten der Plattform bestätigt ist — sie ist keine vollständige Liste der Gebiete, in denen MaestroYa tätig werden kann.",
+    "servicesPrompt": "Suchst du nach Art der Dienstleistung? <link>Sieh dir die verfügbaren Kategorien an</link>."
+  },
+  "locationPage": {
+    "title": "MaestroYa in {city}",
+    "servicesTitle": "Verfügbare Dienstleistungen in {city}",
+    "howItWorksTitle": "So funktioniert es in deiner Gegend",
+    "howItWorks": {
+      "step1": "Du veröffentlichst eine Anfrage mit einer Beschreibung der Arbeit und deiner Adresse in {city}.",
+      "step2": "Fachleute, die diese Kategorie und dieses Gebiet abdecken, können sie prüfen und dir ein Angebot senden.",
+      "step3": "Du vergleichst die erhaltenen Angebote und nimmst das bevorzugte an."
+    },
+    "relatedTitle": "Weitere Orte",
+    "cta": "Bereit? Veröffentliche eine Anfrage, und die Fachleute, die {city} abdecken, können dir ein Angebot senden.",
+    "viewProfessionalsIn": "Fachleute in {city} ansehen"
+  },
+  "nationalPage": {
+    "title": "MaestroYa in {country}",
+    "categoriesTitle": "Dienstleistungskategorien",
+    "localAvailabilityTitle": "So funktioniert die lokale Verfügbarkeit",
+    "confirmedEmpty": "Es gibt noch keine Orte, deren Abdeckung durch reale Daten der Plattform bestätigt ist.",
+    "confirmedNote": "Diese Liste enthält nur Orte, deren Abdeckung durch reale Daten der Plattform bestätigt ist. Dass ein Ort hier nicht erscheint, bedeutet nicht, dass MaestroYa dort künftig nicht tätig sein kann — es bedeutet, dass es heute keine bestätigte Abdeckung gibt, die angezeigt werden kann.",
+    "cta": "Bereit? Veröffentliche eine Anfrage, in der du die benötigte Dienstleistung und deinen Standort beschreibst.",
+    "searchProfessionals": "Fachleute suchen",
+    "joinAsProfessional": "Als Fachkraft mitmachen"
+  },
+  "map": {
+    "ariaLabel": "Karte",
+    "unavailable": "Die Karte ist derzeit nicht verfügbar."
+  }
+}

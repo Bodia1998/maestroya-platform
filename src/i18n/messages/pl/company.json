@@ -1,0 +1,225 @@
+{
+  "tabs": {
+    "ariaLabel": "Sekcje firmy",
+    "profile": "Profil",
+    "members": "Członkowie",
+    "invitations": "Zaproszenia",
+    "verification": "Weryfikacja",
+    "selfBilling": "Samofakturowanie"
+  },
+  "roles": {
+    "OWNER": "Właściciel",
+    "ADMIN": "Administrator",
+    "MANAGER": "Menedżer",
+    "MEMBER": "Członek"
+  },
+  "memberStatus": {
+    "ACTIVE": "Aktywny",
+    "PENDING": "Oczekujący",
+    "REMOVED": "Usunięty"
+  },
+  "invitationStatus": {
+    "PENDING": "Oczekujące",
+    "ACCEPTED": "Przyjęte",
+    "DECLINED": "Odrzucone",
+    "EXPIRED": "Wygasłe",
+    "CANCELLED": "Anulowane"
+  },
+  "companyStatus": {
+    "PENDING": "Oczekująca",
+    "ACTIVE": "Aktywna",
+    "SUSPENDED": "Zawieszona",
+    "DEACTIVATED": "Dezaktywowana"
+  },
+  "errors": {
+    "invalidDetails": "Nieprawidłowe dane firmy.",
+    "createFailed": "Coś poszło nie tak podczas tworzenia firmy.",
+    "updateFailed": "Coś poszło nie tak podczas aktualizowania firmy.",
+    "loadFailed": "Coś poszło nie tak podczas wczytywania firmy."
+  },
+  "index": {
+    "metaTitle": "Moje firmy",
+    "title": "Moje firmy",
+    "subtitle": "Działaj jako firma lub zespół z wieloma specjalistami, niezależnie od swojego indywidualnego profilu specjalisty, jeśli go masz.",
+    "emptyTitle": "Nie masz jeszcze firm",
+    "emptyDescription": "Nie jesteś jeszcze członkiem żadnej firmy. Utwórz firmę poniżej, aby zacząć działać jako zespół.",
+    "manage": "Zarządzaj",
+    "createTitle": "Utwórz firmę",
+    "legalNameRequired": "Nazwa prawna (wymagane)",
+    "tradeName": "Nazwa handlowa / wyświetlana",
+    "taxIdRequired": "Numer identyfikacji podatkowej (wymagane)",
+    "description": "Opis",
+    "submit": "Utwórz firmę"
+  },
+  "acceptInvitation": {
+    "metaTitle": "Zaproszenie do firmy",
+    "title": "Zaproszenie do firmy",
+    "subtitle": "Otrzymałeś zaproszenie do firmy w MaestroYa. Po jego przyjęciu od razu staniesz się aktywnym członkiem.",
+    "missingToken": "W tym linku z zaproszeniem brakuje tokenu.",
+    "accept": "Przyjmij zaproszenie",
+    "decline": "Odrzuć",
+    "invalidLink": "Nieprawidłowy link z zaproszeniem.",
+    "acceptFailed": "Coś poszło nie tak podczas przyjmowania tego zaproszenia.",
+    "declineFailed": "Coś poszło nie tak podczas odrzucania tego zaproszenia."
+  },
+  "profile": {
+    "metaTitle": "Profil firmy",
+    "subtitle": "Status: {status} · {verified}",
+    "verified": "Zweryfikowana",
+    "notVerified": "Niezweryfikowana",
+    "breadcrumbMyCompanies": "Moje firmy",
+    "detailsTitle": "Dane firmy",
+    "legalName": "Nazwa prawna",
+    "tradeName": "Nazwa handlowa / wyświetlana",
+    "description": "Opis",
+    "contactTitle": "Dane kontaktowe",
+    "website": "Strona internetowa",
+    "contactEmail": "E-mail kontaktowy",
+    "contactPhone": "Telefon kontaktowy",
+    "city": "Miasto",
+    "province": "Prowincja",
+    "save": "Zapisz zmiany"
+  },
+  "members": {
+    "metaTitle": "Członkowie firmy",
+    "title": "Członkowie",
+    "activeCount": "{count, plural, one {# aktywny członek.} few {# aktywni członkowie.} many {# aktywnych członków.} other {# aktywnego członka.}}",
+    "emptyTitle": "Firma nie ma jeszcze członków",
+    "emptyDescription": "Zaproś współpracowników na karcie Zaproszenia, aby zacząć wspólną pracę na tym koncie firmowym.",
+    "columns": {
+      "name": "Imię i nazwisko",
+      "email": "E-mail",
+      "role": "Rola",
+      "status": "Status",
+      "actions": "Działania"
+    },
+    "roleFor": "Rola dla {name}",
+    "updateRole": "Zaktualizuj rolę",
+    "transferTitle": "Przekaż własność",
+    "transferNotice": "Tylko obecny właściciel może przekazać własność. Tej operacji nie można cofnąć, chyba że nowy właściciel przekaże własność z powrotem.",
+    "errors": {
+      "loadFailed": "Coś poszło nie tak podczas wczytywania członków.",
+      "invalidRole": "Nieprawidłowa rola.",
+      "changeRoleFailed": "Coś poszło nie tak podczas zmiany roli tego członka.",
+      "invalidMember": "Nieprawidłowy członek.",
+      "removeFailed": "Coś poszło nie tak podczas usuwania tego członka.",
+      "invalidRequest": "Nieprawidłowe żądanie.",
+      "transferFailed": "Coś poszło nie tak podczas przekazywania własności."
+    },
+    "remove": {
+      "trigger": "Usuń",
+      "title": "Usunąć użytkownika {name}?",
+      "description": "Ta osoba natychmiast straci dostęp do tego konta firmowego. Tutaj nie można tego cofnąć.",
+      "confirm": "Tak, usuń",
+      "pending": "Usuwanie…"
+    },
+    "transfer": {
+      "trigger": "Przekaż własność",
+      "title": "Przekazać własność?",
+      "description": "Tylko obecny właściciel może przekazać własność. Tej operacji nie można cofnąć, chyba że nowy właściciel przekaże własność z powrotem.",
+      "confirm": "Tak, przekaż własność",
+      "pending": "Przekazywanie…",
+      "newOwner": "Nowy właściciel",
+      "confirmationLabel": "Wpisz {keyword}, aby potwierdzić"
+    }
+  },
+  "invitations": {
+    "metaTitle": "Zaproszenia firmy",
+    "title": "Zaproszenia",
+    "inviteTitle": "Zaproś członka",
+    "inviteNotice": "Obecnie można zapraszać tylko istniejących użytkowników MaestroYa. Zaproszenie jest ważne przez 14 dni.",
+    "email": "E-mail",
+    "role": "Rola",
+    "send": "Wyślij zaproszenie",
+    "emptyTitle": "Brak zaproszeń",
+    "emptyDescription": "Wysłane przez ciebie zaproszenia będą widoczne tutaj, dopóki nie zostaną przyjęte lub anulowane.",
+    "columns": {
+      "email": "E-mail",
+      "role": "Rola",
+      "status": "Status",
+      "expires": "Wygasa",
+      "actions": "Działania"
+    },
+    "errors": {
+      "loadFailed": "Coś poszło nie tak podczas wczytywania zaproszeń.",
+      "invalid": "Nieprawidłowe zaproszenie.",
+      "createFailed": "Coś poszło nie tak podczas tworzenia zaproszenia.",
+      "cancelFailed": "Coś poszło nie tak podczas anulowania tego zaproszenia."
+    },
+    "cancel": {
+      "trigger": "Anuluj",
+      "title": "Anulować to zaproszenie?",
+      "description": "{email} nie będzie już mógł użyć tego zaproszenia, aby dołączyć do firmy.",
+      "confirm": "Tak, anuluj zaproszenie",
+      "pending": "Anulowanie…",
+      "keep": "Zachowaj zaproszenie"
+    }
+  },
+  "verification": {
+    "metaTitle": "Weryfikacja firmy",
+    "title": "Weryfikacja",
+    "notStarted": "Ta firma nie rozpoczęła jeszcze weryfikacji.",
+    "start": "Rozpocznij weryfikację",
+    "statusCopy": {
+      "DRAFT": "Jeszcze nie wysłano. Prześlij co najmniej jeden dokument firmy i wyślij do sprawdzenia.",
+      "PENDING": "Wysłano — czeka na sprawdzenie przez administratora.",
+      "UNDER_REVIEW": "Administrator sprawdza teraz ten wniosek.",
+      "APPROVED": "Zatwierdzono — twoja firma ma odznakę weryfikacji na swoim profilu publicznym.",
+      "REJECTED": "Odrzucono. Sprawdź powód poniżej i wyślij ponownie, gdy będziesz gotowy.",
+      "RESUBMISSION_REQUIRED": "Przed zatwierdzeniem potrzebne są zmiany. Zobacz instrukcje poniżej.",
+      "EXPIRED": "To zatwierdzenie wygasło. Rozpocznij nowy wniosek o weryfikację."
+    },
+    "reason": "Powód",
+    "whatToUpdate": "Co trzeba zaktualizować",
+    "documents": "Dokumenty",
+    "noDocuments": "Nie przesłano jeszcze żadnych dokumentów.",
+    "docTypes": {
+      "BUSINESS_LICENSE": "Zezwolenie na działalność",
+      "TAX_CERTIFICATE": "Zaświadczenie podatkowe",
+      "INSURANCE_CERTIFICATE": "Certyfikat ubezpieczenia",
+      "PROFESSIONAL_CERTIFICATION": "Certyfikat zawodowy",
+      "PROOF_OF_ADDRESS": "Potwierdzenie adresu",
+      "OTHER": "Inny"
+    },
+    "remove": "Usuń",
+    "uploadTitle": "Prześlij dokument",
+    "docType": "Typ dokumentu",
+    "file": "Plik",
+    "upload": "Prześlij dokument",
+    "submit": "Wyślij do sprawdzenia",
+    "resubmit": "Wyślij ponownie",
+    "errors": {
+      "startFailed": "Coś poszło nie tak podczas rozpoczynania weryfikacji.",
+      "invalidDocType": "Wybierz prawidłowy typ dokumentu.",
+      "chooseFile": "Wybierz plik do przesłania.",
+      "invalidFileType": "Dokument musi być obrazem JPEG, PNG, WebP lub plikiem PDF.",
+      "fileTooLarge": "Każdy dokument musi mieć mniej niż 10 MB.",
+      "uploadFailed": "Coś poszło nie tak podczas przesyłania tego dokumentu.",
+      "invalidDocument": "Nieprawidłowy dokument.",
+      "removeFailed": "Coś poszło nie tak podczas usuwania tego dokumentu.",
+      "submitFailed": "Coś poszło nie tak podczas wysyłania do sprawdzenia.",
+      "resubmitFailed": "Coś poszło nie tak podczas ponownego wysyłania do sprawdzenia."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Samofakturowanie firmy",
+    "title": "Firma",
+    "subtitle": "Zarządzaj upoważnieniem do samofakturowania i fakturami swojej firmy.",
+    "ownerOnlyTitle": "Tylko właściciel/administrator",
+    "ownerOnlyBody": "Tylko właściciel firmy lub administrator może wyświetlać i zmieniać status upoważnienia do samofakturowania.",
+    "sectionTitle": "Upoważnienie do samofakturowania",
+    "notAuthorized": "Brak upoważnienia",
+    "activeBody": "Ta firma upoważniła MaestroYa do wystawiania w jej imieniu faktur w ramach samofakturowania („{legalTerm}”) za zakończone zlecenia. Możesz w każdej chwili cofnąć to upoważnienie.",
+    "revoke": "Cofnij upoważnienie",
+    "inactiveBody": "Bez tego upoważnienia MaestroYa nie może wystawiać faktur w ramach samofakturowania w imieniu tej firmy.",
+    "grant": "Udziel upoważnienia",
+    "invoicesTitle": "Faktury",
+    "noInvoices": "Brak faktur wystawionych w ramach samofakturowania.",
+    "notYetIssued": "Jeszcze niewystawiona",
+    "errors": {
+      "invalidCompany": "Nieprawidłowa firma.",
+      "grantFailed": "Coś poszło nie tak podczas udzielania upoważnienia do samofakturowania.",
+      "revokeFailed": "Coś poszło nie tak podczas cofania upoważnienia do samofakturowania."
+    }
+  }
+}

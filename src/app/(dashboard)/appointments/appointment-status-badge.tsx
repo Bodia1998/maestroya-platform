@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { StatusBadge } from "@/components/dashboard/status-badge";
 
 /**
@@ -14,5 +16,6 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
  * call site across the app keeps working unchanged.
  */
 export function AppointmentStatusBadge({ status }: { status: string }) {
-  return <StatusBadge status={status} label={status === "PENDING_SCHEDULE" ? "Awaiting a proposed time" : undefined} />;
+  const t = useTranslations("customer.appointments");
+  return <StatusBadge status={status} label={status === "PENDING_SCHEDULE" ? t("awaitingProposedTime") : undefined} />;
 }

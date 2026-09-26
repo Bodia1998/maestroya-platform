@@ -1,0 +1,92 @@
+{
+  "metaTitle": "Partner-Dashboard",
+  "title": "Partner-Dashboard",
+  "subtitle": "Verfolge deine Empfehlungslinks, Klicks und Einnahmen als Affiliate-Partner.",
+  "noAccount": {
+    "title": "Du hast noch kein Partnerkonto",
+    "description": "Partnerkonten sind für Affiliate-Partner gedacht, die MaestroYa Kunden empfehlen und dafür einen Anteil am Gewinn der Plattform erhalten. Wende dich an MaestroYa, um dich als Partner zu registrieren."
+  },
+  "statusMessage": {
+    "PENDING": "Deine Partnerbewerbung wird noch geprüft",
+    "REJECTED": "Deine Partnerbewerbung wurde nicht genehmigt",
+    "SUSPENDED": "Dein Partnerkonto ist derzeit gesperrt",
+    "BANNED": "Dein Partnerkonto wurde dauerhaft gesperrt",
+    "other": "Dein Partnerkonto ist nicht aktiv"
+  },
+  "locked": {
+    "description": "Dein Dashboard wird automatisch freigeschaltet, sobald dein Partnerkonto genehmigt ist."
+  },
+  "welcome": "Willkommen zurück, {name}. So schneiden deine Empfehlungslinks ab.",
+  "stats": {
+    "clicks": "Klicks",
+    "visits": "Besuche",
+    "registrations": "Registrierungen",
+    "bookingsCreated": "Erstellte Buchungen",
+    "completedJobs": "Abgeschlossene Aufträge",
+    "conversionRate": "Konversionsrate",
+    "platformCommissionGenerated": "Erzielte Plattformprovision",
+    "pendingEarnings": "Ausstehende Einnahmen",
+    "approvedPayable": "Genehmigt (auszahlbar)",
+    "paidToDate": "Bisher ausgezahlt"
+  },
+  "topCampaigns": {
+    "title": "Top-Kampagnen",
+    "empty": "Noch keine Kampagnenklicks erfasst."
+  },
+  "topReferralLinks": {
+    "title": "Top-Empfehlungslinks",
+    "empty": "Noch keine Klicks auf Empfehlungslinks erfasst."
+  },
+  "visitsCount": "{count, plural, one {# Besuch} other {# Besuche}}",
+  "errors": {
+    "createLinkFailed": "Beim Erstellen dieses Empfehlungslinks ist etwas schiefgelaufen.",
+    "updateLinkFailed": "Beim Aktualisieren dieses Empfehlungslinks ist etwas schiefgelaufen.",
+    "payoutFailed": "Beim Anfordern dieser Auszahlung ist etwas schiefgelaufen."
+  },
+  "campaigns": {
+    "title": "Kampagnenlinks",
+    "code": "Code",
+    "codePlaceholder": "z. B. telegram_valencia",
+    "label": "Bezeichnung (optional)",
+    "labelPlaceholder": "Deine eigene Notiz",
+    "source": "Quelle",
+    "none": "Keine",
+    "sources": {
+      "TELEGRAM": "Telegram",
+      "INSTAGRAM": "Instagram",
+      "TIKTOK": "TikTok",
+      "YOUTUBE": "YouTube",
+      "BLOG": "Blog",
+      "WEBSITE": "Website"
+    },
+    "creating": "Wird erstellt…",
+    "create": "Link erstellen",
+    "empty": "Noch keine Kampagnenlinks – erstelle oben einen, um ihn zu teilen.",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "visits": "{count, plural, one {# Besuch} other {# Besuche}}",
+    "deactivate": "Deaktivieren",
+    "activate": "Aktivieren"
+  },
+  "payout": {
+    "balanceTitle": "Affiliate-Guthaben",
+    "available": "Verfügbares Guthaben",
+    "reserved": "Für Auszahlung reserviert",
+    "paidToDate": "Bisher ausgezahlt",
+    "minimum": "Mindestauszahlung: {amount}",
+    "eligible": "Auszahlung möglich",
+    "moreNeeded": "Noch {amount} erforderlich",
+    "requesting": "Wird angefordert…",
+    "request": "Auszahlung anfordern",
+    "requested": "Auszahlung angefordert – den Status siehst du im Verlauf unten.",
+    "historyTitle": "Auszahlungsverlauf",
+    "empty": "Noch keine Auszahlungen.",
+    "status": {
+      "PENDING": "Ausstehend",
+      "PROCESSING": "In Bearbeitung",
+      "PAID": "Ausgezahlt",
+      "FAILED": "Fehlgeschlagen",
+      "CANCELLED": "Storniert"
+    }
+  }
+}

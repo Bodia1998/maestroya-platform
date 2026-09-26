@@ -1,0 +1,89 @@
+{
+  "title": "Opdrachten",
+  "status": {
+    "pending": "In afwachting",
+    "inProgress": "Bezig",
+    "completed": "Afgerond",
+    "cancelled": "Geannuleerd",
+    "expired": "Verlopen"
+  },
+  "empty": "Je hebt nog geen opdrachten.",
+  "count": "{count, plural, =0 {Geen opdrachten} one {# opdracht} other {# opdrachten}}",
+  "viewDetails": "Details bekijken",
+  "scheduledFor": "Gepland op {date, date, long}",
+  "requests": {
+    "title": "Serviceaanvragen"
+  },
+  "quotes": {
+    "title": "Offertes"
+  },
+  "quoteItems": {
+    "columns": {
+      "description": "Omschrijving",
+      "type": "Type",
+      "quantity": "Aantal",
+      "unitPrice": "Prijs per stuk",
+      "amount": "Bedrag"
+    },
+    "total": "Totaal",
+    "category": {
+      "MATERIALS": "Materialen",
+      "LABOR": "Arbeid"
+    }
+  },
+  "urgency": {
+    "LOW": "Laag",
+    "MEDIUM": "Gemiddeld",
+    "HIGH": "Hoog",
+    "EMERGENCY": "Spoed"
+  },
+  "list": {
+    "title": "Mijn opdrachten",
+    "subtitle": "De algemene voortgang van opdrachten waarvoor je een offerte hebt geaccepteerd.",
+    "empty": {
+      "title": "Geen actieve opdrachten",
+      "description": "Opdrachten verschijnen hier zodra je een offerte van een vakman accepteert en het werk begint.",
+      "action": "Mijn aanvragen bekijken"
+    }
+  },
+  "notStarted": "Niet gestart",
+  "detail": {
+    "title": "Opdracht",
+    "started": "Gestart",
+    "completed": "Voltooid",
+    "cancellationReason": "Reden van annulering",
+    "appointments": "Afspraken voor deze opdracht",
+    "noAppointments": "Nog geen afspraken.",
+    "notScheduled": "Nog niet ingepland",
+    "dateUnset": "—"
+  },
+  "cancellationReason": {
+    "CUSTOMER_REQUEST": "Op verzoek van de klant",
+    "PROFESSIONAL_UNABLE_TO_COMPLETE": "Vakman kan de opdracht niet afronden",
+    "SERVICE_REQUEST_ISSUE": "Probleem met de aanvraag",
+    "OTHER": "Overig"
+  },
+  "actions": {
+    "startWork": "Werk starten",
+    "starting": "Bezig met starten…",
+    "markCompleted": "Opdracht als voltooid markeren",
+    "completing": "Bezig met afronden…",
+    "openAppointmentsWarning": "Deze opdracht heeft nog een openstaande afspraak. Bevestig en rond alle afspraken af (of annuleer ze) voordat je de opdracht als voltooid markeert.",
+    "cancelJob": "Opdracht annuleren",
+    "cancelTitle": "Deze opdracht annuleren?",
+    "reason": "Reden",
+    "note": "Notitie (optioneel)",
+    "cancelling": "Bezig met annuleren…",
+    "confirmCancel": "Ja, annuleren",
+    "notNow": "Nu niet"
+  },
+  "errors": {
+    "invalidJob": "Ongeldige opdracht.",
+    "startFailed": "Er ging iets mis bij het starten van deze opdracht.",
+    "completeFailed": "Er ging iets mis bij het afronden van deze opdracht.",
+    "cancelFailed": "Er ging iets mis bij het annuleren van deze opdracht.",
+    "confirmFailed": "Er ging iets mis bij het bevestigen van deze opdracht.",
+    "disputeFailed": "Er ging iets mis bij het betwisten van de afronding van deze opdracht.",
+    "paymentFailed": "Er ging iets mis bij het starten van je betaling. Probeer het opnieuw."
+  }
+}

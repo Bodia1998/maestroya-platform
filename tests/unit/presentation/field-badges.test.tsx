@@ -22,9 +22,9 @@ describe("RequiredBadge", () => {
 });
 
 describe("OptionalBadge", () => {
-  it("renders 'Opcional' by default", () => {
+  it("renders 'Optional' by default", () => {
     render(<OptionalBadge />);
-    expect(screen.getByText("Opcional")).toBeTruthy();
+    expect(screen.getByText("Optional")).toBeTruthy();
   });
 
   it("renders custom children when provided", () => {

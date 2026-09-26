@@ -33,7 +33,7 @@ export const Heading = React.forwardRef<HTMLHeadingElement, HeadingProps>(
     );
   },
 );
-Heading.displayName = "Heading";
+Heading.displayName = "Heading"; // i18n-ignore
 
 const textVariants = cva("text-foreground", {
   variants: {
@@ -81,4 +81,4 @@ export const Text = React.forwardRef<HTMLElement, TextProps>(
     );
   },
 );
-Text.displayName = "Text";
+Text.displayName = "Text"; // i18n-ignore

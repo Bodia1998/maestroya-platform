@@ -16,5 +16,74 @@
   },
   "quotes": {
     "title": "Preventivi"
+  },
+  "quoteItems": {
+    "columns": {
+      "description": "Descrizione",
+      "type": "Tipo",
+      "quantity": "Q.tà",
+      "unitPrice": "Prezzo unitario",
+      "amount": "Importo"
+    },
+    "total": "Totale",
+    "category": {
+      "MATERIALS": "Materiali",
+      "LABOR": "Manodopera"
+    }
+  },
+  "urgency": {
+    "LOW": "Bassa",
+    "MEDIUM": "Media",
+    "HIGH": "Alta",
+    "EMERGENCY": "Emergenza"
+  },
+  "list": {
+    "title": "I miei lavori",
+    "subtitle": "L'avanzamento complessivo dei lavori per cui hai accettato un preventivo.",
+    "empty": {
+      "title": "Nessun lavoro attivo",
+      "description": "I lavori compaiono qui quando accetti il preventivo di un professionista e il lavoro inizia.",
+      "action": "Vedi le mie richieste"
+    }
+  },
+  "notStarted": "Non iniziato",
+  "detail": {
+    "title": "Lavoro",
+    "started": "Iniziato",
+    "completed": "Completato",
+    "cancellationReason": "Motivo dell'annullamento",
+    "appointments": "Appuntamenti di questo lavoro",
+    "noAppointments": "Ancora nessun appuntamento.",
+    "notScheduled": "Non ancora programmato",
+    "dateUnset": "—"
+  },
+  "cancellationReason": {
+    "CUSTOMER_REQUEST": "Richiesta del cliente",
+    "PROFESSIONAL_UNABLE_TO_COMPLETE": "Il professionista non può completarlo",
+    "SERVICE_REQUEST_ISSUE": "Problema con la richiesta",
+    "OTHER": "Altro"
+  },
+  "actions": {
+    "startWork": "Inizia il lavoro",
+    "starting": "Avvio…",
+    "markCompleted": "Segna il lavoro come completato",
+    "completing": "Completamento…",
+    "openAppointmentsWarning": "Questo lavoro ha ancora un appuntamento in sospeso. Conferma e completa (o annulla) tutti gli appuntamenti prima di segnarlo come completato.",
+    "cancelJob": "Annulla il lavoro",
+    "cancelTitle": "Annullare questo lavoro?",
+    "reason": "Motivo",
+    "note": "Nota (facoltativa)",
+    "cancelling": "Annullamento…",
+    "confirmCancel": "Sì, annulla",
+    "notNow": "Non ora"
+  },
+  "errors": {
+    "invalidJob": "Lavoro non valido.",
+    "startFailed": "Si è verificato un errore durante l'avvio del lavoro.",
+    "completeFailed": "Si è verificato un errore durante il completamento del lavoro.",
+    "cancelFailed": "Si è verificato un errore durante l'annullamento del lavoro.",
+    "confirmFailed": "Si è verificato un errore durante la conferma del lavoro.",
+    "disputeFailed": "Si è verificato un errore durante la contestazione del completamento del lavoro.",
+    "paymentFailed": "Si è verificato un errore durante l'avvio del pagamento. Riprova."
   }
 }

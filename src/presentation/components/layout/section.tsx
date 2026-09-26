@@ -88,4 +88,4 @@ export const Section = React.forwardRef<HTMLDivElement, SectionProps>(
     );
   },
 );
-Section.displayName = "Section";
+Section.displayName = "Section"; // i18n-ignore

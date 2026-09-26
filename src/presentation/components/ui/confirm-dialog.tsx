@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import * as React from "react";
 
 import type { ButtonVariantProps } from "./button-variants";
@@ -55,11 +56,13 @@ export function ConfirmDialog({
   children,
   confirmLabel,
   pendingLabel,
-  cancelLabel = "Cancel",
+  cancelLabel: cancelLabelProp,
   destructive = false,
   onConfirm,
   onOpenChange,
 }: ConfirmDialogProps) {
+  const t = useTranslations("ui");
+  const cancelLabel = cancelLabelProp ?? t("confirmDialog.cancel");
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -76,7 +79,7 @@ export function ConfirmDialog({
     const result = await onConfirm();
     setIsSubmitting(false);
     if (!result.success) {
-      setError(result.error ?? "Something went wrong. Please try again.");
+      setError(result.error ?? t("confirmDialog.genericError"));
       return;
     }
     handleOpenChange(false);

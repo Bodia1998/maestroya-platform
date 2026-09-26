@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { makeGetAppointmentUseCase } from "@/application/use-cases/booking/compose";
 import { NotFoundError } from "@/domain/errors/domain-error";
@@ -9,9 +11,12 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { StatusTimeline } from "@/components/dashboard/status-timeline";
 import { getAppointmentTimelineSteps } from "@/components/dashboard/appointment-timeline-steps";
-import { formatAppointmentWindow } from "@/shared/utils/format-appointment-window";
+import { formatAppointmentWindowLocalized } from "../appointment-window";
 
-export const metadata = { title: "Appointment" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("professional.appointments.detail");
+  return { title: t("metaTitle") };
+}
 
 /**
  * Professional-side mirror of appointments/[id]/page.tsx — same
@@ -44,11 +49,21 @@ export default async function ProfessionalAppointmentDetailPage({
 
   const canConfirm = appointment.status === "PROPOSED" && appointment.proposedByUserId !== user.id;
 
+  const [t, tAppointments, tList, format] = await Promise.all([
+    getTranslations("professional.appointments.detail"),
+    getTranslations("professional.appointments"),
+    getTranslations("professional.appointments.list"),
+    getFormatter(),
+  ]);
+  const windowLabel = (start: Date | null, end: Date | null) =>
+    formatAppointmentWindowLocalized(format, (values) => tAppointments("window", values), start, end, t("notSet"));
+  const reasonKey = `cancellationReasons.${appointment.cancellationReason ?? ""}`;
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Appointment"
-        breadcrumbs={[{ label: "My appointments", href: "/dashboard/professional/appointments" }, { label: "Appointment" }]}
+        title={t("title")}
+        breadcrumbs={[{ label: tList("title"), href: "/dashboard/professional/appointments" }, { label: t("title") }]}
         actions={<AppointmentStatusBadge status={appointment.status} />}
       />
 
@@ -56,18 +71,20 @@ export default async function ProfessionalAppointmentDetailPage({
 
       <ResponsiveGrid as="dl" cols="1-2" gap="sm" bordered>
         <div>
-          <dt className="text-foreground/60">Confirmed time</dt>
-          <dd>{formatAppointmentWindow(appointment.scheduledStart, appointment.scheduledEnd)}</dd>
+          <dt className="text-foreground/60">{t("confirmedTime")}</dt>
+          <dd>{windowLabel(appointment.scheduledStart, appointment.scheduledEnd)}</dd>
         </div>
         <div>
-          <dt className="text-foreground/60">Proposed time</dt>
-          <dd>{formatAppointmentWindow(appointment.proposedStart, appointment.proposedEnd)}</dd>
+          <dt className="text-foreground/60">{t("proposedTime")}</dt>
+          <dd>{windowLabel(appointment.proposedStart, appointment.proposedEnd)}</dd>
         </div>
         {appointment.status === "CANCELLED" && (
           <div className="sm:col-span-2">
-            <dt className="text-foreground/60">Cancellation reason</dt>
+            <dt className="text-foreground/60">{t("cancellationReason")}</dt>
             <dd>
-              {appointment.cancellationReason}
+              {appointment.cancellationReason && t.has(reasonKey as never)
+                ? t(reasonKey as never)
+                : appointment.cancellationReason}
               {appointment.cancellationNote ? ` — ${appointment.cancellationNote}` : ""}
             </dd>
           </div>

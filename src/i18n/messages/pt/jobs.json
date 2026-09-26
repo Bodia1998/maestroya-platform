@@ -16,5 +16,74 @@
   },
   "quotes": {
     "title": "Orçamentos"
+  },
+  "quoteItems": {
+    "columns": {
+      "description": "Descrição",
+      "type": "Tipo",
+      "quantity": "Qtd.",
+      "unitPrice": "Preço unitário",
+      "amount": "Montante"
+    },
+    "total": "Total",
+    "category": {
+      "MATERIALS": "Materiais",
+      "LABOR": "Mão de obra"
+    }
+  },
+  "urgency": {
+    "LOW": "Baixa",
+    "MEDIUM": "Média",
+    "HIGH": "Alta",
+    "EMERGENCY": "Emergência"
+  },
+  "list": {
+    "title": "Os meus trabalhos",
+    "subtitle": "O progresso geral dos trabalhos cujo orçamento aceitou.",
+    "empty": {
+      "title": "Sem trabalhos ativos",
+      "description": "Os trabalhos aparecem aqui quando aceitar o orçamento de um profissional e o trabalho começar.",
+      "action": "Ver os meus pedidos"
+    }
+  },
+  "notStarted": "Não iniciado",
+  "detail": {
+    "title": "Trabalho",
+    "started": "Iniciado",
+    "completed": "Concluído",
+    "cancellationReason": "Motivo do cancelamento",
+    "appointments": "Marcações deste trabalho",
+    "noAppointments": "Ainda não há marcações.",
+    "notScheduled": "Ainda não agendado",
+    "dateUnset": "—"
+  },
+  "cancellationReason": {
+    "CUSTOMER_REQUEST": "A pedido do cliente",
+    "PROFESSIONAL_UNABLE_TO_COMPLETE": "O profissional não pode concluí-lo",
+    "SERVICE_REQUEST_ISSUE": "Problema com o pedido",
+    "OTHER": "Outro"
+  },
+  "actions": {
+    "startWork": "Iniciar trabalho",
+    "starting": "A iniciar…",
+    "markCompleted": "Marcar trabalho como concluído",
+    "completing": "A concluir…",
+    "openAppointmentsWarning": "Este trabalho ainda tem uma marcação por resolver. Confirme e conclua (ou cancele) todas as marcações deste trabalho antes de o marcar como concluído.",
+    "cancelJob": "Cancelar trabalho",
+    "cancelTitle": "Cancelar este trabalho?",
+    "reason": "Motivo",
+    "note": "Nota (opcional)",
+    "cancelling": "A cancelar…",
+    "confirmCancel": "Sim, cancelar",
+    "notNow": "Agora não"
+  },
+  "errors": {
+    "invalidJob": "Trabalho inválido.",
+    "startFailed": "Ocorreu um erro ao iniciar este trabalho.",
+    "completeFailed": "Ocorreu um erro ao concluir este trabalho.",
+    "cancelFailed": "Ocorreu um erro ao cancelar este trabalho.",
+    "confirmFailed": "Ocorreu um erro ao confirmar este trabalho.",
+    "disputeFailed": "Ocorreu um erro ao contestar a conclusão deste trabalho.",
+    "paymentFailed": "Ocorreu um erro ao iniciar o seu pagamento. Tente novamente."
   }
 }

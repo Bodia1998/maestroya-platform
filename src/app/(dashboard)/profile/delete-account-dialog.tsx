@@ -1,7 +1,7 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -14,10 +14,14 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { FormActions } from "@/components/forms/form-actions";
 import { FormFieldError } from "@/components/forms/form-field-description";
 import { deleteAccountSchema, type DeleteAccountInput } from "@/application/dto/profile.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { deleteAccountAction } from "./actions";
 
 export function DeleteAccountDialog({ hasPassword }: { hasPassword: boolean }) {
   const router = useRouter();
+  const t = useTranslations("profile.deleteAccount");
+  const tCommon = useTranslations("common");
+  const resolver = useLocalizedZodResolver(deleteAccountSchema);
   const [isOpen, setIsOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -26,7 +30,7 @@ export function DeleteAccountDialog({ hasPassword }: { hasPassword: boolean }) {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<DeleteAccountInput>({
-    resolver: zodResolver(deleteAccountSchema),
+    resolver,
     defaultValues: { password: "", confirmationText: "DELETE" },
   });
 
@@ -45,11 +49,11 @@ export function DeleteAccountDialog({ hasPassword }: { hasPassword: boolean }) {
   return (
     <>
       <Button type="button" variant="outline" onClick={() => setIsOpen(true)}>
-        Deactivate account
+        {t("trigger")}
       </Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogHeader>
-          <DialogTitle className="text-danger">This will deactivate your account</DialogTitle>
+          <DialogTitle className="text-danger">{t("title")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
@@ -64,7 +68,7 @@ export function DeleteAccountDialog({ hasPassword }: { hasPassword: boolean }) {
               requiring one would be unsatisfiable, not just inconvenient. */}
           {hasPassword && (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="delete-password">Password</Label>
+              <Label htmlFor="delete-password">{t("password")}</Label>
               <PasswordInput
                 id="delete-password"
                 aria-invalid={!!errors.password}
@@ -76,7 +80,7 @@ export function DeleteAccountDialog({ hasPassword }: { hasPassword: boolean }) {
           )}
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="delete-confirmation">Type DELETE to confirm</Label>
+            <Label htmlFor="delete-confirmation">{t("confirmLabel", { token: "DELETE" })}</Label>
             <Input
               id="delete-confirmation"
               aria-invalid={!!errors.confirmationText}
@@ -88,10 +92,10 @@ export function DeleteAccountDialog({ hasPassword }: { hasPassword: boolean }) {
 
           <FormActions>
             <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
-              Cancel
+              {tCommon("actions.cancel")}
             </Button>
             <Button type="submit" variant="outline" disabled={isSubmitting}>
-              {isSubmitting ? "Deactivating…" : "Deactivate my account"}
+              {isSubmitting ? t("deactivating") : t("submit")}
             </Button>
           </FormActions>
         </form>

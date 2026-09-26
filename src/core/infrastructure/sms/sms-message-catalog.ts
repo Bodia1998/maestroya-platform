@@ -8,6 +8,8 @@ import it_sms from "@/i18n/messages/it/sms.json";
 import pt_sms from "@/i18n/messages/pt/sms.json";
 import ro_sms from "@/i18n/messages/ro/sms.json";
 import pl_sms from "@/i18n/messages/pl/sms.json";
+import ru_sms from "@/i18n/messages/ru/sms.json";
+import nl_sms from "@/i18n/messages/nl/sms.json";
 
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from "@/shared/i18n/locales";
 
@@ -69,6 +71,8 @@ export const SMS_MESSAGE_CATALOG: Record<Locale, SmsCatalog> = {
   pt: pt_sms,
   ro: ro_sms,
   pl: pl_sms,
+  ru: ru_sms,
+  nl: nl_sms,
 };
 
 /**

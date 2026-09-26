@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { NotFoundError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
@@ -9,7 +10,10 @@ import { MarkReadOnView } from "./mark-read-on-view";
 import { MessageComposer } from "./message-composer";
 import { MessageBubble } from "./message-bubble";
 
-export const metadata = { title: "Conversation" };
+export async function generateMetadata() {
+  const t = await getTranslations("customer.messages");
+  return { title: t("conversation") };
+}
 
 /**
  * Thread view for one Conversation the signed-in user belongs to.
@@ -38,18 +42,19 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const conversations = await makeListConversationsUseCase().execute(user.id);
   const conversation = conversations.find((c) => c.id === id);
   if (!conversation) notFound();
+  const t = await getTranslations("customer.messages");
 
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title={conversation.otherParticipant.name ?? "Marketplace user"}
+        title={conversation.otherParticipant.name ?? t("unknownParticipant")}
         subtitle={conversation.serviceRequestTitle}
-        breadcrumbs={[{ label: "Messages", href: "/messages" }, { label: conversation.otherParticipant.name ?? "Conversation" }]}
+        breadcrumbs={[{ label: t("title"), href: "/messages" }, { label: conversation.otherParticipant.name ?? t("conversation") }]}
         actions={
           conversation.otherParticipant.image ? (
             <Image
               src={conversation.otherParticipant.image}
-              alt={conversation.otherParticipant.name ?? "Participant"}
+              alt={conversation.otherParticipant.name ?? t("participant")}
               width={40}
               height={40}
               className="h-10 w-10 rounded-full object-cover"
@@ -65,7 +70,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
       <div className="flex flex-col gap-3">
         {messages.length === 0 ? (
           <p className="py-10 text-center text-sm text-foreground/60">
-            No messages yet. Say hello to get things started.
+            {t("emptyThread")}
           </p>
         ) : (
           messages.map((message) => (
@@ -83,7 +88,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         <MessageComposer conversationId={id} />
       ) : (
         <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-foreground/60">
-          This conversation is no longer open for new messages.
+          {t("closed")}
         </p>
       )}
     </div>

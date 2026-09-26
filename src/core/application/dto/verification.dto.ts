@@ -42,7 +42,7 @@ export const uploadVerificationDocumentSchema = z.object({
 export type UploadVerificationDocumentInput = z.infer<typeof uploadVerificationDocumentSchema>;
 
 export const verificationDocumentIdSchema = z.object({
-  documentId: z.string().uuid("Invalid document."),
+  documentId: z.string().uuid("dto.ids.document"),
 });
 export type VerificationDocumentIdInput = z.infer<typeof verificationDocumentIdSchema>;
 
@@ -54,24 +54,24 @@ export const listAdminVerificationsSchema = paginationSchema.extend({
 export type ListAdminVerificationsInput = z.infer<typeof listAdminVerificationsSchema>;
 
 export const adminVerificationIdSchema = z.object({
-  verificationId: z.string().uuid("Invalid verification."),
+  verificationId: z.string().uuid("dto.ids.verification"),
 });
 export type AdminVerificationIdInput = z.infer<typeof adminVerificationIdSchema>;
 
 const reviewReasonSchema = z
   .string()
   .trim()
-  .min(MIN_REVIEW_REASON_LENGTH, `Reason must be at least ${MIN_REVIEW_REASON_LENGTH} characters.`)
-  .max(MAX_REVIEW_REASON_LENGTH, `Reason must be ${MAX_REVIEW_REASON_LENGTH} characters or fewer.`);
+  .min(MIN_REVIEW_REASON_LENGTH, "minLength")
+  .max(MAX_REVIEW_REASON_LENGTH, "maxLength");
 
 export const rejectVerificationSchema = z.object({
-  verificationId: z.string().uuid("Invalid verification."),
+  verificationId: z.string().uuid("dto.ids.verification"),
   reason: reviewReasonSchema,
 });
 export type RejectVerificationInput = z.infer<typeof rejectVerificationSchema>;
 
 export const requestVerificationResubmissionSchema = z.object({
-  verificationId: z.string().uuid("Invalid verification."),
+  verificationId: z.string().uuid("dto.ids.verification"),
   reason: reviewReasonSchema,
 });
 export type RequestVerificationResubmissionInput = z.infer<typeof requestVerificationResubmissionSchema>;
@@ -93,7 +93,7 @@ export const startProviderVerificationSchema = z.object({
   countryCode: z
     .string()
     .trim()
-    .length(2, "Country code must be a 2-letter ISO 3166-1 code.")
+    .length(2, "dto.verification.countryCode")
     .toUpperCase()
     .default("ES"),
 });

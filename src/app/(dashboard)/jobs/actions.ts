@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import {
   cancelJobSchema,
@@ -16,8 +17,8 @@ import {
   makeDisputeJobCompletionUseCase,
   makeStartJobUseCase,
 } from "@/application/use-cases/job/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError, localizeZodError } from "@/presentation/i18n/server";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
@@ -25,12 +26,19 @@ export type ActionResult = { success: true } | { success: false; error: string }
 // appointments/actions.ts): domain errors surface their own safe,
 // user-facing message; anything else is logged server-side and replaced
 // with a generic one.
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+// Module 120 — Multilingual Localization: the fallback is a key in
+// `jobs.errors`, resolved in the request's locale.
+async function fromDomainError(
+  error: unknown,
+  fallbackKey: "startFailed" | "completeFailed" | "cancelFailed" | "confirmFailed" | "disputeFailed",
+): Promise<ActionResult> {
+  const t = await getTranslations("jobs.errors");
+  return { success: false, error: await localizeActionError(error, t(fallbackKey)) };
+}
+
+async function invalidJob(): Promise<ActionResult> {
+  const t = await getTranslations("jobs.errors");
+  return { success: false, error: t("invalidJob") };
 }
 
 // Both the customer- and professional-side job pages import these same
@@ -52,7 +60,7 @@ export async function startJobAction(jobId: string): Promise<ActionResult> {
   const user = await requireAuth();
   const parsed = startJobSchema.safeParse({ jobId });
   if (!parsed.success) {
-    return { success: false, error: "Invalid job." };
+    return invalidJob();
   }
 
   try {
@@ -60,7 +68,7 @@ export async function startJobAction(jobId: string): Promise<ActionResult> {
     revalidateJobPaths(jobId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong starting this job.");
+    return fromDomainError(error, "startFailed");
   }
 }
 
@@ -68,7 +76,7 @@ export async function completeJobAction(jobId: string): Promise<ActionResult> {
   const user = await requireAuth();
   const parsed = completeJobSchema.safeParse({ jobId });
   if (!parsed.success) {
-    return { success: false, error: "Invalid job." };
+    return invalidJob();
   }
 
   try {
@@ -76,7 +84,7 @@ export async function completeJobAction(jobId: string): Promise<ActionResult> {
     revalidateJobPaths(jobId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong completing this job.");
+    return fromDomainError(error, "completeFailed");
   }
 }
 
@@ -84,7 +92,7 @@ export async function cancelJobAction(jobId: string, reason: string, note: strin
   const user = await requireAuth();
   const parsed = cancelJobSchema.safeParse({ jobId, reason, note });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid cancellation." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
@@ -97,7 +105,7 @@ export async function cancelJobAction(jobId: string, reason: string, note: strin
     revalidateJobPaths(jobId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong cancelling this job.");
+    return fromDomainError(error, "cancelFailed");
   }
 }
 
@@ -112,7 +120,7 @@ export async function confirmJobCompletionAction(jobId: string): Promise<ActionR
   const user = await requireAuth();
   const parsed = confirmJobCompletionSchema.safeParse({ jobId });
   if (!parsed.success) {
-    return { success: false, error: "Invalid job." };
+    return invalidJob();
   }
 
   try {
@@ -120,7 +128,7 @@ export async function confirmJobCompletionAction(jobId: string): Promise<ActionR
     revalidateJobPaths(jobId);
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong confirming this job.");
+    return fromDomainError(error, "confirmFailed");
   }
 }
 
@@ -133,7 +141,7 @@ export async function disputeJobCompletionAction(input: {
   const user = await requireAuth();
   const parsed = disputeJobCompletionSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid dispute." };
+    return { success: false, error: await localizeZodError(parsed.error) };
   }
 
   try {
@@ -146,6 +154,6 @@ export async function disputeJobCompletionAction(input: {
     revalidatePath("/disputes");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong disputing this job's completion.");
+    return fromDomainError(error, "disputeFailed");
   }
 }

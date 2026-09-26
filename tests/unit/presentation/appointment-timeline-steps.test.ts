@@ -26,13 +26,13 @@ describe("getAppointmentTimelineSteps", () => {
   it("renders a two-step danger path for CANCELLED", () => {
     const steps = getAppointmentTimelineSteps("CANCELLED");
     expect(steps).toEqual([
-      { key: "PENDING_SCHEDULE", label: "Pending", state: "complete" },
-      { key: "CANCELLED", label: "Cancelled", state: "danger" },
+      { key: "PENDING_SCHEDULE", state: "complete" },
+      { key: "CANCELLED", state: "danger" },
     ]);
   });
 
   it("renders a two-step danger path for RESCHEDULED", () => {
     const steps = getAppointmentTimelineSteps("RESCHEDULED");
-    expect(steps[1]).toEqual({ key: "RESCHEDULED", label: "Rescheduled", state: "danger" });
+    expect(steps[1]).toEqual({ key: "RESCHEDULED", state: "danger" });
   });
 });

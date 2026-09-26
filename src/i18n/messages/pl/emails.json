@@ -3,17 +3,20 @@
     "greeting": "Cześć {name},",
     "signature": "Zespół MaestroYa",
     "footer": "Otrzymujesz tę wiadomość, ponieważ masz konto w MaestroYa.",
-    "ignoreNotice": "Jeśli to nie Ty wysłałeś tę prośbę, zignoruj tę wiadomość."
+    "ignoreNotice": "Jeśli to nie Ty wysłałeś tę prośbę, zignoruj tę wiadomość.",
+    "linkFallback": "Jeśli przycisk nie działa, skopiuj ten link i wklej go w przeglądarce:"
   },
   "verifyEmail": {
     "subject": "Zweryfikuj swój adres e-mail",
     "body": "Potwierdź swój adres e-mail, aby aktywować konto MaestroYa.",
-    "cta": "Zweryfikuj e-mail"
+    "cta": "Zweryfikuj e-mail",
+    "expiresIn": "Link wygaśnie za {hours, plural, one {# godzinę} few {# godziny} many {# godzin} other {# godziny}}."
   },
   "resetPassword": {
     "subject": "Zresetuj hasło",
     "body": "Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta.",
     "cta": "Ustaw nowe hasło",
-    "expiry": "Ten link wygasa {date, date, medium} o {date, time, short}."
+    "expiry": "Ten link wygasa {date, date, medium} o {date, time, short}.",
+    "expiresIn": "Link wygaśnie za {hours, plural, one {# godzinę} few {# godziny} many {# godzin} other {# godziny}}."
   }
 }

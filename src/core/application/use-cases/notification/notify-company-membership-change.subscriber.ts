@@ -60,6 +60,9 @@ export class NotifyCompanyMembershipChangeSubscriber implements EventHandler<Com
           resourceType: "COMPANY",
           resourceId: event.companyId,
           actionUrl: "/dashboard/company/members",
+          // Module 120: the value the localized template renders
+          // (`notificationTemplates.COMPANY_MEMBER_ROLE_CHANGED.message`).
+          metadata: { role: event.newRole },
         };
       case "REMOVED":
         return {

@@ -1,24 +1,252 @@
 {
   "hero": {
     "title": "Finde vertrauenswürdige Fachleute für dein Zuhause",
-    "subtitle": "Beschreibe, was du brauchst, und erhalte Angebote von geprüften Fachleuten in deiner Nähe.",
+    "subtitle": "Beschreibe, was du brauchst, vergleiche Angebote und beauftrage die passende Fachkraft in deiner Nähe – alles über MaestroYa.",
     "ctaPrimary": "Anfrage stellen",
-    "ctaSecondary": "Fachleute entdecken"
+    "ctaSecondary": "Fachleute entdecken",
+    "or": "oder",
+    "highlights": {
+      "verified": "Verifizierte Fachleute",
+      "reviews": "Bewertungen echter Kunden",
+      "audience": "Privatpersonen und Unternehmen"
+    },
+    "search": {
+      "serviceLabel": "Welche Dienstleistung brauchst du?",
+      "locationLabel": "Wo brauchst du sie?",
+      "locationPlaceholder": "Stadt oder Postleitzahl",
+      "submit": "Fachleute finden"
+    }
   },
   "howItWorks": {
     "title": "So funktioniert's",
     "step1": "Beschreibe, was du brauchst",
     "step2": "Angebote erhalten",
-    "step3": "Wähle deine Fachkraft"
+    "step3": "Wähle deine Fachkraft",
+    "subtitle": "Von der Anfrage bis zum erledigten Auftrag in vier Schritten.",
+    "steps": {
+      "one": {
+        "title": "Sag uns, was du brauchst",
+        "description": "Beschreibe die Arbeit, wähle die Kategorie und veröffentliche deine Anfrage in wenigen Minuten."
+      },
+      "two": {
+        "title": "Angebote erhalten",
+        "description": "Interessierte Fachleute, die in deiner Gegend verfügbar sind, schicken dir ihre Angebote."
+      },
+      "three": {
+        "title": "Vergleichen und auswählen",
+        "description": "Sieh dir Profile, Bewertungen und Angebote an und sprich mit der Fachkraft, bevor du dich entscheidest."
+      },
+      "four": {
+        "title": "Buchen und bewerten",
+        "description": "Vereinbare den Termin, verfolge den Auftrag bis zum Abschluss und hinterlasse deine Bewertung."
+      }
+    },
+    "cta": "Jetzt starten"
   },
   "professionals": {
-    "title": "Fachleute"
+    "title": "Fachleute",
+    "heading": "Finde eine Fachkraft",
+    "subtitle": "Suche nach Dienstleistung und Standort, um Fachleute zu sehen, die in deiner Gegend arbeiten.",
+    "invalid": "Diese Suche ist ungültig – bitte versuche es erneut.",
+    "failed": "Bei der Suche ist etwas schiefgelaufen.",
+    "found": "{count, plural, one {# Fachkraft gefunden} other {# Fachleute gefunden}}",
+    "companiesFound": "{count, plural, one {# Unternehmen gefunden} other {# Unternehmen gefunden}}",
+    "verified": "✓ Verifiziert",
+    "form": {
+      "serviceLabel": "Dienstleistung",
+      "selectService": "Dienstleistung auswählen…",
+      "latitude": "Breitengrad",
+      "longitude": "Längengrad",
+      "latitudePlaceholder": "z. B. 38.9665",
+      "longitudePlaceholder": "z. B. -0.1817",
+      "useMyLocation": "Meinen aktuellen Standort verwenden",
+      "locating": "Standort wird ermittelt…",
+      "notSupported": "Dein Browser unterstützt keine Standortdienste.",
+      "locationFailed": "Dein Standort konnte nicht ermittelt werden. Gib ihn unten manuell ein.",
+      "submit": "Fachleute suchen",
+      "submitting": "Suche läuft…"
+    },
+    "results": {
+      "empty": "Für diese Dienstleistung wurden in der Nähe dieses Standorts noch keine Fachleute gefunden.",
+      "distance": "{distance} km entfernt"
+    },
+    "verification": {
+      "UNVERIFIED": "Nicht verifiziert",
+      "PENDING": "Verifizierung ausstehend",
+      "VERIFIED": "Verifizierte Fachkraft",
+      "REJECTED": "Verifizierung abgelehnt"
+    },
+    "profile": {
+      "about": "Über mich",
+      "experience": "Erfahrung",
+      "experienceYears": "{count, plural, one {# Jahr} other {# Jahre}}",
+      "serviceArea": "Einsatzgebiet",
+      "withinKm": "Im Umkreis von {km} km",
+      "readyText": "Bereit loszulegen? Veröffentliche eine Anfrage, und {name} – zusammen mit allen anderen passenden Fachleuten in der Nähe – kann sie prüfen und dir ein Angebot schicken.",
+      "requestService": "Diese Dienstleistung anfragen"
+    }
   },
   "search": {
     "title": "Fachleute finden",
-    "resultCount": "{count, plural, =0 {Keine Ergebnisse} one {# Fachkraft} other {# Fachkräfte}}"
+    "resultCount": "{count, plural, =0 {Keine Ergebnisse} one {# Fachkraft} other {# Fachkräfte}}",
+    "heading": "Finde eine Fachkraft oder ein Unternehmen",
+    "subtitle": "Suche nach Dienstleistung, Stadt, Bewertung und Verifizierung – Fachleute und Unternehmen gemeinsam gerankt.",
+    "invalid": "Diese Suche ist ungültig – bitte passe die Filter an und versuche es erneut.",
+    "failed": "Bei der Suche ist etwas schiefgelaufen.",
+    "resultsFound": "{count, plural, one {# Ergebnis gefunden} other {# Ergebnisse gefunden}}",
+    "form": {
+      "queryLabel": "Was brauchst du?",
+      "queryPlaceholder": "z. B. Elektriker, Klimaanlage…",
+      "serviceLabel": "Dienstleistung",
+      "anyService": "Alle Dienstleistungen",
+      "cityLabel": "Stadt",
+      "cityPlaceholder": "z. B. Gandia",
+      "minRatingLabel": "Mindestbewertung",
+      "anyRating": "Alle Bewertungen",
+      "ratingOption": "{rating}+ Sterne",
+      "sortByLabel": "Sortieren nach",
+      "sort": {
+        "RELEVANCE": "Beste Übereinstimmung",
+        "RATING": "Am besten bewertet",
+        "REVIEWS": "Meiste Bewertungen",
+        "NEWEST": "Neueste",
+        "VERIFIED": "Verifizierte zuerst"
+      },
+      "verifiedOnly": "Nur verifizierte",
+      "nearLocation": "In der Nähe eines Ortes suchen (optional)",
+      "submit": "Suchen"
+    },
+    "location": {
+      "useMyLocation": "Meinen Standort verwenden",
+      "locating": "Standort wird ermittelt…",
+      "clear": "Entfernen",
+      "unknownAddress": "Unbekannte Adresse in der Nähe dieses Punkts",
+      "notSupported": "Dein Browser unterstützt keine Standortdienste.",
+      "failed": "Dein Standort konnte nicht ermittelt werden. Klicke stattdessen auf einen Punkt auf der Karte.",
+      "near": "In der Nähe von {address}",
+      "radiusLabel": "Suchradius (km)",
+      "radiusPlaceholder": "z. B. 25",
+      "invalid": "Dieser Standort scheint ungültig zu sein.",
+      "reverseGeocodeFailed": "Für diesen Standort konnte keine Adresse ermittelt werden."
+    },
+    "results": {
+      "empty": "Noch keine Ergebnisse für diese Filter.",
+      "kindProfessional": "Fachkraft",
+      "kindCompany": "Unternehmen",
+      "reasons": {
+        "verified": "Verifizierte Fachkraft",
+        "highlyRated": "Sehr gut bewertet ({rating}/5 aus {count, plural, one {# Bewertung} other {# Bewertungen}})",
+        "manyJobs": "Viele abgeschlossene Aufträge",
+        "inCity": "In der gesuchten Stadt ansässig",
+        "inRegion": "In der gesuchten Region ansässig",
+        "categoryMatch": "Passt zur gesuchten Dienstleistungskategorie",
+        "portfolio": "Portfolio vorhanden ({count, plural, one {# Eintrag} other {# Einträge}})",
+        "completeProfile": "Starkes, vollständiges Profil"
+      }
+    }
   },
   "footer": {
-    "rights": "© {year, number} MaestroYa. Alle Rechte vorbehalten."
+    "rights": "© {year} MaestroYa. Alle Rechte vorbehalten.",
+    "tagline": "Wir bringen Menschen, die eine Dienstleistung rund ums Zuhause brauchen, mit vertrauenswürdigen Fachleuten in ihrer Nähe zusammen.",
+    "madeIn": "Gemacht in Spanien für spanische Haushalte.",
+    "customers": "Kunden",
+    "professionals": "Fachleute",
+    "account": "Konto",
+    "directory": "Verzeichnis der Fachleute",
+    "joinAsProfessional": "Als Fachkraft mitmachen",
+    "professionalDashboard": "Zu meinem Dashboard",
+    "forgotPassword": "Passwort wiederherstellen"
+  },
+  "meta": {
+    "home": {
+      "title": "MaestroYa – Vertrauenswürdige Fachleute für dein Zuhause",
+      "description": "Beschreibe, was du brauchst, und finde verifizierte Fachleute in deiner Nähe: Sanitär, Elektrik, Renovierung, Reinigung und vieles mehr."
+    },
+    "search": {
+      "title": "Fachleute und Unternehmen suchen",
+      "description": "Filtere nach Kategorie, Stadt, Bewertung und Verifizierung, um die passende Fachkraft oder das passende Unternehmen für dein Projekt zu finden."
+    },
+    "professionals": {
+      "title": "Finde eine Fachkraft in deiner Nähe",
+      "description": "Suche verifizierte Fachleute nach Dienstleistungskategorie und Standort, sortiert nach Entfernung."
+    },
+    "professionalProfile": {
+      "descriptionWithLocation": "Verifizierte Fachkraft in {location}. Sieh dir das Profil an und fordere auf MaestroYa ein Angebot an.",
+      "description": "Sieh dir das Profil dieser Fachkraft an und fordere auf MaestroYa ein Angebot an."
+    },
+    "companyProfile": {
+      "descriptionWithLocation": "Unternehmen für Haushaltsdienstleistungen in {location}. Sieh dir das Profil auf MaestroYa an.",
+      "description": "Sieh dir das Profil dieses Unternehmens an und fordere auf MaestroYa ein Angebot an."
+    }
+  },
+  "categories": {
+    "title": "Beliebteste Dienstleistungen",
+    "subtitle": "Wähle eine Kategorie, um verifizierte Fachleute in deiner Nähe zu sehen."
+  },
+  "trust": {
+    "title": "Damit du jedem Auftrag vertrauen kannst",
+    "subtitle": "Mit MaestroYa weißt du jederzeit, mit wem du sprichst und was du beauftragst.",
+    "verified": {
+      "title": "Verifizierte Fachleute",
+      "description": "Fachleute können ihre Identität – und Unternehmen ihre Unterlagen – verifizieren, bevor sie auf der Plattform tätig werden."
+    },
+    "quotes": {
+      "title": "Klare Angebote",
+      "description": "Erhalte detaillierte Angebote von mehreren Fachleuten und vergleiche sie, bevor du dich entscheidest."
+    },
+    "communication": {
+      "title": "Kommunikation auf der Plattform",
+      "description": "Sprich vor und während der Dienstleistung direkt über MaestroYa mit der Fachkraft."
+    },
+    "reviews": {
+      "title": "Echte Bewertungen",
+      "description": "Jeder abgeschlossene Auftrag kann bewertet werden – sichtbar im Profil der Fachkraft."
+    },
+    "tracking": {
+      "title": "Auftragsverfolgung",
+      "description": "Verfolge den Status deiner Anfrage, deines Termins und deines Auftrags jederzeit in deinem Dashboard."
+    },
+    "support": {
+      "title": "Support, wenn etwas schiefgeht",
+      "description": "Wenn ein Problem auftritt, kannst du eine Supportanfrage stellen, und unser Support-Team hilft dir."
+    }
+  },
+  "professionalCta": {
+    "badge": "Für Fachleute",
+    "title": "Bist du Fachkraft? Gewinne neue Kunden mit MaestroYa",
+    "benefits": {
+      "leads": "Erhalte Anfragen von Kunden, die deine Dienstleistungskategorie suchen",
+      "profile": "Erstelle dein Fachkraft-Profil und zeige deine Erfahrung und dein Portfolio",
+      "quotes": "Sende Angebote direkt aus deinem Dashboard",
+      "schedule": "Verwalte Termine und Aufträge von Anfang bis Ende",
+      "reputation": "Baue deinen Ruf mit den Bewertungen deiner Kunden auf"
+    },
+    "join": "Als Fachkraft mitmachen",
+    "haveAccount": "Ich habe schon ein Konto"
+  },
+  "errorPage": {
+    "title": "Etwas ist schiefgelaufen",
+    "retry": "Erneut versuchen"
+  },
+  "notFound": {
+    "message": "Diese Seite wurde nicht gefunden.",
+    "backHome": "Zur Startseite"
+  },
+  "directory": {
+    "backToSearch": "← Zurück zur Suche",
+    "viewProfile": "Profil ansehen",
+    "about": "Über uns",
+    "services": "Dienstleistungen",
+    "basedNear": "Region",
+    "locationNotSet": "Kein Standort angegeben",
+    "teamOf": "{count, plural, one {Team aus # Person} other {Team aus # Personen}}",
+    "verifiedCompany": "✓ Verifiziertes Unternehmen"
+  },
+  "companies": {
+    "profile": {
+      "teamSize": "Teamgröße",
+      "rating": "Bewertung",
+      "portfolio": "Portfolio"
+    }
   }
 }

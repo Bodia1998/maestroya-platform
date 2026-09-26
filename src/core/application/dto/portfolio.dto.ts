@@ -17,16 +17,16 @@ export const createPortfolioItemSchema = z.object({
   title: z
     .string()
     .trim()
-    .min(MIN_TITLE_LENGTH, `Title must be at least ${MIN_TITLE_LENGTH} characters.`)
-    .max(MAX_TITLE_LENGTH, `Title must be ${MAX_TITLE_LENGTH} characters or fewer.`),
+    .min(MIN_TITLE_LENGTH, "minLength")
+    .max(MAX_TITLE_LENGTH, "maxLength"),
   description: z
     .string()
     .trim()
-    .max(MAX_DESCRIPTION_LENGTH, `Description must be ${MAX_DESCRIPTION_LENGTH} characters or fewer.`)
+    .max(MAX_DESCRIPTION_LENGTH, "maxLength")
     .optional()
     .or(z.literal("")),
-  mediaUrl: z.string().trim().url("Enter a valid media URL."),
-  serviceCategoryId: z.string().uuid("Invalid service category.").optional().or(z.literal("")),
+  mediaUrl: z.string().trim().url("dto.portfolio.mediaUrlInvalid"),
+  serviceCategoryId: z.string().uuid("dto.ids.serviceCategory").optional().or(z.literal("")),
 });
 export type CreatePortfolioItemInput = z.infer<typeof createPortfolioItemSchema>;
 
@@ -37,7 +37,7 @@ export const updatePortfolioItemSchema = createPortfolioItemSchema;
 export type UpdatePortfolioItemInput = z.infer<typeof updatePortfolioItemSchema>;
 
 export const listPortfolioItemsSchema = z.object({
-  professionalProfileId: z.string().uuid("Invalid professional."),
+  professionalProfileId: z.string().uuid("dto.ids.professional"),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),
 });

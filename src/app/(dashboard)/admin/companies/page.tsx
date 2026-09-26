@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Building2 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { reactivateCompanyFormAction, suspendCompanyFormAction } from "@/app/(dashboard)/admin/companies/actions";
 import { makeListAdminCompaniesUseCase } from "@/application/use-cases/admin/compose";
@@ -14,7 +15,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 
-export const metadata = { title: "Admin — Companies" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("companiesPage.title") }) };
+}
+
+const STATUS_FILTER_OPTIONS = ["PENDING", "ACTIVE", "SUSPENDED", "DEACTIVATED"] as const;
 
 type SearchParams = Promise<{ page?: string; search?: string; status?: string }>;
 
@@ -35,6 +41,9 @@ export default async function AdminCompaniesPage({ searchParams }: { searchParam
     status: status as never,
   });
 
+  const t = await getTranslations("admin");
+  const srOnly = (chunks: React.ReactNode) => <span className="sr-only">{chunks}</span>;
+
   const qs = (extra: string) => {
     const parts = [extra];
     if (search) parts.push(`search=${encodeURIComponent(search)}`);
@@ -44,38 +53,39 @@ export default async function AdminCompaniesPage({ searchParams }: { searchParam
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Companies" subtitle="Company profiles, owners, verification, and status." />
+      <PageHeader title={t("companiesPage.title")} subtitle={t("companiesPage.subtitle")} />
 
-      <AdminFilterForm aria-label="Search and filter companies" submitLabel="Filter">
+      <AdminFilterForm aria-label={t("companiesPage.searchLabel")} submitLabel={t("table.filter")}>
         <Input
           type="text"
           name="search"
           defaultValue={search}
-          placeholder="Search by legal/trade name, owner name, or email"
-          aria-label="Search by legal/trade name, owner name, or email"
+          placeholder={t("companiesPage.searchPlaceholder")}
+          aria-label={t("companiesPage.searchPlaceholder")}
           className="h-10 flex-1 min-w-[220px]"
         />
-        <Select name="status" defaultValue={status ?? ""} aria-label="Filter by status" className="h-10 w-auto">
-          <option value="">All statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="ACTIVE">Active</option>
-          <option value="SUSPENDED">Suspended</option>
-          <option value="DEACTIVATED">Deactivated</option>
+        <Select name="status" defaultValue={status ?? ""} aria-label={t("common.filterByStatus")} className="h-10 w-auto">
+          <option value="">{t("common.allStatuses")}</option>
+          {STATUS_FILTER_OPTIONS.map((value) => (
+            <option key={value} value={value}>
+              {t(`statusOptions.${value}`)}
+            </option>
+          ))}
         </Select>
       </AdminFilterForm>
 
       {companies.length === 0 ? (
-        <EmptyState icon={Building2} title="No companies found" description="Try a different search or filter." />
+        <EmptyState icon={Building2} title={t("companiesPage.empty")} description={t("common.tryDifferentFilter")} />
       ) : (
-        <AdminDataTable caption="Companies" minWidth={720}>
+        <AdminDataTable caption={t("companiesPage.title")} minWidth={720}>
           <AdminTableHeadRow>
-            <AdminTh>Legal name</AdminTh>
-            <AdminTh>Owner</AdminTh>
-            <AdminTh>Members</AdminTh>
-            <AdminTh>Status</AdminTh>
-            <AdminTh>Verified</AdminTh>
-            <AdminTh>Rating</AdminTh>
-            <AdminTh>Actions</AdminTh>
+            <AdminTh>{t("companiesPage.columns.legalName")}</AdminTh>
+            <AdminTh>{t("common.columns.owner")}</AdminTh>
+            <AdminTh>{t("common.columns.members")}</AdminTh>
+            <AdminTh>{t("common.columns.status")}</AdminTh>
+            <AdminTh>{t("common.columns.verified")}</AdminTh>
+            <AdminTh>{t("common.columns.rating")}</AdminTh>
+            <AdminTh>{t("common.columns.actions")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {companies.map((company) => (
@@ -90,7 +100,7 @@ export default async function AdminCompaniesPage({ searchParams }: { searchParam
                 <td className="px-4 py-3">
                   <StatusBadge status={company.status} />
                 </td>
-                <td className="px-4 py-3">{company.isVerified ? "Yes" : "No"}</td>
+                <td className="px-4 py-3">{company.isVerified ? t("common.yes") : t("common.no")}</td>
                 <td className="px-4 py-3">
                   {company.averageRating !== null ? `${company.averageRating} (${company.reviewCount})` : "—"}
                 </td>
@@ -99,14 +109,15 @@ export default async function AdminCompaniesPage({ searchParams }: { searchParam
                     {(company.status === "ACTIVE" || company.status === "PENDING") && (
                       <form action={suspendCompanyFormAction.bind(null, company.id)}>
                         <AdminRowActionButton>
-                          Suspend<span className="sr-only"> company {company.tradeName ?? company.legalName}</span>
+                          {t.rich("companiesPage.suspend", { name: company.tradeName ?? company.legalName, sr: srOnly })}
                         </AdminRowActionButton>
                       </form>
                     )}
                     {company.status === "SUSPENDED" && (
                       <form action={reactivateCompanyFormAction.bind(null, company.id)}>
                         <AdminRowActionButton>
-                          Reactivate<span className="sr-only"> company {company.tradeName ?? company.legalName}</span>
+                          {t.rich("companiesPage.reactivate", { name: company.tradeName ?? company.legalName, sr: srOnly })}
+
                         </AdminRowActionButton>
                       </form>
                     )}

@@ -1,0 +1,13 @@
+{
+  "title": "Beheerpaneel",
+  "users": "Gebruikers",
+  "jobs": "Opdrachten",
+  "disputes": "Geschillen",
+  "supportTickets": "Supporttickets",
+  "verifications": "Verificaties",
+  "companies": "Bedrijven",
+  "reviews": "Beoordelingen",
+  "auditLogs": "Auditlogboek",
+  "analytics": "Analyses",
+  "accessDenied": "Je hebt geen toegang tot dit onderdeel."
+}

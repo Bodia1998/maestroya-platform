@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { DomainError } from "@/domain/errors/domain-error";
+import { localizeActionError } from "@/presentation/i18n/server";
 import { getCurrentUser } from "@/infrastructure/auth/rbac";
 import { logger } from "@/infrastructure/observability/logger";
 import { createErrorReporter } from "@/infrastructure/observability/error-reporter-factory";
@@ -44,19 +46,19 @@ async function handle(request: NextRequest, action: "subscribe" | "unsubscribe")
 
   const user = await getCurrentUser();
   if (!user) {
-    return NextResponse.json({ status: "error", message: "Unauthorized." }, { status: 401, headers });
+    return NextResponse.json({ status: "error", message: await errorsT("domain.signInRequired") }, { status: 401, headers });
   }
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ status: "error", message: "Invalid JSON body." }, { status: 400, headers });
+    return NextResponse.json({ status: "error", message: await errorsT("byCode.VALIDATION_ERROR") }, { status: 400, headers });
   }
 
   const parsed = channelActionSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ status: "error", message: "connectionId and channel are required." }, { status: 400, headers });
+    return NextResponse.json({ status: "error", message: await errorsT("byCode.VALIDATION_ERROR") }, { status: 400, headers });
   }
 
   try {
@@ -69,7 +71,7 @@ async function handle(request: NextRequest, action: "subscribe" | "unsubscribe")
   } catch (error) {
     if (error instanceof DomainError) {
       const status = error.code === "UNAUTHORIZED" ? 403 : 400;
-      return NextResponse.json({ status: "error", message: error.message }, { status, headers });
+      return NextResponse.json({ status: "error", message: await localizeActionError(error) }, { status, headers });
     }
     logger.error("realtime_channel_action_failed", { requestId, route: "/api/realtime/channels", action, error });
     createErrorReporter().reportException(error, {
@@ -77,6 +79,16 @@ async function handle(request: NextRequest, action: "subscribe" | "unsubscribe")
       extra: { requestId, action },
       user: { id: user.id },
     });
-    return NextResponse.json({ status: "error", message: "Could not update channel subscription." }, { status: 500, headers });
+    return NextResponse.json({ status: "error", message: await errorsT("generic") }, { status: 500, headers });
   }
+}
+
+/**
+ * Module 120 — Multilingual Localization: user-facing error text in the
+ * request's language (`errors` namespace); JSON shape and status codes are
+ * unchanged.
+ */
+async function errorsT(key: "domain.signInRequired" | "byCode.VALIDATION_ERROR" | "generic"): Promise<string> {
+  const t = await getTranslations("errors");
+  return t(key);
 }

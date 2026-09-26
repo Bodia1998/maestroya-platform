@@ -1,0 +1,30 @@
+{
+  "site": {
+    "defaultTitle": "MaestroYa — Finde vertrauenswürdige Fachleute für dein Zuhause",
+    "description": "Finde vertrauenswürdige Fachleute für dein Zuhause: Sanitär, Elektroarbeiten, Renovierungen, Reinigung und vieles mehr."
+  },
+  "servicesIndex": {
+    "title": "Haushaltsdienstleistungen auf MaestroYa",
+    "description": "Sieh dir die auf MaestroYa verfügbaren Kategorien von Haushaltsdienstleistungen an: Sanitär, Elektroarbeiten, Klimaanlagen, Malerarbeiten, Renovierungen und Möbelmontage."
+  },
+  "servicePage": {
+    "title": "{service} — MaestroYa",
+    "descriptionFallback": "Fordere über MaestroYa eine Fachkraft für die Kategorie „{service}“ an und vergleiche Angebote."
+  },
+  "serviceLocationPage": {
+    "title": "{service} in {city} — MaestroYa",
+    "description": "Frage über MaestroYa eine Dienstleistung der Kategorie „{service}“ in {city} ({province}) an und vergleiche Angebote."
+  },
+  "locationsIndex": {
+    "title": "Standorte — MaestroYa in Spanien",
+    "description": "MaestroYa ist ein Marktplatz für Haushaltsdienstleistungen, der darauf ausgelegt ist, in ganz Spanien tätig zu sein. Sieh dir die Reichweite der Plattform und die Orte mit bestätigter Abdeckung an."
+  },
+  "locationPage": {
+    "title": "Fachleute in {city} — MaestroYa",
+    "description": "Haushaltsdienstleistungen, die in {city} ({province}) über MaestroYa verfügbar sind."
+  },
+  "nationalCoverage": {
+    "title": "MaestroYa in Spanien — landesweite Abdeckung",
+    "description": "MaestroYa ist ein Marktplatz für Haushaltsdienstleistungen, der darauf ausgelegt ist, in ganz Spanien tätig zu sein. Die tatsächliche Verfügbarkeit von Fachleuten hängt vom jeweiligen Gebiet ab."
+  }
+}

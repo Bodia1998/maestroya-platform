@@ -1,0 +1,30 @@
+{
+  "site": {
+    "defaultTitle": "MaestroYa — Trova professionisti affidabili per la tua casa",
+    "description": "Entra in contatto con professionisti affidabili per la tua casa: idraulica, impianti elettrici, ristrutturazioni, pulizie e molto altro."
+  },
+  "servicesIndex": {
+    "title": "Servizi per la casa su MaestroYa",
+    "description": "Consulta le categorie di servizi per la casa disponibili su MaestroYa: idraulica, impianti elettrici, aria condizionata, tinteggiatura, ristrutturazioni e montaggio mobili."
+  },
+  "servicePage": {
+    "title": "{service} — MaestroYa",
+    "descriptionFallback": "Richiedi un professionista nella categoria «{service}» tramite MaestroYa e confronta i preventivi."
+  },
+  "serviceLocationPage": {
+    "title": "{service} a {city} — MaestroYa",
+    "description": "Richiedi un servizio nella categoria «{service}» a {city} ({province}) tramite MaestroYa e confronta i preventivi."
+  },
+  "locationsIndex": {
+    "title": "Località — MaestroYa in Spagna",
+    "description": "MaestroYa è un marketplace di servizi per la casa pensato per operare in tutta la Spagna. Consulta la portata della piattaforma e le località con copertura confermata."
+  },
+  "locationPage": {
+    "title": "Professionisti a {city} — MaestroYa",
+    "description": "Servizi per la casa disponibili a {city} ({province}) tramite MaestroYa."
+  },
+  "nationalCoverage": {
+    "title": "MaestroYa in Spagna — copertura nazionale",
+    "description": "MaestroYa è un marketplace di servizi per la casa pensato per operare in tutta la Spagna. La disponibilità effettiva di professionisti dipende da ciascuna zona."
+  }
+}

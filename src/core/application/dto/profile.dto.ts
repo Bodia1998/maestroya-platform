@@ -17,23 +17,23 @@ export const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5MB
 // can reuse the exact same address validation rules instead of a second,
 // possibly-drifting copy — see professional.dto.ts's professionalOnboardingSchema.
 export const addressSchema = z.object({
-  line1: z.string().trim().min(1, "Enter a street address.").max(200),
+  line1: z.string().trim().min(1, "dto.address.street").max(200),
   line2: z.string().trim().max(200).optional().or(z.literal("")),
-  city: z.string().trim().min(1, "Enter a city.").max(100),
+  city: z.string().trim().min(1, "dto.address.city").max(100),
   province: z.string().trim().max(100).optional().or(z.literal("")),
-  postalCode: z.string().trim().min(1, "Enter a postal code.").max(20),
-  country: z.string().trim().min(2, "Enter a country.").max(100).default("ES"),
+  postalCode: z.string().trim().min(1, "dto.address.postalCode").max(20),
+  country: z.string().trim().min(2, "dto.address.country").max(100).default("ES"),
 });
 
 export const updateProfileSchema = z.object({
-  name: z.string().trim().min(2, "Enter your name.").max(100),
+  name: z.string().trim().min(2, "dto.auth.nameRequired").max(100),
   phone: z
     .string()
     .trim()
-    .regex(/^\+?[0-9\s-]{7,20}$/, "Enter a valid phone number.")
+    .regex(/^\+?[0-9\s-]{7,20}$/, "phone")
     .optional()
     .or(z.literal("")),
-  timezone: z.string().trim().min(1, "Select a timezone.").max(100).optional(),
+  timezone: z.string().trim().min(1, "dto.profile.timezoneRequired").max(100).optional(),
   // Empty string ("No preference" option) explicitly clears the
   // preference (-> null) rather than being rejected as an invalid UUID —
   // preferredLanguageId is nullable on User, so the form must be able to
@@ -57,22 +57,22 @@ export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Enter your current password."),
+    currentPassword: z.string().min(1, "dto.profile.currentPasswordRequired"),
     newPassword: z
       .string()
-      .min(10, "Password must be at least 10 characters.")
-      .max(128, "Password is too long.")
-      .regex(/[a-z]/, "Password must include a lowercase letter.")
-      .regex(/[A-Z]/, "Password must include an uppercase letter.")
-      .regex(/[0-9]/, "Password must include a number."),
+      .min(10, "dto.password.minLength")
+      .max(128, "dto.password.tooLong")
+      .regex(/[a-z]/, "dto.password.lowercase")
+      .regex(/[A-Z]/, "dto.password.uppercase")
+      .regex(/[0-9]/, "dto.password.number"),
     confirmNewPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmNewPassword, {
-    message: "Passwords do not match.",
+    message: "dto.auth.passwordsMismatch",
     path: ["confirmNewPassword"],
   })
   .refine((data) => data.currentPassword !== data.newPassword, {
-    message: "New password must be different from your current password.",
+    message: "dto.profile.passwordMustDiffer",
     path: ["newPassword"],
   });
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
@@ -83,7 +83,7 @@ export const deleteAccountSchema = z.object({
   // account actually has a password", since only it knows that.
   password: z.string().optional(),
   confirmationText: z.literal("DELETE", {
-    errorMap: () => ({ message: 'Type "DELETE" to confirm.' }),
+    errorMap: () => ({ message: "dto.profile.deleteConfirm" }),
   }),
 });
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;

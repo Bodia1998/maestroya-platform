@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
@@ -33,13 +34,17 @@ export function Combobox({
   options,
   value,
   onValueChange,
-  placeholder = "Selecciona una opción",
-  searchPlaceholder = "Buscar…",
-  emptyText = "Sin resultados",
+  placeholder: placeholderProp,
+  searchPlaceholder: searchPlaceholderProp,
+  emptyText: emptyTextProp,
   className,
   invalid,
   disabled,
 }: ComboboxProps) {
+  const t = useTranslations("ui");
+  const placeholder = placeholderProp ?? t("combobox.placeholder");
+  const searchPlaceholder = searchPlaceholderProp ?? t("combobox.searchPlaceholder");
+  const emptyText = emptyTextProp ?? t("combobox.empty");
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [activeIndex, setActiveIndex] = React.useState(0);

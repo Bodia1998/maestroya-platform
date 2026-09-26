@@ -1,0 +1,281 @@
+{
+  "NEW_QUOTE": {
+    "title": "Nuevo presupuesto recibido",
+    "message": "Un profesional ha enviado un presupuesto para tu solicitud."
+  },
+  "QUOTE_ACCEPTED": {
+    "title": "Han aceptado tu presupuesto",
+    "message": "El cliente ha aceptado tu presupuesto."
+  },
+  "QUOTE_REJECTED": {
+    "title": "Tu presupuesto no ha sido elegido",
+    "message": "El cliente ha aceptado otro presupuesto para esta solicitud."
+  },
+  "QUOTE_EXPIRED": {
+    "title": "Tu presupuesto ha caducado",
+    "message": "Uno de tus presupuestos ha caducado porque no se aceptó a tiempo."
+  },
+  "NEW_MESSAGE": {
+    "title": "Nuevo mensaje"
+  },
+  "APPOINTMENT_PROPOSED": {
+    "title": "Nueva hora propuesta para la cita",
+    "message": "Se ha propuesto una nueva hora para la cita.",
+    "variants": {
+      "byCustomer": {
+        "message": "El cliente ha propuesto una nueva hora para la cita."
+      },
+      "byProfessional": {
+        "message": "El profesional ha propuesto una nueva hora para la cita."
+      }
+    }
+  },
+  "APPOINTMENT_CONFIRMED": {
+    "title": "Hora de la cita confirmada",
+    "message": "Se ha confirmado la hora de la cita.",
+    "variants": {
+      "byCustomer": {
+        "message": "El cliente ha confirmado la hora de la cita."
+      },
+      "byProfessional": {
+        "message": "El profesional ha confirmado la hora de la cita."
+      }
+    }
+  },
+  "APPOINTMENT_CANCELLED": {
+    "title": "Cita cancelada",
+    "message": "Esta cita se ha cancelado.",
+    "variants": {
+      "byCustomer": {
+        "message": "El cliente ha cancelado esta cita."
+      },
+      "byProfessional": {
+        "message": "El profesional ha cancelado esta cita."
+      }
+    }
+  },
+  "JOB_STARTED": {
+    "title": "El trabajo ha comenzado",
+    "message": "El profesional ha comenzado tu trabajo."
+  },
+  "JOB_CANCELLED": {
+    "title": "Trabajo cancelado",
+    "message": "Este trabajo se ha cancelado.",
+    "variants": {
+      "byCustomer": {
+        "message": "El cliente ha cancelado este trabajo."
+      },
+      "byProfessional": {
+        "message": "El profesional ha cancelado este trabajo."
+      }
+    }
+  },
+  "JOB_COMPLETION_CONFIRMATION_REQUESTED": {
+    "title": "Confirma el servicio completado",
+    "message": "El profesional ha marcado tu trabajo como completado. Confirma que se ha realizado o avísanos si hay algún problema."
+  },
+  "JOB_COMPLETION_CONFIRMATION_REMINDER": {
+    "title": "Confirma el servicio completado",
+    "message": "Confirma el servicio completado o avísanos si hay algún problema antes de que termine el plazo de confirmación."
+  },
+  "JOB_COMPLETION_CONFIRMED": {
+    "title": "Servicio confirmado",
+    "message": "El cliente ha confirmado el servicio completado."
+  },
+  "JOB_COMPLETION_CONFIRMATION_TIMED_OUT": {
+    "title": "Trabajo en revisión",
+    "message": "El cliente no respondió a tiempo a la confirmación de finalización. Este trabajo está ahora en revisión manual antes de liberar el pago."
+  },
+  "MATERIALS_PURCHASE_CONFIRMED": {
+    "title": "Compra de materiales confirmada",
+    "message": "El cliente ha confirmado que ha comprado todos los materiales necesarios."
+  },
+  "REVIEW_RECEIVED": {
+    "title": "Has recibido una nueva reseña",
+    "message": "Un cliente ha dejado una reseña sobre tu trabajo completado."
+  },
+  "REVIEW_RESPONSE_ADDED": {
+    "title": "Un profesional ha respondido a tu reseña",
+    "message": "El profesional al que dejaste una reseña ha publicado una respuesta."
+  },
+  "SERVICE_REQUEST_EXPIRED": {
+    "title": "Tu solicitud ha caducado",
+    "message": "Tu solicitud «{requestTitle}» ha caducado sin completarse."
+  },
+  "VERIFICATION_SUBMITTED": {
+    "title": "Solicitud de verificación enviada",
+    "message": "Hemos recibido tu solicitud de verificación y la revisaremos en breve.",
+    "variants": {
+      "resubmitted": {
+        "title": "Solicitud de verificación reenviada",
+        "message": "Hemos recibido tu solicitud de verificación actualizada y la revisaremos en breve."
+      }
+    }
+  },
+  "VERIFICATION_APPROVED": {
+    "title": "Ya eres un profesional verificado",
+    "message": "Tu verificación ha sido aprobada. Tu perfil público ya muestra la insignia de verificado.",
+    "variants": {
+      "automated": {
+        "message": "Has superado la verificación automática de identidad. Tu perfil público ya muestra la insignia de verificado."
+      }
+    }
+  },
+  "VERIFICATION_REJECTED": {
+    "title": "Solicitud de verificación rechazada",
+    "message": "Tu solicitud de verificación ha sido rechazada. Abre tu página de verificación para ver el motivo e inténtalo de nuevo.",
+    "variants": {
+      "automated": {
+        "message": "No has superado la verificación automática de identidad. Abre tu página de verificación para ver el motivo e inténtalo de nuevo."
+      }
+    }
+  },
+  "VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Necesitamos más información para la verificación",
+    "message": "Un revisor te ha pedido que actualices tu solicitud de verificación. Abre tu página de verificación para ver los detalles.",
+    "variants": {
+      "businessRegistration": {
+        "title": "Se necesita un documento de registro de la actividad",
+        "message": "Has superado la verificación automática de identidad. Sube un documento de registro de la actividad para completar tu verificación profesional."
+      }
+    }
+  },
+  "VERIFICATION_EXPIRED": {
+    "title": "Tu verificación ha caducado",
+    "message": "Tu verificación profesional ha caducado. Inicia una nueva verificación para conservar tu insignia de verificado."
+  },
+  "COMPANY_INVITATION_RECEIVED": {
+    "title": "Te han invitado a unirte a una empresa",
+    "message": "Tienes una invitación pendiente de una empresa."
+  },
+  "COMPANY_INVITATION_ACCEPTED": {
+    "title": "Invitación aceptada",
+    "message": "Se ha aceptado una invitación pendiente de la empresa."
+  },
+  "COMPANY_INVITATION_DECLINED": {
+    "title": "Invitación rechazada",
+    "message": "Se ha rechazado una invitación pendiente de la empresa."
+  },
+  "COMPANY_MEMBER_REMOVED": {
+    "title": "Te han eliminado de una empresa",
+    "message": "Ya no eres miembro de esta empresa."
+  },
+  "COMPANY_MEMBER_ROLE_CHANGED": {
+    "title": "Tu rol ha cambiado",
+    "message": "Tu rol en la empresa ahora es: {role}.",
+    "variants": {
+      "ownershipTransferred": {
+        "title": "Ahora eres el propietario de la empresa",
+        "message": "Se te ha transferido la propiedad de la empresa."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_SUBMITTED": {
+    "title": "Solicitud de verificación enviada",
+    "message": "Hemos recibido la solicitud de verificación de tu empresa y la revisaremos en breve.",
+    "variants": {
+      "resubmitted": {
+        "title": "Solicitud de verificación reenviada",
+        "message": "Hemos recibido la solicitud de verificación actualizada de tu empresa."
+      }
+    }
+  },
+  "COMPANY_VERIFICATION_APPROVED": {
+    "title": "Tu empresa ya está verificada",
+    "message": "La verificación de tu empresa ha sido aprobada. Su perfil público ya muestra la insignia de verificada."
+  },
+  "COMPANY_VERIFICATION_REJECTED": {
+    "title": "Solicitud de verificación rechazada",
+    "message": "La solicitud de verificación de tu empresa ha sido rechazada. Consulta los detalles para ver el motivo."
+  },
+  "COMPANY_VERIFICATION_RESUBMISSION_REQUIRED": {
+    "title": "Es necesario volver a enviarla",
+    "message": "La solicitud de verificación de tu empresa necesita cambios antes de poder aprobarse."
+  },
+  "COMPANY_VERIFICATION_EXPIRED": {
+    "title": "La verificación de tu empresa ha caducado",
+    "message": "La verificación de tu empresa ha caducado. Inicia una nueva verificación para conservar la insignia de verificada."
+  },
+  "COMPANY_SUSPENDED": {
+    "title": "Tu empresa ha sido suspendida",
+    "message": "Un administrador de la plataforma ha suspendido el perfil de tu empresa."
+  },
+  "COMPANY_REACTIVATED": {
+    "title": "Tu empresa se ha reactivado",
+    "message": "El perfil de tu empresa vuelve a estar activo."
+  },
+  "DISPUTE_CREATED": {
+    "title": "Se ha abierto una disputa",
+    "message": "Se ha abierto una disputa ({caseNumber}) sobre tu trabajo."
+  },
+  "DISPUTE_ASSIGNED": {
+    "title": "Se te ha asignado una disputa",
+    "message": "Se te ha asignado la disputa {caseNumber}."
+  },
+  "DISPUTE_STATUS_CHANGED": {
+    "title": "Estado de la disputa actualizado",
+    "message": "Nuevo estado de la disputa {caseNumber}: {status}.",
+    "variants": {
+      "newMessage": {
+        "title": "Nuevo mensaje en tu disputa",
+        "message": "Hay un nuevo mensaje en la disputa {caseNumber}."
+      }
+    }
+  },
+  "DISPUTE_RESPONSE_REQUESTED": {
+    "title": "Se solicita tu respuesta en una disputa",
+    "message": "Nuevo estado de la disputa {caseNumber}: {status}."
+  },
+  "DISPUTE_RESOLVED": {
+    "title": "Tu disputa se ha resuelto",
+    "message": "La disputa {caseNumber} se ha resuelto."
+  },
+  "DISPUTE_REJECTED": {
+    "title": "Tu disputa ha sido rechazada",
+    "message": "La disputa {caseNumber} ha sido rechazada."
+  },
+  "DISPUTE_CLOSED": {
+    "title": "Tu disputa se ha cerrado",
+    "message": "La disputa {caseNumber} se ha cerrado."
+  },
+  "SUPPORT_TICKET_ASSIGNED": {
+    "title": "Se te ha asignado un ticket de soporte",
+    "message": "Se te ha asignado el ticket {ticketNumber}."
+  },
+  "SUPPORT_TICKET_STATUS_CHANGED": {
+    "title": "Tu ticket de soporte se ha actualizado",
+    "message": "Nuevo estado del ticket {ticketNumber}: {status}."
+  },
+  "SUPPORT_TICKET_RESOLVED": {
+    "title": "Tu ticket de soporte se ha resuelto",
+    "message": "El ticket {ticketNumber} se ha resuelto."
+  },
+  "SUPPORT_TICKET_CLOSED": {
+    "title": "Tu ticket de soporte se ha cerrado",
+    "message": "El ticket {ticketNumber} se ha cerrado."
+  },
+  "labels": {
+    "disputeStatus": {
+      "OPEN": "Abierta",
+      "UNDER_REVIEW": "En revisión",
+      "WAITING_FOR_CUSTOMER": "Esperando al cliente",
+      "WAITING_FOR_PROFESSIONAL": "Esperando al profesional",
+      "RESOLVED": "Resuelta",
+      "REJECTED": "Rechazada",
+      "CLOSED": "Cerrada"
+    },
+    "ticketStatus": {
+      "OPEN": "Abierto",
+      "IN_PROGRESS": "En curso",
+      "WAITING_FOR_USER": "Esperando tu respuesta",
+      "RESOLVED": "Resuelto",
+      "CLOSED": "Cerrado"
+    },
+    "companyRole": {
+      "OWNER": "Propietario",
+      "ADMIN": "Administrador",
+      "MANAGER": "Gestor",
+      "MEMBER": "Miembro"
+    }
+  }
+}

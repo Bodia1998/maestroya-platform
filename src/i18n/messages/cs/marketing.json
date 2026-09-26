@@ -1,24 +1,252 @@
 {
   "hero": {
-    "title": "Spojte se s prověřenými profesionály pro váš domov",
-    "subtitle": "Popište, co potřebujete, a získejte nabídky od ověřených profesionálů ve vašem okolí.",
+    "title": "Najděte důvěryhodné profesionály pro svůj domov",
+    "subtitle": "Popište, co potřebujete, porovnejte nabídky a najměte si vhodného profesionála ve svém okolí — vše na MaestroYa.",
     "ctaPrimary": "Zadat poptávku",
-    "ctaSecondary": "Procházet profesionály"
+    "ctaSecondary": "Procházet profesionály",
+    "or": "nebo",
+    "highlights": {
+      "verified": "Ověření profesionálové",
+      "reviews": "Recenze skutečných zákazníků",
+      "audience": "Jednotlivci i firmy"
+    },
+    "search": {
+      "serviceLabel": "Jakou službu potřebujete?",
+      "locationLabel": "Kde ji potřebujete?",
+      "locationPlaceholder": "Město nebo PSČ",
+      "submit": "Hledat profesionály"
+    }
   },
   "howItWorks": {
     "title": "Jak to funguje",
     "step1": "Popište, co potřebujete",
     "step2": "Získejte nabídky",
-    "step3": "Vyberte si profesionála"
+    "step3": "Vyberte si profesionála",
+    "subtitle": "Od poptávky k hotové zakázce ve čtyřech krocích.",
+    "steps": {
+      "one": {
+        "title": "Řekněte nám, co potřebujete",
+        "description": "Popište práci, zvolte kategorii a během pár minut zveřejněte poptávku."
+      },
+      "two": {
+        "title": "Získejte nabídky",
+        "description": "Profesionálové, kteří mají zájem a jsou ve vaší oblasti k dispozici, vám pošlou své nabídky."
+      },
+      "three": {
+        "title": "Porovnejte a vyberte",
+        "description": "Projděte si profily, recenze a nabídky a promluvte si s profesionálem, než se rozhodnete."
+      },
+      "four": {
+        "title": "Rezervujte a ohodnoťte službu",
+        "description": "Domluvte si schůzku, sledujte zakázku až do dokončení a zanechte recenzi."
+      }
+    },
+    "cta": "Začít"
   },
   "professionals": {
-    "title": "Profesionálové"
+    "title": "Profesionálové",
+    "heading": "Najděte profesionála",
+    "subtitle": "Hledejte podle služby a lokality a uvidíte profesionály, kteří působí ve vaší oblasti.",
+    "invalid": "Toto hledání není platné — zkuste to znovu.",
+    "failed": "Při hledání se něco pokazilo.",
+    "found": "{count, plural, one {Nalezen # profesionál} few {Nalezeni # profesionálové} many {Nalezeno # profesionála} other {Nalezeno # profesionálů}}",
+    "companiesFound": "{count, plural, one {Nalezena # firma} few {Nalezeny # firmy} many {Nalezeno # firmy} other {Nalezeno # firem}}",
+    "verified": "✓ Ověřená",
+    "form": {
+      "serviceLabel": "Služba",
+      "selectService": "Vyberte službu…",
+      "latitude": "Zeměpisná šířka",
+      "longitude": "Zeměpisná délka",
+      "latitudePlaceholder": "např. 38.9665",
+      "longitudePlaceholder": "např. -0.1817",
+      "useMyLocation": "Použít mou aktuální polohu",
+      "locating": "Zjišťování polohy…",
+      "notSupported": "Váš prohlížeč nepodporuje služby určování polohy.",
+      "locationFailed": "Vaši polohu se nepodařilo zjistit. Zadejte ji ručně níže.",
+      "submit": "Hledat profesionály",
+      "submitting": "Hledání…"
+    },
+    "results": {
+      "empty": "Pro tuto službu zatím v okolí tohoto místa nebyli nalezeni žádní profesionálové.",
+      "distance": "{distance} km odsud"
+    },
+    "verification": {
+      "UNVERIFIED": "Neověřeno",
+      "PENDING": "Ověření čeká na vyřízení",
+      "VERIFIED": "Ověřený profesionál",
+      "REJECTED": "Ověření zamítnuto"
+    },
+    "profile": {
+      "about": "O mně",
+      "experience": "Praxe",
+      "experienceYears": "{count, plural, one {# rok} few {# roky} many {# roku} other {# let}}",
+      "serviceArea": "Oblast působení",
+      "withinKm": "Do {km} km",
+      "readyText": "Chcete začít? Zveřejněte poptávku služby a {name} — spolu se všemi dalšími vhodnými profesionály v okolí — ji bude moci posoudit a poslat vám nabídku.",
+      "requestService": "Poptat tuto službu"
+    }
   },
   "search": {
     "title": "Najít profesionály",
-    "resultCount": "{count, plural, =0 {Žádné výsledky} one {# profesionál} few {# profesionálové} other {# profesionálů}}"
+    "resultCount": "{count, plural, =0 {Žádné výsledky} one {# profesionál} few {# profesionálové} other {# profesionálů}}",
+    "heading": "Najděte profesionála nebo firmu",
+    "subtitle": "Hledejte podle služby, města, hodnocení a ověření — profesionálové i firmy v jednom pořadí.",
+    "invalid": "Toto hledání není platné — upravte filtry a zkuste to znovu.",
+    "failed": "Při hledání se něco pokazilo.",
+    "resultsFound": "{count, plural, one {Nalezen # výsledek} few {Nalezeny # výsledky} many {Nalezeno # výsledku} other {Nalezeno # výsledků}}",
+    "form": {
+      "queryLabel": "Co potřebujete?",
+      "queryPlaceholder": "např. elektrikář, klimatizace…",
+      "serviceLabel": "Služba",
+      "anyService": "Jakákoli služba",
+      "cityLabel": "Město",
+      "cityPlaceholder": "např. Gandia",
+      "minRatingLabel": "Minimální hodnocení",
+      "anyRating": "Jakékoli hodnocení",
+      "ratingOption": "{rating}+ hvězdiček",
+      "sortByLabel": "Řadit podle",
+      "sort": {
+        "RELEVANCE": "Nejlepší shoda",
+        "RATING": "Nejlépe hodnocené",
+        "REVIEWS": "Nejvíce recenzí",
+        "NEWEST": "Nejnovější",
+        "VERIFIED": "Nejprve ověření"
+      },
+      "verifiedOnly": "Pouze ověření",
+      "nearLocation": "Hledat poblíž místa (nepovinné)",
+      "submit": "Hledat"
+    },
+    "location": {
+      "useMyLocation": "Použít mou polohu",
+      "locating": "Zjišťování polohy…",
+      "clear": "Vymazat",
+      "unknownAddress": "Neznámá adresa poblíž tohoto bodu",
+      "notSupported": "Váš prohlížeč nepodporuje služby určování polohy.",
+      "failed": "Vaši polohu se nepodařilo zjistit. Klikněte místo toho na bod na mapě.",
+      "near": "Poblíž: {address}",
+      "radiusLabel": "Okruh hledání (km)",
+      "radiusPlaceholder": "např. 25",
+      "invalid": "Tato poloha se zdá neplatná.",
+      "reverseGeocodeFailed": "Pro toto místo se nepodařilo zjistit adresu."
+    },
+    "results": {
+      "empty": "Těmto filtrům zatím nic neodpovídá.",
+      "kindProfessional": "Profesionál",
+      "kindCompany": "Firma",
+      "reasons": {
+        "verified": "Ověřený profesionál",
+        "highlyRated": "Vysoce hodnocený ({rating}/5, {count, plural, one {# recenze} few {# recenze} many {# recenze} other {# recenzí}})",
+        "manyJobs": "Mnoho dokončených zakázek",
+        "inCity": "Sídlí v hledaném městě",
+        "inRegion": "Sídlí v hledaném kraji",
+        "categoryMatch": "Odpovídá hledané kategorii služeb",
+        "portfolio": "Dostupné portfolio ({count, plural, one {# položka} few {# položky} many {# položky} other {# položek}})",
+        "completeProfile": "Silný, úplný profil"
+      }
+    }
   },
   "footer": {
-    "rights": "© {year, number} MaestroYa. Všechna práva vyhrazena."
+    "rights": "© {year} MaestroYa. Všechna práva vyhrazena.",
+    "tagline": "Spojujeme lidi, kteří potřebují službu pro domácnost, s důvěryhodnými profesionály v jejich okolí.",
+    "madeIn": "Vytvořeno ve Španělsku pro španělské domácnosti.",
+    "customers": "Zákazníci",
+    "professionals": "Profesionálové",
+    "account": "Účet",
+    "directory": "Adresář profesionálů",
+    "joinAsProfessional": "Přidat se jako profesionál",
+    "professionalDashboard": "Přejít do přehledu",
+    "forgotPassword": "Obnovit heslo"
+  },
+  "meta": {
+    "home": {
+      "title": "MaestroYa — Důvěryhodní profesionálové pro váš domov",
+      "description": "Popište, co potřebujete, a spojte se s ověřenými profesionály ve vašem okolí: instalatérství, elektro, rekonstrukce, úklid a mnohem více."
+    },
+    "search": {
+      "title": "Hledat profesionály a firmy",
+      "description": "Filtrujte podle kategorie, města, hodnocení a ověření a najděte vhodného profesionála nebo firmu pro svůj projekt."
+    },
+    "professionals": {
+      "title": "Najděte profesionála ve svém okolí",
+      "description": "Hledejte ověřené profesionály podle kategorie služby a lokality, seřazené podle vzdálenosti."
+    },
+    "professionalProfile": {
+      "descriptionWithLocation": "Ověřený profesionál – {location}. Prohlédněte si profil a vyžádejte si nabídku na MaestroYa.",
+      "description": "Prohlédněte si profil tohoto profesionála a vyžádejte si nabídku na MaestroYa."
+    },
+    "companyProfile": {
+      "descriptionWithLocation": "Firma poskytující služby pro domácnost – {location}. Prohlédněte si její profil na MaestroYa.",
+      "description": "Prohlédněte si profil této firmy a vyžádejte si nabídku na MaestroYa."
+    }
+  },
+  "categories": {
+    "title": "Nejžádanější služby",
+    "subtitle": "Vyberte kategorii a uvidíte ověřené profesionály ve svém okolí."
+  },
+  "trust": {
+    "title": "Navrženo tak, abyste mohli důvěřovat každé zakázce",
+    "subtitle": "S MaestroYa vždy víte, s kým mluvíte a co objednáváte.",
+    "verified": {
+      "title": "Ověření profesionálové",
+      "description": "Profesionálové si mohou ověřit totožnost a firmy své dokumenty ještě předtím, než začnou na platformě působit."
+    },
+    "quotes": {
+      "title": "Jasné nabídky",
+      "description": "Získejte podrobné nabídky od několika profesionálů a porovnejte je, než se rozhodnete."
+    },
+    "communication": {
+      "title": "Komunikace na platformě",
+      "description": "Mluvte s profesionálem přímo na MaestroYa před službou i během ní."
+    },
+    "reviews": {
+      "title": "Skutečné recenze",
+      "description": "Každá dokončená zakázka může dostat recenzi, která se zobrazí v profilu profesionála."
+    },
+    "tracking": {
+      "title": "Sledování zakázky",
+      "description": "Ve svém přehledu kdykoli zkontrolujte stav poptávky, schůzky i zakázky."
+    },
+    "support": {
+      "title": "Podpora, když se něco pokazí",
+      "description": "Pokud nastane problém, můžete otevřít požadavek na podporu a náš tým vám pomůže."
+    }
+  },
+  "professionalCta": {
+    "badge": "Pro profesionály",
+    "title": "Jste profesionál? Získejte nové zákazníky s MaestroYa",
+    "benefits": {
+      "leads": "Dostávejte poptávky od zákazníků, kteří hledají vaši kategorii služeb",
+      "profile": "Vytvořte si profesionální profil a ukažte své zkušenosti a portfolio",
+      "quotes": "Posílejte nabídky přímo ze svého přehledu",
+      "schedule": "Spravujte schůzky a zakázky od začátku do konce",
+      "reputation": "Budujte si pověst díky recenzím svých zákazníků"
+    },
+    "join": "Přidat se jako profesionál",
+    "haveAccount": "Už mám účet"
+  },
+  "errorPage": {
+    "title": "Něco se pokazilo",
+    "retry": "Zkusit znovu"
+  },
+  "notFound": {
+    "message": "Tuto stránku se nepodařilo najít.",
+    "backHome": "Zpět na úvod"
+  },
+  "directory": {
+    "backToSearch": "← Zpět na hledání",
+    "viewProfile": "Zobrazit profil",
+    "about": "O nás",
+    "services": "Služby",
+    "basedNear": "Oblast",
+    "locationNotSet": "Lokalita neuvedena",
+    "teamOf": "{count, plural, one {Tým: # osoba} few {Tým: # osoby} many {Tým: # osoby} other {Tým: # osob}}",
+    "verifiedCompany": "✓ Ověřená firma"
+  },
+  "companies": {
+    "profile": {
+      "teamSize": "Velikost týmu",
+      "rating": "Hodnocení",
+      "portfolio": "Portfolio"
+    }
   }
 }

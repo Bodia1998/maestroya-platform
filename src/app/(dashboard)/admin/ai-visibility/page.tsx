@@ -1,4 +1,5 @@
 import { Eye } from "lucide-react";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
@@ -10,14 +11,24 @@ import { findAiVisibilityQueryById } from "@/shared/content/ai-visibility-querie
 import type { AiVisibilityRate } from "@/application/use-cases/ai-visibility/get-ai-visibility-metrics.use-case";
 import { RecordObservationForm } from "./record-observation-form";
 
-export const metadata = { title: "Admin — AI visibility" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("aiVisibility.title") }) };
+}
 
 type SearchParams = Promise<{ page?: string }>;
 
-function formatRate(rate: AiVisibilityRate): string {
-  if (rate.denominator === 0) return "n/a (0 observations)";
-  const pct = Math.round((rate.numerator / rate.denominator) * 100);
-  return `${pct}% (${rate.numerator}/${rate.denominator})`;
+type AiVisibilityTranslator = Awaited<ReturnType<typeof getTranslations<"admin.aiVisibility">>>;
+type Formatter = Awaited<ReturnType<typeof getFormatter>>;
+
+function formatRate(t: AiVisibilityTranslator, format: Formatter, rate: AiVisibilityRate): string {
+  if (rate.denominator === 0) return t("rateNotApplicable");
+  const ratio = Math.round((rate.numerator / rate.denominator) * 100) / 100;
+  return t("rateValue", {
+    percent: format.number(ratio, { style: "percent" }),
+    numerator: rate.numerator,
+    denominator: rate.denominator,
+  });
 }
 
 /**
@@ -46,38 +57,51 @@ export default async function AdminAiVisibilityPage({ searchParams }: { searchPa
     makeGetAiVisibilityMetricsUseCase().execute({ from: thirtyDaysAgo, to: now }),
     makeListAiVisibilityObservationsUseCase().execute({ limit: DEFAULT_PAGE_SIZE, offset }),
   ]);
+  const t = await getTranslations("admin.aiVisibility");
+  const tCommon = await getTranslations("admin.common");
+  const format = await getFormatter();
+  const rate = (value: AiVisibilityRate) => formatRate(t, format, value);
+  const enumLabel = (group: string, value: string) =>
+    t.has(`${group}.${value}` as never) ? t(`${group}.${value}` as never) : value;
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="AI visibility"
-        subtitle="Objective, timestamped observations of how external AI/search systems respond to MaestroYa-related queries. These are individual observations, not a stable ranking — AI output is inherently variable."
+        title={t("title")}
+        subtitle={t("subtitle")}
       />
 
       <section className="rounded-xl border border-border p-4">
         <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-          Last 30 days ({thirtyDaysAgo.toLocaleDateString()} – {now.toLocaleDateString()}), excluding neutral-intent queries unless noted
+          {t("metricsHeading", {
+            from: format.dateTime(thirtyDaysAgo, { dateStyle: "medium" }),
+            to: format.dateTime(now, { dateStyle: "medium" }),
+          })}
         </h2>
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <MetricItem label="Total observations" value={String(metrics.totalObservations)} />
-          <MetricItem label="Mention rate" value={formatRate(metrics.mentionRate)} />
-          <MetricItem label="Neutral-query mention rate" value={formatRate(metrics.neutralQueryMentionRate)} />
-          <MetricItem label="Citation present (of mentioned)" value={formatRate(metrics.citationRate)} />
-          <MetricItem label="Citation correct (of cited)" value={formatRate(metrics.citationCorrectnessRate)} />
-          <MetricItem label="Correct identity (of mentioned)" value={formatRate(metrics.correctIdentityRate)} />
-          <MetricItem label="Correct geography (of mentioned)" value={formatRate(metrics.correctGeographicRate)} />
-          <MetricItem label="Correct service (of mentioned)" value={formatRate(metrics.correctServiceRate)} />
-          <MetricItem label="URL provided (of mentioned)" value={formatRate(metrics.urlProvidedRate)} />
-          <MetricItem label="Correct URL (of provided)" value={formatRate(metrics.correctUrlRate)} />
+          <MetricItem label={t("metrics.totalObservations")} value={format.number(metrics.totalObservations)} />
+          <MetricItem label={t("metrics.mentionRate")} value={rate(metrics.mentionRate)} />
+          <MetricItem label={t("metrics.neutralQueryMentionRate")} value={rate(metrics.neutralQueryMentionRate)} />
+          <MetricItem label={t("metrics.citationRate")} value={rate(metrics.citationRate)} />
+          <MetricItem label={t("metrics.citationCorrectnessRate")} value={rate(metrics.citationCorrectnessRate)} />
+          <MetricItem label={t("metrics.correctIdentityRate")} value={rate(metrics.correctIdentityRate)} />
+          <MetricItem label={t("metrics.correctGeographicRate")} value={rate(metrics.correctGeographicRate)} />
+          <MetricItem label={t("metrics.correctServiceRate")} value={rate(metrics.correctServiceRate)} />
+          <MetricItem label={t("metrics.urlProvidedRate")} value={rate(metrics.urlProvidedRate)} />
+          <MetricItem label={t("metrics.correctUrlRate")} value={rate(metrics.correctUrlRate)} />
         </dl>
 
         {metrics.byProvider.length > 0 ? (
           <div className="mt-4">
-            <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">By provider</h3>
+            <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("byProvider")}</h3>
             <ul className="flex flex-col gap-1 text-sm">
               {metrics.byProvider.map((entry) => (
                 <li key={entry.key}>
-                  {entry.key}: {entry.totalObservations} observations, mention rate {formatRate(entry.mentionRate)}
+                  {t("byProviderEntry", {
+                    provider: enumLabel("provider", entry.key),
+                    count: entry.totalObservations,
+                    rate: rate(entry.mentionRate),
+                  })}
                 </li>
               ))}
             </ul>
@@ -88,34 +112,38 @@ export default async function AdminAiVisibilityPage({ searchParams }: { searchPa
       <RecordObservationForm />
 
       {observations.length === 0 ? (
-        <EmptyState icon={Eye} title="No observations recorded yet" description="Recorded AI visibility observations will appear here." />
+        <EmptyState icon={Eye} title={t("empty")} description={t("emptyDescription")} />
       ) : (
-        <AdminDataTable caption="AI visibility observations" minWidth={900}>
+        <AdminDataTable caption={t("caption")} minWidth={900}>
           <AdminTableHeadRow>
-            <AdminTh>Observed</AdminTh>
-            <AdminTh>Query</AdminTh>
-            <AdminTh>Provider</AdminTh>
-            <AdminTh>Mentioned</AdminTh>
-            <AdminTh>Recommendation</AdminTh>
-            <AdminTh>URL</AdminTh>
-            <AdminTh>Citation</AdminTh>
+            <AdminTh>{t("columns.observed")}</AdminTh>
+            <AdminTh>{t("columns.query")}</AdminTh>
+            <AdminTh>{t("columns.provider")}</AdminTh>
+            <AdminTh>{t("columns.mentioned")}</AdminTh>
+            <AdminTh>{t("columns.recommendation")}</AdminTh>
+            <AdminTh>{t("columns.url")}</AdminTh>
+            <AdminTh>{t("columns.citation")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
             {observations.map((observation) => (
               <AdminTableRow key={observation.id}>
-                <td className="px-4 py-3 whitespace-nowrap">{observation.observedAt.toLocaleString()}</td>
+                <td className="px-4 py-3 whitespace-nowrap">{format.dateTime(observation.observedAt, { dateStyle: "medium", timeStyle: "short" })}</td>
                 <td className="px-4 py-3 font-mono text-xs">
                   {observation.queryId}
                   <div className="text-muted-foreground">{findAiVisibilityQueryById(observation.queryId)?.text ?? ""}</div>
                 </td>
                 <td className="px-4 py-3">
-                  {observation.provider}
+                  {enumLabel("provider", observation.provider)}
                   {observation.providerModel ? ` (${observation.providerModel})` : ""}
                 </td>
-                <td className="px-4 py-3">{observation.mentioned ? "Yes" : "No"}</td>
-                <td className="px-4 py-3">{observation.recommendationClassification}</td>
-                <td className="px-4 py-3">{observation.urlAccuracy}</td>
-                <td className="px-4 py-3">{observation.citationPresent ? (observation.citationCorrect ? "Present, correct" : "Present, unverified/incorrect") : "None"}</td>
+                <td className="px-4 py-3">{observation.mentioned ? tCommon("yes") : tCommon("no")}</td>
+                <td className="px-4 py-3">{enumLabel("recommendation", observation.recommendationClassification)}</td>
+                <td className="px-4 py-3">{enumLabel("accuracy", observation.urlAccuracy)}</td>
+                <td className="px-4 py-3">{observation.citationPresent
+                    ? observation.citationCorrect
+                      ? t("citation.correct")
+                      : t("citation.unverified")
+                    : t("citation.none")}</td>
               </AdminTableRow>
             ))}
           </AdminTableBody>

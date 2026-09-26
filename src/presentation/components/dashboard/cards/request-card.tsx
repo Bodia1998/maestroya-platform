@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { LinkCard } from "@/components/ui/card";
 
@@ -13,6 +15,7 @@ export interface RequestCardProps {
 
 /** Service request list-item card — same data every "My requests" list already rendered inline, just restyled. */
 export function RequestCard({ href, title, status, categoryName, city, createdAt, updatedAt }: RequestCardProps) {
+  const t = useTranslations("dashboard.cards");
   return (
     <LinkCard href={href} cardClassName="flex flex-col gap-2 p-4">
       <div className="flex items-center justify-between gap-4">
@@ -23,7 +26,7 @@ export function RequestCard({ href, title, status, categoryName, city, createdAt
       {city && <p className="text-sm text-muted-foreground">{city}</p>}
       {createdAt && updatedAt && (
         <p className="text-xs text-muted-foreground/80">
-          Posted {createdAt.toLocaleDateString()} — updated {updatedAt.toLocaleDateString()}
+          {t("requestPosted", { created: createdAt, updated: updatedAt })}
         </p>
       )}
     </LinkCard>

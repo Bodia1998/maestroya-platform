@@ -18,17 +18,17 @@ const paginationSchema = z.object({
 });
 
 export const createCompanySchema = z.object({
-  legalName: z.string().trim().min(2, "Legal name is required.").max(200),
+  legalName: z.string().trim().min(2, "dto.company.legalNameRequired").max(200),
   tradeName: optionalTrimmed(200),
-  taxId: z.string().trim().min(3, "Tax ID is required.").max(50),
+  taxId: z.string().trim().min(3, "dto.company.taxIdRequired").max(50),
   description: z.string().trim().max(5000).optional().or(z.literal("")),
-  logoUrl: z.string().trim().url("Enter a valid URL.").optional().or(z.literal("")),
-  websiteUrl: z.string().trim().url("Enter a valid URL.").optional().or(z.literal("")),
-  contactEmail: z.string().trim().toLowerCase().email("Enter a valid email address.").optional().or(z.literal("")),
+  logoUrl: z.string().trim().url("url").optional().or(z.literal("")),
+  websiteUrl: z.string().trim().url("url").optional().or(z.literal("")),
+  contactEmail: z.string().trim().toLowerCase().email("email").optional().or(z.literal("")),
   contactPhone: z
     .string()
     .trim()
-    .regex(/^\+?[0-9\s-]{7,20}$/, "Enter a valid phone number.")
+    .regex(/^\+?[0-9\s-]{7,20}$/, "phone")
     .optional()
     .or(z.literal("")),
   addressLine: optionalTrimmed(200),
@@ -38,7 +38,7 @@ export const createCompanySchema = z.object({
   country: optionalTrimmed(2),
   latitude: z.coerce.number().min(-90).max(90).optional(),
   longitude: z.coerce.number().min(-180).max(180).optional(),
-  categoryIds: z.array(z.string().uuid()).max(20, "Select up to 20 categories.").optional(),
+  categoryIds: z.array(z.string().uuid()).max(20, "dto.categories.max").optional(),
 });
 export type CreateCompanyInput = z.infer<typeof createCompanySchema>;
 
@@ -54,8 +54,8 @@ export type UpdateCompanyInput = z.infer<typeof updateCompanySchema>;
 export const updateCompanyServicesSchema = z.object({
   categoryIds: z
     .array(z.string().uuid())
-    .min(1, "Select at least one service category.")
-    .max(20, "Select up to 20 categories."),
+    .min(1, "dto.categories.min")
+    .max(20, "dto.categories.max"),
 });
 export type UpdateCompanyServicesInput = z.infer<typeof updateCompanyServicesSchema>;
 
@@ -68,13 +68,13 @@ export const listAdminCompaniesSchema = paginationSchema.extend({
 export type ListAdminCompaniesInput = z.infer<typeof listAdminCompaniesSchema>;
 
 export const adminCompanyIdSchema = z.object({
-  companyId: z.string().uuid("Invalid company."),
+  companyId: z.string().uuid("dto.ids.company"),
 });
 export type AdminCompanyIdInput = z.infer<typeof adminCompanyIdSchema>;
 
 // --- Discovery ---
 
 export const searchCompaniesSchema = z.object({
-  categoryId: z.string().uuid("Select a valid category."),
+  categoryId: z.string().uuid("dto.categories.invalid"),
 });
 export type SearchCompaniesInput = z.infer<typeof searchCompaniesSchema>;

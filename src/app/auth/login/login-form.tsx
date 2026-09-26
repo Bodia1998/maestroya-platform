@@ -1,15 +1,20 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { loginSchema, type LoginInput } from "@/application/dto/auth.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
+
+/** Provider names are brand names (i18n-ignore: not translated). */
+const OAUTH_PROVIDER_NAMES = { google: "Google", apple: "Apple", facebook: "Facebook" } as const; // i18n-ignore
 
 export function LoginForm() {
+  const t = useTranslations("auth");
   const searchParams = useSearchParams();
   const explicitCallbackUrl = searchParams.get("callbackUrl");
   const callbackUrl = explicitCallbackUrl ?? "/dashboard";
@@ -27,7 +32,7 @@ export function LoginForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
+    resolver: useLocalizedZodResolver(loginSchema),
     defaultValues: { email: "", password: "", rememberMe: false },
   });
 
@@ -42,7 +47,9 @@ export function LoginForm() {
     });
 
     if (!result || !result.ok || result.error) {
-      setServerError("Incorrect email or password.");
+      // Same message for an unknown email and a wrong password (no account
+      // enumeration) — only its language changes.
+      setServerError(t("errors.invalidCredentials"));
       return;
     }
 
@@ -92,15 +99,15 @@ export function LoginForm() {
             onClick={() => handleOAuth(provider)}
           >
             {oauthLoading === provider
-              ? "Redirecting…"
-              : `Continue with ${provider.charAt(0).toUpperCase()}${provider.slice(1)}`}
+              ? t("login.redirecting")
+              : t("login.continueWith", { provider: OAUTH_PROVIDER_NAMES[provider] })}
           </Button>
         ))}
       </div>
 
       <div className="flex items-center gap-3 text-xs text-foreground/50">
         <div className="h-px flex-1 bg-border" />
-        or
+        {t("login.or")}
         <div className="h-px flex-1 bg-border" />
       </div>
 
@@ -113,7 +120,7 @@ export function LoginForm() {
 
         <div className="flex flex-col gap-1">
           <label htmlFor="email" className="text-sm font-medium">
-            Email
+            {t("login.emailLabel")}
           </label>
           <input
             id="email"
@@ -130,10 +137,10 @@ export function LoginForm() {
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <label htmlFor="password" className="text-sm font-medium">
-              Password
+              {t("login.passwordLabel")}
             </label>
             <a href="/auth/forgot-password" className="text-xs underline">
-              Forgot password?
+              {t("login.forgotPassword")}
             </a>
           </div>
           <input
@@ -150,11 +157,11 @@ export function LoginForm() {
 
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" {...register("rememberMe")} />
-          Remember me
+          {t("login.rememberMe")}
         </label>
 
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Logging in…" : "Log in"}
+          {isSubmitting ? t("login.submitting") : t("login.submit")}
         </Button>
       </form>
     </div>

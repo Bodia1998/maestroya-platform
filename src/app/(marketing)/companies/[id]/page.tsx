@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { NotFoundError } from "@/domain/errors/domain-error";
@@ -13,6 +14,7 @@ import { Section } from "@/components/layout/section";
 import { ResponsiveGrid } from "@/components/layout/responsive-grid";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buildBreadcrumbJsonLd, buildLocalBusinessJsonLd } from "@/shared/seo/structured-data";
+import { localizeCategoryName } from "@/presentation/i18n/service-categories";
 
 type CompanyPageProps = { params: Promise<{ id: string }> };
 
@@ -33,12 +35,13 @@ export async function generateMetadata({ params }: CompanyPageProps): Promise<Me
   const profile = await getProfile(id);
   if (!profile) return {};
 
+  const t = await getTranslations("marketing");
   const location = [profile.city, profile.province].filter(Boolean).join(", ");
   const description =
     profile.description ??
     (location
-      ? `Empresa de servicios para el hogar en ${location}. Consulta su perfil en MaestroYa.`
-      : "Consulta el perfil de esta empresa y solicita presupuesto en MaestroYa.");
+      ? t("meta.companyProfile.descriptionWithLocation", { location })
+      : t("meta.companyProfile.description"));
   const path = `/companies/${id}`;
 
   return {
@@ -75,11 +78,18 @@ export default async function PublicCompanyProfilePage({ params }: CompanyPagePr
     notFound();
   }
 
-  const [categories, portfolioItems] = await Promise.all([
+  const [categories, portfolioItems, t, tNav, tServices, format] = await Promise.all([
     profile.categoryIds.length
-      ? prisma.serviceCategory.findMany({ where: { id: { in: profile.categoryIds } }, select: { id: true, name: true } })
+      ? prisma.serviceCategory.findMany({
+          where: { id: { in: profile.categoryIds } },
+          select: { id: true, name: true, slug: true },
+        })
       : Promise.resolve([]),
     makeListCompanyPortfolioItemsUseCase().execute(profile.id, { limit: 12, offset: 0 }),
+    getTranslations("marketing"),
+    getTranslations("nav"),
+    getTranslations("services"),
+    getFormatter(),
   ]);
 
   const path = `/companies/${profile.id}`;
@@ -101,14 +111,14 @@ export default async function PublicCompanyProfilePage({ params }: CompanyPagePr
       />
       <JsonLd
         data={buildBreadcrumbJsonLd([
-          { name: "Inicio", path: "/" },
-          { name: "Profesionales", path: "/professionals" },
+          { name: tNav("home"), path: "/" },
+          { name: tNav("professionals"), path: "/professionals" },
           { name: profile.displayName, path },
         ])}
       />
 
       <Link href="/professionals" className="text-sm text-foreground/70 hover:underline">
-        ← Back to search
+        {t("directory.backToSearch")}
       </Link>
 
       <div className="flex items-start gap-5">
@@ -119,45 +129,46 @@ export default async function PublicCompanyProfilePage({ params }: CompanyPagePr
           <h1 className="text-2xl font-semibold">{profile.displayName}</h1>
           {profile.isVerified && (
             <span className="w-fit rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-              ✓ Verified company
+              {t("directory.verifiedCompany")}
             </span>
           )}
         </div>
       </div>
 
       {profile.description && (
-        <Section title="About" gap="sm">
+        <Section title={t("directory.about")} gap="sm">
           <p className="whitespace-pre-line text-sm text-foreground/80">{profile.description}</p>
         </Section>
       )}
 
       <ResponsiveGrid cols="2" gap="md" bordered>
         <div>
-          <p className="text-foreground/60">Team size</p>
-          <p className="font-medium">{profile.teamSize}</p>
+          <p className="text-foreground/60">{t("companies.profile.teamSize")}</p>
+          <p className="font-medium">{format.number(profile.teamSize)}</p>
         </div>
         {profile.averageRating !== null && (
           <div>
-            <p className="text-foreground/60">Rating</p>
+            <p className="text-foreground/60">{t("companies.profile.rating")}</p>
             <p className="font-medium">
-              {profile.averageRating} ({profile.reviewCount})
+              {format.number(profile.averageRating)} (
+              {format.number(profile.reviewCount)})
             </p>
           </div>
         )}
         {(profile.city || profile.province) && (
           <div>
-            <p className="text-foreground/60">Based near</p>
+            <p className="text-foreground/60">{t("directory.basedNear")}</p>
             <p className="font-medium">{[profile.city, profile.province].filter(Boolean).join(", ")}</p>
           </div>
         )}
       </ResponsiveGrid>
 
       {categories.length > 0 && (
-        <Section title="Services" gap="sm">
+        <Section title={t("directory.services")} gap="sm">
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <span key={category.id} className="rounded-full bg-black/5 px-3 py-1 text-xs text-foreground/70">
-                {category.name}
+                {localizeCategoryName(tServices, category)}
               </span>
             ))}
           </div>
@@ -165,7 +176,7 @@ export default async function PublicCompanyProfilePage({ params }: CompanyPagePr
       )}
 
       {portfolioItems.length > 0 && (
-        <Section title="Portfolio" gap="sm">
+        <Section title={t("companies.profile.portfolio")} gap="sm">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {portfolioItems.map((item) => (
               <div key={item.id} className="overflow-hidden rounded-md border border-border">

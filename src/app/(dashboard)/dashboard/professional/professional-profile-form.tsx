@@ -1,7 +1,7 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22,6 +22,7 @@ import {
   type CreateProfessionalInput,
   type UpdateProfessionalInput,
 } from "@/application/dto/professional.dto";
+import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { createProfessionalAction, updateProfessionalAction } from "./actions";
 
 interface ProfessionalLike {
@@ -45,6 +46,7 @@ interface ProfessionalLike {
  * `verificationStatus` are never part of this form — see professional.dto.ts.
  */
 export function ProfessionalProfileForm({ professional }: { professional: ProfessionalLike | null }) {
+  const t = useTranslations("professional.profileForm");
   const isEditing = professional !== null;
   const { update } = useSession();
   const router = useRouter();
@@ -59,7 +61,7 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
     setError,
     formState: { errors, isSubmitting },
   } = useForm<CreateProfessionalInput | UpdateProfessionalInput>({
-    resolver: zodResolver(schema),
+    resolver: useLocalizedZodResolver(schema),
     defaultValues: {
       businessName: professional?.businessName ?? "",
       headline: professional?.headline ?? "",
@@ -114,7 +116,7 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
       router.refresh();
     }
 
-    setSuccessMessage(isEditing ? "Professional profile updated." : "Professional profile created.");
+    setSuccessMessage(isEditing ? t("updated") : t("created"));
   }
 
   return (
@@ -130,10 +132,10 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
         </Alert>
       )}
 
-      <FormSection title="About your business">
+      <FormSection title={t("aboutSection")}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="businessName">
-            Business name <OptionalBadge />
+            {t("businessName")} <OptionalBadge />
           </Label>
           <Input id="businessName" aria-invalid={!!errors.businessName} {...register("businessName")} />
           <FormFieldError>{errors.businessName?.message}</FormFieldError>
@@ -141,11 +143,11 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="headline">
-            Headline <RequiredBadge />
+            {t("headline")} <RequiredBadge />
           </Label>
           <Input
             id="headline"
-            placeholder="e.g. Licensed electrician, 10+ years"
+            placeholder={t("headlinePlaceholder")}
             aria-invalid={!!errors.headline}
             {...register("headline")}
           />
@@ -154,7 +156,7 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="bio">
-            Description <RequiredBadge />
+            {t("bio")} <RequiredBadge />
           </Label>
           <Textarea id="bio" rows={4} aria-invalid={!!errors.bio} {...register("bio")} />
           <FormFieldError>{errors.bio?.message}</FormFieldError>
@@ -163,7 +165,7 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="yearsExperience">
-              Years of experience <OptionalBadge />
+              {t("yearsExperience")} <OptionalBadge />
             </Label>
             <Input
               id="yearsExperience"
@@ -177,7 +179,7 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="serviceRadiusKm">
-              Service radius (km) <OptionalBadge />
+              {t("serviceRadius")} <OptionalBadge />
             </Label>
             <Input
               id="serviceRadiusKm"
@@ -191,33 +193,33 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
         </div>
       </FormSection>
 
-      <FormSection title="Contact information">
+      <FormSection title={t("contactSection")}>
         <fieldset className="flex flex-col gap-3 rounded-lg border border-border p-4">
-          <legend className="sr-only">Contact information</legend>
+          <legend className="sr-only">{t("contactSection")}</legend>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="contactEmail">
-              Contact email <OptionalBadge />
+              {t("contactEmail")} <OptionalBadge />
             </Label>
             <Input id="contactEmail" aria-invalid={!!errors.contactEmail} {...register("contactEmail")} />
             <FormFieldError>{errors.contactEmail?.message}</FormFieldError>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="contactPhone">
-              Contact phone <OptionalBadge />
+              {t("contactPhone")} <OptionalBadge />
             </Label>
             <Input id="contactPhone" aria-invalid={!!errors.contactPhone} {...register("contactPhone")} />
             <FormFieldError>{errors.contactPhone?.message}</FormFieldError>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="websiteUrl">
-              Website URL <OptionalBadge />
+              {t("websiteUrl")} <OptionalBadge />
             </Label>
             <Input id="websiteUrl" aria-invalid={!!errors.websiteUrl} {...register("websiteUrl")} />
             <FormFieldError>{errors.websiteUrl?.message}</FormFieldError>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="taxId">
-              Tax ID (NIF/CIF) <OptionalBadge />
+              {t("taxId")} <OptionalBadge />
             </Label>
             <Input id="taxId" aria-invalid={!!errors.taxId} {...register("taxId")} />
             <FormFieldError>{errors.taxId?.message}</FormFieldError>
@@ -226,10 +228,10 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
       </FormSection>
 
       {isEditing && (
-        <FormSection title="Availability">
+        <FormSection title={t("availabilitySection")}>
           <div className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-border px-4 py-2">
             <Label htmlFor="isAcceptingRequests" className="text-sm font-medium text-foreground">
-              Currently accepting new requests
+              {t("acceptingRequests")}
             </Label>
             <Switch id="isAcceptingRequests" {...register("isAcceptingRequests")} />
           </div>
@@ -238,7 +240,7 @@ export function ProfessionalProfileForm({ professional }: { professional: Profes
 
       <FormActions stickyOnMobile>
         <Button type="submit" disabled={isSubmitting} className="sm:min-w-48">
-          {isSubmitting ? "Saving…" : isEditing ? "Save changes" : "Create professional profile"}
+          {isSubmitting ? t("saving") : isEditing ? t("saveChanges") : t("create")}
         </Button>
       </FormActions>
     </form>

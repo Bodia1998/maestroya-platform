@@ -12,5 +12,192 @@
   "passwordTooWeak": "The password must include upper case, lower case and numbers.",
   "mismatch": "The values do not match.",
   "invalid": "The value entered is not valid.",
-  "summary": "Please fix the errors below."
+  "summary": "Please fix the errors below.",
+  "dto": {
+    "ids": {
+      "action": "Invalid action.",
+      "adminUser": "Invalid admin user.",
+      "admin": "Invalid admin.",
+      "appeal": "Invalid appeal.",
+      "appointment": "Invalid appointment.",
+      "case": "Invalid case.",
+      "company": "Invalid company.",
+      "conversation": "Invalid conversation.",
+      "dispute": "Invalid dispute.",
+      "document": "Invalid document.",
+      "invitation": "Invalid invitation.",
+      "job": "Invalid job.",
+      "member": "Invalid member.",
+      "notification": "Invalid notification.",
+      "payment": "Invalid payment.",
+      "portfolioItem": "Invalid portfolio item.",
+      "professional": "Invalid professional.",
+      "quote": "Invalid quote.",
+      "recipient": "Invalid recipient.",
+      "review": "Invalid review.",
+      "reviewer": "Invalid reviewer.",
+      "serviceCategory": "Invalid service category.",
+      "serviceRequest": "Invalid service request.",
+      "ticket": "Invalid ticket.",
+      "user": "Invalid user.",
+      "verification": "Invalid verification."
+    },
+    "invitation": {
+      "linkInvalid": "Invalid invitation link."
+    },
+    "admin": {
+      "roleRequired": "At least one role is required."
+    },
+    "aiVisibility": {
+      "queryRequired": "A query is required.",
+      "unknownQuery": "Unknown query id — must be one of the active AI visibility queries."
+    },
+    "analytics": {
+      "dateRange": "The start date must be before the end date."
+    },
+    "auth": {
+      "nameRequired": "Enter your name.",
+      "passwordRequired": "Enter your password.",
+      "passwordsMismatch": "Passwords do not match."
+    },
+    "password": {
+      "minLength": "Password must be at least 10 characters.",
+      "tooLong": "Password is too long.",
+      "lowercase": "Password must include a lowercase letter.",
+      "uppercase": "Password must include an uppercase letter.",
+      "number": "Password must include a number."
+    },
+    "profile": {
+      "currentPasswordRequired": "Enter your current password.",
+      "passwordMustDiffer": "New password must be different from your current password.",
+      "timezoneRequired": "Select a timezone.",
+      "deleteConfirm": "Type \"DELETE\" to confirm."
+    },
+    "professional": {
+      "deactivateConfirm": "Type \"DEACTIVATE\" to confirm.",
+      "yearsNegative": "Years of experience cannot be negative.",
+      "yearsRealistic": "Enter a realistic number of years.",
+      "radiusNegative": "Service radius cannot be negative.",
+      "radiusRealistic": "Enter a realistic service radius.",
+      "descriptionRequired": "Add a short description."
+    },
+    "membership": {
+      "transferConfirm": "Type \"TRANSFER\" to confirm.",
+      "roleInvalid": "Select a valid role."
+    },
+    "address": {
+      "street": "Enter a street address.",
+      "city": "Enter a city.",
+      "postalCode": "Enter a postal code.",
+      "country": "Enter a country."
+    },
+    "location": {
+      "cityRequired": "City is required.",
+      "latitudeInvalid": "Enter a valid latitude.",
+      "longitudeInvalid": "Enter a valid longitude.",
+      "latitudeRange": "Latitude must be between -90 and 90.",
+      "longitudeRange": "Longitude must be between -180 and 180."
+    },
+    "search": {
+      "coordinatesTogether": "Both latitude and longitude must be provided together.",
+      "radiusRequiresLocation": "A search radius requires latitude/longitude to be set.",
+      "radiusInvalid": "Enter a valid search radius.",
+      "radiusPositive": "Search radius must be greater than zero.",
+      "radiusMax": "Search radius must be 200km or fewer.",
+      "minRatingInvalid": "Enter a valid minimum rating.",
+      "minRatingRange": "Minimum rating must be between 1 and 5.",
+      "minReviewCountInvalid": "Enter a valid minimum review count.",
+      "minReviewCountNegative": "Minimum review count cannot be negative.",
+      "minReviewCountTooLarge": "Minimum review count is too large."
+    },
+    "categories": {
+      "invalid": "Select a valid service category.",
+      "min": "Select at least one service category.",
+      "max": "Select up to 20 categories."
+    },
+    "company": {
+      "legalNameRequired": "Legal name is required.",
+      "taxIdRequired": "Tax ID is required."
+    },
+    "common": {
+      "wholeNumber": "Enter a whole number.",
+      "cancellationReasonRequired": "Choose a cancellation reason."
+    },
+    "portfolio": {
+      "mediaUrlInvalid": "Enter a valid media URL."
+    },
+    "referral": {
+      "codeFormat": "Referral code may only contain lowercase letters, digits, and underscores."
+    },
+    "verification": {
+      "countryCode": "Country code must be a 2-letter ISO 3166-1 code."
+    },
+    "chat": {
+      "messageRequired": "Write a message before sending."
+    },
+    "onboarding": {
+      "termsVersionRequired": "A terms version is required.",
+      "privacyVersionRequired": "A privacy policy version is required.",
+      "accountHolderRequired": "Enter the account holder's full name.",
+      "ibanInvalid": "Enter a valid IBAN."
+    },
+    "dispute": {
+      "reasonRequired": "A reason is required.",
+      "refundAmountRequired": "A refund amount is required for a partial resolution.",
+      "amountRequired": "An amount is required for this resolution.",
+      "adjustmentTypeRequired": "An adjustment type is required for this resolution.",
+      "messageEmpty": "Message cannot be empty.",
+      "fileUrlInvalid": "Invalid file URL.",
+      "fileUrlHttp": "File URL must be an http(s) link.",
+      "resolutionNoteRequired": "Resolution note is required.",
+      "amountPositive": "Amount must be positive."
+    },
+    "review": {
+      "responseEmpty": "A response cannot be empty.",
+      "ratingInteger": "Rating must be a whole number."
+    },
+    "notification": {
+      "actionUrlUnsafe": "Action URL must be a safe, internal path.",
+      "titleRequired": "Title is required.",
+      "messageRequired": "Message is required."
+    },
+    "quote": {
+      "itemsRequired": "Add at least one item to your quote.",
+      "requiredMaterialsMissing": "Add at least one required material when materials are purchased by the customer.",
+      "materialsPriced": "Materials cannot be priced on a quote when the customer purchases them directly.",
+      "materialNameRequired": "Enter a name for this material.",
+      "itemDescriptionRequired": "Enter a description for this item.",
+      "quantityPositive": "Quantity must be greater than zero.",
+      "quantityRealistic": "Enter a realistic quantity.",
+      "unitPriceNegative": "Unit price cannot be negative.",
+      "unitPriceRealistic": "Enter a realistic unit price.",
+      "validUntilFuture": "Validity date must be in the future.",
+      "itemsMax": "A quote can have at most 20 items.",
+      "materialsMax": "A materials list can have at most 50 items."
+    },
+    "financial": {
+      "adjustmentPositive": "Adjustment amount must be greater than zero.",
+      "adjustmentRealistic": "Enter a realistic adjustment amount."
+    },
+    "booking": {
+      "startTimeInvalid": "Enter a valid start time.",
+      "endTimeInvalid": "Enter a valid end time.",
+      "endAfterStart": "End time must be after the start time."
+    },
+    "job": {
+      "reasonRequired": "Choose a reason.",
+      "decisionRequired": "Choose a decision.",
+      "describeProblem": "Please describe the problem in at least 20 characters."
+    },
+    "serviceRequest": {
+      "titleRequired": "Enter a title.",
+      "descriptionRequired": "Enter a description.",
+      "budgetNegative": "Budget cannot be negative.",
+      "budgetRange": "Minimum budget must not exceed maximum budget."
+    },
+    "featureFlag": {
+      "keyRequired": "Flag key is required.",
+      "keyFormat": "Flag key may only contain letters, numbers, '-', '_' and '.'."
+    }
+  }
 }

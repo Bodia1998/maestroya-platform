@@ -22,9 +22,9 @@ export const createProfessionalSchema = z.object({
   bio: z.string().trim().max(2000).optional().or(z.literal("")),
   yearsExperience: z
     .coerce.number()
-    .int("Enter a whole number.")
-    .min(0, "Years of experience cannot be negative.")
-    .max(80, "Enter a realistic number of years.")
+    .int("dto.common.wholeNumber")
+    .min(0, "dto.professional.yearsNegative")
+    .max(80, "dto.professional.yearsRealistic")
     .optional(),
   // Deliberately no `hourlyRate` field — not part of this marketplace's
   // MVP professional pricing model (pricing happens per-Quote, via the
@@ -37,20 +37,20 @@ export const createProfessionalSchema = z.object({
   // path can set or display it anymore.
   serviceRadiusKm: z
     .coerce.number()
-    .int("Enter a whole number.")
-    .min(0, "Service radius cannot be negative.")
-    .max(1000, "Enter a realistic service radius.")
+    .int("dto.common.wholeNumber")
+    .min(0, "dto.professional.radiusNegative")
+    .max(1000, "dto.professional.radiusRealistic")
     .optional(),
-  contactEmail: z.string().trim().toLowerCase().email("Enter a valid email address.").optional().or(z.literal("")),
+  contactEmail: z.string().trim().toLowerCase().email("email").optional().or(z.literal("")),
   contactPhone: z
     .string()
     .trim()
-    .regex(/^\+?[0-9\s-]{7,20}$/, "Enter a valid phone number.")
+    .regex(/^\+?[0-9\s-]{7,20}$/, "phone")
     .optional()
     .or(z.literal("")),
-  websiteUrl: z.string().trim().url("Enter a valid URL.").optional().or(z.literal("")),
+  websiteUrl: z.string().trim().url("url").optional().or(z.literal("")),
   taxId: optionalTrimmed(50),
-  categoryIds: z.array(z.string().uuid()).max(20, "Select up to 20 categories.").optional(),
+  categoryIds: z.array(z.string().uuid()).max(20, "dto.categories.max").optional(),
 });
 export type CreateProfessionalInput = z.infer<typeof createProfessionalSchema>;
 
@@ -68,8 +68,8 @@ export type UpdateProfessionalInput = z.infer<typeof updateProfessionalSchema>;
 export const updateProfessionalServicesSchema = z.object({
   categoryIds: z
     .array(z.string().uuid())
-    .min(1, "Select at least one service category.")
-    .max(20, "Select up to 20 categories."),
+    .min(1, "dto.categories.min")
+    .max(20, "dto.categories.max"),
 });
 export type UpdateProfessionalServicesInput = z.infer<typeof updateProfessionalServicesSchema>;
 
@@ -94,20 +94,20 @@ export const professionalOnboardingSchema = z.object({
   contactPhone: z
     .string()
     .trim()
-    .regex(/^\+?[0-9\s-]{7,20}$/, "Enter a valid phone number."),
-  bio: z.string().trim().min(1, "Add a short description.").max(2000),
+    .regex(/^\+?[0-9\s-]{7,20}$/, "phone"),
+  bio: z.string().trim().min(1, "dto.professional.descriptionRequired").max(2000),
   serviceRadiusKm: z
     .coerce.number()
-    .int("Enter a whole number.")
-    .min(0, "Service radius cannot be negative.")
-    .max(1000, "Enter a realistic service radius."),
+    .int("dto.common.wholeNumber")
+    .min(0, "dto.professional.radiusNegative")
+    .max(1000, "dto.professional.radiusRealistic"),
   address: addressSchema,
 });
 export type ProfessionalOnboardingInput = z.infer<typeof professionalOnboardingSchema>;
 
 export const deactivateProfessionalSchema = z.object({
   confirmationText: z.literal("DEACTIVATE", {
-    errorMap: () => ({ message: 'Type "DEACTIVATE" to confirm.' }),
+    errorMap: () => ({ message: "dto.professional.deactivateConfirm" }),
   }),
 });
 export type DeactivateProfessionalInput = z.infer<typeof deactivateProfessionalSchema>;

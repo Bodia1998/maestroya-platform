@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   Building2,
   Fan,
@@ -40,16 +41,17 @@ const ICONS_BY_SLUG: Record<string, LucideIcon> = {
 };
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
+  const t = useTranslations("marketing");
   if (categories.length === 0) return null;
 
   return (
     <section className="container flex flex-col gap-8 py-16">
       <div className="flex flex-col gap-2">
         <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-          Servicios más solicitados
+          {t("categories.title")}
         </h2>
         <p className="max-w-2xl text-muted-foreground">
-          Elige una categoría para ver profesionales verificados cerca de ti.
+          {t("categories.subtitle")}
         </p>
       </div>
 

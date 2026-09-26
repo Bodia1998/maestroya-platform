@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Mail } from "lucide-react";
+import { getFormatter, getTranslations } from "next-intl/server";
 
 import { createCompanyInvitationFormAction } from "@/app/(dashboard)/dashboard/company/[companyId]/invitations/actions";
 import { makeGetCompanyForMemberUseCase } from "@/application/use-cases/company/compose";
@@ -18,7 +19,17 @@ import { Select } from "@/components/ui/select";
 import { CompanyTabNav } from "../company-tab-nav";
 import { CancelInvitationButton } from "./cancel-invitation-button";
 
-export const metadata = { title: "Company invitations" };
+export async function generateMetadata() {
+  const t = await getTranslations("company.invitations");
+  return { title: t("metaTitle") };
+}
+
+const ASSIGNABLE_ROLES = ["ADMIN", "MANAGER", "MEMBER"] as const;
+const ROLE_KEYS = ["OWNER", "ADMIN", "MANAGER", "MEMBER"] as const;
+const INVITATION_STATUS_KEYS = ["PENDING", "ACCEPTED", "DECLINED", "EXPIRED", "CANCELLED"] as const;
+function isOneOf<T extends string>(values: readonly T[], value: string): value is T {
+  return (values as readonly string[]).includes(value);
+}
 
 const STATUS_VARIANT: Record<string, "success" | "warning" | "secondary"> = {
   PENDING: "warning",
@@ -42,6 +53,8 @@ export default async function CompanyInvitationsPage({ params }: { params: Promi
     throw error;
   }
 
+  const t = await getTranslations("company");
+  const format = await getFormatter();
   const invitations = await makeListCompanyInvitationsUseCase().execute(user.id, companyId);
 
   return (
@@ -49,32 +62,34 @@ export default async function CompanyInvitationsPage({ params }: { params: Promi
       <CompanyTabNav companyId={companyId} active="invitations" />
 
       <PageHeader
-        title="Invitations"
+        title={t("invitations.title")}
         breadcrumbs={[
           { label: company.tradeName ?? company.legalName, href: `/dashboard/company/${companyId}/profile` },
-          { label: "Invitations" },
+          { label: t("invitations.title") },
         ]}
       />
 
-      <Section title="Invite a member" bordered>
+      <Section title={t("invitations.inviteTitle")} bordered>
         <p className="text-sm text-muted-foreground">
-          Only existing MaestroYa users can be invited today. The invitation is valid for 14 days.
+          {t("invitations.inviteNotice")}
         </p>
         <form action={createCompanyInvitationFormAction.bind(null, companyId)} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="invite-email">Email</Label>
+            <Label htmlFor="invite-email">{t("invitations.email")}</Label>
             <Input id="invite-email" name="email" type="email" required />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="invite-role">Role</Label>
+            <Label htmlFor="invite-role">{t("invitations.role")}</Label>
             <Select id="invite-role" name="role" defaultValue="MEMBER" className="sm:max-w-xs">
-              <option value="ADMIN">ADMIN</option>
-              <option value="MANAGER">MANAGER</option>
-              <option value="MEMBER">MEMBER</option>
+              {ASSIGNABLE_ROLES.map((role) => (
+                <option key={role} value={role}>
+                  {t(`roles.${role}`)}
+                </option>
+              ))}
             </Select>
           </div>
           <Button type="submit" className="w-fit">
-            Send invitation
+            {t("invitations.send")}
           </Button>
         </form>
       </Section>
@@ -82,30 +97,37 @@ export default async function CompanyInvitationsPage({ params }: { params: Promi
       {invitations.length === 0 ? (
         <EmptyState
           icon={Mail}
-          title="No invitations yet"
-          description="Invitations you send will appear here until they're accepted or cancelled."
+          title={t("invitations.emptyTitle")}
+          description={t("invitations.emptyDescription")}
         />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full min-w-[560px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Role</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Expires</th>
-                <th className="px-4 py-3 font-medium"></th>
+                <th className="px-4 py-3 font-medium">{t("invitations.columns.email")}</th>
+                <th className="px-4 py-3 font-medium">{t("invitations.columns.role")}</th>
+                <th className="px-4 py-3 font-medium">{t("invitations.columns.status")}</th>
+                <th className="px-4 py-3 font-medium">{t("invitations.columns.expires")}</th>
+                <th className="px-4 py-3 font-medium">
+                  <span className="sr-only">{t("invitations.columns.actions")}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
               {invitations.map((invitation) => (
                 <tr key={invitation.id} className="border-b border-border/50 last:border-0">
                   <td className="px-4 py-3">{invitation.email}</td>
-                  <td className="px-4 py-3">{invitation.role}</td>
                   <td className="px-4 py-3">
-                    <Badge variant={STATUS_VARIANT[invitation.status] ?? "secondary"}>{invitation.status}</Badge>
+                    {isOneOf(ROLE_KEYS, invitation.role) ? t(`roles.${invitation.role}`) : invitation.role}
                   </td>
-                  <td className="px-4 py-3">{invitation.expiresAt.toLocaleDateString()}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant={STATUS_VARIANT[invitation.status] ?? "secondary"}>{isOneOf(INVITATION_STATUS_KEYS, invitation.status)
+                        ? t(`invitationStatus.${invitation.status}`)
+                        : invitation.status}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3">{format.dateTime(invitation.expiresAt, { dateStyle: "medium" })}</td>
                   <td className="px-4 py-3">
                     {invitation.status === "PENDING" && (
                       <CancelInvitationButton companyId={companyId} invitationId={invitation.id} email={invitation.email} />

@@ -1,0 +1,225 @@
+{
+  "tabs": {
+    "ariaLabel": "Unternehmensbereiche",
+    "profile": "Profil",
+    "members": "Mitglieder",
+    "invitations": "Einladungen",
+    "verification": "Verifizierung",
+    "selfBilling": "Gutschriftverfahren"
+  },
+  "roles": {
+    "OWNER": "Inhaber",
+    "ADMIN": "Admin",
+    "MANAGER": "Manager",
+    "MEMBER": "Mitglied"
+  },
+  "memberStatus": {
+    "ACTIVE": "Aktiv",
+    "PENDING": "Ausstehend",
+    "REMOVED": "Entfernt"
+  },
+  "invitationStatus": {
+    "PENDING": "Ausstehend",
+    "ACCEPTED": "Angenommen",
+    "DECLINED": "Abgelehnt",
+    "EXPIRED": "Abgelaufen",
+    "CANCELLED": "Storniert"
+  },
+  "companyStatus": {
+    "PENDING": "Ausstehend",
+    "ACTIVE": "Aktiv",
+    "SUSPENDED": "Gesperrt",
+    "DEACTIVATED": "Deaktiviert"
+  },
+  "errors": {
+    "invalidDetails": "Ungültige Unternehmensdaten.",
+    "createFailed": "Beim Erstellen des Unternehmens ist etwas schiefgelaufen.",
+    "updateFailed": "Beim Aktualisieren des Unternehmens ist etwas schiefgelaufen.",
+    "loadFailed": "Beim Laden des Unternehmens ist etwas schiefgelaufen."
+  },
+  "index": {
+    "metaTitle": "Meine Unternehmen",
+    "title": "Meine Unternehmen",
+    "subtitle": "Arbeite als Unternehmen oder Team mit mehreren Fachleuten – zusätzlich zu einem eventuell vorhandenen persönlichen Fachkraft-Profil.",
+    "emptyTitle": "Noch keine Unternehmen",
+    "emptyDescription": "Du bist noch kein Mitglied eines Unternehmens. Erstelle unten eines, um als Team zu arbeiten.",
+    "manage": "Verwalten",
+    "createTitle": "Unternehmen erstellen",
+    "legalNameRequired": "Firmenname laut Register (Pflichtfeld)",
+    "tradeName": "Handels- / Anzeigename",
+    "taxIdRequired": "Steuernummer (Pflichtfeld)",
+    "description": "Beschreibung",
+    "submit": "Unternehmen erstellen"
+  },
+  "acceptInvitation": {
+    "metaTitle": "Unternehmenseinladung",
+    "title": "Unternehmenseinladung",
+    "subtitle": "Du wurdest eingeladen, einem Unternehmen auf MaestroYa beizutreten. Wenn du annimmst, wirst du sofort aktives Mitglied.",
+    "missingToken": "In diesem Einladungslink fehlt das Token.",
+    "accept": "Einladung annehmen",
+    "decline": "Ablehnen",
+    "invalidLink": "Ungültiger Einladungslink.",
+    "acceptFailed": "Beim Annehmen dieser Einladung ist etwas schiefgelaufen.",
+    "declineFailed": "Beim Ablehnen dieser Einladung ist etwas schiefgelaufen."
+  },
+  "profile": {
+    "metaTitle": "Unternehmensprofil",
+    "subtitle": "Status: {status} · {verified}",
+    "verified": "Verifiziert",
+    "notVerified": "Nicht verifiziert",
+    "breadcrumbMyCompanies": "Meine Unternehmen",
+    "detailsTitle": "Unternehmensdaten",
+    "legalName": "Firmenname laut Register",
+    "tradeName": "Handels- / Anzeigename",
+    "description": "Beschreibung",
+    "contactTitle": "Kontaktinformationen",
+    "website": "Website",
+    "contactEmail": "Kontakt-E-Mail",
+    "contactPhone": "Kontakttelefon",
+    "city": "Stadt",
+    "province": "Provinz",
+    "save": "Änderungen speichern"
+  },
+  "members": {
+    "metaTitle": "Unternehmensmitglieder",
+    "title": "Mitglieder",
+    "activeCount": "{count, plural, one {# aktives Mitglied.} other {# aktive Mitglieder.}}",
+    "emptyTitle": "Noch keine Unternehmensmitglieder",
+    "emptyDescription": "Lade Teammitglieder über den Tab „Einladungen“ ein, um in diesem Unternehmenskonto zusammenzuarbeiten.",
+    "columns": {
+      "name": "Name",
+      "email": "E-Mail",
+      "role": "Rolle",
+      "status": "Status",
+      "actions": "Aktionen"
+    },
+    "roleFor": "Rolle für {name}",
+    "updateRole": "Rolle aktualisieren",
+    "transferTitle": "Inhaberschaft übertragen",
+    "transferNotice": "Nur der aktuelle Inhaber kann die Inhaberschaft übertragen. Diese Aktion ist unumkehrbar, es sei denn, der neue Inhaber überträgt sie zurück.",
+    "errors": {
+      "loadFailed": "Beim Laden der Mitglieder ist etwas schiefgelaufen.",
+      "invalidRole": "Ungültige Rolle.",
+      "changeRoleFailed": "Beim Ändern der Rolle dieses Mitglieds ist etwas schiefgelaufen.",
+      "invalidMember": "Ungültiges Mitglied.",
+      "removeFailed": "Beim Entfernen dieses Mitglieds ist etwas schiefgelaufen.",
+      "invalidRequest": "Ungültige Anfrage.",
+      "transferFailed": "Beim Übertragen der Inhaberschaft ist etwas schiefgelaufen."
+    },
+    "remove": {
+      "trigger": "Entfernen",
+      "title": "{name} entfernen?",
+      "description": "Die Person verliert sofort den Zugriff auf dieses Unternehmenskonto. Das kann hier nicht rückgängig gemacht werden.",
+      "confirm": "Ja, entfernen",
+      "pending": "Wird entfernt…"
+    },
+    "transfer": {
+      "trigger": "Inhaberschaft übertragen",
+      "title": "Inhaberschaft übertragen?",
+      "description": "Nur der aktuelle Inhaber kann die Inhaberschaft übertragen. Diese Aktion ist unumkehrbar, es sei denn, der neue Inhaber überträgt sie zurück.",
+      "confirm": "Ja, Inhaberschaft übertragen",
+      "pending": "Wird übertragen…",
+      "newOwner": "Neuer Inhaber",
+      "confirmationLabel": "Gib zur Bestätigung {keyword} ein"
+    }
+  },
+  "invitations": {
+    "metaTitle": "Unternehmenseinladungen",
+    "title": "Einladungen",
+    "inviteTitle": "Mitglied einladen",
+    "inviteNotice": "Derzeit können nur bestehende MaestroYa-Nutzer eingeladen werden. Die Einladung ist 14 Tage gültig.",
+    "email": "E-Mail",
+    "role": "Rolle",
+    "send": "Einladung senden",
+    "emptyTitle": "Noch keine Einladungen",
+    "emptyDescription": "Von dir gesendete Einladungen erscheinen hier, bis sie angenommen oder storniert werden.",
+    "columns": {
+      "email": "E-Mail",
+      "role": "Rolle",
+      "status": "Status",
+      "expires": "Läuft ab",
+      "actions": "Aktionen"
+    },
+    "errors": {
+      "loadFailed": "Beim Laden der Einladungen ist etwas schiefgelaufen.",
+      "invalid": "Ungültige Einladung.",
+      "createFailed": "Beim Erstellen der Einladung ist etwas schiefgelaufen.",
+      "cancelFailed": "Beim Stornieren dieser Einladung ist etwas schiefgelaufen."
+    },
+    "cancel": {
+      "trigger": "Stornieren",
+      "title": "Diese Einladung stornieren?",
+      "description": "{email} kann diese Einladung dann nicht mehr nutzen, um dem Unternehmen beizutreten.",
+      "confirm": "Ja, Einladung stornieren",
+      "pending": "Wird storniert…",
+      "keep": "Einladung behalten"
+    }
+  },
+  "verification": {
+    "metaTitle": "Unternehmensverifizierung",
+    "title": "Verifizierung",
+    "notStarted": "Dieses Unternehmen hat die Verifizierung noch nicht begonnen.",
+    "start": "Verifizierung starten",
+    "statusCopy": {
+      "DRAFT": "Noch nicht eingereicht. Lade mindestens ein Geschäftsdokument hoch und reiche es zur Prüfung ein.",
+      "PENDING": "Eingereicht – wartet auf Prüfung durch einen Admin.",
+      "UNDER_REVIEW": "Ein Admin prüft diese Anfrage gerade.",
+      "APPROVED": "Genehmigt – dein Unternehmen zeigt ein Verifizierungsabzeichen im öffentlichen Profil.",
+      "REJECTED": "Abgelehnt. Sieh dir den Grund unten an und reiche erneut ein, wenn du so weit bist.",
+      "RESUBMISSION_REQUIRED": "Vor einer Genehmigung sind Änderungen nötig. Sieh dir die Hinweise unten an.",
+      "EXPIRED": "Diese Genehmigung ist abgelaufen. Starte eine neue Verifizierungsanfrage."
+    },
+    "reason": "Grund",
+    "whatToUpdate": "Was zu aktualisieren ist",
+    "documents": "Dokumente",
+    "noDocuments": "Noch keine Dokumente hochgeladen.",
+    "docTypes": {
+      "BUSINESS_LICENSE": "Gewerbeerlaubnis",
+      "TAX_CERTIFICATE": "Steuerbescheinigung",
+      "INSURANCE_CERTIFICATE": "Versicherungsnachweis",
+      "PROFESSIONAL_CERTIFICATION": "Berufliche Zertifizierung",
+      "PROOF_OF_ADDRESS": "Adressnachweis",
+      "OTHER": "Sonstiges"
+    },
+    "remove": "Entfernen",
+    "uploadTitle": "Dokument hochladen",
+    "docType": "Dokumenttyp",
+    "file": "Datei",
+    "upload": "Dokument hochladen",
+    "submit": "Zur Prüfung einreichen",
+    "resubmit": "Erneut einreichen",
+    "errors": {
+      "startFailed": "Beim Starten der Verifizierung ist etwas schiefgelaufen.",
+      "invalidDocType": "Wähle einen gültigen Dokumenttyp.",
+      "chooseFile": "Wähle eine Datei zum Hochladen.",
+      "invalidFileType": "Dokumente müssen ein JPEG-, PNG- oder WebP-Bild oder ein PDF sein.",
+      "fileTooLarge": "Jedes Dokument muss kleiner als 10 MB sein.",
+      "uploadFailed": "Beim Hochladen dieses Dokuments ist etwas schiefgelaufen.",
+      "invalidDocument": "Ungültiges Dokument.",
+      "removeFailed": "Beim Entfernen dieses Dokuments ist etwas schiefgelaufen.",
+      "submitFailed": "Beim Einreichen zur Prüfung ist etwas schiefgelaufen.",
+      "resubmitFailed": "Beim erneuten Einreichen zur Prüfung ist etwas schiefgelaufen."
+    }
+  },
+  "selfBilling": {
+    "metaTitle": "Gutschriftverfahren des Unternehmens",
+    "title": "Unternehmen",
+    "subtitle": "Verwalte die Autorisierung deines Unternehmens für das Gutschriftverfahren und die zugehörigen Rechnungen.",
+    "ownerOnlyTitle": "Nur Inhaber/Admin",
+    "ownerOnlyBody": "Nur der Inhaber des Unternehmens oder ein Admin kann den Status der Autorisierung für das Gutschriftverfahren einsehen oder ändern.",
+    "sectionTitle": "Autorisierung für das Gutschriftverfahren",
+    "notAuthorized": "Nicht autorisiert",
+    "activeBody": "Dieses Unternehmen hat MaestroYa autorisiert, in seinem Namen Rechnungen im Gutschriftverfahren („{legalTerm}“) für abgeschlossene Aufträge auszustellen. Du kannst diese Autorisierung jederzeit widerrufen.",
+    "revoke": "Autorisierung widerrufen",
+    "inactiveBody": "Ohne diese Autorisierung kann MaestroYa keine Rechnungen im Gutschriftverfahren im Namen dieses Unternehmens ausstellen.",
+    "grant": "Autorisierung erteilen",
+    "invoicesTitle": "Rechnungen",
+    "noInvoices": "Noch keine Rechnungen im Gutschriftverfahren.",
+    "notYetIssued": "Noch nicht ausgestellt",
+    "errors": {
+      "invalidCompany": "Ungültiges Unternehmen.",
+      "grantFailed": "Beim Erteilen der Autorisierung für das Gutschriftverfahren ist etwas schiefgelaufen.",
+      "revokeFailed": "Beim Widerrufen der Autorisierung für das Gutschriftverfahren ist etwas schiefgelaufen."
+    }
+  }
+}

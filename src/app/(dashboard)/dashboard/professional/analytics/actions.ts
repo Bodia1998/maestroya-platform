@@ -1,9 +1,11 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
+
 import { analyticsDateRangeSchema, type ProfessionalAnalyticsSummaryDTO } from "@/application/dto/analytics.dto";
 import { makeGetProfessionalAnalyticsSummaryUseCase } from "@/application/use-cases/analytics/compose";
-import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
+import { localizeActionError, localizeZodError } from "@/presentation/i18n/server";
 
 /**
  * Module 23 — Analytics: professional-facing Server Action. Only
@@ -27,16 +29,14 @@ export async function getProfessionalAnalyticsSummaryAction(
   const user = await requireAuth();
   const parsed = analyticsDateRangeSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid date range." };
+    const t = await getTranslations("professional.errors");
+    return { success: false, error: await localizeZodError(parsed.error, t("invalidDateRange")) };
   }
   try {
     const data = await makeGetProfessionalAnalyticsSummaryUseCase().execute(user.id, parsed.data);
     return { success: true, data };
   } catch (error) {
-    if (error instanceof DomainError) {
-      return { success: false, error: error.message };
-    }
-    console.error(error);
-    return { success: false, error: "Something went wrong loading your analytics." };
+    const t = await getTranslations("professional.errors");
+    return { success: false, error: await localizeActionError(error, t("loadAnalytics")) };
   }
 }

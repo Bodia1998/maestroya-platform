@@ -1,4 +1,5 @@
 import { LifeBuoy } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { listAdminSupportTicketsAction } from "./actions";
 import { DEFAULT_PAGE_SIZE } from "@/domain/services/admin-rules";
@@ -11,7 +12,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { ButtonLink } from "@/components/ui/button-link";
 
-export const metadata = { title: "Admin — Support tickets" };
+export async function generateMetadata() {
+  const t = await getTranslations("admin");
+  return { title: t("common.metaTitle", { page: t("supportTicketsPage.title") }) };
+}
 
 type SearchParams = Promise<{ page?: string; search?: string }>;
 
@@ -29,9 +33,13 @@ export default async function AdminSupportTicketsPage({ searchParams }: { search
 
   const qs = (p: number) => `/admin/support-tickets?page=${p}${search ? `&search=${encodeURIComponent(search)}` : ""}`;
 
+  const t = await getTranslations("admin");
+  const enumLabel = (group: string, value: string) =>
+    t.has(`${group}.${value}` as never) ? t(`${group}.${value}` as never) : value;
+
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Support tickets" subtitle="Customer/professional support requests." />
+      <PageHeader title={t("supportTicketsPage.title")} subtitle={t("supportTicketsPage.subtitle")} />
 
       {!result.success && (
         <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
@@ -39,42 +47,42 @@ export default async function AdminSupportTicketsPage({ searchParams }: { search
         </p>
       )}
 
-      <AdminFilterForm aria-label="Search support tickets">
+      <AdminFilterForm aria-label={t("supportTicketsPage.searchLabel")}>
         <SearchInput
           name="search"
           defaultValue={search}
-          placeholder="Search ticket number or subject"
-          aria-label="Search ticket number or subject"
+          placeholder={t("supportTicketsPage.searchPlaceholder")}
+          aria-label={t("supportTicketsPage.searchPlaceholder")}
           className="flex-1 min-w-[200px]"
         />
       </AdminFilterForm>
 
       {tickets.length === 0 ? (
-        <EmptyState icon={LifeBuoy} title="No tickets found" description="Support tickets will appear here." />
+        <EmptyState icon={LifeBuoy} title={t("supportTicketsPage.empty")} description={t("supportTicketsPage.emptyDescription")} />
       ) : (
-        <AdminDataTable caption="Support tickets" minWidth={560}>
+        <AdminDataTable caption={t("supportTicketsPage.title")} minWidth={560}>
           <AdminTableHeadRow>
-            <AdminTh>Ticket</AdminTh>
-            <AdminTh>Subject</AdminTh>
-            <AdminTh>Category</AdminTh>
-            <AdminTh>Status</AdminTh>
+            <AdminTh>{t("supportTicketsPage.columns.ticket")}</AdminTh>
+            <AdminTh>{t("supportTicketsPage.columns.subject")}</AdminTh>
+            <AdminTh>{t("supportTicketsPage.columns.category")}</AdminTh>
+            <AdminTh>{t("common.columns.status")}</AdminTh>
           </AdminTableHeadRow>
           <AdminTableBody>
-            {tickets.map((t) => (
-              <AdminTableRow key={t.id}>
+            {tickets.map((ticket) => (
+              <AdminTableRow key={ticket.id}>
                 <td className="px-4 py-3">
                   <ButtonLink
-                    href={`/admin/support-tickets/${t.id}`}
+                    href={`/admin/support-tickets/${ticket.id}`}
                     variant="link"
                     className="h-auto p-0 font-medium"
                   >
-                    {t.ticketNumber}
+                    {ticket.ticketNumber}
                   </ButtonLink>
                 </td>
-                <td className="px-4 py-3">{t.subject}</td>
-                <td className="px-4 py-3">{t.category}</td>
+                <td className="px-4 py-3">{ticket.subject}</td>
+                <td className="px-4 py-3">{enumLabel("supportTicketsPage.category", ticket.category)}</td>
                 <td className="px-4 py-3">
-                  <StatusBadge status={t.status} />
+                  <StatusBadge status={ticket.status} />
                 </td>
               </AdminTableRow>
             ))}

@@ -62,8 +62,9 @@ export function Providers({ children, locale, messages, isAuthenticated }: Provi
             the session or the query cache above it. */}
         <I18nProvider locale={locale} messages={messages} isAuthenticated={isAuthenticated}>
           {children}
+          {/* Inside the intl provider: the toast close button / live-region labels are translated (Module 120). */}
+          <Toaster />
         </I18nProvider>
-        <Toaster />
         {process.env.NODE_ENV === "development" && <ReactQueryDevtools initialIsOpen={false} />}
       </QueryClientProvider>
     </SessionProvider>

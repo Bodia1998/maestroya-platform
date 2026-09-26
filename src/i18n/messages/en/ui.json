@@ -1,0 +1,51 @@
+{
+  "legalDocument": {
+    "issuedLanguageNotice": "This document is shown in the language it was issued in (Spanish)."
+  },
+  "close": "Close",
+  "breadcrumb": {
+    "label": "Breadcrumb"
+  },
+  "chip": {
+    "remove": "Remove"
+  },
+  "combobox": {
+    "placeholder": "Select an option",
+    "searchPlaceholder": "Search…",
+    "empty": "No results"
+  },
+  "confirmDialog": {
+    "cancel": "Cancel",
+    "genericError": "Something went wrong. Please try again."
+  },
+  "errorState": {
+    "title": "Something went wrong",
+    "retry": "Retry"
+  },
+  "loadingState": {
+    "label": "Loading…"
+  },
+  "spinner": {
+    "label": "Loading"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "passwordInput": {
+    "show": "Show password",
+    "hide": "Hide password"
+  },
+  "searchInput": {
+    "clear": "Clear search"
+  },
+  "toast": {
+    "close": "Close notification",
+    "region": "Notifications",
+    "assertiveRegion": "Important notifications"
+  },
+  "fieldBadges": {
+    "optional": "Optional"
+  }
+}

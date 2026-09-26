@@ -1,0 +1,134 @@
+{
+  "categories": {
+    "fontaneria": {
+      "name": "Instalatérské práce",
+      "description": "Opravy úniků vody, baterií, potrubí a vodovodních instalací."
+    },
+    "electricidad": {
+      "name": "Elektroinstalace",
+      "description": "Elektroinstalace, poruchy, rozvaděče a zásuvky."
+    },
+    "aire-acondicionado": {
+      "name": "Klimatizace",
+      "description": "Instalace, údržba a opravy klimatizace."
+    },
+    "pintura": {
+      "name": "Malířské práce",
+      "description": "Vnitřní i venkovní malování, vyrovnání stěn a povrchové úpravy."
+    },
+    "reformas": {
+      "name": "Rekonstrukce",
+      "description": "Kompletní i částečné rekonstrukce domácností."
+    },
+    "montaje-de-muebles": {
+      "name": "Montáž nábytku",
+      "description": "Montáž a sestavení nábytku."
+    },
+    "fontanero": {
+      "name": "Instalatér"
+    },
+    "electricista": {
+      "name": "Elektrikář"
+    },
+    "tecnico-climatizacion": {
+      "name": "Technik klimatizací"
+    },
+    "pintor": {
+      "name": "Malíř"
+    },
+    "reformista": {
+      "name": "Specialista na rekonstrukce"
+    },
+    "montador-de-muebles": {
+      "name": "Montážník nábytku"
+    }
+  },
+  "countries": {
+    "ES": "Španělsko"
+  },
+  "breadcrumbs": {
+    "home": "Domů",
+    "services": "Služby",
+    "locations": "Lokality"
+  },
+  "shared": {
+    "faqTitle": "Časté dotazy",
+    "provinceCountry": "{province}, {country}",
+    "serviceInCity": "{service} – {city}",
+    "requestThisService": "Poptat tuto službu",
+    "viewProfessionals": "Zobrazit profesionály",
+    "platformScopeTitle": "Působnost platformy",
+    "confirmedLocalitiesTitle": "Lokality s potvrzeným pokrytím"
+  },
+  "index": {
+    "title": "Služby pro domácnost",
+    "intro": "Toto jsou kategorie služeb, které jsou dnes v MaestroYa dostupné. Vyberte si jednu a zjistěte, co můžete poptat a jak funguje proces nabídek.",
+    "empty": "Momentálně nejsou zveřejněny žádné kategorie služeb.",
+    "locationsPrompt": "Hledáte pokrytí podle oblasti? <link>Prohlédněte si dostupné lokality</link>."
+  },
+  "servicePage": {
+    "whatYouCanRequestTitle": "Co můžete poptat",
+    "whatProfessionalsProvideTitle": "Co profesionál obvykle zajišťuje",
+    "howItWorksTitle": "Jak to funguje v MaestroYa",
+    "howItWorks": {
+      "step1": "Zveřejníte poptávku s popisem práce v kategorii „{service}“.",
+      "step2": "Profesionálové, kteří pokrývají tuto kategorii a vaši oblast, ji mohou prohlédnout a poslat vám nabídku.",
+      "step3": "Porovnáte obdržené nabídky a přijmete tu, která vám vyhovuje.",
+      "step4": "Zakázka se naplánuje a provede podle toho, co bylo dohodnuto v přijaté nabídce."
+    },
+    "areasTitle": "Oblasti s touto službou",
+    "beforeRequestingTitle": "Než poptáte",
+    "relatedTitle": "Související služby",
+    "cta": "Chcete začít? Zveřejněte poptávku v kategorii „{service}“ a profesionálové, kteří ji pokrývají, vám budou moci poslat nabídku."
+  },
+  "serviceLocationPage": {
+    "confirmedCoverage": "MaestroYa má potvrzené pokrytí v lokalitě {city} ({province}), takže můžete zveřejnit poptávku s adresou v této lokalitě.",
+    "localFaq": {
+      "question": "Mohu v lokalitě {city} zadat poptávku v kategorii „{service}“?",
+      "answer": "Ano. Můžete zveřejnit poptávku v kategorii „{service}“ s adresou v lokalitě {city} ({province}). Profesionálové této kategorie, kteří oblast pokrývají, ji budou moci prohlédnout a poslat vám nabídku."
+    },
+    "howItWorksTitle": "Jak to funguje v lokalitě {city}",
+    "howItWorks": {
+      "step1": "Zveřejníte poptávku v kategorii „{service}“ s adresou v lokalitě {city}.",
+      "step2": "Profesionálové této kategorie, kteří oblast pokrývají, vám mohou poslat nabídku.",
+      "step3": "Porovnáte nabídky a přijmete tu, která vám vyhovuje."
+    },
+    "cta": "Chcete začít? Zveřejněte poptávku v kategorii „{service}“ v lokalitě {city}."
+  },
+  "locationsIndex": {
+    "title": "Lokality",
+    "intro": "MaestroYa je tržiště služeb pro domácnost navržené tak, aby fungovalo v celém Španělsku. Skutečná dostupnost profesionálů závisí na dané oblasti.",
+    "nationalCardTitle": "MaestroYa – {country}",
+    "nationalCardDescription": "Co znamená, že MaestroYa je tržiště s celostátní působností, a jak funguje místní dostupnost.",
+    "confirmedEmpty": "Momentálně nejsou zveřejněny žádné lokality s potvrzeným pokrytím.",
+    "confirmedNote": "Tento seznam obsahuje jen lokality, jejichž pokrytí potvrzují reálná data platformy — nejde o úplný seznam oblastí, kde MaestroYa může začít působit.",
+    "servicesPrompt": "Hledáte podle druhu služby? <link>Prohlédněte si dostupné kategorie</link>."
+  },
+  "locationPage": {
+    "title": "MaestroYa – {city}",
+    "servicesTitle": "Služby dostupné v lokalitě {city}",
+    "howItWorksTitle": "Jak to funguje ve vaší oblasti",
+    "howItWorks": {
+      "step1": "Zveřejníte poptávku s popisem práce a vaší adresou v lokalitě {city}.",
+      "step2": "Profesionálové, kteří pokrývají danou kategorii a tuto oblast, ji mohou prohlédnout a poslat vám nabídku.",
+      "step3": "Porovnáte obdržené nabídky a přijmete tu, která vám vyhovuje."
+    },
+    "relatedTitle": "Další lokality",
+    "cta": "Chcete začít? Zveřejněte poptávku a profesionálové, kteří pokrývají lokalitu {city}, vám budou moci poslat nabídku.",
+    "viewProfessionalsIn": "Zobrazit profesionály v lokalitě {city}"
+  },
+  "nationalPage": {
+    "title": "MaestroYa – {country}",
+    "categoriesTitle": "Kategorie služeb",
+    "localAvailabilityTitle": "Jak funguje místní dostupnost",
+    "confirmedEmpty": "Zatím nejsou žádné lokality s pokrytím potvrzeným reálnými daty platformy.",
+    "confirmedNote": "Tento seznam obsahuje jen lokality, jejichž pokrytí potvrzují reálná data platformy. To, že zde lokalita není, neznamená, že v ní MaestroYa nebude moci v budoucnu působit — znamená to, že dnes pro ni není co zobrazit jako potvrzené pokrytí.",
+    "cta": "Chcete začít? Zveřejněte poptávku s popisem služby, kterou potřebujete, a svého umístění.",
+    "searchProfessionals": "Hledat profesionály",
+    "joinAsProfessional": "Připojit se jako profesionál"
+  },
+  "map": {
+    "ariaLabel": "Mapa",
+    "unavailable": "Mapa momentálně není k dispozici."
+  }
+}

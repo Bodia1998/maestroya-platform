@@ -3,17 +3,20 @@
     "greeting": "Hola {name}:",
     "signature": "El equipo de MaestroYa",
     "footer": "Has recibido este correo porque tienes una cuenta en MaestroYa.",
-    "ignoreNotice": "Si no has solicitado esto, puedes ignorar este correo."
+    "ignoreNotice": "Si no has solicitado esto, puedes ignorar este correo.",
+    "linkFallback": "Si el botón no funciona, copia y pega este enlace en tu navegador:"
   },
   "verifyEmail": {
     "subject": "Verifica tu dirección de correo",
     "body": "Confirma tu dirección de correo para activar tu cuenta de MaestroYa.",
-    "cta": "Verificar mi correo"
+    "cta": "Verificar mi correo",
+    "expiresIn": "Este enlace caduca en {hours, plural, one {# hora} other {# horas}}."
   },
   "resetPassword": {
     "subject": "Restablece tu contraseña",
     "body": "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.",
     "cta": "Crear una nueva contraseña",
-    "expiry": "Este enlace caduca el {date, date, medium} a las {date, time, short}."
+    "expiry": "Este enlace caduca el {date, date, medium} a las {date, time, short}.",
+    "expiresIn": "Este enlace caduca en {hours, plural, one {# hora} other {# horas}}."
   }
 }

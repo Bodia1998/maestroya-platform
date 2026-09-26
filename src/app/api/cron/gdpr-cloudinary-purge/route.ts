@@ -39,6 +39,7 @@ export const GET = withApiTracing("/api/cron/gdpr-cloudinary-purge", async funct
       reason: "CRON_SECRET is not configured",
     });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "Cron endpoint is not configured." },
       { status: 503, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
@@ -51,6 +52,7 @@ export const GET = withApiTracing("/api/cron/gdpr-cloudinary-purge", async funct
       route: "/api/cron/gdpr-cloudinary-purge",
     });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "Unauthorized." },
       { status: 401, headers: { [REQUEST_ID_HEADER]: requestId } },
     );
@@ -76,6 +78,7 @@ export const GET = withApiTracing("/api/cron/gdpr-cloudinary-purge", async funct
       // discarded" requirement, rule 5/17), but an operator-actionable
       // signal: a message-level Sentry report, same convention
       // `reconciliation-run/route.ts` uses for a failed run.
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       createErrorReporter().reportMessage("GDPR Cloudinary purge documents moved to DEAD_LETTER", {
         tags: { route: "/api/cron/gdpr-cloudinary-purge", source: "background-job" },
         extra: { requestId, deadLettered: result.deadLettered, claimed: result.claimed },
@@ -97,6 +100,7 @@ export const GET = withApiTracing("/api/cron/gdpr-cloudinary-purge", async funct
       extra: { requestId },
     });
     return NextResponse.json(
+      // i18n-ignore — machine/operator-facing (API response, header, SQL or log), not UI text
       { status: "error", message: "GDPR Cloudinary purge retry failed." },
       { status: 500, headers: { [REQUEST_ID_HEADER]: requestId } },
     );

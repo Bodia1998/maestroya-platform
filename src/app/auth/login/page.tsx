@@ -1,11 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { getCurrentUser } from "@/infrastructure/auth/rbac";
 import { resolvePostLoginDestination } from "@/shared/utils/resolve-post-login-destination";
 import { LoginForm } from "./login-form";
 
-export const metadata = { title: "Log in" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth");
+  return { title: t("meta.login") };
+}
 
 /**
  * `?intent=professional` (from site-header.tsx's "Soy profesional" CTA)
@@ -47,27 +52,32 @@ export default async function LoginPage({
     redirect(destination);
   }
 
+  const t = await getTranslations("auth");
+
   return (
     <div className="flex flex-col gap-6">
       <div className="text-center">
-        <h1 className="text-2xl font-semibold">{isProfessionalIntent ? "Professional log in" : "Log in"}</h1>
+        <h1 className="text-2xl font-semibold">
+          {isProfessionalIntent ? t("login.professionalTitle") : t("login.title")}
+        </h1>
         <p className="mt-1 text-sm text-foreground/70">
-          {isProfessionalIntent
-            ? "Log in to your professional account."
-            : "Welcome back to MaestroYa."}
+          {isProfessionalIntent ? t("login.professionalSubtitle") : t("login.subtitle")}
         </p>
       </div>
 
       <LoginForm />
 
       <p className="text-center text-sm text-foreground/70">
-        Don&apos;t have an account?{" "}
-        <Link
-          href={isProfessionalIntent ? "/auth/register?intent=professional" : "/auth/register"}
-          className="font-medium underline"
-        >
-          Sign up
-        </Link>
+        {t.rich("login.noAccount", {
+          link: (chunks) => (
+            <Link
+              href={isProfessionalIntent ? "/auth/register?intent=professional" : "/auth/register"}
+              className="font-medium underline"
+            >
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
     </div>
   );

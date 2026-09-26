@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
+import type { ZodError } from "zod";
 
-import { DomainError } from "@/domain/errors/domain-error";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import {
   createProfessionalSchema,
@@ -18,21 +19,35 @@ import {
   makeUpdateProfessionalServicesUseCase,
   makeUpdateProfessionalUseCase,
 } from "@/application/use-cases/professional/compose";
+import { localizeActionError, localizeZodFieldErrors } from "@/presentation/i18n/server";
 
 export type ActionResult =
   | { success: true }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
-// Same translation convention as the Profile module's actions.ts: domain
-// errors surface their own message (safe, user-facing by construction),
-// anything else is logged server-side and replaced with a generic message
-// so internals never leak to the client.
-function fromDomainError(error: unknown, fallback: string): ActionResult {
-  if (error instanceof DomainError) {
-    return { success: false, error: error.message };
-  }
-  console.error(error);
-  return { success: false, error: fallback };
+// Module 120 — errors are localised at the edge: domain errors map to
+// their catalog sentence (`localizeActionError`), anything else is logged
+// server-side and replaced with the caller's localised fallback so
+// internals never leak to the client.
+async function fromDomainError(error: unknown, fallbackKey: FallbackKey): Promise<ActionResult> {
+  const t = await getTranslations("professional.errors");
+  return { success: false, error: await localizeActionError(error, t(fallbackKey)) };
+}
+
+type FallbackKey =
+  | "createProfile"
+  | "onboarding"
+  | "updateProfile"
+  | "updateServices"
+  | "deactivate";
+
+async function invalid(error: ZodError): Promise<ActionResult> {
+  const t = await getTranslations("professional.errors");
+  return {
+    success: false,
+    error: t("fixErrors"),
+    fieldErrors: await localizeZodFieldErrors(error),
+  };
 }
 
 export async function createProfessionalAction(formData: unknown): Promise<ActionResult> {
@@ -40,11 +55,7 @@ export async function createProfessionalAction(formData: unknown): Promise<Actio
 
   const parsed = createProfessionalSchema.safeParse(formData);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return invalid(parsed.error);
   }
 
   try {
@@ -52,7 +63,7 @@ export async function createProfessionalAction(formData: unknown): Promise<Actio
     revalidatePath("/dashboard/professional");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong creating your professional profile.");
+    return fromDomainError(error, "createProfile");
   }
 }
 
@@ -71,11 +82,7 @@ export async function completeProfessionalOnboardingAction(
 
   const parsed = professionalOnboardingSchema.safeParse(formData);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return invalid(parsed.error);
   }
 
   try {
@@ -84,7 +91,7 @@ export async function completeProfessionalOnboardingAction(
     revalidatePath("/dashboard/professional/onboarding");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong setting up your professional profile.");
+    return fromDomainError(error, "onboarding");
   }
 }
 
@@ -93,11 +100,7 @@ export async function updateProfessionalAction(formData: unknown): Promise<Actio
 
   const parsed = updateProfessionalSchema.safeParse(formData);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return invalid(parsed.error);
   }
 
   try {
@@ -105,7 +108,7 @@ export async function updateProfessionalAction(formData: unknown): Promise<Actio
     revalidatePath("/dashboard/professional");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong updating your professional profile.");
+    return fromDomainError(error, "updateProfile");
   }
 }
 
@@ -114,11 +117,7 @@ export async function updateProfessionalServicesAction(formData: unknown): Promi
 
   const parsed = updateProfessionalServicesSchema.safeParse(formData);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return invalid(parsed.error);
   }
 
   try {
@@ -126,7 +125,7 @@ export async function updateProfessionalServicesAction(formData: unknown): Promi
     revalidatePath("/dashboard/professional");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong updating your service categories.");
+    return fromDomainError(error, "updateServices");
   }
 }
 
@@ -135,11 +134,7 @@ export async function deactivateProfessionalAction(formData: unknown): Promise<A
 
   const parsed = deactivateProfessionalSchema.safeParse(formData);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: "Please fix the errors below.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
+    return invalid(parsed.error);
   }
 
   try {
@@ -147,6 +142,6 @@ export async function deactivateProfessionalAction(formData: unknown): Promise<A
     revalidatePath("/dashboard/professional");
     return { success: true };
   } catch (error) {
-    return fromDomainError(error, "Something went wrong deactivating your professional profile.");
+    return fromDomainError(error, "deactivate");
   }
 }

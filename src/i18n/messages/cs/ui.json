@@ -1,0 +1,51 @@
+{
+  "legalDocument": {
+    "issuedLanguageNotice": "Tento dokument je zobrazen v jazyce, ve kterém byl vystaven (ve španělštině)."
+  },
+  "close": "Zavřít",
+  "breadcrumb": {
+    "label": "Drobečková navigace"
+  },
+  "chip": {
+    "remove": "Odebrat"
+  },
+  "combobox": {
+    "placeholder": "Vyberte možnost",
+    "searchPlaceholder": "Hledat…",
+    "empty": "Žádné výsledky"
+  },
+  "confirmDialog": {
+    "cancel": "Zrušit",
+    "genericError": "Něco se pokazilo. Zkuste to znovu."
+  },
+  "errorState": {
+    "title": "Něco se pokazilo",
+    "retry": "Zkusit znovu"
+  },
+  "loadingState": {
+    "label": "Načítání…"
+  },
+  "spinner": {
+    "label": "Načítání"
+  },
+  "pagination": {
+    "label": "Stránkování",
+    "previous": "Předchozí",
+    "next": "Další"
+  },
+  "passwordInput": {
+    "show": "Zobrazit heslo",
+    "hide": "Skrýt heslo"
+  },
+  "searchInput": {
+    "clear": "Vymazat hledání"
+  },
+  "toast": {
+    "close": "Zavřít oznámení",
+    "region": "Oznámení",
+    "assertiveRegion": "Důležitá oznámení"
+  },
+  "fieldBadges": {
+    "optional": "Nepovinné"
+  }
+}
