@@ -1,3 +1,4 @@
+import { LegacyFlowBoundaryError } from "@/domain/services/transaction-flow";
 import { SelfBillingNotAuthorizedError, ValidationError } from "@/domain/errors/domain-error";
 import type { EventHandler } from "@/application/ports/event-bus";
 import type { PaymentReleaseApproved } from "@/domain/events/payment-release-approved";
@@ -155,5 +156,10 @@ export class ActivateInvoiceLifecycleOnPaymentReleaseApprovedSubscriber implemen
 }
 
 function isExpectedNonActivation(error: unknown): boolean {
-  return error instanceof SelfBillingNotAuthorizedError || error instanceof ValidationError;
+  // LegacyFlowBoundaryError (Module 121): a non-legacy request never gets a legacy invoice/receipt.
+  return (
+    error instanceof SelfBillingNotAuthorizedError ||
+    error instanceof ValidationError ||
+    error instanceof LegacyFlowBoundaryError
+  );
 }

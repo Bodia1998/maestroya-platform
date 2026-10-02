@@ -1,3 +1,4 @@
+import { transactionFlowGuard } from "@/application/services/flow/compose";
 import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prisma/repositories/prisma-customer-profile-repository";
 import { PrismaProfessionalDiscoveryRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-discovery-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
@@ -43,7 +44,7 @@ export function makeGetServiceRequestForProfessionalUseCase() {
 }
 
 export function makeCreateQuoteUseCase() {
-  return new CreateQuoteUseCase(professionals, professionalDiscovery, requestDiscovery, quotes, notifications, customerProfiles);
+  return new CreateQuoteUseCase(professionals, professionalDiscovery, requestDiscovery, quotes, notifications, customerProfiles, transactionFlowGuard);
 }
 
 export function makeUpdateQuoteUseCase() {
@@ -75,6 +76,7 @@ export function makeAcceptQuoteUseCase() {
     professionals,
     notifications,
     trustAutomatedActions,
+    transactionFlowGuard,
   );
 }
 

@@ -1,3 +1,4 @@
+import { transactionFlowGuard } from "@/application/services/flow/compose";
 import { PrismaCommissionRateRepository } from "@/infrastructure/database/prisma/repositories/prisma-commission-rate-repository";
 import { PrismaCommissionRepository } from "@/infrastructure/database/prisma/repositories/prisma-commission-repository";
 import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prisma/repositories/prisma-customer-profile-repository";
@@ -62,7 +63,7 @@ export function makeCalculateJobTaxBreakdownUseCase() {
 }
 
 export function makeRecordCommissionForPaymentUseCase() {
-  return new RecordCommissionForPaymentUseCase(payments, commissions, ledger, breakdowns, completionConfirmations);
+  return new RecordCommissionForPaymentUseCase(payments, commissions, ledger, breakdowns, completionConfirmations, transactionFlowGuard);
 }
 
 export function makeGetProfessionalEarningsUseCase() {

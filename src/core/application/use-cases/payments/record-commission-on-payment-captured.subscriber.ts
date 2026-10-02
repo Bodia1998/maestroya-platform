@@ -1,3 +1,4 @@
+import { LegacyFlowBoundaryError } from "@/domain/services/transaction-flow";
 import { ValidationError } from "@/domain/errors/domain-error";
 import type { PaymentCaptured } from "@/domain/events/payment-captured";
 import type { EventHandler } from "@/application/ports/event-bus";
@@ -46,6 +47,13 @@ export class RecordCommissionOnPaymentCapturedSubscriber implements EventHandler
     try {
       await this.recordCommission.execute(event.paymentId);
     } catch (error) {
+      if (error instanceof LegacyFlowBoundaryError) {
+        logger.info("payment_captured.commission_skipped_non_legacy_flow", {
+          paymentId: event.paymentId,
+          flowVersion: error.flowVersion,
+        });
+        return;
+      }
       if (error instanceof ValidationError) {
         logger.info("payment_captured.commission_deferred", {
           paymentId: event.paymentId,

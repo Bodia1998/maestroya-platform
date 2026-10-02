@@ -1,3 +1,4 @@
+import { transactionFlowGuard } from "@/application/services/flow/compose";
 import { PrismaConversationRepository } from "@/infrastructure/database/prisma/repositories/prisma-conversation-repository";
 import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prisma/repositories/prisma-customer-profile-repository";
 import { PrismaJobRepository } from "@/infrastructure/database/prisma/repositories/prisma-job-repository";
@@ -127,6 +128,7 @@ export function makeEvaluatePaymentReleaseUseCase() {
     failureReporter,
     // Module 75 — Company Payout Eligibility.
     companies,
+    transactionFlowGuard,
   );
 }
 
@@ -180,5 +182,6 @@ export function makeAdminResolvePaymentReleaseUseCase() {
     failureReporter,
     // Module 75 — Company Payout Eligibility.
     companies,
+    transactionFlowGuard,
   );
 }

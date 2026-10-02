@@ -1,3 +1,4 @@
+import type { TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { NotFoundError, SelfBillingNotAuthorizedError, ValidationError } from "@/domain/errors/domain-error";
 import type { InvoiceLineItemInput, InvoiceRecord, InvoiceRepository } from "@/domain/repositories/invoice-repository";
 import type { JobRepository } from "@/domain/repositories/job-repository";
@@ -64,6 +65,10 @@ export class CreateProfessionalInvoiceDraftUseCase {
     private readonly taxBreakdowns: CalculateJobTaxBreakdownUseCase,
     private readonly eventBus: EventBus,
     private readonly failureReporter: FailureReporter = new NullFailureReporter(),
+    // Module 121 — legacy/LEAD_V1 boundary. Optional (like this class's other
+    // late-added dependencies) so historical direct constructions still compile;
+    // production composition always supplies it.
+    private readonly flowGuard?: TransactionFlowGuard,
   ) {}
 
   async execute(jobId: string): Promise<InvoiceRecord> {
@@ -79,6 +84,8 @@ export class CreateProfessionalInvoiceDraftUseCase {
     if (!job) {
       throw new NotFoundError("Job", jobId);
     }
+
+    await this.flowGuard?.assertLegacy(job.serviceRequestId, "invoice.professional_draft");
     if (job.status !== "COMPLETED") {
       throw new ValidationError("An invoice can only be drafted once the job is COMPLETED.");
     }

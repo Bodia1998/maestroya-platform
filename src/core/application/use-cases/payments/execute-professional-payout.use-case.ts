@@ -1,3 +1,4 @@
+import type { TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import { roundToCents } from "@/domain/services/money";
 import { StripeTransferError } from "@/domain/errors/domain-error";
@@ -135,6 +136,10 @@ export class ExecuteProfessionalPayoutUseCase {
     // `satisfiesPayoutInvoicePrerequisite` (ISSUED or PAID).
     private readonly invoiceGate?: CheckInvoiceRequiredForPayoutUseCase,
     private readonly requireInvoiceForPayout = false,
+    // Module 121 — legacy/LEAD_V1 boundary. Optional (like this class's other
+    // late-added dependencies) so historical direct constructions still compile;
+    // production composition always supplies it.
+    private readonly flowGuard?: TransactionFlowGuard,
   ) {}
 
   async execute(jobId: string): Promise<PayoutRecord> {
@@ -174,6 +179,8 @@ export class ExecuteProfessionalPayoutUseCase {
     if (!job) {
       throw new NotFoundError("Job", jobId);
     }
+
+    await this.flowGuard?.assertLegacy(job.serviceRequestId, "professional_payout.execute");
 
     // --- Module 66 gate: the single authoritative release decision ---
     const confirmation = await this.completionConfirmations.findByJobId(jobId);

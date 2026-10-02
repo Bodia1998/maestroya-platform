@@ -1,3 +1,4 @@
+import type { TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { CommissionRecord, CommissionRepository } from "@/domain/repositories/commission-repository";
 import type { CreateLedgerEntryData, FinancialLedgerRepository } from "@/domain/repositories/financial-ledger-repository";
@@ -81,6 +82,10 @@ export class RecordCommissionForPaymentUseCase {
     private readonly ledger: FinancialLedgerRepository,
     private readonly breakdowns: CalculateJobCommissionBreakdownUseCase,
     private readonly completionConfirmations: JobCompletionConfirmationRepository,
+    // Module 121 — legacy/LEAD_V1 boundary. Optional (like this class's other
+    // late-added dependencies) so historical direct constructions still compile;
+    // production composition always supplies it.
+    private readonly flowGuard?: TransactionFlowGuard,
   ) {}
 
   async execute(paymentId: string): Promise<CommissionRecord> {
@@ -88,6 +93,8 @@ export class RecordCommissionForPaymentUseCase {
     if (!payment) {
       throw new NotFoundError("Payment", paymentId);
     }
+
+    await this.flowGuard?.assertLegacy(payment.serviceRequestId, "commission.record");
 
     if (payment.status !== "CAPTURED") {
       throw new ValidationError(

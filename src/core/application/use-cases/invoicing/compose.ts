@@ -1,3 +1,4 @@
+import { transactionFlowGuard } from "@/application/services/flow/compose";
 import "server-only";
 
 import { eventBus } from "@/infrastructure/events/compose";
@@ -145,6 +146,7 @@ export function makeCreateProfessionalInvoiceDraftUseCase(): CreateProfessionalI
     taxBreakdowns,
     eventBus,
     failureReporter,
+    transactionFlowGuard,
   );
 }
 
@@ -159,6 +161,7 @@ export function makeCreateCustomerReceiptDraftUseCase(): CreateCustomerReceiptDr
     taxBreakdowns,
     eventBus,
     failureReporter,
+    transactionFlowGuard,
   );
 }
 

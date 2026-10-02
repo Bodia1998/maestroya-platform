@@ -1,3 +1,4 @@
+import type { TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import type { JobRepository } from "@/domain/repositories/job-repository";
 import type { JobCompletionConfirmationRecord, JobCompletionConfirmationRepository } from "@/domain/repositories/job-completion-confirmation-repository";
@@ -69,6 +70,10 @@ export class EvaluatePaymentReleaseUseCase {
      *  unchanged. Only needed to evaluate company-owned Jobs — see this
      *  class's own doc comment. */
     private readonly companies?: CompanyRepository,
+    // Module 121 — legacy/LEAD_V1 boundary. Optional (like this class's other
+    // late-added dependencies) so historical direct constructions still compile;
+    // production composition always supplies it.
+    private readonly flowGuard?: TransactionFlowGuard,
   ) {}
 
   async execute(jobId: string): Promise<JobCompletionConfirmationRecord> {
@@ -76,6 +81,8 @@ export class EvaluatePaymentReleaseUseCase {
     if (!job) {
       throw new NotFoundError("Job", jobId);
     }
+
+    await this.flowGuard?.assertLegacy(job.serviceRequestId, "payment_release.evaluate");
 
     const confirmation = await this.confirmations.findByJobId(jobId);
     if (!confirmation) {

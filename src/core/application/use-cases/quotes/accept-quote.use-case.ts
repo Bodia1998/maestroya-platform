@@ -1,3 +1,4 @@
+import type { TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { NullNotificationCreator } from "@/application/ports/notification-creator";
 import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
@@ -70,6 +71,10 @@ export class AcceptQuoteUseCase {
     // Module 89 — Fraud & Trust Signal Activation: optional, see this
     // class's own doc comment above.
     private readonly trustAutomatedActions?: TrustAutomatedActionRepository,
+    // Module 121 — legacy/LEAD_V1 boundary. Optional (like this class's other
+    // late-added dependencies) so historical direct constructions still compile;
+    // production composition always supplies it.
+    private readonly flowGuard?: TransactionFlowGuard,
   ) {}
 
   async execute(userId: string, serviceRequestId: string, quoteId: string): Promise<AcceptQuoteResult> {
@@ -82,6 +87,8 @@ export class AcceptQuoteUseCase {
     if (!request || request.customerId !== customer.id) {
       throw new NotFoundError("ServiceRequest", serviceRequestId);
     }
+
+    await this.flowGuard?.assertLegacy(request.id, "quote.accept");
 
     const quote = await this.quotes.findById(quoteId);
     if (!quote || quote.serviceRequestId !== serviceRequestId) {

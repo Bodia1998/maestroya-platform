@@ -595,6 +595,19 @@ enum RequestUrgency {
   EMERGENCY
 }
 
+/// Module 121 — Legacy Freeze & Flow Version Boundary: which financial
+/// architecture a ServiceRequest (and everything hanging off it) belongs to.
+/// LEGACY_QUOTE_PAYMENT = Quote -> customer Payment -> Commission ->
+/// PaymentRelease -> Payout (the pre-Module-121 model, unchanged).
+/// LEAD_V1 = the lead-marketplace model (professional pays MaestroYa a lead
+/// fee; the customer pays the professional directly). A LEAD_V1 request must
+/// never reach any legacy financial use case — see
+/// domain/services/transaction-flow.ts and TransactionFlowGuard.
+enum TransactionFlowVersion {
+  LEGACY_QUOTE_PAYMENT
+  LEAD_V1
+}
+
 /// Order / Job Lifecycle module (Module 11) note: IN_PROGRESS/COMPLETED
 /// remain reserved-but-unused here by deliberate decision — Module 11
 /// introduces Job.status as the authoritative execution-lifecycle field
@@ -1815,6 +1828,8 @@ model ServiceRequest {
   title            String
   description      String                @db.Text
   status           ServiceRequestStatus  @default(DRAFT)
+  /// Module 121 — additive; every pre-existing row is LEGACY_QUOTE_PAYMENT.
+  flowVersion      TransactionFlowVersion @default(LEGACY_QUOTE_PAYMENT)
   urgency          RequestUrgency        @default(MEDIUM)
   budgetMin        Decimal?              @db.Decimal(10, 2)
   budgetMax        Decimal?              @db.Decimal(10, 2)
