@@ -1,3 +1,4 @@
+import { transactionFlowGuard } from "@/application/services/flow/compose";
 import "server-only";
 
 import { env } from "@/infrastructure/config/env";
@@ -169,6 +170,7 @@ export function makeInitiateQuotePaymentUseCase(): InitiateQuotePaymentUseCase {
     paymentGateway,
     lock,
     getFeatureFlagService(),
+    transactionFlowGuard,
   );
 }
 
@@ -203,6 +205,7 @@ export function makeProcessCustomerPaymentWebhookUseCase(): ProcessCustomerPayme
     refunds,
     makeProcessStripeDisputeWebhookUseCase(),
     financialLedger,
+    transactionFlowGuard,
   );
 }
 
@@ -232,6 +235,7 @@ export function makeExecuteProfessionalPayoutUseCase(): ExecuteProfessionalPayou
     // is always held to the ISSUED-or-later bar regardless.
     makeCheckInvoiceRequiredForPayoutUseCase(),
     false,
+    transactionFlowGuard,
   );
 }
 

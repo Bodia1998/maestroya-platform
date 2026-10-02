@@ -1,3 +1,4 @@
+import { LegacyFlowBoundaryError } from "@/domain/services/transaction-flow";
 import { ValidationError } from "@/domain/errors/domain-error";
 import type { PaymentReleaseApproved } from "@/domain/events/payment-release-approved";
 import type { EventHandler } from "@/application/ports/event-bus";
@@ -42,6 +43,13 @@ export class ExecutePayoutOnReleaseApprovedSubscriber implements EventHandler<Pa
     try {
       await this.executePayout.execute(event.jobId);
     } catch (error) {
+      if (error instanceof LegacyFlowBoundaryError) {
+        logger.info("payment_release_approved.payout_skipped_non_legacy_flow", {
+          jobId: event.jobId,
+          flowVersion: error.flowVersion,
+        });
+        return;
+      }
       if (error instanceof ValidationError) {
         logger.info("payment_release_approved.payout_execution_deferred", {
           jobId: event.jobId,

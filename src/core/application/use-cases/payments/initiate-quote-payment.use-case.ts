@@ -1,3 +1,4 @@
+import type { TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { randomUUID } from "node:crypto";
 
 import { calculateQuoteTotal } from "@/domain/services/money";
@@ -106,6 +107,10 @@ export class InitiateQuotePaymentUseCase {
     private readonly paymentGateway: PaymentGateway,
     private readonly lock: DistributedLock,
     private readonly featureFlags: Pick<FeatureFlagService, "isEnabled">,
+    // Module 121 — legacy/LEAD_V1 boundary. Optional (like this class's other
+    // late-added dependencies) so historical direct constructions still compile;
+    // production composition always supplies it.
+    private readonly flowGuard?: TransactionFlowGuard,
   ) {}
 
   async execute(userId: string, jobId: string): Promise<InitiateQuotePaymentResult> {
@@ -124,6 +129,7 @@ export class InitiateQuotePaymentUseCase {
     if (!job || job.customerId !== customer.id) {
       throw new NotFoundError("Job", jobId);
     }
+    await this.flowGuard?.assertLegacy(job.serviceRequestId, "customer_payment.initiate");
     if (job.status === "CANCELLED") {
       throw new ValidationError("This job has been cancelled and can no longer be paid.");
     }

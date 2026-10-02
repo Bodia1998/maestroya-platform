@@ -1,3 +1,4 @@
+import { shouldRunLegacyFlow, type TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { Payment } from "@/domain/entities/payment";
 import { InvalidPaymentTransitionError } from "@/domain/errors/domain-error";
 import type { EventBus } from "@/application/ports/event-bus";
@@ -142,6 +143,10 @@ export class ProcessCustomerPaymentWebhookUseCase {
      *  actual Stripe fee is genuinely captured. See
      *  `handleChargeUpdated`'s own doc comment for the full mechanism. */
     private readonly feeLedger: FinancialLedgerRepository | null = null,
+    // Module 121 — legacy/LEAD_V1 boundary. Optional (like this class's other
+    // late-added dependencies) so historical direct constructions still compile;
+    // production composition always supplies it.
+    private readonly flowGuard?: TransactionFlowGuard,
   ) {}
 
   async execute(event: StripePaymentWebhookEvent): Promise<ProcessCustomerPaymentWebhookResult> {
@@ -197,6 +202,12 @@ export class ProcessCustomerPaymentWebhookUseCase {
     const payment = await this.findPayment(event);
     if (!payment) return { outcome: "unmatched" };
 
+    if (!(await shouldRunLegacyFlow(this.flowGuard, payment.serviceRequestId, "customer_payment.capture"))) {
+      // Module 121: never capture funds / publish PaymentCaptured for a non-legacy
+      // request. Ignored (not thrown) so Stripe is still ACKed.
+      return { outcome: "ignored", paymentId: payment.id };
+    }
+
     if (payment.status !== "PENDING") {
       // Already progressed past PENDING — a duplicate/out-of-order
       // delivery, or `payment_intent.succeeded` already handled this.
@@ -220,6 +231,12 @@ export class ProcessCustomerPaymentWebhookUseCase {
   ): Promise<ProcessCustomerPaymentWebhookResult> {
     const payment = await this.findPayment(event);
     if (!payment) return { outcome: "unmatched" };
+
+    if (!(await shouldRunLegacyFlow(this.flowGuard, payment.serviceRequestId, "customer_payment.capture"))) {
+      // Module 121: never capture funds / publish PaymentCaptured for a non-legacy
+      // request. Ignored (not thrown) so Stripe is still ACKed.
+      return { outcome: "ignored", paymentId: payment.id };
+    }
 
     if (payment.status === "CAPTURED") {
       return { outcome: "already-settled", paymentId: payment.id };

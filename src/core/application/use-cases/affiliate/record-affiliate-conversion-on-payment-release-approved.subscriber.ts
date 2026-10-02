@@ -1,3 +1,4 @@
+import { LegacyFlowBoundaryError } from "@/domain/services/transaction-flow";
 import { ValidationError } from "@/domain/errors/domain-error";
 import type { EventHandler } from "@/application/ports/event-bus";
 import type { PaymentReleaseApproved } from "@/domain/events/payment-release-approved";
@@ -114,6 +115,13 @@ export class RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber impleme
       try {
         commission = await this.recordCommission.execute(event.paymentId);
       } catch (error) {
+        if (error instanceof LegacyFlowBoundaryError) {
+          logger.info("affiliate.conversion.skipped_non_legacy_flow", {
+            paymentId: event.paymentId,
+            flowVersion: error.flowVersion,
+          });
+          return;
+        }
         if (error instanceof ValidationError) {
           // Same "expected, not a failure" treatment
           // `RecordCommissionOnPaymentCapturedSubscriber` gives this
