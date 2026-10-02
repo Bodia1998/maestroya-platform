@@ -16,6 +16,13 @@ import type {
  * the Haversine distance + per-professional-radius rule in the application
  * layer.
  */
+/**
+ * Module 122: this is the LEGACY quote feed. LEAD_V1 requests must never
+ * appear here (they would bypass the lead preview boundary and expose raw
+ * request text); they are served only via the future LeadPreviewDTO feed.
+ */
+const LEGACY_FLOW = "LEGACY_QUOTE_PAYMENT" as const;
+
 const CANDIDATE_SELECT = {
   id: true,
   title: true,
@@ -60,7 +67,7 @@ function toCandidate(row: CandidateRow): ServiceRequestDiscoveryCandidate {
 export class PrismaServiceRequestDiscoveryRepository implements ServiceRequestDiscoveryRepository {
   async findPublishedById(id: string): Promise<ServiceRequestDiscoveryCandidate | null> {
     const row = await prisma.serviceRequest.findFirst({
-      where: { id, status: "PUBLISHED", deletedAt: null },
+      where: { id, status: "PUBLISHED", deletedAt: null, flowVersion: LEGACY_FLOW },
       select: CANDIDATE_SELECT,
     });
     return row ? toCandidate(row) : null;
@@ -69,7 +76,7 @@ export class PrismaServiceRequestDiscoveryRepository implements ServiceRequestDi
   async findPublishedByCategoryIds(categoryIds: string[]): Promise<ServiceRequestDiscoveryCandidate[]> {
     if (categoryIds.length === 0) return [];
     const rows = await prisma.serviceRequest.findMany({
-      where: { status: "PUBLISHED", deletedAt: null, categoryId: { in: categoryIds } },
+      where: { status: "PUBLISHED", deletedAt: null, flowVersion: LEGACY_FLOW, categoryId: { in: categoryIds } },
       select: CANDIDATE_SELECT,
     });
     return rows.map(toCandidate);
