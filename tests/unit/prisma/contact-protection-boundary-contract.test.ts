@@ -44,8 +44,15 @@ describe("contact protection boundary — static contract", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("does not introduce Lead / LeadPurchase tables yet (Module 123)", () => {
+  it("Lead / LeadPurchase tables (Module 123) hold no customer contact columns", () => {
+    // Module 122 asserted these models did not exist yet. Module 123 introduces
+    // them, so the invariant that still matters is that they never carry
+    // contact data (contact stays reachable only via LeadContactReader).
     const schema = read("prisma/schema.prisma");
-    expect(schema).not.toMatch(/^model Lead(Purchase)?\s*\{/m);
+    for (const name of ["Lead", "LeadPurchase"]) {
+      const m = schema.match(new RegExp(`^model ${name} \\{[\\s\\S]*?^\\}`, "m"));
+      expect(m, `model ${name}`).not.toBeNull();
+      expect(m![0]).not.toMatch(/^\s*(email|phone|addressLine\w*|postalCode|customerName|contact\w*)\s/im);
+    }
   });
 });
