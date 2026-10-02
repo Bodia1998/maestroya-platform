@@ -1469,6 +1469,8 @@ model ProfessionalProfile {
   /// .professionalProfileId) — see that model's own doc comment for why
   /// this is insert-or-replace rather than a history table.
   payoutAccount           ProfessionalPayoutAccount?
+  /// Module 123 — lead-access purchases made by this professional.
+  leadPurchases           LeadPurchase[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1855,6 +1857,10 @@ model ServiceRequest {
   reviews       Review[]
   payments      Payment[]
   disputes      Dispute[]
+  /// Module 123 — the lead-marketplace opportunity derived from this request.
+  /// At most one (`Lead.serviceRequestId` is @unique); only ever exists for
+  /// flowVersion = LEAD_V1 (enforced in PrismaLeadRepository.create).
+  lead          Lead?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -5895,4 +5901,118 @@ enum AiVisibilityEvidenceType {
   MANUAL_SCREENSHOT_REFERENCE
   API_RESPONSE_REFERENCE
   EXTERNAL_ARTICLE_REFERENCE
+}
+
+/// Module 123 — Lead Marketplace: lifecycle of a Lead (the marketplace
+/// opportunity derived from a LEAD_V1 ServiceRequest). Module 123 only
+/// persists the state; ALL transitions (publish, close, expire, cancel) are
+/// implemented by later modules. DRAFT = created, not visible to
+/// professionals; PUBLISHED = visible/purchasable; CLOSED = no longer
+/// purchasable (e.g. buyer cap reached / customer chose a professional);
+/// EXPIRED = time-based end; CANCELLED = withdrawn (customer/admin).
+enum LeadStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  EXPIRED
+  CANCELLED
+}
+
+/// Module 123 — Lead Marketplace: lifecycle of a LeadPurchase (a
+/// professional's purchase of ACCESS to a Lead). Only CONFIRMED may ever
+/// grant contact access (Module 122 policy); every other state denies.
+/// PENDING_PAYMENT = created, fee not yet paid; CONFIRMED = fee paid;
+/// FAILED = payment attempt failed; CANCELLED = abandoned before payment;
+/// REFUNDED = fee returned after confirmation; REVOKED = access withdrawn
+/// by the platform after confirmation. Transitions belong to Module 126+.
+enum LeadPurchaseStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  FAILED
+  CANCELLED
+  REFUNDED
+  REVOKED
+}
+
+/// Module 123 — Lead Marketplace: the marketplace opportunity derived from
+/// a ServiceRequest. Deliberately thin: the customer's real request data
+/// (title, description, address, contact) stays ONLY on ServiceRequest and
+/// is never copied here, so this table holds no customer contact data.
+///
+/// ServiceRequest 1 --- 0..1 Lead (`serviceRequestId` @unique).
+///
+/// `flowVersion` is intentionally NOT stored: it is derived from
+/// ServiceRequest.flowVersion (single source of truth, no drift). The
+/// invariant "a Lead belongs to LEAD_V1" is enforced in
+/// PrismaLeadRepository.create (the only write path; static contract test
+/// guards that) and surfaced on read as `LeadRecord.flowVersion`.
+///
+/// `maxBuyers` is the configurable access rule: NULL = "buyer policy not
+/// configured yet" (NOT "unlimited" and NOT "exclusive"). The business
+/// decision (exclusive vs. shared) is unresolved; a later module sets it
+/// without a schema change. A CHECK (maxBuyers >= 1) is added in the
+/// migration (Prisma cannot express CHECK constraints).
+model Lead {
+  id               String     @id @default(uuid()) @db.Uuid
+  serviceRequestId String     @unique @db.Uuid
+  status           LeadStatus @default(DRAFT)
+  maxBuyers        Int?
+
+  serviceRequest ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
+  purchases      LeadPurchase[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Future professional feed: WHERE status = 'PUBLISHED' ORDER BY createdAt.
+  @@index([status, createdAt])
+  @@map("leads")
+}
+
+/// Module 123 — Lead Marketplace: a professional's purchase of access to a
+/// Lead. This is the fee the professional pays MaestroYa — NOT the
+/// customer's payment for the service and NOT the professional's quote. It
+/// is NOT a legacy `Payment`/`Commission`/`Payout` and never feeds the
+/// legacy invoice/self-billing flow.
+///
+/// Lead 1 --- N LeadPurchase (shared leads remain possible). A purchase
+/// existing (any status) NEVER authorizes contact access by itself — only
+/// status CONFIRMED, evaluated through Module 122's policy.
+///
+/// `professionalProfileId` references the existing ProfessionalProfile (the
+/// identity Module 122 already uses). No second Professional entity.
+///
+/// `price` follows the repo's money convention (Decimal(10,2) + ISO
+/// currency string defaulting to EUR, as on Payment/Quote). The migration
+/// adds CHECK (price >= 0) and a PARTIAL UNIQUE index
+/// `lead_purchases_one_active_per_lead_professional` on
+/// (leadId, professionalProfileId) WHERE status IN
+/// ('PENDING_PAYMENT','CONFIRMED') — at most one in-flight-or-paid purchase
+/// per professional per lead; terminal rows are kept for history. Prisma
+/// cannot express partial indexes (same precedent as PartnerPayout), so it
+/// is declared in the migration only and enforced via the P2002 mapping in
+/// PrismaLeadPurchaseRepository.create.
+model LeadPurchase {
+  id                    String             @id @default(uuid()) @db.Uuid
+  leadId                String             @db.Uuid
+  professionalProfileId String             @db.Uuid
+  status                LeadPurchaseStatus @default(PENDING_PAYMENT)
+  price                 Decimal            @db.Decimal(10, 2)
+  currency              String             @default("EUR")
+  confirmedAt           DateTime?
+  refundedAt            DateTime?
+  revokedAt             DateTime?
+
+  lead         Lead               @relation(fields: [leadId], references: [id], onDelete: Restrict)
+  professional ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Buyer-count / authorization lookups per lead (leadId is the prefix, so
+  /// this also serves the leadId foreign key).
+  @@index([leadId, status])
+  /// "My purchases" lookups (prefix also serves the professional FK).
+  @@index([professionalProfileId, status])
+  @@map("lead_purchases")
 }
