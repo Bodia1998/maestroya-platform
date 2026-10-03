@@ -72,6 +72,16 @@ export class PrismaLeadRepository implements LeadRepository {
     }
   }
 
+  async publish(id: string): Promise<LeadRecord | null> {
+    // Status-conditional write: only a DRAFT row can transition.
+    const { count } = await prisma.lead.updateMany({
+      where: { id, status: "DRAFT" },
+      data: { status: "PUBLISHED" },
+    });
+    if (count === 0) return null;
+    return this.findById(id);
+  }
+
   async findById(id: string): Promise<LeadRecord | null> {
     const row = await prisma.lead.findUnique({ where: { id }, select: SELECT });
     return row ? toRecord(row) : null;

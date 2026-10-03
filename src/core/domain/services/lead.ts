@@ -1,4 +1,5 @@
 import { DomainError } from "@/domain/errors/domain-error";
+import type { ServiceRequestStatusValue } from "@/domain/repositories/service-request-repository";
 import type { TransactionFlowVersion } from "@/domain/services/transaction-flow";
 
 /**
@@ -51,6 +52,65 @@ export class InvalidLeadMaxBuyersError extends DomainError {
 
   constructor(value: unknown) {
     super(`Lead maxBuyers must be null (not configured) or an integer >= 1 (got ${String(value)}).`);
+  }
+}
+
+/**
+ * Module 124 — Lead lifecycle (only DRAFT -> PUBLISHED is modelled; close /
+ * expire / cancel remain future modules).
+ */
+export const LEAD_PUBLISHABLE_FROM_STATUS: LeadStatus = "DRAFT";
+
+export function canPublishLead(status: LeadStatus): boolean {
+  return status === LEAD_PUBLISHABLE_FROM_STATUS;
+}
+
+/** Thrown for any status that may not move to PUBLISHED (CLOSED, EXPIRED,
+ *  CANCELLED). A Lead that is already PUBLISHED is NOT an error: publish is
+ *  idempotent and handled by the use case. */
+export class LeadNotPublishableError extends DomainError {
+  readonly code = "LEAD_NOT_PUBLISHABLE";
+
+  constructor(readonly status: LeadStatus) {
+    super(`A Lead in status "${status}" cannot be published.`);
+  }
+}
+
+export function assertLeadPublishable(status: LeadStatus): void {
+  if (!canPublishLead(status)) throw new LeadNotPublishableError(status);
+}
+
+/**
+ * ServiceRequest state that may back a Lead. PUBLISHED is the project's
+ * existing "open" state (see service-request-state.ts); no new status is
+ * introduced.
+ */
+export const LEAD_ELIGIBLE_REQUEST_STATUS: ServiceRequestStatusValue = "PUBLISHED";
+
+export type LeadRequestIneligibilityReason = "REQUEST_NOT_OPEN" | "REQUEST_INCOMPLETE";
+
+export class ServiceRequestNotEligibleForLeadError extends DomainError {
+  readonly code = "SERVICE_REQUEST_NOT_ELIGIBLE_FOR_LEAD";
+
+  constructor(readonly reason: LeadRequestIneligibilityReason) {
+    super("This service request is not eligible to be a Lead.");
+  }
+}
+
+/** Minimum information a professional needs to understand a Lead. Mirrors
+ *  what ServiceRequest creation already requires (title, description and
+ *  location city are mandatory); no new required fields are invented. */
+export interface LeadRequestEligibilityInput {
+  status: ServiceRequestStatusValue;
+  title: string;
+  description: string;
+  location: { city: string };
+}
+
+export function assertServiceRequestEligibleForLead(request: LeadRequestEligibilityInput): void {
+  if (request.status !== LEAD_ELIGIBLE_REQUEST_STATUS) throw new ServiceRequestNotEligibleForLeadError("REQUEST_NOT_OPEN");
+  if (request.title.trim() === "" || request.description.trim() === "" || request.location.city.trim() === "") {
+    throw new ServiceRequestNotEligibleForLeadError("REQUEST_INCOMPLETE");
   }
 }
 
