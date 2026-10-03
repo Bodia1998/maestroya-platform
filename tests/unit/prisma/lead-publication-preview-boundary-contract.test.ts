@@ -77,10 +77,17 @@ describe("Module 124 boundaries", () => {
     for (const f of files) expect(read(f), f).not.toMatch(/use-cases\/lead\//);
   });
 
-  it("nothing under src/app exposes the lead workflows or preview repository yet", () => {
-    const files = walk(path.join(root, "src/app")).map((f) => path.relative(root, f));
+  it("only the Module 125 entry-point files under src/app reach the lead workflows, and only through the lead composition root", () => {
+    const allowed = [
+      "src/app/(dashboard)/requests/lead-actions.ts",
+      "src/app/(dashboard)/dashboard/professional/leads/actions.ts",
+    ];
+    const files = walk(path.join(root, "src/app")).map((f) => path.relative(root, f).split(path.sep).join("/"));
     const exposed = files.filter((f) => /CreateLeadUseCase|PublishLeadUseCase|GetPublishedLead|LeadPreviewRepository|PrismaLeadPreview/.test(read(f)));
-    expect(exposed).toEqual([]);
+    expect(exposed.every((f) => allowed.includes(f)), exposed.join(", ")).toBe(true);
+    for (const f of exposed) {
+      expect(read(f), f).not.toMatch(/Prisma\w*Repository|@\/infrastructure\/database/);
+    }
   });
 
   it("Module 124 adds no migration", () => {
