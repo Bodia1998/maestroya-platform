@@ -4,8 +4,8 @@ import type { LeadStatus } from "@/domain/services/lead";
 /**
  * Module 123 — Lead Marketplace: persistence port for `Lead`.
  *
- * Intentionally minimal. There is NO status-update method: lifecycle
- * transitions belong to Module 124+ and will add exactly what they need.
+ * Intentionally minimal. Module 124 adds only `publish` (DRAFT -> PUBLISHED);
+ * other lifecycle transitions belong to later modules.
  *
  * SECURITY: a LeadRecord never contains customer contact data (no
  * name/email/phone/address) and implementations must not select any. Private
@@ -38,6 +38,14 @@ export interface LeadRepository {
    * Quote/Payment/Commission.
    */
   create(data: CreateLeadData): Promise<LeadRecord>;
+  /**
+   * Module 124 - atomic DRAFT -> PUBLISHED. Returns the updated record, or
+   * `null` when no DRAFT row was transitioned (missing, or already in another
+   * status - the caller re-reads to tell an idempotent repeat from a rejected
+   * transition). Conditional on status, so concurrent publishes cannot
+   * double-transition or resurrect a CLOSED/EXPIRED/CANCELLED lead.
+   */
+  publish(id: string): Promise<LeadRecord | null>;
   findById(id: string): Promise<LeadRecord | null>;
   findByServiceRequestId(serviceRequestId: string): Promise<LeadRecord | null>;
 }
