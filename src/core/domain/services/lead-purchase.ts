@@ -13,8 +13,8 @@ import type { LeadContactGrantState } from "@/domain/services/lead-contact-acces
  * most 2 fraction digits, persisted as Decimal(10,2), plus an ISO currency
  * string — the same shape as Payment/Quote). No second Money abstraction.
  *
- * Status TRANSITIONS are deliberately NOT modelled here (Module 126+ owns
- * the payment state machine). Module 123 only represents the states.
+ * Module 126 adds the explicit status TRANSITION policy (see
+ * LEAD_PURCHASE_TRANSITIONS below) and the professional-eligibility rule.
  */
 export const LEAD_PURCHASE_STATUSES = [
   "PENDING_PAYMENT",
@@ -108,4 +108,101 @@ export function toLeadContactGrantState(status: LeadPurchaseStatus | string): Le
       // FAILED, CANCELLED, REFUNDED and anything unrecognised.
       return "INVALID";
   }
+}
+
+// ============================================================================
+// Module 126 — state machine
+// ============================================================================
+
+/**
+ * The ONLY allowed LeadPurchase status transitions. Every status change in
+ * application code must go through `assertLeadPurchaseTransition`.
+ *
+ *   PENDING_PAYMENT -> CONFIRMED | FAILED | CANCELLED
+ *   CONFIRMED       -> REFUNDED | REVOKED
+ *   FAILED / CANCELLED / REFUNDED / REVOKED -> (terminal)
+ *
+ * Nothing ever returns to CONFIRMED or PENDING_PAYMENT: a new attempt is a
+ * NEW purchase row (allowed once the previous one is no longer active).
+ */
+export const LEAD_PURCHASE_TRANSITIONS: Readonly<Record<LeadPurchaseStatus, readonly LeadPurchaseStatus[]>> = {
+  PENDING_PAYMENT: ["CONFIRMED", "FAILED", "CANCELLED"],
+  CONFIRMED: ["REFUNDED", "REVOKED"],
+  FAILED: [],
+  CANCELLED: [],
+  REFUNDED: [],
+  REVOKED: [],
+};
+
+export function canTransitionLeadPurchase(from: LeadPurchaseStatus, to: LeadPurchaseStatus): boolean {
+  return (LEAD_PURCHASE_TRANSITIONS[from] as readonly string[] | undefined)?.includes(to) ?? false;
+}
+
+export function isTerminalLeadPurchaseStatus(status: LeadPurchaseStatus): boolean {
+  return LEAD_PURCHASE_TRANSITIONS[status].length === 0;
+}
+
+export class InvalidLeadPurchaseTransitionError extends DomainError {
+  readonly code = "INVALID_LEAD_PURCHASE_TRANSITION";
+
+  constructor(
+    readonly from: string,
+    readonly to: string,
+  ) {
+    super(`A lead purchase cannot move from "${from}" to "${to}".`);
+  }
+}
+
+export function assertLeadPurchaseTransition(from: LeadPurchaseStatus, to: LeadPurchaseStatus): void {
+  if (!canTransitionLeadPurchase(from, to)) throw new InvalidLeadPurchaseTransitionError(from, to);
+}
+
+/** Which timestamp column a transition stamps (set once, by the transition). */
+export function leadPurchaseTransitionTimestamp(to: LeadPurchaseStatus): "confirmedAt" | "refundedAt" | "revokedAt" | null {
+  if (to === "CONFIRMED") return "confirmedAt";
+  if (to === "REFUNDED") return "refundedAt";
+  if (to === "REVOKED") return "revokedAt";
+  return null;
+}
+
+/** Statuses an internal (non-confirmation) transition may target. CONFIRMED
+ *  is reserved for ConfirmLeadPurchaseUseCase, which re-validates the Lead. */
+export const NON_CONFIRMING_TARGET_STATUSES = ["FAILED", "CANCELLED", "REFUNDED", "REVOKED"] as const satisfies readonly LeadPurchaseStatus[];
+
+// ============================================================================
+// Module 126 — purchase rules
+// ============================================================================
+
+/** The Lead cannot be bought right now (not found / not published / wrong
+ *  flow / request closed / not visible to this professional / own lead). One
+ *  fixed message so a caller cannot probe which of those it was. */
+export class LeadNotPurchasableError extends DomainError {
+  readonly code = "LEAD_NOT_PURCHASABLE";
+
+  constructor() {
+    super("This lead is not available for purchase.");
+  }
+}
+
+/** Lead.maxBuyers active purchases (PENDING_PAYMENT + CONFIRMED) already exist. */
+export class LeadBuyerLimitReachedError extends DomainError {
+  readonly code = "LEAD_BUYER_LIMIT_REACHED";
+
+  constructor() {
+    super("This lead has reached its maximum number of buyers.");
+  }
+}
+
+/** True when another active purchase may still be created. `null` maxBuyers
+ *  = buyer policy not configured: it is NOT enforced (Module 123 semantics). */
+export function hasBuyerCapacity(maxBuyers: number | null, activePurchaseCount: number): boolean {
+  if (maxBuyers === null) return true;
+  return activePurchaseCount < maxBuyers;
+}
+
+/** Single definition of "may this professional buy leads": an ACTIVE profile
+ *  that is VERIFIED — the same rule CreateQuoteUseCase already enforces
+ *  (Module 83); it reads the existing verificationStatus, nothing new. */
+export function isProfessionalEligibleToPurchaseLeads(professional: { status: string; verificationStatus: string }): boolean {
+  return professional.status === "ACTIVE" && professional.verificationStatus === "VERIFIED";
 }

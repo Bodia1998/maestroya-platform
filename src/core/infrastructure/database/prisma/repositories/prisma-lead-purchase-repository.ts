@@ -10,8 +10,14 @@ import {
   ACTIVE_LEAD_PURCHASE_STATUSES,
   DuplicateActiveLeadPurchaseError,
   LEAD_PURCHASE_CURRENCY,
+  LeadBuyerLimitReachedError,
+  LeadNotPurchasableError,
+  assertLeadPurchaseTransition,
   assertValidLeadPurchaseAmount,
+  hasBuyerCapacity,
   isLeadPurchaseStatus,
+  leadPurchaseTransitionTimestamp,
+  type LeadPurchaseStatus,
 } from "@/domain/services/lead-purchase";
 
 const SELECT = {
@@ -63,6 +69,49 @@ function toRecord(row: Row): LeadPurchaseRecord {
  *  only the `lead_purchases` table: it never creates a Payment, Commission,
  *  Payout or Invoice. */
 export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository {
+  async initiate(data: CreateLeadPurchaseData): Promise<LeadPurchaseRecord> {
+    const currency = data.currency ?? LEAD_PURCHASE_CURRENCY;
+    assertValidLeadPurchaseAmount(data.price, currency);
+    try {
+      const row = await prisma.$transaction(async (tx) => {
+        // Row lock on the lead: concurrent buyers of the SAME lead queue here,
+        // so count -> insert below cannot interleave and exceed maxBuyers.
+        const locked = await tx.$queryRaw<Array<{ status: string; maxBuyers: number | null }>>`
+          SELECT "status"::text AS "status", "maxBuyers" FROM "leads" WHERE "id" = ${data.leadId}::uuid FOR UPDATE`;
+        const lead = locked[0];
+        if (!lead || lead.status !== "PUBLISHED") throw new LeadNotPurchasableError();
+
+        const active = await tx.leadPurchase.count({
+          where: { leadId: data.leadId, status: { in: [...ACTIVE_LEAD_PURCHASE_STATUSES] } },
+        });
+        if (!hasBuyerCapacity(lead.maxBuyers, active)) throw new LeadBuyerLimitReachedError();
+
+        return tx.leadPurchase.create({
+          data: { leadId: data.leadId, professionalProfileId: data.professionalProfileId, price: data.price, currency },
+          select: SELECT,
+        });
+      });
+      return toRecord(row);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        throw new DuplicateActiveLeadPurchaseError();
+      }
+      throw error;
+    }
+  }
+
+  async transition(id: string, from: LeadPurchaseStatus, to: LeadPurchaseStatus, now: Date): Promise<LeadPurchaseRecord | null> {
+    assertLeadPurchaseTransition(from, to);
+    const stamp = leadPurchaseTransitionTimestamp(to);
+    // Status-conditional write: only a row still in `from` moves, exactly once.
+    const { count } = await prisma.leadPurchase.updateMany({
+      where: { id, status: from },
+      data: { status: to, ...(stamp ? { [stamp]: now } : {}) },
+    });
+    if (count === 0) return null;
+    return this.findById(id);
+  }
+
   async create(data: CreateLeadPurchaseData): Promise<LeadPurchaseRecord> {
     const currency = data.currency ?? LEAD_PURCHASE_CURRENCY;
     assertValidLeadPurchaseAmount(data.price, currency);
