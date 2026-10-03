@@ -13,6 +13,8 @@
  * the OPEN-equivalent state" rule enforced by the use cases.
  */
 
+import type { TransactionFlowVersion } from "@/domain/services/transaction-flow";
+
 export type ServiceRequestStatusValue =
   | "DRAFT"
   | "PUBLISHED"
@@ -88,6 +90,13 @@ export interface CreateServiceRequestData {
   budgetMin: number | null;
   budgetMax: number | null;
   location: ServiceRequestLocation;
+  /**
+   * Module 125 — which transaction flow the new request belongs to. Optional
+   * so the legacy creation path is untouched: when omitted the repository
+   * persists LEGACY_QUOTE_PAYMENT explicitly. The Lead Marketplace entry
+   * (CreateLeadV1ServiceRequestUseCase) is the only caller that passes LEAD_V1.
+   */
+  flowVersion?: TransactionFlowVersion;
 }
 
 /**

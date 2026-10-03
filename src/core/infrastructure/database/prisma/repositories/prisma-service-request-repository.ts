@@ -8,6 +8,7 @@ import type {
   ServiceRequestStatusValue,
   UpdateServiceRequestFields,
 } from "@/domain/repositories/service-request-repository";
+import { DEFAULT_TRANSACTION_FLOW_VERSION } from "@/domain/services/transaction-flow";
 
 const SELECT = {
   id: true,
@@ -158,6 +159,8 @@ export class PrismaServiceRequestRepository implements ServiceRequestRepository 
         budgetMin: data.budgetMin,
         budgetMax: data.budgetMax,
         publishedAt: new Date(),
+        // Module 125: always written explicitly (never left to the DB default).
+        flowVersion: data.flowVersion ?? DEFAULT_TRANSACTION_FLOW_VERSION,
       },
       select: SELECT,
     });
