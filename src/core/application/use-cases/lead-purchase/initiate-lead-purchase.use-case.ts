@@ -12,6 +12,8 @@ import { LEAD_FLOW_VERSION, assertServiceRequestEligibleForLead } from "@/domain
 import {
   DuplicateActiveLeadPurchaseError,
   LeadNotPurchasableError,
+  LeadPurchasePricingError,
+  assertValidLeadPurchaseAmount,
   isProfessionalEligibleToPurchaseLeads,
 } from "@/domain/services/lead-purchase";
 import { isProfessionalEligibleForRequest } from "@/domain/services/quote-eligibility";
@@ -42,7 +44,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * `lead_purchases_one_active_per_lead_professional` remains the final
  * arbiter for the same professional.
  *
- * Out of scope here: payment provider, pricing, contact, customer payments.
+ * Pricing failures surface as LeadPurchasePricingError (nothing persisted).
+ *
+ * Out of scope here: payment provider, pricing rules, contact, customer payments.
  */
 export class InitiateLeadPurchaseUseCase {
   constructor(
@@ -92,8 +96,20 @@ export class InitiateLeadPurchaseUseCase {
       throw new DuplicateActiveLeadPurchaseError();
     }
 
-    const { price, currency } = await this.prices.getPriceForLead(leadId);
+    const { price, currency } = await this.resolvePrice(leadId);
     const purchase = await this.purchases.initiate({ leadId, professionalProfileId: professional.id, price, currency });
     return toLeadPurchaseDto(purchase);
+  }
+
+  /** Price failure (provider throws, or returns an unusable amount) is one
+   *  typed error; nothing has been written at this point. */
+  private async resolvePrice(leadId: string): Promise<{ price: number; currency: string }> {
+    try {
+      const quote = await this.prices.getPriceForLead(leadId);
+      assertValidLeadPurchaseAmount(quote.price, quote.currency);
+      return { price: quote.price, currency: quote.currency };
+    } catch {
+      throw new LeadPurchasePricingError();
+    }
   }
 }

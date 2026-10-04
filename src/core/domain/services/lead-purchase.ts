@@ -184,6 +184,16 @@ export class LeadNotPurchasableError extends DomainError {
   }
 }
 
+/** The server-side price source failed or returned an unusable amount.
+ *  Fixed message: provider internals are never exposed. Nothing is persisted. */
+export class LeadPurchasePricingError extends DomainError {
+  readonly code = "LEAD_PURCHASE_PRICING_FAILED";
+
+  constructor() {
+    super("The price for this lead could not be determined. Please try again later.");
+  }
+}
+
 /** Lead.maxBuyers active purchases (PENDING_PAYMENT + CONFIRMED) already exist. */
 export class LeadBuyerLimitReachedError extends DomainError {
   readonly code = "LEAD_BUYER_LIMIT_REACHED";
