@@ -13,6 +13,7 @@ import {
   InvalidLeadPurchaseTransitionError,
   LeadBuyerLimitReachedError,
   LeadNotPurchasableError,
+  LeadPurchasePricingError,
   assertLeadPurchaseTransition,
   hasBuyerCapacity,
   isActiveLeadPurchaseStatus,
@@ -196,6 +197,42 @@ describe("InitiateLeadPurchaseUseCase", () => {
   it.each(["UNVERIFIED", "PENDING", "REJECTED"])("%s professional -> ProfessionalNotVerifiedError", async (verificationStatus) => {
     const b = build({ professional: { verificationStatus } });
     await expect(b.initiate.execute(USER, LEAD)).rejects.toBeInstanceOf(ProfessionalNotVerifiedError);
+    expect(b.purchases.rows).toHaveLength(0);
+  });
+
+  it("persists exactly the provider's price and currency on the created purchase", async () => {
+    const b = build({ price: { price: 12.34, currency: "EUR" } });
+    const spy = vi.spyOn(b.purchases, "initiate");
+    const dto = await b.initiate.execute(USER, LEAD);
+    expect(spy).toHaveBeenCalledWith({ leadId: LEAD, professionalProfileId: "pro-1", price: 12.34, currency: "EUR" });
+    expect(b.purchases.rows[0]).toMatchObject({ price: 12.34, currency: "EUR", status: "PENDING_PAYMENT" });
+    expect(dto.purchaseId).toBe(b.purchases.rows[0]!.id);
+  });
+
+  it("a successful initiation does not authorize contact (PENDING_PAYMENT is not a contact candidate)", async () => {
+    const b = build();
+    const dto = await b.initiate.execute(USER, LEAD);
+    expect(dto.status).toBe("PENDING_PAYMENT");
+    expect(await b.purchases.findConfirmedByLeadAndProfessional(LEAD, "pro-1")).toBeNull();
+  });
+
+  it("pricing failure -> LeadPurchasePricingError, nothing persisted, no internals leaked", async () => {
+    const b = build();
+    b.prices.getPriceForLead.mockRejectedValueOnce(new Error("pricing-db host=10.0.0.5 down"));
+    const err = await b.initiate.execute(USER, LEAD).catch((e) => e);
+    expect(err).toBeInstanceOf(LeadPurchasePricingError);
+    expect(err.message).not.toContain("10.0.0.5");
+    expect(b.purchases.rows).toHaveLength(0);
+  });
+
+  it.each([
+    ["NaN", { price: Number.NaN, currency: "EUR" }],
+    ["negative", { price: -1, currency: "EUR" }],
+    ["too many decimals", { price: 1.005, currency: "EUR" }],
+    ["wrong currency", { price: 5, currency: "USD" }],
+  ])("unusable provider price (%s) -> LeadPurchasePricingError, nothing persisted", async (_n, price) => {
+    const b = build({ price });
+    await expect(b.initiate.execute(USER, LEAD)).rejects.toBeInstanceOf(LeadPurchasePricingError);
     expect(b.purchases.rows).toHaveLength(0);
   });
 
