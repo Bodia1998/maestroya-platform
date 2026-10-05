@@ -3,7 +3,16 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import type { CreateLeadData, LeadRecord, LeadRepository } from "@/domain/repositories/lead-repository";
-import { LeadAlreadyExistsError, assertLeadEligibleFlow, isLeadStatus, normalizeLeadMaxBuyers } from "@/domain/services/lead";
+import {
+  LEAD_FLOW_VERSION,
+  LeadAlreadyExistsError,
+  assertLeadEligibleFlow,
+  isLeadStatus,
+  leadStatusForRequestStatus,
+  leadStatusesThatMayTransitionTo,
+  normalizeLeadMaxBuyers,
+} from "@/domain/services/lead";
+import type { ServiceRequestStatusValue } from "@/domain/repositories/service-request-repository";
 import type { TransactionFlowVersion } from "@/domain/services/transaction-flow";
 
 /** Explicit column list. NEVER add customer/address/contact columns here —
@@ -39,6 +48,40 @@ function toRecord(row: Row): LeadRecord {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
+}
+
+/**
+ * Module 130 — ServiceRequest -> Lead propagation, run INSIDE the caller's
+ * transaction (PrismaServiceRequestRepository.updateStatus) so the request
+ * status and the lead status commit or roll back together.
+ *
+ * Deterministic: the target comes from the domain rule
+ * `leadStatusForRequestStatus`. Idempotent and race-safe: a single
+ * status-conditional `updateMany` that only moves leads whose current status
+ * may legally transition to the target (DRAFT/PUBLISHED); terminal leads, and
+ * a repeat of the same propagation, match 0 rows. Scoped to the request's own
+ * lead and to LEAD_V1 (a legacy request can never have a lead; the filter
+ * makes that boundary explicit). Touches only `leads.status` — never
+ * LeadPurchase, Quote, Payment, Commission or Payout.
+ *
+ * Returns the number of leads moved (0 or 1).
+ */
+export async function propagateServiceRequestStatusToLead(
+  tx: Pick<Prisma.TransactionClient, "lead">,
+  serviceRequestId: string,
+  requestStatus: ServiceRequestStatusValue,
+): Promise<number> {
+  const target = leadStatusForRequestStatus(requestStatus);
+  if (target === null) return 0;
+  const { count } = await tx.lead.updateMany({
+    where: {
+      serviceRequestId,
+      status: { in: leadStatusesThatMayTransitionTo(target) },
+      serviceRequest: { flowVersion: LEAD_FLOW_VERSION },
+    },
+    data: { status: target },
+  });
+  return count;
 }
 
 /**
