@@ -11,6 +11,12 @@ describe("infrastructure/config/env", () => {
     expect(isDevelopment).toBe(true);
   });
 
+  it("Module 132: LEAD_PRICING_CONFIG_VERSION has no default, treats empty as unset, and never fails startup", async () => {
+    expect((await loadEnvWith({})).env.LEAD_PRICING_CONFIG_VERSION).toBeUndefined();
+    expect((await loadEnvWith({ LEAD_PRICING_CONFIG_VERSION: "" })).env.LEAD_PRICING_CONFIG_VERSION).toBeUndefined();
+    expect((await loadEnvWith({ LEAD_PRICING_CONFIG_VERSION: "lead-pricing-pilot-v1" })).env.LEAD_PRICING_CONFIG_VERSION).toBe("lead-pricing-pilot-v1");
+  });
+
   it("fails fast when a required variable is missing", async () => {
     await expect(loadEnvWith({ DATABASE_URL: undefined })).rejects.toThrow(
       /Invalid environment variables/,
