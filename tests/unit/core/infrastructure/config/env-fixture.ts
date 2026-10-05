@@ -43,6 +43,8 @@ const ENV_KEYS = [
   "AUTH_FACEBOOK_SECRET",
   "STRIPE_CONNECT_CLIENT_ID",
   "REDIS_URL",
+  // Module 132 — LEAD_V1 pricing configuration selector.
+  "LEAD_PRICING_CONFIG_VERSION",
   "NEXT_PHASE",
   "GEOCODING_PROVIDER",
   "MAPBOX_API_KEY",

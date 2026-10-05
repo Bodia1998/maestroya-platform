@@ -49,6 +49,7 @@ export type LeadPricingFailureReason =
   | "SERVICE_VALUE_UNAVAILABLE"
   | "CATEGORY_MISSING"
   | "RATE_NOT_CONFIGURED"
+  | "CATEGORY_UNSUPPORTED"
   | "CONFIDENCE_TOO_LOW"
   | "INVALID_SERVICE_VALUE"
   | "INVALID_CURRENCY"
@@ -87,6 +88,14 @@ export interface LeadPricingConfig {
   urgencyFactors: Readonly<Partial<Record<string, string>>>;
   /** Results below this confidence are UNPRICED instead of PRICED. */
   minimumConfidence: LeadPricingConfidence;
+  /**
+   * Module 132: categories that are explicitly NOT priceable (e.g. outside the
+   * pilot). A request whose own slug or parent slug is listed is UNPRICED with
+   * CATEGORY_UNSUPPORTED — an explicit outcome, never a guess. Optional so
+   * pre-Module-132 configurations keep their exact behaviour. A slug cannot be
+   * both unsupported and have a rate.
+   */
+  unsupportedCategorySlugs?: readonly string[];
 }
 
 export interface LeadPricingFactors {
@@ -152,6 +161,7 @@ interface CompiledConfig {
   maxCents: bigint;
   urgency: Map<string, bigint>;
   minimumConfidence: LeadPricingConfidence;
+  unsupported: Set<string>;
 }
 
 /** Validates + parses configuration. Returns null when it is nonsensical. */
@@ -175,7 +185,15 @@ function compileConfig(config: LeadPricingConfig): CompiledConfig | null {
     if (factor === null || factor <= 0n || factor > MAX_FACTOR) return null;
     urgency.set(level, factor);
   }
-  return { ruleVersion: config.ruleVersion, rates, minCents, maxCents, urgency, minimumConfidence: config.minimumConfidence };
+  const unsupported = new Set<string>();
+  const rawUnsupported: unknown = config.unsupportedCategorySlugs ?? [];
+  if (!Array.isArray(rawUnsupported)) return null;
+  for (const slug of rawUnsupported) {
+    // An unsupported category that also has a rate is contradictory configuration.
+    if (typeof slug !== "string" || slug === "" || rates.has(slug)) return null;
+    unsupported.add(slug);
+  }
+  return { ruleVersion: config.ruleVersion, rates, minCents, maxCents, urgency, minimumConfidence: config.minimumConfidence, unsupported };
 }
 
 /** True when the configuration would be accepted by the engine. */
@@ -198,6 +216,14 @@ export function calculateLeadPrice(context: LeadPricingContext, config: LeadPric
   // Legacy / unknown flow: never priced (LEAD_V1 only).
   if (!context || context.flowVersion !== LEAD_FLOW_VERSION) return fail("UNPRICED", "NOT_LEAD_V1", version);
   if (!compiled) return fail("INVALID_INPUT", "INVALID_CONFIGURATION", null);
+
+  // Module 132: explicitly unsupported categories are reported as such, before
+  // (and regardless of) whether a service value exists.
+  const requestedSlug = typeof context.categorySlug === "string" ? context.categorySlug : "";
+  const requestedParent = typeof context.parentCategorySlug === "string" ? context.parentCategorySlug : "";
+  if ((requestedSlug !== "" && compiled.unsupported.has(requestedSlug)) || (requestedParent !== "" && compiled.unsupported.has(requestedParent))) {
+    return fail("UNPRICED", "CATEGORY_UNSUPPORTED", version);
+  }
 
   const value = context.estimatedServiceValue;
   if (value === null || value === undefined) return fail("UNPRICED", "SERVICE_VALUE_UNAVAILABLE", version);

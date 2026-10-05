@@ -237,6 +237,16 @@ const envSchema = z
     CLOUDINARY_API_KEY: z.string().min(1, "CLOUDINARY_API_KEY is required"),
     CLOUDINARY_API_SECRET: z.string().min(1, "CLOUDINARY_API_SECRET is required"),
 
+    // --- LEAD_V1 pricing (Module 132) ---
+    // Selects which released, validated pricing snapshot the Lead purchase
+    // price provider runs (see infrastructure/pricing/
+    // lead-pricing-production-config-resolver.ts). Deliberately NOT given a
+    // default and NOT enforced here: an unset/unknown/invalid value must fail
+    // the pricing composition closed with a precise error (never fall back to
+    // test or provisional values), without taking down unrelated parts of
+    // the app that never price a Lead.
+    LEAD_PRICING_CONFIG_VERSION: z.preprocess(emptyStringToUndefined, z.string().optional()),
+
     // --- Redis (optional — Module 25 reserved this variable; Module 44
     // — Redis Infrastructure — is what actually consumes it) ---
     // Still optional and unset by default: a single-instance deployment

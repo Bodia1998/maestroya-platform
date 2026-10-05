@@ -60,15 +60,16 @@ describe("Module 129 boundaries", () => {
     expect(src).not.toMatch(/calculateLeadPrice|rateBySlug|LEAD_PRICING_CONFIG|bigint|\d+n\b|baseValueBySlug/);
   });
 
-  it("only the lead-purchase composition root wires the concrete estimator config; no route/page/action exposes it", () => {
+  it("only the estimator, its adapter and the V1 fixture reference the estimator config; Module 132 moved the production wiring to the pilot snapshot; no route/page/action exposes it", () => {
     const files = walk(path.join(root, "src")).map((f) => path.relative(root, f).split(path.sep).join("/"));
     const users = files.filter((f) => /JOB_VALUE_ESTIMATION_CONFIG_V1|estimateJobValue\b/.test(readFileSync(path.join(root, f), "utf8")));
     expect(users.sort()).toEqual([
       "src/core/application/services/lead-pricing/estimated-value-lead-pricing-context-reader.ts",
-      "src/core/application/use-cases/lead-purchase/compose.ts",
       "src/core/domain/services/job-value-estimation.ts",
       "src/core/infrastructure/pricing/job-value-estimation-config.v1.ts",
     ]);
+    // Module 132: production composition no longer imports the provisional V1 fixture.
+    expect(readFileSync(path.join(root, "src/core/application/use-cases/lead-purchase/compose.ts"), "utf8")).not.toMatch(/JOB_VALUE_ESTIMATION_CONFIG_V1/);
     expect(files.filter((f) => f.startsWith("src/app/") && /job-value-estimation/i.test(readFileSync(path.join(root, f), "utf8")))).toEqual([]);
   });
 
