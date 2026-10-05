@@ -1,4 +1,5 @@
 import { prisma } from "@/infrastructure/database/prisma/client";
+import { propagateServiceRequestStatusToLead } from "@/infrastructure/database/prisma/repositories/prisma-lead-repository";
 import type {
   CreateServiceRequestData,
   RequestPhotoRecord,
@@ -212,7 +213,14 @@ export class PrismaServiceRequestRepository implements ServiceRequestRepository 
   }
 
   async updateStatus(id: string, status: ServiceRequestStatusValue): Promise<void> {
-    await prisma.serviceRequest.update({ where: { id }, data: { status } });
+    // Module 130: the request status and its LEAD_V1 lead (if any) change in
+    // ONE transaction, so a lead can never stay available behind a request
+    // that was cancelled/expired/closed. This is the single status-write path
+    // used by cancel, expiry and the LEAD_V1 entry rollback.
+    await prisma.$transaction(async (tx) => {
+      await tx.serviceRequest.update({ where: { id }, data: { status } });
+      await propagateServiceRequestStatusToLead(tx, id, status);
+    });
   }
 
   async findExpirable(now: Date): Promise<ServiceRequestRecord[]> {
