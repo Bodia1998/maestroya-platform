@@ -27,6 +27,7 @@ import {
   FakeQuoteRepository,
   FakeSelfBillingAuthorizationRepository,
 } from "./fakes";
+import { legacyFlowGuardForTests } from "../../../../../test-utils/legacy-flow-guard";
 
 function makeJob(overrides: Partial<JobRecord> = {}): JobRecord {
   return {
@@ -214,6 +215,8 @@ describe("Module 79 — Invoicing & Credit Notes use cases", () => {
       invoices,
       taxBreakdowns,
       eventBus,
+      undefined,
+      legacyFlowGuardForTests(),
     );
     submitForAcceptance = new SubmitInvoiceForAcceptanceUseCase(invoices, eventBus);
     acceptInvoice = new AcceptInvoiceUseCase(invoices, professionals as never, companies as never, selfBillingAuthorizations, eventBus);

@@ -13,6 +13,7 @@ import {
   fakeJobRecord,
   fakeQuoteRecord,
 } from "./fakes";
+import { legacyFlowGuardForTests } from "../../../../../test-utils/legacy-flow-guard";
 
 /**
  * Module 73 — Real Customer Payment Capture: application-level tests for
@@ -46,6 +47,7 @@ describe("InitiateQuotePaymentUseCase (Module 73)", () => {
       gateway,
       lock,
       fakeFeatureFlags(true),
+      legacyFlowGuardForTests(),
     );
 
     customerProfiles.seed({ id: "customer-1", userId: USER_ID, customerType: "PRIVATE_CUSTOMER" });
@@ -171,6 +173,7 @@ describe("InitiateQuotePaymentUseCase (Module 73)", () => {
       gateway,
       lock,
       fakeFeatureFlags(false),
+      legacyFlowGuardForTests(),
     );
 
     await expect(useCase.execute(USER_ID, "job-1")).rejects.toBeInstanceOf(ValidationError);

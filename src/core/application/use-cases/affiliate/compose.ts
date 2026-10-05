@@ -51,6 +51,7 @@ import { PaymentRefunded } from "@/domain/events/payment-refunded";
 import { StripeDisputeClosed } from "@/domain/events/stripe-dispute-closed";
 import { makeRecordCommissionForPaymentUseCase } from "@/application/use-cases/financial/compose";
 import { stripeTransferGateway } from "@/infrastructure/payments/stripe/compose";
+import { transactionFlowGuard } from "@/application/services/flow/compose";
 import { makeRecordConversionUseCase } from "@/application/use-cases/referral/compose";
 
 /**
@@ -276,6 +277,7 @@ eventBus.subscribe(
     makeRecordAffiliateCommissionUseCase(),
     failureReporter,
     financialLedger,
+    transactionFlowGuard,
   ),
 );
 

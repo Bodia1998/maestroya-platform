@@ -1,6 +1,8 @@
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { calculateQuoteItemAmount } from "@/domain/services/money";
 import { OPEN_QUOTE_STATUSES } from "@/domain/services/quote-state";
+import { NotFoundError } from "@/domain/errors/domain-error";
+import { LegacyFlowBoundaryError, isLegacyQuotePaymentFlow, type TransactionFlowVersion } from "@/domain/services/transaction-flow";
 import { DEFAULT_MATERIALS_STRATEGY } from "@/domain/value-objects/materials-strategy";
 import type { MaterialsStrategyValue } from "@/domain/value-objects/materials-strategy";
 import type {
@@ -265,6 +267,17 @@ export class PrismaQuoteRepository implements QuoteRepository {
   }
 
   async create(data: CreateQuoteData): Promise<QuoteRecord> {
+    // Module 131 — defense in depth below CreateQuoteUseCase's guard: the
+    // only quote write path refuses to persist a Quote for a non-legacy
+    // (LEAD_V1 / unknown) ServiceRequest. Fails closed.
+    const owner = await prisma.serviceRequest.findUnique({
+      where: { id: data.serviceRequestId },
+      select: { flowVersion: true },
+    });
+    if (!owner) throw new NotFoundError("ServiceRequest", data.serviceRequestId);
+    if (!isLegacyQuotePaymentFlow(owner.flowVersion as TransactionFlowVersion)) {
+      throw new LegacyFlowBoundaryError("quote.create", owner.flowVersion as TransactionFlowVersion);
+    }
     const materialsStrategy = data.materialsStrategy ?? DEFAULT_MATERIALS_STRATEGY;
     const row = await prisma.quote.create({
       data: {

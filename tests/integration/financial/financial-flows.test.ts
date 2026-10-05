@@ -27,6 +27,7 @@ import {
   FakeJobCompletionConfirmationRepository,
   FakePaymentRepository,
 } from "./fakes";
+import { legacyFlowGuardForTests } from "../../test-utils/legacy-flow-guard";
 
 /**
  * Integration tests for Module 22 — Commission & Financial. Real use cases
@@ -81,6 +82,7 @@ function makeRepos() {
       ledger,
       breakdowns,
       completionConfirmations,
+      legacyFlowGuardForTests(),
     ),
     getProfessionalEarnings: new GetProfessionalEarningsUseCase(professionals, commissions, payments, breakdowns),
     getCustomerSummary: new GetCustomerFinancialSummaryUseCase(customerProfiles, jobs, payments, breakdowns),

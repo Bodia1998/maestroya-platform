@@ -1,4 +1,4 @@
-import { shouldRunLegacyFlow, type TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
+import { shouldRunLegacyFlow, requireLegacyFlowGuard, type TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { Payment } from "@/domain/entities/payment";
 import { InvalidPaymentTransitionError } from "@/domain/errors/domain-error";
 import type { EventBus } from "@/application/ports/event-bus";
@@ -143,11 +143,12 @@ export class ProcessCustomerPaymentWebhookUseCase {
      *  actual Stripe fee is genuinely captured. See
      *  `handleChargeUpdated`'s own doc comment for the full mechanism. */
     private readonly feeLedger: FinancialLedgerRepository | null = null,
-    // Module 121 — legacy/LEAD_V1 boundary. Optional (like this class's other
-    // late-added dependencies) so historical direct constructions still compile;
-    // production composition always supplies it.
-    private readonly flowGuard?: TransactionFlowGuard,
-  ) {}
+    // Module 131 — legacy/LEAD_V1 boundary. MANDATORY and fail-closed: the
+    // constructor throws if it is not supplied (never silently skipped).
+    private readonly flowGuard: TransactionFlowGuard,
+  ) {
+    requireLegacyFlowGuard(flowGuard, "ProcessCustomerPaymentWebhookUseCase");
+  }
 
   async execute(event: StripePaymentWebhookEvent): Promise<ProcessCustomerPaymentWebhookResult> {
     const claim = await this.webhookEvents.claim({

@@ -19,6 +19,7 @@ import {
   FakeServiceRequestRepository,
   FakeTrustAutomatedActionRepository,
 } from "./fakes";
+import { legacyFlowGuardForTests } from "../../test-utils/legacy-flow-guard";
 
 const PLUMBING_ID = "cat-plumbing";
 const ELECTRICAL_ID = "cat-electrical";
@@ -261,6 +262,9 @@ describe("CreateQuoteUseCase", () => {
         repos.professionalDiscovery,
         repos.requestDiscovery,
         repos.quotes,
+        undefined,
+        undefined,
+        legacyFlowGuardForTests(),
       ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS }),
     ).rejects.toThrow();
   });
@@ -285,6 +289,9 @@ describe("CreateQuoteUseCase", () => {
           repos.professionalDiscovery,
           repos.requestDiscovery,
           repos.quotes,
+          undefined,
+          undefined,
+          legacyFlowGuardForTests(),
         ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS }),
       ).rejects.toBeInstanceOf(ProfessionalNotVerifiedError);
     },
@@ -300,6 +307,9 @@ describe("CreateQuoteUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     expect(quote.id).toBeTruthy();
@@ -315,6 +325,9 @@ describe("CreateQuoteUseCase", () => {
         repos.professionalDiscovery,
         repos.requestDiscovery,
         repos.quotes,
+        undefined,
+        undefined,
+        legacyFlowGuardForTests(),
       ).execute("pro-without-profile", { serviceRequestId: request.id, items: VALID_ITEMS }),
     ).rejects.toThrow();
   });
@@ -334,6 +347,9 @@ describe("CreateQuoteUseCase", () => {
         repos.professionalDiscovery,
         repos.requestDiscovery,
         repos.quotes,
+        undefined,
+        undefined,
+        legacyFlowGuardForTests(),
       ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS }),
     ).rejects.toThrow();
   });
@@ -349,6 +365,9 @@ describe("CreateQuoteUseCase", () => {
         repos.professionalDiscovery,
         repos.requestDiscovery,
         repos.quotes,
+        undefined,
+        undefined,
+        legacyFlowGuardForTests(),
       ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS }),
     ).rejects.toThrow();
   });
@@ -364,6 +383,9 @@ describe("CreateQuoteUseCase", () => {
         repos.professionalDiscovery,
         repos.requestDiscovery,
         repos.quotes,
+        undefined,
+        undefined,
+        legacyFlowGuardForTests(),
       ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS }),
     ).rejects.toThrow();
   });
@@ -379,6 +401,9 @@ describe("CreateQuoteUseCase", () => {
         repos.professionalDiscovery,
         repos.requestDiscovery,
         repos.quotes,
+        undefined,
+        undefined,
+        legacyFlowGuardForTests(),
       ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS }),
     ).rejects.toThrow();
   });
@@ -393,6 +418,9 @@ describe("CreateQuoteUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: [
@@ -418,6 +446,9 @@ describe("CreateQuoteUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     );
 
     await useCase.execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
@@ -438,6 +469,9 @@ describe("GetProfessionalQuoteUseCase / GetProfessionalQuotesUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     const list = await new GetProfessionalQuotesUseCase(
@@ -460,6 +494,9 @@ describe("GetProfessionalQuoteUseCase / GetProfessionalQuotesUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     await expect(
@@ -478,6 +515,9 @@ describe("UpdateQuoteUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     const updated = await new UpdateQuoteUseCase(repos.professionals, repos.quotes).execute(
@@ -501,6 +541,9 @@ describe("UpdateQuoteUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     await expect(
@@ -519,6 +562,9 @@ describe("UpdateQuoteUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
     await repos.quotes.updateStatus(quote.id, "ACCEPTED");
 
@@ -540,6 +586,9 @@ describe("WithdrawQuoteUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     await new WithdrawQuoteUseCase(repos.professionals, repos.quotes).execute("pro-1", quote.id);
@@ -558,6 +607,9 @@ describe("WithdrawQuoteUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     await expect(
@@ -577,6 +629,9 @@ describe("WithdrawQuoteUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
     await new WithdrawQuoteUseCase(repos.professionals, repos.quotes).execute("pro-1", quote.id);
 
@@ -594,6 +649,9 @@ describe("WithdrawQuoteUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
     await repos.quotes.updateStatus(quote.id, "ACCEPTED");
 
@@ -612,6 +670,9 @@ describe("AcceptQuoteUseCase — Module 89 BOOKING_RESTRICTION enforcement", () 
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
     return { request, quote };
   }
@@ -630,6 +691,7 @@ describe("AcceptQuoteUseCase — Module 89 BOOKING_RESTRICTION enforcement", () 
       repos.professionals,
       undefined,
       trustAutomatedActions,
+      legacyFlowGuardForTests(),
     ).execute("cust-1", request.id, quote.id);
 
     expect(result.acceptedQuoteId).toBe(quote.id);
@@ -648,6 +710,9 @@ describe("AcceptQuoteUseCase — Module 89 BOOKING_RESTRICTION enforcement", () 
       repos.quotes,
       quoteAcceptance,
       repos.professionals,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("cust-1", request.id, quote.id);
 
     expect(result.acceptedQuoteId).toBe(quote.id);
@@ -669,6 +734,7 @@ describe("AcceptQuoteUseCase — Module 89 BOOKING_RESTRICTION enforcement", () 
         repos.professionals,
         undefined,
         trustAutomatedActions,
+        legacyFlowGuardForTests(),
       ).execute("cust-1", request.id, quote.id),
     ).rejects.toThrow(/booking restriction/i);
 
@@ -693,6 +759,7 @@ describe("AcceptQuoteUseCase — Module 89 BOOKING_RESTRICTION enforcement", () 
         repos.professionals,
         undefined,
         trustAutomatedActions,
+        legacyFlowGuardForTests(),
       ).execute("cust-1", request.id, quote.id),
     ).rejects.toThrow(/booking restriction/i);
 
@@ -714,6 +781,7 @@ describe("AcceptQuoteUseCase — Module 89 BOOKING_RESTRICTION enforcement", () 
       repos.professionals,
       undefined,
       trustAutomatedActions,
+      legacyFlowGuardForTests(),
     ).execute("cust-1", request.id, quote.id);
 
     expect(result.acceptedQuoteId).toBe(quote.id);
@@ -730,6 +798,9 @@ describe("GetServiceRequestQuotesUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     const views = await new GetServiceRequestQuotesUseCase(
@@ -752,6 +823,9 @@ describe("GetServiceRequestQuotesUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
     await repos.customerProfiles.findOrCreateByUserId("cust-2");
 
@@ -774,6 +848,9 @@ describe("GetServiceRequestQuotesUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     const [view] = await new GetServiceRequestQuotesUseCase(

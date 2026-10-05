@@ -1,4 +1,4 @@
-import type { TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
+import { requireLegacyFlowGuard, type TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import type { JobRepository } from "@/domain/repositories/job-repository";
 import type { JobCompletionConfirmationRecord, JobCompletionConfirmationRepository } from "@/domain/repositories/job-completion-confirmation-repository";
@@ -66,12 +66,13 @@ export class AdminResolvePaymentReleaseUseCase {
     /** Module 75 — Company Payout Eligibility: optional, mirrors
      *  EvaluatePaymentReleaseUseCase's own identical addition — see that
      *  class's own doc comment. */
-    private readonly companies?: CompanyRepository,
-    // Module 121 — legacy/LEAD_V1 boundary. Optional (like this class's other
-    // late-added dependencies) so historical direct constructions still compile;
-    // production composition always supplies it.
-    private readonly flowGuard?: TransactionFlowGuard,
-  ) {}
+    private readonly companies: CompanyRepository | undefined,
+    // Module 131 — legacy/LEAD_V1 boundary. MANDATORY and fail-closed: the
+    // constructor throws if it is not supplied (never silently skipped).
+    private readonly flowGuard: TransactionFlowGuard,
+  ) {
+    requireLegacyFlowGuard(flowGuard, "AdminResolvePaymentReleaseUseCase");
+  }
 
   async execute(
     adminUserId: string,
@@ -84,7 +85,7 @@ export class AdminResolvePaymentReleaseUseCase {
       throw new NotFoundError("Job", jobId);
     }
 
-    await this.flowGuard?.assertLegacy(job.serviceRequestId, "payment_release.admin_resolve");
+    await this.flowGuard.assertLegacy(job.serviceRequestId, "payment_release.admin_resolve");
 
     const confirmation = await this.confirmations.findByJobId(jobId);
     if (!confirmation) {

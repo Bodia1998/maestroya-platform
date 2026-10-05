@@ -43,6 +43,7 @@ describe("Module 121 composition wiring", () => {
     ["src/core/application/use-cases/job/compose.ts", "AdminResolvePaymentReleaseUseCase"],
     ["src/core/application/use-cases/invoicing/compose.ts", "CreateProfessionalInvoiceDraftUseCase"],
     ["src/core/application/use-cases/invoicing/compose.ts", "CreateCustomerReceiptDraftUseCase"],
+    ["src/core/application/use-cases/affiliate/compose.ts", "RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber"],
   ];
 
   it.each(wired)("%s passes transactionFlowGuard to %s", (file, cls) => {

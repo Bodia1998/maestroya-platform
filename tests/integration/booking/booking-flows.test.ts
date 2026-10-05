@@ -9,6 +9,7 @@ import {
   FakeQuoteRepository,
   FakeServiceRequestRepository,
 } from "./fakes";
+import { legacyFlowGuardForTests } from "../../test-utils/legacy-flow-guard";
 
 /**
  * Integration tests for the Booking/Appointments module's central use case,
@@ -90,7 +91,7 @@ async function seedQuote(
 }
 
 function makeUseCase(repos: ReturnType<typeof makeRepos>) {
-  return new AcceptQuoteUseCase(repos.customerProfiles, repos.serviceRequests, repos.quotes, repos.quoteAcceptance);
+  return new AcceptQuoteUseCase(repos.customerProfiles, repos.serviceRequests, repos.quotes, repos.quoteAcceptance, undefined, undefined, undefined, legacyFlowGuardForTests());
 }
 
 describe("Server Action auth boundary (unauthenticated users)", () => {

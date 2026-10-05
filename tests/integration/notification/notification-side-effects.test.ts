@@ -27,6 +27,7 @@ import {
 } from "../quotes/fakes";
 import { FakeReviewRepository } from "../review/fakes";
 import { FakeConversationRepository, FakeMessageRepository } from "../chat/fakes";
+import { legacyFlowGuardForTests } from "../../test-utils/legacy-flow-guard";
 
 /**
  * Integration tests proving the Notifications module's central reliability
@@ -112,6 +113,8 @@ describe("Notification failures never break the primary business operation", () 
       requestDiscovery,
       quotes,
       new ThrowingNotificationCreator(),
+      undefined,
+      legacyFlowGuardForTests(),
     );
 
     const quote = await createQuote.execute("pro-1", {
@@ -190,6 +193,8 @@ describe("Notification failures never break the primary business operation", () 
       quoteAcceptance,
       professionals,
       new ThrowingNotificationCreator(),
+      undefined,
+      legacyFlowGuardForTests(),
     );
 
     const result = await acceptQuote.execute("customer-1", request.id, winningQuote.id);
