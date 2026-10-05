@@ -34,6 +34,7 @@ import {
   FakePaymentGateway,
   fakeFeatureFlags,
 } from "../../unit/core/application/use-cases/payments/fakes";
+import { legacyFlowGuardForTests } from "../../test-utils/legacy-flow-guard";
 
 /**
  * Module 73 — Real Customer Payment Capture: end-to-end integration test
@@ -92,6 +93,7 @@ function makeRepos() {
     ledger,
     breakdowns,
     completionConfirmations,
+    legacyFlowGuardForTests(),
   );
 
   eventBus.subscribe(PaymentCaptured, new RecordCommissionOnPaymentCapturedSubscriber(recordCommission));
@@ -104,8 +106,9 @@ function makeRepos() {
     paymentGateway,
     lock,
     fakeFeatureFlags(true),
+    legacyFlowGuardForTests(),
   );
-  const processWebhook = new ProcessCustomerPaymentWebhookUseCase(payments, paymentGateway, webhookEvents, eventBus);
+  const processWebhook = new ProcessCustomerPaymentWebhookUseCase(payments, paymentGateway, webhookEvents, eventBus, undefined, undefined, undefined, undefined, legacyFlowGuardForTests());
 
   return {
     customerProfiles,

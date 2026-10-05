@@ -31,6 +31,7 @@ import {
   FakeProfessionalPayoutLedgerRepository,
   FakeTrustAutomatedActionRepository,
 } from "./fakes";
+import { legacyFlowGuardForTests } from "../../test-utils/legacy-flow-guard";
 
 /**
  * Module 70.1 — Pre-Stripe Security & Integration Hardening (Objective D):
@@ -86,7 +87,7 @@ function makeRepos() {
     verifications,
     breakdowns,
     reconcilePayment,
-    recordCommission: new RecordCommissionForPaymentUseCase(payments, commissions, ledger, breakdowns, completionConfirmations),
+    recordCommission: new RecordCommissionForPaymentUseCase(payments, commissions, ledger, breakdowns, completionConfirmations, legacyFlowGuardForTests()),
     createAdjustment: new CreateFinancialAdjustmentUseCase(jobs, adjustments, ledger, payments),
     payoutEligibility,
     checkPayoutReadiness: new CheckPayoutReadinessUseCase(

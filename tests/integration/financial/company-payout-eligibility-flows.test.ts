@@ -55,6 +55,7 @@ import { FakeCompanyRepository } from "../company/fakes";
 import { FakeCompanyVerificationRepository } from "../workflow-expiration/fakes";
 import { FakeProfessionalVerificationRepository } from "../verification/fakes";
 import { FakeProfessionalRepository as VerificationFakeProfessionalRepository } from "../verification/fakes";
+import { legacyFlowGuardForTests } from "../../test-utils/legacy-flow-guard";
 
 /**
  * Module 75 — Company Payout Eligibility: comprehensive integration
@@ -537,6 +538,7 @@ function makeRepos() {
     eventBus,
     undefined,
     companies,
+    legacyFlowGuardForTests(),
   );
 
   const resolveDestination = new ResolvePayoutDestinationUseCase(professionalOnboardings, companyPayoutAccounts);

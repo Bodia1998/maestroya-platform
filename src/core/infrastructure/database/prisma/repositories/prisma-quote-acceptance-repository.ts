@@ -1,6 +1,7 @@
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { ConflictError, NotFoundError } from "@/domain/errors/domain-error";
 import { OPEN_QUOTE_STATUSES } from "@/domain/services/quote-state";
+import { LegacyFlowBoundaryError, isLegacyQuotePaymentFlow, type TransactionFlowVersion } from "@/domain/services/transaction-flow";
 import type {
   AcceptQuoteJobRecord,
   AcceptQuoteResult,
@@ -109,10 +110,20 @@ export class PrismaQuoteAcceptanceRepository implements QuoteAcceptanceRepositor
       // acceptance attempt, not just a read.
       const request = await tx.serviceRequest.findFirst({
         where: { id: serviceRequestId, deletedAt: null },
-        select: { id: true, addressId: true, status: true, customerId: true },
+        select: { id: true, addressId: true, status: true, customerId: true, flowVersion: true },
       });
       if (!request) {
         throw new NotFoundError("ServiceRequest", serviceRequestId);
+      }
+      // Module 131 — defense in depth. This transaction writes
+      // ServiceRequest.status = ACCEPTED directly (it does not go through
+      // ServiceRequestRepository.updateStatus) and creates the legacy Job +
+      // Appointment, so it must enforce the legacy-flow boundary itself: a
+      // LEAD_V1 request can never be quote-accepted, even if a caller skips
+      // AcceptQuoteUseCase / TransactionFlowGuard. Fails closed on any
+      // non-legacy (or unknown) flow value; nothing has been written yet.
+      if (!isLegacyQuotePaymentFlow(request.flowVersion as TransactionFlowVersion)) {
+        throw new LegacyFlowBoundaryError("quote.accept", request.flowVersion as TransactionFlowVersion);
       }
       if (request.status !== "PUBLISHED") {
         throw new ConflictError("This request can no longer accept a quote.");
@@ -157,7 +168,7 @@ export class PrismaQuoteAcceptanceRepository implements QuoteAcceptanceRepositor
       });
 
       const requestUpdate = await tx.serviceRequest.updateMany({
-        where: { id: serviceRequestId, status: "PUBLISHED" },
+        where: { id: serviceRequestId, status: "PUBLISHED", flowVersion: "LEGACY_QUOTE_PAYMENT" },
         data: { status: "ACCEPTED" },
       });
       if (requestUpdate.count === 0) {

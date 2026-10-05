@@ -10,6 +10,7 @@ import type { RecordConversionUseCase } from "@/application/use-cases/referral/r
 import type { RecordAffiliateCommissionUseCase } from "@/application/use-cases/affiliate/record-affiliate-commission.use-case";
 import type { FailureReporter } from "@/application/ports/failure-reporter";
 import type { FinancialLedgerRepository, FinancialTransactionRecord } from "@/domain/repositories/financial-ledger-repository";
+import { legacyFlowGuardForTests } from "../../../../../test-utils/legacy-flow-guard";
 
 /**
  * Module 96 — Referral & Affiliate Production Wiring: tests for the
@@ -109,6 +110,9 @@ describe("RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber (Module 96
       fakeRecordCommission(vi.fn()),
       fakeRecordConversion(vi.fn()),
       fakeRecordAffiliateCommission(vi.fn()),
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     );
 
     await subscriber.handle(new PaymentReleaseApproved("job-1", "confirmation-1", null));
@@ -124,6 +128,9 @@ describe("RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber (Module 96
       fakeRecordCommission(recordCommission),
       fakeRecordConversion(vi.fn()),
       fakeRecordAffiliateCommission(vi.fn()),
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     );
 
     await subscriber.handle(new PaymentReleaseApproved("job-1", "confirmation-1", "payment-1"));
@@ -142,6 +149,9 @@ describe("RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber (Module 96
       fakeRecordCommission(recordCommission),
       fakeRecordConversion(recordConversion),
       fakeRecordAffiliateCommission(recordAffiliateCommission),
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     );
 
     await subscriber.handle(new PaymentReleaseApproved("job-1", "confirmation-1", "payment-1"));
@@ -177,6 +187,7 @@ describe("RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber (Module 96
         fakeRecordAffiliateCommission(recordAffiliateCommission),
         undefined,
         ledger,
+        legacyFlowGuardForTests(),
       );
 
       await subscriber.handle(new PaymentReleaseApproved("job-1", "confirmation-1", "payment-1"));
@@ -209,6 +220,7 @@ describe("RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber (Module 96
         fakeRecordAffiliateCommission(recordAffiliateCommission),
         undefined,
         ledger,
+        legacyFlowGuardForTests(),
       );
 
       await subscriber.handle(new PaymentReleaseApproved("job-1", "confirmation-1", "payment-1"));
@@ -244,6 +256,7 @@ describe("RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber (Module 96
         fakeRecordAffiliateCommission(recordAffiliateCommission),
         undefined,
         ledger,
+        legacyFlowGuardForTests(),
       );
 
       await subscriber.handle(new PaymentReleaseApproved("job-1", "confirmation-1", "payment-1"));
@@ -262,6 +275,9 @@ describe("RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber (Module 96
       fakeRecordCommission(vi.fn().mockRejectedValue(new ValidationError("not yet"))),
       fakeRecordConversion(recordConversion),
       fakeRecordAffiliateCommission(vi.fn()),
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     );
 
     await expect(subscriber.handle(new PaymentReleaseApproved("job-1", "confirmation-1", "payment-1"))).resolves.toBeUndefined();
@@ -278,6 +294,8 @@ describe("RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber (Module 96
       fakeRecordConversion(vi.fn()),
       fakeRecordAffiliateCommission(vi.fn()),
       failureReporter,
+      undefined,
+      legacyFlowGuardForTests(),
     );
 
     await expect(subscriber.handle(new PaymentReleaseApproved("job-1", "confirmation-1", "payment-1"))).resolves.toBeUndefined();

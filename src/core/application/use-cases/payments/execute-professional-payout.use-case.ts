@@ -1,4 +1,4 @@
-import type { TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
+import { requireLegacyFlowGuard, type TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { NotFoundError, ValidationError } from "@/domain/errors/domain-error";
 import { roundToCents } from "@/domain/services/money";
 import { StripeTransferError } from "@/domain/errors/domain-error";
@@ -134,13 +134,14 @@ export class ExecuteProfessionalPayoutUseCase {
     // unmodified. When wired (see `payments/compose.ts`), a payout is
     // blocked until the job's invoice satisfies
     // `satisfiesPayoutInvoicePrerequisite` (ISSUED or PAID).
-    private readonly invoiceGate?: CheckInvoiceRequiredForPayoutUseCase,
+    private readonly invoiceGate: CheckInvoiceRequiredForPayoutUseCase | undefined,
     private readonly requireInvoiceForPayout = false,
-    // Module 121 — legacy/LEAD_V1 boundary. Optional (like this class's other
-    // late-added dependencies) so historical direct constructions still compile;
-    // production composition always supplies it.
-    private readonly flowGuard?: TransactionFlowGuard,
-  ) {}
+    // Module 131 — legacy/LEAD_V1 boundary. MANDATORY and fail-closed: the
+    // constructor throws if it is not supplied (never silently skipped).
+    private readonly flowGuard: TransactionFlowGuard,
+  ) {
+    requireLegacyFlowGuard(flowGuard, "ExecuteProfessionalPayoutUseCase");
+  }
 
   async execute(jobId: string): Promise<PayoutRecord> {
     // Fast path — never even takes the lock for a Job whose payout is
@@ -180,7 +181,7 @@ export class ExecuteProfessionalPayoutUseCase {
       throw new NotFoundError("Job", jobId);
     }
 
-    await this.flowGuard?.assertLegacy(job.serviceRequestId, "professional_payout.execute");
+    await this.flowGuard.assertLegacy(job.serviceRequestId, "professional_payout.execute");
 
     // --- Module 66 gate: the single authoritative release decision ---
     const confirmation = await this.completionConfirmations.findByJobId(jobId);

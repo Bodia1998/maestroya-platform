@@ -1,4 +1,5 @@
 import { LegacyFlowBoundaryError } from "@/domain/services/transaction-flow";
+import { requireLegacyFlowGuard, shouldRunLegacyFlow, type TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { ValidationError } from "@/domain/errors/domain-error";
 import type { EventHandler } from "@/application/ports/event-bus";
 import type { PaymentReleaseApproved } from "@/domain/events/payment-release-approved";
@@ -95,7 +96,13 @@ export class RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber impleme
      *  supplies the real ledger, so the profit-base formula genuinely
      *  consumes the real captured Stripe fee in production. */
     private readonly financialLedger: FinancialLedgerRepository | null = null,
-  ) {}
+    // Module 131 — legacy/LEAD_V1 boundary, enforced at THIS subscriber's own
+    // boundary (not only transitively via RecordCommissionForPaymentUseCase).
+    // MANDATORY and fail-closed: the constructor throws if it is missing.
+    private readonly flowGuard: TransactionFlowGuard,
+  ) {
+    requireLegacyFlowGuard(flowGuard, "RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber");
+  }
 
   async handle(event: PaymentReleaseApproved): Promise<void> {
     if (!event.paymentId) return;
@@ -103,6 +110,13 @@ export class RecordAffiliateConversionOnPaymentReleaseApprovedSubscriber impleme
     try {
       const payment = await this.payments.findById(event.paymentId);
       if (!payment) return;
+
+      // Module 131: a LEAD_V1 request never produces a legacy affiliate
+      // conversion/commission. Checked before any attribution read or write.
+      if (!(await shouldRunLegacyFlow(this.flowGuard, payment.serviceRequestId, "affiliate.conversion_on_release"))) {
+        logger.info("affiliate.conversion.skipped_non_legacy_flow", { paymentId: event.paymentId });
+        return;
+      }
 
       const attribution = await this.attributions.findByUserId(payment.payerId);
       if (!attribution) {

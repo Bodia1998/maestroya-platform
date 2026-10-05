@@ -25,6 +25,7 @@ import {
   FakeServiceRequestDiscoveryRepository,
   FakeServiceRequestRepository,
 } from "../quotes/fakes";
+import { legacyFlowGuardForTests } from "../../test-utils/legacy-flow-guard";
 
 /**
  * Module 63 — Materials Procurement Workflow: end-to-end integration
@@ -175,6 +176,9 @@ describe("Module 63 — CreateQuoteUseCase materials strategy", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     expect(quote.materialsStrategy).toBe("PROFESSIONAL_SUPPLIED");
@@ -193,6 +197,9 @@ describe("Module 63 — CreateQuoteUseCase materials strategy", () => {
         repos.professionalDiscovery,
         repos.requestDiscovery,
         repos.quotes,
+        undefined,
+        undefined,
+        legacyFlowGuardForTests(),
       ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS, materialsStrategy: "CUSTOMER_PURCHASED", materials: [] }),
     ).rejects.toThrow(MaterialsListRequiredError);
   });
@@ -207,6 +214,9 @@ describe("Module 63 — CreateQuoteUseCase materials strategy", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: VALID_ITEMS,
@@ -230,6 +240,9 @@ describe("Module 63 — CreateQuoteUseCase materials strategy", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: VALID_ITEMS,
@@ -253,6 +266,9 @@ describe("Module 78 audit finding — priced MATERIALS items on a CUSTOMER_PURCH
         repos.professionalDiscovery,
         repos.requestDiscovery,
         repos.quotes,
+        undefined,
+        undefined,
+        legacyFlowGuardForTests(),
       ).execute("pro-1", {
         serviceRequestId: request.id,
         items: PROFESSIONAL_MATERIALS_ITEMS,
@@ -277,6 +293,9 @@ describe("Module 78 audit finding — priced MATERIALS items on a CUSTOMER_PURCH
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: UNPRICED_MATERIALS_ITEM,
@@ -297,6 +316,9 @@ describe("Module 78 audit finding — priced MATERIALS items on a CUSTOMER_PURCH
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: PROFESSIONAL_MATERIALS_ITEMS,
@@ -317,6 +339,9 @@ describe("Module 78 audit finding — priced MATERIALS items on a CUSTOMER_PURCH
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: VALID_ITEMS,
@@ -338,6 +363,9 @@ describe("Module 63 — UpdateQuoteUseCase materials strategy", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: VALID_ITEMS,
@@ -362,6 +390,9 @@ describe("Module 63 — UpdateQuoteUseCase materials strategy", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     await expect(
@@ -384,6 +415,9 @@ describe("Module 78 audit finding — priced MATERIALS items on a CUSTOMER_PURCH
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: PROFESSIONAL_MATERIALS_ITEMS,
@@ -412,6 +446,9 @@ describe("Module 78 audit finding — priced MATERIALS items on a CUSTOMER_PURCH
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: VALID_ITEMS,
@@ -437,6 +474,9 @@ describe("Module 78 audit finding — priced MATERIALS items on a CUSTOMER_PURCH
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: PROFESSIONAL_MATERIALS_ITEMS,
@@ -461,6 +501,9 @@ describe("Module 63 — ConfirmMaterialsPurchasedUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: VALID_ITEMS,
@@ -505,6 +548,9 @@ describe("Module 63 — ConfirmMaterialsPurchasedUseCase", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", { serviceRequestId: request.id, items: VALID_ITEMS });
 
     await expect(
@@ -538,6 +584,9 @@ describe("Module 63 — StartJobUseCase materials gate", () => {
       repos.professionalDiscovery,
       repos.requestDiscovery,
       repos.quotes,
+      undefined,
+      undefined,
+      legacyFlowGuardForTests(),
     ).execute("pro-1", {
       serviceRequestId: request.id,
       items: VALID_ITEMS,

@@ -16,6 +16,7 @@ import {
 } from "./fakes";
 import { NullFailureReporter } from "@/application/ports/failure-reporter";
 import { FakeRefundRepository } from "../refunds/fakes";
+import { legacyFlowGuardForTests } from "../../../../../test-utils/legacy-flow-guard";
 
 /**
  * Module 73 — Real Customer Payment Capture: application-level tests for
@@ -73,7 +74,7 @@ describe("ProcessCustomerPaymentWebhookUseCase (Module 73)", () => {
     gateway = new FakePaymentGateway();
     webhookEvents = new FakeExternalWebhookEventRepository();
     eventBus = new FakeEventBus();
-    useCase = new ProcessCustomerPaymentWebhookUseCase(payments, gateway, webhookEvents, eventBus);
+    useCase = new ProcessCustomerPaymentWebhookUseCase(payments, gateway, webhookEvents, eventBus, undefined, undefined, undefined, undefined, legacyFlowGuardForTests());
   });
 
   describe("payment_intent.amount_capturable_updated", () => {
@@ -206,6 +207,9 @@ describe("ProcessCustomerPaymentWebhookUseCase (Module 73)", () => {
           eventBus,
           new NullFailureReporter(),
           refunds,
+          undefined,
+          undefined,
+          legacyFlowGuardForTests(),
         );
       });
 
@@ -325,6 +329,7 @@ describe("ProcessCustomerPaymentWebhookUseCase (Module 73)", () => {
         null,
         null,
         ledger,
+        legacyFlowGuardForTests(),
       );
 
       const result = await useCaseWithLedger.execute(chargeUpdatedEvent());
@@ -355,6 +360,7 @@ describe("ProcessCustomerPaymentWebhookUseCase (Module 73)", () => {
         null,
         null,
         ledger,
+        legacyFlowGuardForTests(),
       );
       seedPendingPayment(payments, { status: "CAPTURED" });
 
@@ -377,6 +383,7 @@ describe("ProcessCustomerPaymentWebhookUseCase (Module 73)", () => {
         null,
         null,
         ledger,
+        legacyFlowGuardForTests(),
       );
 
       const first = await useCaseWithLedger.execute(chargeUpdatedEvent());
@@ -407,6 +414,7 @@ describe("ProcessCustomerPaymentWebhookUseCase (Module 73)", () => {
         null,
         null,
         ledger,
+        legacyFlowGuardForTests(),
       );
 
       const result = await useCaseWithLedger.execute(chargeUpdatedEvent({ paymentIntentId: "pi_unknown" }));
@@ -500,6 +508,8 @@ describe("ProcessCustomerPaymentWebhookUseCase (Module 73)", () => {
         undefined,
         undefined,
         handler,
+        undefined,
+        legacyFlowGuardForTests(),
       );
 
       for (const type of ["charge.dispute.created", "charge.dispute.updated", "charge.dispute.closed"]) {

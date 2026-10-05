@@ -1,4 +1,4 @@
-import type { TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
+import { requireLegacyFlowGuard, type TransactionFlowGuard } from "@/application/services/flow/transaction-flow-guard";
 import { NullNotificationCreator } from "@/application/ports/notification-creator";
 import type { NotificationCreator } from "@/application/ports/notification-creator";
 import { ConflictError, NotFoundError, ProfessionalNotVerifiedError, ValidationError } from "@/domain/errors/domain-error";
@@ -53,11 +53,12 @@ export class CreateQuoteUseCase {
     // never had a reason to know this dependency exists keeps compiling
     // and behaving exactly as before (general IVA rate).
     private readonly customerProfiles: CustomerProfileRepository = new NullCustomerProfileRepository(),
-    // Module 121 — legacy/LEAD_V1 boundary. Optional (like this class's other
-    // late-added dependencies) so historical direct constructions still compile;
-    // production composition always supplies it.
-    private readonly flowGuard?: TransactionFlowGuard,
-  ) {}
+    // Module 131 — legacy/LEAD_V1 boundary. MANDATORY and fail-closed: the
+    // constructor throws if it is not supplied (never silently skipped).
+    private readonly flowGuard: TransactionFlowGuard,
+  ) {
+    requireLegacyFlowGuard(flowGuard, "CreateQuoteUseCase");
+  }
 
   async execute(userId: string, input: CreateQuoteInput): Promise<QuoteRecord> {
     const professional = await this.professionals.findByUserId(userId);
@@ -90,7 +91,7 @@ export class CreateQuoteUseCase {
       throw new NotFoundError("ServiceRequest", input.serviceRequestId);
     }
 
-    await this.flowGuard?.assertLegacy(request.id, "quote.create");
+    await this.flowGuard.assertLegacy(request.id, "quote.create");
 
     if (request.customerUserId === userId) {
       throw new ValidationError("You cannot submit a quote for your own service request.");

@@ -37,6 +37,7 @@ import {
 import { FakeProfessionalRepository, FakeProfessionalVerificationRepository, FakeProfessionalOnboardingRepository } from "../onboarding/fakes";
 import { CheckInvoiceRequiredForPayoutUseCase } from "@/application/use-cases/invoicing/check-invoice-required-for-payout.use-case";
 import { FakeInvoiceRepository } from "../invoicing/fakes";
+import { legacyFlowGuardForTests } from "../../../../../test-utils/legacy-flow-guard";
 
 /**
  * Module 76 — Professional Payout Execution: tests for
@@ -105,7 +106,7 @@ function buildHarness(options: { invoiceGate?: CheckInvoiceRequiredForPayoutUseC
   const eventBus = new FakeEventBus();
 
   const breakdowns = new CalculateJobCommissionBreakdownUseCase(jobs, quotes, rates);
-  const recordCommission = new RecordCommissionForPaymentUseCase(payments, commissions, ledger, breakdowns, completionConfirmations);
+  const recordCommission = new RecordCommissionForPaymentUseCase(payments, commissions, ledger, breakdowns, completionConfirmations, legacyFlowGuardForTests());
   const payoutEligibility = new CheckPayoutEligibilityUseCase(verifications, companyVerifications, companies, companyPayoutAccounts);
   const destinationResolver = new ResolvePayoutDestinationUseCase(professionalOnboardings, companyPayoutAccounts);
 
@@ -134,6 +135,7 @@ function buildHarness(options: { invoiceGate?: CheckInvoiceRequiredForPayoutUseC
     // behavior when absent.
     options.invoiceGate,
     options.requireInvoiceForPayout,
+    legacyFlowGuardForTests(),
   );
 
   return {

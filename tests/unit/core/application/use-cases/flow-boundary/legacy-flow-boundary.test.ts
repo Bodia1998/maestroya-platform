@@ -379,10 +379,15 @@ describe("Event boundary — legacy event consumers stay quiet for LEAD_V1", () 
       recordConversion as never,
       recordAffiliateCommission as never,
       failureReporter as never,
+      undefined,
+      guard,
     );
 
     await subscriber.handle(new PaymentReleaseApproved("job-1", "confirmation-1", "payment-1"));
 
+    // Module 131: the subscriber's OWN guard stops LEAD_V1 before the
+    // attribution read and before the commission use case is even called.
+    expect(recordCommission.execute).not.toHaveBeenCalled();
     expect(recordConversion.execute).not.toHaveBeenCalled();
     expect(recordAffiliateCommission.execute).not.toHaveBeenCalled();
     expect(failureReporter.report).not.toHaveBeenCalled();
@@ -443,19 +448,5 @@ describe("LEGACY_QUOTE_PAYMENT keeps the existing path (tests 7 + 10)", () => {
     expect(c.outcome).toBe("already-settled");
     expect(gateway.captureCalls).toHaveLength(1);
     expect(bus.published.filter((e) => e instanceof PaymentCaptured)).toHaveLength(1);
-  });
-
-  it("guard is skipped (legacy behavior) when no guard is injected — historical constructions unchanged", async () => {
-    const payments = new FakePaymentRepository();
-    payments.seed(paymentRecord());
-    const bus = new FakeEventBus();
-    const useCase = new ProcessCustomerPaymentWebhookUseCase(
-      payments,
-      new FakePaymentGateway(),
-      new FakeExternalWebhookEventRepository(),
-      bus,
-    );
-    const result = await useCase.execute(webhookEvent("payment_intent.amount_capturable_updated"));
-    expect(result.outcome).toBe("captured");
   });
 });

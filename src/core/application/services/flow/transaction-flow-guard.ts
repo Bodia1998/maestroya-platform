@@ -32,15 +32,30 @@ export class TransactionFlowGuard {
   }
 }
 
+/**
+ * Module 131 — fail-closed construction check. Legacy-only components must be
+ * handed a guard; a missing one (e.g. a JS caller, a cast, a bad composition
+ * root) fails loudly at construction instead of silently running legacy money
+ * flows for every request.
+ */
+export function requireLegacyFlowGuard(
+  guard: TransactionFlowGuard | null | undefined,
+  owner: string,
+): asserts guard is TransactionFlowGuard {
+  if (!guard) {
+    throw new Error(`${owner} requires a TransactionFlowGuard (Module 131: legacy-flow isolation is mandatory and fail-closed).`);
+  }
+}
+
 /** For subscribers/webhooks that must not throw: true = proceed (legacy),
- *  false = skipped and logged. `guard` undefined = not wired (legacy-only
- *  historical constructions), proceeds. */
+ *  false = skipped and logged. A missing guard is a wiring error and throws
+ *  (Module 131) — it never means "proceed". */
 export async function shouldRunLegacyFlow(
-  guard: TransactionFlowGuard | undefined,
+  guard: TransactionFlowGuard,
   serviceRequestId: string,
   operation: LegacyFinancialOperation,
 ): Promise<boolean> {
-  if (!guard) return true;
+  requireLegacyFlowGuard(guard, "shouldRunLegacyFlow");
   try {
     await guard.assertLegacy(serviceRequestId, operation);
     return true;
