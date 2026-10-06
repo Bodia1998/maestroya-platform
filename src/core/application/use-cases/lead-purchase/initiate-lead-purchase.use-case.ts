@@ -16,6 +16,7 @@ import {
   assertValidLeadPurchaseAmount,
   isProfessionalEligibleToPurchaseLeads,
 } from "@/domain/services/lead-purchase";
+import { isLeadMarketplaceReady } from "@/domain/services/lead-publication";
 import { isProfessionalEligibleForRequest } from "@/domain/services/quote-eligibility";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -81,6 +82,13 @@ export class InitiateLeadPurchaseUseCase {
     try {
       assertServiceRequestEligibleForLead(request);
     } catch {
+      throw new LeadNotPurchasableError();
+    }
+    // Module 134 boundary: only a lead the Lead Feed v2 would list may be bought. A
+    // PUBLISHED LEAD_V1 lead without a complete Module 133 publication snapshot (e.g.
+    // published by Module 124 before M133) is not marketplace-ready. Same authoritative
+    // policy as the feed (M130 availability + complete snapshot); not a new rule.
+    if (!isLeadMarketplaceReady({ leadStatus: lead.status, flowVersion: lead.flowVersion, requestStatus: request.status, publication: lead.publication })) {
       throw new LeadNotPurchasableError();
     }
 

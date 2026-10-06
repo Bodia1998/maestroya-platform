@@ -8,6 +8,7 @@ import { NotFoundError, ProfessionalNotVerifiedError } from "@/domain/errors/dom
 import type { LeadPreviewCandidate } from "@/domain/repositories/lead-preview-repository";
 import type { LeadRecord } from "@/domain/repositories/lead-repository";
 import type { CreateLeadPurchaseData, LeadPurchaseRecord, LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
+import { SNAPSHOT_DATA } from "../../../../../test-utils/lead-publication-fixtures";
 import {
   DuplicateActiveLeadPurchaseError,
   InvalidLeadPurchaseTransitionError,
@@ -31,6 +32,7 @@ const lead = (patch: Partial<LeadRecord> = {}): LeadRecord => ({
   status: "PUBLISHED",
   flowVersion: "LEAD_V1",
   maxBuyers: null,
+  publication: { ...SNAPSHOT_DATA, publishedAt: new Date("2026-10-06T10:00:00Z") },
   createdAt: new Date(),
   updatedAt: new Date(),
   ...patch,
@@ -171,6 +173,9 @@ describe("InitiateLeadPurchaseUseCase", () => {
   it.each([
     ["missing lead", { lead: null }],
     ["legacy lead", { lead: lead({ flowVersion: "LEGACY_QUOTE_PAYMENT" }) }],
+    ["published lead without publication snapshot (pre-M133)", { lead: lead({ publication: null }) }],
+    ["published lead with undefined snapshot", { lead: lead({ publication: undefined }) }],
+    ["published lead with malformed snapshot", { lead: lead({ publication: { ...SNAPSHOT_DATA, price: "0.00", publishedAt: new Date() } }) }],
     ["draft lead", { lead: lead({ status: "DRAFT" }) }],
     ["closed lead", { lead: lead({ status: "CLOSED" }) }],
     ["expired lead", { lead: lead({ status: "EXPIRED" }) }],
