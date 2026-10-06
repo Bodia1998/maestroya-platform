@@ -1,5 +1,6 @@
 import { geocodingProvider } from "@/application/use-cases/geolocation/compose";
 import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prisma/repositories/prisma-customer-profile-repository";
+import { PrismaLeadFeedRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-feed-repository";
 import { PrismaLeadPreviewRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-preview-repository";
 import { PrismaLeadRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-repository";
 import { PrismaProfessionalDiscoveryRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-discovery-repository";
@@ -9,6 +10,7 @@ import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma
 import { PrismaTransactionFlowReader } from "@/infrastructure/database/prisma/repositories/prisma-transaction-flow-reader";
 import { CreateLeadUseCase } from "@/application/use-cases/lead/create-lead.use-case";
 import { CreateLeadV1ServiceRequestUseCase } from "@/application/use-cases/lead/create-lead-v1-service-request.use-case";
+import { GetLeadFeedForProfessionalUseCase } from "@/application/use-cases/lead/get-lead-feed.use-case";
 import {
   GetPublishedLeadPreviewUseCase,
   GetPublishedLeadPreviewsForProfessionalUseCase,
@@ -27,6 +29,7 @@ const categories = new PrismaServiceCategoryRepository();
 const flows = new PrismaTransactionFlowReader();
 const leads = new PrismaLeadRepository();
 const leadPreviews = new PrismaLeadPreviewRepository();
+const leadFeed = new PrismaLeadFeedRepository();
 const professionals = new PrismaProfessionalRepository();
 const professionalDiscovery = new PrismaProfessionalDiscoveryRepository();
 
@@ -50,4 +53,9 @@ export function makeGetPublishedLeadPreviewsForProfessionalUseCase() {
 
 export function makeGetPublishedLeadPreviewUseCase() {
   return new GetPublishedLeadPreviewUseCase(professionals, professionalDiscovery, leadPreviews);
+}
+
+/** Module 134 — LEAD_V1 Lead Feed v2 (paginated, snapshot-priced, contact-safe). */
+export function makeGetLeadFeedForProfessionalUseCase() {
+  return new GetLeadFeedForProfessionalUseCase(professionals, professionalDiscovery, leadFeed);
 }

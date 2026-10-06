@@ -10,7 +10,10 @@ import { LeadPricingUnavailableError } from "@/domain/services/lead-pricing";
 import { LeadPurchasePricingError } from "@/domain/services/lead-purchase";
 import { JOB_VALUE_ESTIMATION_CONFIG_V1 } from "@/infrastructure/pricing/job-value-estimation-config.v1";
 import { LEAD_PRICING_CONFIG_V1 } from "@/infrastructure/pricing/lead-pricing-config.v1";
+import { SNAPSHOT_DATA } from "../../../../../test-utils/lead-publication-fixtures";
 
+/** A legitimately published (M133) LEAD_V1 lead: complete immutable snapshot, so purchase initiation passes the marketplace-readiness check and actually reaches pricing. */
+const PUBLICATION = { ...SNAPSHOT_DATA, publishedAt: new Date("2026-10-06T10:00:00Z") };
 const USER = "pro-user";
 const LEAD = "11111111-1111-4111-8111-111111111111";
 const REQUEST = "22222222-2222-4222-8222-222222222222";
@@ -75,7 +78,7 @@ function build(context: JobValueEstimationContext | null, config: JobValueEstima
   const useCase = new InitiateLeadPurchaseUseCase(
     { findByUserId: async () => ({ id: "pro-1", status: "ACTIVE", verificationStatus: "VERIFIED" }) } as never,
     { findCandidateById: async () => ({ id: "pro-1", categoryIds: ["cat-1"], latitude: 40.4, longitude: -3.7, serviceRadiusKm: 50 }) } as never,
-    { findById: async () => ({ id: LEAD, serviceRequestId: REQUEST, status: "PUBLISHED", flowVersion: "LEAD_V1", maxBuyers: null }) } as never,
+    { findById: async () => ({ id: LEAD, serviceRequestId: REQUEST, status: "PUBLISHED", flowVersion: "LEAD_V1", maxBuyers: SNAPSHOT_DATA.maxBuyers, publication: PUBLICATION }) } as never,
     { findById: async () => ({ id: REQUEST, status: "PUBLISHED", title: "Fuga", description: "d", location: { city: "Madrid" } }) } as never,
     { findPublishedById: async () => preview, findPublishedByCategoryIds: vi.fn() } as never,
     purchases,
