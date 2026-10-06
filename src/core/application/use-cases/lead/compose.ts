@@ -13,7 +13,7 @@ import {
   GetPublishedLeadPreviewUseCase,
   GetPublishedLeadPreviewsForProfessionalUseCase,
 } from "@/application/use-cases/lead/get-published-lead-previews.use-case";
-import { PublishLeadUseCase } from "@/application/use-cases/lead/publish-lead.use-case";
+export { makePublishLeadUseCase } from "@/application/use-cases/lead-publication/compose";
 
 /**
  * Module 125 — Lead Marketplace composition root (same plain-factory
@@ -42,10 +42,6 @@ export function makeCreateLeadV1ServiceRequestUseCase() {
     geocodingProvider,
     makeCreateLeadUseCase(),
   );
-}
-
-export function makePublishLeadUseCase() {
-  return new PublishLeadUseCase(customerProfiles, serviceRequests, leads);
 }
 
 export function makeGetPublishedLeadPreviewsForProfessionalUseCase() {

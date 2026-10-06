@@ -11,6 +11,7 @@ import { PrismaLeadRepository } from "@/infrastructure/database/prisma/repositor
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { LeadNotPurchasableError } from "@/domain/services/lead-purchase";
 
+import { SNAPSHOT_DATA } from "../../test-utils/lead-publication-fixtures";
 import { setupDbTestLifecycle } from "../../test-utils/db/db-test-lifecycle";
 import {
   createAddress,
@@ -36,7 +37,7 @@ describe("Module 130 — lead lifecycle propagation (real PostgreSQL)", () => {
     const request = await createServiceRequest(prisma, { customerId: customer.id, categoryId: category.id, addressId: address.id });
     await prisma.serviceRequest.update({ where: { id: request.id }, data: { flowVersion: "LEAD_V1" } });
     let lead = await leads.create({ serviceRequestId: request.id });
-    if (opts.publish ?? true) lead = (await leads.publish(lead.id))!;
+    if (opts.publish ?? true) lead = (await leads.publish(lead.id, SNAPSHOT_DATA))!;
     return { request, lead };
   }
 
@@ -65,7 +66,7 @@ describe("Module 130 — lead lifecycle propagation (real PostgreSQL)", () => {
     await requests.updateStatus(request.id, "CANCELLED");
     await requests.updateStatus(request.id, "EXPIRED");
     expect(await statusOf(lead.id)).toBe("CANCELLED");
-    expect(await leads.publish(lead.id)).toBeNull();
+    expect(await leads.publish(lead.id, SNAPSHOT_DATA)).toBeNull();
   });
 
   it("does not affect another request's lead", async () => {

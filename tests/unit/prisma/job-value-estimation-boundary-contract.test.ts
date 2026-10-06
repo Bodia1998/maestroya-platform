@@ -79,7 +79,8 @@ describe("Module 129 boundaries", () => {
 
   it("Module 129 added no Prisma migration and no schema field for the estimate", () => {
     const migrations = readdirSync(path.join(root, "prisma/migrations")).filter((n) => /^\d{14}_/.test(n)).sort();
-    expect(migrations.at(-1)).toBe("20261002000000_add_module_123_lead_and_lead_purchase");
+    // M133 added a later migration, so assert on THIS module's own name instead of "latest migration".
+    expect(migrations.filter((n) => /_module_129_/.test(n))).toEqual([]);
     expect(readFileSync(path.join(root, "prisma/schema.prisma"), "utf8")).not.toMatch(/estimatedServiceValue/);
   });
 });

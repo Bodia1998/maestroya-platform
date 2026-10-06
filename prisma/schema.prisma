@@ -5956,7 +5956,29 @@ model Lead {
   id               String     @id @default(uuid()) @db.Uuid
   serviceRequestId String     @unique @db.Uuid
   status           LeadStatus @default(DRAFT)
+  /// Module 123: buyer rule. Module 133: written ONCE at publication from the
+  /// released buyer policy (see publication snapshot below) and never changed
+  /// afterwards. NULL = not configured (only possible while not published).
   maxBuyers        Int?
+
+  /// Module 133 — immutable publication snapshot. Set atomically with
+  /// `status = PUBLISHED` by a single status-conditional write
+  /// (PrismaLeadRepository.publish) and never rewritten: what was offered to
+  /// professionals is NOT recomputed from (mutable) pricing configuration.
+  /// All publication* columns + publishedAt are NULL together (never
+  /// published) or set together (migration CHECK). `maxBuyers` is part of the
+  /// snapshot (not duplicated). Money = Decimal(10,2) + ISO currency, rate =
+  /// Decimal(8,6) fraction, same conventions as LeadPurchase.
+  publishedAt                     DateTime?
+  publicationPrice                Decimal?  @db.Decimal(10, 2)
+  publicationCurrency             String?
+  publicationEstimatedJobValue    Decimal?  @db.Decimal(10, 2)
+  publicationPricingRate          Decimal?  @db.Decimal(8, 6)
+  publicationPricingConfidence    String?
+  publicationPricingConfigVersion String?
+  publicationJobValueRuleVersion  String?
+  publicationPricingRuleVersion   String?
+  publicationBuyerPolicyVersion   String?
 
   serviceRequest ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
   purchases      LeadPurchase[]

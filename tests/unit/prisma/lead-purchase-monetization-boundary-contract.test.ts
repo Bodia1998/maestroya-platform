@@ -74,6 +74,7 @@ describe("Module 126 boundaries", () => {
 
   it("no new Prisma migration was added by Module 126", () => {
     const migrations = readdirSync(path.join(root, "prisma/migrations")).filter((n) => /^\d{14}_/.test(n)).sort();
-    expect(migrations.at(-1)).toBe("20261002000000_add_module_123_lead_and_lead_purchase");
+    // M133 added a later migration, so assert on THIS module's own name instead of "latest migration".
+    expect(migrations.filter((n) => /_module_126_/.test(n))).toEqual([]);
   });
 });

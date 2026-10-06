@@ -1,35 +1,52 @@
 import { NotFoundError } from "@/domain/errors/domain-error";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
+import type { LeadPublicationPriceSource } from "@/application/ports/lead-publication-price-source";
 import type { LeadRecord, LeadRepository } from "@/domain/repositories/lead-repository";
 import type { ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
+import { LeadNotPublishableError, assertLeadEligibleFlow } from "@/domain/services/lead";
 import {
-  LeadNotPublishableError,
-  assertLeadEligibleFlow,
-  assertLeadPublishable,
-  assertServiceRequestEligibleForLead,
-} from "@/domain/services/lead";
+  LeadPublicationRejectedError,
+  assertLeadPublicationEligible,
+  assertValidLeadPublicationSnapshotData,
+  buildLeadPublicationSnapshotData,
+  evaluateLeadPublicationPricing,
+  isValidLeadBuyerPolicy,
+  type LeadBuyerPolicy,
+} from "@/domain/services/lead-publication";
 
 /**
- * Module 124 — publishes a DRAFT Lead (DRAFT -> PUBLISHED, nothing else).
+ * Module 124/133 — publishes a DRAFT Lead (DRAFT -> PUBLISHED) under the
+ * LEAD_V1 publication contract (see domain/services/lead-publication.ts).
  *
  * `userId` must come from the server-side session; only the owning customer
  * may publish. A Lead that is missing or not yours is the same NotFoundError.
  *
- * Idempotent: publishing an already-PUBLISHED Lead returns it unchanged (no
- * write, no new record). CLOSED / EXPIRED / CANCELLED leads are rejected with
- * LeadNotPublishableError. The flow comes from ServiceRequest.flowVersion
- * (derived onto the LeadRecord), not from duplicated Lead state.
+ * Order: ownership -> LEAD_V1 flow -> idempotent PUBLISHED repeat -> DRAFT +
+ * open/complete/non-deleted request (publication eligibility) -> explicit
+ * buyer policy -> production price outcome through the priceability gate ->
+ * snapshot -> ONE conditional write of status + snapshot.
  *
- * Publishing exposes no contact data and creates no financial record: it
- * needs no payment, LeadPurchase, professional or quote. `maxBuyers` is not
- * touched (NULL stays "not configured"). Expiry duration and pricing are
- * future extension points and are intentionally not decided here.
+ * - Anything unpriceable (UNPRICED, unsupported category, low confidence,
+ *   missing/invalid configuration, malformed result) or an invalid buyer
+ *   policy throws LeadPublicationRejectedError. The Lead stays DRAFT and the
+ *   publication can be retried later; nothing partial is written.
+ * - Idempotent: an already-PUBLISHED Lead is returned unchanged — its original
+ *   snapshot and buyer policy are NEVER recomputed or overwritten, and the
+ *   price source is not even consulted.
+ * - CLOSED / EXPIRED / CANCELLED Leads are rejected (LeadNotPublishableError).
+ * - Concurrent publishes: the repository write is conditional on DRAFT, so the
+ *   first snapshot wins; the loser re-reads and returns the winner's record.
+ *
+ * Publishing exposes no contact data and creates no financial record. It
+ * enforces no purchase limit (that is M135/M137).
  */
 export class PublishLeadUseCase {
   constructor(
     private readonly customerProfiles: CustomerProfileRepository,
     private readonly serviceRequests: ServiceRequestRepository,
     private readonly leads: LeadRepository,
+    private readonly priceSource: LeadPublicationPriceSource,
+    private readonly buyerPolicy: LeadBuyerPolicy,
   ) {}
 
   async execute(userId: string, leadId: string): Promise<LeadRecord> {
@@ -44,15 +61,24 @@ export class PublishLeadUseCase {
 
     assertLeadEligibleFlow(lead.flowVersion);
 
+    // Idempotent repeat: never touch (or re-derive) an existing snapshot.
     if (lead.status === "PUBLISHED") return lead;
-    assertLeadPublishable(lead.status);
-    assertServiceRequestEligibleForLead(request);
 
-    const published = await this.leads.publish(leadId);
+    assertLeadPublicationEligible({ leadStatus: lead.status, flowVersion: lead.flowVersion, request });
+
+    if (!isValidLeadBuyerPolicy(this.buyerPolicy)) throw new LeadPublicationRejectedError("BUYER_POLICY_INVALID");
+
+    const evaluation = evaluateLeadPublicationPricing(await this.priceSource.priceForLead(leadId));
+    if (!evaluation.ok) throw new LeadPublicationRejectedError(evaluation.reason);
+
+    const snapshot = buildLeadPublicationSnapshotData(evaluation.pricing, this.buyerPolicy);
+    assertValidLeadPublicationSnapshotData(snapshot);
+
+    const published = await this.leads.publish(leadId, snapshot);
     if (published) return published;
 
-    // Lost a race (or the lead changed after our read): re-read to tell an
-    // idempotent repeat from a rejected transition.
+    // Lost a race (or the lead/request changed after our read): re-read to
+    // tell an idempotent repeat from a rejected publication.
     const current = await this.leads.findById(leadId);
     if (!current) throw new NotFoundError("Lead", leadId);
     if (current.status === "PUBLISHED") return current;

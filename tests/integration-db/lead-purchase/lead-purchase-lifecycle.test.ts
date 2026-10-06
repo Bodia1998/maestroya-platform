@@ -22,6 +22,7 @@ import {
 } from "@/domain/services/lead-purchase";
 import { canProfessionalAccessLeadContact } from "@/domain/services/lead-contact-access-policy";
 
+import { SNAPSHOT_DATA } from "../../test-utils/lead-publication-fixtures";
 import { setupDbTestLifecycle } from "../../test-utils/db/db-test-lifecycle";
 import {
   createAddress,
@@ -47,7 +48,8 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
     const request = await createServiceRequest(prisma, { customerId: customer.id, categoryId: category.id, addressId: address.id });
     await prisma.serviceRequest.update({ where: { id: request.id }, data: { flowVersion: "LEAD_V1" } });
     const draft = await leads.create({ serviceRequestId: request.id, maxBuyers });
-    const lead = await leads.publish(draft.id);
+    // Module 133: a Lead is only ever published WITH a snapshot (incl. a buyer policy), so `null` here means "effectively uncapped" (100), not NULL maxBuyers.
+    const lead = await leads.publish(draft.id, { ...SNAPSHOT_DATA, maxBuyers: maxBuyers ?? 100 });
     return { lead: lead!, request };
   }
 
@@ -149,7 +151,7 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
     expect(await prisma.leadPurchase.count({ where: { leadId: lead.id, status: { in: ["PENDING_PAYMENT", "CONFIRMED"] } } })).toBe(2);
   });
 
-  it("maxBuyers: a FAILED/CANCELLED purchase frees a slot; NULL maxBuyers is not enforced", async () => {
+  it("maxBuyers: a FAILED/CANCELLED purchase frees a slot; an uncapped (100) lead is not limited", async () => {
     const { lead } = await publishedLead(1);
     const [a, b] = await Promise.all([professional(), professional()]);
     const first = await purchases.initiate({ leadId: lead.id, professionalProfileId: a.id, price: 4.5 });
