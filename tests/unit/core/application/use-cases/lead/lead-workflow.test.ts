@@ -12,6 +12,7 @@ import {
 import type { TransactionFlowVersion } from "@/domain/services/transaction-flow";
 import { CreateLeadUseCase } from "@/application/use-cases/lead/create-lead.use-case";
 import { PublishLeadUseCase } from "@/application/use-cases/lead/publish-lead.use-case";
+import { TEST_BUYER_POLICY, fixedPriceSource, pricedOutcome, withSnapshot } from "../../../../../test-utils/lead-publication-fixtures";
 
 const USER = "user-1";
 const CUSTOMER = "cust-1";
@@ -53,10 +54,10 @@ function fakeLeads(initial: LeadRecord[] = []) {
       rows.set(created.id, created);
       return created;
     }),
-    publish: vi.fn(async (id) => {
+    publish: vi.fn(async (id, snapshot) => {
       const row = rows.get(id);
       if (!row || row.status !== "DRAFT") return null;
-      const next = { ...row, status: "PUBLISHED" as const };
+      const next = withSnapshot(row, snapshot);
       rows.set(id, next);
       return next;
     }),
@@ -131,7 +132,7 @@ describe("CreateLeadUseCase", () => {
 
 function publishUc(opts: { lead?: LeadRecord | null; req?: ServiceRequestRecord | null; customer?: boolean } = {}) {
   const leads = fakeLeads(opts.lead === null ? [] : [opts.lead ?? lead()]);
-  const uc = new PublishLeadUseCase(customers(opts.customer ?? true) as never, requests(opts.req === undefined ? request() : opts.req) as never, leads);
+  const uc = new PublishLeadUseCase(customers(opts.customer ?? true) as never, requests(opts.req === undefined ? request() : opts.req) as never, leads, fixedPriceSource(pricedOutcome()), TEST_BUYER_POLICY);
   return { uc, leads };
 }
 

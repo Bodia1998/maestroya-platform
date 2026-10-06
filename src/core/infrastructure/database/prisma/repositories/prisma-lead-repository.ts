@@ -3,7 +3,9 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/infrastructure/database/prisma/client";
 import { NotFoundError } from "@/domain/errors/domain-error";
 import type { CreateLeadData, LeadRecord, LeadRepository } from "@/domain/repositories/lead-repository";
+import { formatScaledDecimal, parseScaledDecimal } from "@/domain/services/fixed-point-decimal";
 import {
+  LEAD_ELIGIBLE_REQUEST_STATUS,
   LEAD_FLOW_VERSION,
   LeadAlreadyExistsError,
   assertLeadEligibleFlow,
@@ -12,6 +14,7 @@ import {
   leadStatusesThatMayTransitionTo,
   normalizeLeadMaxBuyers,
 } from "@/domain/services/lead";
+import { assertValidLeadPublicationSnapshotData, isValidLeadPublicationSnapshotData, type LeadPublicationSnapshotData } from "@/domain/services/lead-publication";
 import type { ServiceRequestStatusValue } from "@/domain/repositories/service-request-repository";
 import type { TransactionFlowVersion } from "@/domain/services/transaction-flow";
 
@@ -22,20 +25,82 @@ const SELECT = {
   serviceRequestId: true,
   status: true,
   maxBuyers: true,
+  publishedAt: true,
+  publicationPrice: true,
+  publicationCurrency: true,
+  publicationEstimatedJobValue: true,
+  publicationPricingRate: true,
+  publicationPricingConfidence: true,
+  publicationPricingConfigVersion: true,
+  publicationJobValueRuleVersion: true,
+  publicationPricingRuleVersion: true,
+  publicationBuyerPolicyVersion: true,
   createdAt: true,
   updatedAt: true,
   serviceRequest: { select: { flowVersion: true } },
 } as const;
+
+/** Prisma.Decimal is read through its exact decimal string; never converted to a JS number. */
+type DecimalLike = { toString(): string };
 
 type Row = {
   id: string;
   serviceRequestId: string;
   status: string;
   maxBuyers: number | null;
+  publishedAt: Date | null;
+  publicationPrice: DecimalLike | null;
+  publicationCurrency: string | null;
+  publicationEstimatedJobValue: DecimalLike | null;
+  publicationPricingRate: DecimalLike | null;
+  publicationPricingConfidence: string | null;
+  publicationPricingConfigVersion: string | null;
+  publicationJobValueRuleVersion: string | null;
+  publicationPricingRuleVersion: string | null;
+  publicationBuyerPolicyVersion: string | null;
   createdAt: Date;
   updatedAt: Date;
   serviceRequest: { flowVersion: string };
 };
+
+/** Exact Decimal -> normalised decimal string (fixed-point parse, no floating point). */
+function exactDecimal(value: DecimalLike, scale: number, minFraction: number, column: string): string {
+  const parsed = parseScaledDecimal(value.toString(), scale);
+  if (parsed === null) throw new Error(`Lead ${column} is not a valid Decimal(${scale}).`);
+  return formatScaledDecimal(parsed, scale, minFraction);
+}
+
+function toPublication(row: Row): LeadRecord["publication"] {
+  const columns = [
+    row.publishedAt,
+    row.publicationPrice,
+    row.publicationCurrency,
+    row.publicationEstimatedJobValue,
+    row.publicationPricingRate,
+    row.publicationPricingConfidence,
+    row.publicationPricingConfigVersion,
+    row.publicationJobValueRuleVersion,
+    row.publicationPricingRuleVersion,
+    row.publicationBuyerPolicyVersion,
+  ];
+  if (columns.every((c) => c === null)) return null;
+  // The migration's CHECK makes a partial snapshot impossible; if one ever appears it is corruption, never "no snapshot".
+  if (columns.some((c) => c === null) || row.maxBuyers === null) throw new Error(`Lead "${row.id}" has an incomplete publication snapshot.`);
+  const data = {
+    price: exactDecimal(row.publicationPrice!, 2, 2, "publicationPrice"),
+    currency: row.publicationCurrency,
+    estimatedJobValue: exactDecimal(row.publicationEstimatedJobValue!, 2, 2, "publicationEstimatedJobValue"),
+    pricingRate: exactDecimal(row.publicationPricingRate!, 6, 2, "publicationPricingRate"),
+    pricingConfidence: row.publicationPricingConfidence,
+    pricingConfigVersion: row.publicationPricingConfigVersion,
+    jobValueRuleVersion: row.publicationJobValueRuleVersion,
+    pricingRuleVersion: row.publicationPricingRuleVersion,
+    buyerPolicyVersion: row.publicationBuyerPolicyVersion,
+    maxBuyers: row.maxBuyers,
+  };
+  if (!isValidLeadPublicationSnapshotData(data)) throw new Error(`Lead "${row.id}" has an invalid publication snapshot.`);
+  return { ...data, publishedAt: row.publishedAt! };
+}
 
 function toRecord(row: Row): LeadRecord {
   if (!isLeadStatus(row.status)) throw new Error(`Unknown Lead status "${row.status}".`);
@@ -45,6 +110,7 @@ function toRecord(row: Row): LeadRecord {
     status: row.status,
     flowVersion: row.serviceRequest.flowVersion as TransactionFlowVersion,
     maxBuyers: row.maxBuyers,
+    publication: toPublication(row),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -115,11 +181,39 @@ export class PrismaLeadRepository implements LeadRepository {
     }
   }
 
-  async publish(id: string): Promise<LeadRecord | null> {
-    // Status-conditional write: only a DRAFT row can transition.
+  /**
+   * Module 133: status and snapshot are written by ONE conditional UPDATE, so
+   * a Lead can never be PUBLISHED without its snapshot (nor the reverse), and
+   * only the first of several concurrent publishes matches. The condition
+   * also re-checks, in the same statement, that the Lead is still DRAFT, has
+   * no snapshot yet, and that its request is still an open, non-deleted
+   * LEAD_V1 request. A terminal Lead, an already-published Lead (its snapshot
+   * and maxBuyers are never overwritten) or a closed request match 0 rows.
+   * The migration's CHECKs and immutability trigger back this up in the DB.
+   */
+  async publish(id: string, snapshot: LeadPublicationSnapshotData): Promise<LeadRecord | null> {
+    assertValidLeadPublicationSnapshotData(snapshot);
     const { count } = await prisma.lead.updateMany({
-      where: { id, status: "DRAFT" },
-      data: { status: "PUBLISHED" },
+      where: {
+        id,
+        status: "DRAFT",
+        publishedAt: null,
+        serviceRequest: { flowVersion: LEAD_FLOW_VERSION, deletedAt: null, status: LEAD_ELIGIBLE_REQUEST_STATUS },
+      },
+      data: {
+        status: "PUBLISHED",
+        publishedAt: new Date(),
+        publicationPrice: snapshot.price,
+        publicationCurrency: snapshot.currency,
+        publicationEstimatedJobValue: snapshot.estimatedJobValue,
+        publicationPricingRate: snapshot.pricingRate,
+        publicationPricingConfidence: snapshot.pricingConfidence,
+        publicationPricingConfigVersion: snapshot.pricingConfigVersion,
+        publicationJobValueRuleVersion: snapshot.jobValueRuleVersion,
+        publicationPricingRuleVersion: snapshot.pricingRuleVersion,
+        publicationBuyerPolicyVersion: snapshot.buyerPolicyVersion,
+        maxBuyers: snapshot.maxBuyers,
+      },
     });
     if (count === 0) return null;
     return this.findById(id);

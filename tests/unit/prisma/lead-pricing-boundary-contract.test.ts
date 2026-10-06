@@ -59,6 +59,7 @@ describe("Module 128 boundaries", () => {
     const files = walk(path.join(root, "src")).map((f) => path.relative(root, f).split(path.sep).join("/"));
     const users = files.filter((f) => /ConfiguredLeadPurchasePriceProvider|LEAD_PRICING_CONFIG_V1|calculateLeadPrice/.test(readFileSync(path.join(root, f), "utf8")));
     expect(users.sort()).toEqual([
+      "src/core/application/services/lead-pricing/configured-lead-publication-price-source.ts", // Module 133: the publication price source runs the same engine
       "src/core/application/services/lead-pricing/configured-lead-purchase-price-provider.ts",
       "src/core/application/use-cases/lead-purchase/compose.ts",
       "src/core/domain/services/lead-pricing.ts",
@@ -75,6 +76,7 @@ describe("Module 128 boundaries", () => {
 
   it("Module 128 added no Prisma migration", () => {
     const migrations = readdirSync(path.join(root, "prisma/migrations")).filter((n) => /^\d{14}_/.test(n)).sort();
-    expect(migrations.at(-1)).toBe("20261002000000_add_module_123_lead_and_lead_purchase");
+    // M133 added a later migration, so assert on THIS module's own name instead of "latest migration".
+    expect(migrations.filter((n) => /_module_128_/.test(n))).toEqual([]);
   });
 });

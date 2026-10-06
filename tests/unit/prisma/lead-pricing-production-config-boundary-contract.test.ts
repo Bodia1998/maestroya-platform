@@ -31,6 +31,7 @@ describe("Module 132 production pricing configuration boundaries", () => {
   it("only compose (via env) and the resolver (error-message variable name) know the version selector; the resolver never reads env", () => {
     const users = srcFiles().filter((f) => /LEAD_PRICING_CONFIG_VERSION/.test(code(f)));
     expect(users.sort()).toEqual([
+      "src/core/application/use-cases/lead-publication/compose.ts", // Module 133 publication composition root
       "src/core/application/use-cases/lead-purchase/compose.ts",
       "src/core/infrastructure/config/env.ts",
       RESOLVER,
@@ -60,6 +61,8 @@ describe("Module 132 production pricing configuration boundaries", () => {
   it("only LEAD_V1 lead-purchase pricing consumes the contract; legacy and every other flow do not", () => {
     const users = srcFiles().filter((f) => /lead-pricing-production-config|lead-pricing-pilot-config|LEAD_PRICING_PILOT_CONFIG|LeadPricingProductionConfig/.test(code(f)));
     expect(users.sort()).toEqual([
+      "src/core/application/services/lead-pricing/configured-lead-publication-price-source.ts", // Module 133
+      "src/core/application/use-cases/lead-publication/compose.ts", // Module 133
       "src/core/application/use-cases/lead-purchase/compose.ts",
       CONTRACT,
       PILOT,
@@ -83,7 +86,8 @@ describe("Module 132 production pricing configuration boundaries", () => {
 
   it("Module 132 added no Prisma migration", () => {
     const migrations = readdirSync(path.join(root, "prisma/migrations")).filter((n) => /^\d{14}_/.test(n)).sort();
-    expect(migrations.at(-1)).toBe("20261002000000_add_module_123_lead_and_lead_purchase");
+    // M133 added a later migration, so assert on THIS module's own name instead of "latest migration".
+    expect(migrations.filter((n) => /_module_132_/.test(n))).toEqual([]);
   });
 
   it("the env selector is documented in .env.example and has no default in env.ts", () => {

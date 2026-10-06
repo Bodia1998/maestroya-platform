@@ -36,6 +36,17 @@ const row = (flowVersion = "LEAD_V1") => ({
   serviceRequestId: "sr-1",
   status: "DRAFT",
   maxBuyers: null,
+  // Module 133: a never-published lead has every publication column NULL.
+  publishedAt: null,
+  publicationPrice: null,
+  publicationCurrency: null,
+  publicationEstimatedJobValue: null,
+  publicationPricingRate: null,
+  publicationPricingConfidence: null,
+  publicationPricingConfigVersion: null,
+  publicationJobValueRuleVersion: null,
+  publicationPricingRuleVersion: null,
+  publicationBuyerPolicyVersion: null,
   createdAt: now,
   updatedAt: now,
   serviceRequest: { flowVersion },
@@ -60,6 +71,7 @@ describe("PrismaLeadRepository", () => {
       status: "DRAFT",
       flowVersion: "LEAD_V1",
       maxBuyers: null,
+      publication: null,
       createdAt: now,
       updatedAt: now,
     });
@@ -126,7 +138,7 @@ describe("PrismaLeadRepository", () => {
     expect(select.serviceRequest).toEqual({ select: { flowVersion: true } });
     expect(JSON.stringify(select)).not.toMatch(/email|phone|address|line1|customer|title|description|name/i);
     const result = await (await repo()).findById("lead-1");
-    expect(Object.keys(result!).sort()).toEqual(["createdAt", "flowVersion", "id", "maxBuyers", "serviceRequestId", "status", "updatedAt"]);
+    expect(Object.keys(result!).sort()).toEqual(["createdAt", "flowVersion", "id", "maxBuyers", "publication", "serviceRequestId", "status", "updatedAt"]);
   });
 
   it("rejects a persisted unknown status instead of passing it through", async () => {

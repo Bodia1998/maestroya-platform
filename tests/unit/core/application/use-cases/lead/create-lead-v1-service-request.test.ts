@@ -12,6 +12,7 @@ import { CreateLeadUseCase } from "@/application/use-cases/lead/create-lead.use-
 import { CreateLeadV1ServiceRequestUseCase } from "@/application/use-cases/lead/create-lead-v1-service-request.use-case";
 import { GetPublishedLeadPreviewsForProfessionalUseCase } from "@/application/use-cases/lead/get-published-lead-previews.use-case";
 import { PublishLeadUseCase } from "@/application/use-cases/lead/publish-lead.use-case";
+import { TEST_BUYER_POLICY, fixedPriceSource, pricedOutcome, withSnapshot } from "../../../../../test-utils/lead-publication-fixtures";
 
 const CAT = "11111111-1111-4111-8111-111111111111";
 const now = new Date("2026-10-03T10:00:00Z");
@@ -61,10 +62,10 @@ function world() {
       leads.set(l.id, l);
       return l;
     }),
-    publish: vi.fn(async (id) => {
+    publish: vi.fn(async (id, snapshot) => {
       const l = leads.get(id);
       if (!l || l.status !== "DRAFT") return null;
-      const next = { ...l, status: "PUBLISHED" as const };
+      const next = withSnapshot(l, snapshot);
       leads.set(id, next);
       return next;
     }),
@@ -90,7 +91,7 @@ function world() {
   const geocoding = { geocode: vi.fn(async () => null) };
   const createLead = new CreateLeadUseCase(customerRepo as never, requestRepo as never, flows, leadRepo);
   const entry = new CreateLeadV1ServiceRequestUseCase(requestRepo as never, customerRepo as never, categories as never, geocoding as never, createLead);
-  const publish = new PublishLeadUseCase(customerRepo as never, requestRepo as never, leadRepo);
+  const publish = new PublishLeadUseCase(customerRepo as never, requestRepo as never, leadRepo, fixedPriceSource(pricedOutcome()), TEST_BUYER_POLICY);
   const professionals = { findByUserId: vi.fn(async (u: string) => (u === "pro" ? { id: "pro-1" } : null)) };
   const discovery = { findCandidateById: vi.fn(async () => ({ id: "pro-1", categoryIds: [CAT], latitude: 40.42, longitude: -3.7, serviceRadiusKm: 50 })) };
   const feed = new GetPublishedLeadPreviewsForProfessionalUseCase(professionals as never, discovery as never, previews);
