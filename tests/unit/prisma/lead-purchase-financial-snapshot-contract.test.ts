@@ -34,8 +34,11 @@ describe("Module 135 schema", () => {
   });
 
   it("does not add idempotency-key or unique columns: the natural (lead, professional, active) boundary already exists", () => {
-    expect(model).not.toMatch(/idempotency/i);
-    expect(model).not.toMatch(/@@unique|@unique/);
+    const columns = model.replace(/^\s*\/\/\/.*$/gm, "");
+    expect(columns).not.toMatch(/idempotency/i);
+    expect(columns).not.toMatch(/@@unique/);
+    // Module 140's write-once provider payment reference is the ONLY unique column since Module 135.
+    expect([...columns.matchAll(/^\s*(\w+)\s+\S+\s+@unique\b/gm)].map((m) => m[1])).toEqual(["paymentReference"]);
   });
 });
 

@@ -232,6 +232,7 @@ describe("M139 — purchase initiation / confirmation / lifecycle responses are 
       findById: async (id: string) => rows.find((r) => r.id === id) ?? null,
       findActiveByLeadAndProfessional: async (leadId: string, pro: string) =>
         rows.find((r) => r.leadId === leadId && r.professionalProfileId === pro && isActiveLeadPurchaseStatus(r.status)) ?? null,
+      recordPaymentReference: async () => null,
       findConfirmedByLeadAndProfessional: async () => null,
     } as LeadPurchaseRepository;
     return { rows, repo };
