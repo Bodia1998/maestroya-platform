@@ -27,8 +27,12 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * reason is logged (ids only, no PII). `userId` must come from the
  * server-side session (requireRole), never from the request.
  *
- * Nothing is wired to this class yet: Lead/LeadPurchase adapters arrive in
- * Module 123, which also adds the composition root and server action.
+ * Module 138 wires this to the real Lead/LeadPurchase tables
+ * (PrismaLeadContactAccessRepository), the composition root
+ * (lead-contact/compose.ts) and the session-bound Server Action. Access is
+ * derived dynamically from the persisted LeadPurchase status (CONFIRMED only);
+ * there is no stored "unlocked" flag, so REFUNDED/REVOKED purchases lose access
+ * immediately.
  */
 export class GetLeadContactUseCase {
   constructor(

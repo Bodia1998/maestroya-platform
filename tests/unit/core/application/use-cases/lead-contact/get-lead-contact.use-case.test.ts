@@ -45,6 +45,7 @@ function facts(overrides: Partial<LeadContactAuthorizationFacts> = {}): LeadCont
     flowVersion: "LEAD_V1",
     grant: { state: "CONFIRMED", professionalProfileId: PRO_ID },
     blocked: false,
+    contactOwnershipConsistent: true,
     ...overrides,
   };
 }

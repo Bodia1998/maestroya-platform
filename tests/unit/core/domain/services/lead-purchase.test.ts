@@ -53,6 +53,7 @@ describe("Module 123 — LeadPurchase domain rules", () => {
       flowVersion: flow,
       grant: { state, professionalProfileId: "pro-1" },
       blocked: false,
+      contactOwnershipConsistent: true,
     });
 
     it("maps only CONFIRMED to a CONFIRMED grant; everything else is non-confirmed", () => {
