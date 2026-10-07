@@ -104,3 +104,13 @@ export interface LeadPurchaseRepository {
    *  decision. */
   findConfirmedByLeadAndProfessional(leadId: string, professionalProfileId: string): Promise<LeadPurchaseRecord | null>;
 }
+
+/**
+ * Module 141 — read-only correlation of a verified provider payment to its purchase.
+ * A separate narrow port (not a new method on `LeadPurchaseRepository`) so existing
+ * repository fakes stay valid. `paymentReference` is unique, so at most one row matches.
+ * Never writes: the reference is write-once and Module 141 never repairs it.
+ */
+export interface LeadPurchasePaymentCorrelationReader {
+  findByPaymentReference(paymentReference: string): Promise<LeadPurchaseRecord | null>;
+}

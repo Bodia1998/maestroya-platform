@@ -5,6 +5,10 @@ import {
   getStripePaymentWebhookVerifierInstance,
   makeProcessCustomerPaymentWebhookUseCase,
 } from "@/application/use-cases/payments/compose";
+import {
+  isLeadFeePaymentEvent,
+} from "@/application/use-cases/lead-fee-payment/process-lead-fee-payment-webhook.use-case";
+import { makeProcessLeadFeePaymentWebhookUseCase } from "@/application/use-cases/lead-fee-payment/compose";
 import { reconcileAffiliateCommissionStripeFeeForPayment } from "@/application/use-cases/affiliate/compose";
 import { toHttpErrorResponse } from "@/infrastructure/observability/http-error-response";
 import { logger } from "@/infrastructure/observability/logger";
@@ -82,6 +86,21 @@ export const POST = withApiTracing("/api/webhooks/stripe-payments", async functi
   }
 
   try {
+    // Module 141 — LEAD_V1 lead-fee payments (M140's server-written `metadata.flow`) are confirmed by
+    // their own use case and NEVER enter the legacy customer-payment path below. The response carries
+    // only the outcome label: no purchase, amount, contact or payment detail.
+    if (isLeadFeePaymentEvent(validation.event)) {
+      const leadFeeResult = await makeProcessLeadFeePaymentWebhookUseCase().execute(validation.event);
+      logger.info("stripe_payments_webhook_lead_fee_processed", {
+        requestId,
+        route,
+        outcome: leadFeeResult.outcome,
+        eventId: validation.event.id,
+        eventType: validation.event.type,
+      });
+      return NextResponse.json({ status: leadFeeResult.outcome, requestId }, { status: 200, headers });
+    }
+
     const result = await makeProcessCustomerPaymentWebhookUseCase().execute(validation.event);
 
     logger.info("stripe_payments_webhook_processed", {

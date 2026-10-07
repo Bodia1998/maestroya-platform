@@ -67,7 +67,15 @@ export function leadFeePaymentIdempotencyKey(purchaseId: string): string {
  */
 export function leadFeePaymentTermsFromPurchase(purchase: LeadPurchaseRecord): LeadFeePaymentTerms {
   if (purchase.status !== "PENDING_PAYMENT") throw new LeadFeePaymentNotInitiableError("STATUS");
+  return leadFeePaymentTermsFromSnapshot(purchase);
+}
 
+/**
+ * Module 141 — the same snapshot validation WITHOUT the status rule, so the payment-confirmation
+ * webhook can verify the immutable terms of an already-CONFIRMED purchase (idempotent redelivery)
+ * exactly as M140 verified them at initiation. Pure, no pricing/tax recalculation.
+ */
+export function leadFeePaymentTermsFromSnapshot(purchase: LeadPurchaseRecord): LeadFeePaymentTerms {
   const snapshot = purchase.financialSnapshot;
   if (
     snapshot.totalAmount === null ||

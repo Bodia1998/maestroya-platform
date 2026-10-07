@@ -79,10 +79,28 @@ function extractPaymentIntent(event: Stripe.Event): StripePaymentIntentEventPayl
   if (!HANDLED_PAYMENT_INTENT_EVENTS.has(event.type)) return null;
 
   const intent = event.data.object as Stripe.PaymentIntent;
-  return {
+  const base: StripePaymentIntentEventPayload = {
     paymentIntentId: intent.id,
     lastPaymentErrorMessage: intent.last_payment_error?.message ?? null,
   };
+
+  // Module 141: the LEAD_V1 lead-fee facts are exposed ONLY for intents carrying M140's server-written
+  // marker, so the payload of every legacy intent stays byte-for-byte what it always was. Amount and
+  // currency are passed raw (validated downstream against the persisted purchase snapshot).
+  if (metadataString(intent.metadata, "flow") !== "LEAD_V1") return base;
+  return {
+    ...base,
+    amountMinorUnits: intent.amount,
+    currency: typeof intent.currency === "string" ? intent.currency : null,
+    flow: "LEAD_V1",
+    leadPurchaseId: metadataString(intent.metadata, "leadPurchaseId"),
+    leadId: metadataString(intent.metadata, "leadId"),
+  };
+}
+
+function metadataString(metadata: Stripe.Metadata | null | undefined, key: string): string | null {
+  const value = metadata?.[key];
+  return typeof value === "string" && value !== "" ? value : null;
 }
 
 /** Module 96 — Referral & Affiliate Production Wiring: see
