@@ -52,7 +52,8 @@ describe("Module 133 schema", () => {
 
   it("LeadPurchase and legacy financial models are not modified by the snapshot", () => {
     const purchase = schema.match(/^model LeadPurchase \{[\s\S]*?^\}/m)![0];
-    expect(purchase).not.toMatch(/publication/i);
+    // Module 135 gave LeadPurchase its OWN snapshot provenance (leadPublishedAt, pricing*Version); it still has no publication* columns.
+    expect(purchase).not.toMatch(/^\s*publication\w*\s/m);
     for (const legacy of ["Payment", "Commission", "Payout", "Quote", "Invoice", "CreditNote"]) {
       expect(schema.match(new RegExp(`^model ${legacy} \\{[\\s\\S]*?^\\}`, "m"))![0]).not.toMatch(/publication/i);
     }
@@ -86,7 +87,10 @@ describe("Module 133 migration", () => {
 
 describe("Module 133 boundaries", () => {
   it("the only writer of the snapshot is PrismaLeadRepository.publish (one persistence path)", () => {
-    const writers = walk(path.join(root, "src")).filter((f) => /publicationPrice/.test(strip(read(rel(f)))) && /\.(updateMany|update|create|upsert)\(/.test(strip(read(rel(f)))));
+    // Module 135: the LeadPurchase repository READS the snapshot (locked SELECT) to copy the fee; it never writes the leads table.
+    const writers = walk(path.join(root, "src"))
+      .filter((f) => rel(f) !== "src/core/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository.ts")
+      .filter((f) => /publicationPrice/.test(strip(read(rel(f)))) && /\.(updateMany|update|create|upsert)\(/.test(strip(read(rel(f)))));
     expect(writers.map(rel)).toEqual(["src/core/infrastructure/database/prisma/repositories/prisma-lead-repository.ts"]);
     const repo = strip(read("src/core/infrastructure/database/prisma/repositories/prisma-lead-repository.ts"));
     expect((repo.match(/lead\.updateMany\(/g) ?? []).length).toBe(2); // propagation (M130) + publish (M133)

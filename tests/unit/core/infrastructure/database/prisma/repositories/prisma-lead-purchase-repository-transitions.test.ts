@@ -10,6 +10,7 @@ import {
 
 /** Module 126 — PrismaLeadPurchaseRepository.initiate / transition against a mocked Prisma client. */
 const now = new Date("2026-10-03T10:00:00.000Z");
+const PUBLISHED_AT = new Date("2026-10-06T10:00:00.000Z");
 const { tx, leadPurchase } = vi.hoisted(() => ({
   tx: { $queryRaw: vi.fn(), leadPurchase: { count: vi.fn(), create: vi.fn() } },
   leadPurchase: { updateMany: vi.fn(), findUnique: vi.fn() },
@@ -22,6 +23,7 @@ vi.mock("@/infrastructure/database/prisma/client", () => ({
   },
 }));
 
+import { SNAPSHOT_DATA } from "../../../../../../test-utils/lead-publication-fixtures";
 import { PrismaLeadPurchaseRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository";
 
 const row = (over: Record<string, unknown> = {}) => ({
@@ -29,8 +31,13 @@ const row = (over: Record<string, unknown> = {}) => ({
   leadId: "lead-1",
   professionalProfileId: "pro-1",
   status: "PENDING_PAYMENT",
-  price: "4.50",
+  price: "18.00",
   currency: "EUR",
+  pricingConfigVersion: SNAPSHOT_DATA.pricingConfigVersion,
+  pricingRuleVersion: SNAPSHOT_DATA.pricingRuleVersion,
+  leadPublishedAt: PUBLISHED_AT,
+  taxAmount: null,
+  totalAmount: null,
   confirmedAt: null,
   refundedAt: null,
   revokedAt: null,
@@ -38,54 +45,119 @@ const row = (over: Record<string, unknown> = {}) => ({
   updatedAt: now,
   ...over,
 });
-const data = { leadId: "lead-1", professionalProfileId: "pro-1", price: 4.5 };
+const data = { leadId: "lead-1", professionalProfileId: "pro-1" };
+
+/** What the locked `leads` SELECT returns for a legitimately published (M133) lead: numerics cast to text. */
+const lockedLead = (over: Record<string, unknown> = {}) => ({
+  status: "PUBLISHED",
+  maxBuyers: 2,
+  publishedAt: PUBLISHED_AT,
+  publicationPrice: "18.00",
+  publicationCurrency: "EUR",
+  publicationEstimatedJobValue: "150.00",
+  publicationPricingRate: "0.120000",
+  publicationPricingConfidence: "LOW",
+  publicationPricingConfigVersion: SNAPSHOT_DATA.pricingConfigVersion,
+  publicationJobValueRuleVersion: SNAPSHOT_DATA.jobValueRuleVersion,
+  publicationPricingRuleVersion: SNAPSHOT_DATA.pricingRuleVersion,
+  publicationBuyerPolicyVersion: SNAPSHOT_DATA.buyerPolicyVersion,
+  ...over,
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 describe("initiate", () => {
-  it("locks the lead row, then counts, then inserts (in that order, one transaction)", async () => {
+  it("locks the lead row, then checks own duplicate, then capacity, then inserts (one transaction)", async () => {
     const order: string[] = [];
-    tx.$queryRaw.mockImplementation(async () => (order.push("lock"), [{ status: "PUBLISHED", maxBuyers: 2 }]));
-    tx.leadPurchase.count.mockImplementation(async () => (order.push("count"), 1));
+    tx.$queryRaw.mockImplementation(async () => (order.push("lock"), [lockedLead()]));
+    tx.leadPurchase.count.mockImplementation(async (args: { where: { professionalProfileId?: string } }) => {
+      order.push(args.where.professionalProfileId ? "own" : "count");
+      return args.where.professionalProfileId ? 0 : 1;
+    });
     tx.leadPurchase.create.mockImplementation(async () => (order.push("insert"), row()));
     const r = await new PrismaLeadPurchaseRepository().initiate(data);
-    expect(order).toEqual(["lock", "count", "insert"]);
-    expect(r).toMatchObject({ status: "PENDING_PAYMENT", price: 4.5 });
-    expect(tx.leadPurchase.count.mock.calls[0]![0].where.status.in).toEqual(["PENDING_PAYMENT", "CONFIRMED"]);
+    expect(order).toEqual(["lock", "own", "count", "insert"]);
+    expect(r).toMatchObject({ status: "PENDING_PAYMENT", price: 18 });
+    for (const call of tx.leadPurchase.count.mock.calls) expect(call[0].where.status.in).toEqual(["PENDING_PAYMENT", "CONFIRMED"]);
   });
 
-  it("maxBuyers NULL is not enforced", async () => {
-    tx.$queryRaw.mockResolvedValue([{ status: "PUBLISHED", maxBuyers: null }]);
-    tx.leadPurchase.count.mockResolvedValue(999);
+  it("Module 135: the purchase is created from the locked lead's publication snapshot (exact strings), with no caller price", async () => {
+    tx.$queryRaw.mockResolvedValue([lockedLead()]);
+    tx.leadPurchase.count.mockResolvedValue(0);
     tx.leadPurchase.create.mockResolvedValue(row());
-    await expect(new PrismaLeadPurchaseRepository().initiate(data)).resolves.toBeDefined();
+    await new PrismaLeadPurchaseRepository().initiate({ ...data, price: 0.01, currency: "USD" } as never); // smuggled values are ignored
+    expect(tx.leadPurchase.create.mock.calls[0]![0].data).toEqual({
+      leadId: "lead-1",
+      professionalProfileId: "pro-1",
+      price: "18.00",
+      currency: "EUR",
+      pricingConfigVersion: SNAPSHOT_DATA.pricingConfigVersion,
+      pricingRuleVersion: SNAPSHOT_DATA.pricingRuleVersion,
+      leadPublishedAt: PUBLISHED_AT,
+    });
+    // tax is never computed or written by this module
+    expect(Object.keys(tx.leadPurchase.create.mock.calls[0]![0].data)).not.toEqual(expect.arrayContaining(["taxAmount"]));
+    expect(typeof tx.leadPurchase.create.mock.calls[0]![0].data.price).toBe("string");
+  });
+
+  it("the locking SELECT casts every numeric snapshot column to text (money never passes through a JS number)", async () => {
+    tx.$queryRaw.mockResolvedValue([lockedLead()]);
+    tx.leadPurchase.count.mockResolvedValue(0);
+    tx.leadPurchase.create.mockResolvedValue(row());
+    await new PrismaLeadPurchaseRepository().initiate(data);
+    const sql = (tx.$queryRaw.mock.calls[0]![0] as string[]).join("?");
+    expect(sql).toContain("FOR UPDATE");
+    for (const col of ["publicationPrice", "publicationEstimatedJobValue", "publicationPricingRate"]) expect(sql).toContain(`"${col}"::text`);
+  });
+
+  it("a NULL maxBuyers (incomplete buyer-policy snapshot) is never purchasable", async () => {
+    tx.$queryRaw.mockResolvedValue([lockedLead({ maxBuyers: null })]);
+    tx.leadPurchase.count.mockResolvedValue(0);
+    tx.leadPurchase.create.mockResolvedValue(row());
+    await expect(new PrismaLeadPurchaseRepository().initiate(data)).rejects.toBeInstanceOf(LeadNotPurchasableError);
+    expect(tx.leadPurchase.create).not.toHaveBeenCalled();
   });
 
   it("rejects when the limit is reached, without inserting", async () => {
-    tx.$queryRaw.mockResolvedValue([{ status: "PUBLISHED", maxBuyers: 2 }]);
-    tx.leadPurchase.count.mockResolvedValue(2);
+    tx.$queryRaw.mockResolvedValue([lockedLead({ maxBuyers: 2 })]);
+    tx.leadPurchase.count.mockImplementation(async (args: { where: { professionalProfileId?: string } }) => (args.where.professionalProfileId ? 0 : 2));
     await expect(new PrismaLeadPurchaseRepository().initiate(data)).rejects.toBeInstanceOf(LeadBuyerLimitReachedError);
     expect(tx.leadPurchase.create).not.toHaveBeenCalled();
   });
 
-  it.each([[[]], [[{ status: "DRAFT", maxBuyers: null }]], [[{ status: "CLOSED", maxBuyers: null }]]])("missing / non-PUBLISHED lead -> LeadNotPurchasableError", async (rows) => {
+  it("the buyer's own active purchase is a DUPLICATE (not 'limit reached'), even when the lead is full", async () => {
+    tx.$queryRaw.mockResolvedValue([lockedLead({ maxBuyers: 1 })]);
+    tx.leadPurchase.count.mockResolvedValue(1);
+    await expect(new PrismaLeadPurchaseRepository().initiate(data)).rejects.toBeInstanceOf(DuplicateActiveLeadPurchaseError);
+    expect(tx.leadPurchase.create).not.toHaveBeenCalled();
+  });
+
+  it.each([[[]], [[lockedLead({ status: "DRAFT" })]], [[lockedLead({ status: "CLOSED" })]]])("missing / non-PUBLISHED lead -> LeadNotPurchasableError", async (rows) => {
     tx.$queryRaw.mockResolvedValue(rows);
     await expect(new PrismaLeadPurchaseRepository().initiate(data)).rejects.toBeInstanceOf(LeadNotPurchasableError);
     expect(tx.leadPurchase.create).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["no snapshot at all (pre-M133 publication)", { publishedAt: null, publicationPrice: null, publicationCurrency: null, publicationEstimatedJobValue: null, publicationPricingRate: null, publicationPricingConfidence: null, publicationPricingConfigVersion: null, publicationJobValueRuleVersion: null, publicationPricingRuleVersion: null, publicationBuyerPolicyVersion: null, maxBuyers: null }],
+    ["half-written snapshot", { publicationPricingRuleVersion: null }],
+    ["zero price", { publicationPrice: "0.00" }],
+    ["foreign currency", { publicationCurrency: "USD" }],
+    ["missing publication timestamp", { publishedAt: null }],
+  ])("a PUBLISHED lead with %s is never purchasable and nothing is inserted", async (_n, over) => {
+    tx.$queryRaw.mockResolvedValue([lockedLead(over)]);
+    await expect(new PrismaLeadPurchaseRepository().initiate(data)).rejects.toBeInstanceOf(LeadNotPurchasableError);
+    expect(tx.leadPurchase.count).not.toHaveBeenCalled();
+    expect(tx.leadPurchase.create).not.toHaveBeenCalled();
+  });
+
   it("maps the partial unique index violation (P2002) to DuplicateActiveLeadPurchaseError", async () => {
-    tx.$queryRaw.mockResolvedValue([{ status: "PUBLISHED", maxBuyers: null }]);
+    tx.$queryRaw.mockResolvedValue([lockedLead()]);
     tx.leadPurchase.count.mockResolvedValue(0);
     tx.leadPurchase.create.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("dup", { code: "P2002", clientVersion: "x" }));
     await expect(new PrismaLeadPurchaseRepository().initiate(data)).rejects.toBeInstanceOf(DuplicateActiveLeadPurchaseError);
-  });
-
-  it("validates price/currency before touching the database", async () => {
-    await expect(new PrismaLeadPurchaseRepository().initiate({ ...data, price: -1 })).rejects.toThrow();
-    expect(tx.$queryRaw).not.toHaveBeenCalled();
   });
 });
 

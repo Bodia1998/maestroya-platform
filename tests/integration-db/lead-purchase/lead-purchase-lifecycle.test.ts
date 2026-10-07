@@ -82,7 +82,7 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
     const { lead } = await publishedLead();
     const pro = await professional();
 
-    const pending = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 });
+    const pending = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
     expect(pending.status).toBe("PENDING_PAYMENT");
     expect(pending.confirmedAt).toBeNull();
     expect(await contactDecision(lead.id, pro.id)).toMatchObject({ allowed: false });
@@ -100,7 +100,7 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
   it.each(["FAILED", "CANCELLED"] as const)("PENDING_PAYMENT -> %s: no contact, cannot be confirmed afterwards", async (terminal) => {
     const { lead } = await publishedLead();
     const pro = await professional();
-    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 });
+    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
     await transitionUc().execute(p.id, terminal);
     expect(await contactDecision(lead.id, pro.id)).toMatchObject({ allowed: false });
     await expect(confirmUc().execute(p.id)).rejects.toBeInstanceOf(InvalidLeadPurchaseTransitionError);
@@ -110,7 +110,7 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
   it("CONFIRMED -> REFUNDED: no contact, stamps refundedAt, cannot be re-confirmed", async () => {
     const { lead } = await publishedLead();
     const pro = await professional();
-    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 });
+    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
     await confirmUc().execute(p.id);
     await transitionUc().execute(p.id, "REFUNDED");
     const row = (await purchases.findById(p.id))!;
@@ -123,7 +123,7 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
   it("confirm is idempotent: second call keeps the same confirmedAt and one row", async () => {
     const { lead } = await publishedLead();
     const pro = await professional();
-    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 });
+    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
     const first = await confirmUc().execute(p.id);
     await new Promise((r) => setTimeout(r, 20));
     const second = await confirmUc().execute(p.id);
@@ -135,7 +135,7 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
     const { lead } = await publishedLead();
     const pro = await professional();
     const outcomes = await Promise.allSettled(
-      Array.from({ length: 6 }, () => purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 })),
+      Array.from({ length: 6 }, () => purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id })),
     );
     expect(outcomes.filter((o) => o.status === "fulfilled")).toHaveLength(1);
     for (const o of outcomes) if (o.status === "rejected") expect(o.reason).toBeInstanceOf(DuplicateActiveLeadPurchaseError);
@@ -145,7 +145,7 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
   it("maxBuyers race: concurrent purchases by different professionals never exceed the limit", async () => {
     const { lead } = await publishedLead(2);
     const pros = await Promise.all(Array.from({ length: 6 }, () => professional()));
-    const outcomes = await Promise.allSettled(pros.map((p) => purchases.initiate({ leadId: lead.id, professionalProfileId: p.id, price: 4.5 })));
+    const outcomes = await Promise.allSettled(pros.map((p) => purchases.initiate({ leadId: lead.id, professionalProfileId: p.id })));
     expect(outcomes.filter((o) => o.status === "fulfilled")).toHaveLength(2);
     for (const o of outcomes) if (o.status === "rejected") expect(o.reason).toBeInstanceOf(LeadBuyerLimitReachedError);
     expect(await prisma.leadPurchase.count({ where: { leadId: lead.id, status: { in: ["PENDING_PAYMENT", "CONFIRMED"] } } })).toBe(2);
@@ -154,21 +154,21 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
   it("maxBuyers: a FAILED/CANCELLED purchase frees a slot; an uncapped (100) lead is not limited", async () => {
     const { lead } = await publishedLead(1);
     const [a, b] = await Promise.all([professional(), professional()]);
-    const first = await purchases.initiate({ leadId: lead.id, professionalProfileId: a.id, price: 4.5 });
-    await expect(purchases.initiate({ leadId: lead.id, professionalProfileId: b.id, price: 4.5 })).rejects.toBeInstanceOf(LeadBuyerLimitReachedError);
+    const first = await purchases.initiate({ leadId: lead.id, professionalProfileId: a.id });
+    await expect(purchases.initiate({ leadId: lead.id, professionalProfileId: b.id })).rejects.toBeInstanceOf(LeadBuyerLimitReachedError);
     await transitionUc().execute(first.id, "CANCELLED");
-    await expect(purchases.initiate({ leadId: lead.id, professionalProfileId: b.id, price: 4.5 })).resolves.toMatchObject({ status: "PENDING_PAYMENT" });
+    await expect(purchases.initiate({ leadId: lead.id, professionalProfileId: b.id })).resolves.toMatchObject({ status: "PENDING_PAYMENT" });
 
     const open = await publishedLead(null);
     const many = await Promise.all(Array.from({ length: 4 }, () => professional()));
-    await Promise.all(many.map((p) => purchases.initiate({ leadId: open.lead.id, professionalProfileId: p.id, price: 4.5 })));
+    await Promise.all(many.map((p) => purchases.initiate({ leadId: open.lead.id, professionalProfileId: p.id })));
     expect(await prisma.leadPurchase.count({ where: { leadId: open.lead.id } })).toBe(4);
   });
 
   it("confirmation race: concurrent confirmations transition once and all return CONFIRMED", async () => {
     const { lead } = await publishedLead();
     const pro = await professional();
-    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 });
+    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
     const results = await Promise.all(Array.from({ length: 6 }, () => confirmUc().execute(p.id)));
     for (const r of results) expect(r.status).toBe("CONFIRMED");
     expect(new Set(results.map((r) => r.confirmedAt?.getTime())).size).toBe(1);
@@ -177,7 +177,7 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
   it("invalid-transition race: cancel vs confirm - exactly one wins and the terminal state never becomes CONFIRMED", async () => {
     const { lead } = await publishedLead();
     const pro = await professional();
-    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 });
+    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
     const outcomes = await Promise.allSettled([confirmUc().execute(p.id), transitionUc().execute(p.id, "CANCELLED")]);
     const final = (await purchases.findById(p.id))!;
     expect(["CONFIRMED", "CANCELLED"]).toContain(final.status);
@@ -190,10 +190,10 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
   it("re-purchase is allowed after FAILED (partial index only covers active states) but not while active", async () => {
     const { lead } = await publishedLead();
     const pro = await professional();
-    const a = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 });
-    await expect(purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 })).rejects.toBeInstanceOf(DuplicateActiveLeadPurchaseError);
+    const a = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
+    await expect(purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id })).rejects.toBeInstanceOf(DuplicateActiveLeadPurchaseError);
     await transitionUc().execute(a.id, "FAILED");
-    const b = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 });
+    const b = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
     expect(b.id).not.toBe(a.id);
   });
 
@@ -201,14 +201,14 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
     const { lead } = await publishedLead();
     const pro = await professional();
     await prisma.lead.update({ where: { id: lead.id }, data: { status: "CLOSED" } });
-    await expect(purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 })).rejects.toBeInstanceOf(LeadNotPurchasableError);
+    await expect(purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id })).rejects.toBeInstanceOf(LeadNotPurchasableError);
     expect(await prisma.leadPurchase.count()).toBe(0);
   });
 
   it("confirm refuses when the lead is no longer PUBLISHED (purchase stays PENDING_PAYMENT, no contact)", async () => {
     const { lead } = await publishedLead();
     const pro = await professional();
-    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 });
+    const p = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
     await prisma.lead.update({ where: { id: lead.id }, data: { status: "CANCELLED" } });
     await expect(confirmUc().execute(p.id)).rejects.toBeInstanceOf(LeadNotPurchasableError);
     expect((await purchases.findById(p.id))!.status).toBe("PENDING_PAYMENT");
@@ -221,7 +221,7 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
     await expect(prisma.$executeRawUnsafe(
       `INSERT INTO lead_purchases (id, "leadId", "professionalProfileId", status, price, currency, "updatedAt") VALUES (gen_random_uuid(), '${lead.id}', '${pro.id}', 'PENDING_PAYMENT', -1, 'EUR', now())`,
     )).rejects.toBeDefined();
-    await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 4.5 });
+    await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
     expect(await prisma.payment.count()).toBe(0);
     expect(await prisma.commission.count()).toBe(0);
     expect(await prisma.payout.count()).toBe(0);

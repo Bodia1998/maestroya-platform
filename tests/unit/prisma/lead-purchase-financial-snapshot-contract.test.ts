@@ -1,0 +1,128 @@
+import { readFileSync, readdirSync } from "node:fs";
+import path from "node:path";
+
+import { describe, expect, it } from "vitest";
+
+/**
+ * Module 135 — static contract for the LeadPurchase financial snapshot and
+ * idempotency foundation. The DB-level behaviour is proven by
+ * tests/integration-db/lead-purchase/lead-purchase-financial-snapshot.test.ts
+ * (real PostgreSQL); this file guards the shape of the schema, the migration and the code boundary.
+ */
+const root = path.resolve(__dirname, "../../..");
+const read = (f: string) => readFileSync(path.join(root, f), "utf8");
+const code = (f: string) => read(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+const MIGRATION_DIR = readdirSync(path.join(root, "prisma/migrations")).find((n) => /_module_135_lead_purchase_financial_snapshot$/.test(n));
+const sql = () => read(`prisma/migrations/${MIGRATION_DIR}/migration.sql`);
+const sqlCode = () => sql().replace(/^\s*--.*$/gm, "");
+const schema = read("prisma/schema.prisma");
+const model = schema.slice(schema.indexOf("model LeadPurchase {"), schema.indexOf('@@map("lead_purchases")'));
+
+const REPO = "src/core/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository.ts";
+const USE_CASE = "src/core/application/use-cases/lead-purchase/initiate-lead-purchase.use-case.ts";
+
+describe("Module 135 schema", () => {
+  it("adds exact Decimal(10,2) tax/total placeholders and nullable provenance, never Float/Int money", () => {
+    expect(model).toMatch(/pricingConfigVersion\s+String\?/);
+    expect(model).toMatch(/pricingRuleVersion\s+String\?/);
+    expect(model).toMatch(/leadPublishedAt\s+DateTime\?/);
+    expect(model).toMatch(/taxAmount\s+Decimal\?\s+@db\.Decimal\(10, 2\)/);
+    expect(model).toMatch(/totalAmount\s+Decimal\?\s+@db\.Decimal\(10, 2\)/);
+    expect(model).toMatch(/price\s+Decimal\s+@db\.Decimal\(10, 2\)/); // existing fee column, unchanged precision
+    expect(model).not.toMatch(/\b(Float|Int)\b/);
+    expect(model).not.toMatch(/(paymentId|stripe|commission|payout|invoice|vat|iva)/i);
+  });
+
+  it("does not add idempotency-key or unique columns: the natural (lead, professional, active) boundary already exists", () => {
+    expect(model).not.toMatch(/idempotency/i);
+    expect(model).not.toMatch(/@@unique|@unique/);
+  });
+});
+
+describe("Module 135 migration", () => {
+  it("exists, is additive and only touches lead_purchases", () => {
+    expect(MIGRATION_DIR).toBeDefined();
+    const body = sqlCode();
+    expect(body).not.toMatch(/\b(DROP\s+(TABLE|COLUMN|INDEX|CONSTRAINT)|DELETE|TRUNCATE|UPDATE\s+"|INSERT|RENAME)\b/i);
+    expect(body).not.toMatch(/ALTER COLUMN|SET NOT NULL|SET DEFAULT/i); // no rewrite / no fabricated backfill
+    const alters = [...body.matchAll(/ALTER TABLE "([^"]+)"/g)].map((m) => m[1]);
+    for (const t of alters) expect(t).toBe("lead_purchases");
+    expect(body).not.toMatch(/"(service_requests|quotes|payments|commissions|payouts|invoices|leads)"/);
+  });
+
+  it("adds exactly the five nullable columns", () => {
+    const cols = [...sqlCode().matchAll(/ADD COLUMN "([^"]+)" ([A-Z0-9()]+(?:,\d+\))?)/g)].map((m) => `${m[1]} ${m[2]}`);
+    expect(cols).toEqual([
+      "pricingConfigVersion TEXT",
+      "pricingRuleVersion TEXT",
+      "leadPublishedAt TIMESTAMP(3)",
+      "taxAmount DECIMAL(10,2)",
+      "totalAmount DECIMAL(10,2)",
+    ]);
+    expect(sqlCode()).not.toMatch(/ADD COLUMN[^;]*NOT NULL/);
+  });
+
+  it("creates no new index and leaves the active-purchase partial unique index alone", () => {
+    expect(sqlCode()).not.toMatch(/CREATE\s+(UNIQUE\s+)?INDEX/i);
+    expect(sqlCode()).not.toMatch(/lead_purchases_one_active_per_lead_professional/);
+  });
+
+  it("defines the three CHECKs and the immutability trigger", () => {
+    const body = sqlCode();
+    expect(body).toContain("lead_purchases_snapshot_all_or_nothing");
+    expect(body).toContain('num_nonnulls("pricingConfigVersion", "pricingRuleVersion", "leadPublishedAt") IN (0, 3)');
+    expect(body).toContain("lead_purchases_snapshot_fee_valid");
+    expect(body).toContain("lead_purchases_tax_total_consistent");
+    expect(body).toContain('"totalAmount" = "price" + "taxAmount"');
+    expect(body).toContain("CREATE TRIGGER lead_purchases_financial_immutable_trg");
+    expect(body).toMatch(/BEFORE UPDATE ON "lead_purchases"/);
+  });
+
+  it("the trigger protects every fee/provenance column and treats tax/total as write-once", () => {
+    const fn = sqlCode().slice(sqlCode().indexOf("CREATE FUNCTION"));
+    for (const c of ["leadId", "professionalProfileId", "price", "currency", "pricingConfigVersion", "pricingRuleVersion", "leadPublishedAt", "createdAt"]) {
+      expect(fn).toContain(`NEW."${c}" IS DISTINCT FROM OLD."${c}"`);
+    }
+    expect(fn).toContain('OLD."taxAmount" IS NOT NULL AND NEW."taxAmount" IS DISTINCT FROM OLD."taxAmount"');
+    expect(fn).toContain('OLD."totalAmount" IS NOT NULL AND NEW."totalAmount" IS DISTINCT FROM OLD."totalAmount"');
+    // status and the confirmation/refund/revoke timestamps stay mutable
+    for (const c of ["status", "confirmedAt", "refundedAt", "revokedAt", "updatedAt"]) expect(fn).not.toContain(`NEW."${c}"`);
+  });
+
+  it("contains no tax policy (no rate, no IVA/VAT literal)", () => {
+    expect(sqlCode()).not.toMatch(/0\.21|21\s*%|\biva\b|\bvat\b/i);
+  });
+});
+
+describe("Module 135 code boundary", () => {
+  it("the purchase fee is never written by a transition: updateMany touches status and stamps only", () => {
+    const src = code(REPO);
+    const update = src.slice(src.indexOf("updateMany"), src.indexOf("return this.findById(id)"));
+    expect(update).toContain("status: to");
+    expect(update).not.toMatch(/price|currency|pricingConfigVersion|pricingRuleVersion|leadPublishedAt|taxAmount|totalAmount/);
+  });
+
+  it("no code path updates the money/provenance columns of an existing purchase", () => {
+    expect(code(REPO)).not.toMatch(/leadPurchase\.(update|upsert)\(/);
+  });
+
+  it("initiate copies the fee from the locked lead row and takes no price input", () => {
+    const src = code(REPO);
+    const initiate = src.slice(src.indexOf("async initiate("), src.indexOf("async transition("));
+    expect(initiate).toContain("FOR UPDATE");
+    expect(initiate).toContain("financialSnapshotFromLockedLead");
+    expect(initiate).toMatch(/price: snapshot\.feeAmount/);
+    expect(initiate).not.toMatch(/data\.price/);
+    expect(initiate).not.toMatch(/taxAmount|totalAmount/); // tax is Module 136
+    expect(initiate).not.toMatch(/Number\(|parseFloat|\*\s*0\./); // no float money arithmetic
+  });
+
+  it("the use case still requires isLeadMarketplaceReady before the purchase path and has no pricing dependency", () => {
+    const src = code(USE_CASE);
+    expect(src).toContain("isLeadMarketplaceReady(");
+    expect(src.indexOf("isLeadMarketplaceReady(")).toBeLessThan(src.indexOf("this.purchases.initiate"));
+    expect(src.indexOf("isLeadMarketplaceReady(")).toBeLessThan(src.indexOf("findActiveByLeadAndProfessional"));
+    expect(src).not.toMatch(/LeadPurchasePriceProvider|getPriceForLead|lead-pricing|pricing-config/);
+    expect(src).not.toMatch(/stripe|invoice|\b(tax|iva|vat)\b|payments?\//i);
+  });
+});

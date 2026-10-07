@@ -92,7 +92,7 @@ describe("Module 130 — lead lifecycle propagation (real PostgreSQL)", () => {
     const { request, lead } = await makeLead();
     const proUser = await createUser(prisma, { name: "Pro" });
     const pro = await createProfessionalProfile(prisma, proUser.id);
-    const purchase = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id, price: 5 });
+    const purchase = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
 
     await requests.updateStatus(request.id, "CANCELLED");
 
@@ -100,6 +100,6 @@ describe("Module 130 — lead lifecycle propagation (real PostgreSQL)", () => {
     expect(after).toMatchObject({ id: purchase.id, leadId: lead.id, status: "PENDING_PAYMENT" });
 
     const other = await createProfessionalProfile(prisma, (await createUser(prisma, { name: "Pro2" })).id);
-    await expect(purchases.initiate({ leadId: lead.id, professionalProfileId: other.id, price: 5 })).rejects.toBeInstanceOf(LeadNotPurchasableError);
+    await expect(purchases.initiate({ leadId: lead.id, professionalProfileId: other.id })).rejects.toBeInstanceOf(LeadNotPurchasableError);
   });
 });

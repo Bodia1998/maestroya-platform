@@ -23,7 +23,8 @@ describe("Module 132 — lead purchase composition production contract", () => {
 
   it("fails closed when the version is not configured (INCOMPLETE) — no default, no test fallback", () => {
     expect(() => makeLeadPurchasePriceProvider()).toThrow(LeadPricingConfigurationError);
-    expect(() => makeInitiateLeadPurchaseUseCase()).toThrow(/LEAD_PRICING_CONFIG_VERSION/);
+    // Module 135: purchase initiation copies the lead's publication snapshot and needs no pricing configuration.
+    expect(() => makeInitiateLeadPurchaseUseCase()).not.toThrow();
     try {
       makeLeadPurchasePriceProvider();
     } catch (error) {

@@ -4,11 +4,11 @@ import type { LeadPricingContextReader } from "@/application/ports/lead-pricing-
 import { ConfiguredLeadPurchasePriceProvider } from "@/application/services/lead-pricing/configured-lead-purchase-price-provider";
 import { InitiateLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/initiate-lead-purchase.use-case";
 import type { LeadPreviewCandidate } from "@/domain/repositories/lead-preview-repository";
-import type { CreateLeadPurchaseData, LeadPurchaseRecord, LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
-import { LeadPurchasePricingError } from "@/domain/services/lead-purchase";
+import type { InitiateLeadPurchaseData, LeadPurchaseRecord, LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
 import { LeadPricingUnavailableError, type LeadPricingConfig, type LeadPricingContext } from "@/domain/services/lead-pricing";
 import { LEAD_PRICING_CONFIG_V1 } from "@/infrastructure/pricing/lead-pricing-config.v1";
 import { SNAPSHOT_DATA } from "../../../../../test-utils/lead-publication-fixtures";
+import { pendingPurchaseFromPublication } from "../../../../../test-utils/lead-purchase-fixtures";
 
 /** A legitimately published (M133) LEAD_V1 lead: complete immutable snapshot, so purchase initiation passes the marketplace-readiness check and actually reaches pricing. */
 const PUBLICATION = { ...SNAPSHOT_DATA, publishedAt: new Date("2026-10-06T10:00:00Z") };
@@ -30,20 +30,8 @@ class FakePurchases implements LeadPurchaseRepository {
   async create(): Promise<LeadPurchaseRecord> {
     throw new Error("unused");
   }
-  async initiate(d: CreateLeadPurchaseData): Promise<LeadPurchaseRecord> {
-    const row: LeadPurchaseRecord = {
-      id: `p-${this.rows.length + 1}`,
-      leadId: d.leadId,
-      professionalProfileId: d.professionalProfileId,
-      status: "PENDING_PAYMENT",
-      price: d.price,
-      currency: d.currency ?? "EUR",
-      confirmedAt: null,
-      refundedAt: null,
-      revokedAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+  async initiate(d: InitiateLeadPurchaseData): Promise<LeadPurchaseRecord> {
+    const row = pendingPurchaseFromPublication(`p-${this.rows.length + 1}`, d.leadId, d.professionalProfileId, PUBLICATION);
     this.rows.push(row);
     return { ...row };
   }
@@ -86,7 +74,6 @@ function build(ctx: LeadPricingContext | null, config: LeadPricingConfig = LEAD_
     { findById: async () => ({ id: REQUEST, status: "PUBLISHED", title: "Fuga", description: "d", location: { city: "Madrid" } }) } as never,
     { findPublishedById: async () => preview, findPublishedByCategoryIds: vi.fn() } as never,
     purchases,
-    provider,
   );
   return { reader, provider, purchases, useCase };
 }
@@ -121,20 +108,20 @@ describe("ConfiguredLeadPurchasePriceProvider", () => {
   });
 });
 
-describe("Lead pricing -> InitiateLeadPurchaseUseCase -> LeadPurchase.price", () => {
-  it("snapshots the calculated price into the purchase", async () => {
-    const b = build(context());
+describe("Lead pricing (publication time) vs InitiateLeadPurchaseUseCase (snapshot only, Module 135)", () => {
+  it("snapshots the PUBLISHED price into the purchase, not the engine's current result", async () => {
+    const b = build(context()); // the engine would price this context at 72.00 today
+    await expect(b.provider.getPriceForLead(LEAD)).resolves.toMatchObject({ price: 72 });
     const dto = await b.useCase.execute(USER, LEAD);
-    expect(dto).toMatchObject({ status: "PENDING_PAYMENT", price: 72, currency: "EUR" });
-    expect(b.purchases.rows).toHaveLength(1);
-    expect(b.purchases.rows[0]).toMatchObject({ price: 72, currency: "EUR" });
+    expect(dto).toMatchObject({ status: "PENDING_PAYMENT", price: Number(SNAPSHOT_DATA.price), currency: "EUR" });
+    expect(b.purchases.rows[0]).toMatchObject({ price: Number(SNAPSHOT_DATA.price), currency: "EUR" });
   });
 
   it("the public DTO stays contact-safe and exposes no pricing internals", async () => {
     const dto = await build(context()).useCase.execute(USER, LEAD);
     expect(Object.keys(dto).sort()).toEqual(["confirmedAt", "createdAt", "currency", "leadId", "price", "purchaseId", "status"]);
     const json = JSON.stringify(dto);
-    for (const leaked of ["ruleVersion", "lead-pricing", "rate", "factors", "uncapped", "customer-secret"]) expect(json).not.toContain(leaked);
+    for (const leaked of ["ruleVersion", "lead-pricing", "rate", "factors", "uncapped", "customer-secret", "pricingConfigVersion"]) expect(json).not.toContain(leaked);
   });
 
   it("a later configuration change does not mutate an existing purchase", async () => {
@@ -143,12 +130,7 @@ describe("Lead pricing -> InitiateLeadPurchaseUseCase -> LeadPurchase.price", ()
     const later = build(context(), { ...LEAD_PRICING_CONFIG_V1, rateBySlug: { fontaneria: "0.15" } });
     await expect(later.provider.getPriceForLead(LEAD)).resolves.toMatchObject({ price: 90 });
     expect(b.purchases.rows).toHaveLength(1);
-    expect(b.purchases.rows[0]?.price).toBe(72);
-  });
-
-  it("the cap applies end to end (large project)", async () => {
-    const b = build(context({ categorySlug: "reformas" }, "50000.00"));
-    expect((await b.useCase.execute(USER, LEAD)).price).toBe(150);
+    expect(b.purchases.rows[0]?.price).toBe(Number(SNAPSHOT_DATA.price));
   });
 
   it.each([
@@ -157,11 +139,10 @@ describe("Lead pricing -> InitiateLeadPurchaseUseCase -> LeadPurchase.price", ()
     ["unknown category", context({ categorySlug: "limpieza" })],
     ["zero service value", context({}, "0.00")],
     ["lead missing for pricing", null],
-  ])("pricing failure (%s) -> LeadPurchasePricingError and NO purchase (never zero/cheap)", async (_n, ctx) => {
+  ])("a pricing-configuration failure at purchase time (%s) cannot block or alter a purchase of an already published lead", async (_n, ctx) => {
     const b = build(ctx);
-    const err = await b.useCase.execute(USER, LEAD).catch((e) => e);
-    expect(err).toBeInstanceOf(LeadPurchasePricingError);
-    expect(err.message).toBe("The price for this lead could not be determined. Please try again later.");
-    expect(b.purchases.rows).toHaveLength(0);
+    const dto = await b.useCase.execute(USER, LEAD);
+    expect(dto.price).toBe(Number(SNAPSHOT_DATA.price));
+    expect(b.reader.findByLeadId).not.toHaveBeenCalled();
   });
 });

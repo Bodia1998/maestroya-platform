@@ -32,7 +32,12 @@ export function makeLeadPurchasePriceProvider(config: LeadPricingProductionConfi
   return new ConfiguredLeadPurchasePriceProvider(contexts, config.leadPricing);
 }
 
-export function makeInitiateLeadPurchaseUseCase(config?: LeadPricingProductionConfig) {
+/**
+ * Module 135: purchase initiation no longer takes a price provider or pricing
+ * configuration — the fee is the Lead's immutable M133 publication snapshot.
+ * Pricing configuration is only needed (and validated) at PUBLICATION time.
+ */
+export function makeInitiateLeadPurchaseUseCase() {
   return new InitiateLeadPurchaseUseCase(
     new PrismaProfessionalRepository(),
     new PrismaProfessionalDiscoveryRepository(),
@@ -40,6 +45,5 @@ export function makeInitiateLeadPurchaseUseCase(config?: LeadPricingProductionCo
     new PrismaServiceRequestRepository(),
     new PrismaLeadPreviewRepository(),
     new PrismaLeadPurchaseRepository(),
-    makeLeadPurchasePriceProvider(config),
   );
 }
