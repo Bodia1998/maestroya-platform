@@ -4,6 +4,7 @@ import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
   CreateLeadPurchaseData,
   InitiateLeadPurchaseData,
+  LeadPurchasePaymentCorrelationReader,
   LeadPurchaseRecord,
   LeadPurchaseRepository,
 } from "@/domain/repositories/lead-purchase-repository";
@@ -150,7 +151,7 @@ function financialSnapshotFromLockedLead(lead: LockedLeadRow) {
 /** Module 123 — Prisma implementation of `LeadPurchaseRepository`. Touches
  *  only the `lead_purchases` table: it never creates a Payment, Commission,
  *  Payout or Invoice. */
-export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository {
+export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository, LeadPurchasePaymentCorrelationReader {
   async initiate(data: InitiateLeadPurchaseData): Promise<LeadPurchaseRecord> {
     try {
       const row = await prisma.$transaction(async (tx) => {
@@ -266,6 +267,12 @@ export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository {
 
   async findById(id: string): Promise<LeadPurchaseRecord | null> {
     const row = await prisma.leadPurchase.findUnique({ where: { id }, select: SELECT });
+    return row ? toRecord(row) : null;
+  }
+
+  async findByPaymentReference(paymentReference: string): Promise<LeadPurchaseRecord | null> {
+    if (typeof paymentReference !== "string" || paymentReference === "") return null;
+    const row = await prisma.leadPurchase.findUnique({ where: { paymentReference }, select: SELECT });
     return row ? toRecord(row) : null;
   }
 

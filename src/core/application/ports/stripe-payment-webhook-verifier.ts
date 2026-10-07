@@ -33,6 +33,17 @@ export interface StripePaymentIntentEventPayload {
    *  `payment_intent.payment_failed` — surfaced (never any other PII/card
    *  data) as `Payment.failureReason`. `null` for every other event type. */
   lastPaymentErrorMessage: string | null;
+  /** Module 141 — LEAD_V1 lead-fee confirmation facts, taken from the SIGNATURE-VERIFIED
+   *  event only. Optional so legacy callers/tests are unaffected. `amountMinorUnits` and
+   *  `currency` are passed through RAW (unvalidated): the lead-fee use case validates them
+   *  against the persisted purchase snapshot. */
+  amountMinorUnits?: number | null;
+  currency?: string | null;
+  /** `metadata.flow` written by Module 140 ("LEAD_V1"); null/absent for legacy intents. Routing marker only. */
+  flow?: string | null;
+  /** M140 metadata echoes (opaque ids): cross-check only, never the identity of the purchase. */
+  leadPurchaseId?: string | null;
+  leadId?: string | null;
 }
 
 /**

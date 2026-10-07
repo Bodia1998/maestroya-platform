@@ -22,6 +22,12 @@ vi.mock("@/application/use-cases/payments/compose", () => ({
   makeProcessCustomerPaymentWebhookUseCase: () => ({ execute: mockExecute }),
 }));
 
+// Module 141: the route also imports the LEAD_V1 lead-fee composition root (Prisma-backed); legacy
+// tests never exercise it, so it is stubbed here (see stripe-payments-lead-fee-route-m141.test.ts).
+vi.mock("@/application/use-cases/lead-fee-payment/compose", () => ({
+  makeProcessLeadFeePaymentWebhookUseCase: () => ({ execute: vi.fn() }),
+}));
+
 const { POST } = await import("../../../../../src/app/api/webhooks/stripe-payments/route");
 
 function makeRequest(body: string, signatureHeader: string | null): NextRequest {
