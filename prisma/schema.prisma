@@ -6036,13 +6036,16 @@ model LeadPurchase {
   pricingRuleVersion    String?
   /// `Lead.publishedAt` of the snapshot the fee was copied from.
   leadPublishedAt       DateTime?
-  /// Module 135 — forward-compatible, deliberately NEUTRAL tax placeholders.
-  /// NULL = "tax not determined". Module 135 never computes or writes tax;
-  /// Module 136 owns the lead-fee tax policy. NULL together or set together,
-  /// and totalAmount = price + taxAmount when set (migration CHECK).
-  /// Write-once: they may go NULL -> value once, never change afterwards.
+  /// Module 136 — lead-fee tax snapshot. `price` is the NET fee; `taxAmount` is
+  /// the IVA computed once at creation by the lead-fee tax policy, `totalAmount`
+  /// = price + taxAmount is what the professional pays MaestroYa, and
+  /// `taxPolicyVersion` records which policy version produced them. NULL together
+  /// (purchases created before Module 136: tax is NOT invented for them) or set
+  /// together (migration CHECK); total = price + tax. Write-once (the M135
+  /// immutability trigger), never recomputed from current rules.
   taxAmount             Decimal?           @db.Decimal(10, 2)
   totalAmount           Decimal?           @db.Decimal(10, 2)
+  taxPolicyVersion      String?
 
   lead         Lead               @relation(fields: [leadId], references: [id], onDelete: Restrict)
   professional ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)

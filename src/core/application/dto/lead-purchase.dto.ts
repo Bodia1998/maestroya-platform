@@ -12,6 +12,10 @@ export interface LeadPurchaseDTO {
   status: LeadPurchaseStatus;
   price: number;
   currency: string;
+  /** Module 136: exact decimal strings from the immutable snapshot; null only for pre-M136 purchases. */
+  taxAmount: string | null;
+  totalAmount: string | null;
+  taxPolicyVersion: string | null;
   confirmedAt: Date | null;
   createdAt: Date;
 }
@@ -23,6 +27,9 @@ export function toLeadPurchaseDto(record: LeadPurchaseRecord): LeadPurchaseDTO {
     status: record.status,
     price: record.price,
     currency: record.currency,
+    taxAmount: record.financialSnapshot.taxAmount,
+    totalAmount: record.financialSnapshot.totalAmount,
+    taxPolicyVersion: record.financialSnapshot.taxPolicyVersion,
     confirmedAt: record.confirmedAt,
     createdAt: record.createdAt,
   };

@@ -35,6 +35,7 @@ const SELECT = {
   leadPublishedAt: true,
   taxAmount: true,
   totalAmount: true,
+  taxPolicyVersion: true,
   confirmedAt: true,
   refundedAt: true,
   revokedAt: true,
@@ -54,6 +55,7 @@ type Row = {
   leadPublishedAt: Date | null;
   taxAmount: unknown;
   totalAmount: unknown;
+  taxPolicyVersion: string | null;
   confirmedAt: Date | null;
   refundedAt: Date | null;
   revokedAt: Date | null;
@@ -82,6 +84,7 @@ function toRecord(row: Row): LeadPurchaseRecord {
       currency: row.currency,
       taxAmount: row.taxAmount === null || row.taxAmount === undefined ? null : exactMoney(row.taxAmount, "taxAmount"),
       totalAmount: row.totalAmount === null || row.totalAmount === undefined ? null : exactMoney(row.totalAmount, "totalAmount"),
+      taxPolicyVersion: row.taxPolicyVersion ?? null,
       pricingConfigVersion: row.pricingConfigVersion ?? null,
       pricingRuleVersion: row.pricingRuleVersion ?? null,
       leadPublishedAt: row.leadPublishedAt ?? null,
@@ -190,6 +193,10 @@ export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository {
             pricingConfigVersion: snapshot.pricingConfigVersion,
             pricingRuleVersion: snapshot.pricingRuleVersion,
             leadPublishedAt: snapshot.leadPublishedAt,
+            // Module 136: IVA computed by the pure policy from the immutable fee, persisted atomically with it.
+            taxAmount: snapshot.taxAmount,
+            totalAmount: snapshot.totalAmount,
+            taxPolicyVersion: snapshot.taxPolicyVersion,
           },
           select: SELECT,
         });
