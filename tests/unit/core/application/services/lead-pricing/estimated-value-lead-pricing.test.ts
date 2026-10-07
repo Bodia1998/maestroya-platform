@@ -4,13 +4,13 @@ import type { JobValueEstimationContextReader } from "@/application/ports/job-va
 import { ConfiguredLeadPurchasePriceProvider } from "@/application/services/lead-pricing/configured-lead-purchase-price-provider";
 import { EstimatedValueLeadPricingContextReader } from "@/application/services/lead-pricing/estimated-value-lead-pricing-context-reader";
 import { InitiateLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/initiate-lead-purchase.use-case";
-import type { CreateLeadPurchaseData, LeadPurchaseRecord, LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
+import type { InitiateLeadPurchaseData, LeadPurchaseRecord, LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
 import type { JobValueEstimationConfig, JobValueEstimationContext } from "@/domain/services/job-value-estimation";
 import { LeadPricingUnavailableError } from "@/domain/services/lead-pricing";
-import { LeadPurchasePricingError } from "@/domain/services/lead-purchase";
 import { JOB_VALUE_ESTIMATION_CONFIG_V1 } from "@/infrastructure/pricing/job-value-estimation-config.v1";
 import { LEAD_PRICING_CONFIG_V1 } from "@/infrastructure/pricing/lead-pricing-config.v1";
 import { SNAPSHOT_DATA } from "../../../../../test-utils/lead-publication-fixtures";
+import { pendingPurchaseFromPublication } from "../../../../../test-utils/lead-purchase-fixtures";
 
 /** A legitimately published (M133) LEAD_V1 lead: complete immutable snapshot, so purchase initiation passes the marketplace-readiness check and actually reaches pricing. */
 const PUBLICATION = { ...SNAPSHOT_DATA, publishedAt: new Date("2026-10-06T10:00:00Z") };
@@ -38,20 +38,8 @@ class FakePurchases implements LeadPurchaseRepository {
   async create(): Promise<LeadPurchaseRecord> {
     throw new Error("unused");
   }
-  async initiate(d: CreateLeadPurchaseData): Promise<LeadPurchaseRecord> {
-    const row: LeadPurchaseRecord = {
-      id: `p-${this.rows.length + 1}`,
-      leadId: d.leadId,
-      professionalProfileId: d.professionalProfileId,
-      status: "PENDING_PAYMENT",
-      price: d.price,
-      currency: d.currency ?? "EUR",
-      confirmedAt: null,
-      refundedAt: null,
-      revokedAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+  async initiate(d: InitiateLeadPurchaseData): Promise<LeadPurchaseRecord> {
+    const row = pendingPurchaseFromPublication(`p-${this.rows.length + 1}`, d.leadId, d.professionalProfileId, PUBLICATION);
     this.rows.push(row);
     return { ...row };
   }
@@ -82,7 +70,6 @@ function build(context: JobValueEstimationContext | null, config: JobValueEstima
     { findById: async () => ({ id: REQUEST, status: "PUBLISHED", title: "Fuga", description: "d", location: { city: "Madrid" } }) } as never,
     { findPublishedById: async () => preview, findPublishedByCategoryIds: vi.fn() } as never,
     purchases,
-    provider,
   );
   return { estimationReader, pricingContexts, provider, purchases, useCase };
 }
@@ -114,20 +101,23 @@ describe("EstimatedValueLeadPricingContextReader (adapter only)", () => {
   });
 });
 
-describe("Job Value Estimation -> Lead Pricing Engine -> LeadPurchase", () => {
-  it("MEDIUM estimate is priced by M128 and snapshotted into the purchase (150 x 0.12 = 18.00)", async () => {
+describe("Job Value Estimation -> Lead Pricing Engine (publication-time pricing) and LeadPurchase (snapshot only, M135)", () => {
+  it("MEDIUM estimate is priced by M128 (150 x 0.12 = 18.00)", async () => {
     const b = build(ctx({ categorySlug: "fontanero", parentCategorySlug: "fontaneria" }));
     await expect(b.provider.getPriceForLead(LEAD)).resolves.toEqual({ price: 18, currency: "EUR" });
+  });
+
+  it("purchase initiation never consults the estimator/pricing engine: the fee is the lead's publication snapshot", async () => {
+    const b = build(ctx({ categorySlug: "fontanero", parentCategorySlug: "fontaneria" }));
     const dto = await b.useCase.execute(USER, LEAD);
-    expect(dto).toMatchObject({ status: "PENDING_PAYMENT", price: 18, currency: "EUR" });
+    expect(dto).toMatchObject({ status: "PENDING_PAYMENT", price: Number(SNAPSHOT_DATA.price), currency: "EUR" });
+    expect(b.estimationReader.findByLeadId).not.toHaveBeenCalled();
     expect(b.purchases.rows).toHaveLength(1);
   });
 
-  it("a LOW estimate (category-level only) is UNPRICED by M128's minimum confidence and creates no purchase", async () => {
+  it("a LOW estimate (category-level only) is UNPRICED by M128's minimum confidence", async () => {
     const b = build(ctx(), JOB_VALUE_ESTIMATION_CONFIG_V1);
     await expect(b.provider.getPriceForLead(LEAD)).rejects.toMatchObject({ code: "LEAD_PRICING_UNAVAILABLE", status: "UNPRICED", reason: "CONFIDENCE_TOO_LOW" });
-    expect(await b.useCase.execute(USER, LEAD).catch((e) => e)).toBeInstanceOf(LeadPurchasePricingError);
-    expect(b.purchases.rows).toHaveLength(0);
   });
 
   it.each([
@@ -136,18 +126,14 @@ describe("Job Value Estimation -> Lead Pricing Engine -> LeadPurchase", () => {
     ["legacy flow", ctx({ flowVersion: "LEGACY_QUOTE_PAYMENT" })],
     ["missing category", ctx({ categorySlug: null })],
     ["lead not found", null],
-  ])("estimate unavailable (%s) -> UNPRICED -> no LeadPurchase (never zero/cheap)", async (_n, c) => {
+  ])("estimate unavailable (%s) -> UNPRICED (never zero/cheap)", async (_n, c) => {
     const b = build(c);
     await expect(b.provider.getPriceForLead(LEAD)).rejects.toBeInstanceOf(LeadPricingUnavailableError);
-    const err = await b.useCase.execute(USER, LEAD).catch((e) => e);
-    expect(err).toBeInstanceOf(LeadPurchasePricingError);
-    expect(b.purchases.rows).toHaveLength(0);
   });
 
   it("invalid estimation configuration fails closed", async () => {
     const b = build(ctx({ categorySlug: "fontanero", parentCategorySlug: "fontaneria" }), { ...estimationConfig, maximumValue: "nope" });
     await expect(b.provider.getPriceForLead(LEAD)).rejects.toMatchObject({ reason: "SERVICE_VALUE_UNAVAILABLE" });
-    expect(b.purchases.rows).toHaveLength(0);
   });
 
   it("a later estimation-config change does not mutate an existing purchase snapshot", async () => {
@@ -155,7 +141,7 @@ describe("Job Value Estimation -> Lead Pricing Engine -> LeadPurchase", () => {
     await b.useCase.execute(USER, LEAD);
     const later = build(ctx({ categorySlug: "fontanero", parentCategorySlug: "fontaneria" }), { ...estimationConfig, baseValueBySlug: { fontanero: "300.00" } });
     await expect(later.provider.getPriceForLead(LEAD)).resolves.toEqual({ price: 36, currency: "EUR" });
-    expect(b.purchases.rows[0]?.price).toBe(18);
+    expect(b.purchases.rows[0]?.price).toBe(Number(SNAPSHOT_DATA.price));
   });
 
   it("the customer budget cannot reach pricing: a smuggled budget does not change the result", async () => {

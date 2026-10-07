@@ -1,10 +1,9 @@
 import type { LeadPurchaseDTO } from "@/application/dto/lead-purchase.dto";
 import { toLeadPurchaseDto } from "@/application/dto/lead-purchase.dto";
-import type { LeadPurchasePriceProvider } from "@/application/ports/lead-purchase-price-provider";
 import { ProfessionalNotVerifiedError } from "@/domain/errors/domain-error";
 import type { LeadPreviewRepository } from "@/domain/repositories/lead-preview-repository";
 import type { LeadRepository } from "@/domain/repositories/lead-repository";
-import type { LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
+import type { LeadPurchaseRecord, LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
 import type { ProfessionalDiscoveryRepository } from "@/domain/repositories/professional-discovery-repository";
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
@@ -12,8 +11,6 @@ import { LEAD_FLOW_VERSION, assertServiceRequestEligibleForLead } from "@/domain
 import {
   DuplicateActiveLeadPurchaseError,
   LeadNotPurchasableError,
-  LeadPurchasePricingError,
-  assertValidLeadPurchaseAmount,
   isProfessionalEligibleToPurchaseLeads,
 } from "@/domain/services/lead-purchase";
 import { isLeadMarketplaceReady } from "@/domain/services/lead-publication";
@@ -22,32 +19,41 @@ import { isProfessionalEligibleForRequest } from "@/domain/services/quote-eligib
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Module 126 — a professional starts buying access to a published Lead.
+ * Module 126/135 — a professional starts buying access to a published Lead.
  * Result: a LeadPurchase in PENDING_PAYMENT. That grants NO contact access
  * (Module 122 only honours CONFIRMED) and takes no payment.
  *
  * Trust boundary: `userId` is the server-side session user; the professional
- * profile is resolved from it. The only client value is `leadId`. The price
- * comes from the server-side LeadPurchasePriceProvider, never the client.
+ * profile is resolved from it. The only client value is `leadId`. There is NO
+ * price input and NO pricing provider: the fee is the Lead's immutable M133
+ * publication snapshot, copied by `purchases.initiate` under the lead row lock
+ * (Module 135). It is never recomputed from mutable pricing configuration.
  *
  * Order: input -> professional (ACTIVE + VERIFIED) -> lead (exists, LEAD_V1,
- * PUBLISHED) -> request (still open) -> the same visibility/eligibility the
- * Module 124 preview applies (published+open+LEAD_V1 query, category, radius,
- * never your own request) -> duplicate -> price -> atomic create.
+ * PUBLISHED) -> request (still open) -> isLeadMarketplaceReady (M134: complete
+ * M133 snapshot) -> the same visibility/eligibility the Module 124 preview
+ * applies -> idempotent replay -> atomic create.
  *
- * Every "you may not buy this" outcome (missing, legacy, unpublished, closed,
- * expired, cancelled, request closed, not eligible, own lead) is the SAME
- * LeadNotPurchasableError: no existence/ownership probing, no customer data.
- * Buyer-limit and duplicate errors are only reachable by an eligible buyer.
+ * Every "you may not buy this" outcome (missing, legacy, unpublished, not
+ * marketplace-ready, closed, expired, cancelled, request closed, not eligible,
+ * own lead) is the SAME LeadNotPurchasableError: no existence/ownership
+ * probing, no customer data. Buyer-limit and duplicate errors are only
+ * reachable by an eligible buyer.
  *
- * Concurrency: `purchases.initiate` locks the lead row, checks maxBuyers and
- * inserts in one transaction; the partial unique index
- * `lead_purchases_one_active_per_lead_professional` remains the final
- * arbiter for the same professional.
+ * Idempotency (Module 135): the invariant is "at most one ACTIVE
+ * (PENDING_PAYMENT or CONFIRMED) purchase per (lead, professional)"; terminal
+ * rows are history and a new attempt after FAILED/CANCELLED is a new row. A
+ * repeated/duplicate/concurrent initiation while the purchase is still
+ * PENDING_PAYMENT returns THAT purchase (same id, same snapshot) instead of an
+ * error or a second row. An already CONFIRMED purchase is still
+ * DuplicateActiveLeadPurchaseError (it is bought; there is nothing to retry).
  *
- * Pricing failures surface as LeadPurchasePricingError (nothing persisted).
+ * Concurrency: `purchases.initiate` locks the lead row, re-checks the
+ * duplicate and maxBuyers and inserts in one transaction; the partial unique
+ * index `lead_purchases_one_active_per_lead_professional` remains the final
+ * arbiter. The use case additionally replays on a lost race.
  *
- * Out of scope here: payment provider, pricing rules, contact, customer payments.
+ * Out of scope here: payment provider, tax policy (M136), contact, customer payments.
  */
 export class InitiateLeadPurchaseUseCase {
   constructor(
@@ -57,7 +63,6 @@ export class InitiateLeadPurchaseUseCase {
     private readonly serviceRequests: ServiceRequestRepository,
     private readonly leadPreviews: LeadPreviewRepository,
     private readonly purchases: LeadPurchaseRepository,
-    private readonly prices: LeadPurchasePriceProvider,
   ) {}
 
   async execute(userId: string, leadId: string): Promise<LeadPurchaseDTO> {
@@ -98,26 +103,26 @@ export class InitiateLeadPurchaseUseCase {
     const candidate = await this.professionalDiscovery.findCandidateById(professional.id);
     if (!candidate || !isProfessionalEligibleForRequest(candidate, visible)) throw new LeadNotPurchasableError();
 
-    // Early, friendly duplicate answer. The DB partial unique index is final.
+    // Early idempotent answer. The DB partial unique index (and the locked re-check) is final.
     const existing = await this.purchases.findActiveByLeadAndProfessional(leadId, professional.id);
-    if (existing) {
-      throw new DuplicateActiveLeadPurchaseError();
-    }
+    if (existing) return this.replayOrReject(existing);
 
-    const { price, currency } = await this.resolvePrice(leadId);
-    const purchase = await this.purchases.initiate({ leadId, professionalProfileId: professional.id, price, currency });
-    return toLeadPurchaseDto(purchase);
+    try {
+      const purchase = await this.purchases.initiate({ leadId, professionalProfileId: professional.id });
+      return toLeadPurchaseDto(purchase);
+    } catch (error) {
+      // Lost a race against an identical request: use the purchase that won.
+      if (error instanceof DuplicateActiveLeadPurchaseError) {
+        const winner = await this.purchases.findActiveByLeadAndProfessional(leadId, professional.id);
+        if (winner) return this.replayOrReject(winner);
+      }
+      throw error;
+    }
   }
 
-  /** Price failure (provider throws, or returns an unusable amount) is one
-   *  typed error; nothing has been written at this point. */
-  private async resolvePrice(leadId: string): Promise<{ price: number; currency: string }> {
-    try {
-      const quote = await this.prices.getPriceForLead(leadId);
-      assertValidLeadPurchaseAmount(quote.price, quote.currency);
-      return { price: quote.price, currency: quote.currency };
-    } catch {
-      throw new LeadPurchasePricingError();
-    }
+  /** PENDING_PAYMENT = the same attempt is still open -> return it unchanged. Anything else active (CONFIRMED) is a duplicate. */
+  private replayOrReject(existing: LeadPurchaseRecord): LeadPurchaseDTO {
+    if (existing.status === "PENDING_PAYMENT") return toLeadPurchaseDto(existing);
+    throw new DuplicateActiveLeadPurchaseError();
   }
 }

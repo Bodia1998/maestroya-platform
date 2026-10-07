@@ -7,14 +7,14 @@ import { TransitionLeadPurchaseUseCase } from "@/application/use-cases/lead-purc
 import { NotFoundError, ProfessionalNotVerifiedError } from "@/domain/errors/domain-error";
 import type { LeadPreviewCandidate } from "@/domain/repositories/lead-preview-repository";
 import type { LeadRecord } from "@/domain/repositories/lead-repository";
-import type { CreateLeadPurchaseData, LeadPurchaseRecord, LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
+import type { InitiateLeadPurchaseData, LeadPurchaseRecord, LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
 import { SNAPSHOT_DATA } from "../../../../../test-utils/lead-publication-fixtures";
+import { pendingPurchaseFromPublication } from "../../../../../test-utils/lead-purchase-fixtures";
 import {
   DuplicateActiveLeadPurchaseError,
   InvalidLeadPurchaseTransitionError,
   LeadBuyerLimitReachedError,
   LeadNotPurchasableError,
-  LeadPurchasePricingError,
   assertLeadPurchaseTransition,
   hasBuyerCapacity,
   isActiveLeadPurchaseStatus,
@@ -62,33 +62,25 @@ const preview = (patch: Partial<LeadPreviewCandidate> = {}): LeadPreviewCandidat
   ...patch,
 });
 
-/** In-memory repository that mirrors the Prisma semantics (active-uniqueness, maxBuyers, conditional transition). */
+/** In-memory repository that mirrors the Prisma semantics (snapshot copy, duplicate-before-capacity, maxBuyers, conditional transition). */
 class FakePurchases implements LeadPurchaseRepository {
   rows: LeadPurchaseRecord[] = [];
   n = 0;
-  constructor(private readonly maxBuyers: number | null = null) {}
+  constructor(
+    private readonly maxBuyers: number | null = null,
+    private readonly publication: unknown = { ...SNAPSHOT_DATA, publishedAt: new Date("2026-10-06T10:00:00Z") },
+  ) {}
   async create(): Promise<LeadPurchaseRecord> {
     throw new Error("not used by Module 126");
   }
-  async initiate(d: CreateLeadPurchaseData): Promise<LeadPurchaseRecord> {
+  async initiate(d: InitiateLeadPurchaseData): Promise<LeadPurchaseRecord> {
+    const fresh = pendingPurchaseFromPublication(`p-${this.n + 1}`, d.leadId, d.professionalProfileId, this.publication);
     const active = this.rows.filter((r) => r.leadId === d.leadId && isActiveLeadPurchaseStatus(r.status));
     if (active.some((r) => r.professionalProfileId === d.professionalProfileId)) throw new DuplicateActiveLeadPurchaseError();
     if (!hasBuyerCapacity(this.maxBuyers, active.length)) throw new LeadBuyerLimitReachedError();
-    const row: LeadPurchaseRecord = {
-      id: `p-${++this.n}`,
-      leadId: d.leadId,
-      professionalProfileId: d.professionalProfileId,
-      status: "PENDING_PAYMENT",
-      price: d.price,
-      currency: d.currency ?? "EUR",
-      confirmedAt: null,
-      refundedAt: null,
-      revokedAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.rows.push(row);
-    return { ...row };
+    this.n += 1;
+    this.rows.push(fresh);
+    return { ...fresh };
   }
   async transition(id: string, from: LeadPurchaseStatus, to: LeadPurchaseStatus, now: Date) {
     assertLeadPurchaseTransition(from, to);
@@ -119,7 +111,6 @@ function build(opts: {
   request?: Record<string, unknown> | null;
   preview?: LeadPreviewCandidate | null;
   maxBuyers?: number | null;
-  price?: { price: number; currency: string };
 } = {}) {
   const professionals = {
     findByUserId: vi.fn(async () =>
@@ -134,8 +125,7 @@ function build(opts: {
   const leads = { findById: vi.fn(async () => (opts.lead === null ? null : (opts.lead ?? lead()))) };
   const serviceRequests = { findById: vi.fn(async () => (opts.request === null ? null : (opts.request ?? request()))) };
   const previews = { findPublishedById: vi.fn(async () => (opts.preview === null ? null : (opts.preview ?? preview()))), findPublishedByCategoryIds: vi.fn() };
-  const purchases = new FakePurchases(opts.maxBuyers ?? null);
-  const prices = { getPriceForLead: vi.fn(async () => opts.price ?? { price: 4.5, currency: "EUR" }) };
+  const purchases = new FakePurchases(opts.maxBuyers ?? null, (opts.lead ?? lead())?.publication);
   const initiate = new InitiateLeadPurchaseUseCase(
     professionals as never,
     discovery as never,
@@ -143,18 +133,17 @@ function build(opts: {
     serviceRequests as never,
     previews as never,
     purchases,
-    prices,
   );
   const confirm = new ConfirmLeadPurchaseUseCase(purchases, leads as never, serviceRequests as never, () => new Date("2026-10-03T12:00:00Z"));
   const transition = new TransitionLeadPurchaseUseCase(purchases, () => new Date("2026-10-03T13:00:00Z"));
-  return { initiate, confirm, transition, purchases, prices, leads };
+  return { initiate, confirm, transition, purchases, leads };
 }
 
 describe("InitiateLeadPurchaseUseCase", () => {
   it("creates a PENDING_PAYMENT purchase for a valid published LEAD_V1 lead, with a safe DTO", async () => {
     const b = build();
     const dto = await b.initiate.execute(USER, LEAD);
-    expect(dto).toMatchObject({ leadId: LEAD, status: "PENDING_PAYMENT", price: 4.5, currency: "EUR", confirmedAt: null });
+    expect(dto).toMatchObject({ leadId: LEAD, status: "PENDING_PAYMENT", price: Number(SNAPSHOT_DATA.price), currency: "EUR", confirmedAt: null });
     expect(Object.keys(dto).sort()).toEqual(["confirmedAt", "createdAt", "currency", "leadId", "price", "purchaseId", "status"]);
     const json = JSON.stringify(dto);
     expect(json).not.toContain(OWNER_USER);
@@ -163,11 +152,11 @@ describe("InitiateLeadPurchaseUseCase", () => {
     expect(b.purchases.rows).toHaveLength(1);
   });
 
-  it("price comes from the server-side provider, never the caller", async () => {
-    const b = build({ price: { price: 7.25, currency: "EUR" } });
+  it("the fee is the lead's immutable publication snapshot, never a caller or pricing-provider value (M135)", async () => {
+    const b = build({ lead: lead({ publication: { ...SNAPSHOT_DATA, price: "7.25", publishedAt: new Date("2026-10-06T10:00:00Z") } }) });
     expect((await b.initiate.execute(USER, LEAD)).price).toBe(7.25);
-    expect(b.prices.getPriceForLead).toHaveBeenCalledWith(LEAD);
     expect(b.initiate.execute.length).toBe(2); // (userId, leadId) only
+    expect(b.initiate.constructor.length).toBe(6); // no price provider dependency any more
   });
 
   it.each([
@@ -196,7 +185,6 @@ describe("InitiateLeadPurchaseUseCase", () => {
     expect(err).toBeInstanceOf(LeadNotPurchasableError);
     expect(err.message).toBe("This lead is not available for purchase.");
     expect(b.purchases.rows).toHaveLength(0);
-    expect(b.prices.getPriceForLead).not.toHaveBeenCalled();
   });
 
   it.each(["UNVERIFIED", "PENDING", "REJECTED"])("%s professional -> ProfessionalNotVerifiedError", async (verificationStatus) => {
@@ -205,13 +193,37 @@ describe("InitiateLeadPurchaseUseCase", () => {
     expect(b.purchases.rows).toHaveLength(0);
   });
 
-  it("persists exactly the provider's price and currency on the created purchase", async () => {
-    const b = build({ price: { price: 12.34, currency: "EUR" } });
+  it("persists exactly the publication snapshot's fee, currency and provenance on the purchase", async () => {
+    const publishedAt = new Date("2026-10-06T10:00:00Z");
+    const b = build({ lead: lead({ publication: { ...SNAPSHOT_DATA, price: "12.34", publishedAt } }) });
     const spy = vi.spyOn(b.purchases, "initiate");
     const dto = await b.initiate.execute(USER, LEAD);
-    expect(spy).toHaveBeenCalledWith({ leadId: LEAD, professionalProfileId: "pro-1", price: 12.34, currency: "EUR" });
-    expect(b.purchases.rows[0]).toMatchObject({ price: 12.34, currency: "EUR", status: "PENDING_PAYMENT" });
+    expect(spy).toHaveBeenCalledWith({ leadId: LEAD, professionalProfileId: "pro-1" }); // no price input at all
+    expect(b.purchases.rows[0]).toMatchObject({
+      price: 12.34,
+      currency: "EUR",
+      status: "PENDING_PAYMENT",
+      financialSnapshot: {
+        feeAmount: "12.34",
+        currency: "EUR",
+        taxAmount: null,
+        totalAmount: null,
+        pricingConfigVersion: SNAPSHOT_DATA.pricingConfigVersion,
+        pricingRuleVersion: SNAPSHOT_DATA.pricingRuleVersion,
+        leadPublishedAt: publishedAt,
+      },
+    });
     expect(dto.purchaseId).toBe(b.purchases.rows[0]!.id);
+  });
+
+  it("a later re-read of a differently priced lead does not alter an existing purchase snapshot", async () => {
+    const b = build();
+    await b.initiate.execute(USER, LEAD);
+    const before = structuredClone(b.purchases.rows[0]!.financialSnapshot);
+    // The lead is re-read with a different (hypothetically re-priced) snapshot: the stored purchase is untouched.
+    (b.leads.findById as ReturnType<typeof vi.fn>).mockImplementation(async () => lead({ publication: { ...SNAPSHOT_DATA, price: "99.00", publishedAt: new Date("2026-11-01T00:00:00Z") } }));
+    expect(b.purchases.rows[0]!.financialSnapshot).toEqual(before);
+    expect(b.purchases.rows[0]!.price).toBe(Number(SNAPSHOT_DATA.price));
   });
 
   it("a successful initiation does not authorize contact (PENDING_PAYMENT is not a contact candidate)", async () => {
@@ -219,26 +231,6 @@ describe("InitiateLeadPurchaseUseCase", () => {
     const dto = await b.initiate.execute(USER, LEAD);
     expect(dto.status).toBe("PENDING_PAYMENT");
     expect(await b.purchases.findConfirmedByLeadAndProfessional(LEAD, "pro-1")).toBeNull();
-  });
-
-  it("pricing failure -> LeadPurchasePricingError, nothing persisted, no internals leaked", async () => {
-    const b = build();
-    b.prices.getPriceForLead.mockRejectedValueOnce(new Error("pricing-db host=10.0.0.5 down"));
-    const err = await b.initiate.execute(USER, LEAD).catch((e) => e);
-    expect(err).toBeInstanceOf(LeadPurchasePricingError);
-    expect(err.message).not.toContain("10.0.0.5");
-    expect(b.purchases.rows).toHaveLength(0);
-  });
-
-  it.each([
-    ["NaN", { price: Number.NaN, currency: "EUR" }],
-    ["negative", { price: -1, currency: "EUR" }],
-    ["too many decimals", { price: 1.005, currency: "EUR" }],
-    ["wrong currency", { price: 5, currency: "USD" }],
-  ])("unusable provider price (%s) -> LeadPurchasePricingError, nothing persisted", async (_n, price) => {
-    const b = build({ price });
-    await expect(b.initiate.execute(USER, LEAD)).rejects.toBeInstanceOf(LeadPurchasePricingError);
-    expect(b.purchases.rows).toHaveLength(0);
   });
 
   it("malformed ids are rejected before any lookup", async () => {
@@ -250,12 +242,20 @@ describe("InitiateLeadPurchaseUseCase", () => {
     expect(b.leads.findById).not.toHaveBeenCalled();
   });
 
-  it("rejects a duplicate active purchase (PENDING_PAYMENT or CONFIRMED), and allows a retry after FAILED/CANCELLED", async () => {
+  it("repeated identical initiation while PENDING_PAYMENT returns the SAME purchase (idempotent), no second row", async () => {
     const b = build();
     const first = await b.initiate.execute(USER, LEAD);
-    await expect(b.initiate.execute(USER, LEAD)).rejects.toBeInstanceOf(DuplicateActiveLeadPurchaseError);
+    const again = await b.initiate.execute(USER, LEAD);
+    expect(again).toEqual(first);
+    expect(b.purchases.rows).toHaveLength(1);
+  });
+
+  it("an already CONFIRMED purchase is a duplicate (error), and a retry after FAILED/CANCELLED creates a NEW purchase", async () => {
+    const b = build();
+    const first = await b.initiate.execute(USER, LEAD);
     await b.confirm.execute(first.purchaseId);
     await expect(b.initiate.execute(USER, LEAD)).rejects.toBeInstanceOf(DuplicateActiveLeadPurchaseError);
+    expect(b.purchases.rows).toHaveLength(1);
 
     const c = build();
     const p = await c.initiate.execute(USER, LEAD);
@@ -265,11 +265,52 @@ describe("InitiateLeadPurchaseUseCase", () => {
     expect(c.purchases.rows.filter((r) => isActiveLeadPurchaseStatus(r.status))).toHaveLength(1);
   });
 
-  it("concurrent initiations by the same professional create exactly one active purchase", async () => {
+  it("concurrent identical initiations create exactly one active purchase and all callers get that purchase", async () => {
     const b = build();
     const results = await Promise.allSettled(Array.from({ length: 5 }, () => b.initiate.execute(USER, LEAD)));
-    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(results.every((r) => r.status === "fulfilled")).toBe(true);
+    const ids = new Set(results.map((r) => (r as PromiseFulfilledResult<{ purchaseId: string }>).value.purchaseId));
+    expect(ids.size).toBe(1);
     expect(b.purchases.rows.filter((r) => isActiveLeadPurchaseStatus(r.status))).toHaveLength(1);
+  });
+
+  it("lost race: the repository reports a duplicate -> the use case returns the winning PENDING purchase", async () => {
+    const b = build();
+    const winner = await b.purchases.initiate({ leadId: LEAD, professionalProfileId: "pro-1" });
+    // The early check misses (read happened before the winner committed); the locked insert then reports the duplicate.
+    const find = vi.spyOn(b.purchases, "findActiveByLeadAndProfessional").mockResolvedValueOnce(null);
+    const dto = await b.initiate.execute(USER, LEAD);
+    expect(find).toHaveBeenCalledTimes(2);
+    expect(dto.purchaseId).toBe(winner.id);
+    expect(b.purchases.rows).toHaveLength(1);
+  });
+
+  it("different professionals purchase the same lead independently while the lead's buyer policy allows it", async () => {
+    const b = build({ maxBuyers: 2 });
+    await b.initiate.execute(USER, LEAD);
+    const other = new InitiateLeadPurchaseUseCase(
+      { findByUserId: async () => ({ id: "pro-2", status: "ACTIVE", verificationStatus: "VERIFIED" }) } as never,
+      { findCandidateById: async () => ({ id: "pro-2", categoryIds: ["cat-1"], latitude: 40.42, longitude: -3.7, serviceRadiusKm: 50 }) } as never,
+      b.leads as never,
+      { findById: async () => request() } as never,
+      { findPublishedById: async () => preview(), findPublishedByCategoryIds: vi.fn() } as never,
+      b.purchases,
+    );
+    const second = await other.execute("pro-user-2", LEAD);
+    expect(second.status).toBe("PENDING_PAYMENT");
+    expect(b.purchases.rows.map((r) => r.professionalProfileId).sort()).toEqual(["pro-1", "pro-2"]);
+    // The lead's buyer policy stays authoritative: a third buyer is refused.
+    const third = build({ maxBuyers: 1 });
+    await third.initiate.execute(USER, LEAD);
+    third.purchases.rows[0]!.professionalProfileId = "someone-else";
+    await expect(third.initiate.execute(USER, LEAD)).rejects.toBeInstanceOf(LeadBuyerLimitReachedError);
+  });
+
+  it("an exclusive lead (maxBuyers 1) still reports the buyer's own concurrent retry as the same purchase, not 'limit reached'", async () => {
+    const b = build({ maxBuyers: 1 });
+    const results = await Promise.allSettled(Array.from({ length: 4 }, () => b.initiate.execute(USER, LEAD)));
+    expect(results.every((r) => r.status === "fulfilled")).toBe(true);
+    expect(b.purchases.rows).toHaveLength(1);
   });
 
   it("surfaces LeadBuyerLimitReachedError from the repository when maxBuyers is reached", async () => {
@@ -281,6 +322,7 @@ describe("InitiateLeadPurchaseUseCase", () => {
       status: "CONFIRMED",
       price: 1,
       currency: "EUR",
+      financialSnapshot: { feeAmount: "1.00", currency: "EUR", taxAmount: null, totalAmount: null, pricingConfigVersion: null, pricingRuleVersion: null, leadPublishedAt: null },
       confirmedAt: new Date(),
       refundedAt: null,
       revokedAt: null,

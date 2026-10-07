@@ -3,9 +3,12 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
   CreateLeadPurchaseData,
+  InitiateLeadPurchaseData,
   LeadPurchaseRecord,
   LeadPurchaseRepository,
 } from "@/domain/repositories/lead-purchase-repository";
+import { formatScaledDecimal, parseScaledDecimal } from "@/domain/services/fixed-point-decimal";
+import { toLeadPurchaseFinancialSnapshot } from "@/domain/services/lead-purchase-financial-snapshot";
 import {
   ACTIVE_LEAD_PURCHASE_STATUSES,
   DuplicateActiveLeadPurchaseError,
@@ -27,6 +30,11 @@ const SELECT = {
   status: true,
   price: true,
   currency: true,
+  pricingConfigVersion: true,
+  pricingRuleVersion: true,
+  leadPublishedAt: true,
+  taxAmount: true,
+  totalAmount: true,
   confirmedAt: true,
   refundedAt: true,
   revokedAt: true,
@@ -41,12 +49,24 @@ type Row = {
   status: string;
   price: unknown;
   currency: string;
+  pricingConfigVersion: string | null;
+  pricingRuleVersion: string | null;
+  leadPublishedAt: Date | null;
+  taxAmount: unknown;
+  totalAmount: unknown;
   confirmedAt: Date | null;
   refundedAt: Date | null;
   revokedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
+
+/** Exact Decimal(10,2) -> normalised decimal string via the shared fixed-point parser (no floating point). */
+function exactMoney(value: unknown, column: string): string {
+  const parsed = parseScaledDecimal(String(value), 2);
+  if (parsed === null) throw new Error(`LeadPurchase ${column} is not a valid Decimal(10,2).`);
+  return formatScaledDecimal(parsed, 2, 2);
+}
 
 function toRecord(row: Row): LeadPurchaseRecord {
   if (!isLeadPurchaseStatus(row.status)) throw new Error(`Unknown LeadPurchase status "${row.status}".`);
@@ -57,6 +77,15 @@ function toRecord(row: Row): LeadPurchaseRecord {
     status: row.status,
     price: Number(row.price),
     currency: row.currency,
+    financialSnapshot: {
+      feeAmount: exactMoney(row.price, "price"),
+      currency: row.currency,
+      taxAmount: row.taxAmount === null || row.taxAmount === undefined ? null : exactMoney(row.taxAmount, "taxAmount"),
+      totalAmount: row.totalAmount === null || row.totalAmount === undefined ? null : exactMoney(row.totalAmount, "totalAmount"),
+      pricingConfigVersion: row.pricingConfigVersion ?? null,
+      pricingRuleVersion: row.pricingRuleVersion ?? null,
+      leadPublishedAt: row.leadPublishedAt ?? null,
+    },
     confirmedAt: row.confirmedAt,
     refundedAt: row.refundedAt,
     revokedAt: row.revokedAt,
@@ -65,21 +94,86 @@ function toRecord(row: Row): LeadPurchaseRecord {
   };
 }
 
+/** The lead columns `initiate` reads under the row lock. Numerics are cast to text so they are never converted through a JS number. */
+interface LockedLeadRow {
+  status: string;
+  maxBuyers: number | null;
+  publishedAt: Date | null;
+  publicationPrice: string | null;
+  publicationCurrency: string | null;
+  publicationEstimatedJobValue: string | null;
+  publicationPricingRate: string | null;
+  publicationPricingConfidence: string | null;
+  publicationPricingConfigVersion: string | null;
+  publicationJobValueRuleVersion: string | null;
+  publicationPricingRuleVersion: string | null;
+  publicationBuyerPolicyVersion: string | null;
+}
+
+/** Locked-row -> the snapshot a purchase is created from, or null when the Lead has no complete, valid M133 snapshot. */
+function financialSnapshotFromLockedLead(lead: LockedLeadRow) {
+  const normalise = (raw: string | null, scale: number): string | null => {
+    const parsed = raw === null ? null : parseScaledDecimal(raw, scale);
+    return parsed === null ? null : formatScaledDecimal(parsed, scale, 2);
+  };
+  try {
+    return toLeadPurchaseFinancialSnapshot({
+      price: normalise(lead.publicationPrice, 2),
+      currency: lead.publicationCurrency,
+      estimatedJobValue: normalise(lead.publicationEstimatedJobValue, 2),
+      pricingRate: normalise(lead.publicationPricingRate, 6),
+      pricingConfidence: lead.publicationPricingConfidence,
+      pricingConfigVersion: lead.publicationPricingConfigVersion,
+      jobValueRuleVersion: lead.publicationJobValueRuleVersion,
+      pricingRuleVersion: lead.publicationPricingRuleVersion,
+      buyerPolicyVersion: lead.publicationBuyerPolicyVersion,
+      maxBuyers: lead.maxBuyers,
+      publishedAt: lead.publishedAt,
+    });
+  } catch {
+    return null;
+  }
+}
+
 /** Module 123 — Prisma implementation of `LeadPurchaseRepository`. Touches
  *  only the `lead_purchases` table: it never creates a Payment, Commission,
  *  Payout or Invoice. */
 export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository {
-  async initiate(data: CreateLeadPurchaseData): Promise<LeadPurchaseRecord> {
-    const currency = data.currency ?? LEAD_PURCHASE_CURRENCY;
-    assertValidLeadPurchaseAmount(data.price, currency);
+  async initiate(data: InitiateLeadPurchaseData): Promise<LeadPurchaseRecord> {
     try {
       const row = await prisma.$transaction(async (tx) => {
-        // Row lock on the lead: concurrent buyers of the SAME lead queue here,
-        // so count -> insert below cannot interleave and exceed maxBuyers.
-        const locked = await tx.$queryRaw<Array<{ status: string; maxBuyers: number | null }>>`
-          SELECT "status"::text AS "status", "maxBuyers" FROM "leads" WHERE "id" = ${data.leadId}::uuid FOR UPDATE`;
+        // Row lock on the lead: EVERY concurrent buyer of the SAME lead queues here, so
+        // duplicate-check -> count -> insert below cannot interleave (same professional
+        // retrying, or different professionals racing for the last slot).
+        const locked = await tx.$queryRaw<LockedLeadRow[]>`
+          SELECT "status"::text AS "status", "maxBuyers", "publishedAt",
+                 "publicationPrice"::text AS "publicationPrice",
+                 "publicationCurrency",
+                 "publicationEstimatedJobValue"::text AS "publicationEstimatedJobValue",
+                 "publicationPricingRate"::text AS "publicationPricingRate",
+                 "publicationPricingConfidence",
+                 "publicationPricingConfigVersion",
+                 "publicationJobValueRuleVersion",
+                 "publicationPricingRuleVersion",
+                 "publicationBuyerPolicyVersion"
+          FROM "leads" WHERE "id" = ${data.leadId}::uuid FOR UPDATE`;
         const lead = locked[0];
         if (!lead || lead.status !== "PUBLISHED") throw new LeadNotPurchasableError();
+        // Module 135: the fee is the Lead's immutable publication snapshot, read under the same
+        // lock. A Lead without a complete snapshot (e.g. a pre-M133 publication) is never purchasable.
+        const snapshot = financialSnapshotFromLockedLead(lead);
+        if (!snapshot) throw new LeadNotPurchasableError();
+
+        // Idempotency boundary: one active purchase per (lead, professional). Checked under the
+        // lead lock and BEFORE capacity, so the buyer's own retry is "duplicate", never "limit reached".
+        const own = await tx.leadPurchase.count({
+          where: {
+            leadId: data.leadId,
+            professionalProfileId: data.professionalProfileId,
+            status: { in: [...ACTIVE_LEAD_PURCHASE_STATUSES] },
+          },
+        });
+        if (own > 0) throw new DuplicateActiveLeadPurchaseError();
 
         const active = await tx.leadPurchase.count({
           where: { leadId: data.leadId, status: { in: [...ACTIVE_LEAD_PURCHASE_STATUSES] } },
@@ -87,7 +181,16 @@ export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository {
         if (!hasBuyerCapacity(lead.maxBuyers, active)) throw new LeadBuyerLimitReachedError();
 
         return tx.leadPurchase.create({
-          data: { leadId: data.leadId, professionalProfileId: data.professionalProfileId, price: data.price, currency },
+          data: {
+            leadId: data.leadId,
+            professionalProfileId: data.professionalProfileId,
+            // Decimal strings: money never passes through a JS number on the write path.
+            price: snapshot.feeAmount,
+            currency: snapshot.currency,
+            pricingConfigVersion: snapshot.pricingConfigVersion,
+            pricingRuleVersion: snapshot.pricingRuleVersion,
+            leadPublishedAt: snapshot.leadPublishedAt,
+          },
           select: SELECT,
         });
       });
