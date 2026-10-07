@@ -38,6 +38,7 @@ const row = (over: Record<string, unknown> = {}) => ({
   leadPublishedAt: null,
   taxAmount: null,
   totalAmount: null,
+  taxPolicyVersion: null,
   confirmedAt: null,
   refundedAt: null,
   revokedAt: null,
@@ -137,7 +138,7 @@ describe("PrismaLeadPurchaseRepository", () => {
     ]);
   });
 
-  it("Module 135: maps the stored Decimals to an exact financial snapshot (strings, no float), tax neutral by default", async () => {
+  it("Module 135: maps the stored Decimals to an exact financial snapshot (strings, no float), pre-M136 purchases carry no tax", async () => {
     const published = new Date("2026-10-06T10:00:00Z");
     leadPurchase.findUnique.mockResolvedValue(
       row({ price: "18", pricingConfigVersion: "cfg-v1", pricingRuleVersion: "rule-v1", leadPublishedAt: published }),
@@ -148,6 +149,7 @@ describe("PrismaLeadPurchaseRepository", () => {
       currency: "EUR",
       taxAmount: null,
       totalAmount: null,
+      taxPolicyVersion: null,
       pricingConfigVersion: "cfg-v1",
       pricingRuleVersion: "rule-v1",
       leadPublishedAt: published,
@@ -158,12 +160,12 @@ describe("PrismaLeadPurchaseRepository", () => {
   it("Module 135: a legacy purchase (pre-snapshot) maps with null provenance; nothing is fabricated", async () => {
     leadPurchase.findUnique.mockResolvedValue(row({ price: "4.50" }));
     const { financialSnapshot } = (await (await repo()).findById("lp-1"))!;
-    expect(financialSnapshot).toMatchObject({ feeAmount: "4.50", pricingConfigVersion: null, pricingRuleVersion: null, leadPublishedAt: null, taxAmount: null, totalAmount: null });
+    expect(financialSnapshot).toMatchObject({ feeAmount: "4.50", pricingConfigVersion: null, pricingRuleVersion: null, leadPublishedAt: null, taxAmount: null, totalAmount: null, taxPolicyVersion: null });
   });
 
-  it("Module 135: stored tax/total are passed through exactly when present (written by a later module)", async () => {
-    leadPurchase.findUnique.mockResolvedValue(row({ price: "18.00", taxAmount: "3.78", totalAmount: "21.78" }));
+  it("Module 135: Module 136: stored tax/total/policy version are passed through exactly when present", async () => {
+    leadPurchase.findUnique.mockResolvedValue(row({ price: "18.00", taxAmount: "3.78", totalAmount: "21.78", taxPolicyVersion: "lead-fee-tax-policy-v1", leadPublishedAt: now, pricingConfigVersion: "c", pricingRuleVersion: "r" }));
     const { financialSnapshot } = (await (await repo()).findById("lp-1"))!;
-    expect(financialSnapshot).toMatchObject({ taxAmount: "3.78", totalAmount: "21.78" });
+    expect(financialSnapshot).toMatchObject({ taxAmount: "3.78", totalAmount: "21.78", taxPolicyVersion: "lead-fee-tax-policy-v1" });
   });
 });

@@ -1,3 +1,4 @@
+import { computeLeadFeeTax } from "@/domain/services/lead-fee-tax-policy";
 import { LeadPublicationRejectedError, isLeadPublicationSnapshotComplete } from "@/domain/services/lead-publication";
 
 /**
@@ -10,9 +11,12 @@ import { LeadPublicationRejectedError, isLeadPublicationSnapshotComplete } from 
  * which published snapshot produced the fee; they are null only for purchases
  * created before Module 135 (nothing is fabricated for those).
  *
- * `taxAmount` / `totalAmount` are a deliberately neutral, forward-compatible
- * placeholder: null = "tax not determined". Module 135 never computes tax; the
- * authoritative lead-fee tax policy belongs to Module 136.
+ * Module 136: `feeAmount` is the NET lead fee. `taxAmount` (21% IVA),
+ * `totalAmount` (= fee + IVA, what the professional pays MaestroYa) and
+ * `taxPolicyVersion` are computed ONCE, at creation, by the pure lead-fee tax
+ * policy from that immutable fee, and stored with it. All three are null only for
+ * purchases created before Module 136 ("tax not determined": no tax is invented
+ * for them, and they are never recomputed from current rules).
  *
  * Kept in its own file so the M133 publication contract and the M123 purchase
  * rules stay free of each other (no import cycle).
@@ -22,6 +26,7 @@ export interface LeadPurchaseFinancialSnapshot {
   currency: string;
   taxAmount: string | null;
   totalAmount: string | null;
+  taxPolicyVersion: string | null;
   pricingConfigVersion: string | null;
   pricingRuleVersion: string | null;
   leadPublishedAt: Date | null;
@@ -29,18 +34,20 @@ export interface LeadPurchaseFinancialSnapshot {
 
 /**
  * The financial terms a purchase of a published Lead is created with: the
- * Lead's immutable publication snapshot, copied verbatim. Pure; no arithmetic
- * and no tax (Module 136). Throws LeadPublicationRejectedError("SNAPSHOT_INVALID")
+ * Lead's immutable publication snapshot, copied verbatim. Pure; the only
+ * arithmetic is the Module 136 tax policy over the fee. Throws LeadPublicationRejectedError("SNAPSHOT_INVALID")
  * when the snapshot is not complete: a purchase can never be priced from
  * anything else.
  */
 export function toLeadPurchaseFinancialSnapshot(publication: unknown): LeadPurchaseFinancialSnapshot {
   if (!isLeadPublicationSnapshotComplete(publication)) throw new LeadPublicationRejectedError("SNAPSHOT_INVALID");
+  const tax = computeLeadFeeTax(publication.price);
   return {
     feeAmount: publication.price,
     currency: publication.currency,
-    taxAmount: null,
-    totalAmount: null,
+    taxAmount: tax.taxAmount,
+    totalAmount: tax.totalAmount,
+    taxPolicyVersion: tax.taxPolicyVersion,
     pricingConfigVersion: publication.pricingConfigVersion,
     pricingRuleVersion: publication.pricingRuleVersion,
     leadPublishedAt: publication.publishedAt,

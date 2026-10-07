@@ -60,16 +60,18 @@ describe("Module 135 — LeadPurchase financial snapshot & idempotency (real Pos
       expect(created.financialSnapshot).toEqual({
         feeAmount: "18.05",
         currency: "EUR",
-        taxAmount: null,
-        totalAmount: null,
+        taxAmount: "3.79",
+        totalAmount: "21.84",
+        taxPolicyVersion: "lead-fee-tax-policy-v1",
         pricingConfigVersion: SNAPSHOT_DATA.pricingConfigVersion,
         pricingRuleVersion: SNAPSHOT_DATA.pricingRuleVersion,
         leadPublishedAt: lead.publication!.publishedAt,
       });
       const row = await prisma.leadPurchase.findUniqueOrThrow({ where: { id: created.id } });
       expect(row.price.toString()).toBe("18.05");
-      expect(row.taxAmount).toBeNull();
-      expect(row.totalAmount).toBeNull();
+      expect(row.taxAmount?.toString()).toBe("3.79"); // 18.05 x 21% = 3.7905 -> 3.79
+      expect(row.totalAmount?.toString()).toBe("21.84");
+      expect(row.taxPolicyVersion).toBe("lead-fee-tax-policy-v1");
     });
 
     it("the purchase keeps its fee even though the lead's own snapshot can never be re-priced (M133 trigger)", async () => {
@@ -115,16 +117,63 @@ describe("Module 135 — LeadPurchase financial snapshot & idempotency (real Pos
       expect(refunded!.financialSnapshot).toEqual(created.financialSnapshot);
     });
 
-    it("tax/total are neutral placeholders: write-once and consistent (total = price + tax), never inconsistent", async () => {
-      const lead = await publishedLead();
+    it.each([
+      ["5.00", "1.05", "6.05"],
+      ["100.00", "21.00", "121.00"],
+      ["150.00", "31.50", "181.50"],
+      ["12.34", "2.59", "14.93"],
+    ])("Module 136: net fee %s persists IVA %s and total %s (exact Decimal, 21%%)", async (price, tax, total) => {
+      const lead = await publishedLead(2, { price });
       const pro = await professional();
       const created = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
-      expect(await rejected(`UPDATE lead_purchases SET "taxAmount" = 3.78 WHERE id = '${created.id}'`)).toMatch(/lead_purchases_tax_total_consistent|check/i);
-      expect(await rejected(`UPDATE lead_purchases SET "taxAmount" = 3.78, "totalAmount" = 20.00 WHERE id = '${created.id}'`)).toMatch(/lead_purchases_tax_total_consistent|check/i);
-      // NULL -> consistent value: allowed once (a later module's decision, not made here)
-      await prisma.$executeRawUnsafe(`UPDATE lead_purchases SET "taxAmount" = 3.78, "totalAmount" = 21.78 WHERE id = '${created.id}'`);
-      expect(await rejected(`UPDATE lead_purchases SET "taxAmount" = 0, "totalAmount" = 18.00 WHERE id = '${created.id}'`)).toMatch(/immutable/i);
-      expect((await purchases.findById(created.id))!.financialSnapshot).toMatchObject({ taxAmount: "3.78", totalAmount: "21.78" });
+      expect(created.financialSnapshot).toMatchObject({ feeAmount: price, taxAmount: tax, totalAmount: total, taxPolicyVersion: "lead-fee-tax-policy-v1" });
+      const reread = await purchases.findById(created.id);
+      expect(reread!.financialSnapshot).toEqual(created.financialSnapshot);
+    });
+
+    it("Module 136: the tax snapshot is complete at insert, consistent (total = price + tax) and write-once", async () => {
+      const lead = await publishedLead(2, { price: "100.00" });
+      const pro = await professional();
+      const created = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
+      expect(await rejected(`UPDATE lead_purchases SET "taxAmount" = 0 WHERE id = '${created.id}'`)).toMatch(/immutable|check/i);
+      expect(await rejected(`UPDATE lead_purchases SET "taxAmount" = 20.00, "totalAmount" = 121.00 WHERE id = '${created.id}'`)).toMatch(/immutable|check/i);
+      expect(await rejected(`UPDATE lead_purchases SET "totalAmount" = 150.00 WHERE id = '${created.id}'`)).toMatch(/immutable|check/i);
+      expect(await rejected(`UPDATE lead_purchases SET "taxPolicyVersion" = 'other' WHERE id = '${created.id}'`)).toMatch(/immutable|check/i);
+      expect(await rejected(`UPDATE lead_purchases SET "taxAmount" = NULL, "totalAmount" = NULL, "taxPolicyVersion" = NULL WHERE id = '${created.id}'`)).toMatch(/immutable|check/i);
+      expect((await purchases.findById(created.id))!.financialSnapshot).toMatchObject({ taxAmount: "21.00", totalAmount: "121.00", taxPolicyVersion: "lead-fee-tax-policy-v1" });
+    });
+
+    it("Module 136: the database rejects inconsistent or half-written tax snapshots on insert", async () => {
+      const lead = await publishedLead();
+      const pro = await professional();
+      const provenance = `"pricingConfigVersion", "pricingRuleVersion", "leadPublishedAt"`;
+      const insert = (cols: string, vals: string) =>
+        `INSERT INTO lead_purchases (id, "leadId", "professionalProfileId", status, price, currency, ${cols}, "updatedAt") VALUES (gen_random_uuid(), '${lead.id}', '${pro.id}', 'FAILED', ${vals}, now())`;
+      // total != price + tax
+      expect(await rejected(insert(`${provenance}, "taxAmount", "totalAmount", "taxPolicyVersion"`, `100.00, 'EUR', 'c', 'r', now(), 21.00, 120.00, 'v'`))).toMatch(/lead_purchases_tax_total_consistent|check/i);
+      // negative tax
+      expect(await rejected(insert(`${provenance}, "taxAmount", "totalAmount", "taxPolicyVersion"`, `100.00, 'EUR', 'c', 'r', now(), -1.00, 99.00, 'v'`))).toMatch(/lead_purchases_tax_total_consistent|check/i);
+      // tax without a policy version / version without tax
+      expect(await rejected(insert(`${provenance}, "taxAmount", "totalAmount"`, `100.00, 'EUR', 'c', 'r', now(), 21.00, 121.00`))).toMatch(/lead_purchases_tax_snapshot_all_or_nothing|check/i);
+      expect(await rejected(insert(`${provenance}, "taxPolicyVersion"`, `100.00, 'EUR', 'c', 'r', now(), 'v'`))).toMatch(/lead_purchases_tax_snapshot_all_or_nothing|check/i);
+      // blank version
+      expect(await rejected(insert(`${provenance}, "taxAmount", "totalAmount", "taxPolicyVersion"`, `100.00, 'EUR', 'c', 'r', now(), 21.00, 121.00, '  '`))).toMatch(/lead_purchases_tax_snapshot_provenance|check/i);
+      // tax snapshot on a purchase with no M133 fee provenance
+      expect(await rejected(insert(`"taxAmount", "totalAmount", "taxPolicyVersion"`, `100.00, 'EUR', 21.00, 121.00, 'v'`))).toMatch(/lead_purchases_tax_snapshot_provenance|check/i);
+    });
+
+    it("Module 136: a pre-M136 purchase keeps NULL tax (nothing invented), stays valid and a retry gets a fresh snapshot", async () => {
+      const lead = await publishedLead(2, { price: "100.00" });
+      const pro = await professional();
+      const id = "00000000-0000-4000-8000-000000000136";
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO lead_purchases (id, "leadId", "professionalProfileId", status, price, currency, "pricingConfigVersion", "pricingRuleVersion", "leadPublishedAt", "updatedAt") VALUES ('${id}', '${lead.id}', '${pro.id}', 'PENDING_PAYMENT', 100.00, 'EUR', 'c', 'r', now(), now())`,
+      );
+      const legacy = (await purchases.findById(id))!;
+      expect(legacy.financialSnapshot).toMatchObject({ feeAmount: "100.00", taxAmount: null, totalAmount: null, taxPolicyVersion: null });
+      expect((await purchases.transition(id, "PENDING_PAYMENT", "FAILED", new Date()))!.financialSnapshot.taxAmount).toBeNull();
+      const fresh = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
+      expect(fresh.financialSnapshot).toMatchObject({ taxAmount: "21.00", totalAmount: "121.00", taxPolicyVersion: "lead-fee-tax-policy-v1" });
     });
 
     it("provenance is all-or-nothing and a snapshotted purchase must carry a positive EUR fee", async () => {
@@ -182,6 +231,7 @@ describe("Module 135 — LeadPurchase financial snapshot & idempotency (real Pos
       expect(ok).toHaveLength(3); // the buyer policy stays authoritative
       for (const o of outcomes) if (o.status === "rejected") expect(o.reason).toBeInstanceOf(LeadBuyerLimitReachedError);
       expect(new Set(ok.map((o) => o.value.financialSnapshot.feeAmount))).toEqual(new Set(["18.00"]));
+      expect(new Set(ok.map((o) => o.value.financialSnapshot.totalAmount))).toEqual(new Set(["21.78"]));
     });
 
     it("a retry after FAILED is a NEW purchase with the SAME snapshot fee; history is kept", async () => {
@@ -191,7 +241,8 @@ describe("Module 135 — LeadPurchase financial snapshot & idempotency (real Pos
       await purchases.transition(first.id, "PENDING_PAYMENT", "FAILED", new Date());
       const second = await purchases.initiate({ leadId: lead.id, professionalProfileId: pro.id });
       expect(second.id).not.toBe(first.id);
-      expect(second.financialSnapshot).toEqual(first.financialSnapshot);
+      expect(second.financialSnapshot).toEqual(first.financialSnapshot); // incl. taxAmount / totalAmount / taxPolicyVersion
+      expect(second.financialSnapshot.taxAmount).toBe("3.78");
       expect(await prisma.leadPurchase.count({ where: { leadId: lead.id } })).toBe(2);
     });
 

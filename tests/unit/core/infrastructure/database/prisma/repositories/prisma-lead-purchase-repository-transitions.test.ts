@@ -38,6 +38,7 @@ const row = (over: Record<string, unknown> = {}) => ({
   leadPublishedAt: PUBLISHED_AT,
   taxAmount: null,
   totalAmount: null,
+  taxPolicyVersion: null,
   confirmedAt: null,
   refundedAt: null,
   revokedAt: null,
@@ -96,9 +97,11 @@ describe("initiate", () => {
       pricingConfigVersion: SNAPSHOT_DATA.pricingConfigVersion,
       pricingRuleVersion: SNAPSHOT_DATA.pricingRuleVersion,
       leadPublishedAt: PUBLISHED_AT,
+      // Module 136: IVA 21% computed from the locked snapshot fee (18.00), written with the insert
+      taxAmount: "3.78",
+      totalAmount: "21.78",
+      taxPolicyVersion: "lead-fee-tax-policy-v1",
     });
-    // tax is never computed or written by this module
-    expect(Object.keys(tx.leadPurchase.create.mock.calls[0]![0].data)).not.toEqual(expect.arrayContaining(["taxAmount"]));
     expect(typeof tx.leadPurchase.create.mock.calls[0]![0].data.price).toBe("string");
   });
 

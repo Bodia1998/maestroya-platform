@@ -119,7 +119,8 @@ describe("Lead pricing (publication time) vs InitiateLeadPurchaseUseCase (snapsh
 
   it("the public DTO stays contact-safe and exposes no pricing internals", async () => {
     const dto = await build(context()).useCase.execute(USER, LEAD);
-    expect(Object.keys(dto).sort()).toEqual(["confirmedAt", "createdAt", "currency", "leadId", "price", "purchaseId", "status"]);
+    // Module 136 intentionally adds the persisted IVA / gross amounts and the tax policy identifier (nothing else).
+    expect(Object.keys(dto).sort()).toEqual(["confirmedAt", "createdAt", "currency", "leadId", "price", "purchaseId", "status", "taxAmount", "taxPolicyVersion", "totalAmount"]);
     const json = JSON.stringify(dto);
     for (const leaked of ["ruleVersion", "lead-pricing", "rate", "factors", "uncapped", "customer-secret", "pricingConfigVersion"]) expect(json).not.toContain(leaked);
   });

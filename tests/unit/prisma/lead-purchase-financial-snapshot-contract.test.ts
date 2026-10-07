@@ -30,7 +30,7 @@ describe("Module 135 schema", () => {
     expect(model).toMatch(/totalAmount\s+Decimal\?\s+@db\.Decimal\(10, 2\)/);
     expect(model).toMatch(/price\s+Decimal\s+@db\.Decimal\(10, 2\)/); // existing fee column, unchanged precision
     expect(model).not.toMatch(/\b(Float|Int)\b/);
-    expect(model).not.toMatch(/(paymentId|stripe|commission|payout|invoice|vat|iva)/i);
+    expect(model.replace(/^\s*\/\/\/.*$/gm, "")).not.toMatch(/(paymentId|stripe|commission|payout|invoice|vat|iva)/i); // doc comments may mention IVA (Module 136)
   });
 
   it("does not add idempotency-key or unique columns: the natural (lead, professional, active) boundary already exists", () => {
@@ -113,7 +113,10 @@ describe("Module 135 code boundary", () => {
     expect(initiate).toContain("financialSnapshotFromLockedLead");
     expect(initiate).toMatch(/price: snapshot\.feeAmount/);
     expect(initiate).not.toMatch(/data\.price/);
-    expect(initiate).not.toMatch(/taxAmount|totalAmount/); // tax is Module 136
+    // Module 136: tax comes from the pure policy via the snapshot, never computed in the repository
+    expect(initiate).toMatch(/taxAmount: snapshot\.taxAmount/);
+    expect(initiate).toMatch(/totalAmount: snapshot\.totalAmount/);
+    expect(initiate).toMatch(/taxPolicyVersion: snapshot\.taxPolicyVersion/);
     expect(initiate).not.toMatch(/Number\(|parseFloat|\*\s*0\./); // no float money arithmetic
   });
 
@@ -123,6 +126,45 @@ describe("Module 135 code boundary", () => {
     expect(src.indexOf("isLeadMarketplaceReady(")).toBeLessThan(src.indexOf("this.purchases.initiate"));
     expect(src.indexOf("isLeadMarketplaceReady(")).toBeLessThan(src.indexOf("findActiveByLeadAndProfessional"));
     expect(src).not.toMatch(/LeadPurchasePriceProvider|getPriceForLead|lead-pricing|pricing-config/);
-    expect(src).not.toMatch(/stripe|invoice|\b(tax|iva|vat)\b|payments?\//i);
+    expect(src).not.toMatch(/stripe|invoice|\b(tax|iva|vat)\b|payments?\//i); // tax lives in the domain snapshot, not the use case
+  });
+});
+
+describe("Module 136 migration & schema boundary", () => {
+  const DIR = readdirSync(path.join(root, "prisma/migrations")).find((n) => /_module_136_lead_fee_tax_snapshot$/.test(n));
+  const m136 = () => read(`prisma/migrations/${DIR}/migration.sql`).replace(/^\s*--.*$/gm, "");
+
+  it("is forward-only and additive: one nullable column, no backfill, no index change", () => {
+    expect(DIR).toBeDefined();
+    const body = m136();
+    expect([...body.matchAll(/ADD COLUMN "([^"]+)" (\w+)/g)].map((m) => `${m[1]} ${m[2]}`)).toEqual(["taxPolicyVersion TEXT"]);
+    expect(body).not.toMatch(/\b(DROP\s+(TABLE|COLUMN|INDEX)|DELETE|TRUNCATE|UPDATE\s+"|INSERT|RENAME)\b/i);
+    expect(body).not.toMatch(/SET NOT NULL|SET DEFAULT|ALTER COLUMN/i);
+    expect(body).not.toMatch(/CREATE\s+(UNIQUE\s+)?INDEX|lead_purchases_one_active_per_lead_professional/i);
+    for (const t of [...body.matchAll(/ALTER TABLE "([^"]+)"/g)].map((m) => m[1])) expect(t).toBe("lead_purchases");
+    expect(body).not.toMatch(/0\.21|2100|21\s*%/); // the rate lives in the domain policy only
+  });
+
+  it("adds the all-or-nothing + provenance CHECKs and extends (never weakens) the immutability function", () => {
+    const body = m136();
+    expect(body).toContain('num_nonnulls("taxAmount", "totalAmount", "taxPolicyVersion") IN (0, 3)');
+    expect(body).toContain("lead_purchases_tax_snapshot_provenance");
+    const fn = body.slice(body.indexOf("CREATE OR REPLACE FUNCTION"));
+    for (const c of ["leadId", "professionalProfileId", "price", "currency", "pricingConfigVersion", "pricingRuleVersion", "leadPublishedAt", "createdAt"]) {
+      expect(fn).toContain(`NEW."${c}" IS DISTINCT FROM OLD."${c}"`);
+    }
+    for (const c of ["taxAmount", "totalAmount", "taxPolicyVersion"]) expect(fn).toContain(`OLD."${c}" IS NOT NULL AND NEW."${c}" IS DISTINCT FROM OLD."${c}"`);
+    expect(body).not.toMatch(/CREATE TRIGGER|DROP TRIGGER/); // M135's trigger is reused, not replaced
+  });
+
+  it("schema: taxPolicyVersion is a nullable String next to the tax columns", () => {
+    expect(model).toMatch(/taxPolicyVersion\s+String\?/);
+  });
+
+  it("the 21% rate is defined in exactly one source file", () => {
+    const hits = readdirSync(path.join(root, "src/core/domain/services")).filter((f) => /lead-fee|lead-purchase/.test(f) && /LEAD_FEE_IVA_RATE_BPS\s*=/.test(read(`src/core/domain/services/${f}`)));
+    expect(hits).toEqual(["lead-fee-tax-policy.ts"]);
+    expect(code(REPO)).not.toMatch(/0\.21|2100|LEAD_FEE_IVA_RATE_BPS/);
+    expect(code(USE_CASE)).not.toMatch(/0\.21|2100|LEAD_FEE_IVA_RATE_BPS/);
   });
 });

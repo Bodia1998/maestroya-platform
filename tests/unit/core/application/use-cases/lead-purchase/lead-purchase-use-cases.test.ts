@@ -144,7 +144,7 @@ describe("InitiateLeadPurchaseUseCase", () => {
     const b = build();
     const dto = await b.initiate.execute(USER, LEAD);
     expect(dto).toMatchObject({ leadId: LEAD, status: "PENDING_PAYMENT", price: Number(SNAPSHOT_DATA.price), currency: "EUR", confirmedAt: null });
-    expect(Object.keys(dto).sort()).toEqual(["confirmedAt", "createdAt", "currency", "leadId", "price", "purchaseId", "status"]);
+    expect(Object.keys(dto).sort()).toEqual(["confirmedAt", "createdAt", "currency", "leadId", "price", "purchaseId", "status", "taxAmount", "taxPolicyVersion", "totalAmount"]);
     const json = JSON.stringify(dto);
     expect(json).not.toContain(OWNER_USER);
     expect(json).not.toContain("pro-1");
@@ -206,8 +206,9 @@ describe("InitiateLeadPurchaseUseCase", () => {
       financialSnapshot: {
         feeAmount: "12.34",
         currency: "EUR",
-        taxAmount: null,
-        totalAmount: null,
+        taxAmount: "2.59",
+        totalAmount: "14.93",
+        taxPolicyVersion: "lead-fee-tax-policy-v1",
         pricingConfigVersion: SNAPSHOT_DATA.pricingConfigVersion,
         pricingRuleVersion: SNAPSHOT_DATA.pricingRuleVersion,
         leadPublishedAt: publishedAt,
@@ -322,7 +323,7 @@ describe("InitiateLeadPurchaseUseCase", () => {
       status: "CONFIRMED",
       price: 1,
       currency: "EUR",
-      financialSnapshot: { feeAmount: "1.00", currency: "EUR", taxAmount: null, totalAmount: null, pricingConfigVersion: null, pricingRuleVersion: null, leadPublishedAt: null },
+      financialSnapshot: { feeAmount: "1.00", currency: "EUR", taxAmount: null, totalAmount: null, taxPolicyVersion: null, pricingConfigVersion: null, pricingRuleVersion: null, leadPublishedAt: null },
       confirmedAt: new Date(),
       refundedAt: null,
       revokedAt: null,
@@ -451,5 +452,59 @@ describe("TransitionLeadPurchaseUseCase", () => {
 
   it("missing purchase -> NotFoundError", async () => {
     await expect(build().transition.execute("nope", "FAILED")).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe("Module 136 — LEAD_V1 lead-fee tax snapshot through the purchase lifecycle", () => {
+  const priced = (price: string) => lead({ publication: { ...SNAPSHOT_DATA, price, publishedAt: new Date("2026-10-06T10:00:00Z") } });
+
+  it.each([
+    ["100.00", "21.00", "121.00"],
+    ["18.00", "3.78", "21.78"],
+    ["12.34", "2.59", "14.93"],
+  ])("net lead fee %s -> IVA %s, total %s, persisted on the purchase with the policy version", async (fee, tax, total) => {
+    const b = build({ lead: priced(fee) });
+    const dto = await b.initiate.execute(USER, LEAD);
+    expect(dto).toMatchObject({ price: Number(fee), taxAmount: tax, totalAmount: total, taxPolicyVersion: "lead-fee-tax-policy-v1" });
+    expect(b.purchases.rows[0]!.financialSnapshot).toMatchObject({ feeAmount: fee, taxAmount: tax, totalAmount: total, taxPolicyVersion: "lead-fee-tax-policy-v1" });
+  });
+
+  it("the taxable base is the immutable snapshot fee: a re-priced lead or a pricing provider is never consulted", async () => {
+    const b = build({ lead: priced("100.00") });
+    const first = await b.initiate.execute(USER, LEAD);
+    (b.leads.findById as ReturnType<typeof vi.fn>).mockImplementation(async () => priced("40.00"));
+    const again = await b.initiate.execute(USER, LEAD);
+    expect(again).toEqual(first);
+    expect(again).toMatchObject({ taxAmount: "21.00", totalAmount: "121.00" });
+    expect(b.initiate.constructor.length).toBe(6); // no pricing / tax dependency injected
+  });
+
+  it("a repeated PENDING_PAYMENT initiation returns identical financial values and does not recompute", async () => {
+    const b = build({ lead: priced("52.00") });
+    const first = await b.initiate.execute(USER, LEAD);
+    const spy = vi.spyOn(b.purchases, "initiate");
+    const second = await b.initiate.execute(USER, LEAD);
+    expect(spy).not.toHaveBeenCalled();
+    expect(second).toEqual(first);
+    expect(second).toMatchObject({ taxAmount: "10.92", totalAmount: "62.92" });
+  });
+
+  it("CONFIRMED stays a duplicate; FAILED/CANCELLED retry gets its own snapshot with the same amounts", async () => {
+    const b = build({ lead: priced("35.00") });
+    const first = await b.initiate.execute(USER, LEAD);
+    await b.transition.execute(first.purchaseId, "FAILED");
+    const retry = await b.initiate.execute(USER, LEAD);
+    expect(retry.purchaseId).not.toBe(first.purchaseId);
+    expect(retry).toMatchObject({ taxAmount: "7.35", totalAmount: "42.35", taxPolicyVersion: "lead-fee-tax-policy-v1" });
+    await b.confirm.execute(retry.purchaseId);
+    await expect(b.initiate.execute(USER, LEAD)).rejects.toBeInstanceOf(DuplicateActiveLeadPurchaseError);
+  });
+
+  it("a lead without a valid M133 price snapshot never enters the tax/purchase lifecycle", async () => {
+    for (const publication of [null, { ...SNAPSHOT_DATA, price: "0.00", publishedAt: new Date() }, { ...SNAPSHOT_DATA, price: "18.005", publishedAt: new Date() }]) {
+      const b = build({ lead: lead({ publication: publication as never }) });
+      await expect(b.initiate.execute(USER, LEAD)).rejects.toBeInstanceOf(LeadNotPurchasableError);
+      expect(b.purchases.rows).toHaveLength(0);
+    }
   });
 });
