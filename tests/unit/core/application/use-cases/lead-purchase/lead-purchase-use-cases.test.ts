@@ -88,6 +88,8 @@ class FakePurchases implements LeadPurchaseRepository {
     if (!row) return null;
     row.status = to;
     if (to === "CONFIRMED") row.confirmedAt = now;
+    if (to === "FAILED") row.failedAt = now;
+    if (to === "CANCELLED") row.cancelledAt = now;
     if (to === "REFUNDED") row.refundedAt = now;
     if (to === "REVOKED") row.revokedAt = now;
     return { ...row };
@@ -144,7 +146,7 @@ describe("InitiateLeadPurchaseUseCase", () => {
     const b = build();
     const dto = await b.initiate.execute(USER, LEAD);
     expect(dto).toMatchObject({ leadId: LEAD, status: "PENDING_PAYMENT", price: Number(SNAPSHOT_DATA.price), currency: "EUR", confirmedAt: null });
-    expect(Object.keys(dto).sort()).toEqual(["confirmedAt", "createdAt", "currency", "leadId", "price", "purchaseId", "status", "taxAmount", "taxPolicyVersion", "totalAmount"]);
+    expect(Object.keys(dto).sort()).toEqual(["cancelledAt", "confirmedAt", "createdAt", "currency", "failedAt", "leadId", "price", "purchaseId", "status", "taxAmount", "taxPolicyVersion", "totalAmount"]);
     const json = JSON.stringify(dto);
     expect(json).not.toContain(OWNER_USER);
     expect(json).not.toContain("pro-1");
@@ -325,6 +327,8 @@ describe("InitiateLeadPurchaseUseCase", () => {
       currency: "EUR",
       financialSnapshot: { feeAmount: "1.00", currency: "EUR", taxAmount: null, totalAmount: null, taxPolicyVersion: null, pricingConfigVersion: null, pricingRuleVersion: null, leadPublishedAt: null },
       confirmedAt: new Date(),
+      failedAt: null,
+      cancelledAt: null,
       refundedAt: null,
       revokedAt: null,
       createdAt: new Date(),
@@ -506,5 +510,80 @@ describe("Module 136 — LEAD_V1 lead-fee tax snapshot through the purchase life
       await expect(b.initiate.execute(USER, LEAD)).rejects.toBeInstanceOf(LeadNotPurchasableError);
       expect(b.purchases.rows).toHaveLength(0);
     }
+  });
+});
+
+describe("Module 137 — purchase lifecycle (confirm / fail / cancel)", () => {
+  async function pending() {
+    const b = build();
+    const dto = await b.initiate.execute(USER, LEAD);
+    return { b, id: dto.purchaseId, dto };
+  }
+  const FINANCIAL = ["price", "currency", "taxAmount", "totalAmount", "taxPolicyVersion"] as const;
+  const FORBIDDEN_KEYS = [...PRIVATE_CONTACT_FIELD_NAMES, "professionalProfileId", "financialSnapshot", "pricingConfigVersion", "pricingRuleVersion", "estimatedJobValue", "pricingRate"];
+
+  it("PENDING_PAYMENT -> FAILED stamps failedAt only; the purchase becomes historical (not active)", async () => {
+    const { b, id } = await pending();
+    const dto = await b.transition.execute(id, "FAILED");
+    expect(dto).toMatchObject({ status: "FAILED", failedAt: new Date("2026-10-03T13:00:00Z"), cancelledAt: null, confirmedAt: null });
+    expect(await b.purchases.findActiveByLeadAndProfessional(LEAD, "pro-1")).toBeNull();
+    expect(b.purchases.rows).toHaveLength(1); // never deleted
+  });
+
+  it("PENDING_PAYMENT -> CANCELLED stamps cancelledAt only", async () => {
+    const { b, id } = await pending();
+    const dto = await b.transition.execute(id, "CANCELLED");
+    expect(dto).toMatchObject({ status: "CANCELLED", cancelledAt: new Date("2026-10-03T13:00:00Z"), failedAt: null, confirmedAt: null });
+    expect(await b.purchases.findActiveByLeadAndProfessional(LEAD, "pro-1")).toBeNull();
+  });
+
+  it.each(["FAILED", "CANCELLED"] as const)("repeating %s is an idempotent no-op: same result, timestamp not reset, one row", async (target) => {
+    const { b, id } = await pending();
+    const first = await b.transition.execute(id, target);
+    const later = new TransitionLeadPurchaseUseCase(b.purchases, () => new Date("2030-01-01T00:00:00Z"));
+    const second = await later.execute(id, target);
+    expect(second).toEqual(first);
+    expect(b.purchases.rows).toHaveLength(1);
+  });
+
+  it("an old FAILED/CANCELLED event can never be followed by confirmation, and vice versa", async () => {
+    const { b, id } = await pending();
+    await b.transition.execute(id, "FAILED");
+    await expect(b.confirm.execute(id)).rejects.toBeInstanceOf(InvalidLeadPurchaseTransitionError);
+    await expect(b.transition.execute(id, "CANCELLED")).rejects.toBeInstanceOf(InvalidLeadPurchaseTransitionError);
+    expect(b.purchases.rows[0]).toMatchObject({ status: "FAILED", confirmedAt: null, cancelledAt: null });
+
+    const c = await pending();
+    await c.b.confirm.execute(c.id);
+    await expect(c.b.transition.execute(c.id, "FAILED")).rejects.toBeInstanceOf(InvalidLeadPurchaseTransitionError);
+    await expect(c.b.transition.execute(c.id, "CANCELLED")).rejects.toBeInstanceOf(InvalidLeadPurchaseTransitionError);
+    expect(c.b.purchases.rows[0]).toMatchObject({ status: "CONFIRMED", failedAt: null, cancelledAt: null });
+  });
+
+  it("an unknown purchase is NotFound for every lifecycle operation", async () => {
+    const b = build();
+    await expect(b.confirm.execute("nope")).rejects.toBeInstanceOf(NotFoundError);
+    await expect(b.transition.execute("nope", "FAILED")).rejects.toBeInstanceOf(NotFoundError);
+    await expect(b.transition.execute("nope", "CANCELLED")).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it.each(["CONFIRMED", "FAILED", "CANCELLED"] as const)("the financial snapshot is untouched by PENDING_PAYMENT -> %s", async (target) => {
+    const { b, id, dto: before } = await pending();
+    const snapshotBefore = structuredClone(b.purchases.rows[0]!.financialSnapshot);
+    const after = target === "CONFIRMED" ? await b.confirm.execute(id) : await b.transition.execute(id, target);
+    for (const k of FINANCIAL) expect(after[k]).toEqual(before[k]);
+    expect(b.purchases.rows[0]!.financialSnapshot).toEqual(snapshotBefore);
+    expect(before.taxAmount).not.toBeNull();
+  });
+
+  it("lifecycle results never carry contact, address, coordinates, pricing internals or the buyer id", async () => {
+    const { b, id } = await pending();
+    for (const dto of [await b.confirm.execute(id)]) {
+      for (const k of FORBIDDEN_KEYS) expect(Object.keys(dto)).not.toContain(k);
+    }
+    const f = await pending();
+    expect(Object.keys(await f.b.transition.execute(f.id, "FAILED")).sort()).toEqual(
+      ["cancelledAt", "confirmedAt", "createdAt", "currency", "failedAt", "leadId", "price", "purchaseId", "status", "taxAmount", "taxPolicyVersion", "totalAmount"],
+    );
   });
 });

@@ -40,6 +40,8 @@ const row = (over: Record<string, unknown> = {}) => ({
   totalAmount: null,
   taxPolicyVersion: null,
   confirmedAt: null,
+  failedAt: null,
+  cancelledAt: null,
   refundedAt: null,
   revokedAt: null,
   createdAt: now,
@@ -177,7 +179,10 @@ describe("transition", () => {
     expect(leadPurchase.updateMany).toHaveBeenLastCalledWith({ where: { id: "lp-1", status: "CONFIRMED" }, data: { status: "REVOKED", revokedAt: now } });
 
     await new PrismaLeadPurchaseRepository().transition("lp-1", "PENDING_PAYMENT", "FAILED", now);
-    expect(leadPurchase.updateMany).toHaveBeenLastCalledWith({ where: { id: "lp-1", status: "PENDING_PAYMENT" }, data: { status: "FAILED" } });
+    expect(leadPurchase.updateMany).toHaveBeenLastCalledWith({ where: { id: "lp-1", status: "PENDING_PAYMENT" }, data: { status: "FAILED", failedAt: now } });
+
+    await new PrismaLeadPurchaseRepository().transition("lp-1", "PENDING_PAYMENT", "CANCELLED", now);
+    expect(leadPurchase.updateMany).toHaveBeenLastCalledWith({ where: { id: "lp-1", status: "PENDING_PAYMENT" }, data: { status: "CANCELLED", cancelledAt: now } });
   });
 
   it("returns null when no row was in `from` (lost race / missing)", async () => {

@@ -6022,6 +6022,11 @@ model LeadPurchase {
   price                 Decimal            @db.Decimal(10, 2)
   currency              String             @default("EUR")
   confirmedAt           DateTime?
+  /// Module 137 — lifecycle audit timestamps, stamped once by the PENDING_PAYMENT -> FAILED / CANCELLED
+  /// transition. NULL for non-terminal purchases and for rows that failed/cancelled before Module 137
+  /// (no history is fabricated).
+  failedAt              DateTime?
+  cancelledAt           DateTime?
   refundedAt            DateTime?
   revokedAt             DateTime?
 

@@ -17,6 +17,9 @@ export interface LeadPurchaseDTO {
   totalAmount: string | null;
   taxPolicyVersion: string | null;
   confirmedAt: Date | null;
+  /** Module 137 lifecycle audit timestamps (null unless that transition happened). */
+  failedAt: Date | null;
+  cancelledAt: Date | null;
   createdAt: Date;
 }
 
@@ -31,6 +34,8 @@ export function toLeadPurchaseDto(record: LeadPurchaseRecord): LeadPurchaseDTO {
     totalAmount: record.financialSnapshot.totalAmount,
     taxPolicyVersion: record.financialSnapshot.taxPolicyVersion,
     confirmedAt: record.confirmedAt,
+    failedAt: record.failedAt,
+    cancelledAt: record.cancelledAt,
     createdAt: record.createdAt,
   };
 }

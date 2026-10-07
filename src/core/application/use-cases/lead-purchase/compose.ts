@@ -1,5 +1,7 @@
 import { EstimatedValueLeadPricingContextReader } from "@/application/services/lead-pricing/estimated-value-lead-pricing-context-reader";
 import { ConfiguredLeadPurchasePriceProvider } from "@/application/services/lead-pricing/configured-lead-purchase-price-provider";
+import { ConfirmLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/confirm-lead-purchase.use-case";
+import { TransitionLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/transition-lead-purchase.use-case";
 import { InitiateLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/initiate-lead-purchase.use-case";
 import { PrismaLeadPreviewRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-preview-repository";
 import { PrismaJobValueEstimationContextReader } from "@/infrastructure/database/prisma/repositories/prisma-job-value-estimation-context-reader";
@@ -46,4 +48,18 @@ export function makeInitiateLeadPurchaseUseCase() {
     new PrismaLeadPreviewRepository(),
     new PrismaLeadPurchaseRepository(),
   );
+}
+
+/**
+ * Module 137: TRUSTED, INTERNAL lifecycle use cases (PENDING_PAYMENT -> CONFIRMED /
+ * FAILED / CANCELLED). They take no session and are exposed by no Server Action or
+ * route; Modules 140/141 will be the only callers, after verifying the payment provider.
+ * No payment processing happens here — they only record lifecycle state.
+ */
+export function makeConfirmLeadPurchaseUseCase() {
+  return new ConfirmLeadPurchaseUseCase(new PrismaLeadPurchaseRepository(), new PrismaLeadRepository(), new PrismaServiceRequestRepository());
+}
+
+export function makeTransitionLeadPurchaseUseCase() {
+  return new TransitionLeadPurchaseUseCase(new PrismaLeadPurchaseRepository());
 }
