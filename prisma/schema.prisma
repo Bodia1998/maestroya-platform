@@ -6052,6 +6052,14 @@ model LeadPurchase {
   totalAmount           Decimal?           @db.Decimal(10, 2)
   taxPolicyVersion      String?
 
+  /// Module 140 — the payment provider's identifier of the lead-fee payment attempt
+  /// (a PaymentIntent id) created for this purchase. NULL until payment is
+  /// initiated. Write-once (NULL -> value, immutability trigger) and unique, so Module 141
+  /// can identify the purchase from a verified provider event and a purchase can never be
+  /// attached to a second provider payment. Not a payment result: the status stays
+  /// PENDING_PAYMENT until Module 141 confirms it.
+  paymentReference      String?            @unique
+
   lead         Lead               @relation(fields: [leadId], references: [id], onDelete: Restrict)
   professional ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
 

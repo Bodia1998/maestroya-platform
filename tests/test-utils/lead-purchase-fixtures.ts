@@ -28,6 +28,7 @@ export function pendingPurchaseFromPublication(
     price: Number(financialSnapshot.feeAmount),
     currency: financialSnapshot.currency,
     financialSnapshot,
+    paymentReference: null,
     confirmedAt: null,
     failedAt: null,
     cancelledAt: null,

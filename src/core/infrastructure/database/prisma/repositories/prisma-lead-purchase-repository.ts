@@ -36,6 +36,7 @@ const SELECT = {
   taxAmount: true,
   totalAmount: true,
   taxPolicyVersion: true,
+  paymentReference: true,
   confirmedAt: true,
   failedAt: true,
   cancelledAt: true,
@@ -58,6 +59,7 @@ type Row = {
   taxAmount: unknown;
   totalAmount: unknown;
   taxPolicyVersion: string | null;
+  paymentReference: string | null;
   confirmedAt: Date | null;
   failedAt: Date | null;
   cancelledAt: Date | null;
@@ -93,6 +95,7 @@ function toRecord(row: Row): LeadPurchaseRecord {
       pricingRuleVersion: row.pricingRuleVersion ?? null,
       leadPublishedAt: row.leadPublishedAt ?? null,
     },
+    paymentReference: row.paymentReference ?? null,
     confirmedAt: row.confirmedAt,
     failedAt: row.failedAt,
     cancelledAt: row.cancelledAt,
@@ -223,6 +226,17 @@ export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository {
     const { count } = await prisma.leadPurchase.updateMany({
       where: { id, status: from },
       data: { status: to, ...(stamp ? { [stamp]: now } : {}) },
+    });
+    if (count === 0) return null;
+    return this.findById(id);
+  }
+
+  async recordPaymentReference(id: string, paymentReference: string): Promise<LeadPurchaseRecord | null> {
+    // Conditional write: only a still-PENDING_PAYMENT purchase with no reference yet is updated,
+    // exactly once. Touches no financial column and never the status.
+    const { count } = await prisma.leadPurchase.updateMany({
+      where: { id, status: "PENDING_PAYMENT", paymentReference: null },
+      data: { paymentReference },
     });
     if (count === 0) return null;
     return this.findById(id);

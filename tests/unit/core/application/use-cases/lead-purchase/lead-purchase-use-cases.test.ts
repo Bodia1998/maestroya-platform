@@ -101,6 +101,9 @@ class FakePurchases implements LeadPurchaseRepository {
   async findActiveByLeadAndProfessional(leadId: string, pro: string) {
     return this.rows.find((r) => r.leadId === leadId && r.professionalProfileId === pro && isActiveLeadPurchaseStatus(r.status)) ?? null;
   }
+  async recordPaymentReference() {
+    return null;
+  }
   async findConfirmedByLeadAndProfessional(leadId: string, pro: string) {
     return this.rows.find((r) => r.leadId === leadId && r.professionalProfileId === pro && r.status === "CONFIRMED") ?? null;
   }
@@ -326,6 +329,7 @@ describe("InitiateLeadPurchaseUseCase", () => {
       price: 1,
       currency: "EUR",
       financialSnapshot: { feeAmount: "1.00", currency: "EUR", taxAmount: null, totalAmount: null, taxPolicyVersion: null, pricingConfigVersion: null, pricingRuleVersion: null, leadPublishedAt: null },
+      paymentReference: null,
       confirmedAt: new Date(),
       failedAt: null,
       cancelledAt: null,

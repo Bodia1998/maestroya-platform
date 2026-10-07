@@ -52,6 +52,9 @@ class FakePurchases implements LeadPurchaseRepository {
   async findActiveByLeadAndProfessional() {
     return null;
   }
+  async recordPaymentReference() {
+    return null;
+  }
   async findConfirmedByLeadAndProfessional() {
     return null;
   }

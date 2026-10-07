@@ -20,6 +20,8 @@ export interface LeadPurchaseRecord {
   currency: string;
   /** Module 135: immutable financial snapshot (exact decimal strings). */
   financialSnapshot: LeadPurchaseFinancialSnapshot;
+  /** Module 140: provider id of the lead-fee payment attempt; null until payment is initiated. Write-once. NOT a payment result. */
+  paymentReference: string | null;
   confirmedAt: Date | null;
   /** Module 137: stamped once by PENDING_PAYMENT -> FAILED (null for pre-M137 rows). */
   failedAt: Date | null;
@@ -73,6 +75,16 @@ export interface LeadPurchaseRepository {
    * re-reads to distinguish an idempotent repeat from a rejected transition.
    */
   transition(id: string, from: LeadPurchaseStatus, to: LeadPurchaseStatus, now: Date): Promise<LeadPurchaseRecord | null>;
+
+  /**
+   * Module 140 — records the provider payment reference of a purchase's payment attempt.
+   * Atomic and conditional: only a row that is STILL PENDING_PAYMENT and has NO reference
+   * yet is updated (write-once; the DB trigger enforces it too). Never touches the
+   * financial snapshot or the status. Returns the updated record, or `null` when the row
+   * did not match (missing, no longer PENDING_PAYMENT, or a reference is already set) —
+   * the caller re-reads to tell which.
+   */
+  recordPaymentReference(id: string, paymentReference: string): Promise<LeadPurchaseRecord | null>;
 
   /**
    * Creates a PENDING_PAYMENT purchase (which grants NO access) WITHOUT a
