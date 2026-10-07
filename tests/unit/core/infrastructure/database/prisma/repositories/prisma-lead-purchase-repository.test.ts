@@ -40,6 +40,8 @@ const row = (over: Record<string, unknown> = {}) => ({
   totalAmount: null,
   taxPolicyVersion: null,
   confirmedAt: null,
+  failedAt: null,
+  cancelledAt: null,
   refundedAt: null,
   revokedAt: null,
   createdAt: now,
@@ -134,7 +136,7 @@ describe("PrismaLeadPurchaseRepository", () => {
     const result = await (await repo()).findById("lp-1");
     expect(JSON.stringify(leadPurchase.findUnique.mock.calls[0]![0]!.select)).not.toMatch(/email|phone|address|customer|lead:|professional:/i);
     expect(Object.keys(result!).sort()).toEqual([
-      "confirmedAt", "createdAt", "currency", "financialSnapshot", "id", "leadId", "price", "professionalProfileId", "refundedAt", "revokedAt", "status", "updatedAt",
+      "cancelledAt", "confirmedAt", "createdAt", "currency", "failedAt", "financialSnapshot", "id", "leadId", "price", "professionalProfileId", "refundedAt", "revokedAt", "status", "updatedAt",
     ]);
   });
 

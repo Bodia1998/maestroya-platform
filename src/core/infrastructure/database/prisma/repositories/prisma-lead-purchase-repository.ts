@@ -37,6 +37,8 @@ const SELECT = {
   totalAmount: true,
   taxPolicyVersion: true,
   confirmedAt: true,
+  failedAt: true,
+  cancelledAt: true,
   refundedAt: true,
   revokedAt: true,
   createdAt: true,
@@ -57,6 +59,8 @@ type Row = {
   totalAmount: unknown;
   taxPolicyVersion: string | null;
   confirmedAt: Date | null;
+  failedAt: Date | null;
+  cancelledAt: Date | null;
   refundedAt: Date | null;
   revokedAt: Date | null;
   createdAt: Date;
@@ -90,6 +94,8 @@ function toRecord(row: Row): LeadPurchaseRecord {
       leadPublishedAt: row.leadPublishedAt ?? null,
     },
     confirmedAt: row.confirmedAt,
+    failedAt: row.failedAt,
+    cancelledAt: row.cancelledAt,
     refundedAt: row.refundedAt,
     revokedAt: row.revokedAt,
     createdAt: row.createdAt,

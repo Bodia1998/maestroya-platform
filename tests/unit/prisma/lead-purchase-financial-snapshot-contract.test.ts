@@ -86,7 +86,7 @@ describe("Module 135 migration", () => {
     expect(fn).toContain('OLD."taxAmount" IS NOT NULL AND NEW."taxAmount" IS DISTINCT FROM OLD."taxAmount"');
     expect(fn).toContain('OLD."totalAmount" IS NOT NULL AND NEW."totalAmount" IS DISTINCT FROM OLD."totalAmount"');
     // status and the confirmation/refund/revoke timestamps stay mutable
-    for (const c of ["status", "confirmedAt", "refundedAt", "revokedAt", "updatedAt"]) expect(fn).not.toContain(`NEW."${c}"`);
+    for (const c of ["status", "confirmedAt", "failedAt", "cancelledAt", "refundedAt", "revokedAt", "updatedAt"]) expect(fn).not.toContain(`NEW."${c}"`);
   });
 
   it("contains no tax policy (no rate, no IVA/VAT literal)", () => {
@@ -166,5 +166,28 @@ describe("Module 136 migration & schema boundary", () => {
     expect(hits).toEqual(["lead-fee-tax-policy.ts"]);
     expect(code(REPO)).not.toMatch(/0\.21|2100|LEAD_FEE_IVA_RATE_BPS/);
     expect(code(USE_CASE)).not.toMatch(/0\.21|2100|LEAD_FEE_IVA_RATE_BPS/);
+  });
+});
+
+describe("Module 137 lifecycle timestamps migration", () => {
+  const DIR = readdirSync(path.join(root, "prisma/migrations")).find((n) => /_module_137_lead_purchase_lifecycle_timestamps$/.test(n));
+  const m137 = () => read(`prisma/migrations/${DIR}/migration.sql`).replace(/^\s*--.*$/gm, "");
+
+  it("is additive: two nullable columns + two CHECKs, no backfill, no destructive or index/trigger change", () => {
+    expect(DIR).toBeDefined();
+    const sql137 = m137();
+    expect(sql137).toContain('ADD COLUMN "failedAt" TIMESTAMP(3), ADD COLUMN "cancelledAt" TIMESTAMP(3)');
+    expect(sql137).not.toMatch(/NOT NULL|UPDATE\s|INSERT\s|DELETE\s|DROP\s|CREATE\s+(UNIQUE\s+)?INDEX|TRIGGER|FUNCTION/i);
+  });
+
+  it("a lifecycle timestamp can only exist in the matching status", () => {
+    expect(m137()).toContain(`"failedAt" IS NULL OR "status" = 'FAILED'`);
+    expect(m137()).toContain(`"cancelledAt" IS NULL OR "status" = 'CANCELLED'`);
+  });
+
+  it("the Prisma model declares both columns as optional", () => {
+    const schema = read("prisma/schema.prisma");
+    expect(schema).toMatch(/failedAt\s+DateTime\?/);
+    expect(schema).toMatch(/cancelledAt\s+DateTime\?/);
   });
 });

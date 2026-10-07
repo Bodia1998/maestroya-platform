@@ -29,6 +29,8 @@ export function pendingPurchaseFromPublication(
     currency: financialSnapshot.currency,
     financialSnapshot,
     confirmedAt: null,
+    failedAt: null,
+    cancelledAt: null,
     refundedAt: null,
     revokedAt: null,
     createdAt: new Date(),

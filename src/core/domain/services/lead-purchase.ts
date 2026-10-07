@@ -158,8 +158,12 @@ export function assertLeadPurchaseTransition(from: LeadPurchaseStatus, to: LeadP
 }
 
 /** Which timestamp column a transition stamps (set once, by the transition). */
-export function leadPurchaseTransitionTimestamp(to: LeadPurchaseStatus): "confirmedAt" | "refundedAt" | "revokedAt" | null {
+export function leadPurchaseTransitionTimestamp(
+  to: LeadPurchaseStatus,
+): "confirmedAt" | "failedAt" | "cancelledAt" | "refundedAt" | "revokedAt" | null {
   if (to === "CONFIRMED") return "confirmedAt";
+  if (to === "FAILED") return "failedAt";
+  if (to === "CANCELLED") return "cancelledAt";
   if (to === "REFUNDED") return "refundedAt";
   if (to === "REVOKED") return "revokedAt";
   return null;

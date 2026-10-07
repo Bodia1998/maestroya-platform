@@ -70,8 +70,9 @@ describe("Module 126 — LeadPurchase state machine", () => {
     expect(leadPurchaseTransitionTimestamp("CONFIRMED")).toBe("confirmedAt");
     expect(leadPurchaseTransitionTimestamp("REFUNDED")).toBe("refundedAt");
     expect(leadPurchaseTransitionTimestamp("REVOKED")).toBe("revokedAt");
-    expect(leadPurchaseTransitionTimestamp("FAILED")).toBeNull();
-    expect(leadPurchaseTransitionTimestamp("CANCELLED")).toBeNull();
+    expect(leadPurchaseTransitionTimestamp("FAILED")).toBe("failedAt");
+    expect(leadPurchaseTransitionTimestamp("CANCELLED")).toBe("cancelledAt");
+    expect(leadPurchaseTransitionTimestamp("PENDING_PAYMENT")).toBeNull();
   });
 });
 
@@ -120,5 +121,55 @@ describe("Module 126 — purchase rules", () => {
     for (const s of ["INACTIVE", "SUSPENDED"]) {
       expect(isProfessionalEligibleToPurchaseLeads({ status: s, verificationStatus: "VERIFIED" })).toBe(false);
     }
+  });
+});
+
+describe("Module 137 — authoritative LEAD_V1 lifecycle policy", () => {
+  const TERMINAL = ["CONFIRMED", "FAILED", "CANCELLED"] as const;
+
+  it("PENDING_PAYMENT is the only entry point to CONFIRMED / FAILED / CANCELLED", () => {
+    for (const to of TERMINAL) {
+      for (const from of LEAD_PURCHASE_STATUSES) {
+        expect(canTransitionLeadPurchase(from, to)).toBe(from === "PENDING_PAYMENT");
+      }
+    }
+  });
+
+  it.each([
+    ["CONFIRMED", "PENDING_PAYMENT"],
+    ["CONFIRMED", "FAILED"],
+    ["CONFIRMED", "CANCELLED"],
+    ["CONFIRMED", "CONFIRMED"],
+    ["FAILED", "PENDING_PAYMENT"],
+    ["FAILED", "CONFIRMED"],
+    ["FAILED", "CANCELLED"],
+    ["FAILED", "FAILED"],
+    ["CANCELLED", "PENDING_PAYMENT"],
+    ["CANCELLED", "CONFIRMED"],
+    ["CANCELLED", "FAILED"],
+    ["CANCELLED", "CANCELLED"],
+  ] as Array<[LeadPurchaseStatus, LeadPurchaseStatus]>)("rejects %s -> %s (incl. same-state repeats)", (from, to) => {
+    expect(() => assertLeadPurchaseTransition(from, to)).toThrow(InvalidLeadPurchaseTransitionError);
+  });
+
+  it("nothing can return to PENDING_PAYMENT", () => {
+    for (const from of LEAD_PURCHASE_STATUSES) expect(canTransitionLeadPurchase(from, "PENDING_PAYMENT")).toBe(false);
+  });
+
+  it("the transition error carries a stable code, the states and a message", () => {
+    try {
+      assertLeadPurchaseTransition("FAILED", "CONFIRMED");
+      throw new Error("expected throw");
+    } catch (e) {
+      expect(e).toBeInstanceOf(InvalidLeadPurchaseTransitionError);
+      expect(e).toMatchObject({ code: "INVALID_LEAD_PURCHASE_TRANSITION", from: "FAILED", to: "CONFIRMED" });
+      expect((e as Error).message).toBe('A lead purchase cannot move from "FAILED" to "CONFIRMED".');
+    }
+  });
+
+  it("each lifecycle target stamps its own distinct timestamp column", () => {
+    expect(leadPurchaseTransitionTimestamp("CONFIRMED")).toBe("confirmedAt");
+    expect(leadPurchaseTransitionTimestamp("FAILED")).toBe("failedAt");
+    expect(leadPurchaseTransitionTimestamp("CANCELLED")).toBe("cancelledAt");
   });
 });

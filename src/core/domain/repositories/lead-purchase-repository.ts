@@ -21,6 +21,10 @@ export interface LeadPurchaseRecord {
   /** Module 135: immutable financial snapshot (exact decimal strings). */
   financialSnapshot: LeadPurchaseFinancialSnapshot;
   confirmedAt: Date | null;
+  /** Module 137: stamped once by PENDING_PAYMENT -> FAILED (null for pre-M137 rows). */
+  failedAt: Date | null;
+  /** Module 137: stamped once by PENDING_PAYMENT -> CANCELLED (null for pre-M137 rows). */
+  cancelledAt: Date | null;
   refundedAt: Date | null;
   revokedAt: Date | null;
   createdAt: Date;
