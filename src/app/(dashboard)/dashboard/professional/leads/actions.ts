@@ -1,6 +1,6 @@
 "use server";
 
-import type { LeadPreviewDTO } from "@/application/dto/lead-contact.dto";
+import type { LeadContactDTO, LeadPreviewDTO } from "@/application/dto/lead-contact.dto";
 import type { LeadFeedPageDTO } from "@/application/dto/lead-feed.dto";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import {
@@ -8,6 +8,7 @@ import {
   makeGetPublishedLeadPreviewUseCase,
   makeGetPublishedLeadPreviewsForProfessionalUseCase,
 } from "@/application/use-cases/lead/compose";
+import { makeGetLeadContactUseCase } from "@/application/use-cases/lead-contact/compose";
 import { localizeActionError } from "@/presentation/i18n/server";
 
 /**
@@ -52,6 +53,26 @@ export async function getLeadFeedAction(input?: { limit?: number; cursor?: strin
       categoryId: input?.categoryId ?? null,
     });
     return { success: true, ...page };
+  } catch (error) {
+    return { success: false, error: await localizeActionError(error) };
+  }
+}
+
+/**
+ * Module 138 — customer contact for a PURCHASED LEAD_V1 lead. The only input
+ * is the lead id; the professional identity comes ONLY from the session (no
+ * professionalProfileId / purchaseId is accepted). Access exists only while the
+ * caller's own LeadPurchase for this lead is CONFIRMED — every other case
+ * (no purchase, pending, failed, cancelled, refunded, revoked, someone else's
+ * purchase, wrong flow) returns the same generic denial.
+ */
+export type LeadContactResult = { success: true; contact: LeadContactDTO } | { success: false; error: string };
+
+export async function getLeadContactAction(leadId: unknown): Promise<LeadContactResult> {
+  const user = await requireAuth();
+  try {
+    const contact = await makeGetLeadContactUseCase().execute(user.id, leadId as string);
+    return { success: true, contact };
   } catch (error) {
     return { success: false, error: await localizeActionError(error) };
   }

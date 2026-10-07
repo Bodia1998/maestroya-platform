@@ -37,8 +37,14 @@ export interface LeadContactAuthorizationFacts {
      *  buggy adapter cannot hand over another professional's grant. */
     professionalProfileId: string;
   } | null;
-  /** Any other server-side block (restriction, dispute freeze, ...). */
+  /** Any other server-side block (restriction, dispute freeze, soft-deleted request, ...). */
   blocked: boolean;
+  /**
+   * Module 138 — ownership chain integrity: Lead -> ServiceRequest -> customer,
+   * and the address released with the contact belongs to THAT customer's user.
+   * Anything other than exactly `true` denies (fail closed).
+   */
+  contactOwnershipConsistent: boolean;
 }
 
 export type LeadContactDenialReason =
@@ -47,7 +53,8 @@ export type LeadContactDenialReason =
   | "NO_GRANT"
   | "GRANT_NOT_CONFIRMED"
   | "GRANT_BELONGS_TO_OTHER_PROFESSIONAL"
-  | "BLOCKED";
+  | "BLOCKED"
+  | "OWNERSHIP_MISMATCH";
 
 export type LeadContactAccessDecision =
   | { allowed: true }
@@ -60,6 +67,7 @@ export function canProfessionalAccessLeadContact(
   if (!facts || !facts.leadExists) return { allowed: false, reason: "LEAD_NOT_FOUND" };
   if (facts.flowVersion !== "LEAD_V1") return { allowed: false, reason: "WRONG_FLOW" };
   if (facts.blocked !== false) return { allowed: false, reason: "BLOCKED" };
+  if (facts.contactOwnershipConsistent !== true) return { allowed: false, reason: "OWNERSHIP_MISMATCH" };
   if (!facts.grant) return { allowed: false, reason: "NO_GRANT" };
   if (facts.grant.professionalProfileId !== professionalProfileId) {
     return { allowed: false, reason: "GRANT_BELONGS_TO_OTHER_PROFESSIONAL" };

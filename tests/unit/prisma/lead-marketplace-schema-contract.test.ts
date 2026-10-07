@@ -162,8 +162,8 @@ describe("Module 123 code boundaries", () => {
     }
   });
 
-  it("Module 122 still has no adapter reading contact through Lead tables (readContact unreachable)", () => {
+  it("Module 138: the ONLY adapters of Module 122's contact ports live in the single reviewed Prisma file", () => {
     const readers = files.filter((f) => /implements\s+LeadContact(Reader|AuthorizationReader)/.test(content(f)));
-    expect(readers).toEqual([]);
+    expect(readers).toEqual(["src/core/infrastructure/database/prisma/repositories/prisma-lead-contact-access-repository.ts"]);
   });
 });

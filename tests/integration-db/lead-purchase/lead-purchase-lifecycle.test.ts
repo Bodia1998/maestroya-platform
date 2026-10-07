@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 
 import { prisma } from "@/infrastructure/database/prisma/client";
+import { PrismaLeadContactAuthorizationReader } from "@/infrastructure/database/prisma/repositories/prisma-lead-contact-access-repository";
 import { PrismaLeadPurchaseRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository";
 import { PrismaLeadRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
@@ -18,7 +19,6 @@ import {
   InvalidLeadPurchaseTransitionError,
   LeadBuyerLimitReachedError,
   LeadNotPurchasableError,
-  toLeadContactGrantState,
 } from "@/domain/services/lead-purchase";
 import { canProfessionalAccessLeadContact } from "@/domain/services/lead-contact-access-policy";
 
@@ -58,21 +58,10 @@ describe("Module 126 — LeadPurchase lifecycle (real PostgreSQL)", () => {
     return createProfessionalProfile(prisma, user.id);
   }
 
-  /** The Module 122 decision exactly as an adapter would feed it (facts from the DB). */
+  /** The Module 122 decision fed by the real Module 138 adapter (facts from the DB). */
   async function contactDecision(leadId: string, professionalProfileId: string) {
-    const lead = await leads.findById(leadId);
-    const row = await prisma.leadPurchase.findFirst({ where: { leadId, professionalProfileId }, orderBy: { createdAt: "desc" } });
-    return canProfessionalAccessLeadContact(
-      lead
-        ? {
-            leadExists: true,
-            flowVersion: lead.flowVersion,
-            blocked: false,
-            grant: row ? { state: toLeadContactGrantState(row.status), professionalProfileId: row.professionalProfileId } : null,
-          }
-        : null,
-      professionalProfileId,
-    );
+    const facts = await new PrismaLeadContactAuthorizationReader().findFacts(leadId, professionalProfileId);
+    return canProfessionalAccessLeadContact(facts, professionalProfileId);
   }
 
   const confirmUc = () => new ConfirmLeadPurchaseUseCase(purchases, leads, serviceRequests);

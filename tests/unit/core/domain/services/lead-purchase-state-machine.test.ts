@@ -79,7 +79,7 @@ describe("Module 126 — LeadPurchase state machine", () => {
 describe("Module 126 — only CONFIRMED grants contact (Module 122 policy, unchanged)", () => {
   const decide = (status: LeadPurchaseStatus) =>
     canProfessionalAccessLeadContact(
-      { leadExists: true, flowVersion: "LEAD_V1", blocked: false, grant: { state: toLeadContactGrantState(status), professionalProfileId: "pro-1" } },
+      { leadExists: true, flowVersion: "LEAD_V1", blocked: false, contactOwnershipConsistent: true, grant: { state: toLeadContactGrantState(status), professionalProfileId: "pro-1" } },
       "pro-1",
     );
 
@@ -91,13 +91,13 @@ describe("Module 126 — only CONFIRMED grants contact (Module 122 policy, uncha
     expect(decide("CONFIRMED")).toEqual({ allowed: true });
     expect(
       canProfessionalAccessLeadContact(
-        { leadExists: true, flowVersion: "LEAD_V1", blocked: false, grant: { state: "CONFIRMED", professionalProfileId: "pro-2" } },
+        { leadExists: true, flowVersion: "LEAD_V1", blocked: false, contactOwnershipConsistent: true, grant: { state: "CONFIRMED", professionalProfileId: "pro-2" } },
         "pro-1",
       ),
     ).toMatchObject({ allowed: false });
     expect(
       canProfessionalAccessLeadContact(
-        { leadExists: true, flowVersion: "LEGACY_QUOTE_PAYMENT", blocked: false, grant: { state: "CONFIRMED", professionalProfileId: "pro-1" } },
+        { leadExists: true, flowVersion: "LEGACY_QUOTE_PAYMENT", blocked: false, contactOwnershipConsistent: true, grant: { state: "CONFIRMED", professionalProfileId: "pro-1" } },
         "pro-1",
       ),
     ).toMatchObject({ allowed: false });
