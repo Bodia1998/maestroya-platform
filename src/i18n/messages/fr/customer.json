@@ -88,6 +88,50 @@
       "photoTooLarge": "Chaque photo doit faire moins de 5 Mo.",
       "photoUploadFailed": "Une erreur s'est produite lors de l'envoi de votre photo.",
       "photoRemoveFailed": "Une erreur s'est produite lors de la suppression de cette photo."
+    },
+    "leadForm": {
+      "title": "Demander un service",
+      "subtitle": "Décrivez-nous le besoin pour que nous trouvions des professionnels adaptés.",
+      "unavailable": {
+        "title": "Les demandes sont temporairement indisponibles",
+        "description": "Nous ne pouvons pas accepter de nouvelles demandes pour le moment. Veuillez réessayer plus tard."
+      },
+      "sections": {
+        "job": "À propos du travail",
+        "jobDescription": "Plus vous donnez de détails, plus les réponses que vous recevrez seront utiles.",
+        "location": "Où se situe le chantier ?",
+        "locationDescription": "Nous utilisons l'adresse pour trouver des professionnels qui travaillent dans votre zone."
+      },
+      "fields": {
+        "category": "Catégorie de service",
+        "selectCategory": "Sélectionnez une catégorie",
+        "title": "Titre court",
+        "titlePlaceholder": "p. ex. Robinet de cuisine qui fuit",
+        "description": "Décrivez le problème",
+        "descriptionPlaceholder": "p. ex. Le robinet sous l'évier goutte depuis deux jours et le placard devient humide.",
+        "descriptionHint": "Indiquez ce qui ne va pas, où cela se trouve dans le logement et tout ce qui peut influencer les travaux. 20 caractères minimum.",
+        "urgency": "Urgence",
+        "line1": "Adresse (rue et numéro)",
+        "line2": "Appartement, étage, etc.",
+        "city": "Ville",
+        "postalCode": "Code postal",
+        "province": "Province",
+        "country": "Pays"
+      },
+      "submit": "Envoyer la demande",
+      "submitting": "Envoi en cours…",
+      "success": {
+        "title": "Demande envoyée",
+        "description": "Merci ! MaestroYa recherche des professionnels adaptés à votre besoin. Nous vous indiquerons ici, sur la plateforme, la marche à suivre.",
+        "noPaymentNote": "Vous n'avez pas à payer le professionnel via MaestroYa.",
+        "viewRequests": "Voir mes demandes"
+      },
+      "errors": {
+        "unauthenticated": "Votre session a expiré. Connectez-vous pour envoyer une demande.",
+        "signIn": "Se connecter",
+        "categoryUnsupported": "Cette catégorie de service n'est pas encore disponible pour les demandes. Veuillez en choisir une autre.",
+        "submitFailed": "Nous n'avons pas pu envoyer votre demande. Veuillez réessayer dans un instant."
+      }
     }
   },
   "quotes": {

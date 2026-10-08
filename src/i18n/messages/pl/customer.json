@@ -88,6 +88,50 @@
       "photoTooLarge": "Każde zdjęcie musi mieć mniej niż 5 MB.",
       "photoUploadFailed": "Coś poszło nie tak podczas przesyłania zdjęcia.",
       "photoRemoveFailed": "Coś poszło nie tak podczas usuwania zdjęcia."
+    },
+    "leadForm": {
+      "title": "Zleć usługę",
+      "subtitle": "Opisz nam zlecenie, abyśmy mogli znaleźć odpowiednich fachowców.",
+      "unavailable": {
+        "title": "Zlecenia są tymczasowo niedostępne",
+        "description": "Obecnie nie możemy przyjmować nowych zleceń. Spróbuj ponownie później."
+      },
+      "sections": {
+        "job": "O zleceniu",
+        "jobDescription": "Im więcej szczegółów podasz, tym bardziej przydatne będą otrzymane odpowiedzi.",
+        "location": "Gdzie ma być wykonana praca?",
+        "locationDescription": "Adres służy do znalezienia fachowców działających w Twojej okolicy."
+      },
+      "fields": {
+        "category": "Kategoria usługi",
+        "selectCategory": "Wybierz kategorię",
+        "title": "Krótki tytuł",
+        "titlePlaceholder": "np. Cieknący kran w kuchni",
+        "description": "Opisz problem",
+        "descriptionPlaceholder": "np. Kran pod zlewem kapie od dwóch dni, a szafka robi się wilgotna.",
+        "descriptionHint": "Napisz, co jest nie tak, w którym miejscu mieszkania i co ma wpływ na pracę. Co najmniej 20 znaków.",
+        "urgency": "Pilność",
+        "line1": "Ulica i numer",
+        "line2": "Mieszkanie, piętro itp.",
+        "city": "Miasto",
+        "postalCode": "Kod pocztowy",
+        "province": "Prowincja",
+        "country": "Kraj"
+      },
+      "submit": "Wyślij zlecenie",
+      "submitting": "Wysyłanie…",
+      "success": {
+        "title": "Zlecenie wysłane",
+        "description": "Dziękujemy! MaestroYa szuka teraz odpowiednich fachowców do Twojego zlecenia. O kolejnych krokach poinformujemy Cię tutaj, na platformie.",
+        "noPaymentNote": "Nie musisz płacić fachowcowi przez MaestroYa.",
+        "viewRequests": "Zobacz moje zlecenia"
+      },
+      "errors": {
+        "unauthenticated": "Twoja sesja wygasła. Zaloguj się, aby wysłać zlecenie.",
+        "signIn": "Zaloguj się",
+        "categoryUnsupported": "Ta kategoria usług nie jest jeszcze dostępna dla zleceń. Wybierz inną.",
+        "submitFailed": "Nie udało się wysłać zlecenia. Spróbuj ponownie za chwilę."
+      }
     }
   },
   "quotes": {

@@ -88,6 +88,50 @@
       "photoTooLarge": "Cada fotografia tem de ter menos de 5 MB.",
       "photoUploadFailed": "Ocorreu um erro ao carregar a sua fotografia.",
       "photoRemoveFailed": "Ocorreu um erro ao remover essa fotografia."
+    },
+    "leadForm": {
+      "title": "Pedir um serviço",
+      "subtitle": "Conte-nos o que precisa para encontrarmos os profissionais certos.",
+      "unavailable": {
+        "title": "Os pedidos estão temporariamente indisponíveis",
+        "description": "De momento não podemos aceitar novos pedidos de serviço. Tente novamente mais tarde."
+      },
+      "sections": {
+        "job": "Sobre o trabalho",
+        "jobDescription": "Quanto mais detalhes der, mais úteis serão as respostas que receber.",
+        "location": "Onde é o trabalho?",
+        "locationDescription": "Usamos a morada para encontrar profissionais que trabalham na sua zona."
+      },
+      "fields": {
+        "category": "Categoria do serviço",
+        "selectCategory": "Selecione uma categoria",
+        "title": "Título curto",
+        "titlePlaceholder": "p. ex. Torneira da cozinha com fuga",
+        "description": "Descreva o problema",
+        "descriptionPlaceholder": "p. ex. A torneira debaixo do lava-loiça pinga há dois dias e o armário está a ficar húmido.",
+        "descriptionHint": "Indique o que se passa, em que parte da casa está e tudo o que afeta o trabalho. Mínimo de 20 caracteres.",
+        "urgency": "Urgência",
+        "line1": "Rua e número",
+        "line2": "Andar, porta, etc.",
+        "city": "Cidade",
+        "postalCode": "Código postal",
+        "province": "Província",
+        "country": "País"
+      },
+      "submit": "Enviar pedido",
+      "submitting": "A enviar…",
+      "success": {
+        "title": "Pedido enviado",
+        "description": "Obrigado! A MaestroYa está a procurar profissionais adequados para o seu trabalho. Avisamos aqui, na plataforma, quais são os próximos passos.",
+        "noPaymentNote": "Não precisa de pagar ao profissional através da MaestroYa.",
+        "viewRequests": "Ver os meus pedidos"
+      },
+      "errors": {
+        "unauthenticated": "A sua sessão expirou. Inicie sessão para enviar um pedido.",
+        "signIn": "Iniciar sessão",
+        "categoryUnsupported": "Esta categoria de serviço ainda não está disponível para pedidos. Escolha outra.",
+        "submitFailed": "Não foi possível enviar o seu pedido. Tente novamente dentro de instantes."
+      }
     }
   },
   "quotes": {
