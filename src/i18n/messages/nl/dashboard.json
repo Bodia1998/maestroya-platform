@@ -42,7 +42,8 @@
       "adminPanel": "Beheerpaneel",
       "profile": "Profiel",
       "professionalProfile": "Vakmanprofiel",
-      "switchToProfessional": "Overschakelen naar vakmandashboard"
+      "switchToProfessional": "Overschakelen naar vakmandashboard",
+      "leadMarketplace": "Opdrachtenmarkt"
     }
   },
   "shell": {

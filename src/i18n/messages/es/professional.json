@@ -340,5 +340,37 @@
       "BUSINESS_REGISTRATION": "Registro mercantil / alta de actividad",
       "OTHER": "Otro"
     }
+  },
+  "leads": {
+    "metaTitle": "Mercado de oportunidades",
+    "title": "Mercado de oportunidades",
+    "subtitle": "Consulta las solicitudes de clientes que encajan con tus servicios y tu zona. Los datos de contacto del cliente solo se comparten después de comprar la oportunidad.",
+    "listLabel": "Oportunidades disponibles",
+    "card": {
+      "posted": "Publicada el {date}",
+      "priceLabel": "Precio de la oportunidad",
+      "maxBuyers": "Máximo de compradores: {count, number}",
+      "contactNote": "Los datos de contacto permanecen ocultos hasta que compres la oportunidad."
+    },
+    "cta": {
+      "available": "Comprar esta oportunidad",
+      "unavailable": "Compra disponible próximamente"
+    },
+    "status": {
+      "loading": "Cargando oportunidades disponibles…",
+      "loaded": "Oportunidades mostradas: {count, number}"
+    },
+    "empty": {
+      "title": "No hay oportunidades disponibles ahora mismo",
+      "description": "Las nuevas oportunidades que encajen con tus servicios aparecerán aquí. Vuelve a consultar pronto."
+    },
+    "error": {
+      "title": "No hemos podido cargar las oportunidades",
+      "description": "Algo ha salido mal. Inténtalo de nuevo.",
+      "retry": "Reintentar"
+    },
+    "loadMore": "Cargar más",
+    "loadingMore": "Cargando…",
+    "loadMoreError": "No hemos podido cargar más oportunidades. Inténtalo de nuevo."
   }
 }

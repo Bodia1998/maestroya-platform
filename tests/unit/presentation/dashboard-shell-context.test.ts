@@ -166,6 +166,7 @@ describe("resolveVisibleNavGroups", () => {
     expect(orderedHrefs).toEqual([
       "/dashboard",
       "/dashboard/professional/requests",
+      "/dashboard/professional/leads",
       "/dashboard/professional/quotes",
       "/dashboard/professional/appointments",
       "/dashboard/professional/jobs",

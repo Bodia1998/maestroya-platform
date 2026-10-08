@@ -340,5 +340,37 @@
       "BUSINESS_REGISTRATION": "Immatriculation de l’entreprise",
       "OTHER": "Autre"
     }
+  },
+  "leads": {
+    "metaTitle": "Marché des opportunités",
+    "title": "Marché des opportunités",
+    "subtitle": "Parcourez les demandes de clients qui correspondent à vos services et à votre zone. Les coordonnées du client ne sont communiquées qu'après l'achat de l'opportunité.",
+    "listLabel": "Opportunités disponibles",
+    "card": {
+      "posted": "Publiée le {date}",
+      "priceLabel": "Prix de l'opportunité",
+      "maxBuyers": "Nombre maximal d'acheteurs : {count, number}",
+      "contactNote": "Les coordonnées restent masquées tant que l'opportunité n'est pas achetée."
+    },
+    "cta": {
+      "available": "Acheter cette opportunité",
+      "unavailable": "Achat bientôt disponible"
+    },
+    "status": {
+      "loading": "Chargement des opportunités disponibles…",
+      "loaded": "Opportunités affichées : {count, number}"
+    },
+    "empty": {
+      "title": "Aucune opportunité disponible pour le moment",
+      "description": "Les nouvelles opportunités correspondant à vos services apparaîtront ici. Revenez bientôt."
+    },
+    "error": {
+      "title": "Impossible de charger les opportunités",
+      "description": "Un problème est survenu. Veuillez réessayer.",
+      "retry": "Réessayer"
+    },
+    "loadMore": "Charger plus",
+    "loadingMore": "Chargement…",
+    "loadMoreError": "Impossible de charger d'autres opportunités. Veuillez réessayer."
   }
 }

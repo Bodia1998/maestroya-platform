@@ -42,7 +42,8 @@
       "adminPanel": "Panou de administrare",
       "profile": "Profil",
       "professionalProfile": "Profil de profesionist",
-      "switchToProfessional": "Treci la panoul de profesionist"
+      "switchToProfessional": "Treci la panoul de profesionist",
+      "leadMarketplace": "Piața de oportunități"
     }
   },
   "shell": {

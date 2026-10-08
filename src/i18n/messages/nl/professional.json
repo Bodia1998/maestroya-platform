@@ -340,5 +340,37 @@
       "BUSINESS_REGISTRATION": "Inschrijving in het handelsregister",
       "OTHER": "Anders"
     }
+  },
+  "leads": {
+    "metaTitle": "Opdrachtenmarkt",
+    "title": "Opdrachtenmarkt",
+    "subtitle": "Bekijk klantaanvragen die passen bij jouw diensten en werkgebied. De contactgegevens van de klant worden pas gedeeld nadat je de lead hebt gekocht.",
+    "listLabel": "Beschikbare leads",
+    "card": {
+      "posted": "Gepubliceerd op {date}",
+      "priceLabel": "Leadprijs",
+      "maxBuyers": "Maximaal aantal kopers: {count, number}",
+      "contactNote": "De contactgegevens blijven verborgen totdat de lead is gekocht."
+    },
+    "cta": {
+      "available": "Deze lead kopen",
+      "unavailable": "Kopen binnenkort beschikbaar"
+    },
+    "status": {
+      "loading": "Beschikbare leads laden…",
+      "loaded": "Getoonde leads: {count, number}"
+    },
+    "empty": {
+      "title": "Momenteel geen leads beschikbaar",
+      "description": "Nieuwe leads die bij jouw diensten passen, verschijnen hier. Kom binnenkort terug."
+    },
+    "error": {
+      "title": "We konden de leads niet laden",
+      "description": "Er ging iets mis. Probeer het opnieuw.",
+      "retry": "Opnieuw proberen"
+    },
+    "loadMore": "Meer laden",
+    "loadingMore": "Laden…",
+    "loadMoreError": "We konden geen extra leads laden. Probeer het opnieuw."
   }
 }

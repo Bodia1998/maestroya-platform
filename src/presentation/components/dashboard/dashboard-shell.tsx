@@ -78,6 +78,7 @@ export type DashboardNavLabelKey =
   | "support"
   | "professionalDashboard"
   | "availableRequests"
+  | "leadMarketplace"
   | "myQuotes"
   | "myAppointments"
   | "myJobs"

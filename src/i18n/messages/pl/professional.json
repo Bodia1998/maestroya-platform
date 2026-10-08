@@ -340,5 +340,37 @@
       "BUSINESS_REGISTRATION": "Wpis do rejestru działalności",
       "OTHER": "Inny"
     }
+  },
+  "leads": {
+    "metaTitle": "Giełda zleceń",
+    "title": "Giełda zleceń",
+    "subtitle": "Przeglądaj zapytania klientów dopasowane do Twoich usług i obszaru działania. Dane kontaktowe klienta są udostępniane dopiero po zakupie zlecenia.",
+    "listLabel": "Dostępne zlecenia",
+    "card": {
+      "posted": "Opublikowano {date}",
+      "priceLabel": "Cena zlecenia",
+      "maxBuyers": "Maksymalna liczba kupujących: {count, number}",
+      "contactNote": "Dane kontaktowe pozostają ukryte do czasu zakupu zlecenia."
+    },
+    "cta": {
+      "available": "Kup to zlecenie",
+      "unavailable": "Zakup wkrótce dostępny"
+    },
+    "status": {
+      "loading": "Wczytywanie dostępnych zleceń…",
+      "loaded": "Wyświetlone zlecenia: {count, number}"
+    },
+    "empty": {
+      "title": "Obecnie brak dostępnych zleceń",
+      "description": "Nowe zlecenia dopasowane do Twoich usług pojawią się tutaj. Zajrzyj tu wkrótce."
+    },
+    "error": {
+      "title": "Nie udało się wczytać zleceń",
+      "description": "Coś poszło nie tak. Spróbuj ponownie.",
+      "retry": "Spróbuj ponownie"
+    },
+    "loadMore": "Wczytaj więcej",
+    "loadingMore": "Wczytywanie…",
+    "loadMoreError": "Nie udało się wczytać kolejnych zleceń. Spróbuj ponownie."
   }
 }

@@ -44,6 +44,7 @@ describe("buildDashboardNavGroups", () => {
     expect(professionalGroup?.items.map((item) => item.href)).toEqual([
       "/dashboard",
       "/dashboard/professional/requests",
+      "/dashboard/professional/leads",
       "/dashboard/professional/quotes",
       "/dashboard/professional/appointments",
       "/dashboard/professional/jobs",

@@ -42,7 +42,8 @@
       "adminPanel": "Panel administracyjny",
       "profile": "Profil",
       "professionalProfile": "Profil specjalisty",
-      "switchToProfessional": "Przełącz na panel specjalisty"
+      "switchToProfessional": "Przełącz na panel specjalisty",
+      "leadMarketplace": "Giełda zleceń"
     }
   },
   "shell": {
