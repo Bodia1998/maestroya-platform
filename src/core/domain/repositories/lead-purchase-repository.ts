@@ -114,3 +114,15 @@ export interface LeadPurchaseRepository {
 export interface LeadPurchasePaymentCorrelationReader {
   findByPaymentReference(paymentReference: string): Promise<LeadPurchaseRecord | null>;
 }
+
+/**
+ * Module 144 — read-only lookup of the professional's LATEST purchase of a lead in ANY status
+ * (PENDING_PAYMENT, CONFIRMED, FAILED, CANCELLED, ...), so the checkout page can recover from the
+ * authoritative state after a reload. A separate narrow port (not a new method on
+ * `LeadPurchaseRepository`) so existing repository fakes stay valid. Scoped by the
+ * session-derived professional profile id: another professional's purchase is never returned.
+ * Never writes.
+ */
+export interface LeadPurchaseLatestReader {
+  findLatestByLeadAndProfessional(leadId: string, professionalProfileId: string): Promise<LeadPurchaseRecord | null>;
+}

@@ -372,5 +372,106 @@
     "loadMore": "Načíst další",
     "loadingMore": "Načítání…",
     "loadMoreError": "Další zakázky se nepodařilo načíst. Zkuste to prosím znovu."
+  },
+  "leadCheckout": {
+    "metaTitle": "Koupit zakázku",
+    "title": "Koupit tuto zakázku",
+    "subtitle": "Zkontrolujte zakázku, bezpečně zaplaťte poplatek a po potvrzení platby získáte kontaktní údaje zákazníka.",
+    "lead": {
+      "heading": "Zakázka",
+      "contactNote": "Kontaktní údaje zákazníka se zobrazí až po potvrzení vaší platby."
+    },
+    "summary": {
+      "heading": "Souhrn objednávky",
+      "pending": "Poplatek, DPH (IVA) a celková částka se zobrazí, jakmile zahájíte nákup. Nic se neúčtuje, dokud nezaplatíte.",
+      "unavailable": "Rozpis ceny tohoto nákupu není k dispozici.",
+      "fee": "Poplatek za zakázku",
+      "tax": "IVA",
+      "total": "Celkem k úhradě"
+    },
+    "status": {
+      "review": {
+        "title": "Připraveno k nákupu",
+        "description": "Pokračujte a zobrazí se přesná celková částka. Účtuje se až po potvrzení platby."
+      },
+      "starting": {
+        "title": "Připravujeme váš nákup",
+        "description": "Chvíli strpení…"
+      },
+      "preparing": {
+        "title": "Připravujeme zabezpečenou platbu",
+        "description": "Nastavujeme platební formulář…"
+      },
+      "payment": {
+        "title": "Zaplaťte bezpečně",
+        "description": "Zadejte platební údaje a dokončete nákup."
+      },
+      "awaiting": {
+        "title": "Potvrzujeme vaši platbu",
+        "description": "Vaše platba se potvrzuje. Obvykle to trvá několik sekund. Tuto stránku prosím nezavírejte."
+      },
+      "timeout": {
+        "title": "Platbu stále potvrzujeme",
+        "description": "Potvrzení trvá déle, než se čekalo. Kontaktní údaje se zobrazí po potvrzení platby. Můžete to zkontrolovat znovu nebo se vrátit později."
+      },
+      "confirmed": {
+        "title": "Zakázka zakoupena",
+        "description": "Vaše platba je potvrzena. Kontaktní údaje zákazníka jsou zobrazeny níže."
+      },
+      "failed": {
+        "title": "Platba se nezdařila",
+        "description": "Platbu se nepodařilo dokončit. Můžete zahájit nový nákup."
+      },
+      "cancelled": {
+        "title": "Nákup zrušen",
+        "description": "Tento nákup byl zrušen nebo vypršel, proto již zakázku nelze jeho prostřednictvím koupit. Další zakázky najdete na tržišti."
+      },
+      "unavailable": {
+        "title": "Zakázka není dostupná",
+        "description": "Tuto zakázku nelze koupit."
+      },
+      "error": {
+        "network": {
+          "title": "Problém s připojením",
+          "description": "Nepodařilo se spojit se serverem. Zkontrolujte připojení a zkuste to znovu."
+        },
+        "denied": {
+          "title": "Nákup se nepodařilo zahájit",
+          "description": "Tato zakázka už možná není dostupná, nebo ji váš účet momentálně nemůže koupit."
+        },
+        "payment": {
+          "title": "Platbu se nepodařilo zahájit",
+          "description": "Zabezpečenou platbu se nepodařilo připravit. Zkuste to prosím znovu."
+        }
+      }
+    },
+    "payment": {
+      "heading": "Platební údaje",
+      "secure": "Údaje o kartě zadáváte do zabezpečeného formuláře Stripe a nikdy se nedostanou na servery MaestroYa.",
+      "declined": "Tuto platbu se nepodařilo zpracovat. Zkontrolujte své údaje nebo zkuste jiný způsob platby.",
+      "incomplete": "Vyplňte prosím platební údaje.",
+      "unavailable": "Zabezpečený platební formulář se nepodařilo načíst."
+    },
+    "actions": {
+      "start": "Pokračovat k platbě",
+      "pay": "Zaplatit",
+      "paying": "Zpracováváme…",
+      "retry": "Zkusit znovu",
+      "checkAgain": "Zkontrolovat znovu",
+      "startNew": "Zahájit nový nákup",
+      "backToMarketplace": "Zpět na tržiště"
+    },
+    "contact": {
+      "heading": "Kontaktní údaje zákazníka",
+      "loading": "Načítáme kontaktní údaje…",
+      "error": "Kontaktní údaje se nepodařilo načíst. Zkuste to prosím znovu.",
+      "denied": "Kontaktní údaje pro tento nákup nejsou k dispozici.",
+      "retry": "Zkusit znovu",
+      "name": "Jméno",
+      "email": "E-mail",
+      "phone": "Telefon",
+      "address": "Adresa",
+      "notProvided": "Neuvedeno"
+    }
   }
 }

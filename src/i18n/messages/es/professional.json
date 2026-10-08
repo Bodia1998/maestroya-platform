@@ -372,5 +372,106 @@
     "loadMore": "Cargar más",
     "loadingMore": "Cargando…",
     "loadMoreError": "No hemos podido cargar más oportunidades. Inténtalo de nuevo."
+  },
+  "leadCheckout": {
+    "metaTitle": "Comprar oportunidad",
+    "title": "Comprar esta oportunidad",
+    "subtitle": "Revisa la oportunidad, paga la tarifa de forma segura y obtén los datos de contacto del cliente cuando se confirme el pago.",
+    "lead": {
+      "heading": "Oportunidad",
+      "contactNote": "Los datos de contacto del cliente solo se muestran cuando se confirma tu pago."
+    },
+    "summary": {
+      "heading": "Resumen del pedido",
+      "pending": "La tarifa, el IVA y el total se muestran en cuanto inicies la compra. No se cobra nada hasta que pagues.",
+      "unavailable": "El desglose del precio de esta compra no está disponible.",
+      "fee": "Tarifa de la oportunidad",
+      "tax": "IVA",
+      "total": "Total a pagar"
+    },
+    "status": {
+      "review": {
+        "title": "Listo para comprar",
+        "description": "Continúa para ver el total exacto. Solo se te cobrará cuando confirmes el pago."
+      },
+      "starting": {
+        "title": "Preparando tu compra",
+        "description": "Espera un momento…"
+      },
+      "preparing": {
+        "title": "Preparando el pago seguro",
+        "description": "Configurando el formulario de pago…"
+      },
+      "payment": {
+        "title": "Paga de forma segura",
+        "description": "Introduce tus datos de pago para completar la compra."
+      },
+      "awaiting": {
+        "title": "Confirmando tu pago",
+        "description": "Estamos confirmando tu pago. Suele tardar unos segundos. No cierres esta página."
+      },
+      "timeout": {
+        "title": "Seguimos confirmando tu pago",
+        "description": "La confirmación está tardando más de lo esperado. Los datos de contacto aparecerán cuando se confirme el pago. Puedes volver a comprobarlo o regresar más tarde."
+      },
+      "confirmed": {
+        "title": "Oportunidad comprada",
+        "description": "Tu pago está confirmado. Los datos de contacto del cliente se muestran a continuación."
+      },
+      "failed": {
+        "title": "El pago ha fallado",
+        "description": "No se pudo completar el pago. Puedes iniciar una nueva compra."
+      },
+      "cancelled": {
+        "title": "Compra cancelada",
+        "description": "Esta compra se canceló o ha caducado, por lo que la oportunidad ya no se puede comprar con ella. Puedes ver otras oportunidades en el mercado."
+      },
+      "unavailable": {
+        "title": "Oportunidad no disponible",
+        "description": "Esta oportunidad no está disponible para su compra."
+      },
+      "error": {
+        "network": {
+          "title": "Problema de conexión",
+          "description": "No hemos podido conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo."
+        },
+        "denied": {
+          "title": "No hemos podido iniciar la compra",
+          "description": "Puede que esta oportunidad ya no esté disponible o que tu cuenta no pueda comprarla ahora mismo."
+        },
+        "payment": {
+          "title": "No se pudo iniciar el pago",
+          "description": "No hemos podido preparar el pago seguro. Inténtalo de nuevo."
+        }
+      }
+    },
+    "payment": {
+      "heading": "Datos de pago",
+      "secure": "Los datos de la tarjeta se introducen en un formulario seguro de Stripe y nunca llegan a los servidores de MaestroYa.",
+      "declined": "No hemos podido procesar este pago. Revisa tus datos o prueba con otro método de pago.",
+      "incomplete": "Completa tus datos de pago.",
+      "unavailable": "No se pudo cargar el formulario de pago seguro."
+    },
+    "actions": {
+      "start": "Continuar al pago",
+      "pay": "Pagar ahora",
+      "paying": "Procesando…",
+      "retry": "Inténtalo de nuevo",
+      "checkAgain": "Comprobar de nuevo",
+      "startNew": "Iniciar una nueva compra",
+      "backToMarketplace": "Volver al mercado"
+    },
+    "contact": {
+      "heading": "Datos de contacto del cliente",
+      "loading": "Cargando los datos de contacto…",
+      "error": "No hemos podido cargar los datos de contacto. Inténtalo de nuevo.",
+      "denied": "Los datos de contacto no están disponibles para esta compra.",
+      "retry": "Inténtalo de nuevo",
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "notProvided": "No indicado"
+    }
   }
 }

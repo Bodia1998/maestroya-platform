@@ -372,5 +372,106 @@
     "loadMore": "Charger plus",
     "loadingMore": "Chargement…",
     "loadMoreError": "Impossible de charger d'autres opportunités. Veuillez réessayer."
+  },
+  "leadCheckout": {
+    "metaTitle": "Acheter l'opportunité",
+    "title": "Acheter cette opportunité",
+    "subtitle": "Vérifiez l'opportunité, payez les frais en toute sécurité et obtenez les coordonnées du client dès que le paiement est confirmé.",
+    "lead": {
+      "heading": "Opportunité",
+      "contactNote": "Les coordonnées du client ne s'affichent qu'une fois votre paiement confirmé."
+    },
+    "summary": {
+      "heading": "Récapitulatif de la commande",
+      "pending": "Les frais, l'IVA et le total s'affichent dès que vous démarrez l'achat. Rien n'est débité tant que vous ne payez pas.",
+      "unavailable": "Le détail du prix de cet achat n'est pas disponible.",
+      "fee": "Frais de l'opportunité",
+      "tax": "IVA",
+      "total": "Total à payer"
+    },
+    "status": {
+      "review": {
+        "title": "Prêt à acheter",
+        "description": "Continuez pour voir le total exact. Vous n'êtes débité qu'après avoir confirmé le paiement."
+      },
+      "starting": {
+        "title": "Préparation de votre achat",
+        "description": "Veuillez patienter un instant…"
+      },
+      "preparing": {
+        "title": "Préparation du paiement sécurisé",
+        "description": "Configuration du formulaire de paiement…"
+      },
+      "payment": {
+        "title": "Payez en toute sécurité",
+        "description": "Saisissez vos informations de paiement pour finaliser l'achat."
+      },
+      "awaiting": {
+        "title": "Confirmation de votre paiement",
+        "description": "Votre paiement est en cours de confirmation. Cela prend généralement quelques secondes. Ne fermez pas cette page."
+      },
+      "timeout": {
+        "title": "Confirmation du paiement toujours en cours",
+        "description": "La confirmation prend plus de temps que prévu. Les coordonnées apparaîtront une fois le paiement confirmé. Vous pouvez vérifier à nouveau ou revenir plus tard."
+      },
+      "confirmed": {
+        "title": "Opportunité achetée",
+        "description": "Votre paiement est confirmé. Les coordonnées du client s'affichent ci-dessous."
+      },
+      "failed": {
+        "title": "Échec du paiement",
+        "description": "Le paiement n'a pas pu être finalisé. Vous pouvez démarrer un nouvel achat."
+      },
+      "cancelled": {
+        "title": "Achat annulé",
+        "description": "Cet achat a été annulé ou a expiré ; l'opportunité ne peut donc plus être achetée par ce biais. Vous pouvez consulter d'autres opportunités sur le marché."
+      },
+      "unavailable": {
+        "title": "Opportunité indisponible",
+        "description": "Cette opportunité n'est pas disponible à l'achat."
+      },
+      "error": {
+        "network": {
+          "title": "Problème de connexion",
+          "description": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez."
+        },
+        "denied": {
+          "title": "Impossible de démarrer cet achat",
+          "description": "Cette opportunité n'est peut-être plus disponible, ou votre compte ne peut pas l'acheter pour le moment."
+        },
+        "payment": {
+          "title": "Impossible de démarrer le paiement",
+          "description": "Nous n'avons pas pu préparer le paiement sécurisé. Veuillez réessayer."
+        }
+      }
+    },
+    "payment": {
+      "heading": "Informations de paiement",
+      "secure": "Les données de carte sont saisies dans un formulaire sécurisé fourni par Stripe et n'arrivent jamais sur les serveurs de MaestroYa.",
+      "declined": "Nous n'avons pas pu traiter ce paiement. Vérifiez vos informations ou essayez un autre moyen de paiement.",
+      "incomplete": "Veuillez compléter vos informations de paiement.",
+      "unavailable": "Le formulaire de paiement sécurisé n'a pas pu être chargé."
+    },
+    "actions": {
+      "start": "Continuer vers le paiement",
+      "pay": "Payer maintenant",
+      "paying": "Traitement en cours…",
+      "retry": "Réessayer",
+      "checkAgain": "Vérifier à nouveau",
+      "startNew": "Démarrer un nouvel achat",
+      "backToMarketplace": "Retour au marché"
+    },
+    "contact": {
+      "heading": "Coordonnées du client",
+      "loading": "Chargement des coordonnées…",
+      "error": "Impossible de charger les coordonnées. Veuillez réessayer.",
+      "denied": "Les coordonnées ne sont pas disponibles pour cet achat.",
+      "retry": "Réessayer",
+      "name": "Nom",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "address": "Adresse",
+      "notProvided": "Non renseigné"
+    }
   }
 }

@@ -372,5 +372,106 @@
     "loadMore": "Încarcă mai multe",
     "loadingMore": "Se încarcă…",
     "loadMoreError": "Nu am putut încărca mai multe oportunități. Încearcă din nou."
+  },
+  "leadCheckout": {
+    "metaTitle": "Cumpără oportunitatea",
+    "title": "Cumpără această oportunitate",
+    "subtitle": "Verifică oportunitatea, plătește taxa în siguranță și primește datele de contact ale clientului după confirmarea plății.",
+    "lead": {
+      "heading": "Oportunitate",
+      "contactNote": "Datele de contact ale clientului sunt afișate doar după confirmarea plății tale."
+    },
+    "summary": {
+      "heading": "Rezumatul comenzii",
+      "pending": "Taxa, IVA și totalul sunt afișate imediat ce începi achiziția. Nu se percepe nimic până nu plătești.",
+      "unavailable": "Detalierea prețului pentru această achiziție nu este disponibilă.",
+      "fee": "Taxa oportunității",
+      "tax": "IVA",
+      "total": "Total de plată"
+    },
+    "status": {
+      "review": {
+        "title": "Gata de achiziție",
+        "description": "Continuă pentru a vedea totalul exact. Se percepe suma doar după ce confirmi plata."
+      },
+      "starting": {
+        "title": "Se pregătește achiziția",
+        "description": "Așteaptă un moment…"
+      },
+      "preparing": {
+        "title": "Se pregătește plata securizată",
+        "description": "Se configurează formularul de plată…"
+      },
+      "payment": {
+        "title": "Plătește în siguranță",
+        "description": "Introdu datele de plată pentru a finaliza achiziția."
+      },
+      "awaiting": {
+        "title": "Se confirmă plata",
+        "description": "Plata ta este în curs de confirmare. De obicei durează câteva secunde. Nu închide această pagină."
+      },
+      "timeout": {
+        "title": "Plata este încă în curs de confirmare",
+        "description": "Confirmarea durează mai mult decât se aștepta. Datele de contact vor apărea după confirmarea plății. Poți verifica din nou sau reveni mai târziu."
+      },
+      "confirmed": {
+        "title": "Oportunitate cumpărată",
+        "description": "Plata ta este confirmată. Datele de contact ale clientului sunt afișate mai jos."
+      },
+      "failed": {
+        "title": "Plata a eșuat",
+        "description": "Plata nu a putut fi finalizată. Poți începe o nouă achiziție."
+      },
+      "cancelled": {
+        "title": "Achiziție anulată",
+        "description": "Această achiziție a fost anulată sau a expirat, așa că oportunitatea nu mai poate fi cumpărată prin ea. Poți vedea alte oportunități pe piață."
+      },
+      "unavailable": {
+        "title": "Oportunitate indisponibilă",
+        "description": "Această oportunitate nu este disponibilă pentru achiziție."
+      },
+      "error": {
+        "network": {
+          "title": "Problemă de conexiune",
+          "description": "Nu am putut contacta serverul. Verifică conexiunea și încearcă din nou."
+        },
+        "denied": {
+          "title": "Nu am putut începe achiziția",
+          "description": "Este posibil ca această oportunitate să nu mai fie disponibilă sau contul tău să nu o poată cumpăra acum."
+        },
+        "payment": {
+          "title": "Plata nu a putut fi începută",
+          "description": "Nu am putut pregăti plata securizată. Încearcă din nou."
+        }
+      }
+    },
+    "payment": {
+      "heading": "Date de plată",
+      "secure": "Datele cardului se introduc într-un formular securizat Stripe și nu ajung niciodată pe serverele MaestroYa.",
+      "declined": "Nu am putut procesa această plată. Verifică datele sau încearcă altă metodă de plată.",
+      "incomplete": "Completează datele de plată.",
+      "unavailable": "Formularul de plată securizat nu a putut fi încărcat."
+    },
+    "actions": {
+      "start": "Continuă la plată",
+      "pay": "Plătește acum",
+      "paying": "Se procesează…",
+      "retry": "Încearcă din nou",
+      "checkAgain": "Verifică din nou",
+      "startNew": "Începe o nouă achiziție",
+      "backToMarketplace": "Înapoi la piață"
+    },
+    "contact": {
+      "heading": "Datele de contact ale clientului",
+      "loading": "Se încarcă datele de contact…",
+      "error": "Nu am putut încărca datele de contact. Încearcă din nou.",
+      "denied": "Datele de contact nu sunt disponibile pentru această achiziție.",
+      "retry": "Încearcă din nou",
+      "name": "Nume",
+      "email": "E-mail",
+      "phone": "Telefon",
+      "address": "Adresă",
+      "notProvided": "Nespecificat"
+    }
   }
 }

@@ -372,5 +372,106 @@
     "loadMore": "Mehr laden",
     "loadingMore": "Wird geladen…",
     "loadMoreError": "Weitere Leads konnten nicht geladen werden. Bitte versuche es erneut."
+  },
+  "leadCheckout": {
+    "metaTitle": "Lead kaufen",
+    "title": "Diesen Lead kaufen",
+    "subtitle": "Prüfen Sie den Lead, zahlen Sie die Lead-Gebühr sicher und erhalten Sie die Kontaktdaten des Kunden, sobald die Zahlung bestätigt ist.",
+    "lead": {
+      "heading": "Lead",
+      "contactNote": "Die Kontaktdaten des Kunden werden erst angezeigt, wenn Ihre Zahlung bestätigt ist."
+    },
+    "summary": {
+      "heading": "Bestellübersicht",
+      "pending": "Lead-Gebühr, IVA und Gesamtbetrag werden angezeigt, sobald Sie den Kauf starten. Es wird nichts abgebucht, bevor Sie bezahlen.",
+      "unavailable": "Die Preisaufschlüsselung für diesen Kauf ist nicht verfügbar.",
+      "fee": "Lead-Gebühr",
+      "tax": "IVA",
+      "total": "Zu zahlender Gesamtbetrag"
+    },
+    "status": {
+      "review": {
+        "title": "Bereit zum Kauf",
+        "description": "Fahren Sie fort, um den genauen Gesamtbetrag zu sehen. Abgebucht wird erst, nachdem Sie die Zahlung bestätigt haben."
+      },
+      "starting": {
+        "title": "Ihr Kauf wird vorbereitet",
+        "description": "Einen Moment bitte…"
+      },
+      "preparing": {
+        "title": "Sichere Zahlung wird vorbereitet",
+        "description": "Das Zahlungsformular wird eingerichtet…"
+      },
+      "payment": {
+        "title": "Sicher bezahlen",
+        "description": "Geben Sie Ihre Zahlungsdaten ein, um den Kauf abzuschließen."
+      },
+      "awaiting": {
+        "title": "Ihre Zahlung wird bestätigt",
+        "description": "Ihre Zahlung wird bestätigt. Das dauert meist nur wenige Sekunden. Bitte schließen Sie diese Seite nicht."
+      },
+      "timeout": {
+        "title": "Die Zahlung wird noch bestätigt",
+        "description": "Die Bestätigung dauert länger als erwartet. Die Kontaktdaten erscheinen, sobald die Zahlung bestätigt ist. Sie können erneut prüfen oder später wiederkommen."
+      },
+      "confirmed": {
+        "title": "Lead gekauft",
+        "description": "Ihre Zahlung ist bestätigt. Die Kontaktdaten des Kunden werden unten angezeigt."
+      },
+      "failed": {
+        "title": "Zahlung fehlgeschlagen",
+        "description": "Die Zahlung konnte nicht abgeschlossen werden. Sie können einen neuen Kauf starten."
+      },
+      "cancelled": {
+        "title": "Kauf storniert",
+        "description": "Dieser Kauf wurde storniert oder ist abgelaufen, daher kann der Lead darüber nicht mehr gekauft werden. Weitere Leads finden Sie im Marktplatz."
+      },
+      "unavailable": {
+        "title": "Lead nicht verfügbar",
+        "description": "Dieser Lead steht nicht zum Kauf zur Verfügung."
+      },
+      "error": {
+        "network": {
+          "title": "Verbindungsproblem",
+          "description": "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+        },
+        "denied": {
+          "title": "Der Kauf konnte nicht gestartet werden",
+          "description": "Dieser Lead ist möglicherweise nicht mehr verfügbar, oder Ihr Konto kann ihn derzeit nicht kaufen."
+        },
+        "payment": {
+          "title": "Die Zahlung konnte nicht gestartet werden",
+          "description": "Die sichere Zahlung konnte nicht vorbereitet werden. Bitte versuchen Sie es erneut."
+        }
+      }
+    },
+    "payment": {
+      "heading": "Zahlungsdaten",
+      "secure": "Kartendaten werden in einem sicheren Formular von Stripe eingegeben und gelangen nie auf die Server von MaestroYa.",
+      "declined": "Diese Zahlung konnte nicht verarbeitet werden. Prüfen Sie Ihre Angaben oder wählen Sie eine andere Zahlungsmethode.",
+      "incomplete": "Bitte vervollständigen Sie Ihre Zahlungsdaten.",
+      "unavailable": "Das sichere Zahlungsformular konnte nicht geladen werden."
+    },
+    "actions": {
+      "start": "Weiter zur Zahlung",
+      "pay": "Jetzt bezahlen",
+      "paying": "Wird verarbeitet…",
+      "retry": "Erneut versuchen",
+      "checkAgain": "Erneut prüfen",
+      "startNew": "Neuen Kauf starten",
+      "backToMarketplace": "Zurück zum Marktplatz"
+    },
+    "contact": {
+      "heading": "Kontaktdaten des Kunden",
+      "loading": "Kontaktdaten werden geladen…",
+      "error": "Die Kontaktdaten konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+      "denied": "Für diesen Kauf sind keine Kontaktdaten verfügbar.",
+      "retry": "Erneut versuchen",
+      "name": "Name",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "address": "Adresse",
+      "notProvided": "Nicht angegeben"
+    }
   }
 }

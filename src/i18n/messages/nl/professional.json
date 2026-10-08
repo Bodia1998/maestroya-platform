@@ -372,5 +372,106 @@
     "loadMore": "Meer laden",
     "loadingMore": "Laden…",
     "loadMoreError": "We konden geen extra leads laden. Probeer het opnieuw."
+  },
+  "leadCheckout": {
+    "metaTitle": "Lead kopen",
+    "title": "Deze lead kopen",
+    "subtitle": "Bekijk de lead, betaal de leadkosten veilig en ontvang de contactgegevens van de klant zodra de betaling is bevestigd.",
+    "lead": {
+      "heading": "Lead",
+      "contactNote": "De contactgegevens van de klant worden pas getoond nadat je betaling is bevestigd."
+    },
+    "summary": {
+      "heading": "Besteloverzicht",
+      "pending": "De leadkosten, IVA en het totaal worden getoond zodra je de aankoop start. Er wordt niets afgeschreven totdat je betaalt.",
+      "unavailable": "De prijsopbouw van deze aankoop is niet beschikbaar.",
+      "fee": "Leadkosten",
+      "tax": "IVA",
+      "total": "Totaal te betalen"
+    },
+    "status": {
+      "review": {
+        "title": "Klaar om te kopen",
+        "description": "Ga verder om het exacte totaal te zien. Er wordt pas afgeschreven nadat je de betaling bevestigt."
+      },
+      "starting": {
+        "title": "Je aankoop wordt voorbereid",
+        "description": "Een ogenblik geduld…"
+      },
+      "preparing": {
+        "title": "Veilige betaling wordt voorbereid",
+        "description": "Het betaalformulier wordt ingesteld…"
+      },
+      "payment": {
+        "title": "Betaal veilig",
+        "description": "Voer je betaalgegevens in om de aankoop te voltooien."
+      },
+      "awaiting": {
+        "title": "Je betaling wordt bevestigd",
+        "description": "Je betaling wordt bevestigd. Dit duurt meestal een paar seconden. Sluit deze pagina niet."
+      },
+      "timeout": {
+        "title": "Betaling wordt nog bevestigd",
+        "description": "De bevestiging duurt langer dan verwacht. De contactgegevens verschijnen zodra de betaling is bevestigd. Je kunt opnieuw controleren of later terugkomen."
+      },
+      "confirmed": {
+        "title": "Lead gekocht",
+        "description": "Je betaling is bevestigd. De contactgegevens van de klant staan hieronder."
+      },
+      "failed": {
+        "title": "Betaling mislukt",
+        "description": "De betaling kon niet worden voltooid. Je kunt een nieuwe aankoop starten."
+      },
+      "cancelled": {
+        "title": "Aankoop geannuleerd",
+        "description": "Deze aankoop is geannuleerd of verlopen, dus de lead kan hiermee niet meer worden gekocht. Je kunt andere leads bekijken op de markt."
+      },
+      "unavailable": {
+        "title": "Lead niet beschikbaar",
+        "description": "Deze lead is niet beschikbaar voor aankoop."
+      },
+      "error": {
+        "network": {
+          "title": "Verbindingsprobleem",
+          "description": "We kunnen de server niet bereiken. Controleer je verbinding en probeer het opnieuw."
+        },
+        "denied": {
+          "title": "We konden deze aankoop niet starten",
+          "description": "Deze lead is mogelijk niet meer beschikbaar, of je account kan hem op dit moment niet kopen."
+        },
+        "payment": {
+          "title": "Betaling kon niet worden gestart",
+          "description": "We konden de veilige betaling niet voorbereiden. Probeer het opnieuw."
+        }
+      }
+    },
+    "payment": {
+      "heading": "Betaalgegevens",
+      "secure": "Kaartgegevens worden ingevoerd in een beveiligd formulier van Stripe en bereiken nooit de servers van MaestroYa.",
+      "declined": "We konden deze betaling niet verwerken. Controleer je gegevens of probeer een andere betaalmethode.",
+      "incomplete": "Vul je betaalgegevens volledig in.",
+      "unavailable": "Het beveiligde betaalformulier kon niet worden geladen."
+    },
+    "actions": {
+      "start": "Verder naar betaling",
+      "pay": "Nu betalen",
+      "paying": "Verwerken…",
+      "retry": "Opnieuw proberen",
+      "checkAgain": "Opnieuw controleren",
+      "startNew": "Nieuwe aankoop starten",
+      "backToMarketplace": "Terug naar de markt"
+    },
+    "contact": {
+      "heading": "Contactgegevens van de klant",
+      "loading": "Contactgegevens laden…",
+      "error": "De contactgegevens konden niet worden geladen. Probeer het opnieuw.",
+      "denied": "Er zijn geen contactgegevens beschikbaar voor deze aankoop.",
+      "retry": "Opnieuw proberen",
+      "name": "Naam",
+      "email": "E-mail",
+      "phone": "Telefoon",
+      "address": "Adres",
+      "notProvided": "Niet opgegeven"
+    }
   }
 }

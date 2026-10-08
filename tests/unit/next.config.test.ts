@@ -36,6 +36,18 @@ describe("next.config.ts security headers", () => {
     expect(csp).toMatch(/frame-ancestors 'none'/);
   });
 
+  it("allows exactly Stripe's documented origins for the Module 144 Payment Element — no wildcard, no extra eval", async () => {
+    const rules = await nextConfig.headers!();
+    const csp = rules[0]!.headers.find((h) => h.key === "Content-Security-Policy")!.value;
+    const directive = (name: string) => csp.split("; ").find((d) => d.startsWith(`${name} `)) ?? "";
+
+    expect(directive("script-src")).toContain("https://js.stripe.com");
+    expect(directive("frame-src").split(" ").sort()).toEqual(["frame-src", "https://hooks.stripe.com", "https://js.stripe.com"]);
+    expect(directive("connect-src")).toContain("https://api.stripe.com");
+    expect(csp).not.toMatch(/\*\.stripe\.com/);
+    expect(directive("default-src")).toBe("default-src 'self'");
+  });
+
   it("uses standalone output for Docker readiness", () => {
     expect(nextConfig.output).toBe("standalone");
   });
