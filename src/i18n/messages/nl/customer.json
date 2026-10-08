@@ -88,6 +88,50 @@
       "photoTooLarge": "Elke foto moet kleiner zijn dan 5 MB.",
       "photoUploadFailed": "Er ging iets mis bij het uploaden van je foto.",
       "photoRemoveFailed": "Er ging iets mis bij het verwijderen van die foto."
+    },
+    "leadForm": {
+      "title": "Een dienst aanvragen",
+      "subtitle": "Vertel ons over de klus, zodat we geschikte vakmensen voor je kunnen vinden.",
+      "unavailable": {
+        "title": "Aanvragen zijn tijdelijk niet beschikbaar",
+        "description": "Op dit moment kunnen we geen nieuwe aanvragen aannemen. Probeer het later opnieuw."
+      },
+      "sections": {
+        "job": "Over de klus",
+        "jobDescription": "Hoe meer details je geeft, hoe nuttiger de reacties die je krijgt.",
+        "location": "Waar is de klus?",
+        "locationDescription": "We gebruiken het adres om vakmensen te vinden die in jouw regio werken."
+      },
+      "fields": {
+        "category": "Dienstcategorie",
+        "selectCategory": "Kies een categorie",
+        "title": "Korte titel",
+        "titlePlaceholder": "bijv. Lekkende keukenkraan",
+        "description": "Beschrijf het probleem",
+        "descriptionPlaceholder": "bijv. De kraan onder de gootsteen lekt al twee dagen en de kast wordt vochtig.",
+        "descriptionHint": "Vertel wat er mis is, waar in huis het zit en wat van invloed is op het werk. Minimaal 20 tekens.",
+        "urgency": "Urgentie",
+        "line1": "Straat en huisnummer",
+        "line2": "Appartement, verdieping, enz.",
+        "city": "Plaats",
+        "postalCode": "Postcode",
+        "province": "Provincie",
+        "country": "Land"
+      },
+      "submit": "Aanvraag versturen",
+      "submitting": "Bezig met versturen…",
+      "success": {
+        "title": "Aanvraag verstuurd",
+        "description": "Bedankt! MaestroYa zoekt nu geschikte vakmensen voor je klus. Op het platform laten we je weten wat de volgende stap is.",
+        "noPaymentNote": "Je hoeft de vakman niet via MaestroYa te betalen.",
+        "viewRequests": "Mijn aanvragen bekijken"
+      },
+      "errors": {
+        "unauthenticated": "Je sessie is verlopen. Log in om een aanvraag te versturen.",
+        "signIn": "Inloggen",
+        "categoryUnsupported": "Deze categorie is nog niet beschikbaar voor aanvragen. Kies een andere.",
+        "submitFailed": "We konden je aanvraag niet versturen. Probeer het zo meteen opnieuw."
+      }
     }
   },
   "quotes": {

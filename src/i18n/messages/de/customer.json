@@ -88,6 +88,50 @@
       "photoTooLarge": "Jedes Foto muss kleiner als 5 MB sein.",
       "photoUploadFailed": "Beim Hochladen deines Fotos ist etwas schiefgelaufen.",
       "photoRemoveFailed": "Beim Entfernen des Fotos ist etwas schiefgelaufen."
+    },
+    "leadForm": {
+      "title": "Dienstleistung anfragen",
+      "subtitle": "Beschreibe uns den Auftrag, damit wir passende Fachkräfte für dich finden.",
+      "unavailable": {
+        "title": "Anfragen sind vorübergehend nicht verfügbar",
+        "description": "Neue Anfragen können derzeit nicht angenommen werden. Bitte versuche es später erneut."
+      },
+      "sections": {
+        "job": "Zum Auftrag",
+        "jobDescription": "Je mehr Details du angibst, desto hilfreicher sind die Antworten, die du erhältst.",
+        "location": "Wo findet der Auftrag statt?",
+        "locationDescription": "Wir nutzen die Adresse, um Fachkräfte in deiner Nähe zu finden."
+      },
+      "fields": {
+        "category": "Dienstleistungskategorie",
+        "selectCategory": "Kategorie auswählen",
+        "title": "Kurzer Titel",
+        "titlePlaceholder": "z. B. Tropfender Küchenwasserhahn",
+        "description": "Beschreibe das Problem",
+        "descriptionPlaceholder": "z. B. Der Wasserhahn unter der Spüle tropft seit zwei Tagen und der Schrank wird feucht.",
+        "descriptionHint": "Gib an, was nicht stimmt, wo es sich in der Wohnung befindet und was die Arbeit beeinflusst. Mindestens 20 Zeichen.",
+        "urgency": "Dringlichkeit",
+        "line1": "Straße und Hausnummer",
+        "line2": "Wohnung, Etage usw.",
+        "city": "Stadt",
+        "postalCode": "Postleitzahl",
+        "province": "Provinz",
+        "country": "Land"
+      },
+      "submit": "Anfrage senden",
+      "submitting": "Wird gesendet…",
+      "success": {
+        "title": "Anfrage gesendet",
+        "description": "Danke! MaestroYa sucht jetzt passende Fachkräfte für deinen Auftrag. Wie es weitergeht, teilen wir dir hier auf der Plattform mit.",
+        "noPaymentNote": "Du musst die Fachkraft nicht über MaestroYa bezahlen.",
+        "viewRequests": "Meine Anfragen ansehen"
+      },
+      "errors": {
+        "unauthenticated": "Deine Sitzung ist abgelaufen. Bitte melde dich an, um eine Anfrage zu senden.",
+        "signIn": "Anmelden",
+        "categoryUnsupported": "Diese Kategorie ist für Anfragen noch nicht verfügbar. Bitte wähle eine andere.",
+        "submitFailed": "Deine Anfrage konnte nicht gesendet werden. Bitte versuche es gleich noch einmal."
+      }
     }
   },
   "quotes": {

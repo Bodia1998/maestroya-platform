@@ -88,6 +88,50 @@
       "photoTooLarge": "Fiecare fotografie trebuie să aibă mai puțin de 5 MB.",
       "photoUploadFailed": "A apărut o eroare la încărcarea fotografiei.",
       "photoRemoveFailed": "A apărut o eroare la eliminarea fotografiei."
+    },
+    "leadForm": {
+      "title": "Solicită un serviciu",
+      "subtitle": "Spune-ne despre lucrare, ca să găsim profesioniști potriviți pentru tine.",
+      "unavailable": {
+        "title": "Cererile sunt temporar indisponibile",
+        "description": "Momentan nu putem primi cereri noi. Încearcă din nou mai târziu."
+      },
+      "sections": {
+        "job": "Despre lucrare",
+        "jobDescription": "Cu cât oferi mai multe detalii, cu atât răspunsurile primite vor fi mai utile.",
+        "location": "Unde se face lucrarea?",
+        "locationDescription": "Folosim adresa pentru a găsi profesioniști care lucrează în zona ta."
+      },
+      "fields": {
+        "category": "Categoria serviciului",
+        "selectCategory": "Selectează o categorie",
+        "title": "Titlu scurt",
+        "titlePlaceholder": "ex. Robinet de bucătărie care curge",
+        "description": "Descrie problema",
+        "descriptionPlaceholder": "ex. Robinetul de sub chiuvetă picură de două zile, iar dulapul se umezește.",
+        "descriptionHint": "Spune ce nu funcționează, unde în locuință se află și orice influențează lucrarea. Cel puțin 20 de caractere.",
+        "urgency": "Urgență",
+        "line1": "Stradă și număr",
+        "line2": "Apartament, etaj etc.",
+        "city": "Oraș",
+        "postalCode": "Cod poștal",
+        "province": "Județ",
+        "country": "Țară"
+      },
+      "submit": "Trimite cererea",
+      "submitting": "Se trimite…",
+      "success": {
+        "title": "Cerere trimisă",
+        "description": "Mulțumim! MaestroYa caută acum profesioniști potriviți pentru lucrarea ta. Te vom anunța aici, pe platformă, care sunt pașii următori.",
+        "noPaymentNote": "Nu trebuie să plătești profesionistul prin MaestroYa.",
+        "viewRequests": "Vezi cererile mele"
+      },
+      "errors": {
+        "unauthenticated": "Sesiunea ta a expirat. Autentifică-te pentru a trimite o cerere.",
+        "signIn": "Autentifică-te",
+        "categoryUnsupported": "Această categorie de servicii nu este încă disponibilă pentru cereri. Alege alta.",
+        "submitFailed": "Nu am putut trimite cererea ta. Încearcă din nou peste un moment."
+      }
     }
   },
   "quotes": {

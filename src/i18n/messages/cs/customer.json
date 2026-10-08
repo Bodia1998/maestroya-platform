@@ -88,6 +88,50 @@
       "photoTooLarge": "Každá fotografie musí mít méně než 5 MB.",
       "photoUploadFailed": "Při nahrávání fotografie se něco pokazilo.",
       "photoRemoveFailed": "Při odebírání fotografie se něco pokazilo."
+    },
+    "leadForm": {
+      "title": "Zadat službu",
+      "subtitle": "Popište nám práci, abychom pro vás našli vhodné odborníky.",
+      "unavailable": {
+        "title": "Poptávky jsou dočasně nedostupné",
+        "description": "Nové poptávky momentálně nemůžeme přijímat. Zkuste to prosím později."
+      },
+      "sections": {
+        "job": "O práci",
+        "jobDescription": "Čím více podrobností uvedete, tím užitečnější odpovědi dostanete.",
+        "location": "Kde se práce bude provádět?",
+        "locationDescription": "Adresu používáme k vyhledání odborníků, kteří působí ve vašem okolí."
+      },
+      "fields": {
+        "category": "Kategorie služby",
+        "selectCategory": "Vyberte kategorii",
+        "title": "Krátký název",
+        "titlePlaceholder": "např. Kapající kuchyňská baterie",
+        "description": "Popište problém",
+        "descriptionPlaceholder": "např. Baterie pod dřezem kape už dva dny a skříňka vlhne.",
+        "descriptionHint": "Napište, co je špatně, kde v bytě to je a cokoli, co ovlivňuje práci. Alespoň 20 znaků.",
+        "urgency": "Naléhavost",
+        "line1": "Ulice a číslo",
+        "line2": "Byt, patro atd.",
+        "city": "Město",
+        "postalCode": "PSČ",
+        "province": "Provincie",
+        "country": "Země"
+      },
+      "submit": "Odeslat poptávku",
+      "submitting": "Odesílání…",
+      "success": {
+        "title": "Poptávka odeslána",
+        "description": "Děkujeme! MaestroYa nyní hledá vhodné odborníky pro vaši práci. O dalším postupu vás budeme informovat zde na platformě.",
+        "noPaymentNote": "Odborníkovi nemusíte platit přes MaestroYa.",
+        "viewRequests": "Zobrazit moje poptávky"
+      },
+      "errors": {
+        "unauthenticated": "Platnost vašeho přihlášení vypršela. Pro odeslání poptávky se přihlaste.",
+        "signIn": "Přihlásit se",
+        "categoryUnsupported": "Tato kategorie služeb zatím není pro poptávky dostupná. Vyberte jinou.",
+        "submitFailed": "Poptávku se nepodařilo odeslat. Zkuste to prosím za chvíli znovu."
+      }
     }
   },
   "quotes": {

@@ -88,6 +88,50 @@
       "photoTooLarge": "Ogni foto deve essere inferiore a 5 MB.",
       "photoUploadFailed": "Si è verificato un errore durante il caricamento della foto.",
       "photoRemoveFailed": "Si è verificato un errore durante la rimozione della foto."
+    },
+    "leadForm": {
+      "title": "Richiedi un servizio",
+      "subtitle": "Raccontaci di cosa hai bisogno, così possiamo trovare i professionisti giusti.",
+      "unavailable": {
+        "title": "Le richieste sono temporaneamente non disponibili",
+        "description": "Al momento non possiamo accettare nuove richieste di servizio. Riprova più tardi."
+      },
+      "sections": {
+        "job": "Il lavoro",
+        "jobDescription": "Più dettagli fornisci, più utili saranno le risposte che riceverai.",
+        "location": "Dove si svolge il lavoro?",
+        "locationDescription": "Usiamo l'indirizzo per trovare professionisti che operano nella tua zona."
+      },
+      "fields": {
+        "category": "Categoria del servizio",
+        "selectCategory": "Seleziona una categoria",
+        "title": "Titolo breve",
+        "titlePlaceholder": "es. Rubinetto della cucina che perde",
+        "description": "Descrivi il problema",
+        "descriptionPlaceholder": "es. Il rubinetto sotto il lavello gocciola da due giorni e il mobile sta diventando umido.",
+        "descriptionHint": "Indica cosa non va, in quale parte della casa si trova e tutto ciò che influisce sul lavoro. Almeno 20 caratteri.",
+        "urgency": "Urgenza",
+        "line1": "Via e numero civico",
+        "line2": "Interno, piano, ecc.",
+        "city": "Città",
+        "postalCode": "CAP",
+        "province": "Provincia",
+        "country": "Paese"
+      },
+      "submit": "Invia richiesta",
+      "submitting": "Invio in corso…",
+      "success": {
+        "title": "Richiesta inviata",
+        "description": "Grazie! MaestroYa sta cercando i professionisti adatti al tuo lavoro. Ti diremo qui, sulla piattaforma, quali sono i prossimi passi.",
+        "noPaymentNote": "Non devi pagare il professionista tramite MaestroYa.",
+        "viewRequests": "Vedi le mie richieste"
+      },
+      "errors": {
+        "unauthenticated": "La tua sessione è scaduta. Accedi per inviare una richiesta.",
+        "signIn": "Accedi",
+        "categoryUnsupported": "Questa categoria di servizio non è ancora disponibile per le richieste. Scegline un'altra.",
+        "submitFailed": "Non siamo riusciti a inviare la tua richiesta. Riprova tra un momento."
+      }
     }
   },
   "quotes": {

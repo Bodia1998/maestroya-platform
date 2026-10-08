@@ -26,8 +26,17 @@ import { resolveLeadPricingProductionConfig } from "@/infrastructure/pricing/lea
  * Buyer policy: the released pilot policy (a PILOT ASSUMPTION, see
  * lead-buyer-policy-pilot.v1.ts). Tests may inject both explicitly.
  */
+/**
+ * Module 142 — the resolution the publication contract runs on, exposed so the
+ * customer request UI can derive its supported-category list from exactly the
+ * same source (this file stays the only reader of the version selector).
+ */
+export function resolveLeadPublicationConfiguration(): LeadPricingConfigResolution {
+  return resolveLeadPricingProductionConfig(env.LEAD_PRICING_CONFIG_VERSION);
+}
+
 export function makePublishLeadUseCase(
-  configuration: LeadPricingConfigResolution = resolveLeadPricingProductionConfig(env.LEAD_PRICING_CONFIG_VERSION),
+  configuration: LeadPricingConfigResolution = resolveLeadPublicationConfiguration(),
   buyerPolicy: LeadBuyerPolicy = LEAD_BUYER_POLICY_PILOT_V1,
 ) {
   return new PublishLeadUseCase(

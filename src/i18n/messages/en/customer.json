@@ -88,6 +88,50 @@
       "photoTooLarge": "Each photo must be smaller than 5MB.",
       "photoUploadFailed": "Something went wrong uploading your photo.",
       "photoRemoveFailed": "Something went wrong removing that photo."
+    },
+    "leadForm": {
+      "title": "Request a service",
+      "subtitle": "Tell us about the job so we can find suitable professionals for you.",
+      "unavailable": {
+        "title": "Requests are temporarily unavailable",
+        "description": "We can't take new service requests right now. Please try again later."
+      },
+      "sections": {
+        "job": "About the job",
+        "jobDescription": "The more detail you give, the more useful the responses you receive will be.",
+        "location": "Where is the job?",
+        "locationDescription": "We use the address to find professionals who work in your area."
+      },
+      "fields": {
+        "category": "Service category",
+        "selectCategory": "Select a category",
+        "title": "Short title",
+        "titlePlaceholder": "e.g. Leaking kitchen tap",
+        "description": "Describe the problem",
+        "descriptionPlaceholder": "e.g. The tap under the kitchen sink has been dripping for two days and the cupboard is getting damp.",
+        "descriptionHint": "Say what is wrong, where in the home it is and anything that affects the work. At least 20 characters.",
+        "urgency": "Urgency",
+        "line1": "Street address",
+        "line2": "Apartment, floor, etc.",
+        "city": "City",
+        "postalCode": "Postal code",
+        "province": "Province",
+        "country": "Country"
+      },
+      "submit": "Send request",
+      "submitting": "Sending…",
+      "success": {
+        "title": "Request sent",
+        "description": "Thanks! MaestroYa is now finding suitable professionals for your job. We'll let you know here on the platform what to do next.",
+        "noPaymentNote": "You don't need to pay the professional through MaestroYa.",
+        "viewRequests": "View my requests"
+      },
+      "errors": {
+        "unauthenticated": "Your session has expired. Please sign in to send a request.",
+        "signIn": "Sign in",
+        "categoryUnsupported": "This service category isn't available for requests yet. Please choose another one.",
+        "submitFailed": "We couldn't send your request. Please try again in a moment."
+      }
     }
   },
   "quotes": {

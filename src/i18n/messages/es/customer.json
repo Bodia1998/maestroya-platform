@@ -88,6 +88,50 @@
       "photoTooLarge": "Cada foto debe pesar menos de 5 MB.",
       "photoUploadFailed": "Algo salió mal al subir tu foto.",
       "photoRemoveFailed": "Algo salió mal al quitar esa foto."
+    },
+    "leadForm": {
+      "title": "Solicitar un servicio",
+      "subtitle": "Cuéntanos qué necesitas para que podamos encontrar profesionales adecuados.",
+      "unavailable": {
+        "title": "Las solicitudes no están disponibles temporalmente",
+        "description": "Ahora mismo no podemos aceptar nuevas solicitudes de servicio. Inténtalo de nuevo más tarde."
+      },
+      "sections": {
+        "job": "Sobre el trabajo",
+        "jobDescription": "Cuantos más detalles des, más útiles serán las respuestas que recibas.",
+        "location": "¿Dónde es el trabajo?",
+        "locationDescription": "Usamos la dirección para encontrar profesionales que trabajen en tu zona."
+      },
+      "fields": {
+        "category": "Categoría del servicio",
+        "selectCategory": "Selecciona una categoría",
+        "title": "Título breve",
+        "titlePlaceholder": "p. ej. Grifo de la cocina con fugas",
+        "description": "Describe el problema",
+        "descriptionPlaceholder": "p. ej. El grifo del fregadero lleva dos días goteando y el armario se está humedeciendo.",
+        "descriptionHint": "Indica qué ocurre, en qué parte de la vivienda está y cualquier dato que afecte al trabajo. Mínimo 20 caracteres.",
+        "urgency": "Urgencia",
+        "line1": "Calle y número",
+        "line2": "Piso, puerta, etc.",
+        "city": "Ciudad",
+        "postalCode": "Código postal",
+        "province": "Provincia",
+        "country": "País"
+      },
+      "submit": "Enviar solicitud",
+      "submitting": "Enviando…",
+      "success": {
+        "title": "Solicitud enviada",
+        "description": "¡Gracias! MaestroYa está buscando profesionales adecuados para tu trabajo. Te avisaremos aquí, en la plataforma, de los siguientes pasos.",
+        "noPaymentNote": "No tienes que pagar al profesional a través de MaestroYa.",
+        "viewRequests": "Ver mis solicitudes"
+      },
+      "errors": {
+        "unauthenticated": "Tu sesión ha caducado. Inicia sesión para enviar una solicitud.",
+        "signIn": "Iniciar sesión",
+        "categoryUnsupported": "Esta categoría de servicio aún no está disponible para solicitudes. Elige otra.",
+        "submitFailed": "No hemos podido enviar tu solicitud. Inténtalo de nuevo en unos instantes."
+      }
     }
   },
   "quotes": {
