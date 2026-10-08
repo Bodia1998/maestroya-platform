@@ -45,10 +45,10 @@ describe("M143 — professional lead marketplace UI boundary", () => {
     expect(card).not.toMatch(/paymentReference|clientSecret|customerUserId|customerId|email|phone|passwordHash/);
   });
 
-  it("the purchase CTA seam is inert until Module 144 (no route invented, no action wired)", () => {
+  it("the purchase CTA seam only builds the Module 144 checkout href (no import, no action wired)", () => {
     const entry = strip(read(`${dir}/lead-purchase-entry.ts`));
-    expect(entry).toMatch(/return null;/);
-    expect(entry).not.toMatch(/import /);
+    expect(entry).toContain("/dashboard/professional/leads/${encodeURIComponent(leadId)}/purchase");
+    expect(entry).not.toMatch(/import |action|fetch|stripe/i);
   });
 
   it("the guarded read-only actions.ts is untouched by the UI (still exactly the M125/M134/M138 entry points)", () => {

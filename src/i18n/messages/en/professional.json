@@ -372,5 +372,106 @@
     "loadMore": "Load more",
     "loadingMore": "Loading…",
     "loadMoreError": "We couldn't load more leads. Please try again."
+  },
+  "leadCheckout": {
+    "metaTitle": "Buy lead",
+    "title": "Buy this lead",
+    "subtitle": "Review the lead, pay the lead fee securely and get the customer's contact details once the payment is confirmed.",
+    "lead": {
+      "heading": "Lead",
+      "contactNote": "The customer's contact details are shown only after your payment is confirmed."
+    },
+    "summary": {
+      "heading": "Order summary",
+      "pending": "The lead fee, IVA and total are shown as soon as you start the purchase. Nothing is charged until you pay.",
+      "unavailable": "The price breakdown for this purchase is not available.",
+      "fee": "Lead fee",
+      "tax": "IVA",
+      "total": "Total payable"
+    },
+    "status": {
+      "review": {
+        "title": "Ready to purchase",
+        "description": "Continue to see the exact total. You are only charged after you confirm the payment."
+      },
+      "starting": {
+        "title": "Preparing your purchase",
+        "description": "Please wait a moment…"
+      },
+      "preparing": {
+        "title": "Preparing secure payment",
+        "description": "Setting up the payment form…"
+      },
+      "payment": {
+        "title": "Pay securely",
+        "description": "Enter your payment details to complete the purchase."
+      },
+      "awaiting": {
+        "title": "Confirming your payment",
+        "description": "Your payment is being confirmed. This usually takes a few seconds. Please don't close this page."
+      },
+      "timeout": {
+        "title": "Still confirming your payment",
+        "description": "Confirmation is taking longer than expected. The contact details will appear once the payment is confirmed. You can check again or come back later."
+      },
+      "confirmed": {
+        "title": "Lead purchased",
+        "description": "Your payment is confirmed. The customer's contact details are shown below."
+      },
+      "failed": {
+        "title": "Payment failed",
+        "description": "The payment could not be completed. You can start a new purchase."
+      },
+      "cancelled": {
+        "title": "Purchase cancelled",
+        "description": "This purchase was cancelled or has expired, so this lead can no longer be bought through it. You can browse other leads in the marketplace."
+      },
+      "unavailable": {
+        "title": "Lead unavailable",
+        "description": "This lead is not available for purchase."
+      },
+      "error": {
+        "network": {
+          "title": "Connection problem",
+          "description": "We couldn't reach the server. Check your connection and try again."
+        },
+        "denied": {
+          "title": "We couldn't start this purchase",
+          "description": "This lead may no longer be available, or your account can't purchase it right now."
+        },
+        "payment": {
+          "title": "Payment couldn't be started",
+          "description": "We couldn't prepare the secure payment. Please try again."
+        }
+      }
+    },
+    "payment": {
+      "heading": "Payment details",
+      "secure": "Card details are entered in a secure form provided by Stripe and never reach MaestroYa's servers.",
+      "declined": "We couldn't process this payment. Please check your details or try another payment method.",
+      "incomplete": "Please complete your payment details.",
+      "unavailable": "The secure payment form couldn't be loaded."
+    },
+    "actions": {
+      "start": "Continue to payment",
+      "pay": "Pay now",
+      "paying": "Processing…",
+      "retry": "Try again",
+      "checkAgain": "Check again",
+      "startNew": "Start a new purchase",
+      "backToMarketplace": "Back to marketplace"
+    },
+    "contact": {
+      "heading": "Customer contact details",
+      "loading": "Loading contact details…",
+      "error": "We couldn't load the contact details. Please try again.",
+      "denied": "Contact details are not available for this purchase.",
+      "retry": "Try again",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "notProvided": "Not provided"
+    }
   }
 }

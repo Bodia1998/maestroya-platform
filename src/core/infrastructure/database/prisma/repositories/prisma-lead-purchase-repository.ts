@@ -4,6 +4,7 @@ import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
   CreateLeadPurchaseData,
   InitiateLeadPurchaseData,
+  LeadPurchaseLatestReader,
   LeadPurchasePaymentCorrelationReader,
   LeadPurchaseRecord,
   LeadPurchaseRepository,
@@ -151,7 +152,7 @@ function financialSnapshotFromLockedLead(lead: LockedLeadRow) {
 /** Module 123 — Prisma implementation of `LeadPurchaseRepository`. Touches
  *  only the `lead_purchases` table: it never creates a Payment, Commission,
  *  Payout or Invoice. */
-export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository, LeadPurchasePaymentCorrelationReader {
+export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository, LeadPurchasePaymentCorrelationReader, LeadPurchaseLatestReader {
   async initiate(data: InitiateLeadPurchaseData): Promise<LeadPurchaseRecord> {
     try {
       const row = await prisma.$transaction(async (tx) => {
@@ -288,6 +289,16 @@ export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository, Lea
   async findConfirmedByLeadAndProfessional(leadId: string, professionalProfileId: string): Promise<LeadPurchaseRecord | null> {
     const row = await prisma.leadPurchase.findFirst({
       where: { leadId, professionalProfileId, status: "CONFIRMED" },
+      orderBy: { createdAt: "desc" },
+      select: SELECT,
+    });
+    return row ? toRecord(row) : null;
+  }
+
+  /** Module 144: the professional's newest purchase of the lead, any status (read-only; the filter is the session-derived profile id). */
+  async findLatestByLeadAndProfessional(leadId: string, professionalProfileId: string): Promise<LeadPurchaseRecord | null> {
+    const row = await prisma.leadPurchase.findFirst({
+      where: { leadId, professionalProfileId },
       orderBy: { createdAt: "desc" },
       select: SELECT,
     });

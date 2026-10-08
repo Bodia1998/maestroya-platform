@@ -153,15 +153,15 @@ describe("LeadMarketplace — keyset pagination", () => {
   });
 });
 
-describe("LeadMarketplace — purchase CTA boundary (M144 not implemented)", () => {
-  it("renders a disabled CTA that performs no payment, navigation or action call", () => {
+describe("LeadMarketplace — purchase CTA boundary (M144 checkout route)", () => {
+  it("renders the CTA as a plain link to the checkout page that performs no payment, purchase or action call", () => {
     renderMarketplace({ initialItems: [item(1)] });
-    const cta = screen.getByRole("button", { name: "Purchase coming soon" });
-    expect(cta).toBeDisabled();
+    const cta = screen.getByRole("link", { name: "Buy this lead" });
+    expect(cta).toHaveAttribute("href", `/dashboard/professional/leads/${item(1).leadId}/purchase`);
+    expect(screen.queryByRole("button", { name: "Purchase coming soon" })).toBeNull();
     fireEvent.click(cta);
     expect(paymentAction).not.toHaveBeenCalled();
     expect(feedAction).not.toHaveBeenCalled();
-    expect(screen.queryByRole("link")).toBeNull();
     expect(document.body.textContent).not.toMatch(/(has been|was) purchased|purchase (complete|successful|confirmed)|unlocked|payment (confirmed|successful)/i);
   });
 });

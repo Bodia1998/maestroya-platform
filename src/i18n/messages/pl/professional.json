@@ -372,5 +372,106 @@
     "loadMore": "Wczytaj więcej",
     "loadingMore": "Wczytywanie…",
     "loadMoreError": "Nie udało się wczytać kolejnych zleceń. Spróbuj ponownie."
+  },
+  "leadCheckout": {
+    "metaTitle": "Kup zlecenie",
+    "title": "Kup to zlecenie",
+    "subtitle": "Sprawdź zlecenie, bezpiecznie opłać należność i otrzymaj dane kontaktowe klienta po potwierdzeniu płatności.",
+    "lead": {
+      "heading": "Zlecenie",
+      "contactNote": "Dane kontaktowe klienta zostaną wyświetlone dopiero po potwierdzeniu Twojej płatności."
+    },
+    "summary": {
+      "heading": "Podsumowanie zamówienia",
+      "pending": "Opłata, IVA i kwota łączna pojawią się, gdy rozpoczniesz zakup. Nic nie jest pobierane, dopóki nie zapłacisz.",
+      "unavailable": "Szczegóły ceny tego zakupu są niedostępne.",
+      "fee": "Opłata za zlecenie",
+      "tax": "IVA",
+      "total": "Łącznie do zapłaty"
+    },
+    "status": {
+      "review": {
+        "title": "Gotowe do zakupu",
+        "description": "Kontynuuj, aby zobaczyć dokładną kwotę łączną. Płatność zostanie pobrana dopiero po jej potwierdzeniu."
+      },
+      "starting": {
+        "title": "Przygotowujemy zakup",
+        "description": "Chwileczkę…"
+      },
+      "preparing": {
+        "title": "Przygotowujemy bezpieczną płatność",
+        "description": "Konfigurujemy formularz płatności…"
+      },
+      "payment": {
+        "title": "Zapłać bezpiecznie",
+        "description": "Podaj dane płatnicze, aby dokończyć zakup."
+      },
+      "awaiting": {
+        "title": "Potwierdzamy płatność",
+        "description": "Twoja płatność jest potwierdzana. Zwykle trwa to kilka sekund. Nie zamykaj tej strony."
+      },
+      "timeout": {
+        "title": "Płatność nadal jest potwierdzana",
+        "description": "Potwierdzenie trwa dłużej niż zwykle. Dane kontaktowe pojawią się po potwierdzeniu płatności. Możesz sprawdzić ponownie lub wrócić później."
+      },
+      "confirmed": {
+        "title": "Zlecenie zakupione",
+        "description": "Płatność została potwierdzona. Dane kontaktowe klienta są widoczne poniżej."
+      },
+      "failed": {
+        "title": "Płatność nie powiodła się",
+        "description": "Nie udało się zrealizować płatności. Możesz rozpocząć nowy zakup."
+      },
+      "cancelled": {
+        "title": "Zakup anulowany",
+        "description": "Ten zakup został anulowany lub wygasł, więc nie można już za jego pomocą kupić tego zlecenia. Inne zlecenia znajdziesz na giełdzie."
+      },
+      "unavailable": {
+        "title": "Zlecenie niedostępne",
+        "description": "Tego zlecenia nie można kupić."
+      },
+      "error": {
+        "network": {
+          "title": "Problem z połączeniem",
+          "description": "Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie."
+        },
+        "denied": {
+          "title": "Nie udało się rozpocząć zakupu",
+          "description": "To zlecenie może być już niedostępne lub Twoje konto nie może go teraz kupić."
+        },
+        "payment": {
+          "title": "Nie udało się rozpocząć płatności",
+          "description": "Nie udało się przygotować bezpiecznej płatności. Spróbuj ponownie."
+        }
+      }
+    },
+    "payment": {
+      "heading": "Dane płatnicze",
+      "secure": "Dane karty wpisujesz w bezpiecznym formularzu Stripe i nigdy nie trafiają one na serwery MaestroYa.",
+      "declined": "Nie udało się przetworzyć płatności. Sprawdź dane lub użyj innej metody płatności.",
+      "incomplete": "Uzupełnij dane płatnicze.",
+      "unavailable": "Nie udało się załadować bezpiecznego formularza płatności."
+    },
+    "actions": {
+      "start": "Przejdź do płatności",
+      "pay": "Zapłać teraz",
+      "paying": "Przetwarzanie…",
+      "retry": "Spróbuj ponownie",
+      "checkAgain": "Sprawdź ponownie",
+      "startNew": "Rozpocznij nowy zakup",
+      "backToMarketplace": "Wróć na giełdę"
+    },
+    "contact": {
+      "heading": "Dane kontaktowe klienta",
+      "loading": "Ładowanie danych kontaktowych…",
+      "error": "Nie udało się załadować danych kontaktowych. Spróbuj ponownie.",
+      "denied": "Dane kontaktowe nie są dostępne dla tego zakupu.",
+      "retry": "Spróbuj ponownie",
+      "name": "Imię i nazwisko",
+      "email": "E-mail",
+      "phone": "Telefon",
+      "address": "Adres",
+      "notProvided": "Nie podano"
+    }
   }
 }

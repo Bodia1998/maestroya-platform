@@ -18,10 +18,13 @@ const isProductionBuild = process.env.NODE_ENV === "production";
  * Scoped to this app's actual external dependencies as of this audit:
  * Cloudinary-hosted images (`next.config.ts`'s own `images.remotePatterns`),
  * and Stripe's API for the Stripe client already present in
- * `infrastructure/payments/stripe/client.ts` (server-side only today — no
- * client-side Stripe.js/Elements usage found in `src/`, so `js.stripe.com`
- * is deliberately not yet in `script-src`; add it there if/when Module 12
- * introduces Stripe Elements).
+ * `infrastructure/payments/stripe/client.ts`.
+ *
+ * Module 144 introduces the first client-side Stripe.js / Payment Element usage (the
+ * professional lead-fee checkout), so exactly Stripe's documented origins are allowed:
+ * `https://js.stripe.com` for the script and the Elements iframe, `https://hooks.stripe.com`
+ * for 3-D Secure / bank redirect frames. `api.stripe.com` was already in `connect-src`.
+ * Nothing else is widened (no `*.stripe.com` wildcard, no `unsafe-eval`).
  *
  * `script-src`/`style-src` include `'unsafe-inline'` rather than a
  * nonce-based policy: Next.js's App Router streams inline hydration
@@ -51,11 +54,12 @@ const isProductionBuild = process.env.NODE_ENV === "production";
  */
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isProductionBuild ? "" : " 'unsafe-eval'"}`,
+  `script-src 'self' 'unsafe-inline' https://js.stripe.com${isProductionBuild ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https://res.cloudinary.com",
   "font-src 'self' data:",
   "connect-src 'self' https://res.cloudinary.com https://api.stripe.com",
+  "frame-src https://js.stripe.com https://hooks.stripe.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
