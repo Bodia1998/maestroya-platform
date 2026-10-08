@@ -340,5 +340,37 @@
       "BUSINESS_REGISTRATION": "Iscrizione al registro delle imprese",
       "OTHER": "Altro"
     }
+  },
+  "leads": {
+    "metaTitle": "Mercato delle opportunità",
+    "title": "Mercato delle opportunità",
+    "subtitle": "Sfoglia le richieste dei clienti in linea con i tuoi servizi e la tua zona. I dati di contatto del cliente vengono condivisi solo dopo l'acquisto dell'opportunità.",
+    "listLabel": "Opportunità disponibili",
+    "card": {
+      "posted": "Pubblicata il {date}",
+      "priceLabel": "Prezzo dell'opportunità",
+      "maxBuyers": "Numero massimo di acquirenti: {count, number}",
+      "contactNote": "I dati di contatto restano nascosti finché l'opportunità non viene acquistata."
+    },
+    "cta": {
+      "available": "Acquista questa opportunità",
+      "unavailable": "Acquisto presto disponibile"
+    },
+    "status": {
+      "loading": "Caricamento delle opportunità disponibili…",
+      "loaded": "Opportunità mostrate: {count, number}"
+    },
+    "empty": {
+      "title": "Nessuna opportunità disponibile al momento",
+      "description": "Le nuove opportunità in linea con i tuoi servizi compariranno qui. Ricontrolla a breve."
+    },
+    "error": {
+      "title": "Impossibile caricare le opportunità",
+      "description": "Qualcosa è andato storto. Riprova.",
+      "retry": "Riprova"
+    },
+    "loadMore": "Carica altre",
+    "loadingMore": "Caricamento…",
+    "loadMoreError": "Impossibile caricare altre opportunità. Riprova."
   }
 }

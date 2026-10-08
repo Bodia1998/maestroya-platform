@@ -340,5 +340,37 @@
       "BUSINESS_REGISTRATION": "Zápis do obchodního rejstříku",
       "OTHER": "Jiné"
     }
+  },
+  "leads": {
+    "metaTitle": "Tržiště zakázek",
+    "title": "Tržiště zakázek",
+    "subtitle": "Prohlížejte poptávky zákazníků, které odpovídají vašim službám a oblasti. Kontaktní údaje zákazníka se zpřístupní až po zakoupení zakázky.",
+    "listLabel": "Dostupné zakázky",
+    "card": {
+      "posted": "Zveřejněno {date}",
+      "priceLabel": "Cena zakázky",
+      "maxBuyers": "Maximální počet kupujících: {count, number}",
+      "contactNote": "Kontaktní údaje zůstávají skryté do zakoupení zakázky."
+    },
+    "cta": {
+      "available": "Koupit tuto zakázku",
+      "unavailable": "Nákup bude brzy dostupný"
+    },
+    "status": {
+      "loading": "Načítání dostupných zakázek…",
+      "loaded": "Zobrazené zakázky: {count, number}"
+    },
+    "empty": {
+      "title": "Momentálně nejsou k dispozici žádné zakázky",
+      "description": "Nové zakázky odpovídající vašim službám se zobrazí zde. Zkuste to prosím brzy znovu."
+    },
+    "error": {
+      "title": "Zakázky se nepodařilo načíst",
+      "description": "Něco se pokazilo. Zkuste to prosím znovu.",
+      "retry": "Zkusit znovu"
+    },
+    "loadMore": "Načíst další",
+    "loadingMore": "Načítání…",
+    "loadMoreError": "Další zakázky se nepodařilo načíst. Zkuste to prosím znovu."
   }
 }

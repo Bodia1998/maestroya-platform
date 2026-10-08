@@ -42,7 +42,8 @@
       "adminPanel": "Administrace",
       "profile": "Profil",
       "professionalProfile": "Profil profesionála",
-      "switchToProfessional": "Přepnout na přehled profesionála"
+      "switchToProfessional": "Přepnout na přehled profesionála",
+      "leadMarketplace": "Tržiště zakázek"
     }
   },
   "shell": {

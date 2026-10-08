@@ -42,7 +42,8 @@
       "adminPanel": "Panel de administración",
       "profile": "Perfil",
       "professionalProfile": "Perfil profesional",
-      "switchToProfessional": "Cambiar al panel profesional"
+      "switchToProfessional": "Cambiar al panel profesional",
+      "leadMarketplace": "Mercado de oportunidades"
     }
   },
   "shell": {

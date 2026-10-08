@@ -340,5 +340,37 @@
       "BUSINESS_REGISTRATION": "Business registration",
       "OTHER": "Other"
     }
+  },
+  "leads": {
+    "metaTitle": "Lead marketplace",
+    "title": "Lead marketplace",
+    "subtitle": "Browse customer requests that match your services and area. Customer contact details are shared only after you purchase a lead.",
+    "listLabel": "Available leads",
+    "card": {
+      "posted": "Published {date}",
+      "priceLabel": "Lead price",
+      "maxBuyers": "Maximum buyers: {count, number}",
+      "contactNote": "Contact details stay hidden until the lead is purchased."
+    },
+    "cta": {
+      "available": "Buy this lead",
+      "unavailable": "Purchase coming soon"
+    },
+    "status": {
+      "loading": "Loading available leads…",
+      "loaded": "Leads shown: {count, number}"
+    },
+    "empty": {
+      "title": "No leads available right now",
+      "description": "New leads that match your services will appear here. Please check back soon."
+    },
+    "error": {
+      "title": "We couldn't load the leads",
+      "description": "Something went wrong. Please try again.",
+      "retry": "Try again"
+    },
+    "loadMore": "Load more",
+    "loadingMore": "Loading…",
+    "loadMoreError": "We couldn't load more leads. Please try again."
   }
 }

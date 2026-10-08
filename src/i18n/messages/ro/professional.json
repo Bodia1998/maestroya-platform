@@ -340,5 +340,37 @@
       "BUSINESS_REGISTRATION": "Înregistrare la registrul comerțului",
       "OTHER": "Altul"
     }
+  },
+  "leads": {
+    "metaTitle": "Piața de oportunități",
+    "title": "Piața de oportunități",
+    "subtitle": "Răsfoiește cererile clienților care se potrivesc serviciilor și zonei tale. Datele de contact ale clientului sunt comunicate abia după ce cumperi oportunitatea.",
+    "listLabel": "Oportunități disponibile",
+    "card": {
+      "posted": "Publicată pe {date}",
+      "priceLabel": "Prețul oportunității",
+      "maxBuyers": "Număr maxim de cumpărători: {count, number}",
+      "contactNote": "Datele de contact rămân ascunse până la cumpărarea oportunității."
+    },
+    "cta": {
+      "available": "Cumpără această oportunitate",
+      "unavailable": "Cumpărarea va fi disponibilă în curând"
+    },
+    "status": {
+      "loading": "Se încarcă oportunitățile disponibile…",
+      "loaded": "Oportunități afișate: {count, number}"
+    },
+    "empty": {
+      "title": "Nu există oportunități disponibile acum",
+      "description": "Oportunitățile noi care se potrivesc serviciilor tale vor apărea aici. Revino în curând."
+    },
+    "error": {
+      "title": "Nu am putut încărca oportunitățile",
+      "description": "Ceva nu a funcționat. Încearcă din nou.",
+      "retry": "Încearcă din nou"
+    },
+    "loadMore": "Încarcă mai multe",
+    "loadingMore": "Se încarcă…",
+    "loadMoreError": "Nu am putut încărca mai multe oportunități. Încearcă din nou."
   }
 }

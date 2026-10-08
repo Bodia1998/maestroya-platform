@@ -340,5 +340,37 @@
       "BUSINESS_REGISTRATION": "Gewerbeanmeldung / Handelsregistereintrag",
       "OTHER": "Sonstiges"
     }
+  },
+  "leads": {
+    "metaTitle": "Auftragsmarktplatz",
+    "title": "Auftragsmarktplatz",
+    "subtitle": "Durchsuche Kundenanfragen, die zu deinen Leistungen und deinem Einsatzgebiet passen. Die Kontaktdaten des Kunden werden erst nach dem Kauf des Leads freigegeben.",
+    "listLabel": "Verfügbare Leads",
+    "card": {
+      "posted": "Veröffentlicht am {date}",
+      "priceLabel": "Lead-Preis",
+      "maxBuyers": "Maximale Anzahl Käufer: {count, number}",
+      "contactNote": "Die Kontaktdaten bleiben bis zum Kauf des Leads verborgen."
+    },
+    "cta": {
+      "available": "Diesen Lead kaufen",
+      "unavailable": "Kauf bald verfügbar"
+    },
+    "status": {
+      "loading": "Verfügbare Leads werden geladen…",
+      "loaded": "Angezeigte Leads: {count, number}"
+    },
+    "empty": {
+      "title": "Derzeit sind keine Leads verfügbar",
+      "description": "Neue Leads, die zu deinen Leistungen passen, erscheinen hier. Schau bald wieder vorbei."
+    },
+    "error": {
+      "title": "Die Leads konnten nicht geladen werden",
+      "description": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+      "retry": "Erneut versuchen"
+    },
+    "loadMore": "Mehr laden",
+    "loadingMore": "Wird geladen…",
+    "loadMoreError": "Weitere Leads konnten nicht geladen werden. Bitte versuche es erneut."
   }
 }

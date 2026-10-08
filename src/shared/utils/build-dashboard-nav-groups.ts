@@ -84,6 +84,7 @@ const PROFESSIONAL_NAV_GROUP: DashboardNavGroup = {
   items: [
     { href: "/dashboard", labelKey: "professionalDashboard", icon: "dashboard" },
     { href: "/dashboard/professional/requests", labelKey: "availableRequests", icon: "requests" },
+    { href: "/dashboard/professional/leads", labelKey: "leadMarketplace", icon: "requests" },
     { href: "/dashboard/professional/quotes", labelKey: "myQuotes", icon: "quotes" },
     { href: "/dashboard/professional/appointments", labelKey: "myAppointments", icon: "appointments" },
     { href: "/dashboard/professional/jobs", labelKey: "myJobs", icon: "jobs" },

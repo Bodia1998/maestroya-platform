@@ -42,7 +42,8 @@
       "adminPanel": "Панель администратора",
       "profile": "Профиль",
       "professionalProfile": "Профиль специалиста",
-      "switchToProfessional": "Перейти в панель специалиста"
+      "switchToProfessional": "Перейти в панель специалиста",
+      "leadMarketplace": "Биржа заказов"
     }
   },
   "shell": {

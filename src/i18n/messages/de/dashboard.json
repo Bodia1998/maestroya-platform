@@ -42,7 +42,8 @@
       "adminPanel": "Verwaltungsbereich",
       "profile": "Profil",
       "professionalProfile": "Fachkraft-Profil",
-      "switchToProfessional": "Zum Dashboard für Fachkräfte wechseln"
+      "switchToProfessional": "Zum Dashboard für Fachkräfte wechseln",
+      "leadMarketplace": "Auftragsmarktplatz"
     }
   },
   "shell": {
