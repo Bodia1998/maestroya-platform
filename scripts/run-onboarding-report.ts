@@ -80,9 +80,9 @@ function buildArchitectureChecks(): CheckResult[] {
 function buildActivationRuleChecks(): CheckResult[] {
   return [
     {
-      check: "Activation requires all five steps",
+      check: "Activation requires all five required steps (payout is optional — Module 148)",
       passed: true,
-      detail: "computeOnboardingProgress()/isEligibleForActivation requires TERMS_ACCEPTED, PRIVACY_POLICY_ACCEPTED, IDENTITY_VERIFIED, PROFILE_COMPLETE, and PAYOUT_CONNECTED — no shortcuts.",
+      detail: "computeOnboardingProgress()/isEligibleForActivation requires TERMS_ACCEPTED, PRIVACY_POLICY_ACCEPTED, IDENTITY_VERIFIED, BUSINESS_REGISTRATION_VERIFIED and PROFILE_COMPLETE — no shortcuts. PAYOUT_CONNECTED is an optional step (Module 148) and never blocks activation.",
     },
     {
       check: "Activation re-validates server-side, never trusts client state",
@@ -152,7 +152,7 @@ function buildOnboardingCompletenessChecks(): CheckResult[] {
     {
       check: "Every module-brief step has a domain step + use case",
       passed: true,
-      detail: "Terms/Privacy/Persona/Profile/Bank Account/Stripe Express/Final Activation each map onto one ONBOARDING_STEP_VALUES entry and one dedicated use case.",
+      detail: "Terms/Privacy/Persona/Profile/Bank Account/Stripe Express/Final Activation each map onto one ONBOARDING_STEP_VALUES entry (Bank Account is an optional step since Module 148) and one dedicated use case.",
     },
     {
       check: "ONBOARDING_ACTIVATED is audit-logged",

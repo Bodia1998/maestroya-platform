@@ -1,4 +1,7 @@
-import { ONBOARDING_STEP_VALUES } from "@/domain/services/professional-onboarding-rules";
+import {
+  ONBOARDING_OPTIONAL_STEP_VALUES,
+  ONBOARDING_REQUIRED_STEP_VALUES,
+} from "@/domain/services/professional-onboarding-rules";
 
 /**
  * Module 62 — Professional Onboarding: pure data → markdown/JSON rendering
@@ -90,7 +93,8 @@ export function renderMarkdownOnboardingReport(report: OnboardingReport): string
   if (report.inProgressCount !== null && report.activatedCount !== null) {
     lines.push(`In progress: ${report.inProgressCount}`);
     lines.push(`Activated: ${report.activatedCount}`);
-    lines.push(`Onboarding steps: ${ONBOARDING_STEP_VALUES.join(", ")}`);
+    lines.push(`Required onboarding steps: ${ONBOARDING_REQUIRED_STEP_VALUES.join(", ")}`);
+    lines.push(`Optional onboarding steps (never block activation): ${ONBOARDING_OPTIONAL_STEP_VALUES.join(", ")}`);
   } else {
     lines.push(
       "_Database was unreachable when this report was generated — statistics unavailable. See the CLI's own console warning for detail._",

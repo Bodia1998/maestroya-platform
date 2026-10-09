@@ -9,6 +9,9 @@ import {
   isValidIban,
   maskIban,
   normalizeIban,
+  ONBOARDING_OPTIONAL_STEP_VALUES,
+  ONBOARDING_REQUIRED_STEP_VALUES,
+  ONBOARDING_STEP_VALUES,
   type ProfileCompletenessInput,
 } from "@/domain/services/professional-onboarding-rules";
 
@@ -95,7 +98,7 @@ describe("professional-onboarding-rules (Module 62)", () => {
   });
 
   describe("computeOnboardingProgress", () => {
-    it("is eligible for activation only when all six steps are complete", () => {
+    it("is eligible for activation only when all five required steps are complete", () => {
       const progress = computeOnboardingProgress({
         termsAccepted: true,
         privacyPolicyAccepted: true,
@@ -106,9 +109,10 @@ describe("professional-onboarding-rules (Module 62)", () => {
       });
 
       expect(progress.isEligibleForActivation).toBe(true);
-      expect(progress.completedStepCount).toBe(6);
-      expect(progress.totalStepCount).toBe(6);
+      expect(progress.completedStepCount).toBe(5);
+      expect(progress.totalStepCount).toBe(5);
       expect(progress.steps.every((s) => s.complete)).toBe(true);
+      expect(progress.optionalSteps).toEqual([{ step: "PAYOUT_CONNECTED", complete: true }]);
     });
 
     it("is not eligible when any single step is incomplete", () => {
@@ -122,7 +126,7 @@ describe("professional-onboarding-rules (Module 62)", () => {
       });
 
       expect(progress.isEligibleForActivation).toBe(false);
-      expect(progress.completedStepCount).toBe(4);
+      expect(progress.completedStepCount).toBe(3);
       const identityStep = progress.steps.find((s) => s.step === "IDENTITY_VERIFIED");
       expect(identityStep?.complete).toBe(false);
     });
@@ -154,6 +158,67 @@ describe("professional-onboarding-rules (Module 62)", () => {
       expect(progress.isEligibleForActivation).toBe(false);
       const businessRegStep = progress.steps.find((s) => s.step === "BUSINESS_REGISTRATION_VERIFIED");
       expect(businessRegStep?.complete).toBe(false);
+    });
+  });
+
+  describe("Module 148 — onboarding is decoupled from payout", () => {
+    const allRequiredDone = {
+      termsAccepted: true,
+      privacyPolicyAccepted: true,
+      identityVerificationStatus: "APPROVED" as const,
+      verificationDocumentTypes: ["BUSINESS_REGISTRATION"],
+      profile: completeProfile(),
+    };
+
+    it("does not list PAYOUT_CONNECTED among the required steps", () => {
+      expect(ONBOARDING_REQUIRED_STEP_VALUES).not.toContain("PAYOUT_CONNECTED");
+      expect(ONBOARDING_OPTIONAL_STEP_VALUES).toEqual(["PAYOUT_CONNECTED"]);
+      expect(ONBOARDING_STEP_VALUES).toEqual([...ONBOARDING_REQUIRED_STEP_VALUES, "PAYOUT_CONNECTED"]);
+    });
+
+    it.each([null, "PENDING", "VERIFIED", "REJECTED"] as const)(
+      "is eligible for activation with payout account status %s",
+      (payoutAccountStatus) => {
+        const progress = computeOnboardingProgress({ ...allRequiredDone, payoutAccountStatus });
+
+        expect(progress.isEligibleForActivation).toBe(true);
+        expect(progress.completedStepCount).toBe(5);
+        expect(progress.steps.map((s) => s.step)).not.toContain("PAYOUT_CONNECTED");
+      },
+    );
+
+    it("still reports the payout step as an optional step, with its real state", () => {
+      expect(computeOnboardingProgress({ ...allRequiredDone, payoutAccountStatus: null }).optionalSteps).toEqual([
+        { step: "PAYOUT_CONNECTED", complete: false },
+      ]);
+      expect(computeOnboardingProgress({ ...allRequiredDone, payoutAccountStatus: "REJECTED" }).optionalSteps).toEqual([
+        { step: "PAYOUT_CONNECTED", complete: false },
+      ]);
+      expect(computeOnboardingProgress({ ...allRequiredDone, payoutAccountStatus: "PENDING" }).optionalSteps).toEqual([
+        { step: "PAYOUT_CONNECTED", complete: true },
+      ]);
+    });
+
+    it("a connected payout account never compensates for a missing required step", () => {
+      const cases = [
+        { termsAccepted: false },
+        { privacyPolicyAccepted: false },
+        { identityVerificationStatus: "PENDING" as const },
+        { identityVerificationStatus: null },
+        { verificationDocumentTypes: ["NATIONAL_ID"] },
+        { verificationDocumentTypes: [] as string[] },
+        { profile: completeProfile({ bio: null }) },
+      ];
+      for (const patch of cases) {
+        const progress = computeOnboardingProgress({ ...allRequiredDone, ...patch, payoutAccountStatus: "VERIFIED" });
+        expect(progress.isEligibleForActivation).toBe(false);
+      }
+    });
+
+    it("keeps the payout predicate itself unchanged for the legacy payout flow", () => {
+      expect(isPayoutAccountConnected("PENDING")).toBe(true);
+      expect(isPayoutAccountConnected("REJECTED")).toBe(false);
+      expect(isPayoutAccountConnected(null)).toBe(false);
     });
   });
 

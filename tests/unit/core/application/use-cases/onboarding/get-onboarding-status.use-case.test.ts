@@ -75,4 +75,34 @@ describe("GetOnboardingStatusUseCase (Module 62)", () => {
     expect(result.progress.isEligibleForActivation).toBe(true);
     expect(result.identityVerificationStatus).toBe("APPROVED");
   });
+
+  it("Module 148: is eligible without any payout account and reports payout as an optional, incomplete step", async () => {
+    const { professionals, addresses, consents, verifications, onboardings, useCase } = makeContext();
+    const professional = professionals.seed({
+      userId: "user-1",
+      businessName: "Acme Plumbing",
+      bio: "We fix pipes",
+      contactPhone: "+34600000000",
+      serviceRadiusKm: 20,
+      yearsExperience: 5,
+      categoryIds: ["cat-1"],
+    });
+    await addresses.upsertPrimaryForUser("user-1", {
+      line1: "Calle Mayor 1",
+      city: "Madrid",
+      postalCode: "28001",
+      country: "ES",
+    });
+    await consents.create({ userId: "user-1", type: "TERMS_OF_SERVICE", version: "v1", grantedAt: new Date() });
+    await consents.create({ userId: "user-1", type: "PRIVACY_POLICY", version: "v1", grantedAt: new Date() });
+    verifications.seedApproved(professional.id);
+    verifications.seedDocument(professional.id, "BUSINESS_REGISTRATION");
+    await onboardings.create(professional.id);
+
+    const result = await useCase.execute("user-1");
+
+    expect(result.payoutAccount).toBeNull();
+    expect(result.progress.isEligibleForActivation).toBe(true);
+    expect(result.progress.optionalSteps).toEqual([{ step: "PAYOUT_CONNECTED", complete: false }]);
+  });
 });

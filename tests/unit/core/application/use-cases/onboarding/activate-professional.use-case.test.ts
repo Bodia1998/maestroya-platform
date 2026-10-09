@@ -27,7 +27,11 @@ function makeContext(eventBus = new NullEventBus()) {
   return { onboardings, professionals, addresses, consents, verifications, activate };
 }
 
-async function completeEverything(ctx: ReturnType<typeof makeContext>, userId: string) {
+async function completeEverything(
+  ctx: ReturnType<typeof makeContext>,
+  userId: string,
+  options: { withPayout?: boolean } = {},
+) {
   const professional = ctx.professionals.seed({
     userId,
     businessName: "Acme Plumbing",
@@ -50,16 +54,108 @@ async function completeEverything(ctx: ReturnType<typeof makeContext>, userId: s
   // requires an approved business-registration document on the case.
   ctx.verifications.seedDocument(professional.id, "BUSINESS_REGISTRATION");
   await ctx.onboardings.create(professional.id);
-  await ctx.onboardings.upsertPayoutAccount({
-    professionalProfileId: professional.id,
-    method: "IBAN",
-    status: "PENDING",
-    accountHolderName: "Jane Doe",
-    ibanLast4: "1332",
-    ibanHash: "hash",
-  });
+  if (options.withPayout ?? true) {
+    await ctx.onboardings.upsertPayoutAccount({
+      professionalProfileId: professional.id,
+      method: "IBAN",
+      status: "PENDING",
+      accountHolderName: "Jane Doe",
+      ibanLast4: "1332",
+      ibanHash: "hash",
+    });
+  }
   return professional;
 }
+
+describe("ActivateProfessionalUseCase (Module 148 — decoupled from payout)", () => {
+  it("activates a professional who has no payout account at all", async () => {
+    const ctx = makeContext();
+    await completeEverything(ctx, "user-1", { withPayout: false });
+    expect(ctx.onboardings.payoutAccounts.size).toBe(0);
+
+    const result = await ctx.activate.execute("user-1");
+
+    expect(result.status).toBe("ACTIVATED");
+    expect(ctx.onboardings.payoutAccounts.size).toBe(0); // activation never creates a payout destination
+  });
+
+  it("activates a professional whose payout destination was REJECTED", async () => {
+    const ctx = makeContext();
+    const professional = await completeEverything(ctx, "user-1", { withPayout: false });
+    await ctx.onboardings.upsertPayoutAccount({
+      professionalProfileId: professional.id,
+      method: "IBAN",
+      status: "REJECTED",
+      accountHolderName: "Jane Doe",
+      ibanLast4: "1332",
+      ibanHash: "hash",
+    });
+
+    await expect(ctx.activate.execute("user-1")).resolves.toMatchObject({ status: "ACTIVATED" });
+  });
+
+  it("does not mention payout among the remaining steps of an otherwise-empty onboarding", async () => {
+    const ctx = makeContext();
+    const professional = ctx.professionals.seed({ userId: "user-1" });
+    await ctx.onboardings.create(professional.id);
+
+    const error = await ctx.activate.execute("user-1").catch((e: unknown) => e as Error);
+
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as Error).message).toMatch(/Remaining steps/);
+    expect((error as Error).message).not.toMatch(/payout/i);
+  });
+
+  it("a verified payout destination does not substitute for identity verification", async () => {
+    const ctx = makeContext();
+    const professional = ctx.professionals.seed({ userId: "user-1" });
+    await ctx.onboardings.create(professional.id);
+    await ctx.onboardings.upsertPayoutAccount({
+      professionalProfileId: professional.id,
+      method: "IBAN",
+      status: "VERIFIED",
+      accountHolderName: "Jane Doe",
+      ibanLast4: "1332",
+      ibanHash: "hash",
+    });
+
+    await expect(ctx.activate.execute("user-1")).rejects.toThrow(/Complete identity verification/);
+    expect((await ctx.onboardings.findByProfessionalProfileId(professional.id))?.status).toBe("IN_PROGRESS");
+  });
+
+  it("approved identity without a business-registration document is still refused, payout or not", async () => {
+    for (const withPayout of [true, false]) {
+      // An APPROVED case that carries no business-registration document.
+      const fresh = makeContext();
+      const p = fresh.professionals.seed({
+        userId: "user-2",
+        businessName: "Acme",
+        bio: "bio",
+        contactPhone: "+34600000000",
+        serviceRadiusKm: 20,
+        yearsExperience: 5,
+        categoryIds: ["cat-1"],
+      });
+      await fresh.addresses.upsertPrimaryForUser("user-2", { line1: "Calle 1", city: "Madrid", postalCode: "28001", country: "ES" });
+      await fresh.consents.create({ userId: "user-2", type: "TERMS_OF_SERVICE", version: "v1", grantedAt: new Date() });
+      await fresh.consents.create({ userId: "user-2", type: "PRIVACY_POLICY", version: "v1", grantedAt: new Date() });
+      fresh.verifications.seedApproved(p.id);
+      await fresh.onboardings.create(p.id);
+      if (withPayout) {
+        await fresh.onboardings.upsertPayoutAccount({
+          professionalProfileId: p.id,
+          method: "IBAN",
+          status: "VERIFIED",
+          accountHolderName: "Jane Doe",
+          ibanLast4: "1332",
+          ibanHash: "hash",
+        });
+      }
+
+      await expect(fresh.activate.execute("user-2")).rejects.toThrow(/business-registration/);
+    }
+  });
+});
 
 describe("ActivateProfessionalUseCase (Module 62)", () => {
   it("throws ValidationError when the professional has never started onboarding", async () => {
