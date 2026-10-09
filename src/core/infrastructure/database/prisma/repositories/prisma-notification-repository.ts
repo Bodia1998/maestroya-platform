@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/infrastructure/database/prisma/client";
 import type {
   CreateNotificationData,
+  IdempotentNotificationData,
+  IdempotentNotificationWriter,
   ListNotificationsOptions,
   NotificationRecord,
   NotificationRepository,
@@ -75,7 +77,7 @@ function toRecord(row: PrismaNotificationRow): NotificationRecord {
  * counted for another user's call (see this module's documentation, "User
  * Isolation").
  */
-export class PrismaNotificationRepository implements NotificationRepository {
+export class PrismaNotificationRepository implements NotificationRepository, IdempotentNotificationWriter {
   async create(data: CreateNotificationData): Promise<NotificationRecord> {
     const row = await prisma.notification.create({
       data: {
@@ -91,6 +93,41 @@ export class PrismaNotificationRepository implements NotificationRepository {
       select: DETAIL_SELECT,
     });
     return toRecord(row);
+  }
+
+  /**
+   * Module 145 — at-most-once creation per (userId, dedupeKey). The guarantee is the DB
+   * unique index `notifications_userId_dedupeKey_key`: this issues `INSERT ... ON CONFLICT DO
+   * NOTHING` (Prisma `createMany({ skipDuplicates })`), so of any number of concurrent or
+   * repeated callers exactly one inserts (count 1 => `created: true`) and every other gets
+   * count 0 and the existing row. ON CONFLICT (rather than catching the unique-violation) keeps
+   * the expected duplicate case silent: no aborted statement, no error-level query log per replay.
+   * `dedupeKey` is write-only here: DETAIL_SELECT never reads it back, so it can never reach a
+   * record/DTO.
+   */
+  async createIfAbsent(data: IdempotentNotificationData): Promise<{ notification: NotificationRecord; created: boolean }> {
+    const { count } = await prisma.notification.createMany({
+      data: [
+        {
+          userId: data.userId,
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          resourceType: data.resourceType,
+          resourceId: data.resourceId,
+          actionUrl: data.actionUrl,
+          metadata: data.metadata === null ? Prisma.JsonNull : (data.metadata as Prisma.InputJsonValue),
+          dedupeKey: data.dedupeKey,
+        },
+      ],
+      skipDuplicates: true,
+    });
+    const row = await prisma.notification.findFirst({
+      where: { userId: data.userId, dedupeKey: data.dedupeKey },
+      select: DETAIL_SELECT,
+    });
+    if (!row) throw new Error("Notification idempotent insert did not yield a row.");
+    return { notification: toRecord(row), created: count === 1 };
   }
 
   async findByIdForUser(id: string, userId: string): Promise<NotificationRecord | null> {

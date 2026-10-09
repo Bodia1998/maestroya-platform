@@ -65,6 +65,12 @@ export interface NotificationEvent {
    *  `["IN_APP"]` when omitted, preserving every existing call site's
    *  current behavior exactly. */
   channels?: NotificationChannel[];
+  /** Module 145 — optional idempotency key of the business event this notification reports.
+   *  When set, the IN_APP row is created at most once per (userId, dedupeKey) (DB-enforced),
+   *  and the other requested channels are skipped when that row already existed — so a
+   *  replayed event can never produce a second user-visible notification on any channel.
+   *  Omitted (every pre-M145 caller) = exactly the previous behavior. Internal only. */
+  dedupeKey?: string | null;
 }
 
 export interface NotificationCreator {

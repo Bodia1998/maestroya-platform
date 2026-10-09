@@ -1,4 +1,7 @@
 import { NotFoundError } from "@/domain/errors/domain-error";
+import { LeadPublished } from "@/domain/events/lead-published";
+import type { EventBus } from "@/application/ports/event-bus";
+import { logger } from "@/infrastructure/observability/logger";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
 import type { LeadPublicationPriceSource } from "@/application/ports/lead-publication-price-source";
 import type { LeadRecord, LeadRepository } from "@/domain/repositories/lead-repository";
@@ -39,6 +42,11 @@ import {
  *
  * Publishing exposes no contact data and creates no financial record. It
  * enforces no purchase limit (that is M135/M137).
+ *
+ * Module 145: when (and only when) THIS call won the conditional DRAFT -> PUBLISHED write, it
+ * raises `LeadPublished` (id only) so the customer is notified. An idempotent repeat or a lost race
+ * raises nothing. Notification is best-effort: a failing subscriber is logged and never fails or
+ * rolls back the publication. `events` is optional so every pre-M145 construction is unchanged.
  */
 export class PublishLeadUseCase {
   constructor(
@@ -47,6 +55,7 @@ export class PublishLeadUseCase {
     private readonly leads: LeadRepository,
     private readonly priceSource: LeadPublicationPriceSource,
     private readonly buyerPolicy: LeadBuyerPolicy,
+    private readonly events?: Pick<EventBus, "publish">,
   ) {}
 
   async execute(userId: string, leadId: string): Promise<LeadRecord> {
@@ -75,7 +84,10 @@ export class PublishLeadUseCase {
     assertValidLeadPublicationSnapshotData(snapshot);
 
     const published = await this.leads.publish(leadId, snapshot);
-    if (published) return published;
+    if (published) {
+      await this.announcePublication(leadId);
+      return published;
+    }
 
     // Lost a race (or the lead/request changed after our read): re-read to
     // tell an idempotent repeat from a rejected publication.
@@ -83,5 +95,14 @@ export class PublishLeadUseCase {
     if (!current) throw new NotFoundError("Lead", leadId);
     if (current.status === "PUBLISHED") return current;
     throw new LeadNotPublishableError(current.status);
+  }
+
+  private async announcePublication(leadId: string): Promise<void> {
+    if (!this.events) return;
+    try {
+      await this.events.publish(new LeadPublished(leadId));
+    } catch (error) {
+      logger.error("lead_publication.notification_failed", { error: error instanceof Error ? error.message : "unknown" });
+    }
   }
 }

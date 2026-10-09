@@ -54,6 +54,7 @@ export class NotificationServiceCreator implements NotificationCreator {
       actionUrl: event.actionUrl ?? null,
       metadata: event.metadata ?? null,
       channels: event.channels ?? ["IN_APP", "REALTIME"],
+      ...(event.dedupeKey ? { dedupeKey: event.dedupeKey } : {}),
     });
   }
 }

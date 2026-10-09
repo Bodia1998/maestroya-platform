@@ -254,6 +254,22 @@
     "title": "Il tuo ticket di assistenza è stato chiuso",
     "message": "Il ticket {ticketNumber} è stato chiuso."
   },
+  "LEAD_REQUEST_PUBLISHED": {
+    "title": "La tua richiesta è online",
+    "message": "La tua richiesta di servizio a {city} è stata pubblicata e i professionisti possono ora vederla."
+  },
+  "LEAD_PURCHASED": {
+    "title": "Un professionista ha sbloccato la tua richiesta",
+    "message": "Un professionista ha acquistato l'accesso alla tua richiesta di servizio a {city} e potrebbe contattarti presto."
+  },
+  "LEAD_PURCHASE_CONFIRMED": {
+    "title": "Pagamento confermato",
+    "message": "Il tuo pagamento per l'opportunità a {city} è confermato. Ora puoi vedere i dati di contatto del cliente."
+  },
+  "LEAD_PURCHASE_CANCELLED": {
+    "title": "Tentativo di pagamento annullato",
+    "message": "Il tuo tentativo di pagamento per l'opportunità a {city} è stato annullato e non è stato concesso alcun accesso. Puoi avviare un nuovo acquisto se l'opportunità è ancora disponibile."
+  },
   "labels": {
     "disputeStatus": {
       "OPEN": "Aperta",

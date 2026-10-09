@@ -3,6 +3,9 @@ import { PublishLeadUseCase } from "@/application/use-cases/lead/publish-lead.us
 import type { LeadPricingConfigResolution } from "@/domain/services/lead-pricing-production-config";
 import type { LeadBuyerPolicy } from "@/domain/services/lead-publication";
 import { env } from "@/infrastructure/config/env";
+import { eventBus } from "@/infrastructure/events/compose";
+// Side-effect import: registers the Module 145 LEAD_V1 notification subscribers against the shared eventBus.
+import "@/application/use-cases/notification/compose";
 import { PrismaCustomerProfileRepository } from "@/infrastructure/database/prisma/repositories/prisma-customer-profile-repository";
 import { PrismaJobValueEstimationContextReader } from "@/infrastructure/database/prisma/repositories/prisma-job-value-estimation-context-reader";
 import { PrismaLeadRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-repository";
@@ -45,5 +48,6 @@ export function makePublishLeadUseCase(
     new PrismaLeadRepository(),
     new ConfiguredLeadPublicationPriceSource(new PrismaJobValueEstimationContextReader(), configuration),
     buyerPolicy,
+    eventBus,
   );
 }

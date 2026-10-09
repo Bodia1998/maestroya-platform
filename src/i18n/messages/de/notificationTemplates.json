@@ -254,6 +254,22 @@
     "title": "Dein Support-Ticket wurde geschlossen",
     "message": "Das Ticket {ticketNumber} wurde geschlossen."
   },
+  "LEAD_REQUEST_PUBLISHED": {
+    "title": "Deine Anfrage ist online",
+    "message": "Deine Serviceanfrage in {city} wurde veröffentlicht und Fachkräfte können sie jetzt sehen."
+  },
+  "LEAD_PURCHASED": {
+    "title": "Eine Fachkraft hat deine Anfrage freigeschaltet",
+    "message": "Eine Fachkraft hat den Zugang zu deiner Serviceanfrage in {city} gekauft und kann sich bald bei dir melden."
+  },
+  "LEAD_PURCHASE_CONFIRMED": {
+    "title": "Zahlung bestätigt",
+    "message": "Deine Zahlung für den Lead in {city} ist bestätigt. Du kannst jetzt die Kontaktdaten des Kunden einsehen."
+  },
+  "LEAD_PURCHASE_CANCELLED": {
+    "title": "Zahlungsversuch abgebrochen",
+    "message": "Dein Zahlungsversuch für den Lead in {city} wurde abgebrochen und es wurde kein Zugang gewährt. Du kannst einen neuen Kauf starten, wenn der Lead noch verfügbar ist."
+  },
   "labels": {
     "disputeStatus": {
       "OPEN": "Offen",

@@ -64,7 +64,17 @@ export interface NotificationChannelPayload {
   resourceId?: string | null;
   actionUrl?: string | null;
   metadata?: Record<string, unknown> | null;
+  /** Module 145 — see `NotificationRequest.dedupeKey`. Only the IN_APP adapter reads it. */
+  dedupeKey?: string | null;
 }
+
+/**
+ * Module 145 — what an adapter may report from `send`. Returning nothing (every
+ * pre-M145 adapter) means "delivered". `"DUPLICATE"` is returned only by the IN_APP
+ * adapter when its idempotent insert found the row already present; the dispatcher
+ * then skips the remaining channels for that replayed event.
+ */
+export type NotificationChannelSendResult = { outcome: "DELIVERED" | "DUPLICATE" } | void;
 
 /**
  * One channel's delivery mechanism. Mirrors `NotificationCreator`'s own
@@ -75,5 +85,5 @@ export interface NotificationChannelPayload {
  */
 export interface NotificationChannelAdapter {
   readonly channel: NotificationChannel;
-  send(payload: NotificationChannelPayload): Promise<void>;
+  send(payload: NotificationChannelPayload): Promise<NotificationChannelSendResult>;
 }

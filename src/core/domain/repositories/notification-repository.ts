@@ -100,7 +100,15 @@ export type NotificationTypeValue =
   | "JOB_COMPLETION_CONFIRMATION_REQUESTED"
   | "JOB_COMPLETION_CONFIRMATION_REMINDER"
   | "JOB_COMPLETION_CONFIRMED"
-  | "JOB_COMPLETION_CONFIRMATION_TIMED_OUT";
+  | "JOB_COMPLETION_CONFIRMATION_TIMED_OUT"
+  // Module 145 — LEAD_V1 lead notifications. Recipients: the request's
+  // customer (LEAD_REQUEST_PUBLISHED, LEAD_PURCHASED) or the buying
+  // professional (LEAD_PURCHASE_CONFIRMED, LEAD_PURCHASE_CANCELLED) — always
+  // resolved server-side, see domain/services/lead-notification.ts.
+  | "LEAD_REQUEST_PUBLISHED"
+  | "LEAD_PURCHASED"
+  | "LEAD_PURCHASE_CONFIRMED"
+  | "LEAD_PURCHASE_CANCELLED";
 
 export interface NotificationRecord {
   id: string;
@@ -133,6 +141,24 @@ export interface CreateNotificationData {
   resourceId: string | null;
   actionUrl: string | null;
   metadata: Record<string, unknown> | null;
+}
+
+/**
+ * Module 145 — idempotent creation, as a SEPARATE narrow port (not a new method on
+ * `NotificationRepository`) so every existing repository fake stays valid.
+ *
+ * `createIfAbsent` inserts the row, or — when a row with the same
+ * (`userId`, `dedupeKey`) already exists — returns that row with
+ * `created: false`. The guarantee is the database's unique index
+ * `notifications_userId_dedupeKey_key`, not an application-level pre-check, so
+ * concurrent callers cannot both create it.
+ */
+export interface IdempotentNotificationData extends CreateNotificationData {
+  dedupeKey: string;
+}
+
+export interface IdempotentNotificationWriter {
+  createIfAbsent(data: IdempotentNotificationData): Promise<{ notification: NotificationRecord; created: boolean }>;
 }
 
 export interface ListNotificationsOptions {

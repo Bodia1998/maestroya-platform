@@ -254,6 +254,22 @@
     "title": "Je supportticket is gesloten",
     "message": "Ticket {ticketNumber} is gesloten."
   },
+  "LEAD_REQUEST_PUBLISHED": {
+    "title": "Je aanvraag staat online",
+    "message": "Je serviceaanvraag in {city} is gepubliceerd en vakmensen kunnen deze nu zien."
+  },
+  "LEAD_PURCHASED": {
+    "title": "Een vakman heeft je aanvraag ontgrendeld",
+    "message": "Een vakman heeft toegang gekocht tot je serviceaanvraag in {city} en kan binnenkort contact met je opnemen."
+  },
+  "LEAD_PURCHASE_CONFIRMED": {
+    "title": "Betaling bevestigd",
+    "message": "Je betaling voor de lead in {city} is bevestigd. Je kunt nu de contactgegevens van de klant bekijken."
+  },
+  "LEAD_PURCHASE_CANCELLED": {
+    "title": "Betaalpoging geannuleerd",
+    "message": "Je betaalpoging voor de lead in {city} is geannuleerd en er is geen toegang verleend. Je kunt een nieuwe aankoop starten als de lead nog beschikbaar is."
+  },
   "labels": {
     "disputeStatus": {
       "OPEN": "Open",
