@@ -168,8 +168,11 @@ describe("M145 schema + migration are additive and DB-enforced", () => {
     expect(record).not.toMatch(/dedupeKey/);
   });
 
-  it("no pre-existing migration was modified (this is the newest migration directory)", () => {
+  it("no pre-existing migration was modified (M145's migration exists and only LATER modules' migrations follow it)", () => {
     const dirs = readdirSync(path.join(root, "prisma/migrations")).filter((n) => /^\d{14}_/.test(n)).sort();
-    expect(dirs[dirs.length - 1]).toBe("20261011000000_add_module_145_lead_notifications");
+    const index = dirs.indexOf("20261011000000_add_module_145_lead_notifications");
+    expect(index).toBeGreaterThanOrEqual(0);
+    // Updated by Module 146: a newer migration may follow, but only one that belongs to a later module.
+    for (const later of dirs.slice(index + 1)) expect(later).toMatch(/_add_module_(14[6-9]|1[5-9]\d)_/);
   });
 });

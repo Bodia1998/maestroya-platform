@@ -198,6 +198,10 @@
     "featureFlag": {
       "keyRequired": "Flag key is required.",
       "keyFormat": "Flag key may only contain letters, numbers, '-', '_' and '.'."
+    },
+    "billingIdentity": {
+      "taxId": "Enter a valid tax ID (4–20 letters or digits).",
+      "country": "Enter a two-letter country code, e.g. ES."
     }
   }
 }

@@ -131,7 +131,8 @@
     "recordingTheObservation": "Something went wrong recording the observation.",
     "invalidFilters": "Invalid filters.",
     "invalidRestrictionDetails": "Invalid restriction details.",
-    "invalidPayoutPeriod": "Enter a valid payout period (start on or before end)."
+    "invalidPayoutPeriod": "Enter a valid payout period (start on or before end).",
+    "reviewingThisBillingIdentity": "Something went wrong reviewing this billing identity."
   },
   "common": {
     "metaTitle": "Admin — {page}",

@@ -36,6 +36,10 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   VERIFICATION_APPROVED: "VERIFICATION",
   VERIFICATION_REJECTED: "VERIFICATION",
   VERIFICATION_RESUBMISSION_REQUESTED: "VERIFICATION",
+  // Module 146 — billing identity submission/review.
+  BILLING_IDENTITY_SUBMITTED: "VERIFICATION",
+  BILLING_IDENTITY_VERIFIED: "VERIFICATION",
+  BILLING_IDENTITY_REJECTED: "VERIFICATION",
   // Module 18 — Company Professional: same "map to the closest existing
   // AuditLogAction value, preserve the concrete action in metadata.adminAction"
   // convention. Company profile/membership/invitation actions map to

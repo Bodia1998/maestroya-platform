@@ -166,7 +166,8 @@
     "profileDetails": "Profildaten",
     "serviceCategories": "Dienstleistungskategorien",
     "dangerZone": "Gefahrenbereich",
-    "dangerZoneDescription": "Wenn du dein Profil deaktivierst, erscheint es nicht mehr in der Kundensuche, bis es wieder aktiviert wird."
+    "dangerZoneDescription": "Wenn du dein Profil deaktivierst, erscheint es nicht mehr in der Kundensuche, bis es wieder aktiviert wird.",
+    "billingLink": "Rechnungsdaten"
   },
   "requests": {
     "distance": "{distance, number} km entfernt",
@@ -472,6 +473,67 @@
       "phone": "Telefon",
       "address": "Adresse",
       "notProvided": "Nicht angegeben"
+    }
+  },
+  "billing": {
+    "metaTitle": "Rechnungsdaten",
+    "title": "Rechnungsdaten",
+    "subtitle": "Die rechtlichen Angaben, mit denen MaestroYa dir die gekauften Leads in Rechnung stellt.",
+    "noProfile": "Lege zuerst dein <link>Fachkraft-Profil</link> an, um Rechnungsdaten hinzuzufügen.",
+    "verifiedOn": "Verifiziert am {date}",
+    "notVerificationNotice": "Das Speichern dieses Formulars verifiziert deine Angaben nicht. Ein MaestroYa-Administrator prüft sie manuell; diese Prüfung ist keine Bestätigung durch eine Steuerbehörde.",
+    "state": {
+      "MISSING": {
+        "label": "Noch keine Rechnungsdaten",
+        "description": "Gib deinen rechtlichen Namen, deine Steuernummer und deine Rechnungsadresse an. Sie werden benötigt, um die gekauften Leads abzurechnen."
+      },
+      "PENDING_REVIEW": {
+        "label": "Prüfung ausstehend",
+        "description": "Deine Angaben sind vollständig und warten auf die Prüfung durch MaestroYa. Sie sind noch nicht verifiziert."
+      },
+      "VERIFIED": {
+        "label": "Verifiziert",
+        "description": "MaestroYa hat diese Angaben geprüft. Wenn du eine davon änderst, müssen sie erneut geprüft werden."
+      },
+      "NEEDS_CORRECTION": {
+        "label": "Korrektur erforderlich",
+        "description": "MaestroYa konnte diese Angaben nicht akzeptieren. Aktualisiere und speichere sie, um sie erneut zur Prüfung einzureichen."
+      }
+    },
+    "rejectionReason": {
+      "TAX_ID_MISMATCH": "Die Steuernummer passt nicht zum angegebenen rechtlichen Namen.",
+      "LEGAL_NAME_MISMATCH": "Der rechtliche Name passt nicht zur angegebenen Steuernummer.",
+      "ADDRESS_INVALID": "Die Rechnungsadresse ist unvollständig oder konnte nicht akzeptiert werden.",
+      "OTHER": "Bitte prüfe alle Angaben und wende dich an den Support, wenn du Hilfe brauchst."
+    },
+    "form": {
+      "detailsSection": "Rechtliche Identität",
+      "addressSection": "Rechnungsadresse",
+      "entityType": "Abrechnung als",
+      "entityTypes": {
+        "INDIVIDUAL": "Privatperson / selbstständige Fachkraft",
+        "COMPANY": "Unternehmen"
+      },
+      "legalName": "Rechtlicher Name oder Firmenname",
+      "legalNameHint": "Genau so, wie bei der Steuerbehörde registriert.",
+      "taxId": "Steuernummer",
+      "taxIdHint": "Leerzeichen, Punkte und Bindestriche werden ignoriert.",
+      "taxCountry": "Land der steuerlichen Registrierung",
+      "countryHint": "Zweistelliger Ländercode, z. B. ES, DE, FR.",
+      "addressLine1": "Adresszeile 1",
+      "addressLine2": "Adresszeile 2",
+      "city": "Stadt",
+      "region": "Region oder Provinz",
+      "postalCode": "Postleitzahl",
+      "country": "Land",
+      "save": "Rechnungsdaten speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Rechnungsdaten gespeichert. Sie warten jetzt auf die Prüfung; Speichern verifiziert sie nicht.",
+      "changeWarning": "Wenn du eine dieser Angaben änderst, müssen sie erneut geprüft werden."
+    },
+    "errors": {
+      "fixErrors": "Bitte korrigiere die Fehler unten.",
+      "save": "Beim Speichern deiner Rechnungsdaten ist ein Fehler aufgetreten."
     }
   }
 }

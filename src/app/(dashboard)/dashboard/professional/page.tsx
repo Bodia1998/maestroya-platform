@@ -57,6 +57,13 @@ export default async function ProfessionalDashboardPage() {
               <CardTitle>{t("statusTitle")}</CardTitle>
               <div className="flex items-center gap-4">
                 <Link
+                  href="/dashboard/professional/billing"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  <FileText className="h-4 w-4" aria-hidden />
+                  {t("billingLink")}
+                </Link>
+                <Link
                   href="/dashboard/professional/self-billing"
                   className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
                 >

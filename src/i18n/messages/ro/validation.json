@@ -198,6 +198,10 @@
     "featureFlag": {
       "keyRequired": "Cheia flag-ului este obligatorie.",
       "keyFormat": "Cheia flag-ului poate conține doar litere, cifre, '-', '_' și '.'."
+    },
+    "billingIdentity": {
+      "taxId": "Introdu un cod de identificare fiscală valid (4–20 litere sau cifre).",
+      "country": "Introdu un cod de țară din două litere, de ex. ES."
     }
   }
 }

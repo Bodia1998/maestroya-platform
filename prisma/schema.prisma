@@ -210,6 +210,8 @@ model User {
   /// Module 79 — Invoicing & Credit Notes.
   selfBillingAuthorizationsAccepted SelfBillingAuthorization[] @relation("SelfBillingAuthorizationAcceptedBy")
   selfBillingAuthorizationsRevoked  SelfBillingAuthorization[] @relation("SelfBillingAuthorizationRevokedBy")
+  /// Module 146 — billing identities this user (an admin) reviewed.
+  billingIdentitiesReviewed         ProfessionalBillingIdentity[] @relation("BillingIdentityReviewedBy")
   invoicesAccepted                  Invoice[]                  @relation("InvoiceAcceptedBy")
   invoicesCancelled                 Invoice[]                  @relation("InvoiceCancelledBy")
   creditNotesCancelled              CreditNote[]               @relation("CreditNoteCancelledBy")
@@ -1481,6 +1483,8 @@ model ProfessionalProfile {
   payoutAccount           ProfessionalPayoutAccount?
   /// Module 123 — lead-access purchases made by this professional.
   leadPurchases           LeadPurchase[]
+  /// Module 146 — the professional's billing identity (at most one; absent = MISSING).
+  billingIdentity         ProfessionalBillingIdentity?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -6090,4 +6094,76 @@ model LeadPurchase {
   /// "My purchases" lookups (prefix also serves the professional FK).
   @@index([professionalProfileId, status])
   @@map("lead_purchases")
+}
+
+/// Module 146 — Professional Billing Identity: legal entity type of the party MaestroYa bills
+/// for purchased lead access. Not inferred from, and not a substitute for, any tax treatment (M136).
+enum BillingEntityType {
+  INDIVIDUAL
+  COMPANY
+}
+
+/// Module 146 — closed, non-sensitive reasons an administrator may attach to a rejection. Safe
+/// to show to the professional; free-text reviewer notes are stored separately and never shown.
+enum BillingIdentityRejectionReason {
+  TAX_ID_MISMATCH
+  LEGAL_NAME_MISMATCH
+  ADDRESS_INVALID
+  OTHER
+}
+
+/// Module 146 — the fiscal identity MaestroYa bills a professional under for LEAD_V1 lead-access
+/// fees (consumed by M147 eligibility and M150 invoices). One row per ProfessionalProfile.
+///
+/// Distinct from: account identity (User), professional identity/business verification
+/// (ProfessionalProfile.verificationStatus, M17/M59/M98), payment-provider identity (Stripe) and
+/// payout identity (ProfessionalPayoutAccount). It is NOT backfilled from
+/// ProfessionalProfile.taxId/businessName (self-entered, unreviewed): existing professionals have
+/// NO row, which reads as MISSING / not billing-ready.
+///
+/// `verificationStatus` reuses the existing VerificationStatus enum; only UNVERIFIED (complete,
+/// awaiting review), VERIFIED and REJECTED (needs correction) are used (migration CHECK). VERIFIED
+/// means a MaestroYa administrator reviewed exactly these details at `revision` — it is NOT a
+/// registry/VIES confirmation. Every detail column is material: changing any of them resets the
+/// row to UNVERIFIED, clears review metadata and bumps `revision` (application + the
+/// `professional_billing_identity_guard` trigger declared in the migration; Prisma cannot express
+/// triggers or CHECKs). Rows cannot be INSERTed as VERIFIED. `taxId` is deliberately NOT unique
+/// (a unique constraint would let one professional probe whether another holds an identifier).
+model ProfessionalBillingIdentity {
+  id                    String            @id @default(uuid()) @db.Uuid
+  professionalProfileId String            @unique @db.Uuid
+  entityType            BillingEntityType
+  legalName             String            @db.VarChar(200)
+  /// Normalised (uppercase, no separators); syntax-checked only.
+  taxId                 String            @db.VarChar(20)
+  /// ISO 3166-1 alpha-2 country of tax registration/residence.
+  taxCountry            String            @db.VarChar(2)
+  addressLine1          String            @db.VarChar(200)
+  addressLine2          String?           @db.VarChar(200)
+  city                  String            @db.VarChar(120)
+  region                String?           @db.VarChar(120)
+  postalCode            String            @db.VarChar(20)
+  /// ISO 3166-1 alpha-2 country of the billing address.
+  country               String            @db.VarChar(2)
+
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  /// Starts at 1, bumped on every material change; admin decisions are conditional on it.
+  revision           Int                @default(1)
+  verifiedAt         DateTime?
+  reviewedAt         DateTime?
+  /// Admin-only metadata: never exposed by a professional-facing DTO.
+  reviewedByUserId   String?            @db.Uuid
+  rejectionReason    BillingIdentityRejectionReason?
+  reviewNote         String?            @db.Text
+
+  professionalProfile ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Cascade)
+  reviewedBy          User?               @relation("BillingIdentityReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Admin review queue.
+  @@index([verificationStatus, updatedAt], map: "prof_billing_identities_status_updated_idx")
+  @@index([reviewedByUserId])
+  @@map("professional_billing_identities")
 }

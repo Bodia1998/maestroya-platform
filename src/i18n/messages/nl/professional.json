@@ -166,7 +166,8 @@
     "profileDetails": "Profielgegevens",
     "serviceCategories": "Dienstcategorieën",
     "dangerZone": "Gevarenzone",
-    "dangerZoneDescription": "Als je je profiel deactiveert, verschijnt het niet meer in de zoekresultaten van klanten totdat het weer wordt geactiveerd."
+    "dangerZoneDescription": "Als je je profiel deactiveert, verschijnt het niet meer in de zoekresultaten van klanten totdat het weer wordt geactiveerd.",
+    "billingLink": "Factuurgegevens"
   },
   "requests": {
     "distance": "{distance, number} km verderop",
@@ -472,6 +473,67 @@
       "phone": "Telefoon",
       "address": "Adres",
       "notProvided": "Niet opgegeven"
+    }
+  },
+  "billing": {
+    "metaTitle": "Factuurgegevens",
+    "title": "Factuurgegevens",
+    "subtitle": "De juridische gegevens die MaestroYa gebruikt om de leads die je koopt aan jou te factureren.",
+    "noProfile": "Maak eerst je <link>vakmanprofiel</link> aan om factuurgegevens toe te voegen.",
+    "verifiedOn": "Geverifieerd op {date}",
+    "notVerificationNotice": "Door dit formulier op te slaan worden je gegevens niet geverifieerd. Een MaestroYa-beheerder beoordeelt ze handmatig; deze beoordeling is geen bevestiging door een belastingautoriteit.",
+    "state": {
+      "MISSING": {
+        "label": "Nog geen factuurgegevens",
+        "description": "Vul je juridische naam, belastingnummer en factuuradres in. Ze zijn nodig om de leads die je koopt te factureren."
+      },
+      "PENDING_REVIEW": {
+        "label": "Wacht op beoordeling",
+        "description": "Je gegevens zijn compleet en wachten op beoordeling door MaestroYa. Ze zijn nog niet geverifieerd."
+      },
+      "VERIFIED": {
+        "label": "Geverifieerd",
+        "description": "MaestroYa heeft deze gegevens beoordeeld. Als je er een wijzigt, moeten ze opnieuw worden beoordeeld."
+      },
+      "NEEDS_CORRECTION": {
+        "label": "Correctie nodig",
+        "description": "MaestroYa kon deze gegevens niet accepteren. Pas ze aan en sla ze op om ze opnieuw ter beoordeling in te dienen."
+      }
+    },
+    "rejectionReason": {
+      "TAX_ID_MISMATCH": "Het belastingnummer komt niet overeen met de opgegeven juridische naam.",
+      "LEGAL_NAME_MISMATCH": "De juridische naam komt niet overeen met het opgegeven belastingnummer.",
+      "ADDRESS_INVALID": "Het factuuradres is onvolledig of kon niet worden geaccepteerd.",
+      "OTHER": "Controleer alle gegevens en neem contact op met support als je hulp nodig hebt."
+    },
+    "form": {
+      "detailsSection": "Juridische identiteit",
+      "addressSection": "Factuuradres",
+      "entityType": "Factureren als",
+      "entityTypes": {
+        "INDIVIDUAL": "Particulier / zelfstandige vakman",
+        "COMPANY": "Bedrijf"
+      },
+      "legalName": "Juridische naam of bedrijfsnaam",
+      "legalNameHint": "Precies zoals geregistreerd bij de belastingautoriteit.",
+      "taxId": "Belastingidentificatienummer",
+      "taxIdHint": "Spaties, punten en streepjes worden genegeerd.",
+      "taxCountry": "Land van belastingregistratie",
+      "countryHint": "Landcode van twee letters, bijv. ES, DE, FR.",
+      "addressLine1": "Adresregel 1",
+      "addressLine2": "Adresregel 2",
+      "city": "Plaats",
+      "region": "Regio of provincie",
+      "postalCode": "Postcode",
+      "country": "Land",
+      "save": "Factuurgegevens opslaan",
+      "saving": "Opslaan…",
+      "saved": "Factuurgegevens opgeslagen. Ze wachten nu op beoordeling; opslaan verifieert ze niet.",
+      "changeWarning": "Als je een van deze gegevens wijzigt, moeten ze opnieuw worden beoordeeld."
+    },
+    "errors": {
+      "fixErrors": "Los de onderstaande fouten op.",
+      "save": "Er is iets misgegaan bij het opslaan van je factuurgegevens."
     }
   }
 }

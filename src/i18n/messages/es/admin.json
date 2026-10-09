@@ -131,7 +131,8 @@
     "recordingTheObservation": "No se pudo registrar la observación.",
     "invalidFilters": "Filtros no válidos.",
     "invalidRestrictionDetails": "Datos de la restricción no válidos.",
-    "invalidPayoutPeriod": "Introduce un periodo de cobro válido (el inicio debe ser anterior o igual al final)."
+    "invalidPayoutPeriod": "Introduce un periodo de cobro válido (el inicio debe ser anterior o igual al final).",
+    "reviewingThisBillingIdentity": "Se ha producido un error al revisar esta identidad de facturación."
   },
   "common": {
     "metaTitle": "Admin — {page}",

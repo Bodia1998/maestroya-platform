@@ -198,6 +198,10 @@
     "featureFlag": {
       "keyRequired": "A chave da flag é obrigatória.",
       "keyFormat": "A chave da flag só pode conter letras, números, '-', '_' e '.'."
+    },
+    "billingIdentity": {
+      "taxId": "Introduza um número de identificação fiscal válido (4 a 20 letras ou dígitos).",
+      "country": "Introduza um código de país com duas letras, p. ex. ES."
     }
   }
 }

@@ -166,7 +166,8 @@
     "profileDetails": "Profile details",
     "serviceCategories": "Service categories",
     "dangerZone": "Danger zone",
-    "dangerZoneDescription": "Deactivating your profile removes it from customer search until reactivated."
+    "dangerZoneDescription": "Deactivating your profile removes it from customer search until reactivated.",
+    "billingLink": "Billing details"
   },
   "requests": {
     "distance": "{distance, number} km away",
@@ -472,6 +473,67 @@
       "phone": "Phone",
       "address": "Address",
       "notProvided": "Not provided"
+    }
+  },
+  "billing": {
+    "metaTitle": "Billing details",
+    "title": "Billing details",
+    "subtitle": "The legal details MaestroYa uses to invoice you for the leads you purchase.",
+    "noProfile": "Create your <link>professional profile</link> first to add billing details.",
+    "verifiedOn": "Verified on {date}",
+    "notVerificationNotice": "Saving this form does not verify your details. A MaestroYa administrator reviews them manually; this review is not a confirmation by a tax authority.",
+    "state": {
+      "MISSING": {
+        "label": "No billing details yet",
+        "description": "Enter your legal name, tax ID and billing address. They are needed to invoice the leads you purchase."
+      },
+      "PENDING_REVIEW": {
+        "label": "Awaiting review",
+        "description": "Your details are complete and waiting for review by MaestroYa. They are not verified yet."
+      },
+      "VERIFIED": {
+        "label": "Verified",
+        "description": "MaestroYa has reviewed these details. If you change any of them, they will need to be reviewed again."
+      },
+      "NEEDS_CORRECTION": {
+        "label": "Correction needed",
+        "description": "MaestroYa could not accept these details. Update them and save to send them for review again."
+      }
+    },
+    "rejectionReason": {
+      "TAX_ID_MISMATCH": "The tax ID does not match the legal name provided.",
+      "LEGAL_NAME_MISMATCH": "The legal name does not match the tax ID provided.",
+      "ADDRESS_INVALID": "The billing address is incomplete or could not be accepted.",
+      "OTHER": "Please check all details and contact support if you need help."
+    },
+    "form": {
+      "detailsSection": "Legal identity",
+      "addressSection": "Billing address",
+      "entityType": "Billing as",
+      "entityTypes": {
+        "INDIVIDUAL": "Individual / self-employed professional",
+        "COMPANY": "Company"
+      },
+      "legalName": "Legal name or registered company name",
+      "legalNameHint": "Exactly as registered with the tax authority.",
+      "taxId": "Tax identification number",
+      "taxIdHint": "Spaces, dots and hyphens are ignored.",
+      "taxCountry": "Country of tax registration",
+      "countryHint": "Two-letter country code, e.g. ES, DE, FR.",
+      "addressLine1": "Address line 1",
+      "addressLine2": "Address line 2",
+      "city": "City",
+      "region": "Region or province",
+      "postalCode": "Postal code",
+      "country": "Country",
+      "save": "Save billing details",
+      "saving": "Saving…",
+      "saved": "Billing details saved. They are now awaiting review; saving does not verify them.",
+      "changeWarning": "Changing any of these details means they will need to be reviewed again."
+    },
+    "errors": {
+      "fixErrors": "Please fix the errors below.",
+      "save": "Something went wrong saving your billing details."
     }
   }
 }

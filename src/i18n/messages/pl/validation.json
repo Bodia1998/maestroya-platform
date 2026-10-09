@@ -198,6 +198,10 @@
     "featureFlag": {
       "keyRequired": "Klucz flagi jest wymagany.",
       "keyFormat": "Klucz flagi może zawierać tylko litery, cyfry, '-', '_' i '.'."
+    },
+    "billingIdentity": {
+      "taxId": "Wpisz prawidłowy numer identyfikacji podatkowej (4–20 liter lub cyfr).",
+      "country": "Wpisz dwuliterowy kod kraju, np. ES."
     }
   }
 }

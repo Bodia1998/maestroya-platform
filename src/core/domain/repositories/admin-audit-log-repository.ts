@@ -51,6 +51,13 @@ export type AdminAuditAction =
   | "VERIFICATION_APPROVED"
   | "VERIFICATION_REJECTED"
   | "VERIFICATION_RESUBMISSION_REQUESTED"
+  // Module 146 — Professional Billing Identity. SUBMITTED is performed by the
+  // professional (details saved/changed), VERIFIED/REJECTED by an admin. Metadata
+  // carries ids, revision and a rejection reason code only — never a tax id,
+  // name or address.
+  | "BILLING_IDENTITY_SUBMITTED"
+  | "BILLING_IDENTITY_VERIFIED"
+  | "BILLING_IDENTITY_REJECTED"
   // Module 18 — Company Professional. COMPANY_CREATED/UPDATED and the
   // membership/invitation actions are performed by a company owner/admin
   // (not a platform admin) but reuse this same append-only trail, same

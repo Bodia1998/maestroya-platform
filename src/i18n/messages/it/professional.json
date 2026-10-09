@@ -166,7 +166,8 @@
     "profileDetails": "Dati del profilo",
     "serviceCategories": "Categorie di servizi",
     "dangerZone": "Zona pericolosa",
-    "dangerZoneDescription": "Disattivando il profilo, questo non comparirà più nelle ricerche dei clienti finché non verrà riattivato."
+    "dangerZoneDescription": "Disattivando il profilo, questo non comparirà più nelle ricerche dei clienti finché non verrà riattivato.",
+    "billingLink": "Dati di fatturazione"
   },
   "requests": {
     "distance": "A {distance, number} km",
@@ -472,6 +473,67 @@
       "phone": "Telefono",
       "address": "Indirizzo",
       "notProvided": "Non indicato"
+    }
+  },
+  "billing": {
+    "metaTitle": "Dati di fatturazione",
+    "title": "Dati di fatturazione",
+    "subtitle": "I dati legali che MaestroYa usa per fatturarti i lead che acquisti.",
+    "noProfile": "Crea prima il tuo <link>profilo professionale</link> per aggiungere i dati di fatturazione.",
+    "verifiedOn": "Verificato il {date}",
+    "notVerificationNotice": "Salvare questo modulo non verifica i tuoi dati. Un amministratore di MaestroYa li esamina manualmente; questo controllo non è una conferma da parte di un'autorità fiscale.",
+    "state": {
+      "MISSING": {
+        "label": "Nessun dato di fatturazione",
+        "description": "Inserisci la tua denominazione legale, il codice fiscale/partita IVA e l'indirizzo di fatturazione. Servono per fatturare i lead che acquisti."
+      },
+      "PENDING_REVIEW": {
+        "label": "In attesa di revisione",
+        "description": "I tuoi dati sono completi e in attesa di revisione da parte di MaestroYa. Non sono ancora verificati."
+      },
+      "VERIFIED": {
+        "label": "Verificati",
+        "description": "MaestroYa ha esaminato questi dati. Se ne modifichi uno, dovranno essere esaminati di nuovo."
+      },
+      "NEEDS_CORRECTION": {
+        "label": "Correzione necessaria",
+        "description": "MaestroYa non ha potuto accettare questi dati. Aggiornali e salvali per inviarli di nuovo in revisione."
+      }
+    },
+    "rejectionReason": {
+      "TAX_ID_MISMATCH": "Il codice fiscale non corrisponde alla denominazione legale indicata.",
+      "LEGAL_NAME_MISMATCH": "La denominazione legale non corrisponde al codice fiscale indicato.",
+      "ADDRESS_INVALID": "L'indirizzo di fatturazione è incompleto o non è stato accettato.",
+      "OTHER": "Controlla tutti i dati e contatta l'assistenza se hai bisogno di aiuto."
+    },
+    "form": {
+      "detailsSection": "Identità legale",
+      "addressSection": "Indirizzo di fatturazione",
+      "entityType": "Fatturazione come",
+      "entityTypes": {
+        "INDIVIDUAL": "Persona fisica / professionista autonomo",
+        "COMPANY": "Società"
+      },
+      "legalName": "Denominazione legale o ragione sociale",
+      "legalNameHint": "Esattamente come registrata presso l'autorità fiscale.",
+      "taxId": "Codice di identificazione fiscale",
+      "taxIdHint": "Spazi, punti e trattini vengono ignorati.",
+      "taxCountry": "Paese di registrazione fiscale",
+      "countryHint": "Codice paese di due lettere, ad es. ES, DE, FR.",
+      "addressLine1": "Indirizzo (riga 1)",
+      "addressLine2": "Indirizzo (riga 2)",
+      "city": "Città",
+      "region": "Regione o provincia",
+      "postalCode": "CAP",
+      "country": "Paese",
+      "save": "Salva i dati di fatturazione",
+      "saving": "Salvataggio…",
+      "saved": "Dati di fatturazione salvati. Ora sono in attesa di revisione; il salvataggio non li verifica.",
+      "changeWarning": "Se modifichi uno di questi dati, dovranno essere esaminati di nuovo."
+    },
+    "errors": {
+      "fixErrors": "Correggi gli errori qui sotto.",
+      "save": "Si è verificato un errore durante il salvataggio dei dati di fatturazione."
     }
   }
 }

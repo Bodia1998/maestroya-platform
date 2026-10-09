@@ -198,6 +198,10 @@
     "featureFlag": {
       "keyRequired": "Klíč příznaku je povinný.",
       "keyFormat": "Klíč příznaku smí obsahovat jen písmena, číslice, '-', '_' a '.'."
+    },
+    "billingIdentity": {
+      "taxId": "Zadejte platné daňové identifikační číslo (4–20 písmen nebo číslic).",
+      "country": "Zadejte dvoupísmenný kód země, např. ES."
     }
   }
 }
