@@ -20,12 +20,21 @@ import {
   type ProfessionalVerificationStatusValue,
 } from "@/domain/services/professional-verification-rules";
 
-/** The fixed, ordered set of requirements a professional must satisfy
- *  before `ActivateProfessionalUseCase` will move them to ACTIVATED. Order
- *  matters only for display purposes (a wizard-style onboarding UI would
- *  render steps in this order) — activation itself requires all of them,
- *  regardless of the order they were completed in. */
-export const ONBOARDING_STEP_VALUES = [
+/** Module 148 — Onboarding Decoupling from Payout.
+ *
+ *  The steps a professional MUST complete before `ActivateProfessionalUseCase`
+ *  will move them to ACTIVATED. Order matters only for display purposes (a
+ *  wizard-style onboarding UI would render steps in this order) — activation
+ *  itself requires all of them, regardless of the order they were completed
+ *  in.
+ *
+ *  Payout setup is deliberately NOT in this list: under the LEAD_V1 lead
+ *  marketplace MaestroYa never collects, holds or pays out a professional's
+ *  service revenue, so a payout destination is not a precondition of being
+ *  activated. The identity and business-registration steps stay mandatory.
+ *  Neither this list nor ACTIVATED is evidence of M146 billing readiness or
+ *  M147 lead-purchase eligibility — those are evaluated separately. */
+export const ONBOARDING_REQUIRED_STEP_VALUES = [
   "TERMS_ACCEPTED",
   "PRIVACY_POLICY_ACCEPTED",
   "IDENTITY_VERIFIED",
@@ -34,7 +43,19 @@ export const ONBOARDING_STEP_VALUES = [
    *  activation — see isBusinessRegistrationVerified below. */
   "BUSINESS_REGISTRATION_VERIFIED",
   "PROFILE_COMPLETE",
-  "PAYOUT_CONNECTED",
+] as const;
+
+/** Module 148 — steps that are tracked and reported but never block
+ *  activation. `PAYOUT_CONNECTED` is only relevant to the frozen legacy
+ *  payout flow (`ExecuteProfessionalPayoutUseCase` /
+ *  `ResolvePayoutDestinationUseCase`), which checks the payout account
+ *  itself and does not consult onboarding status. */
+export const ONBOARDING_OPTIONAL_STEP_VALUES = ["PAYOUT_CONNECTED"] as const;
+
+/** Every step the module knows about (required + optional). */
+export const ONBOARDING_STEP_VALUES = [
+  ...ONBOARDING_REQUIRED_STEP_VALUES,
+  ...ONBOARDING_OPTIONAL_STEP_VALUES,
 ] as const;
 export type OnboardingStepValue = (typeof ONBOARDING_STEP_VALUES)[number];
 
@@ -177,7 +198,13 @@ export interface OnboardingProgressInput {
 }
 
 export interface OnboardingProgress {
+  /** Required steps only (`ONBOARDING_REQUIRED_STEP_VALUES`) — the sole
+   *  input to `isEligibleForActivation`, `completedStepCount` and
+   *  `totalStepCount`. */
   steps: OnboardingStepState[];
+  /** Module 148 — optional steps (currently `PAYOUT_CONNECTED`): reported
+   *  for display, never counted and never blocking. */
+  optionalSteps: OnboardingStepState[];
   completedStepCount: number;
   totalStepCount: number;
   isEligibleForActivation: boolean;
@@ -202,13 +229,16 @@ export function computeOnboardingProgress(input: OnboardingProgressInput): Onboa
     PAYOUT_CONNECTED: isPayoutAccountConnected(input.payoutAccountStatus),
   };
 
-  const steps = ONBOARDING_STEP_VALUES.map((step) => ({ step, complete: stepComplete[step] }));
+  const steps = ONBOARDING_REQUIRED_STEP_VALUES.map((step) => ({ step, complete: stepComplete[step] }));
+  const optionalSteps = ONBOARDING_OPTIONAL_STEP_VALUES.map((step) => ({ step, complete: stepComplete[step] }));
   const completedStepCount = steps.filter((s) => s.complete).length;
 
   return {
     steps,
+    optionalSteps,
     completedStepCount,
-    totalStepCount: ONBOARDING_STEP_VALUES.length,
+    totalStepCount: ONBOARDING_REQUIRED_STEP_VALUES.length,
+    // Module 148: only the required steps gate activation.
     isEligibleForActivation: steps.every((s) => s.complete),
   };
 }
@@ -222,7 +252,7 @@ export const ONBOARDING_STEP_LABELS: Record<OnboardingStepValue, string> = {
   IDENTITY_VERIFIED: "Complete identity verification",
   BUSINESS_REGISTRATION_VERIFIED: "Submit and get approval for a business-registration document",
   PROFILE_COMPLETE: "Complete your professional profile",
-  PAYOUT_CONNECTED: "Add a payout destination",
+  PAYOUT_CONNECTED: "Add a payout destination (optional)",
 };
 
 // ============================================================================

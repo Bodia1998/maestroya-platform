@@ -65,12 +65,13 @@ describe("Professional Onboarding end-to-end flow (Module 62)", () => {
     // 3. Accept privacy policy.
     await acceptPrivacy.execute("user-1", { version: "2026-01-01" });
 
-    // Still missing identity verification, profile completeness, and payout.
+    // Still missing identity verification and profile completeness. Module 148:
+    // payout is no longer a required step, so it is never listed as missing.
     let validation = await validate.execute("user-1");
     expect(validation.eligible).toBe(false);
     expect(validation.missingSteps).toContain("Complete identity verification");
     expect(validation.missingSteps).toContain("Complete your professional profile");
-    expect(validation.missingSteps).toContain("Add a payout destination");
+    expect(validation.missingSteps.join(";")).not.toMatch(/payout/i);
 
     // 4. Persona verification (Module 59) — reused, not reimplemented.
     verifications.seedApproved(professional.id);
@@ -95,7 +96,12 @@ describe("Professional Onboarding end-to-end flow (Module 62)", () => {
       country: "ES",
     });
 
-    // 6. Bank account (real IbanPayoutProvider — validates/masks/hashes for real).
+    // Module 148: every REQUIRED requirement is already satisfied — no payout needed.
+    validation = await validate.execute("user-1");
+    expect(validation.eligible).toBe(true);
+    expect(validation.missingSteps).toHaveLength(0);
+
+    // 6. Bank account (OPTIONAL since Module 148; real IbanPayoutProvider — validates/masks/hashes for real).
     const payoutAccount = await setPayoutDestination.execute("user-1", {
       method: "IBAN",
       accountHolderName: "Jane Doe",
@@ -104,7 +110,7 @@ describe("Professional Onboarding end-to-end flow (Module 62)", () => {
     expect(payoutAccount.status).toBe("PENDING");
     expect(payoutAccount.ibanLast4).toBe("1332");
 
-    // Now every requirement is satisfied.
+    // Adding the optional payout destination does not change eligibility.
     validation = await validate.execute("user-1");
     expect(validation.eligible).toBe(true);
     expect(validation.missingSteps).toHaveLength(0);
