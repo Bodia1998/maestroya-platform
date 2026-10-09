@@ -473,6 +473,24 @@
       "phone": "Phone",
       "address": "Address",
       "notProvided": "Not provided"
+    },
+    "eligibility": {
+      "title": "Complete these steps before buying leads",
+      "cta": {
+        "profile": "Go to my profile",
+        "verification": "Go to verification",
+        "billing": "Go to billing details"
+      },
+      "reason": {
+        "NO_PROFESSIONAL_PROFILE": "You need a professional profile before you can buy leads.",
+        "PROFESSIONAL_NOT_ACTIVE": "Your professional profile is not active, so you can't buy leads right now.",
+        "PROFESSIONAL_NOT_VERIFIED": "Your professional verification must be completed and approved before you can buy leads.",
+        "BILLING_MISSING": "Add your billing details before buying leads. An administrator will review them.",
+        "BILLING_PENDING_REVIEW": "Your billing details are awaiting review. You can buy leads once they are verified.",
+        "BILLING_NEEDS_CORRECTION": "Your billing details need to be corrected and reviewed again before you can buy leads.",
+        "BILLING_INCOMPLETE": "Your billing details are incomplete. Complete them and submit them for review before buying leads.",
+        "BILLING_NOT_READY": "Your billing details are not verified yet, so you can't buy leads right now."
+      }
     }
   },
   "billing": {

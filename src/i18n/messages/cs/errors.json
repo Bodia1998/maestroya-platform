@@ -9,6 +9,7 @@
     "RATE_LIMITED": "Příliš mnoho pokusů. Chvíli počkejte a zkuste to znovu.",
     "ACCOUNT_RESTRICTED": "Tato akce je pro váš účet dočasně nedostupná.",
     "PROFESSIONAL_NOT_VERIFIED": "K této akci musíte dokončit ověření profesionála.",
+    "LEAD_PURCHASE_NOT_ELIGIBLE": "Před nákupem leadů doplňte své fakturační údaje.",
     "SELF_BILLING_NOT_AUTHORIZED": "Než budete pokračovat, musíte povolit samofakturaci.",
     "BUSINESS_REGISTRATION_REQUIRED": "Než budete pokračovat, musíte doplnit daňové a podnikatelské údaje.",
     "MATERIALS_NOT_CONFIRMED": "Než budete pokračovat, potvrďte, jak bude zajištěn materiál.",

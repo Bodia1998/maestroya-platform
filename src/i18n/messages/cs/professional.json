@@ -473,6 +473,24 @@
       "phone": "Telefon",
       "address": "Adresa",
       "notProvided": "Neuvedeno"
+    },
+    "eligibility": {
+      "title": "Dokončete tyto kroky, než začnete nakupovat leady",
+      "cta": {
+        "profile": "Přejít na můj profil",
+        "verification": "Přejít na ověření",
+        "billing": "Přejít na fakturační údaje"
+      },
+      "reason": {
+        "NO_PROFESSIONAL_PROFILE": "Než budete moci nakupovat leady, potřebujete profesionální profil.",
+        "PROFESSIONAL_NOT_ACTIVE": "Váš profesionální profil není aktivní, takže teď nemůžete nakupovat leady.",
+        "PROFESSIONAL_NOT_VERIFIED": "Vaše profesní ověření musí být dokončeno a schváleno, než budete moci nakupovat leady.",
+        "BILLING_MISSING": "Před nákupem leadů doplňte fakturační údaje. Zkontroluje je administrátor.",
+        "BILLING_PENDING_REVIEW": "Vaše fakturační údaje čekají na kontrolu. Leady budete moci nakupovat po jejich ověření.",
+        "BILLING_NEEDS_CORRECTION": "Vaše fakturační údaje je třeba opravit a znovu zkontrolovat, než budete moci nakupovat leady.",
+        "BILLING_INCOMPLETE": "Vaše fakturační údaje jsou neúplné. Doplňte je a odešlete ke kontrole, než začnete nakupovat leady.",
+        "BILLING_NOT_READY": "Vaše fakturační údaje ještě nejsou ověřeny, takže teď nemůžete nakupovat leady."
+      }
     }
   },
   "billing": {

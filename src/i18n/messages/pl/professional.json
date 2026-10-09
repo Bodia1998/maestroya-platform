@@ -473,6 +473,24 @@
       "phone": "Telefon",
       "address": "Adres",
       "notProvided": "Nie podano"
+    },
+    "eligibility": {
+      "title": "Wykonaj te kroki, zanim zaczniesz kupować leady",
+      "cta": {
+        "profile": "Przejdź do mojego profilu",
+        "verification": "Przejdź do weryfikacji",
+        "billing": "Przejdź do danych rozliczeniowych"
+      },
+      "reason": {
+        "NO_PROFESSIONAL_PROFILE": "Aby kupować leady, potrzebujesz profilu profesjonalisty.",
+        "PROFESSIONAL_NOT_ACTIVE": "Twój profil profesjonalisty nie jest aktywny, więc teraz nie możesz kupować leadów.",
+        "PROFESSIONAL_NOT_VERIFIED": "Twoja weryfikacja zawodowa musi zostać ukończona i zatwierdzona, zanim będziesz mógł kupować leady.",
+        "BILLING_MISSING": "Dodaj dane rozliczeniowe, zanim zaczniesz kupować leady. Sprawdzi je administrator.",
+        "BILLING_PENDING_REVIEW": "Twoje dane rozliczeniowe czekają na weryfikację. Leady kupisz, gdy zostaną zweryfikowane.",
+        "BILLING_NEEDS_CORRECTION": "Twoje dane rozliczeniowe muszą zostać poprawione i ponownie sprawdzone, zanim będziesz mógł kupować leady.",
+        "BILLING_INCOMPLETE": "Twoje dane rozliczeniowe są niekompletne. Uzupełnij je i wyślij do weryfikacji, zanim zaczniesz kupować leady.",
+        "BILLING_NOT_READY": "Twoje dane rozliczeniowe nie zostały jeszcze zweryfikowane, więc teraz nie możesz kupować leadów."
+      }
     }
   },
   "billing": {

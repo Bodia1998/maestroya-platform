@@ -473,6 +473,24 @@
       "phone": "Teléfono",
       "address": "Dirección",
       "notProvided": "No indicado"
+    },
+    "eligibility": {
+      "title": "Completa estos pasos antes de comprar oportunidades",
+      "cta": {
+        "profile": "Ir a mi perfil",
+        "verification": "Ir a la verificación",
+        "billing": "Ir a los datos de facturación"
+      },
+      "reason": {
+        "NO_PROFESSIONAL_PROFILE": "Necesitas un perfil profesional antes de poder comprar oportunidades.",
+        "PROFESSIONAL_NOT_ACTIVE": "Tu perfil profesional no está activo, así que ahora mismo no puedes comprar oportunidades.",
+        "PROFESSIONAL_NOT_VERIFIED": "Tu verificación profesional debe estar completada y aprobada antes de poder comprar oportunidades.",
+        "BILLING_MISSING": "Añade tus datos de facturación antes de comprar oportunidades. Un administrador los revisará.",
+        "BILLING_PENDING_REVIEW": "Tus datos de facturación están pendientes de revisión. Podrás comprar oportunidades cuando estén verificados.",
+        "BILLING_NEEDS_CORRECTION": "Tus datos de facturación deben corregirse y revisarse de nuevo antes de poder comprar oportunidades.",
+        "BILLING_INCOMPLETE": "Tus datos de facturación están incompletos. Complétalos y envíalos a revisión antes de comprar oportunidades.",
+        "BILLING_NOT_READY": "Tus datos de facturación aún no están verificados, así que ahora mismo no puedes comprar oportunidades."
+      }
     }
   },
   "billing": {

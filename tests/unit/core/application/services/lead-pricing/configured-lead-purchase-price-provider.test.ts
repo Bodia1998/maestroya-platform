@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { eligibilityPolicy } from "../../../../../test-utils/lead-purchase-eligibility-fixtures";
 import type { LeadPricingContextReader } from "@/application/ports/lead-pricing-context-reader";
 import { ConfiguredLeadPurchasePriceProvider } from "@/application/services/lead-pricing/configured-lead-purchase-price-provider";
 import { InitiateLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/initiate-lead-purchase.use-case";
@@ -77,6 +78,7 @@ function build(ctx: LeadPricingContext | null, config: LeadPricingConfig = LEAD_
     { findById: async () => ({ id: REQUEST, status: "PUBLISHED", title: "Fuga", description: "d", location: { city: "Madrid" } }) } as never,
     { findPublishedById: async () => preview, findPublishedByCategoryIds: vi.fn() } as never,
     purchases,
+    eligibilityPolicy(),
   );
   return { reader, provider, purchases, useCase };
 }

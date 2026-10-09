@@ -4,6 +4,7 @@ import type * as TaxPolicyModule from "@/domain/services/lead-fee-tax-policy";
 import type * as LeadPricingModule from "@/domain/services/lead-pricing";
 import type * as JobValueModule from "@/domain/services/job-value-estimation";
 
+import { LeadPurchaseEligibilityPolicy, type LeadPurchaseEligibilityEvaluator } from "@/application/services/lead-purchase-eligibility-policy";
 import { InitiateLeadFeePaymentUseCase } from "@/application/use-cases/lead-fee-payment/initiate-lead-fee-payment.use-case";
 import { PaymentGatewayError } from "@/domain/errors/domain-error";
 import type { LeadPurchaseRecord, LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
@@ -13,6 +14,7 @@ import { LeadFeePaymentNotInitiableError, LeadFeePaymentUnavailableError } from 
 import { LEAD_PURCHASE_STATUSES, type LeadPurchaseStatus } from "@/domain/services/lead-purchase";
 
 import { SNAPSHOT_DATA } from "../../../../../test-utils/lead-publication-fixtures";
+import { READY_BILLING, eligibilityPolicy, fakeBillingReadiness } from "../../../../../test-utils/lead-purchase-eligibility-fixtures";
 import { pendingPurchaseFromPublication } from "../../../../../test-utils/lead-purchase-fixtures";
 import { FakeLeadFeePaymentGateway } from "../../../../../test-utils/fake-lead-fee-payment-gateway";
 import {
@@ -53,7 +55,7 @@ const LEAD = "11111111-1111-4111-8111-111111111111";
 const PURCHASE = "55555555-5555-4555-8555-555555555555";
 const PUBLICATION = { ...SNAPSHOT_DATA, publishedAt: new Date("2026-10-01T00:00:00Z") };
 
-function world(opts: { purchase?: LeadPurchaseRecord | null; flow?: "LEAD_V1" | "LEGACY_QUOTE_PAYMENT"; proStatus?: string; verification?: string; price?: string } = {}) {
+function world(opts: { purchase?: LeadPurchaseRecord | null; flow?: "LEAD_V1" | "LEGACY_QUOTE_PAYMENT"; proStatus?: string; verification?: string; price?: string; billing?: Parameters<typeof eligibilityPolicy>[0]; eligibility?: LeadPurchaseEligibilityEvaluator } = {}) {
   let purchase: LeadPurchaseRecord | null =
     opts.purchase === undefined ? pendingPurchaseFromPublication(PURCHASE, LEAD, PRO_A, { ...PUBLICATION, price: opts.price ?? "100.00" }) : opts.purchase;
   const snapshotBefore = purchase ? JSON.stringify(purchase.financialSnapshot) : "";
@@ -84,7 +86,7 @@ function world(opts: { purchase?: LeadPurchaseRecord | null; flow?: "LEAD_V1" | 
   } as unknown as ProfessionalRepository;
   const leads = { findById: vi.fn(async () => ({ id: LEAD, flowVersion: opts.flow ?? "LEAD_V1" })) } as unknown as LeadRepository;
   const gateway = new FakeLeadFeePaymentGateway();
-  const useCase = new InitiateLeadFeePaymentUseCase(professionals, purchases, leads, gateway);
+  const useCase = new InitiateLeadFeePaymentUseCase(professionals, purchases, leads, gateway, opts.eligibility ?? eligibilityPolicy(opts.billing));
   return {
     useCase,
     gateway,
@@ -329,5 +331,75 @@ describe("M140 — lifecycle & contact boundary", () => {
     const result = await w.useCase.execute(USER_A, PURCHASE);
     expect(() => assertNoContactLeak(JSON.parse(JSON.stringify(result)), [M139_SECRET_EMAIL, M139_SECRET_PHONE, M139_SECRET_ADDRESS, M139_SECRET_POSTAL_CODE, M139_SECRET_NAME])).not.toThrow();
     expect(Object.keys(result).sort()).toEqual(["clientSecret", "currency", "paymentStatus", "purchaseId", "purchaseStatus", "totalAmount"]);
+  });
+});
+
+describe("M147 — defensive eligibility at payment initiation (new provider payments only)", () => {
+  const NOT_READY = [
+    ["MISSING", { state: "MISSING", isComplete: false, isVerified: false, billingReady: false }],
+    ["PENDING_REVIEW", { state: "PENDING_REVIEW", isComplete: true, isVerified: false, billingReady: false }],
+    ["NEEDS_CORRECTION", { state: "NEEDS_CORRECTION", isComplete: true, isVerified: false, billingReady: false }],
+    ["VERIFIED but no longer complete", { state: "VERIFIED", isComplete: false, isVerified: true, billingReady: false }],
+    ["unknown state", { state: "SOMETHING_NEW", isComplete: true, isVerified: true, billingReady: true }],
+  ] as const;
+
+  it.each(NOT_READY)("a professional with %s billing cannot start a NEW provider payment: generic denial, nothing created, nothing written", async (_name, billing) => {
+    const w = world({ billing });
+    const error = await rejection(w.useCase.execute(USER_A, PURCHASE));
+    expect(error).toBeInstanceOf(LeadFeePaymentNotInitiableError);
+    expect(error).toMatchObject({ reason: "NOT_ELIGIBLE", message: "This lead purchase cannot be paid." });
+    expect(w.gateway.created).toHaveLength(0);
+    expect(w.writes).toEqual([]);
+    expect(w.current()?.paymentReference).toBeNull();
+    expect(w.current()?.status).toBe("PENDING_PAYMENT");
+  });
+
+  it("a missing readiness result fails closed", async () => {
+    const w = world({ billing: null });
+    expect(await rejection(w.useCase.execute(USER_A, PURCHASE))).toMatchObject({ reason: "NOT_ELIGIBLE" });
+    expect(w.gateway.created).toHaveLength(0);
+  });
+
+  it("a readiness read failure is never turned into eligibility", async () => {
+    const eligibility = new LeadPurchaseEligibilityPolicy({ execute: async () => Promise.reject(new Error("db down")) });
+    const w = world({ eligibility });
+    expect(await rejection(w.useCase.execute(USER_A, PURCHASE))).toMatchObject({ message: "db down" });
+    expect(w.gateway.created).toHaveLength(0);
+    expect(w.writes).toEqual([]);
+  });
+
+  it("a legitimate RETRY keeps working after billing changed: an already persisted provider attempt is reused (same client secret), no new payment", async () => {
+    let ready = true;
+    const eligibility = new LeadPurchaseEligibilityPolicy({
+      execute: async () => (ready ? READY_BILLING : { ...READY_BILLING, state: "PENDING_REVIEW", isVerified: false, billingReady: false }),
+    });
+    const w = world({ eligibility });
+    const first = await w.useCase.execute(USER_A, PURCHASE);
+    ready = false; // the professional edited their billing details meanwhile
+    const retry = await w.useCase.execute(USER_A, PURCHASE);
+    expect(retry.clientSecret).toBe(first.clientSecret);
+    expect(w.gateway.created).toHaveLength(1);
+  });
+
+  it("the M98 half still applies to every call, including a retry (unchanged behaviour and position)", async () => {
+    const unverified = world({ verification: "REJECTED" });
+    expect(await rejection(unverified.useCase.execute(USER_A, PURCHASE))).toMatchObject({ reason: "NOT_ELIGIBLE" });
+    expect(unverified.purchases.findById).not.toHaveBeenCalled();
+    expect(unverified.gateway.created).toHaveLength(0);
+  });
+
+  it("eligible behaviour is unchanged: the same payment is created for the persisted total", async () => {
+    const w = world({ billing: {} });
+    const result = await w.useCase.execute(USER_A, PURCHASE);
+    expect(result).toMatchObject({ purchaseStatus: "PENDING_PAYMENT", totalAmount: "121.00", currency: "EUR" });
+    expect(w.gateway.created).toHaveLength(1);
+  });
+
+  it("the policy is consulted with the SESSION professional's id only, and the denial leaks no billing detail", async () => {
+    const reader = fakeBillingReadiness({ state: "MISSING", isComplete: false, isVerified: false, billingReady: false });
+    const w = world({ eligibility: new LeadPurchaseEligibilityPolicy(reader) });
+    const error = await rejection(w.useCase.execute(USER_A, PURCHASE));
+    expect(reader.calls).toEqual([PRO_A]);
+    expect(JSON.stringify({ message: (error as Error).message, ...(error as object) })).not.toMatch(/SECRET|taxId|address/i);
   });
 });

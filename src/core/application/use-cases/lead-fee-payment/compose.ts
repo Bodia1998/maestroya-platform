@@ -2,6 +2,7 @@ import { ConfirmLeadPurchaseUseCase } from "@/application/use-cases/lead-purchas
 import { InitiateLeadFeePaymentUseCase } from "@/application/use-cases/lead-fee-payment/initiate-lead-fee-payment.use-case";
 import { TransitionLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/transition-lead-purchase.use-case";
 import { ProcessLeadFeePaymentWebhookUseCase } from "@/application/use-cases/lead-fee-payment/process-lead-fee-payment-webhook.use-case";
+import { makeLeadPurchaseEligibilityPolicy } from "@/application/use-cases/lead-purchase-eligibility/compose";
 import { PrismaExternalWebhookEventRepository } from "@/infrastructure/database/prisma/repositories/prisma-external-webhook-event-repository";
 import { PrismaLeadPurchaseRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository";
 import { PrismaLeadRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-repository";
@@ -29,6 +30,7 @@ export function makeInitiateLeadFeePaymentUseCase() {
     new PrismaLeadPurchaseRepository(),
     new PrismaLeadRepository(),
     new StripeLeadFeePaymentGatewayAdapter(stripe),
+    makeLeadPurchaseEligibilityPolicy(),
   );
 }
 

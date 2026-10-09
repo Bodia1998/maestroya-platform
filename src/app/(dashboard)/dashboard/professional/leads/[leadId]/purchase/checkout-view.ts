@@ -71,3 +71,34 @@ export function formatBackendAmount(
     return `${amount} ${currency}`;
   }
 }
+
+/**
+ * Module 147 — presentation-only mapping of the server's eligibility reason to the guidance shown.
+ * It decides nothing: the reason comes from the server and enforcement is server-side.
+ * An unknown reason (a newer server) falls back to the generic billing-not-ready guidance.
+ */
+/** Structural copy of the server's eligibility answer (a flag and a closed reason code); display-only. */
+export type EligibilityView = { eligible: boolean; reason: string | null };
+
+const ELIGIBILITY_REASON_KEYS = [
+  "NO_PROFESSIONAL_PROFILE",
+  "PROFESSIONAL_NOT_ACTIVE",
+  "PROFESSIONAL_NOT_VERIFIED",
+  "BILLING_MISSING",
+  "BILLING_PENDING_REVIEW",
+  "BILLING_NEEDS_CORRECTION",
+  "BILLING_INCOMPLETE",
+  "BILLING_NOT_READY",
+] as const;
+type EligibilityReasonKey = (typeof ELIGIBILITY_REASON_KEYS)[number];
+
+export type EligibilityGuidance = { reasonKey: EligibilityReasonKey; ctaKey: "profile" | "verification" | "billing"; href: string };
+
+export function eligibilityGuidance(reason: string | null): EligibilityGuidance {
+  const known: EligibilityReasonKey = ELIGIBILITY_REASON_KEYS.find((key) => key === reason) ?? "BILLING_NOT_READY";
+  if (known === "NO_PROFESSIONAL_PROFILE") return { reasonKey: known, ctaKey: "profile", href: "/dashboard/professional" };
+  if (known === "PROFESSIONAL_NOT_ACTIVE" || known === "PROFESSIONAL_NOT_VERIFIED") {
+    return { reasonKey: known, ctaKey: "verification", href: "/dashboard/professional/verification" };
+  }
+  return { reasonKey: known, ctaKey: "billing", href: "/dashboard/professional/billing" };
+}

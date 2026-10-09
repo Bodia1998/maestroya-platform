@@ -1,5 +1,6 @@
 import type { LeadPurchaseDTO } from "@/application/dto/lead-purchase.dto";
 import { toLeadPurchaseDto } from "@/application/dto/lead-purchase.dto";
+import type { LeadPurchaseEligibilityEvaluator } from "@/application/services/lead-purchase-eligibility-policy";
 import { ProfessionalNotVerifiedError } from "@/domain/errors/domain-error";
 import type { LeadPreviewRepository } from "@/domain/repositories/lead-preview-repository";
 import type { LeadRepository } from "@/domain/repositories/lead-repository";
@@ -8,11 +9,8 @@ import type { ProfessionalDiscoveryRepository } from "@/domain/repositories/prof
 import type { ProfessionalRepository } from "@/domain/repositories/professional-repository";
 import type { ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
 import { LEAD_FLOW_VERSION, assertServiceRequestEligibleForLead } from "@/domain/services/lead";
-import {
-  DuplicateActiveLeadPurchaseError,
-  LeadNotPurchasableError,
-  isProfessionalEligibleToPurchaseLeads,
-} from "@/domain/services/lead-purchase";
+import { DuplicateActiveLeadPurchaseError, LeadNotPurchasableError } from "@/domain/services/lead-purchase";
+import { LeadPurchaseNotEligibleError } from "@/domain/services/lead-purchase-eligibility";
 import { isLeadMarketplaceReady } from "@/domain/services/lead-publication";
 import { isProfessionalEligibleForRequest } from "@/domain/services/quote-eligibility";
 
@@ -29,7 +27,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * publication snapshot, copied by `purchases.initiate` under the lead row lock
  * (Module 135). It is never recomputed from mutable pricing configuration.
  *
- * Order: input -> professional (ACTIVE + VERIFIED) -> lead (exists, LEAD_V1,
+ * Order: input -> eligibility policy (Module 147: professional ACTIVE + VERIFIED (M98) and
+ * billing-ready (M146)) -> lead (exists, LEAD_V1,
  * PUBLISHED) -> request (still open) -> isLeadMarketplaceReady (M134: complete
  * M133 snapshot) -> the same visibility/eligibility the Module 124 preview
  * applies -> idempotent replay -> atomic create.
@@ -53,6 +52,16 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * index `lead_purchases_one_active_per_lead_professional` remains the final
  * arbiter. The use case additionally replays on a lost race.
  *
+ * Eligibility (Module 147): `eligibility.evaluate(professional)` is the single, server-side decision
+ * of "may this professional START a new purchase". It runs on the profile resolved from the session
+ * user, before any lead is read, so an ineligible caller learns nothing about any lead and no
+ * LeadPurchase row can be created. Mapping of its typed reasons keeps the pre-M147 outcomes: no profile
+ * / not ACTIVE -> LeadNotPurchasableError, not VERIFIED (M98) -> ProfessionalNotVerifiedError, and the
+ * billing reasons -> LeadPurchaseNotEligibleError (the caller's own state, no billing detail). The
+ * decision is a point-in-time read and NOT atomic with billing updates (the purchase transaction locks
+ * the lead row); payment initiation re-checks before any NEW provider payment is created. A retry of
+ * an already-open PENDING_PAYMENT purchase is subject to the same check (it is still an "initiate").
+ *
  * Out of scope here: payment provider, tax policy (M136), contact, customer payments.
  */
 export class InitiateLeadPurchaseUseCase {
@@ -63,6 +72,7 @@ export class InitiateLeadPurchaseUseCase {
     private readonly serviceRequests: ServiceRequestRepository,
     private readonly leadPreviews: LeadPreviewRepository,
     private readonly purchases: LeadPurchaseRepository,
+    private readonly eligibility: LeadPurchaseEligibilityEvaluator,
   ) {}
 
   async execute(userId: string, leadId: string): Promise<LeadPurchaseDTO> {
@@ -71,13 +81,20 @@ export class InitiateLeadPurchaseUseCase {
     }
 
     const professional = await this.professionals.findByUserId(userId);
-    if (!professional) throw new LeadNotPurchasableError();
-    if (!isProfessionalEligibleToPurchaseLeads(professional)) {
-      if (professional.status === "ACTIVE") {
-        throw new ProfessionalNotVerifiedError("Your professional profile must be verified before you can purchase leads.");
+    const decision = await this.eligibility.evaluate(professional);
+    if (!decision.eligible) {
+      switch (decision.reason) {
+        case "PROFESSIONAL_NOT_VERIFIED":
+          throw new ProfessionalNotVerifiedError("Your professional profile must be verified before you can purchase leads.");
+        case "NO_PROFESSIONAL_PROFILE":
+        case "PROFESSIONAL_NOT_ACTIVE":
+          throw new LeadNotPurchasableError();
+        default:
+          throw new LeadPurchaseNotEligibleError(decision.reason);
       }
-      throw new LeadNotPurchasableError();
     }
+    // Eligible implies a resolved professional profile (the policy fails closed on null).
+    if (!professional) throw new LeadNotPurchasableError();
 
     const lead = await this.leads.findById(leadId);
     if (!lead || lead.flowVersion !== LEAD_FLOW_VERSION || lead.status !== "PUBLISHED") throw new LeadNotPurchasableError();

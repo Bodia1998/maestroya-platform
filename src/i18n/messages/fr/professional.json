@@ -473,6 +473,24 @@
       "phone": "Téléphone",
       "address": "Adresse",
       "notProvided": "Non renseigné"
+    },
+    "eligibility": {
+      "title": "Terminez ces étapes avant d'acheter des leads",
+      "cta": {
+        "profile": "Aller à mon profil",
+        "verification": "Aller à la vérification",
+        "billing": "Aller aux informations de facturation"
+      },
+      "reason": {
+        "NO_PROFESSIONAL_PROFILE": "Vous avez besoin d'un profil professionnel avant de pouvoir acheter des leads.",
+        "PROFESSIONAL_NOT_ACTIVE": "Votre profil professionnel n'est pas actif : vous ne pouvez pas acheter de leads pour le moment.",
+        "PROFESSIONAL_NOT_VERIFIED": "Votre vérification professionnelle doit être terminée et approuvée avant que vous puissiez acheter des leads.",
+        "BILLING_MISSING": "Ajoutez vos informations de facturation avant d'acheter des leads. Un administrateur les examinera.",
+        "BILLING_PENDING_REVIEW": "Vos informations de facturation sont en attente d'examen. Vous pourrez acheter des leads une fois qu'elles seront vérifiées.",
+        "BILLING_NEEDS_CORRECTION": "Vos informations de facturation doivent être corrigées et examinées à nouveau avant que vous puissiez acheter des leads.",
+        "BILLING_INCOMPLETE": "Vos informations de facturation sont incomplètes. Complétez-les et soumettez-les pour examen avant d'acheter des leads.",
+        "BILLING_NOT_READY": "Vos informations de facturation ne sont pas encore vérifiées : vous ne pouvez pas acheter de leads pour le moment."
+      }
     }
   },
   "billing": {

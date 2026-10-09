@@ -9,6 +9,7 @@
     "RATE_LIMITED": "Prea multe încercări. Așteaptă puțin și încearcă din nou.",
     "ACCOUNT_RESTRICTED": "Această acțiune este temporar indisponibilă pentru contul tău.",
     "PROFESSIONAL_NOT_VERIFIED": "Trebuie să finalizezi verificarea ca profesionist pentru a face asta.",
+    "LEAD_PURCHASE_NOT_ELIGIBLE": "Completați datele de facturare înainte de a cumpăra lead-uri.",
     "SELF_BILLING_NOT_AUTHORIZED": "Trebuie să autorizezi autofacturarea înainte de a continua.",
     "BUSINESS_REGISTRATION_REQUIRED": "Trebuie să completezi datele fiscale și ale activității înainte de a continua.",
     "MATERIALS_NOT_CONFIRMED": "Confirmă cum vor fi gestionate materialele înainte de a continua.",
