@@ -33,7 +33,9 @@ export type LeadFeeConfirmationRejection =
   | "AMOUNT_MISMATCH"
   | "CURRENCY_MISMATCH"
   | "STATUS_NOT_CONFIRMABLE"
-  | "LEAD_NOT_CONFIRMABLE";
+  | "LEAD_NOT_CONFIRMABLE"
+  /** Module 149: the confirmed purchase cannot yield a valid lead-fee ledger entry (data problem; nothing recorded). */
+  | "LEDGER_ENTRY_INVALID";
 
 /**
  * Validates provider facts against the purchase (reference, metadata cross-check, snapshot,

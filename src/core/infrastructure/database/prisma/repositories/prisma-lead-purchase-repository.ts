@@ -11,6 +11,8 @@ import type {
 } from "@/domain/repositories/lead-purchase-repository";
 import { formatScaledDecimal, parseScaledDecimal } from "@/domain/services/fixed-point-decimal";
 import { toLeadPurchaseFinancialSnapshot } from "@/domain/services/lead-purchase-financial-snapshot";
+import { buildLeadFeeRevenueLedgerEntry, type LeadFeePaymentLedgerSource } from "@/domain/services/lead-fee-revenue-ledger";
+import { toLeadFeeLedgerCreateData } from "@/infrastructure/database/prisma/repositories/prisma-lead-fee-revenue-ledger-repository";
 import {
   ACTIVE_LEAD_PURCHASE_STATUSES,
   DuplicateActiveLeadPurchaseError,
@@ -221,9 +223,20 @@ export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository, Lea
     }
   }
 
-  async transition(id: string, from: LeadPurchaseStatus, to: LeadPurchaseStatus, now: Date): Promise<LeadPurchaseRecord | null> {
+  async transition(
+    id: string,
+    from: LeadPurchaseStatus,
+    to: LeadPurchaseStatus,
+    now: Date,
+    ledgerSource?: LeadFeePaymentLedgerSource,
+  ): Promise<LeadPurchaseRecord | null> {
     assertLeadPurchaseTransition(from, to);
     const stamp = leadPurchaseTransitionTimestamp(to);
+    if (ledgerSource !== undefined) {
+      // Programming error, never a runtime business case: only a confirmation records lead-fee revenue.
+      if (to !== "CONFIRMED") throw new Error("A lead-fee ledger source is only valid for the CONFIRMED transition.");
+      return this.confirmWithLedgerEntry(id, from, now, ledgerSource);
+    }
     // Status-conditional write: only a row still in `from` moves, exactly once.
     const { count } = await prisma.leadPurchase.updateMany({
       where: { id, status: from },
@@ -231,6 +244,34 @@ export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository, Lea
     });
     if (count === 0) return null;
     return this.findById(id);
+  }
+
+  /**
+   * Module 149 — ONE database transaction: the status-conditional PENDING_PAYMENT -> CONFIRMED write AND the
+   * append-only ledger entry built from the just-confirmed row's persisted snapshot. Only the caller whose
+   * conditional update matched (count 1) inserts; a loser gets `null` and writes nothing. Any failure while
+   * building/inserting the entry (invalid snapshot, unique/CHECK violation, connection error) aborts the
+   * transaction, so the purchase is NOT left CONFIRMED without its ledger entry, and the error propagates.
+   */
+  private async confirmWithLedgerEntry(
+    id: string,
+    from: LeadPurchaseStatus,
+    now: Date,
+    ledgerSource: LeadFeePaymentLedgerSource,
+  ): Promise<LeadPurchaseRecord | null> {
+    return prisma.$transaction(async (tx) => {
+      const { count } = await tx.leadPurchase.updateMany({
+        where: { id, status: from },
+        data: { status: "CONFIRMED", confirmedAt: now },
+      });
+      if (count === 0) return null;
+      const row = await tx.leadPurchase.findUnique({ where: { id }, select: SELECT });
+      if (!row) throw new Error(`LeadPurchase ${id} vanished inside its confirmation transaction.`);
+      const record = toRecord(row);
+      const entry = buildLeadFeeRevenueLedgerEntry(record, ledgerSource);
+      await tx.leadFeeLedgerEntry.create({ data: toLeadFeeLedgerCreateData(entry) });
+      return record;
+    });
   }
 
   async recordPaymentReference(id: string, paymentReference: string): Promise<LeadPurchaseRecord | null> {
