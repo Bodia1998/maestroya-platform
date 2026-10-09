@@ -166,7 +166,8 @@
     "profileDetails": "Informations du profil",
     "serviceCategories": "Catégories de services",
     "dangerZone": "Zone de danger",
-    "dangerZoneDescription": "La désactivation retire votre profil de la recherche des clients jusqu’à sa réactivation."
+    "dangerZoneDescription": "La désactivation retire votre profil de la recherche des clients jusqu’à sa réactivation.",
+    "billingLink": "Informations de facturation"
   },
   "requests": {
     "distance": "À {distance, number} km",
@@ -472,6 +473,67 @@
       "phone": "Téléphone",
       "address": "Adresse",
       "notProvided": "Non renseigné"
+    }
+  },
+  "billing": {
+    "metaTitle": "Informations de facturation",
+    "title": "Informations de facturation",
+    "subtitle": "Les informations légales que MaestroYa utilise pour vous facturer les leads que vous achetez.",
+    "noProfile": "Créez d'abord votre <link>profil professionnel</link> pour ajouter vos informations de facturation.",
+    "verifiedOn": "Vérifié le {date}",
+    "notVerificationNotice": "L'enregistrement de ce formulaire ne vérifie pas vos informations. Un administrateur MaestroYa les examine manuellement ; cet examen n'est pas une confirmation par une administration fiscale.",
+    "state": {
+      "MISSING": {
+        "label": "Aucune information de facturation",
+        "description": "Indiquez votre nom légal, votre numéro d'identification fiscale et votre adresse de facturation. Ils sont nécessaires pour facturer les leads que vous achetez."
+      },
+      "PENDING_REVIEW": {
+        "label": "En attente d'examen",
+        "description": "Vos informations sont complètes et en attente d'examen par MaestroYa. Elles ne sont pas encore vérifiées."
+      },
+      "VERIFIED": {
+        "label": "Vérifiées",
+        "description": "MaestroYa a examiné ces informations. Si vous en modifiez une, elles devront être examinées à nouveau."
+      },
+      "NEEDS_CORRECTION": {
+        "label": "Correction requise",
+        "description": "MaestroYa n'a pas pu accepter ces informations. Modifiez-les et enregistrez-les pour les soumettre à nouveau à l'examen."
+      }
+    },
+    "rejectionReason": {
+      "TAX_ID_MISMATCH": "Le numéro d'identification fiscale ne correspond pas au nom légal indiqué.",
+      "LEGAL_NAME_MISMATCH": "Le nom légal ne correspond pas au numéro d'identification fiscale indiqué.",
+      "ADDRESS_INVALID": "L'adresse de facturation est incomplète ou n'a pas pu être acceptée.",
+      "OTHER": "Vérifiez toutes les informations et contactez le support si vous avez besoin d'aide."
+    },
+    "form": {
+      "detailsSection": "Identité légale",
+      "addressSection": "Adresse de facturation",
+      "entityType": "Facturer en tant que",
+      "entityTypes": {
+        "INDIVIDUAL": "Particulier / professionnel indépendant",
+        "COMPANY": "Entreprise"
+      },
+      "legalName": "Nom légal ou raison sociale",
+      "legalNameHint": "Exactement comme enregistré auprès de l'administration fiscale.",
+      "taxId": "Numéro d'identification fiscale",
+      "taxIdHint": "Les espaces, points et tirets sont ignorés.",
+      "taxCountry": "Pays d'immatriculation fiscale",
+      "countryHint": "Code pays à deux lettres, p. ex. ES, DE, FR.",
+      "addressLine1": "Adresse (ligne 1)",
+      "addressLine2": "Adresse (ligne 2)",
+      "city": "Ville",
+      "region": "Région ou province",
+      "postalCode": "Code postal",
+      "country": "Pays",
+      "save": "Enregistrer les informations de facturation",
+      "saving": "Enregistrement…",
+      "saved": "Informations de facturation enregistrées. Elles sont maintenant en attente d'examen ; l'enregistrement ne les vérifie pas.",
+      "changeWarning": "Si vous modifiez l'une de ces informations, elles devront être examinées à nouveau."
+    },
+    "errors": {
+      "fixErrors": "Veuillez corriger les erreurs ci-dessous.",
+      "save": "Une erreur s'est produite lors de l'enregistrement de vos informations de facturation."
     }
   }
 }

@@ -166,7 +166,8 @@
     "profileDetails": "Detaliile profilului",
     "serviceCategories": "Categorii de servicii",
     "dangerZone": "Zonă periculoasă",
-    "dangerZoneDescription": "Dezactivarea profilului îl elimină din căutările clienților până la reactivare."
+    "dangerZoneDescription": "Dezactivarea profilului îl elimină din căutările clienților până la reactivare.",
+    "billingLink": "Date de facturare"
   },
   "requests": {
     "distance": "La {distance, number} km",
@@ -472,6 +473,67 @@
       "phone": "Telefon",
       "address": "Adresă",
       "notProvided": "Nespecificat"
+    }
+  },
+  "billing": {
+    "metaTitle": "Date de facturare",
+    "title": "Date de facturare",
+    "subtitle": "Datele legale pe care MaestroYa le folosește pentru a-ți factura lead-urile pe care le cumperi.",
+    "noProfile": "Creează mai întâi <link>profilul tău de specialist</link> pentru a adăuga datele de facturare.",
+    "verifiedOn": "Verificat la {date}",
+    "notVerificationNotice": "Salvarea acestui formular nu îți verifică datele. Un administrator MaestroYa le examinează manual; această examinare nu este o confirmare din partea unei autorități fiscale.",
+    "state": {
+      "MISSING": {
+        "label": "Încă nu există date de facturare",
+        "description": "Introdu denumirea legală, codul de identificare fiscală și adresa de facturare. Sunt necesare pentru a factura lead-urile pe care le cumperi."
+      },
+      "PENDING_REVIEW": {
+        "label": "În așteptarea examinării",
+        "description": "Datele tale sunt complete și așteaptă examinarea de către MaestroYa. Încă nu sunt verificate."
+      },
+      "VERIFIED": {
+        "label": "Verificate",
+        "description": "MaestroYa a examinat aceste date. Dacă modifici oricare dintre ele, vor trebui examinate din nou."
+      },
+      "NEEDS_CORRECTION": {
+        "label": "Necesită corectare",
+        "description": "MaestroYa nu a putut accepta aceste date. Actualizează-le și salvează-le pentru a le trimite din nou la examinare."
+      }
+    },
+    "rejectionReason": {
+      "TAX_ID_MISMATCH": "Codul de identificare fiscală nu corespunde denumirii legale furnizate.",
+      "LEGAL_NAME_MISMATCH": "Denumirea legală nu corespunde codului de identificare fiscală furnizat.",
+      "ADDRESS_INVALID": "Adresa de facturare este incompletă sau nu a putut fi acceptată.",
+      "OTHER": "Verifică toate datele și contactează asistența dacă ai nevoie de ajutor."
+    },
+    "form": {
+      "detailsSection": "Identitate legală",
+      "addressSection": "Adresă de facturare",
+      "entityType": "Facturare ca",
+      "entityTypes": {
+        "INDIVIDUAL": "Persoană fizică / specialist independent",
+        "COMPANY": "Companie"
+      },
+      "legalName": "Denumire legală sau denumirea companiei",
+      "legalNameHint": "Exact cum este înregistrată la autoritatea fiscală.",
+      "taxId": "Cod de identificare fiscală",
+      "taxIdHint": "Spațiile, punctele și cratimele sunt ignorate.",
+      "taxCountry": "Țara înregistrării fiscale",
+      "countryHint": "Cod de țară din două litere, de ex. ES, DE, FR.",
+      "addressLine1": "Adresă (linia 1)",
+      "addressLine2": "Adresă (linia 2)",
+      "city": "Oraș",
+      "region": "Regiune sau provincie",
+      "postalCode": "Cod poștal",
+      "country": "Țară",
+      "save": "Salvează datele de facturare",
+      "saving": "Se salvează…",
+      "saved": "Datele de facturare au fost salvate. Acum așteaptă examinarea; salvarea nu le verifică.",
+      "changeWarning": "Dacă modifici oricare dintre aceste date, vor trebui examinate din nou."
+    },
+    "errors": {
+      "fixErrors": "Corectează erorile de mai jos.",
+      "save": "A apărut o eroare la salvarea datelor de facturare."
     }
   }
 }

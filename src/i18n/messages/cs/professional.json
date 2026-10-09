@@ -166,7 +166,8 @@
     "profileDetails": "Údaje profilu",
     "serviceCategories": "Kategorie služeb",
     "dangerZone": "Nebezpečná zóna",
-    "dangerZoneDescription": "Po deaktivaci se váš profil nebude zobrazovat ve vyhledávání zákazníků, dokud nebude znovu aktivován."
+    "dangerZoneDescription": "Po deaktivaci se váš profil nebude zobrazovat ve vyhledávání zákazníků, dokud nebude znovu aktivován.",
+    "billingLink": "Fakturační údaje"
   },
   "requests": {
     "distance": "{distance, number} km od vás",
@@ -472,6 +473,67 @@
       "phone": "Telefon",
       "address": "Adresa",
       "notProvided": "Neuvedeno"
+    }
+  },
+  "billing": {
+    "metaTitle": "Fakturační údaje",
+    "title": "Fakturační údaje",
+    "subtitle": "Právní údaje, které MaestroYa používá k fakturaci leadů, které nakupujete.",
+    "noProfile": "Nejprve si vytvořte <link>profil odborníka</link>, abyste mohli přidat fakturační údaje.",
+    "verifiedOn": "Ověřeno dne {date}",
+    "notVerificationNotice": "Uložením tohoto formuláře se vaše údaje neověřují. Správce MaestroYa je kontroluje ručně; tato kontrola není potvrzením daňovým úřadem.",
+    "state": {
+      "MISSING": {
+        "label": "Zatím žádné fakturační údaje",
+        "description": "Zadejte svůj právní název, daňové identifikační číslo a fakturační adresu. Jsou potřeba k fakturaci leadů, které nakupujete."
+      },
+      "PENDING_REVIEW": {
+        "label": "Čeká na kontrolu",
+        "description": "Vaše údaje jsou úplné a čekají na kontrolu ze strany MaestroYa. Zatím nejsou ověřeny."
+      },
+      "VERIFIED": {
+        "label": "Ověřeno",
+        "description": "MaestroYa tyto údaje zkontrolovala. Pokud některý z nich změníte, bude je nutné zkontrolovat znovu."
+      },
+      "NEEDS_CORRECTION": {
+        "label": "Nutná oprava",
+        "description": "MaestroYa tyto údaje nemohla přijmout. Upravte je a uložte, aby šly znovu ke kontrole."
+      }
+    },
+    "rejectionReason": {
+      "TAX_ID_MISMATCH": "Daňové identifikační číslo neodpovídá uvedenému právnímu názvu.",
+      "LEGAL_NAME_MISMATCH": "Právní název neodpovídá uvedenému daňovému identifikačnímu číslu.",
+      "ADDRESS_INVALID": "Fakturační adresa je neúplná nebo ji nebylo možné přijmout.",
+      "OTHER": "Zkontrolujte všechny údaje a v případě potřeby se obraťte na podporu."
+    },
+    "form": {
+      "detailsSection": "Právní identita",
+      "addressSection": "Fakturační adresa",
+      "entityType": "Fakturovat jako",
+      "entityTypes": {
+        "INDIVIDUAL": "Fyzická osoba / OSVČ",
+        "COMPANY": "Společnost"
+      },
+      "legalName": "Právní název nebo obchodní firma",
+      "legalNameHint": "Přesně tak, jak je zapsáno u daňového úřadu.",
+      "taxId": "Daňové identifikační číslo",
+      "taxIdHint": "Mezery, tečky a pomlčky se ignorují.",
+      "taxCountry": "Země daňové registrace",
+      "countryHint": "Dvoupísmenný kód země, např. ES, DE, FR.",
+      "addressLine1": "Adresa (řádek 1)",
+      "addressLine2": "Adresa (řádek 2)",
+      "city": "Město",
+      "region": "Region nebo provincie",
+      "postalCode": "PSČ",
+      "country": "Země",
+      "save": "Uložit fakturační údaje",
+      "saving": "Ukládání…",
+      "saved": "Fakturační údaje byly uloženy. Nyní čekají na kontrolu; uložení je neověřuje.",
+      "changeWarning": "Pokud některý z těchto údajů změníte, bude je nutné zkontrolovat znovu."
+    },
+    "errors": {
+      "fixErrors": "Opravte prosím chyby níže.",
+      "save": "Při ukládání fakturačních údajů došlo k chybě."
     }
   }
 }

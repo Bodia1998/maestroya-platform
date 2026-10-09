@@ -198,6 +198,10 @@
     "featureFlag": {
       "keyRequired": "Der Flag-Schlüssel ist erforderlich.",
       "keyFormat": "Der Flag-Schlüssel darf nur Buchstaben, Zahlen, '-', '_' und '.' enthalten."
+    },
+    "billingIdentity": {
+      "taxId": "Gib eine gültige Steuernummer ein (4–20 Buchstaben oder Ziffern).",
+      "country": "Gib einen zweistelligen Ländercode ein, z. B. ES."
     }
   }
 }

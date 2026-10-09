@@ -198,6 +198,10 @@
     "featureFlag": {
       "keyRequired": "De flag-sleutel is verplicht.",
       "keyFormat": "De flag-sleutel mag alleen letters, cijfers, '-', '_' en '.' bevatten."
+    },
+    "billingIdentity": {
+      "taxId": "Voer een geldig belastingnummer in (4–20 letters of cijfers).",
+      "country": "Voer een landcode van twee letters in, bijv. ES."
     }
   }
 }

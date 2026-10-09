@@ -166,7 +166,8 @@
     "profileDetails": "Dane profilu",
     "serviceCategories": "Kategorie usług",
     "dangerZone": "Strefa zagrożenia",
-    "dangerZoneDescription": "Po dezaktywacji twój profil nie będzie widoczny w wyszukiwarce klientów, dopóki nie zostanie ponownie aktywowany."
+    "dangerZoneDescription": "Po dezaktywacji twój profil nie będzie widoczny w wyszukiwarce klientów, dopóki nie zostanie ponownie aktywowany.",
+    "billingLink": "Dane do faktury"
   },
   "requests": {
     "distance": "{distance, number} km stąd",
@@ -472,6 +473,67 @@
       "phone": "Telefon",
       "address": "Adres",
       "notProvided": "Nie podano"
+    }
+  },
+  "billing": {
+    "metaTitle": "Dane do faktury",
+    "title": "Dane do faktury",
+    "subtitle": "Dane prawne, których MaestroYa używa do wystawiania Ci faktur za kupowane leady.",
+    "noProfile": "Najpierw utwórz swój <link>profil specjalisty</link>, aby dodać dane do faktury.",
+    "verifiedOn": "Zweryfikowano {date}",
+    "notVerificationNotice": "Zapisanie tego formularza nie weryfikuje Twoich danych. Administrator MaestroYa sprawdza je ręcznie; takie sprawdzenie nie jest potwierdzeniem przez organ podatkowy.",
+    "state": {
+      "MISSING": {
+        "label": "Brak danych do faktury",
+        "description": "Podaj nazwę prawną, numer identyfikacji podatkowej i adres do faktury. Są potrzebne do wystawiania faktur za kupowane leady."
+      },
+      "PENDING_REVIEW": {
+        "label": "Oczekuje na sprawdzenie",
+        "description": "Twoje dane są kompletne i czekają na sprawdzenie przez MaestroYa. Nie zostały jeszcze zweryfikowane."
+      },
+      "VERIFIED": {
+        "label": "Zweryfikowane",
+        "description": "MaestroYa sprawdziła te dane. Jeśli zmienisz którekolwiek z nich, trzeba je będzie sprawdzić ponownie."
+      },
+      "NEEDS_CORRECTION": {
+        "label": "Wymagana poprawa",
+        "description": "MaestroYa nie mogła zaakceptować tych danych. Popraw je i zapisz, aby ponownie wysłać je do sprawdzenia."
+      }
+    },
+    "rejectionReason": {
+      "TAX_ID_MISMATCH": "Numer identyfikacji podatkowej nie pasuje do podanej nazwy prawnej.",
+      "LEGAL_NAME_MISMATCH": "Nazwa prawna nie pasuje do podanego numeru identyfikacji podatkowej.",
+      "ADDRESS_INVALID": "Adres do faktury jest niepełny lub nie mógł zostać zaakceptowany.",
+      "OTHER": "Sprawdź wszystkie dane i skontaktuj się z pomocą techniczną, jeśli potrzebujesz pomocy."
+    },
+    "form": {
+      "detailsSection": "Tożsamość prawna",
+      "addressSection": "Adres do faktury",
+      "entityType": "Fakturowanie jako",
+      "entityTypes": {
+        "INDIVIDUAL": "Osoba fizyczna / samozatrudniony specjalista",
+        "COMPANY": "Firma"
+      },
+      "legalName": "Nazwa prawna lub firmowa",
+      "legalNameHint": "Dokładnie tak, jak w rejestrze organu podatkowego.",
+      "taxId": "Numer identyfikacji podatkowej",
+      "taxIdHint": "Spacje, kropki i myślniki są pomijane.",
+      "taxCountry": "Kraj rejestracji podatkowej",
+      "countryHint": "Dwuliterowy kod kraju, np. ES, DE, FR.",
+      "addressLine1": "Adres (wiersz 1)",
+      "addressLine2": "Adres (wiersz 2)",
+      "city": "Miasto",
+      "region": "Region lub prowincja",
+      "postalCode": "Kod pocztowy",
+      "country": "Kraj",
+      "save": "Zapisz dane do faktury",
+      "saving": "Zapisywanie…",
+      "saved": "Dane do faktury zapisane. Czekają teraz na sprawdzenie; zapisanie ich nie weryfikuje.",
+      "changeWarning": "Zmiana któregokolwiek z tych danych oznacza, że trzeba je będzie sprawdzić ponownie."
+    },
+    "errors": {
+      "fixErrors": "Popraw błędy poniżej.",
+      "save": "Podczas zapisywania danych do faktury wystąpił błąd."
     }
   }
 }
