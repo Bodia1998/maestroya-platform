@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { eligibilityPolicy } from "../../../../test-utils/lead-purchase-eligibility-fixtures";
 import { toLeadFeedItemDto } from "@/application/dto/lead-feed.dto";
 import { toLeadPreviewDto } from "@/application/dto/lead-contact.dto";
 import { toLeadPurchaseDto } from "@/application/dto/lead-purchase.dto";
@@ -249,6 +250,7 @@ describe("M139 — purchase initiation / confirmation / lifecycle responses are 
       { findById: async () => request } as never,
       { findPublishedById: async () => preview } as never,
       repo,
+      eligibilityPolicy(),
     );
     const first = await initiate.execute("pro-user", LEAD);
     const replay = await initiate.execute("pro-user", LEAD);
@@ -282,6 +284,7 @@ describe("M139 — purchase initiation / confirmation / lifecycle responses are 
         { findById: async () => request } as never,
         { findPublishedById: async () => preview } as never,
         repo,
+        eligibilityPolicy(),
       );
     const messages = new Set<string>();
     for (const over of [{ status: "CLOSED" }, { flowVersion: "LEGACY_QUOTE_PAYMENT" }]) {

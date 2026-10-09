@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { localizeCategoryName } from "@/presentation/i18n/service-categories";
 import { getLeadPreviewAction } from "../../actions";
 import { getLeadPurchaseCheckoutAction } from "./actions";
+import { getMyLeadPurchaseEligibilityAction } from "./eligibility-actions";
 import type { CheckoutLeadSummary } from "./checkout-summary";
 import { PurchaseCheckout } from "./purchase-checkout";
 
@@ -26,15 +27,19 @@ export async function generateMetadata(): Promise<Metadata> {
  * redirect or a re-opened tab always recovers from the backend. Query parameters (Stripe appends some
  * after a redirect) are deliberately ignored. No contact data is read here: it is requested by the
  * client from the M138 action only after the status is CONFIRMED.
+ *
+ * Module 147: `eligibility` is display-only guidance read from the server for the session user; the
+ * enforcement is in the purchase and payment use cases, never here.
  */
 export default async function ProfessionalLeadPurchasePage({ params }: { params: Promise<{ leadId: string }> }) {
   await requireAuth();
   const { leadId } = await params;
 
-  const [t, tServices, state, preview, categories] = await Promise.all([
+  const [t, tServices, state, eligibilityResult, preview, categories] = await Promise.all([
     getTranslations("professional.leadCheckout"),
     getTranslations("services"),
     getLeadPurchaseCheckoutAction(leadId).catch(() => null),
+    getMyLeadPurchaseEligibilityAction().catch(() => null),
     getLeadPreviewAction(leadId).catch(() => null),
     makeListLeadRequestCategoriesUseCase()
       .execute()
@@ -60,6 +65,7 @@ export default async function ProfessionalLeadPurchasePage({ params }: { params:
       <PurchaseCheckout
         leadId={leadId}
         initialPurchase={state?.success ? state.purchase : undefined}
+        eligibility={eligibilityResult?.success ? eligibilityResult.eligibility : null}
         lead={lead}
         stripePublishableKey={env.STRIPE_PUBLISHABLE_KEY}
         marketplaceHref="/dashboard/professional/leads"

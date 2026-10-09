@@ -473,6 +473,24 @@
       "phone": "Telefono",
       "address": "Indirizzo",
       "notProvided": "Non indicato"
+    },
+    "eligibility": {
+      "title": "Completa questi passaggi prima di acquistare lead",
+      "cta": {
+        "profile": "Vai al mio profilo",
+        "verification": "Vai alla verifica",
+        "billing": "Vai ai dati di fatturazione"
+      },
+      "reason": {
+        "NO_PROFESSIONAL_PROFILE": "Ti serve un profilo professionale prima di poter acquistare lead.",
+        "PROFESSIONAL_NOT_ACTIVE": "Il tuo profilo professionale non è attivo, quindi al momento non puoi acquistare lead.",
+        "PROFESSIONAL_NOT_VERIFIED": "La tua verifica professionale deve essere completata e approvata prima di poter acquistare lead.",
+        "BILLING_MISSING": "Aggiungi i tuoi dati di fatturazione prima di acquistare lead. Un amministratore li esaminerà.",
+        "BILLING_PENDING_REVIEW": "I tuoi dati di fatturazione sono in attesa di revisione. Potrai acquistare lead una volta verificati.",
+        "BILLING_NEEDS_CORRECTION": "I tuoi dati di fatturazione devono essere corretti e riesaminati prima di poter acquistare lead.",
+        "BILLING_INCOMPLETE": "I tuoi dati di fatturazione sono incompleti. Completali e inviali in revisione prima di acquistare lead.",
+        "BILLING_NOT_READY": "I tuoi dati di fatturazione non sono ancora verificati, quindi al momento non puoi acquistare lead."
+      }
     }
   },
   "billing": {

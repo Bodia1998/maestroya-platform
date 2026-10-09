@@ -473,6 +473,24 @@
       "phone": "Telefon",
       "address": "Adresse",
       "notProvided": "Nicht angegeben"
+    },
+    "eligibility": {
+      "title": "Schließen Sie diese Schritte ab, bevor Sie Leads kaufen",
+      "cta": {
+        "profile": "Zu meinem Profil",
+        "verification": "Zur Verifizierung",
+        "billing": "Zu den Rechnungsdaten"
+      },
+      "reason": {
+        "NO_PROFESSIONAL_PROFILE": "Sie benötigen ein Profil als Fachkraft, bevor Sie Leads kaufen können.",
+        "PROFESSIONAL_NOT_ACTIVE": "Ihr Profil ist nicht aktiv, daher können Sie derzeit keine Leads kaufen.",
+        "PROFESSIONAL_NOT_VERIFIED": "Ihre berufliche Verifizierung muss abgeschlossen und genehmigt sein, bevor Sie Leads kaufen können.",
+        "BILLING_MISSING": "Hinterlegen Sie Ihre Rechnungsdaten, bevor Sie Leads kaufen. Ein Administrator prüft sie.",
+        "BILLING_PENDING_REVIEW": "Ihre Rechnungsdaten warten auf Prüfung. Sie können Leads kaufen, sobald sie verifiziert sind.",
+        "BILLING_NEEDS_CORRECTION": "Ihre Rechnungsdaten müssen korrigiert und erneut geprüft werden, bevor Sie Leads kaufen können.",
+        "BILLING_INCOMPLETE": "Ihre Rechnungsdaten sind unvollständig. Vervollständigen Sie sie und reichen Sie sie zur Prüfung ein, bevor Sie Leads kaufen.",
+        "BILLING_NOT_READY": "Ihre Rechnungsdaten sind noch nicht verifiziert, daher können Sie derzeit keine Leads kaufen."
+      }
     }
   },
   "billing": {

@@ -1,4 +1,5 @@
 import type { LeadFeePaymentInitiationDTO } from "@/application/dto/lead-fee-payment.dto";
+import type { LeadPurchaseEligibilityEvaluator } from "@/application/services/lead-purchase-eligibility-policy";
 import type { LeadFeePaymentGateway, LeadFeeProviderPayment } from "@/application/ports/lead-fee-payment-gateway";
 import { PaymentGatewayError } from "@/domain/errors/domain-error";
 import type { LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
@@ -12,7 +13,7 @@ import {
   type LeadFeePaymentTerms,
 } from "@/domain/services/lead-fee-payment";
 import { LEAD_FLOW_VERSION } from "@/domain/services/lead";
-import { isProfessionalEligibleToPurchaseLeads } from "@/domain/services/lead-purchase";
+import { decideProfessionalVerificationEligibility } from "@/domain/services/lead-purchase-eligibility";
 import { logger } from "@/infrastructure/observability/logger";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -45,6 +46,14 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * Failure: any provider failure is a safe LeadFeePaymentUnavailableError (no provider
  * detail, secret or customer data); the purchase and its snapshot are never mutated.
  *
+ * Eligibility (Module 147, defensive): the shared policy (M98 ACTIVE + VERIFIED, M146 billing-ready)
+ * is evaluated on the session professional. Its M98 half runs first, before the purchase is read, on
+ * every call, exactly as before. The billing half is re-checked only where a NEW provider payment would be
+ * created: a purchase that already has a persisted provider attempt is a retry/resume of a payment that
+ * was legitimately initiated earlier (M146: "a payment initiated before a billing change is confirmed
+ * exactly as before"), so it is reused unchanged and the webhook (M141) is untouched. A billing
+ * failure is the SAME generic denial as any other "not payable" (reason `NOT_ELIGIBLE`, logged only).
+ *
  * Every "you may not pay this" outcome (missing, someone else's, wrong status, legacy,
  * malformed snapshot, ineligible professional) is the same generic
  * LeadFeePaymentNotInitiableError.
@@ -55,6 +64,7 @@ export class InitiateLeadFeePaymentUseCase {
     private readonly purchases: LeadPurchaseRepository,
     private readonly leads: LeadRepository,
     private readonly gateway: LeadFeePaymentGateway,
+    private readonly eligibility: LeadPurchaseEligibilityEvaluator,
   ) {}
 
   async execute(userId: string, purchaseId: string): Promise<LeadFeePaymentInitiationDTO> {
@@ -63,7 +73,8 @@ export class InitiateLeadFeePaymentUseCase {
     }
 
     const professional = await this.professionals.findByUserId(userId);
-    if (!professional || !isProfessionalEligibleToPurchaseLeads(professional)) throw this.denied("NOT_ELIGIBLE");
+    // M98 gate, exactly as before M147 (same position, same reason): an inactive/unverified professional never pays, retry or not.
+    if (!professional || !decideProfessionalVerificationEligibility(professional).eligible) throw this.denied("NOT_ELIGIBLE");
 
     const purchase = await this.purchases.findById(purchaseId);
     if (!purchase || purchase.professionalProfileId !== professional.id) throw this.denied("NOT_FOUND");
@@ -82,6 +93,13 @@ export class InitiateLeadFeePaymentUseCase {
 
     if (purchase.paymentReference) {
       return this.respond(purchase.id, terms, await this.reuse(purchase.paymentReference, terms));
+    }
+
+    // Module 147: no provider payment exists yet -> a NEW one needs the full eligibility (incl. billing).
+    const decision = await this.eligibility.evaluate(professional);
+    if (!decision.eligible) {
+      logger.warn("lead_fee_payment.denied", { reason: "NOT_ELIGIBLE", eligibilityReason: decision.reason });
+      throw this.denied("NOT_ELIGIBLE");
     }
 
     const created = await this.provider(() =>

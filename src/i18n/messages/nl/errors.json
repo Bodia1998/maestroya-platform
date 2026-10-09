@@ -9,6 +9,7 @@
     "RATE_LIMITED": "Te veel pogingen. Wacht even en probeer het opnieuw.",
     "ACCOUNT_RESTRICTED": "Deze actie is tijdelijk niet beschikbaar voor je account.",
     "PROFESSIONAL_NOT_VERIFIED": "Je moet de verificatie als vakman voltooien om dit te doen.",
+    "LEAD_PURCHASE_NOT_ELIGIBLE": "Vul uw factuurgegevens aan voordat u leads koopt.",
     "SELF_BILLING_NOT_AUTHORIZED": "Je moet zelffacturering (self-billing) toestaan voordat je verdergaat.",
     "BUSINESS_REGISTRATION_REQUIRED": "Je moet je fiscale en bedrijfsgegevens aanvullen voordat je verdergaat.",
     "MATERIALS_NOT_CONFIRMED": "Bevestig hoe de materialen worden geregeld voordat je verdergaat.",

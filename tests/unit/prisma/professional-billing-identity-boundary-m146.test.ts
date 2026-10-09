@@ -35,6 +35,8 @@ const OWNERS = new Set([
   "src/core/application/use-cases/billing-identity/save-my-billing-identity.use-case.ts",
   "src/core/application/use-cases/billing-identity/review-billing-identity.use-cases.ts",
   "src/core/application/use-cases/billing-identity/get-professional-billing-readiness.use-case.ts",
+  // Module 147: the ONE composition root that wires the M146 readiness query into the eligibility policy.
+  "src/core/application/use-cases/lead-purchase-eligibility/compose.ts",
   "src/app/(dashboard)/dashboard/professional/billing/actions.ts",
   "src/app/(dashboard)/dashboard/professional/billing/billing-identity-form.tsx",
   "src/app/(dashboard)/dashboard/professional/billing/page.tsx",
@@ -91,11 +93,15 @@ describe("M146 isolation — billing data stays out of every other flow", () => 
     }
   });
 
-  it("introduces NO purchase / payment gate: the purchase and payment use cases and eligibility predicate know nothing about it", () => {
+  it("M146 itself introduced no gate; since M147 only the eligibility policy (never billing data) reaches purchase / payment, and confirmation, webhook, contact and tax stay billing-free", () => {
+    // Module 147 deliberately added the gate to purchase initiation and (new provider payments of) payment
+    // initiation. They depend on the eligibility POLICY PORT only: they never name the billing identity.
+    // These files still must not: confirmation, the verified webhook, contact unlock, the purchase
+    // financial rules and the tax policy (M136).
     for (const f of [
       "src/core/application/use-cases/lead-purchase/initiate-lead-purchase.use-case.ts",
-      "src/core/application/use-cases/lead-purchase/confirm-lead-purchase.use-case.ts",
       "src/core/application/use-cases/lead-fee-payment/initiate-lead-fee-payment.use-case.ts",
+      "src/core/application/use-cases/lead-purchase/confirm-lead-purchase.use-case.ts",
       "src/core/application/use-cases/lead-fee-payment/process-lead-fee-payment-webhook.use-case.ts",
       "src/core/application/use-cases/lead-contact/get-lead-contact.use-case.ts",
       "src/core/domain/services/lead-purchase.ts",

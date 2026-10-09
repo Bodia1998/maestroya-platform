@@ -9,6 +9,7 @@
     "RATE_LIMITED": "Demasiados intentos. Espera un momento y vuelve a intentarlo.",
     "ACCOUNT_RESTRICTED": "Esta acción no está disponible temporalmente para tu cuenta.",
     "PROFESSIONAL_NOT_VERIFIED": "Necesitas completar la verificación profesional para realizar esta acción.",
+    "LEAD_PURCHASE_NOT_ELIGIBLE": "Completa tus datos de facturación antes de comprar oportunidades.",
     "SELF_BILLING_NOT_AUTHORIZED": "Necesitas autorizar la autofacturación antes de continuar.",
     "BUSINESS_REGISTRATION_REQUIRED": "Necesitas completar tus datos fiscales y de actividad antes de continuar.",
     "MATERIALS_NOT_CONFIRMED": "Confirma cómo se gestionarán los materiales antes de continuar.",

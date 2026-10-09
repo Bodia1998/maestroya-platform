@@ -473,6 +473,24 @@
       "phone": "Telefone",
       "address": "Morada",
       "notProvided": "Não indicado"
+    },
+    "eligibility": {
+      "title": "Conclua estes passos antes de comprar leads",
+      "cta": {
+        "profile": "Ir para o meu perfil",
+        "verification": "Ir para a verificação",
+        "billing": "Ir para os dados de faturação"
+      },
+      "reason": {
+        "NO_PROFESSIONAL_PROFILE": "Precisa de um perfil profissional antes de poder comprar leads.",
+        "PROFESSIONAL_NOT_ACTIVE": "O seu perfil profissional não está ativo, por isso não pode comprar leads neste momento.",
+        "PROFESSIONAL_NOT_VERIFIED": "A sua verificação profissional tem de estar concluída e aprovada antes de poder comprar leads.",
+        "BILLING_MISSING": "Adicione os seus dados de faturação antes de comprar leads. Um administrador irá revê-los.",
+        "BILLING_PENDING_REVIEW": "Os seus dados de faturação aguardam revisão. Poderá comprar leads depois de verificados.",
+        "BILLING_NEEDS_CORRECTION": "Os seus dados de faturação têm de ser corrigidos e revistos novamente antes de poder comprar leads.",
+        "BILLING_INCOMPLETE": "Os seus dados de faturação estão incompletos. Complete-os e envie-os para revisão antes de comprar leads.",
+        "BILLING_NOT_READY": "Os seus dados de faturação ainda não estão verificados, por isso não pode comprar leads neste momento."
+      }
     }
   },
   "billing": {

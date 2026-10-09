@@ -3,6 +3,7 @@ import { ConfiguredLeadPurchasePriceProvider } from "@/application/services/lead
 import { ConfirmLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/confirm-lead-purchase.use-case";
 import { TransitionLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/transition-lead-purchase.use-case";
 import { InitiateLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/initiate-lead-purchase.use-case";
+import { makeLeadPurchaseEligibilityPolicy } from "@/application/use-cases/lead-purchase-eligibility/compose";
 import { PrismaLeadPreviewRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-preview-repository";
 import { PrismaJobValueEstimationContextReader } from "@/infrastructure/database/prisma/repositories/prisma-job-value-estimation-context-reader";
 import { PrismaLeadPurchaseRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository";
@@ -47,6 +48,7 @@ export function makeInitiateLeadPurchaseUseCase() {
     new PrismaServiceRequestRepository(),
     new PrismaLeadPreviewRepository(),
     new PrismaLeadPurchaseRepository(),
+    makeLeadPurchaseEligibilityPolicy(),
   );
 }
 

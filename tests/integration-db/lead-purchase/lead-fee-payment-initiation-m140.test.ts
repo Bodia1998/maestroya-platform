@@ -18,6 +18,7 @@ import { LeadFeePaymentNotInitiableError } from "@/domain/services/lead-fee-paym
 
 import { FakeLeadFeePaymentGateway } from "../../test-utils/fake-lead-fee-payment-gateway";
 import { M139_SECRET_ADDRESS, M139_SECRET_NAME, M139_SECRET_POSTAL_CODE, assertNoContactLeak } from "../../test-utils/contact-leak-sentinels";
+import { eligibilityPolicy } from "../../test-utils/lead-purchase-eligibility-fixtures";
 import { SNAPSHOT_DATA } from "../../test-utils/lead-publication-fixtures";
 import { setupDbTestLifecycle } from "../../test-utils/db/db-test-lifecycle";
 import {
@@ -71,7 +72,7 @@ describe("Module 140 — lead-fee payment initiation (real PostgreSQL, fake gate
   }
 
   function build(gateway = new FakeLeadFeePaymentGateway()) {
-    return { gateway, useCase: new InitiateLeadFeePaymentUseCase(new PrismaProfessionalRepository(), purchases, leads, gateway) };
+    return { gateway, useCase: new InitiateLeadFeePaymentUseCase(new PrismaProfessionalRepository(), purchases, leads, gateway, eligibilityPolicy()) };
   }
 
   const rejected = async (p: Promise<unknown>) => p.then(() => null, (e: unknown) => e);

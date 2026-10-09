@@ -473,6 +473,24 @@
       "phone": "Telefoon",
       "address": "Adres",
       "notProvided": "Niet opgegeven"
+    },
+    "eligibility": {
+      "title": "Rond deze stappen af voordat u leads koopt",
+      "cta": {
+        "profile": "Naar mijn profiel",
+        "verification": "Naar verificatie",
+        "billing": "Naar factuurgegevens"
+      },
+      "reason": {
+        "NO_PROFESSIONAL_PROFILE": "U hebt een professioneel profiel nodig voordat u leads kunt kopen.",
+        "PROFESSIONAL_NOT_ACTIVE": "Uw professionele profiel is niet actief, dus u kunt nu geen leads kopen.",
+        "PROFESSIONAL_NOT_VERIFIED": "Uw professionele verificatie moet zijn afgerond en goedgekeurd voordat u leads kunt kopen.",
+        "BILLING_MISSING": "Voeg uw factuurgegevens toe voordat u leads koopt. Een beheerder beoordeelt ze.",
+        "BILLING_PENDING_REVIEW": "Uw factuurgegevens wachten op beoordeling. U kunt leads kopen zodra ze zijn geverifieerd.",
+        "BILLING_NEEDS_CORRECTION": "Uw factuurgegevens moeten worden gecorrigeerd en opnieuw beoordeeld voordat u leads kunt kopen.",
+        "BILLING_INCOMPLETE": "Uw factuurgegevens zijn onvolledig. Vul ze aan en dien ze in ter beoordeling voordat u leads koopt.",
+        "BILLING_NOT_READY": "Uw factuurgegevens zijn nog niet geverifieerd, dus u kunt nu geen leads kopen."
+      }
     }
   },
   "billing": {

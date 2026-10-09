@@ -28,6 +28,7 @@ import type { ProfessionalDiscoveryRepository } from "@/domain/repositories/prof
 import { LeadContactAccessDeniedError } from "@/domain/services/lead-contact-access-policy";
 import type { LeadPurchaseStatus } from "@/domain/services/lead-purchase";
 
+import { eligibilityPolicy } from "../../test-utils/lead-purchase-eligibility-fixtures";
 import { SNAPSHOT_DATA } from "../../test-utils/lead-publication-fixtures";
 import { M139_SECRET_ADDRESS, M139_SECRET_EMAIL, M139_SECRET_NAME, M139_SECRET_PHONE, M139_SECRET_POSTAL_CODE, assertNoContactLeak } from "../../test-utils/contact-leak-sentinels";
 import { setupDbTestLifecycle } from "../../test-utils/db/db-test-lifecycle";
@@ -97,7 +98,7 @@ describe("Module 139 — pre-purchase contact-leak protection (real PostgreSQL)"
 
   const feedFor = (categoryId: string) => new GetLeadFeedForProfessionalUseCase(professionals, discoveryFor(categoryId), new PrismaLeadFeedRepository());
   const initiateFor = (categoryId: string) =>
-    new InitiateLeadPurchaseUseCase(professionals, discoveryFor(categoryId), leads, serviceRequests, previews, purchases);
+    new InitiateLeadPurchaseUseCase(professionals, discoveryFor(categoryId), leads, serviceRequests, previews, purchases, eligibilityPolicy());
 
   const noLeak = (value: unknown) => assertNoContactLeak(value, SENTINEL_PREFIXES);
   const denied = async (p: Promise<unknown>) => expect(await p.then(() => null, (e: unknown) => e)).toBeInstanceOf(LeadContactAccessDeniedError);

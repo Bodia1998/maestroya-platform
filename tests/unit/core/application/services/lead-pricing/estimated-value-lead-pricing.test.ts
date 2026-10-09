@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { eligibilityPolicy } from "../../../../../test-utils/lead-purchase-eligibility-fixtures";
 import type { JobValueEstimationContextReader } from "@/application/ports/job-value-estimation-context-reader";
 import { ConfiguredLeadPurchasePriceProvider } from "@/application/services/lead-pricing/configured-lead-purchase-price-provider";
 import { EstimatedValueLeadPricingContextReader } from "@/application/services/lead-pricing/estimated-value-lead-pricing-context-reader";
@@ -73,6 +74,7 @@ function build(context: JobValueEstimationContext | null, config: JobValueEstima
     { findById: async () => ({ id: REQUEST, status: "PUBLISHED", title: "Fuga", description: "d", location: { city: "Madrid" } }) } as never,
     { findPublishedById: async () => preview, findPublishedByCategoryIds: vi.fn() } as never,
     purchases,
+    eligibilityPolicy(),
   );
   return { estimationReader, pricingContexts, provider, purchases, useCase };
 }

@@ -14,7 +14,7 @@ import { cn } from "@/shared/utils/cn";
 import { initiateLeadFeePaymentAction } from "../../payment-actions";
 import { getLeadPurchaseCheckoutAction, startLeadPurchaseAction } from "./actions";
 import { LeadSummaryCard, PurchaseSummaryCard, type CheckoutLeadSummary } from "./checkout-summary";
-import { phaseFromPurchase, type CheckoutErrorKind, type CheckoutPhase, type CheckoutRetry } from "./checkout-view";
+import { eligibilityGuidance, phaseFromPurchase, type CheckoutErrorKind, type EligibilityView, type CheckoutPhase, type CheckoutRetry } from "./checkout-view";
 import { ContactReveal } from "./contact-reveal";
 import { StripePaymentForm } from "./stripe-payment-form";
 import { usePurchaseStatusPolling } from "./use-purchase-status-polling";
@@ -28,6 +28,8 @@ interface Props {
   /** Stripe's PUBLISHABLE key (public by design). The secret key never leaves the server. */
   stripePublishableKey: string;
   marketplaceHref: string;
+  /** Module 147: display-only guidance from the server (null = unknown -> no banner; the server still enforces). */
+  eligibility?: EligibilityView | null;
 }
 
 /**
@@ -45,7 +47,7 @@ interface Props {
  * mark the purchase paid. After a reload / return from a bank redirect the page starts over from
  * the server state, so a refresh never asks to pay twice and never loses a confirmed purchase.
  */
-export function PurchaseCheckout({ leadId, initialPurchase, lead, stripePublishableKey, marketplaceHref }: Props) {
+export function PurchaseCheckout({ leadId, initialPurchase, lead, stripePublishableKey, marketplaceHref, eligibility = null }: Props) {
   const t = useTranslations("professional.leadCheckout");
 
   const [purchase, setPurchase] = useState<LeadPurchaseCheckoutDTO | null>(initialPurchase ?? null);
@@ -177,6 +179,10 @@ export function PurchaseCheckout({ leadId, initialPurchase, lead, stripePublisha
     else void refresh();
   }
 
+  // Module 147: guidance only. Disabling the buttons is a courtesy; the server rejects an ineligible start anyway.
+  const blocked = eligibility !== null && !eligibility.eligible;
+  const guidance = eligibility && !eligibility.eligible ? eligibilityGuidance(eligibility.reason) : null;
+
   const showWorking = phase.name === "starting" || phase.name === "preparing" || phase.name === "awaiting";
   const title =
     phase.name === "error" ? t(`status.error.${phase.kind}.title`) : t(`status.${phase.name}.title`);
@@ -206,9 +212,19 @@ export function PurchaseCheckout({ leadId, initialPurchase, lead, stripePublisha
           </p>
         </div>
 
+        {guidance && (phase.name === "review" || phase.name === "failed" || phase.name === "error") && (
+          <Alert variant="warning">
+            <p className="font-medium">{t("eligibility.title")}</p>
+            <p>{t(`eligibility.reason.${guidance.reasonKey}`)}</p>
+            <Link href={guidance.href} className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-2")}>
+              {t(`eligibility.cta.${guidance.ctaKey}`)}
+            </Link>
+          </Alert>
+        )}
+
         {phase.name === "review" && (
           <div>
-            <Button type="button" onClick={() => void startPurchase()}>
+            <Button type="button" disabled={blocked} onClick={() => void startPurchase()}>
               {t("actions.start")}
             </Button>
           </div>
@@ -244,7 +260,7 @@ export function PurchaseCheckout({ leadId, initialPurchase, lead, stripePublisha
 
         {phase.name === "failed" && (
           <div>
-            <Button type="button" variant="outline" onClick={() => void startPurchase()}>
+            <Button type="button" variant="outline" disabled={blocked} onClick={() => void startPurchase()}>
               {t("actions.startNew")}
             </Button>
           </div>

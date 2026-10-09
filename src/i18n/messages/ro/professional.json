@@ -473,6 +473,24 @@
       "phone": "Telefon",
       "address": "Adresă",
       "notProvided": "Nespecificat"
+    },
+    "eligibility": {
+      "title": "Finalizați acești pași înainte de a cumpăra lead-uri",
+      "cta": {
+        "profile": "Mergi la profilul meu",
+        "verification": "Mergi la verificare",
+        "billing": "Mergi la datele de facturare"
+      },
+      "reason": {
+        "NO_PROFESSIONAL_PROFILE": "Aveți nevoie de un profil profesional înainte de a putea cumpăra lead-uri.",
+        "PROFESSIONAL_NOT_ACTIVE": "Profilul dvs. profesional nu este activ, deci momentan nu puteți cumpăra lead-uri.",
+        "PROFESSIONAL_NOT_VERIFIED": "Verificarea dvs. profesională trebuie finalizată și aprobată înainte de a putea cumpăra lead-uri.",
+        "BILLING_MISSING": "Adăugați datele de facturare înainte de a cumpăra lead-uri. Un administrator le va verifica.",
+        "BILLING_PENDING_REVIEW": "Datele dvs. de facturare așteaptă verificarea. Veți putea cumpăra lead-uri după ce sunt verificate.",
+        "BILLING_NEEDS_CORRECTION": "Datele dvs. de facturare trebuie corectate și verificate din nou înainte de a putea cumpăra lead-uri.",
+        "BILLING_INCOMPLETE": "Datele dvs. de facturare sunt incomplete. Completați-le și trimiteți-le spre verificare înainte de a cumpăra lead-uri.",
+        "BILLING_NOT_READY": "Datele dvs. de facturare nu sunt încă verificate, deci momentan nu puteți cumpăra lead-uri."
+      }
     }
   },
   "billing": {

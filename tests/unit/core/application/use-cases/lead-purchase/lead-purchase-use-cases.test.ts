@@ -8,6 +8,7 @@ import { NotFoundError, ProfessionalNotVerifiedError } from "@/domain/errors/dom
 import type { LeadPreviewCandidate } from "@/domain/repositories/lead-preview-repository";
 import type { LeadRecord } from "@/domain/repositories/lead-repository";
 import type { InitiateLeadPurchaseData, LeadPurchaseRecord, LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
+import { eligibilityPolicy } from "../../../../../test-utils/lead-purchase-eligibility-fixtures";
 import { SNAPSHOT_DATA } from "../../../../../test-utils/lead-publication-fixtures";
 import { pendingPurchaseFromPublication } from "../../../../../test-utils/lead-purchase-fixtures";
 import {
@@ -116,7 +117,9 @@ function build(opts: {
   request?: Record<string, unknown> | null;
   preview?: LeadPreviewCandidate | null;
   maxBuyers?: number | null;
+  billing?: Parameters<typeof eligibilityPolicy>[0];
 } = {}) {
+  const eligibility = eligibilityPolicy(opts.billing);
   const professionals = {
     findByUserId: vi.fn(async () =>
       opts.professional === null ? null : { id: "pro-1", status: "ACTIVE", verificationStatus: "VERIFIED", ...opts.professional },
@@ -138,6 +141,7 @@ function build(opts: {
     serviceRequests as never,
     previews as never,
     purchases,
+    eligibility,
   );
   const confirm = new ConfirmLeadPurchaseUseCase(purchases, leads as never, serviceRequests as never, () => new Date("2026-10-03T12:00:00Z"));
   const transition = new TransitionLeadPurchaseUseCase(purchases, () => new Date("2026-10-03T13:00:00Z"));
@@ -161,7 +165,7 @@ describe("InitiateLeadPurchaseUseCase", () => {
     const b = build({ lead: lead({ publication: { ...SNAPSHOT_DATA, price: "7.25", publishedAt: new Date("2026-10-06T10:00:00Z") } }) });
     expect((await b.initiate.execute(USER, LEAD)).price).toBe(7.25);
     expect(b.initiate.execute.length).toBe(2); // (userId, leadId) only
-    expect(b.initiate.constructor.length).toBe(6); // no price provider dependency any more
+    expect(b.initiate.constructor.length).toBe(7); // no price provider dependency any more (M147 added the eligibility policy)
   });
 
   it.each([
@@ -301,6 +305,7 @@ describe("InitiateLeadPurchaseUseCase", () => {
       { findById: async () => request() } as never,
       { findPublishedById: async () => preview(), findPublishedByCategoryIds: vi.fn() } as never,
       b.purchases,
+      eligibilityPolicy(),
     );
     const second = await other.execute("pro-user-2", LEAD);
     expect(second.status).toBe("PENDING_PAYMENT");
@@ -484,7 +489,7 @@ describe("Module 136 — LEAD_V1 lead-fee tax snapshot through the purchase life
     const again = await b.initiate.execute(USER, LEAD);
     expect(again).toEqual(first);
     expect(again).toMatchObject({ taxAmount: "21.00", totalAmount: "121.00" });
-    expect(b.initiate.constructor.length).toBe(6); // no pricing / tax dependency injected
+    expect(b.initiate.constructor.length).toBe(7); // the 6 original collaborators + the M147 eligibility policy; still no pricing / tax dependency injected
   });
 
   it("a repeated PENDING_PAYMENT initiation returns identical financial values and does not recompute", async () => {
