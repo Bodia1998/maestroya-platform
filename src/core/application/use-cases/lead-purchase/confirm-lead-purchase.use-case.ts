@@ -4,6 +4,7 @@ import { NotFoundError } from "@/domain/errors/domain-error";
 import type { LeadPurchaseRepository } from "@/domain/repositories/lead-purchase-repository";
 import type { LeadRepository } from "@/domain/repositories/lead-repository";
 import type { ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
+import type { LeadFeePaymentLedgerSource } from "@/domain/services/lead-fee-revenue-ledger";
 import { LEAD_FLOW_VERSION, assertServiceRequestEligibleForLead } from "@/domain/services/lead";
 import { InvalidLeadPurchaseTransitionError, LeadNotPurchasableError, assertLeadPurchaseTransition } from "@/domain/services/lead-purchase";
 
@@ -35,7 +36,21 @@ export class ConfirmLeadPurchaseUseCase {
     private readonly now: () => Date = () => new Date(),
   ) {}
 
+  /** Unchanged M126 contract: confirm by purchase id only (no ledger entry is written). */
   async execute(purchaseId: string): Promise<LeadPurchaseDTO> {
+    return this.confirm(purchaseId);
+  }
+
+  /**
+   * Module 149: the same confirmation, plus the lead-fee revenue ledger entry recorded by the repository in the SAME
+   * database transaction. `ledgerSource` is the verified provider event (id/time) supplied only by the M141 webhook;
+   * it carries no amount and no identity, so `execute`'s "purchase id is the only input" contract is unchanged.
+   */
+  async confirmWithLedgerSource(purchaseId: string, ledgerSource: LeadFeePaymentLedgerSource): Promise<LeadPurchaseDTO> {
+    return this.confirm(purchaseId, ledgerSource);
+  }
+
+  private async confirm(purchaseId: string, ledgerSource?: LeadFeePaymentLedgerSource): Promise<LeadPurchaseDTO> {
     const purchase = await this.purchases.findById(purchaseId);
     if (!purchase) throw new NotFoundError("LeadPurchase", String(purchaseId));
 
@@ -52,7 +67,7 @@ export class ConfirmLeadPurchaseUseCase {
       throw new LeadNotPurchasableError();
     }
 
-    const confirmed = await this.purchases.transition(purchaseId, "PENDING_PAYMENT", "CONFIRMED", this.now());
+    const confirmed = await this.purchases.transition(purchaseId, "PENDING_PAYMENT", "CONFIRMED", this.now(), ledgerSource);
     if (confirmed) return toLeadPurchaseDto(confirmed);
 
     // Lost a race (or changed after our read): idempotent repeat vs rejection.

@@ -1,5 +1,6 @@
 import type { LeadPurchaseFinancialSnapshot } from "@/domain/services/lead-purchase-financial-snapshot";
 import type { LeadPurchaseStatus } from "@/domain/services/lead-purchase";
+import type { LeadFeePaymentLedgerSource } from "@/domain/services/lead-fee-revenue-ledger";
 
 /**
  * Module 123 — Lead Marketplace: persistence port for `LeadPurchase`.
@@ -73,8 +74,20 @@ export interface LeadPurchaseRepository {
    * matching timestamp. Returns the updated record, or `null` when the row
    * was not in `from` (missing, or a concurrent transition won) — the caller
    * re-reads to distinguish an idempotent repeat from a rejected transition.
+   *
+   * Module 149 — optional `ledgerSource` (only valid for `to === "CONFIRMED"`): the verified provider
+   * event that proved the payment. When given, the implementation inserts the lead-fee revenue ledger
+   * entry in the SAME database transaction as the status change: either both are committed or neither
+   * (a ledger failure rolls the confirmation back and the error propagates). When omitted nothing is
+   * recorded — the pre-M149 behaviour — and no caller other than the M141 webhook confirms purchases.
    */
-  transition(id: string, from: LeadPurchaseStatus, to: LeadPurchaseStatus, now: Date): Promise<LeadPurchaseRecord | null>;
+  transition(
+    id: string,
+    from: LeadPurchaseStatus,
+    to: LeadPurchaseStatus,
+    now: Date,
+    ledgerSource?: LeadFeePaymentLedgerSource,
+  ): Promise<LeadPurchaseRecord | null>;
 
   /**
    * Module 140 — records the provider payment reference of a purchase's payment attempt.

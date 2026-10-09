@@ -10,8 +10,14 @@ import type {
   LeadPurchaseRecord,
   LeadPurchaseRepository,
 } from "@/domain/repositories/lead-purchase-repository";
+import type { LeadFeeRevenueLedgerRepository } from "@/domain/repositories/lead-fee-revenue-ledger-repository";
 import type { LeadRepository } from "@/domain/repositories/lead-repository";
 import { LEAD_FLOW_VERSION } from "@/domain/services/lead";
+import {
+  LeadFeeLedgerEntryInvalidError,
+  buildLeadFeeRevenueLedgerEntry,
+  type LeadFeePaymentLedgerSource,
+} from "@/domain/services/lead-fee-revenue-ledger";
 import {
   LEAD_FEE_PAYMENT_FLOW_MARKER,
   validateLeadFeePaymentFacts,
@@ -47,6 +53,8 @@ export interface LeadPurchaseLifecycleTransitioner {
 /** The trusted confirmation collaborator (Module 126's ConfirmLeadPurchaseUseCase satisfies it). */
 export interface LeadPurchaseConfirmer {
   execute(purchaseId: string): Promise<LeadPurchaseDTO>;
+  /** Module 149: confirm AND record the lead-fee ledger entry in one transaction (the webhook always uses this). */
+  confirmWithLedgerSource(purchaseId: string, ledgerSource: LeadFeePaymentLedgerSource): Promise<LeadPurchaseDTO>;
 }
 
 /**
@@ -72,7 +80,8 @@ export function isLeadFeePaymentEvent(event: StripePaymentWebhookEvent): boolean
  * immutable snapshot. Only then is the purchase confirmed — by the existing conditional
  * `PENDING_PAYMENT -> CONFIRMED` transition (status-conditional UPDATE), so concurrent deliveries
  * confirm exactly once. Nothing else is written: no paymentReference repair, no snapshot change, no
- * contact flag (M138 derives access from status), no payment/commission/payout/invoice/revenue record.
+ * contact flag (M138 derives access from status), no payment/commission/payout/invoice record — the ONLY
+ * additional write is the Module 149 lead-fee ledger entry, committed atomically with the status change.
  *
  * Idempotency: (1) the event id is claimed in the external-webhook ledger; (2) an already-CONFIRMED
  * purchase with the SAME reference/amount/currency is "already-confirmed" (no write, no error).
@@ -92,6 +101,15 @@ export function isLeadFeePaymentEvent(event: StripePaymentWebhookEvent): boolean
  * Refunds/credit notes for a payment that cannot be confirmed (e.g. paid after the purchase turned
  * terminal, or the lead closed) belong to later modules.
  *
+ * Module 149 — lead-fee revenue ledger. The ledger entry is written by the repository in the SAME database
+ * transaction as the conditional PENDING_PAYMENT -> CONFIRMED update (the verified event id/time travel as
+ * `ledgerSource`): the entry is built only from the persisted purchase snapshot, never from event/client amounts,
+ * and a ledger failure rolls the confirmation back and is rethrown (5xx -> provider retry; the claim becomes
+ * re-claimable). For a purchase that is ALREADY CONFIRMED when a verified, fully matching success event is
+ * reprocessed, `ledger.recordIfAbsent` idempotently ensures the entry exists (no duplicate; a disagreeing
+ * existing entry throws LeadFeeLedgerConflictError). Pending / failed / cancelled / rejected / unmatched /
+ * duplicate events never reach the ledger.
+ *
  * Module 145 — notifications. After the authoritative outcome this use case raises, through the
  * optional `events` bus (id only, best-effort, never changes the outcome or the HTTP response):
  *   - `LeadPurchaseConfirmed` when the purchase is CONFIRMED by this delivery, and ALSO when it is
@@ -110,6 +128,7 @@ export class ProcessLeadFeePaymentWebhookUseCase {
     private readonly transitioner: LeadPurchaseLifecycleTransitioner,
     private readonly webhookEvents: ExternalWebhookEventRepository,
     private readonly events?: Pick<EventBus, "publish">,
+    private readonly ledger?: Pick<LeadFeeRevenueLedgerRepository, "recordIfAbsent">,
   ) {}
 
   async execute(event: StripePaymentWebhookEvent): Promise<ProcessLeadFeePaymentWebhookResult> {
@@ -161,7 +180,19 @@ export class ProcessLeadFeePaymentWebhookUseCase {
     });
     if (rejection) return this.reject(event, purchase, rejection);
 
+    const ledgerSource: LeadFeePaymentLedgerSource = { providerEventId: event.id, providerEventCreatedAt: event.createdAt ?? null };
+
     if (purchase.status === "CONFIRMED") {
+      // Facts were validated above against the immutable snapshot; make sure the ledger has its (single) entry.
+      // Infrastructure / conflict errors propagate (-> 5xx -> retry): never a silent "recorded".
+      if (this.ledger) {
+        try {
+          await this.ledger.recordIfAbsent(buildLeadFeeRevenueLedgerEntry(purchase, ledgerSource));
+        } catch (error) {
+          if (error instanceof LeadFeeLedgerEntryInvalidError) return this.reject(event, purchase, "LEDGER_ENTRY_INVALID");
+          throw error;
+        }
+      }
       await this.raise(new LeadPurchaseConfirmed(purchase.id), event);
       return { outcome: "already-confirmed" };
     }
@@ -170,10 +201,12 @@ export class ProcessLeadFeePaymentWebhookUseCase {
     try {
       // Existing lifecycle path: Lead still PUBLISHED + request eligible, then the status-conditional
       // PENDING_PAYMENT -> CONFIRMED transition (exactly one concurrent caller writes).
-      await this.confirmer.execute(purchase.id);
+      await this.confirmer.confirmWithLedgerSource(purchase.id, ledgerSource);
     } catch (error) {
       if (error instanceof LeadNotPurchasableError) return this.reject(event, purchase, "LEAD_NOT_CONFIRMABLE");
       if (error instanceof InvalidLeadPurchaseTransitionError) return this.reject(event, purchase, "STATUS_NOT_CONFIRMABLE");
+      // Deterministic ledger-data problem: the transaction rolled back, the purchase stays PENDING_PAYMENT.
+      if (error instanceof LeadFeeLedgerEntryInvalidError) return this.reject(event, purchase, "LEDGER_ENTRY_INVALID");
       throw error;
     }
 

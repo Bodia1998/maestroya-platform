@@ -6085,6 +6085,9 @@ model LeadPurchase {
   lead         Lead               @relation(fields: [leadId], references: [id], onDelete: Restrict)
   professional ProfessionalProfile @relation(fields: [professionalProfileId], references: [id], onDelete: Restrict)
 
+  /// Module 149 — operational revenue-ledger entries recorded for this purchase (at most one per entry type).
+  ledgerEntries LeadFeeLedgerEntry[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -6094,6 +6097,63 @@ model LeadPurchase {
   /// "My purchases" lookups (prefix also serves the professional FK).
   @@index([professionalProfileId, status])
   @@map("lead_purchases")
+}
+
+/// Module 149 — Lead-Fee Revenue Ledger: kinds of operational ledger entry. Only the successful
+/// lead-fee payment exists today; refund / credit-note / chargeback kinds are added by later modules
+/// (an additive enum change) — none is defined or implied here.
+enum LeadFeeLedgerEntryType {
+  LEAD_FEE_PAYMENT_SUCCEEDED
+}
+
+/// Module 149 — Lead-Fee Revenue Ledger: APPEND-ONLY operational record that a professional's
+/// lead-access fee payment SUCCEEDED (authoritative signature-verified provider event, validated
+/// against the immutable M135/M136 snapshot and written in the SAME transaction as
+/// PENDING_PAYMENT -> CONFIRMED). It is an operational event ledger, NOT a double-entry accounting
+/// ledger: no debit/credit, no revenue-recognition policy, no IVA allocation, no invoice/credit-note
+/// semantics. It is separate from the legacy `Transaction` ledger (legacy Payment/Payout/Commission
+/// flow) on purpose, and it never records the customer's job value or the professional's service revenue.
+///
+/// Amounts are copied verbatim from the persisted purchase snapshot (never from the client, never
+/// recomputed): `netFeeAmount` = LeadPurchase.price, `taxAmount` = M136 IVA, `totalCollectedAmount`
+/// = what the professional paid MaestroYa (= net + tax; the provider amount was matched to it in
+/// exact minor units before confirmation). DB guarantees (see migration): one entry per
+/// (purchase, type) and per (paymentReference, type); CHECK total = net + tax; UPDATE/DELETE rejected.
+/// `leadId` / `professionalProfileId` are denormalised from the purchase (immutable there) for
+/// querying; the FK is to the purchase, which determines them.
+model LeadFeeLedgerEntry {
+  id                     String                 @id @default(uuid()) @db.Uuid
+  entryType              LeadFeeLedgerEntryType
+  leadPurchaseId         String                 @db.Uuid
+  leadId                 String                 @db.Uuid
+  professionalProfileId  String                 @db.Uuid
+  /// Provider PaymentIntent id (= LeadPurchase.paymentReference at recording time).
+  paymentReference       String
+  /// Provider event id that proved the payment (audit link to external_webhook_events).
+  providerEventId        String
+  /// The provider's own creation time of that event (NULL if the provider gave none).
+  providerEventCreatedAt DateTime?
+  netFeeAmount           Decimal                @db.Decimal(10, 2)
+  taxAmount              Decimal                @db.Decimal(10, 2)
+  totalCollectedAmount   Decimal                @db.Decimal(10, 2)
+  currency               String
+  taxPolicyVersion       String
+  pricingConfigVersion   String?
+  pricingRuleVersion     String?
+  /// LeadPurchase.confirmedAt — when the platform confirmed the payment.
+  paymentConfirmedAt     DateTime
+  /// When this row was written (equals confirmation time except for a purchase confirmed before M149
+  /// whose entry was recorded later by the idempotent already-confirmed path).
+  recordedAt             DateTime               @default(now())
+
+  leadPurchase LeadPurchase @relation(fields: [leadPurchaseId], references: [id], onDelete: Restrict)
+
+  @@unique([leadPurchaseId, entryType])
+  @@unique([paymentReference, entryType])
+  @@index([leadId])
+  @@index([professionalProfileId, recordedAt])
+  @@index([recordedAt])
+  @@map("lead_fee_ledger_entries")
 }
 
 /// Module 146 — Professional Billing Identity: legal entity type of the party MaestroYa bills

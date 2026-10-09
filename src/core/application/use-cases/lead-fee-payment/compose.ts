@@ -4,6 +4,7 @@ import { TransitionLeadPurchaseUseCase } from "@/application/use-cases/lead-purc
 import { ProcessLeadFeePaymentWebhookUseCase } from "@/application/use-cases/lead-fee-payment/process-lead-fee-payment-webhook.use-case";
 import { makeLeadPurchaseEligibilityPolicy } from "@/application/use-cases/lead-purchase-eligibility/compose";
 import { PrismaExternalWebhookEventRepository } from "@/infrastructure/database/prisma/repositories/prisma-external-webhook-event-repository";
+import { PrismaLeadFeeRevenueLedgerRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-fee-revenue-ledger-repository";
 import { PrismaLeadPurchaseRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository";
 import { PrismaLeadRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
@@ -51,5 +52,8 @@ export function makeProcessLeadFeePaymentWebhookUseCase() {
     new TransitionLeadPurchaseUseCase(purchases),
     new PrismaExternalWebhookEventRepository(),
     eventBus,
+    // Module 149: idempotent ledger path for an already-confirmed purchase (the first confirmation writes its
+    // entry atomically inside PrismaLeadPurchaseRepository.transition).
+    new PrismaLeadFeeRevenueLedgerRepository(),
   );
 }
