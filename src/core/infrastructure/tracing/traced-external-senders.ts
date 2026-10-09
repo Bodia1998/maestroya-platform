@@ -5,6 +5,7 @@ import type {
   NotificationChannel,
   NotificationChannelAdapter,
   NotificationChannelPayload,
+  NotificationChannelSendResult,
 } from "@/application/ports/notification-channel";
 import type { TracingPort } from "@/application/ports/tracing";
 
@@ -75,7 +76,7 @@ export class TracedNotificationChannel implements NotificationChannelAdapter {
     return this.delegate.channel;
   }
 
-  async send(payload: NotificationChannelPayload): Promise<void> {
+  async send(payload: NotificationChannelPayload): Promise<NotificationChannelSendResult> {
     return this.tracer.withSpan(`notification.send ${this.delegate.channel}`, () => this.delegate.send(payload), {
       kind: "client",
       attributes: {

@@ -254,6 +254,22 @@
     "title": "Twoje zgłoszenie zostało zamknięte",
     "message": "Zgłoszenie {ticketNumber} zostało zamknięte."
   },
+  "LEAD_REQUEST_PUBLISHED": {
+    "title": "Twoje zapytanie jest opublikowane",
+    "message": "Twoje zapytanie o usługę w miejscowości {city} zostało opublikowane i specjaliści mogą je teraz zobaczyć."
+  },
+  "LEAD_PURCHASED": {
+    "title": "Specjalista odblokował Twoje zapytanie",
+    "message": "Specjalista wykupił dostęp do Twojego zapytania o usługę w miejscowości {city} i może wkrótce się z Tobą skontaktować."
+  },
+  "LEAD_PURCHASE_CONFIRMED": {
+    "title": "Płatność potwierdzona",
+    "message": "Twoja płatność za zlecenie w miejscowości {city} została potwierdzona. Możesz teraz zobaczyć dane kontaktowe klienta."
+  },
+  "LEAD_PURCHASE_CANCELLED": {
+    "title": "Próba płatności anulowana",
+    "message": "Twoja próba płatności za zlecenie w miejscowości {city} została anulowana i nie przyznano żadnego dostępu. Możesz rozpocząć nowy zakup, jeśli zlecenie jest nadal dostępne."
+  },
   "labels": {
     "disputeStatus": {
       "OPEN": "Otwarty",

@@ -1,4 +1,8 @@
 import type { LeadPurchaseDTO } from "@/application/dto/lead-purchase.dto";
+import type { EventBus } from "@/application/ports/event-bus";
+import type { DomainEvent } from "@/domain/events/domain-event";
+import { LeadPurchaseCancelled } from "@/domain/events/lead-purchase-cancelled";
+import { LeadPurchaseConfirmed } from "@/domain/events/lead-purchase-confirmed";
 import type { StripePaymentWebhookEvent } from "@/application/ports/stripe-payment-webhook-verifier";
 import type { ExternalWebhookEventRepository } from "@/domain/repositories/external-webhook-event-repository";
 import type {
@@ -87,6 +91,16 @@ export function isLeadFeePaymentEvent(event: StripePaymentWebhookEvent): boolean
  * infrastructure error is rethrown (-> 5xx -> provider retry; the ledger entry becomes re-claimable).
  * Refunds/credit notes for a payment that cannot be confirmed (e.g. paid after the purchase turned
  * terminal, or the lead closed) belong to later modules.
+ *
+ * Module 145 — notifications. After the authoritative outcome this use case raises, through the
+ * optional `events` bus (id only, best-effort, never changes the outcome or the HTTP response):
+ *   - `LeadPurchaseConfirmed` when the purchase is CONFIRMED by this delivery, and ALSO when it is
+ *     observed already CONFIRMED with the same reference/amount/currency (so a redelivery after a
+ *     failed notification re-attempts it; the per-recipient dedupe key makes that exactly-once);
+ *   - `LeadPurchaseCancelled` after a verified `payment_intent.canceled` moved PENDING_PAYMENT ->
+ *     CANCELLED.
+ * Nothing is raised for `payment_failed` (non-terminal, purchase untouched), for rejected, unmatched,
+ * duplicate or ignored events, nor for any non-LEAD_V1 event (those never enter this class).
  */
 export class ProcessLeadFeePaymentWebhookUseCase {
   constructor(
@@ -95,6 +109,7 @@ export class ProcessLeadFeePaymentWebhookUseCase {
     private readonly confirmer: LeadPurchaseConfirmer,
     private readonly transitioner: LeadPurchaseLifecycleTransitioner,
     private readonly webhookEvents: ExternalWebhookEventRepository,
+    private readonly events?: Pick<EventBus, "publish">,
   ) {}
 
   async execute(event: StripePaymentWebhookEvent): Promise<ProcessLeadFeePaymentWebhookResult> {
@@ -146,7 +161,10 @@ export class ProcessLeadFeePaymentWebhookUseCase {
     });
     if (rejection) return this.reject(event, purchase, rejection);
 
-    if (purchase.status === "CONFIRMED") return { outcome: "already-confirmed" };
+    if (purchase.status === "CONFIRMED") {
+      await this.raise(new LeadPurchaseConfirmed(purchase.id), event);
+      return { outcome: "already-confirmed" };
+    }
     if (purchase.status !== "PENDING_PAYMENT") return this.reject(event, purchase, "STATUS_NOT_CONFIRMABLE");
 
     try {
@@ -160,6 +178,7 @@ export class ProcessLeadFeePaymentWebhookUseCase {
     }
 
     logger.info("lead_fee_payment_webhook.confirmed", { eventId: event.id, purchaseId: purchase.id });
+    await this.raise(new LeadPurchaseConfirmed(purchase.id), event);
     return { outcome: "confirmed" };
   }
 
@@ -187,7 +206,22 @@ export class ProcessLeadFeePaymentWebhookUseCase {
       throw error;
     }
     logger.info("lead_fee_payment_webhook.cancelled", { eventId: event.id, purchaseId: purchase.id });
+    await this.raise(new LeadPurchaseCancelled(purchase.id), event);
     return { outcome: "cancelled" };
+  }
+
+  /** Module 145 — best-effort domain event. A failing subscriber is logged and never alters the webhook outcome. */
+  private async raise(domainEvent: DomainEvent, event: StripePaymentWebhookEvent): Promise<void> {
+    if (!this.events) return;
+    try {
+      await this.events.publish(domainEvent);
+    } catch (error) {
+      logger.error("lead_fee_payment_webhook.notification_failed", {
+        eventId: event.id,
+        domainEvent: domainEvent.eventName,
+        error: error instanceof Error ? error.message : "unknown",
+      });
+    }
   }
 
   /** Persisted write-once reference -> the one purchase. Metadata ids are never used to find it. */

@@ -1080,6 +1080,16 @@ enum NotificationType {
   JOB_COMPLETION_CONFIRMATION_REMINDER
   JOB_COMPLETION_CONFIRMED
   JOB_COMPLETION_CONFIRMATION_TIMED_OUT
+  /// Module 145 — LEAD_V1 lead notifications (see
+  /// docs/MODULE_145_LEAD_NOTIFICATIONS.md). Recipients are always resolved
+  /// server-side from the persisted Lead/LeadPurchase relations:
+  /// LEAD_REQUEST_PUBLISHED and LEAD_PURCHASED go to the request's customer;
+  /// LEAD_PURCHASE_CONFIRMED and LEAD_PURCHASE_CANCELLED go to the buying
+  /// professional. None carries contact data, payment references or internal ids.
+  LEAD_REQUEST_PUBLISHED
+  LEAD_PURCHASED
+  LEAD_PURCHASE_CONFIRMED
+  LEAD_PURCHASE_CANCELLED
 }
 
 /// Module 74 — Business Registration Enforcement: `BUSINESS_REGISTRATION`
@@ -2981,12 +2991,20 @@ model Notification {
   /// null = active. Non-null = soft-deleted; excluded from listings, unread
   /// counts, and mark-all-as-read. Never hard-deleted.
   dismissedAt  DateTime?
+  /// Module 145 — idempotency key of the business event this notification
+  /// reports (e.g. "lead-v1:purchase-confirmed:<purchaseId>:professional").
+  /// null for every pre-M145 / non-idempotent notification (Postgres treats
+  /// NULLs as distinct in a unique index, so those rows are unconstrained).
+  /// Internal only: never part of any DTO sent to the browser.
+  dedupeKey    String?          @db.VarChar(191)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// Module 145 — DB-enforced "one notification per (recipient, business event)".
+  @@unique([userId, dedupeKey])
   @@index([userId, dismissedAt, createdAt])
   @@index([userId, readAt, dismissedAt])
   @@map("notifications")

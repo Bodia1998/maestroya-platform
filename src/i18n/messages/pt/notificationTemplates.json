@@ -254,6 +254,22 @@
     "title": "O seu pedido de suporte foi encerrado",
     "message": "O pedido de suporte {ticketNumber} foi encerrado."
   },
+  "LEAD_REQUEST_PUBLISHED": {
+    "title": "O seu pedido está publicado",
+    "message": "O seu pedido de serviço em {city} foi publicado e os profissionais já o podem ver."
+  },
+  "LEAD_PURCHASED": {
+    "title": "Um profissional desbloqueou o seu pedido",
+    "message": "Um profissional comprou o acesso ao seu pedido de serviço em {city} e poderá contactá-lo em breve."
+  },
+  "LEAD_PURCHASE_CONFIRMED": {
+    "title": "Pagamento confirmado",
+    "message": "O seu pagamento pela oportunidade em {city} foi confirmado. Já pode ver os dados de contacto do cliente."
+  },
+  "LEAD_PURCHASE_CANCELLED": {
+    "title": "Tentativa de pagamento cancelada",
+    "message": "A sua tentativa de pagamento pela oportunidade em {city} foi cancelada e não foi concedido qualquer acesso. Pode iniciar uma nova compra se a oportunidade ainda estiver disponível."
+  },
   "labels": {
     "disputeStatus": {
       "OPEN": "Aberta",

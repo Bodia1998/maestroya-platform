@@ -2,6 +2,7 @@ import type {
   NotificationChannel,
   NotificationChannelAdapter,
   NotificationChannelPayload,
+  NotificationChannelSendResult,
 } from "@/application/ports/notification-channel";
 
 /**
@@ -25,12 +26,33 @@ import type {
  * import `NotificationServiceCreator` first. `send()` only ever runs at
  * request time, never at module init, so this is a load-time-only change:
  * zero behavior difference, same use case, same execute() call.
+ *
+ * Module 145: when the payload carries a `dedupeKey` the row is created through
+ * `CreateIdempotentNotificationUseCase` (DB-enforced at-most-once per recipient + key) and
+ * the adapter reports `"DUPLICATE"` if the row already existed, so the dispatcher does not
+ * re-deliver the replayed event on any other channel. Without a key the path is unchanged.
  */
 export class InAppNotificationChannel implements NotificationChannelAdapter {
   readonly channel: NotificationChannel = "IN_APP";
 
-  async send(payload: NotificationChannelPayload): Promise<void> {
-    const { makeCreateNotificationUseCase } = await import("@/application/use-cases/notification/compose");
+  async send(payload: NotificationChannelPayload): Promise<NotificationChannelSendResult> {
+    const { makeCreateNotificationUseCase, makeCreateIdempotentNotificationUseCase } = await import(
+      "@/application/use-cases/notification/compose"
+    );
+    if (payload.dedupeKey) {
+      const { created } = await makeCreateIdempotentNotificationUseCase().execute({
+        userId: payload.userId,
+        type: payload.type,
+        title: payload.title,
+        message: payload.message,
+        resourceType: payload.resourceType ?? null,
+        resourceId: payload.resourceId ?? null,
+        actionUrl: payload.actionUrl ?? null,
+        metadata: payload.metadata ?? null,
+        dedupeKey: payload.dedupeKey,
+      });
+      return { outcome: created ? "DELIVERED" : "DUPLICATE" };
+    }
     await makeCreateNotificationUseCase().execute({
       userId: payload.userId,
       type: payload.type,

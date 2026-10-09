@@ -1,5 +1,6 @@
 import { PrismaNotificationRepository } from "@/infrastructure/database/prisma/repositories/prisma-notification-repository";
 import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositories/prisma-user-repository";
+import { PrismaLeadNotificationContextReader } from "@/infrastructure/database/prisma/repositories/prisma-lead-notification-context-reader";
 import { NotificationServiceCreator } from "@/infrastructure/notifications/notification-service";
 import { eventBus } from "@/infrastructure/events/compose";
 import { CompanyStatusChanged } from "@/domain/events/company-status-changed";
@@ -13,8 +14,15 @@ import { DisputeStatusChanged } from "@/domain/events/dispute-status-changed";
 import { ProfessionalVerificationStatusChanged } from "@/domain/events/professional-verification-status-changed";
 import { ReviewCreated } from "@/domain/events/review-created";
 import { ReviewResponseAdded } from "@/domain/events/review-response-added";
+import { LeadPublished } from "@/domain/events/lead-published";
+import { LeadPurchaseCancelled } from "@/domain/events/lead-purchase-cancelled";
+import { LeadPurchaseConfirmed } from "@/domain/events/lead-purchase-confirmed";
 import { SupportTicketStatusChanged } from "@/domain/events/support-ticket-status-changed";
+import { CreateIdempotentNotificationUseCase } from "@/application/use-cases/notification/create-idempotent-notification.use-case";
 import { CreateNotificationUseCase } from "@/application/use-cases/notification/create-notification.use-case";
+import { NotifyLeadPublishedSubscriber } from "@/application/use-cases/notification/notify-lead-published.subscriber";
+import { NotifyLeadPurchaseCancelledSubscriber } from "@/application/use-cases/notification/notify-lead-purchase-cancelled.subscriber";
+import { NotifyLeadPurchaseConfirmedSubscriber } from "@/application/use-cases/notification/notify-lead-purchase-confirmed.subscriber";
 import { DismissNotificationUseCase } from "@/application/use-cases/notification/dismiss-notification.use-case";
 import { GetNotificationUseCase } from "@/application/use-cases/notification/get-notification.use-case";
 import { GetUnreadNotificationCountUseCase } from "@/application/use-cases/notification/get-unread-notification-count.use-case";
@@ -124,6 +132,29 @@ eventBus.subscribe(
  */
 eventBus.subscribe(ReviewCreated, new NotifyReviewCreatedSubscriber(new NotificationServiceCreator()));
 eventBus.subscribe(ReviewResponseAdded, new NotifyReviewResponseAddedSubscriber(new NotificationServiceCreator()));
+
+/**
+ * Module 145 — LEAD_V1 lead notifications: three subscribers, registered LAST so every pre-existing
+ * event's handler ids (queued-bus ordering) are unchanged. Each reacts to a LEAD_V1-only event raised
+ * by an authoritative boundary (M133 publication, M141 webhook) and resolves its recipients server-side
+ * from persisted relations (`PrismaLeadNotificationContextReader`); see each subscriber's doc comment.
+ * Delivery goes through the same `NotificationServiceCreator` (in-app + realtime) with a dedupe key.
+ */
+const leadNotificationContexts = new PrismaLeadNotificationContextReader();
+eventBus.subscribe(LeadPublished, new NotifyLeadPublishedSubscriber(leadNotificationContexts, new NotificationServiceCreator()));
+eventBus.subscribe(
+  LeadPurchaseConfirmed,
+  new NotifyLeadPurchaseConfirmedSubscriber(leadNotificationContexts, new NotificationServiceCreator()),
+);
+eventBus.subscribe(
+  LeadPurchaseCancelled,
+  new NotifyLeadPurchaseCancelledSubscriber(leadNotificationContexts, new NotificationServiceCreator()),
+);
+
+/** Module 145 — internal only, same rules as `makeCreateNotificationUseCase`: at-most-once creation per (recipient, dedupeKey). */
+export function makeCreateIdempotentNotificationUseCase() {
+  return new CreateIdempotentNotificationUseCase(notifications);
+}
 
 /** Internal only — never wired to a public Server Action. See
  *  CreateNotificationUseCase's own doc comment. Exported for

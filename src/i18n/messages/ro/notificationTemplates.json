@@ -254,6 +254,22 @@
     "title": "Tichetul tău de asistență a fost închis",
     "message": "Tichetul {ticketNumber} a fost închis."
   },
+  "LEAD_REQUEST_PUBLISHED": {
+    "title": "Cererea ta este publicată",
+    "message": "Cererea ta de serviciu din {city} a fost publicată, iar profesioniștii o pot vedea acum."
+  },
+  "LEAD_PURCHASED": {
+    "title": "Un profesionist ți-a deblocat cererea",
+    "message": "Un profesionist a cumpărat accesul la cererea ta de serviciu din {city} și te poate contacta în curând."
+  },
+  "LEAD_PURCHASE_CONFIRMED": {
+    "title": "Plată confirmată",
+    "message": "Plata ta pentru oportunitatea din {city} a fost confirmată. Acum poți vedea datele de contact ale clientului."
+  },
+  "LEAD_PURCHASE_CANCELLED": {
+    "title": "Încercare de plată anulată",
+    "message": "Încercarea ta de plată pentru oportunitatea din {city} a fost anulată și nu a fost acordat niciun acces. Poți începe o nouă achiziție dacă oportunitatea este încă disponibilă."
+  },
   "labels": {
     "disputeStatus": {
       "OPEN": "Deschisă",

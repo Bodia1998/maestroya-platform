@@ -254,6 +254,22 @@
     "title": "Tu ticket de soporte se ha cerrado",
     "message": "El ticket {ticketNumber} se ha cerrado."
   },
+  "LEAD_REQUEST_PUBLISHED": {
+    "title": "Tu solicitud ya está publicada",
+    "message": "Tu solicitud de servicio en {city} se ha publicado y los profesionales ya pueden verla."
+  },
+  "LEAD_PURCHASED": {
+    "title": "Un profesional ha desbloqueado tu solicitud",
+    "message": "Un profesional ha comprado el acceso a tu solicitud de servicio en {city} y puede ponerse en contacto contigo pronto."
+  },
+  "LEAD_PURCHASE_CONFIRMED": {
+    "title": "Pago confirmado",
+    "message": "Tu pago por la oportunidad en {city} está confirmado. Ya puedes ver los datos de contacto del cliente."
+  },
+  "LEAD_PURCHASE_CANCELLED": {
+    "title": "Intento de pago cancelado",
+    "message": "Tu intento de pago por la oportunidad en {city} se ha cancelado y no se ha concedido ningún acceso. Puedes iniciar una nueva compra si la oportunidad sigue disponible."
+  },
   "labels": {
     "disputeStatus": {
       "OPEN": "Abierta",

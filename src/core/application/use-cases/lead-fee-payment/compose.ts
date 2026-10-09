@@ -8,6 +8,10 @@ import { PrismaLeadRepository } from "@/infrastructure/database/prisma/repositor
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { stripe } from "@/infrastructure/payments/stripe/client";
+import { eventBus } from "@/infrastructure/events/compose";
+// Side-effect import: registers the Module 145 LEAD_V1 notification subscribers against the shared
+// eventBus (idempotent at module scope), exactly like review/compose.ts and dispute/compose.ts do.
+import "@/application/use-cases/notification/compose";
 import { StripeLeadFeePaymentGatewayAdapter } from "@/infrastructure/payments/stripe/stripe-lead-fee-payment-gateway";
 
 /**
@@ -44,5 +48,6 @@ export function makeProcessLeadFeePaymentWebhookUseCase() {
     new ConfirmLeadPurchaseUseCase(purchases, leads, new PrismaServiceRequestRepository()),
     new TransitionLeadPurchaseUseCase(purchases),
     new PrismaExternalWebhookEventRepository(),
+    eventBus,
   );
 }

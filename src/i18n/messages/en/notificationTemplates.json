@@ -254,6 +254,22 @@
     "title": "Your support ticket was closed",
     "message": "Ticket {ticketNumber} has been closed."
   },
+  "LEAD_REQUEST_PUBLISHED": {
+    "title": "Your request is live",
+    "message": "Your service request in {city} has been published and professionals can now see it."
+  },
+  "LEAD_PURCHASED": {
+    "title": "A professional unlocked your request",
+    "message": "A professional has purchased access to your service request in {city} and may contact you soon."
+  },
+  "LEAD_PURCHASE_CONFIRMED": {
+    "title": "Payment confirmed",
+    "message": "Your payment for the lead in {city} is confirmed. You can now view the customer's contact details."
+  },
+  "LEAD_PURCHASE_CANCELLED": {
+    "title": "Payment attempt cancelled",
+    "message": "Your payment attempt for the lead in {city} was cancelled and no access was granted. You can start a new purchase if the lead is still available."
+  },
   "labels": {
     "disputeStatus": {
       "OPEN": "Open",

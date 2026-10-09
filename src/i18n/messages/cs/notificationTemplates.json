@@ -254,6 +254,22 @@
     "title": "Váš požadavek na podporu byl uzavřen",
     "message": "Požadavek {ticketNumber} byl uzavřen."
   },
+  "LEAD_REQUEST_PUBLISHED": {
+    "title": "Vaše poptávka je zveřejněna",
+    "message": "Vaše poptávka služby v lokalitě {city} byla zveřejněna a profesionálové ji nyní mohou vidět."
+  },
+  "LEAD_PURCHASED": {
+    "title": "Profesionál odemkl vaši poptávku",
+    "message": "Profesionál si zakoupil přístup k vaší poptávce služby v lokalitě {city} a brzy vás může kontaktovat."
+  },
+  "LEAD_PURCHASE_CONFIRMED": {
+    "title": "Platba potvrzena",
+    "message": "Vaše platba za zakázku v lokalitě {city} byla potvrzena. Nyní můžete zobrazit kontaktní údaje zákazníka."
+  },
+  "LEAD_PURCHASE_CANCELLED": {
+    "title": "Pokus o platbu zrušen",
+    "message": "Váš pokus o platbu za zakázku v lokalitě {city} byl zrušen a nebyl udělen žádný přístup. Pokud je zakázka stále dostupná, můžete zahájit nový nákup."
+  },
   "labels": {
     "disputeStatus": {
       "OPEN": "Otevřený",
