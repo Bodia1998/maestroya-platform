@@ -6148,12 +6148,87 @@ model LeadFeeLedgerEntry {
 
   leadPurchase LeadPurchase @relation(fields: [leadPurchaseId], references: [id], onDelete: Restrict)
 
+  /// Module 150 — the lead-fee invoice issued for this entry (at most one). Relation field only: the ledger
+  /// table itself is unchanged by M150.
+  invoice LeadFeeInvoice?
+
   @@unique([leadPurchaseId, entryType])
   @@unique([paymentReference, entryType])
   @@index([leadId])
   @@index([professionalProfileId, recordedAt])
   @@index([recordedAt])
   @@map("lead_fee_ledger_entries")
+}
+
+/// Module 150 — Lead-Fee Invoice: the immutable INVOICE RECORD MaestroYa issues to a professional for ONE
+/// confirmed lead-access fee payment (one M149 ledger entry -> at most one invoice). Separate from the legacy
+/// `Invoice` model (job-based self-billing) on purpose. It is NOT a claim of legal compliance: no reviewed
+/// legal/accounting policy for LEAD_V1 invoices exists in the repository (see
+/// docs/MODULE_150_LEAD_FEE_INVOICE.md) — issuance is fail-closed and requires an operator-supplied
+/// `policyApprovalReference`.
+///
+/// Every amount is copied from the persisted ledger entry (never recomputed); the recipient columns are a
+/// snapshot of the M146 billing identity at `billingIdentityRevision` (no FK to the mutable identity row, so
+/// later profile changes can never alter an issued invoice); the issuer columns are a snapshot of the operator
+/// configuration. Money is exact Decimal(10,2). DB guarantees (see migration): unique number, unique per
+/// ledger entry and per purchase, CHECKs (net > 0, tax >= 0, total = net + tax, shapes, non-placeholder issuer
+/// tax id), an INSERT trigger that cross-checks the ledger entry / CONFIRMED purchase / VERIFIED billing
+/// identity revision, and an append-only trigger (UPDATE/DELETE rejected). FK to the ledger entry is
+/// ON DELETE RESTRICT. `leadPurchaseId` / `leadId` / `professionalProfileId` are denormalised from the entry
+/// (verified by the INSERT trigger) for querying.
+model LeadFeeInvoice {
+  id                    String @id @default(uuid()) @db.Uuid
+  /// "LFI-YYYY-NNNNNN" (provisional series), allocated in the same transaction as the insert.
+  invoiceNumber         String @unique
+  ledgerEntryId         String @unique @db.Uuid
+  leadPurchaseId        String @unique @db.Uuid
+  leadId                String @db.Uuid
+  professionalProfileId String @db.Uuid
+
+  /// Issue date/time. Which date is the tax point is an OPEN legal decision; not asserted here.
+  issuedAt           DateTime
+  /// M149 `paymentConfirmedAt`, copied unchanged.
+  paymentConfirmedAt DateTime
+
+  currency         String
+  netFeeAmount     Decimal @db.Decimal(10, 2)
+  /// IVA rate in basis points, derived from the verified M136 policy version (2100 = 21%).
+  taxRateBps       Int
+  taxAmount        Decimal @db.Decimal(10, 2)
+  totalAmount      Decimal @db.Decimal(10, 2)
+  taxPolicyVersion String
+  description      String
+
+  issuerLegalName String
+  issuerTaxId     String
+  issuerAddress   String
+
+  recipientEntityType   BillingEntityType
+  recipientLegalName    String            @db.VarChar(200)
+  recipientTaxId        String            @db.VarChar(20)
+  recipientTaxCountry   String            @db.VarChar(2)
+  recipientAddressLine1 String            @db.VarChar(200)
+  recipientAddressLine2 String?           @db.VarChar(200)
+  recipientCity         String            @db.VarChar(120)
+  recipientRegion       String?           @db.VarChar(120)
+  recipientPostalCode   String            @db.VarChar(20)
+  recipientCountry      String            @db.VarChar(2)
+
+  billingIdentityRevision   Int
+  billingIdentityVerifiedAt DateTime
+
+  /// Version of the technical issuance rules (NOT a legal approval).
+  rulesVersion            String
+  /// Operator-supplied reference of the reviewed policy approval under which this invoice was issued.
+  policyApprovalReference String
+
+  ledgerEntry LeadFeeLedgerEntry @relation(fields: [ledgerEntryId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([professionalProfileId, issuedAt])
+  @@index([issuedAt])
+  @@map("lead_fee_invoices")
 }
 
 /// Module 146 — Professional Billing Identity: legal entity type of the party MaestroYa bills
