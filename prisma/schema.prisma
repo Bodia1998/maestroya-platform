@@ -6224,11 +6224,75 @@ model LeadFeeInvoice {
 
   ledgerEntry LeadFeeLedgerEntry @relation(fields: [ledgerEntryId], references: [id], onDelete: Restrict)
 
+  /// Module 151 — the credit note issued for this invoice (at most one: FULL credit only). Relation field only: the
+  /// invoice table itself is unchanged by M151.
+  creditNote LeadFeeCreditNote?
+
   createdAt DateTime @default(now())
 
   @@index([professionalProfileId, issuedAt])
   @@index([issuedAt])
   @@map("lead_fee_invoices")
+}
+
+/// Module 151 — Lead-Fee Credit Note: an immutable FULL credit of exactly one M150 lead-fee invoice. A credit note is its own
+/// document with POSITIVE credited amounts (not a negative invoice). Nothing here is a legal approval; see
+/// docs/MODULE_151_LEAD_FEE_CREDIT_NOTES.md for the unresolved decisions and the gates that keep issuance closed.
+model LeadFeeCreditNote {
+  id                      String   @id @default(uuid()) @db.Uuid
+  /// "LFC-YYYY-NNNNNN" (provisional series), allocated in the same transaction as the insert.
+  creditNoteNumber        String   @unique
+  leadFeeInvoiceId        String   @unique @db.Uuid
+  /// Snapshot of the credited invoice's reference.
+  originalInvoiceNumber   String
+  originalInvoiceIssuedAt DateTime
+  ledgerEntryId           String   @db.Uuid
+  leadPurchaseId          String   @db.Uuid
+  leadId                  String   @db.Uuid
+  professionalProfileId   String   @db.Uuid
+
+  issuedAt DateTime
+  /// Only "FULL" is representable (DB CHECK). Partial credits need a documented legal/product policy first.
+  creditKind String
+  /// Caller-supplied, operator-visible reason (not a legal wording). 1..500 characters.
+  reason     String @db.VarChar(500)
+
+  /// Always "EUR" (DB CHECK) and identical to the invoice's.
+  currency            String
+  creditedNetAmount   Decimal @db.Decimal(10, 2)
+  taxRateBps          Int
+  creditedTaxAmount   Decimal @db.Decimal(10, 2)
+  creditedTotalAmount Decimal @db.Decimal(10, 2)
+  taxPolicyVersion    String
+
+  issuerLegalName String
+  issuerTaxId     String
+  issuerAddress   String
+
+  recipientEntityType   BillingEntityType
+  recipientLegalName    String            @db.VarChar(200)
+  recipientTaxId        String            @db.VarChar(20)
+  recipientTaxCountry   String            @db.VarChar(2)
+  recipientAddressLine1 String            @db.VarChar(200)
+  recipientAddressLine2 String?           @db.VarChar(200)
+  recipientCity         String            @db.VarChar(120)
+  recipientRegion       String?           @db.VarChar(120)
+  recipientPostalCode   String            @db.VarChar(20)
+  recipientCountry      String            @db.VarChar(2)
+
+  /// Version of the technical issuance rules (NOT a legal approval).
+  rulesVersion            String
+  /// Operator-supplied reference of the reviewed CREDIT-NOTE policy approval (distinct from the M150 invoice approval).
+  policyApprovalReference String
+
+  invoice LeadFeeInvoice @relation(fields: [leadFeeInvoiceId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([leadPurchaseId])
+  @@index([professionalProfileId, issuedAt])
+  @@index([issuedAt])
+  @@map("lead_fee_credit_notes")
 }
 
 /// Module 146 — Professional Billing Identity: legal entity type of the party MaestroYa bills
