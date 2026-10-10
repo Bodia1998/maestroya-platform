@@ -25,6 +25,12 @@ const PORT = "src/core/domain/repositories/lead-fee-invoice-repository.ts";
 const USE_CASE = "src/core/application/use-cases/lead-fee-invoice/issue-lead-fee-invoice.use-case.ts";
 const COMPOSE = "src/core/application/use-cases/lead-fee-invoice/compose.ts";
 const M150_FILES = [REPO, DOMAIN, PORT, USE_CASE, COMPOSE];
+/** M151 files that legitimately name the invoice (its types / port). The closed list is extended here, as M147/M150 did for their predecessors; M151's own boundary test pins that they only READ via the existing port. */
+const M151_CONSUMERS = [
+  "src/core/domain/services/lead-fee-credit-note.ts",
+  "src/core/application/use-cases/lead-fee-credit-note/issue-lead-fee-credit-note.use-case.ts",
+  "src/core/application/use-cases/lead-fee-credit-note/compose.ts",
+];
 const MIGRATION = "prisma/migrations/20261014000000_add_module_150_lead_fee_invoice/migration.sql";
 const LEDGER_REPO = "src/core/infrastructure/database/prisma/repositories/prisma-lead-fee-revenue-ledger-repository.ts";
 const PURCHASE_REPO = "src/core/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository.ts";
@@ -40,9 +46,9 @@ describe("M150 — write / read boundary", () => {
     expect(code(REPO)).not.toMatch(/leadFeeInvoice\.(update|updateMany|delete|deleteMany|upsert|createMany)\b/);
   });
 
-  it("the whole M150 surface is exactly these five source files plus the known consumers", () => {
+  it("the whole M150 surface is exactly these five source files plus the known consumers (M151 credit-note files, which reference the invoice by design)", () => {
     const users = SRC.filter(mentionsInvoice).sort();
-    expect(users).toEqual([...M150_FILES].sort());
+    expect(users).toEqual([...M150_FILES, ...M151_CONSUMERS].sort());
   });
 
   it("the use case is constructed only by its composition root, and nothing else imports that root (no route, action, webhook, job or UI)", () => {
