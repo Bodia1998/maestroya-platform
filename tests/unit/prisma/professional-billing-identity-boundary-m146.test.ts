@@ -37,6 +37,13 @@ const OWNERS = new Set([
   "src/core/application/use-cases/billing-identity/get-professional-billing-readiness.use-case.ts",
   // Module 147: the ONE composition root that wires the M146 readiness query into the eligibility policy.
   "src/core/application/use-cases/lead-purchase-eligibility/compose.ts",
+  // Module 150: the lead-fee invoice consumes the M146 readiness snapshot (the integration point M146 documents) and
+  // re-checks the identity revision at write time. Pinned as a closed set by lead-fee-invoice-boundary-m150.test.ts.
+  "src/core/domain/services/lead-fee-invoice.ts",
+  "src/core/domain/repositories/lead-fee-invoice-repository.ts",
+  "src/core/application/use-cases/lead-fee-invoice/issue-lead-fee-invoice.use-case.ts",
+  "src/core/application/use-cases/lead-fee-invoice/compose.ts",
+  "src/core/infrastructure/database/prisma/repositories/prisma-lead-fee-invoice-repository.ts",
   "src/app/(dashboard)/dashboard/professional/billing/actions.ts",
   "src/app/(dashboard)/dashboard/professional/billing/billing-identity-form.tsx",
   "src/app/(dashboard)/dashboard/professional/billing/page.tsx",
@@ -79,7 +86,8 @@ describe("M146 isolation — billing data stays out of every other flow", () => 
   });
 
   it("no lead / purchase / payment / notification / contact Prisma adapter reads the billing table", () => {
-    const adapters = SRC.filter((f) => /prisma-lead-|stripe-lead-fee|prisma-notification/.test(f));
+    // Module 150's invoice adapter is the one deliberate exception: it re-checks the snapshotted identity revision at write time.
+    const adapters = SRC.filter((f) => /prisma-lead-|stripe-lead-fee|prisma-notification/.test(f) && !/prisma-lead-fee-invoice-repository/.test(f));
     expect(adapters.length).toBeGreaterThan(3);
     for (const f of adapters) expect(code(f), f).not.toMatch(/professionalBillingIdentity|billingIdentity/);
   });
