@@ -20,14 +20,16 @@ const SRC = walk(path.join(root, "src")).map(rel).filter((f) => /\.(ts|tsx)$/.te
 
 const LEDGER_REPO = "src/core/infrastructure/database/prisma/repositories/prisma-lead-fee-revenue-ledger-repository.ts";
 const PURCHASE_REPO = "src/core/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository.ts";
+/** M152 (read-only reconciliation reader): the closed list is extended here, as M150/M151 did for their predecessors; M152's own boundary test pins that it only issues `findMany`. */
+const M152_READER = "src/core/infrastructure/database/prisma/repositories/prisma-lead-fee-document-reconciliation-reader.ts";
 const WEBHOOK = "src/core/application/use-cases/lead-fee-payment/process-lead-fee-payment-webhook.use-case.ts";
 const COMPOSE = "src/core/application/use-cases/lead-fee-payment/compose.ts";
 const MIGRATION = "prisma/migrations/20261013000000_add_module_149_lead_fee_revenue_ledger/migration.sql";
 
 describe("M149 — ledger write boundary", () => {
-  it("only the two Prisma adapters touch the ledger table", () => {
+  it("only the two Prisma adapters (plus the M152 read-only reconciliation reader) touch the ledger table", () => {
     const users = SRC.filter((f) => /leadFeeLedgerEntry\b/.test(code(f)));
-    expect(users.sort()).toEqual([LEDGER_REPO, PURCHASE_REPO].sort());
+    expect(users.sort()).toEqual([LEDGER_REPO, PURCHASE_REPO, M152_READER].sort());
   });
 
   it("the ledger adapter exposes no update / delete / upsert", () => {

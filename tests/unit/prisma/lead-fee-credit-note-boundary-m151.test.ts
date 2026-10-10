@@ -25,21 +25,24 @@ const PORT = "src/core/domain/repositories/lead-fee-credit-note-repository.ts";
 const USE_CASE = "src/core/application/use-cases/lead-fee-credit-note/issue-lead-fee-credit-note.use-case.ts";
 const COMPOSE = "src/core/application/use-cases/lead-fee-credit-note/compose.ts";
 const M151_FILES = [REPO, DOMAIN, PORT, USE_CASE, COMPOSE];
+/** M152 files that legitimately name the credit note (read-only reconciliation). M152's own boundary test pins that the adapter only issues `findMany`. */
+const M152_READER = "src/core/infrastructure/database/prisma/repositories/prisma-lead-fee-document-reconciliation-reader.ts";
+const M152_DOMAIN = "src/core/domain/services/lead-fee-document-reconciliation.ts";
 const MIGRATION = "prisma/migrations/20261015000000_add_module_151_lead_fee_credit_notes/migration.sql";
 
 const mentionsCreditNote = (f: string) => /leadFeeCreditNote\b|lead_fee_credit_notes|LeadFeeCreditNote|lead-fee-credit-note/.test(code(f));
 
 describe("M151 — write / read boundary", () => {
-  it("only the Prisma adapter touches the lead_fee_credit_notes table / client accessor", () => {
-    expect(SRC.filter((f) => /leadFeeCreditNote\b|lead_fee_credit_notes/.test(code(f)))).toEqual([REPO]);
+  it("only the Prisma adapter (plus the M152 read-only reconciliation reader) touches the lead_fee_credit_notes table / client accessor", () => {
+    expect(SRC.filter((f) => /leadFeeCreditNote\b|lead_fee_credit_notes/.test(code(f))).sort()).toEqual([REPO, M152_READER].sort());
   });
 
   it("the adapter exposes no update / delete / upsert (credit notes are immutable)", () => {
     expect(code(REPO)).not.toMatch(/leadFeeCreditNote\.(update|updateMany|delete|deleteMany|upsert|createMany)\b/);
   });
 
-  it("the whole M151 surface is exactly these five source files", () => {
-    expect(SRC.filter(mentionsCreditNote).sort()).toEqual([...M151_FILES].sort());
+  it("the whole M151 surface is exactly these five source files plus the M152 read-only reconciliation files", () => {
+    expect(SRC.filter(mentionsCreditNote).sort()).toEqual([...M151_FILES, M152_READER, M152_DOMAIN].sort());
   });
 
   it("the use case is constructed only by its composition root, and nothing else imports that root (no route, action, webhook, job, queue or UI)", () => {
