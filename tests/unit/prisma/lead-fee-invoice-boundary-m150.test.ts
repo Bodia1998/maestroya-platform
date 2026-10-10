@@ -31,6 +31,9 @@ const M151_CONSUMERS = [
   "src/core/application/use-cases/lead-fee-credit-note/issue-lead-fee-credit-note.use-case.ts",
   "src/core/application/use-cases/lead-fee-credit-note/compose.ts",
 ];
+/** M152 files that legitimately name the invoice (read-only reconciliation). M152's own boundary test pins that the adapter only issues `findMany`. */
+const M152_READER = "src/core/infrastructure/database/prisma/repositories/prisma-lead-fee-document-reconciliation-reader.ts";
+const M152_DOMAIN = "src/core/domain/services/lead-fee-document-reconciliation.ts";
 const MIGRATION = "prisma/migrations/20261014000000_add_module_150_lead_fee_invoice/migration.sql";
 const LEDGER_REPO = "src/core/infrastructure/database/prisma/repositories/prisma-lead-fee-revenue-ledger-repository.ts";
 const PURCHASE_REPO = "src/core/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository.ts";
@@ -38,8 +41,8 @@ const PURCHASE_REPO = "src/core/infrastructure/database/prisma/repositories/pris
 const mentionsInvoice = (f: string) => /leadFeeInvoice\b|lead_fee_invoices|LeadFeeInvoice|lead-fee-invoice/.test(code(f));
 
 describe("M150 — write / read boundary", () => {
-  it("only the Prisma adapter touches the lead_fee_invoices table / client accessor", () => {
-    expect(SRC.filter((f) => /leadFeeInvoice\b|lead_fee_invoices/.test(code(f)))).toEqual([REPO]);
+  it("only the Prisma adapter (plus the M152 read-only reconciliation reader) touches the lead_fee_invoices table / client accessor", () => {
+    expect(SRC.filter((f) => /leadFeeInvoice\b|lead_fee_invoices/.test(code(f))).sort()).toEqual([REPO, M152_READER].sort());
   });
 
   it("the adapter exposes no update / delete / upsert (invoices are immutable)", () => {
@@ -48,7 +51,7 @@ describe("M150 — write / read boundary", () => {
 
   it("the whole M150 surface is exactly these five source files plus the known consumers (M151 credit-note files, which reference the invoice by design)", () => {
     const users = SRC.filter(mentionsInvoice).sort();
-    expect(users).toEqual([...M150_FILES, ...M151_CONSUMERS].sort());
+    expect(users).toEqual([...M150_FILES, ...M151_CONSUMERS, M152_READER, M152_DOMAIN].sort());
   });
 
   it("the use case is constructed only by its composition root, and nothing else imports that root (no route, action, webhook, job or UI)", () => {
