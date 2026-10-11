@@ -6088,6 +6088,9 @@ model LeadPurchase {
   /// Module 149 — operational revenue-ledger entries recorded for this purchase (at most one per entry type).
   ledgerEntries LeadFeeLedgerEntry[]
 
+  /// Module 153 — refund attempts of this purchase's payment (or of an extra duplicate payment). History, never deleted.
+  refunds LeadFeeRefund[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -6293,6 +6296,68 @@ model LeadFeeCreditNote {
   @@index([professionalProfileId, issuedAt])
   @@index([issuedAt])
   @@map("lead_fee_credit_notes")
+}
+
+/// Module 153 — closed reasons a lead-fee refund can be executed for. CLAIM_APPROVED (M154) and UNFULFILLABLE_PAYMENT (M141) are deliberately absent.
+enum LeadFeeRefundReason {
+  PLATFORM_ERROR
+  DUPLICATE_CHARGE
+}
+
+/// Module 153 — lifecycle of one refund ATTEMPT. REQUESTED/UNKNOWN are unresolved (the provider outcome is not known);
+/// SUCCEEDED and FAILED are terminal. Only SUCCEEDED means money was refunded (provider-confirmed).
+enum LeadFeeRefundStatus {
+  REQUESTED
+  PROVIDER_PENDING
+  UNKNOWN
+  SUCCEEDED
+  FAILED
+}
+
+/// Module 153 — one row per refund ATTEMPT of a lead-fee payment (history is kept; rows are never deleted, money/identity
+/// columns are immutable, status only moves forward — all enforced by DB triggers, see the migration). Holds NO provider fee,
+/// NO ledger/invoice/credit-note reference and no personal data. `actorUserId` is a plain scalar: its FK to users exists in SQL only.
+model LeadFeeRefund {
+  id             String              @id @default(uuid()) @db.Uuid
+  leadPurchaseId String              @db.Uuid
+  reasonCode     LeadFeeRefundReason
+  /// 1 for the first attempt; a controlled retry after a definitive provider failure uses the next number.
+  attemptNumber  Int
+  status         LeadFeeRefundStatus @default(REQUESTED)
+
+  /// 100% of the amount actually charged (equals the purchase snapshot total). Always EUR (DB CHECK).
+  amount   Decimal @db.Decimal(10, 2)
+  currency String
+
+  /// The provider payment this attempt refunds (the purchase's own payment for PLATFORM_ERROR; the EXTRA payment for DUPLICATE_CHARGE).
+  refundedPaymentReference  String
+  /// The purchase's own stored payment reference at the time (differs from the above only for DUPLICATE_CHARGE).
+  purchasePaymentReference  String
+  /// Deterministic per (payment, attempt). Never reused for another attempt and never replayed while the outcome is unknown.
+  idempotencyKey            String  @unique
+  /// Provider id of the refund; write-once, set only after the provider answered.
+  providerRefundId          String? @unique
+
+  actorUserId      String  @db.Uuid
+  /// Operator explanation, 1..1000 characters after trim, stored verbatim (never truncated).
+  explanation      String  @db.VarChar(1000)
+  /// Separate incident / evidence reference (opaque id, not free text).
+  evidenceReference String @db.VarChar(200)
+  /// Closed, non-sensitive failure category (never a provider message).
+  failureCategory  String? @db.VarChar(60)
+
+  /// Stamped once when the purchase was moved CONFIRMED -> REFUNDED (PLATFORM_ERROR only).
+  purchaseTransitionedAt DateTime?
+
+  purchase LeadPurchase @relation(fields: [leadPurchaseId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([refundedPaymentReference, attemptNumber])
+  @@index([leadPurchaseId])
+  @@index([status])
+  @@map("lead_fee_refunds")
 }
 
 /// Module 146 — Professional Billing Identity: legal entity type of the party MaestroYa bills
