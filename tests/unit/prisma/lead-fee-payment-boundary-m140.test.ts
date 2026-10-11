@@ -45,7 +45,9 @@ describe("M140 boundaries", () => {
 
   it("the adapter is a direct platform payment: no Connect / transfer / application-fee / manual capture / refund", () => {
     const src = code("src/core/infrastructure/payments/stripe/stripe-lead-fee-payment-gateway.ts");
-    expect(src).not.toMatch(/transfer_data|on_behalf_of|application_fee|transfers\.|stripeAccount|capture_method|refunds\.|\.capture\(|payouts/);
+    // Module 153 narrowed ONLY the refund prohibition: `refunds.create` / `refunds.list` (full refund + read) are the sole
+    // refund operations allowed here; any other refunds.* call, and every other prohibition, still fails.
+    expect(src).not.toMatch(/transfer_data|on_behalf_of|application_fee|transfers\.|stripeAccount|capture_method|refunds\.(?!create\b|list\b)|\.capture\(|payouts/);
   });
 
   it("the use case never confirms, transitions or unlocks: no lifecycle / contact collaborator", () => {
