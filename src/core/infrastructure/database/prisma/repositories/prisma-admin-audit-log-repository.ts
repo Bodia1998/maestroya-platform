@@ -180,6 +180,11 @@ const ADMIN_ACTION_TO_LOG_ACTION: Record<AdminAuditAction, Prisma.AuditLogCreate
   // raises an alert, it never changes the discrepancy's own status, so
   // it maps to the generic OTHER bucket rather than STATUS_CHANGE.
   RECONCILIATION_CRITICAL_DISCREPANCY_ALERTED: "OTHER",
+  // Module 154 — Lead Quality Claims: creation is a CREATE, every later step a STATUS_CHANGE of the claim.
+  LEAD_QUALITY_CLAIM_SUBMITTED: "CREATE",
+  LEAD_QUALITY_CLAIM_REVIEW_STARTED: "STATUS_CHANGE",
+  LEAD_QUALITY_CLAIM_APPROVED: "STATUS_CHANGE",
+  LEAD_QUALITY_CLAIM_REJECTED: "STATUS_CHANGE",
 };
 
 const SELECT = {
@@ -219,26 +224,41 @@ function toRecord(row: Row): AdminAuditLogRecord {
 }
 
 /**
+ * Module 154: appends one audit entry through the GIVEN client (a `prisma.$transaction` client), so a caller can make a state
+ * change and its audit entry ONE atomic unit: the entry rolls back with the change, and a failing insert rolls the change back.
+ * Same mapping and same append-only INSERT as `record`. `createdAt` may be supplied (a database-clock value read under the
+ * caller's row lock) so the entries of one row are ordered by the order their transitions committed.
+ */
+export async function recordAdminAuditLogWithin(
+  client: Pick<Prisma.TransactionClient, "auditLog">,
+  data: RecordAdminAuditLogData,
+  createdAt?: Date,
+): Promise<AdminAuditLogRecord> {
+  const row = await client.auditLog.create({
+    data: {
+      actorUserId: data.adminUserId,
+      action: ADMIN_ACTION_TO_LOG_ACTION[data.action],
+      entityType: data.targetType,
+      entityId: data.targetId,
+      metadata: {
+        adminAction: data.action,
+        ...(data.metadata ?? {}),
+      } as Prisma.InputJsonValue,
+      ...(createdAt ? { createdAt } : {}),
+    },
+    select: SELECT,
+  });
+  return toRecord(row);
+}
+
+/**
  * Admin Panel module (Module 16): Prisma implementation of
  * AdminAuditLogRepository, backed by the existing `AuditLog` model (see
  * this interface's own doc comment for why no new table was introduced).
  */
 export class PrismaAdminAuditLogRepository implements AdminAuditLogRepository {
   async record(data: RecordAdminAuditLogData): Promise<AdminAuditLogRecord> {
-    const row = await prisma.auditLog.create({
-      data: {
-        actorUserId: data.adminUserId,
-        action: ADMIN_ACTION_TO_LOG_ACTION[data.action],
-        entityType: data.targetType,
-        entityId: data.targetId,
-        metadata: {
-          adminAction: data.action,
-          ...(data.metadata ?? {}),
-        } as Prisma.InputJsonValue,
-      },
-      select: SELECT,
-    });
-    return toRecord(row);
+    return recordAdminAuditLogWithin(prisma, data);
   }
 
   async list(options: ListAdminAuditLogsOptions): Promise<AdminAuditLogRecord[]> {

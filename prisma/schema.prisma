@@ -6360,6 +6360,59 @@ model LeadFeeRefund {
   @@map("lead_fee_refunds")
 }
 
+/// Module 154 — closed reasons a professional may claim a lead was unusable. Workmanship, service quality, the final
+/// price and customer conduct after contact are deliberately NOT claim reasons.
+enum LeadQualityClaimReason {
+  CONTACT_UNREACHABLE
+  CONTACT_INVALID
+  DUPLICATE_LEAD
+}
+
+/// Module 154 — lifecycle of a lead-quality claim. SUBMITTED and UNDER_REVIEW are "open"; APPROVED and REJECTED are terminal.
+/// A decision is NOT a financial result: APPROVED never implies a refund (refund integration is not part of this module).
+enum LeadQualityClaimStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+/// Module 154 — a professional's claim that a CONFIRMED lead purchase was unusable. At most ONE claim per purchase (unique
+/// `leadPurchaseId`). Deliberately scalar-only (no Prisma relations, so no existing model is touched): the foreign keys to
+/// lead_purchases / professional_profiles / users exist in SQL only. Holds no refund, ledger, invoice or credit-note reference and
+/// no customer contact data; `description` / `decisionExplanation` are conservatively validated free text, `evidenceReference` an
+/// opaque id. Immutability, forward-only status, the claim window, the response target and the per-professional limits are
+/// enforced by CHECKs and triggers in the migration (Prisma cannot express them).
+model LeadQualityClaim {
+  id                    String                 @id @default(uuid()) @db.Uuid
+  leadPurchaseId        String                 @unique @db.Uuid
+  professionalProfileId String                 @db.Uuid
+  reasonCode            LeadQualityClaimReason
+  status                LeadQualityClaimStatus @default(SUBMITTED)
+
+  description       String  @db.VarChar(1000)
+  evidenceReference String? @db.VarChar(200)
+
+  submittedAt DateTime
+  /// Response TARGET = submittedAt + 72h (DB CHECK). Not an automatic decision.
+  respondBy   DateTime
+
+  reviewStartedAt       DateTime?
+  reviewStartedByUserId String?   @db.Uuid
+
+  decidedAt           DateTime?
+  decidedByUserId     String?   @db.Uuid
+  decisionExplanation String?   @db.VarChar(1000)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalProfileId, status])
+  @@index([professionalProfileId, submittedAt])
+  @@index([status, respondBy])
+  @@map("lead_quality_claims")
+}
+
 /// Module 146 — Professional Billing Identity: legal entity type of the party MaestroYa bills
 /// for purchased lead access. Not inferred from, and not a substitute for, any tax treatment (M136).
 enum BillingEntityType {
