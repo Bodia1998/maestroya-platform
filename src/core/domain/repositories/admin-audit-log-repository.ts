@@ -231,7 +231,15 @@ export type AdminAuditAction =
   // see that event's own doc comment), giving admins an auditable,
   // queryable record of every alert distinct from the underlying
   // `ReconciliationDiscrepancy` row itself.
-  | "RECONCILIATION_CRITICAL_DISCREPANCY_ALERTED";
+  | "RECONCILIATION_CRITICAL_DISCREPANCY_ALERTED"
+  // Module 154 — Lead Quality Claims. SUBMITTED is performed by the claiming professional (not an admin; same reasoning as
+  // BILLING_IDENTITY_SUBMITTED above), REVIEW_STARTED / APPROVED / REJECTED by an administrator. Metadata carries ids, the
+  // reason code and the status change only — never the claim description, the decision explanation or any contact data.
+  // A claim decision is NOT a financial result: none of these entries records or implies a refund.
+  | "LEAD_QUALITY_CLAIM_SUBMITTED"
+  | "LEAD_QUALITY_CLAIM_REVIEW_STARTED"
+  | "LEAD_QUALITY_CLAIM_APPROVED"
+  | "LEAD_QUALITY_CLAIM_REJECTED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved
