@@ -8,6 +8,7 @@
     "CONFLICT": "Esta acción no es compatible con el estado actual. Actualiza la página e inténtalo de nuevo.",
     "RATE_LIMITED": "Demasiados intentos. Espera un momento y vuelve a intentarlo.",
     "ACCOUNT_RESTRICTED": "Esta acción no está disponible temporalmente para tu cuenta.",
+    "LEAD_V1_ROLLOUT_DISABLED": "Esta función no está disponible en este momento.",
     "PROFESSIONAL_NOT_VERIFIED": "Necesitas completar la verificación profesional para realizar esta acción.",
     "LEAD_PURCHASE_NOT_ELIGIBLE": "Completa tus datos de facturación antes de comprar oportunidades.",
     "SELF_BILLING_NOT_AUTHORIZED": "Necesitas autorizar la autofacturación antes de continuar.",

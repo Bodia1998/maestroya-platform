@@ -8,6 +8,7 @@
     "CONFLICT": "Deze actie is in strijd met de huidige status. Vernieuw de pagina en probeer het opnieuw.",
     "RATE_LIMITED": "Te veel pogingen. Wacht even en probeer het opnieuw.",
     "ACCOUNT_RESTRICTED": "Deze actie is tijdelijk niet beschikbaar voor je account.",
+    "LEAD_V1_ROLLOUT_DISABLED": "Deze functie is momenteel niet beschikbaar.",
     "PROFESSIONAL_NOT_VERIFIED": "Je moet de verificatie als vakman voltooien om dit te doen.",
     "LEAD_PURCHASE_NOT_ELIGIBLE": "Vul uw factuurgegevens aan voordat u leads koopt.",
     "SELF_BILLING_NOT_AUTHORIZED": "Je moet zelffacturering (self-billing) toestaan voordat je verdergaat.",

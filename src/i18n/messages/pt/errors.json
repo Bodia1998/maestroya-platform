@@ -8,6 +8,7 @@
     "CONFLICT": "Esta ação entra em conflito com o estado atual. Atualize a página e tente novamente.",
     "RATE_LIMITED": "Demasiadas tentativas. Aguarde um momento e tente novamente.",
     "ACCOUNT_RESTRICTED": "Esta ação está temporariamente indisponível para a sua conta.",
+    "LEAD_V1_ROLLOUT_DISABLED": "Esta funcionalidade não está disponível neste momento.",
     "PROFESSIONAL_NOT_VERIFIED": "É necessário concluir a verificação profissional para realizar esta ação.",
     "LEAD_PURCHASE_NOT_ELIGIBLE": "Complete os seus dados de faturação antes de comprar leads.",
     "SELF_BILLING_NOT_AUTHORIZED": "É necessário autorizar a autofaturação antes de continuar.",

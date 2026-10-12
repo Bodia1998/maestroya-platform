@@ -1,5 +1,6 @@
 import { ConfiguredLeadPublicationPriceSource } from "@/application/services/lead-pricing/configured-lead-publication-price-source";
 import { guardLeadPublication } from "@/application/use-cases/lead-abuse/compose";
+import { guardLeadV1Entry } from "@/application/use-cases/lead-rollout/compose";
 import { PublishLeadUseCase } from "@/application/use-cases/lead/publish-lead.use-case";
 import type { LeadPricingConfigResolution } from "@/domain/services/lead-pricing-production-config";
 import type { LeadBuyerPolicy } from "@/domain/services/lead-publication";
@@ -44,14 +45,17 @@ export function makePublishLeadUseCase(
   buyerPolicy: LeadBuyerPolicy = LEAD_BUYER_POLICY_PILOT_V1,
 ) {
   // Module 156: guarded only when LEAD_ABUSE_CONTROL_MODE is on; OFF (default) returns the use case itself, unchanged.
-  return guardLeadPublication(
-    new PublishLeadUseCase(
-      new PrismaCustomerProfileRepository(),
-      new PrismaServiceRequestRepository(),
-      new PrismaLeadRepository(),
-      new ConfiguredLeadPublicationPriceSource(new PrismaJobValueEstimationContextReader(), configuration),
-      buyerPolicy,
-      eventBus,
+  // Module 159: the rollout guard is OUTERMOST, so a refused publication spends no M156 rate-limit budget and records no signal.
+  return guardLeadV1Entry(
+    guardLeadPublication(
+      new PublishLeadUseCase(
+        new PrismaCustomerProfileRepository(),
+        new PrismaServiceRequestRepository(),
+        new PrismaLeadRepository(),
+        new ConfiguredLeadPublicationPriceSource(new PrismaJobValueEstimationContextReader(), configuration),
+        buyerPolicy,
+        eventBus,
+      ),
     ),
   );
 }

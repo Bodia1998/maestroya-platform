@@ -8,6 +8,7 @@
     "CONFLICT": "Această acțiune intră în conflict cu starea actuală. Reîncarcă pagina și încearcă din nou.",
     "RATE_LIMITED": "Prea multe încercări. Așteaptă puțin și încearcă din nou.",
     "ACCOUNT_RESTRICTED": "Această acțiune este temporar indisponibilă pentru contul tău.",
+    "LEAD_V1_ROLLOUT_DISABLED": "Această funcție nu este disponibilă momentan.",
     "PROFESSIONAL_NOT_VERIFIED": "Trebuie să finalizezi verificarea ca profesionist pentru a face asta.",
     "LEAD_PURCHASE_NOT_ELIGIBLE": "Completați datele de facturare înainte de a cumpăra lead-uri.",
     "SELF_BILLING_NOT_AUTHORIZED": "Trebuie să autorizezi autofacturarea înainte de a continua.",

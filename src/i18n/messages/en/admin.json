@@ -849,6 +849,8 @@
     "title": "Lead operations",
     "subtitle": "Inspect LEAD_V1 leads, purchases, quality claims, chargebacks, revocations and abuse controls.",
     "privacyNote": "Customer and professional contact details are never shown here. People appear as opaque ids only.",
+    "rolloutMode": "LEAD_V1 rollout mode: {mode}",
+    "rolloutMisconfigured": "The configured value is not valid, so new LEAD_V1 activity is treated as DISABLED.",
     "empty": "No leads found",
     "emptyDescription": "Try a different filter.",
     "sections": {

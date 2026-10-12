@@ -54,6 +54,17 @@ export function PrivacyNote() {
   return <p className="text-sm text-muted-foreground">{t("privacyNote")}</p>;
 }
 
+/** Module 159 — read-only display of the LEAD_V1 rollout switch (M157 "kill-switch visibility"). Changes nothing. */
+export function RolloutModeNote({ mode, misconfigured }: { mode: string; misconfigured: boolean }) {
+  const t = useTranslations("admin.leadOps");
+  return (
+    <p role="status" className="text-sm text-muted-foreground">
+      <span className="font-medium">{t("rolloutMode", { mode })}</span>
+      {misconfigured ? <span> — {t("rolloutMisconfigured")}</span> : null}
+    </p>
+  );
+}
+
 /** Shortens an opaque id for display; the full id stays in the title/link. */
 export function ShortId({ id, href }: { id: string; href?: string }) {
   const label = id.slice(0, 8);

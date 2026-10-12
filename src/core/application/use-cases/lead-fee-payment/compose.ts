@@ -3,6 +3,7 @@ import { InitiateLeadFeePaymentUseCase } from "@/application/use-cases/lead-fee-
 import { TransitionLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/transition-lead-purchase.use-case";
 import { ProcessLeadFeePaymentWebhookUseCase } from "@/application/use-cases/lead-fee-payment/process-lead-fee-payment-webhook.use-case";
 import { makeLeadPurchaseEligibilityPolicy } from "@/application/use-cases/lead-purchase-eligibility/compose";
+import { guardLeadV1Purchase } from "@/application/use-cases/lead-rollout/compose";
 import { PrismaExternalWebhookEventRepository } from "@/infrastructure/database/prisma/repositories/prisma-external-webhook-event-repository";
 import { PrismaLeadFeeRevenueLedgerRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-fee-revenue-ledger-repository";
 import { PrismaLeadPurchaseRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository";
@@ -27,12 +28,16 @@ import { StripeLeadFeePaymentGatewayAdapter } from "@/infrastructure/payments/st
  * to CONFIRMED.
  */
 export function makeInitiateLeadFeePaymentUseCase() {
-  return new InitiateLeadFeePaymentUseCase(
-    new PrismaProfessionalRepository(),
-    new PrismaLeadPurchaseRepository(),
-    new PrismaLeadRepository(),
-    new StripeLeadFeePaymentGatewayAdapter(stripe),
-    makeLeadPurchaseEligibilityPolicy(),
+  // Module 159: creating a NEW payment attempt is new money activity (PURCHASE area). Payments already created keep being confirmed by
+  // `makeProcessLeadFeePaymentWebhookUseCase` below, which is deliberately NOT guarded: a rollout switch must never strand a paid purchase.
+  return guardLeadV1Purchase(
+    new InitiateLeadFeePaymentUseCase(
+      new PrismaProfessionalRepository(),
+      new PrismaLeadPurchaseRepository(),
+      new PrismaLeadRepository(),
+      new StripeLeadFeePaymentGatewayAdapter(stripe),
+      makeLeadPurchaseEligibilityPolicy(),
+    ),
   );
 }
 

@@ -8,6 +8,7 @@ import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/r
 import { PrismaServiceCategoryRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-category-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { PrismaTransactionFlowReader } from "@/infrastructure/database/prisma/repositories/prisma-transaction-flow-reader";
+import { guardLeadV1Entry, guardLeadV1Purchase } from "@/application/use-cases/lead-rollout/compose";
 import { CreateLeadUseCase } from "@/application/use-cases/lead/create-lead.use-case";
 import { CreateLeadV1ServiceRequestUseCase } from "@/application/use-cases/lead/create-lead-v1-service-request.use-case";
 import { GetLeadFeedForProfessionalUseCase } from "@/application/use-cases/lead/get-lead-feed.use-case";
@@ -33,22 +34,23 @@ const leadFeed = new PrismaLeadFeedRepository();
 const professionals = new PrismaProfessionalRepository();
 const professionalDiscovery = new PrismaProfessionalDiscoveryRepository();
 
+/**
+ * Module 159: every factory below that STARTS new LEAD_V1 activity is wrapped (outermost) by the rollout guard; the wrapped
+ * use cases are otherwise unchanged. ENTRY = customer-side creation, PURCHASE = professional-side marketplace / money.
+ */
 export function makeCreateLeadUseCase() {
-  return new CreateLeadUseCase(customerProfiles, serviceRequests, flows, leads);
+  return guardLeadV1Entry(new CreateLeadUseCase(customerProfiles, serviceRequests, flows, leads));
 }
 
 export function makeCreateLeadV1ServiceRequestUseCase() {
-  return new CreateLeadV1ServiceRequestUseCase(
-    serviceRequests,
-    customerProfiles,
-    categories,
-    geocodingProvider,
-    makeCreateLeadUseCase(),
+  return guardLeadV1Entry(
+    new CreateLeadV1ServiceRequestUseCase(serviceRequests, customerProfiles, categories, geocodingProvider, makeCreateLeadUseCase()),
   );
 }
 
+/** Browsing the marketplace is the PURCHASE area (list). The SINGLE preview below is deliberately not guarded: the checkout page of an existing purchase reads it. */
 export function makeGetPublishedLeadPreviewsForProfessionalUseCase() {
-  return new GetPublishedLeadPreviewsForProfessionalUseCase(professionals, professionalDiscovery, leadPreviews);
+  return guardLeadV1Purchase(new GetPublishedLeadPreviewsForProfessionalUseCase(professionals, professionalDiscovery, leadPreviews));
 }
 
 export function makeGetPublishedLeadPreviewUseCase() {
@@ -57,5 +59,5 @@ export function makeGetPublishedLeadPreviewUseCase() {
 
 /** Module 134 — LEAD_V1 Lead Feed v2 (paginated, snapshot-priced, contact-safe). */
 export function makeGetLeadFeedForProfessionalUseCase() {
-  return new GetLeadFeedForProfessionalUseCase(professionals, professionalDiscovery, leadFeed);
+  return guardLeadV1Purchase(new GetLeadFeedForProfessionalUseCase(professionals, professionalDiscovery, leadFeed));
 }
