@@ -32,6 +32,7 @@ const NAV_ITEMS = [
   { href: "/admin/audit-logs", labelKey: "auditLogs" },
   { href: "/admin/ai-visibility", labelKey: "aiVisibility" },
   { href: "/admin/reconciliation", labelKey: "reconciliation" },
+  { href: "/admin/leads", labelKey: "leadOps" },
   { href: "/admin/partners", labelKey: "partners" },
 ] as const;
 

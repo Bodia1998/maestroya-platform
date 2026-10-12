@@ -31,6 +31,21 @@ const MIGRATION = "prisma/migrations/20261022000000_add_module_156_lead_abuse_co
 const VIEW_MIGRATION = "prisma/migrations/20261023000000_add_module_156_dispute_facts_view/migration.sql";
 const sql = () => read(MIGRATION).replace(/^\s*--.*$/gm, "");
 
+/**
+ * Module 157 — the Lead Admin Operations Console is the FIRST caller of this module and a READ MODEL over its table. It is allow-listed
+ * here by exact path; `lead-admin-console-boundary-m157.test.ts` proves the allow-listed files only read and only call the module's
+ * existing use cases (no business rule is re-implemented).
+ */
+const M157_ADMIN_DIR = "src/app/(dashboard)/admin/leads/";
+const M157_READER = "src/core/infrastructure/database/prisma/repositories/prisma-lead-admin-console-reader.ts";
+const M157_CORE = [
+  M157_READER,
+  "src/core/domain/repositories/lead-admin-console-reader.ts",
+  "src/core/domain/services/lead-admin-console.ts",
+  "src/core/application/dto/lead-admin-console.dto.ts",
+];
+const isM157 = (f: string) => f.startsWith(M157_ADMIN_DIR) || f.startsWith("src/core/application/use-cases/lead-admin-console/") || M157_CORE.includes(f);
+
 const FORBIDDEN_IMPORT =
   /stripe|refund|ledger|invoice|credit-?note|payout|payment|commission|affiliate|reconcil|lead-fee|lead-quality-claim|lead-purchase-repository|lead-purchase\.use-case|transition-lead-purchase|confirm-lead-purchase/i;
 
@@ -45,7 +60,7 @@ describe("M156 — financial isolation", () => {
       "src/core/application/use-cases/lead-purchase/compose.ts",
       "src/core/application/use-cases/lead-contact/compose.ts",
     ];
-    expect(mentions.filter((f) => !M156_FILES.includes(f) && !allowedOutside.includes(f))).toEqual([]);
+    expect(mentions.filter((f) => !M156_FILES.includes(f) && !allowedOutside.includes(f) && !isM157(f))).toEqual([]);
   });
 
   it("no M156 file imports a payment, refund, ledger, invoice, credit-note, payout, affiliate, reconciliation, dispute-processing or purchase-mutation module", () => {
@@ -114,14 +129,16 @@ describe("M156 — attachment points", () => {
       "src/core/application/use-cases/lead-contact/compose.ts",
       "src/core/application/use-cases/lead-publication/compose.ts",
       "src/core/application/use-cases/lead-purchase/compose.ts",
-    ]);
+      // Module 157: the admin console's Server Actions are the single caller of the M156 ADMIN use cases (never of the guards)
+      "src/app/(dashboard)/admin/leads/actions.ts",
+    ].sort());
     expect(code("src/core/application/use-cases/lead-publication/compose.ts")).toMatch(/guardLeadPublication\(/);
     expect(code("src/core/application/use-cases/lead-purchase/compose.ts")).toMatch(/guardLeadPurchaseInitiation\(/);
     expect(code("src/core/application/use-cases/lead-contact/compose.ts")).toMatch(/observeLeadContactAccess\(/);
   });
 
-  it("no route, page, Server Action, webhook, job or UI file reaches M156 (admin use cases have no caller yet)", () => {
-    const entryPoints = SRC.filter((f) => /(^|\/)app\//.test(f) || /\/(actions?|jobs?|cron|webhooks?|queues?|workers?|subscribers?)\//.test(f) || /^(middleware|instrumentation)\.ts$/.test(f) || /route\.ts$/.test(f) || /actions?\.ts$/.test(f));
+  it("no route, page, Server Action, webhook, job or UI file reaches M156 except the Module 157 admin console (admin use cases have exactly that one caller)", () => {
+    const entryPoints = SRC.filter((f) => !isM157(f)).filter((f) => /(^|\/)app\//.test(f) || /\/(actions?|jobs?|cron|webhooks?|queues?|workers?|subscribers?)\//.test(f) || /^(middleware|instrumentation)\.ts$/.test(f) || /route\.ts$/.test(f) || /actions?\.ts$/.test(f));
     expect(entryPoints.length).toBeGreaterThan(10);
     for (const f of entryPoints) expect(code(f), f).not.toMatch(/LeadAbuse|lead-abuse|lead_abuse/);
   });
