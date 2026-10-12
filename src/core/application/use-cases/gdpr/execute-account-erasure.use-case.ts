@@ -20,6 +20,7 @@ import type { UserRepository } from "@/domain/repositories/user-repository";
 import type { FraudTrustSignalCheckRepository } from "@/domain/repositories/fraud-trust-signal-check-repository";
 import type { MarketingAttributionRepository } from "@/domain/repositories/marketing-attribution-repository";
 import type { PartnerRepository } from "@/domain/repositories/partner-repository";
+import type { LeadPrivacyRetentionRepository } from "@/domain/repositories/lead-privacy-repository";
 
 /**
  * Module 88 — GDPR Erasure Execution & Document Retention.
@@ -63,7 +64,20 @@ export interface GdprErasureRepos {
   // classification (gdpr-privacy-rules.ts).
   marketingAttributions?: MarketingAttributionRepository;
   partners?: PartnerRepository;
+  // Module 158 — LEAD_V1 GDPR integration: optional, same "every pre-existing
+  // caller/test keeps compiling unchanged" convention. When present, the free
+  // text of this user's LEAD_V1 service requests is overwritten and their open
+  // requests/leads are cancelled — see `LeadPrivacyRetentionRepository.
+  // anonymizeRequestsOfErasedCustomers`. Purchases, the fee ledger, invoices,
+  // credit notes, claims, disputes, abuse records and audit entries are never
+  // touched (their categories stay RETAIN; MARKETPLACE_FINANCIAL et al.).
+  leadPrivacy?: Pick<LeadPrivacyRetentionRepository, "anonymizeRequestsOfErasedCustomers">;
 }
+
+/** Module 158: per-user lead anonymization is bounded — at most this many batches of this size per execution (the scheduled sweep
+ *  finishes any remainder). */
+const LEAD_PRIVACY_BATCH_SIZE = 100;
+const LEAD_PRIVACY_MAX_BATCHES = 10;
 
 /**
  * Who is invoking erasure, resolved by the caller (a Server Action/route
@@ -92,6 +106,8 @@ export interface AccountErasureResult {
   documentsMarkedDeleted: number;
   documentsStoragePurged: number;
   documentsStoragePurgeFailures: number;
+  /** Module 158: present only when the lead-privacy step is wired. */
+  leadRequestsAnonymized?: number;
 }
 
 /**
@@ -241,6 +257,32 @@ export class ExecuteAccountErasureUseCase {
       };
     }
 
+    // --- Step 1b (Module 158): LEAD_V1 request texts and open leads of this user ---
+    // Runs on EVERY call (not only when step 1 anonymized the account this call): it is idempotent, and re-running it is exactly how
+    // a previous execution that crashed between step 1 and here is completed. Its failure never undoes step 1 (the account is
+    // already erased) and never skips the document lifecycle below; the scheduled `RunLeadPrivacyRetentionUseCase` retries it.
+    let leadRequestsAnonymized: number | undefined;
+    if (this.repos.leadPrivacy) {
+      try {
+        let total = 0;
+        for (let batch = 0; batch < LEAD_PRIVACY_MAX_BATCHES; batch += 1) {
+          const result = await this.repos.leadPrivacy.anonymizeRequestsOfErasedCustomers({
+            userId,
+            limit: LEAD_PRIVACY_BATCH_SIZE,
+            dryRun: false,
+          });
+          total += result.anonymized;
+          if (result.eligible < LEAD_PRIVACY_BATCH_SIZE) break;
+        }
+        leadRequestsAnonymized = total;
+      } catch (error) {
+        this.failureReporter.report(error instanceof Error ? error : new Error(String(error)), {
+          operation: "gdpr_erasure_lead_privacy",
+          userId,
+        });
+      }
+    }
+
     // --- Step 2: verification-document lifecycle (soft-delete + retryable storage purge) ---
     // Always runs — even when step 1 did nothing this call (idempotent
     // replay, or lost a concurrent race) — because a *previous* run may
@@ -306,7 +348,14 @@ export class ExecuteAccountErasureUseCase {
 
     try {
       await this.eventBus.publishAll([
-        new AccountErasureExecuted(userId, actor.userId, alreadyErased, categoriesProcessed, documentsStoragePurgeFailures),
+        new AccountErasureExecuted(
+          userId,
+          actor.userId,
+          alreadyErased,
+          categoriesProcessed,
+          documentsStoragePurgeFailures,
+          leadRequestsAnonymized,
+        ),
       ]);
     } catch (error) {
       if (!(error instanceof EventDispatchError)) throw error;
@@ -320,6 +369,7 @@ export class ExecuteAccountErasureUseCase {
       documentsMarkedDeleted,
       documentsStoragePurged,
       documentsStoragePurgeFailures,
+      ...(leadRequestsAnonymized !== undefined ? { leadRequestsAnonymized } : {}),
     };
   }
 }

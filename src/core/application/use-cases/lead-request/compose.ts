@@ -4,6 +4,9 @@ import { makeCreateLeadV1ServiceRequestUseCase } from "@/application/use-cases/l
 import { makePublishLeadUseCase, resolveLeadPublicationConfiguration } from "@/application/use-cases/lead-publication/compose";
 import { ListLeadRequestCategoriesUseCase } from "@/application/use-cases/lead-request/list-lead-request-categories.use-case";
 import { SubmitLeadRequestUseCase } from "@/application/use-cases/lead-request/submit-lead-request.use-case";
+import { makeRecordLeadContactSharingUseCase } from "@/application/use-cases/lead-privacy/compose";
+import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
+import { loadLeadPrivacyConfig } from "@/infrastructure/config/lead-privacy-config";
 
 /**
  * Module 142 — composition root for the customer LEAD_V1 request UI. The
@@ -26,5 +29,11 @@ export function makeSubmitLeadRequestUseCase(configuration: Configuration = reso
     leadRequestCategoryPolicyFrom(configuration),
     makeCreateLeadV1ServiceRequestUseCase(),
     makePublishLeadUseCase(configuration),
+    // Module 158: contact-sharing evidence capture (policy from configuration; inert while the lawful basis is undecided).
+    {
+      policy: loadLeadPrivacyConfig().policy,
+      record: (userId, leadId) => makeRecordLeadContactSharingUseCase().execute(userId, leadId),
+      cancelRequest: (requestId) => new PrismaServiceRequestRepository().updateStatus(requestId, "CANCELLED"),
+    },
   );
 }

@@ -28,6 +28,9 @@ export class AccountErasureExecuted extends DomainEvent {
     readonly alreadyErased: boolean,
     readonly categoriesProcessed: Partial<Record<GdprDataCategoryValue, DeletionStrategyValue>>,
     readonly documentsStoragePurgeFailures: number,
+    /** Module 158: LEAD_V1 request texts anonymized by this execution (a count, never data). `undefined` = the lead-privacy step is
+     *  not wired in this deployment / caller, so the audit entry stays exactly as before. */
+    readonly leadRequestsAnonymized?: number,
   ) {
     super();
   }

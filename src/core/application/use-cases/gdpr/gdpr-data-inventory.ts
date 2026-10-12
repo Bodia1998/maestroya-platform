@@ -22,6 +22,7 @@ import type { MarketingAttributionRepository } from "@/domain/repositories/marke
 import type { PartnerRepository } from "@/domain/repositories/partner-repository";
 import type { ReferralCodeRepository } from "@/domain/repositories/referral-code-repository";
 import type { AffiliateCommissionRepository } from "@/domain/repositories/affiliate-commission-repository";
+import type { LeadContactSharingRepository } from "@/domain/repositories/lead-privacy-repository";
 import type { PersonalDataExport } from "@/application/use-cases/gdpr/personal-data-export.dto";
 
 /**
@@ -89,6 +90,8 @@ export interface GdprInventoryRepos {
   partners: PartnerRepository;
   referralCodes: ReferralCodeRepository;
   affiliateCommissions: AffiliateCommissionRepository;
+  // Module 158 — per-lead contact-sharing evidence (consent / notice). Optional so every pre-existing caller/test is unchanged.
+  leadContactSharing?: LeadContactSharingRepository;
 }
 
 export async function collectUserDataInventory(
@@ -166,6 +169,11 @@ export async function collectUserDataInventory(
     ? await repos.affiliateCommissions.listForPartner(partnerAccount.id)
     : [];
 
+  // Module 158: the data subject's own contact-sharing evidence (ids, basis, notice version, timestamps — no contact data).
+  const leadContactSharingRecords = repos.leadContactSharing
+    ? await repos.leadContactSharing.listByUser(userId, GDPR_LIST_LIMIT)
+    : undefined;
+
   return {
     userId,
     exportedAt: new Date(),
@@ -204,6 +212,7 @@ export async function collectUserDataInventory(
     partnerAccount,
     referralCodesOwned,
     affiliateCommissionsEarned,
+    ...(leadContactSharingRecords !== undefined ? { leadContactSharingRecords } : {}),
   };
 }
 
@@ -233,6 +242,9 @@ export function computeCategoryCounts(inventory: PersonalDataExport): Record<str
     partnerAccount: inventory.partnerAccount ? 1 : 0,
     referralCodesOwned: inventory.referralCodesOwned.length,
     affiliateCommissionsEarned: inventory.affiliateCommissionsEarned.length,
+    ...(inventory.leadContactSharingRecords !== undefined
+      ? { leadContactSharingRecords: inventory.leadContactSharingRecords.length }
+      : {}),
   };
 }
 
@@ -264,7 +276,8 @@ export function groupIntoGdprCategories(inventory: PersonalDataExport): Record<G
     DISPUTES_AND_SUPPORT: inventory.disputesRaised.length + inventory.supportTickets.length,
     VERIFICATION_DOCUMENTS: inventory.professionalVerification?.documents.length ?? 0,
     AUDIT_LOG: inventory.auditLogEntries.length,
-    CONSENT_RECORDS: inventory.consents.length,
+    // Module 158: per-lead contact-sharing evidence is consent-type evidence (RETAIN, like the user-level consents).
+    CONSENT_RECORDS: inventory.consents.length + (inventory.leadContactSharingRecords?.length ?? 0),
     COMPANY_MEMBERSHIP: inventory.companyMemberships.length + inventory.companyInvitations.length,
     REFERRAL_ATTRIBUTION:
       (inventory.marketingAttribution ? 1 : 0) + (inventory.partnerAccount ? 1 : 0) + inventory.referralCodesOwned.length,
