@@ -7,6 +7,24 @@ import type {
 import type { LeadContactAuthorizationFacts } from "@/domain/services/lead-contact-access-policy";
 import { LEAD_FLOW_VERSION } from "@/domain/services/lead";
 import { toLeadContactGrantState, type LeadPurchaseStatus } from "@/domain/services/lead-purchase";
+import { decideContactSharing, isLeadContactSharingBasis, type LeadContactSharingEvidence, type LeadPrivacyPolicy } from "@/domain/services/lead-privacy";
+import { loadLeadPrivacyConfig } from "@/infrastructure/config/lead-privacy-config";
+
+type ContactSharingPolicyProvider = () => Pick<LeadPrivacyPolicy, "contactSharingBasis">;
+const defaultPolicyProvider: ContactSharingPolicyProvider = () => loadLeadPrivacyConfig().policy;
+
+/**
+ * Module 158 — the recorded contact-sharing choice of a lead as domain evidence (ids / basis / version / times only), or null.
+ * Shared by the authorization side and the contact side so both apply the SAME rule (decideContactSharing).
+ */
+async function readSharingEvidence(leadId: string): Promise<LeadContactSharingEvidence | null> {
+  const row = await prisma.leadContactSharingRecord.findUnique({
+    where: { leadId },
+    select: { basis: true, noticeVersion: true, recordedAt: true, withdrawnAt: true },
+  });
+  if (!row || !isLeadContactSharingBasis(row.basis)) return null;
+  return { basis: row.basis, noticeVersion: row.noticeVersion, recordedAt: row.recordedAt, withdrawnAt: row.withdrawnAt };
+}
 
 /**
  * Module 138 — Prisma adapters for Module 122's contact ports.
@@ -24,6 +42,8 @@ import { toLeadContactGrantState, type LeadPurchaseStatus } from "@/domain/servi
  *    GetLeadContactUseCase AFTER the policy allowed access.
  */
 export class PrismaLeadContactAuthorizationReader implements LeadContactAuthorizationReader {
+  constructor(private readonly policyProvider: ContactSharingPolicyProvider = defaultPolicyProvider) {}
+
   async findFacts(leadId: string, professionalProfileId: string): Promise<LeadContactAuthorizationFacts | null> {
     // Every lookup dimension is in the query itself: lead id, the (session-derived)
     // professional profile id, and the CONFIRMED status. Another professional's
@@ -36,7 +56,7 @@ export class PrismaLeadContactAuthorizationReader implements LeadContactAuthoriz
           select: {
             flowVersion: true,
             deletedAt: true,
-            customer: { select: { userId: true, deletedAt: true } },
+            customer: { select: { userId: true, deletedAt: true, user: { select: { personalDataErasedAt: true } } } },
             address: { select: { userId: true } },
           },
         },
@@ -76,24 +96,39 @@ export class PrismaLeadContactAuthorizationReader implements LeadContactAuthoriz
       }
     }
 
+    // Module 158: contact becomes unavailable when the customer's personal data was erased, when the recorded consent was withdrawn,
+    // or (policy basis CONSENT) when no consent was ever recorded. Same fact, same denial path as the M155 dispute suspension: the
+    // buyer's CONFIRMED grant stays untouched in the database and is simply not honoured (derived, never stored).
+    const customerErased = request.customer.user.personalDataErasedAt !== null;
+    const sharing = decideContactSharing(this.policyProvider(), await readSharingEvidence(leadId));
+
     return {
       leadExists: true,
       flowVersion: request.flowVersion,
       grant,
-      blocked: request.deletedAt !== null || request.customer.deletedAt !== null || suspendedByDispute,
+      blocked:
+        request.deletedAt !== null || request.customer.deletedAt !== null || suspendedByDispute || customerErased || !sharing.allowed,
       contactOwnershipConsistent: request.address.userId === request.customer.userId,
     };
   }
 }
 
 export class PrismaLeadContactReader implements LeadContactReader {
+  constructor(private readonly policyProvider: ContactSharingPolicyProvider = defaultPolicyProvider) {}
+
   async readContact(leadId: string): Promise<LeadContactRecord | null> {
     const lead = await prisma.lead.findFirst({
       where: { id: leadId, serviceRequest: { flowVersion: LEAD_FLOW_VERSION, deletedAt: null } },
       select: {
         serviceRequest: {
           select: {
-            customer: { select: { userId: true, deletedAt: true, user: { select: { name: true, email: true, phone: true } } } },
+            customer: {
+              select: {
+                userId: true,
+                deletedAt: true,
+                user: { select: { name: true, email: true, phone: true, personalDataErasedAt: true } },
+              },
+            },
             address: { select: { userId: true, line1: true, line2: true, postalCode: true, city: true, province: true } },
           },
         },
@@ -104,6 +139,11 @@ export class PrismaLeadContactReader implements LeadContactReader {
     const { customer, address } = lead.serviceRequest;
     // Defense in depth: the address must belong to the request's own customer.
     if (customer.deletedAt !== null || address.userId !== customer.userId) return null;
+
+    // Module 158 defense in depth (the authorization side already denied): never read out an erased customer's remnants, nor contact
+    // data whose sharing was withdrawn / was never consented to under a CONSENT policy. `null` = "contact unavailable" to the caller.
+    if (customer.user.personalDataErasedAt !== null) return null;
+    if (!decideContactSharing(this.policyProvider(), await readSharingEvidence(leadId)).allowed) return null;
 
     return {
       customerDisplayName: customer.user.name,

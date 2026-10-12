@@ -6684,3 +6684,37 @@ model LeadAbuseDecision {
   @@index([action, status, decidedAt])
   @@map("lead_abuse_decisions")
 }
+
+// ---------------------------------------------------------------------------
+// Module 158 — GDPR, Consent & Retention for LEAD_V1
+// ---------------------------------------------------------------------------
+
+/// Module 158 — which lawful basis the recorded contact-sharing evidence relies on. CONSENT is only ONE basis: a record of another
+/// basis is notice evidence, cannot be "withdrawn" and never satisfies a CONSENT policy. The choice of basis is an open legal decision
+/// (roadmap D19) and is configuration, not code.
+enum LeadContactSharingBasis {
+  CONSENT
+  OTHER_LAWFUL_BASIS
+}
+
+/// Module 158 — per-lead evidence of the customer's contact-sharing choice (purpose LEAD_CONTACT_SHARING): the basis, the version of
+/// the notice shown and when. At most ONE row per lead (UNIQUE leadId). Holds NO contact data, no free text, no IP / user agent (the
+/// minimum needed to demonstrate a recorded choice). `userId` is the customer's User id; users are anonymized, never deleted, so the
+/// evidence outlives an erasure without identifying anyone. Scalar-only (no Prisma relations, so no existing model is touched): the
+/// foreign keys to leads / users exist in SQL only, together with the CHECKs and triggers (identity columns immutable, `withdrawnAt`
+/// write-once and CONSENT-only, rows never deleted) that Prisma cannot express. Distinct from `Consent` (per-user, fixed types) on
+/// purpose: that table's "one active row per (user, type)" contract cannot hold per-lead rows.
+model LeadContactSharingRecord {
+  id            String                   @id @default(uuid()) @db.Uuid
+  leadId        String                   @unique @db.Uuid
+  userId        String                   @db.Uuid
+  basis         LeadContactSharingBasis
+  noticeVersion String                   @db.VarChar(64)
+  recordedAt    DateTime
+  withdrawnAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("lead_contact_sharing_records")
+}

@@ -1,3 +1,6 @@
+import { LeadContactSharingPurchaseGate, guardLeadPurchaseByContactSharing } from "@/application/use-cases/lead-privacy/lead-contact-sharing-purchase-gate";
+import { loadLeadPrivacyConfig } from "@/infrastructure/config/lead-privacy-config";
+import { PrismaLeadContactSharingRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-contact-sharing-repository";
 import { EstimatedValueLeadPricingContextReader } from "@/application/services/lead-pricing/estimated-value-lead-pricing-context-reader";
 import { ConfiguredLeadPurchasePriceProvider } from "@/application/services/lead-pricing/configured-lead-purchase-price-provider";
 import { guardLeadPurchaseInitiation } from "@/application/use-cases/lead-abuse/compose";
@@ -42,18 +45,19 @@ export function makeLeadPurchasePriceProvider(config: LeadPricingProductionConfi
  * Pricing configuration is only needed (and validated) at PUBLICATION time.
  */
 export function makeInitiateLeadPurchaseUseCase() {
-  // Module 156: guarded only when LEAD_ABUSE_CONTROL_MODE is on; OFF (default) returns the use case itself, unchanged.
-  return guardLeadPurchaseInitiation(
-    new InitiateLeadPurchaseUseCase(
-      new PrismaProfessionalRepository(),
-      new PrismaProfessionalDiscoveryRepository(),
-      new PrismaLeadRepository(),
-      new PrismaServiceRequestRepository(),
-      new PrismaLeadPreviewRepository(),
-      new PrismaLeadPurchaseRepository(),
-      makeLeadPurchaseEligibilityPolicy(),
-    ),
+  // Module 156: guarded only when LEAD_ABUSE_CONTROL_MODE is on (below); OFF (default) returns the wrapped use case unchanged.
+  const initiate = new InitiateLeadPurchaseUseCase(
+    new PrismaProfessionalRepository(),
+    new PrismaProfessionalDiscoveryRepository(),
+    new PrismaLeadRepository(),
+    new PrismaServiceRequestRepository(),
+    new PrismaLeadPreviewRepository(),
+    new PrismaLeadPurchaseRepository(),
+    makeLeadPurchaseEligibilityPolicy(),
   );
+  // Module 158: no-op while the lawful-basis policy is undecided. Decorator, so the use case's pinned constructor shape is unchanged.
+  const gated = guardLeadPurchaseByContactSharing(initiate, new LeadContactSharingPurchaseGate(new PrismaLeadContactSharingRepository(), loadLeadPrivacyConfig().policy));
+  return guardLeadPurchaseInitiation(gated);
 }
 
 /**

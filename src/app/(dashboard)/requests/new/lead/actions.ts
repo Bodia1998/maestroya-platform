@@ -57,7 +57,10 @@ export async function submitLeadRequestAction(formData: unknown): Promise<Submit
   }
 
   try {
-    const { receipt, publication } = await makeSubmitLeadRequestUseCase().execute(user.id, parsed.data);
+    // Module 158: the schema strips unknown keys, so the customer's explicit acknowledgement is read separately and ONLY accepted as a
+    // literal `true`. It is meaningful solely when the server-side policy is CONSENT; the notice version always comes from server config.
+    const contactSharingAccepted = typeof formData === "object" && formData !== null && (formData as Record<string, unknown>).contactSharingAccepted === true;
+    const { receipt, publication } = await makeSubmitLeadRequestUseCase().execute(user.id, parsed.data, { contactSharingAccepted });
     if (publication === "DEFERRED") logger.warn("lead_request.publication_deferred", { requestId: receipt.requestId });
     revalidatePath("/requests");
     return { success: true, receipt };

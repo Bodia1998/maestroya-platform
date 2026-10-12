@@ -47,6 +47,8 @@ import { PrismaMarketingAttributionRepository } from "@/infrastructure/database/
 import { PrismaPartnerRepository } from "@/infrastructure/database/prisma/repositories/prisma-partner-repository";
 import { PrismaReferralCodeRepository } from "@/infrastructure/database/prisma/repositories/prisma-referral-code-repository";
 import { PrismaAffiliateCommissionRepository } from "@/infrastructure/database/prisma/repositories/prisma-affiliate-commission-repository";
+import { PrismaLeadContactSharingRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-contact-sharing-repository";
+import { PrismaLeadPrivacyRetentionRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-privacy-retention-repository";
 
 const users = new PrismaUserRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
@@ -104,6 +106,8 @@ const inventoryRepos: GdprInventoryRepos = {
   partners,
   referralCodes,
   affiliateCommissions,
+  // Module 158: the export includes the data subject's per-lead contact-sharing evidence.
+  leadContactSharing: new PrismaLeadContactSharingRepository(),
 };
 
 /**
@@ -140,6 +144,8 @@ const erasureRepos: GdprErasureRepos = {
   fraudTrustSignalChecks,
   marketingAttributions,
   partners,
+  // Module 158: LEAD_V1 request texts / open leads of the erased user (purchases, ledger, invoices, claims, disputes stay).
+  leadPrivacy: new PrismaLeadPrivacyRetentionRepository(),
 };
 
 // Module 94 — GDPR Cloudinary Purge Retry & Durable Erasure Completion:

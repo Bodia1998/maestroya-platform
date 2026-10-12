@@ -152,3 +152,16 @@ describe("response safety", () => {
     expect(json).not.toMatch(/phone|email|clientSecret|client_secret|paymentReference|pi_x|LeadPurchase|snapshot|buyerPolicy|LEAD_V1|PENDING_PAYMENT|lead-1/i);
   });
 });
+
+describe("Module 158 — contact-sharing acknowledgement", () => {
+  it("forwards only a literal boolean true; absent / truthy-but-not-true values become false; it never reaches the schema payload", async () => {
+    await submitLeadRequestAction({ ...input, contactSharingAccepted: true });
+    expect(execute.mock.calls[0]![2]).toEqual({ contactSharingAccepted: true });
+    expect(execute.mock.calls[0]![1]).not.toHaveProperty("contactSharingAccepted");
+    for (const bad of [undefined, "true", 1, "on", {}, null]) {
+      execute.mockClear();
+      await submitLeadRequestAction({ ...input, contactSharingAccepted: bad });
+      expect(execute.mock.calls[0]![2]).toEqual({ contactSharingAccepted: false });
+    }
+  });
+});

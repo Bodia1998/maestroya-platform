@@ -28,6 +28,8 @@ export class RecordAccountErasureExecutedAuditLogSubscriber implements EventHand
         alreadyErased: event.alreadyErased,
         categoriesProcessed: event.categoriesProcessed,
         documentsStoragePurgeFailures: event.documentsStoragePurgeFailures,
+        // Module 158: only present when the lead-privacy step ran; a count, never data.
+        ...(event.leadRequestsAnonymized !== undefined ? { leadRequestsAnonymized: event.leadRequestsAnonymized } : {}),
       },
     });
   }

@@ -21,6 +21,7 @@ import type { MarketingAttributionRecord } from "@/domain/repositories/marketing
 import type { PartnerRecord } from "@/domain/repositories/partner-repository";
 import type { ReferralCodeRecord } from "@/domain/repositories/referral-code-repository";
 import type { AffiliateCommissionRecord } from "@/domain/repositories/affiliate-commission-repository";
+import type { LeadContactSharingRecordData } from "@/domain/repositories/lead-privacy-repository";
 
 /**
  * Module 38 — GDPR Compliance.
@@ -101,4 +102,7 @@ export interface PersonalDataExport {
    *  AFFILIATE_FINANCIAL's RETAIN classification, gdpr-privacy-rules.ts —
    *  export and erasure are governed by different, independent rights). */
   affiliateCommissionsEarned: AffiliateCommissionRecord[];
+  /** Module 158: this user's per-lead contact-sharing evidence (consent / notice): lead id, basis, notice version and timestamps.
+   *  Optional — present only when the lead-privacy repository is wired. Holds no contact data. */
+  leadContactSharingRecords?: LeadContactSharingRecordData[];
 }
