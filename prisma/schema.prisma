@@ -5947,6 +5947,8 @@ enum LeadStatus {
 /// FAILED = payment attempt failed; CANCELLED = abandoned before payment;
 /// REFUNDED = fee returned after confirmation; REVOKED = access withdrawn
 /// by the platform after confirmation. Transitions belong to Module 126+.
+/// Module 155: DISPUTED = a chargeback on the fee payment is open; contact access is suspended (decision D25) and the
+/// purchase keeps its slot. It returns to CONFIRMED when the dispute is won / withdrawn, or becomes REVOKED when lost.
 enum LeadPurchaseStatus {
   PENDING_PAYMENT
   CONFIRMED
@@ -5954,6 +5956,7 @@ enum LeadPurchaseStatus {
   CANCELLED
   REFUNDED
   REVOKED
+  DISPUTED
 }
 
 /// Module 123 — Lead Marketplace: the marketplace opportunity derived from
@@ -6090,6 +6093,12 @@ model LeadPurchase {
 
   /// Module 153 — refund attempts of this purchase's payment (or of an extra duplicate payment). History, never deleted.
   refunds LeadFeeRefund[]
+
+  /// Module 155 — provider disputes (chargebacks) recorded against this purchase's payment. History, never deleted.
+  disputes LeadFeeDispute[]
+
+  /// Module 155 — why the purchase was REVOKED (administrative revocation or a lost chargeback). At most one.
+  revocation LeadPurchaseRevocation?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -6358,6 +6367,88 @@ model LeadFeeRefund {
   @@index([leadPurchaseId])
   @@index([status])
   @@map("lead_fee_refunds")
+}
+
+/// Module 155 — dispute status as MaestroYa tracks it. NEEDS_RESPONSE / UNDER_REVIEW are open; WON / LOST / WARNING_CLOSED are terminal.
+enum LeadFeeDisputeStatus {
+  NEEDS_RESPONSE
+  UNDER_REVIEW
+  WON
+  LOST
+  WARNING_CLOSED
+}
+
+/// Module 155 — basic evidence submission progress of one dispute. SUBMITTED is final (the provider accepts one submission).
+enum LeadFeeDisputeEvidenceStatus {
+  NOT_SUBMITTED
+  SUBMISSION_PENDING
+  SUBMITTED
+}
+
+/// Module 155 — what caused a revocation. ADMIN = an administrator revoked access; DISPUTE_LOST = a chargeback was lost.
+enum LeadPurchaseRevocationSource {
+  ADMIN
+  DISPUTE_LOST
+}
+
+/// Module 155 — one row per provider dispute (chargeback) on a lead-fee payment. NOT a money movement: it carries no refund,
+/// ledger, invoice or credit-note reference, no provider fee and no personal data. Rows are never deleted; identity and money
+/// columns are immutable; status only moves forward; all enforced by DB triggers (see the migration). `evidenceActorUserId`
+/// is a plain scalar (its FK to users exists in SQL only).
+model LeadFeeDispute {
+  id                String               @id @default(uuid()) @db.Uuid
+  /// The provider's dispute id (opaque, unique): the deterministic idempotency key of the dispute itself.
+  providerDisputeId String               @unique
+  leadPurchaseId    String               @db.Uuid
+  /// The provider payment the dispute is about; the DB insert trigger requires it to equal the purchase's persisted payment reference.
+  paymentReference  String
+  providerChargeId  String
+  status            LeadFeeDisputeStatus
+  /// Disputed amount (EUR). At most the purchase's snapshot total (partial disputes are possible).
+  amount            Decimal              @db.Decimal(10, 2)
+  currency          String
+  reason            String?              @db.VarChar(100)
+  evidenceDueBy     DateTime?
+  openedAt          DateTime
+  closedAt          DateTime?
+  lastProviderEventId String
+  lastProviderEventAt DateTime
+
+  evidenceStatus      LeadFeeDisputeEvidenceStatus @default(NOT_SUBMITTED)
+  evidenceReference   String?                      @db.VarChar(200)
+  evidenceText        String?                      @db.VarChar(1000)
+  evidenceActorUserId String?                      @db.Uuid
+  evidenceRequestedAt DateTime?
+  evidenceSubmittedAt DateTime?
+
+  purchase   LeadPurchase            @relation(fields: [leadPurchaseId], references: [id], onDelete: Restrict)
+  revocation LeadPurchaseRevocation?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leadPurchaseId])
+  @@index([status])
+  @@map("lead_fee_disputes")
+}
+
+/// Module 155 — append-only record of WHY a purchase is REVOKED. Written in the same transaction as the status change.
+/// `actorUserId` is a plain scalar (FK in SQL only). The explanation is stored verbatim and never copied into an audit entry.
+model LeadPurchaseRevocation {
+  id                String                       @id @default(uuid()) @db.Uuid
+  leadPurchaseId    String                       @unique @db.Uuid
+  source            LeadPurchaseRevocationSource
+  actorUserId       String?                      @db.Uuid
+  explanation       String?                      @db.VarChar(1000)
+  evidenceReference String?                      @db.VarChar(200)
+  leadFeeDisputeId  String?                      @unique @db.Uuid
+
+  purchase LeadPurchase    @relation(fields: [leadPurchaseId], references: [id], onDelete: Restrict)
+  dispute  LeadFeeDispute? @relation(fields: [leadFeeDisputeId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@map("lead_purchase_revocations")
 }
 
 /// Module 154 — closed reasons a professional may claim a lead was unusable. Workmanship, service quality, the final

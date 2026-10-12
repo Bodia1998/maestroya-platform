@@ -23,6 +23,7 @@ export const LEAD_PURCHASE_STATUSES = [
   "CANCELLED",
   "REFUNDED",
   "REVOKED",
+  "DISPUTED",
 ] as const;
 export type LeadPurchaseStatus = (typeof LEAD_PURCHASE_STATUSES)[number];
 
@@ -31,8 +32,11 @@ export const INITIAL_LEAD_PURCHASE_STATUS: LeadPurchaseStatus = "PENDING_PAYMENT
 /** Statuses that count as "in flight or paid". At most one such purchase may
  *  exist per (lead, professional) — mirrored by the partial unique index
  *  `lead_purchases_one_active_per_lead_professional` in the migration. Keep
- *  the two in sync (a contract test asserts it). */
-export const ACTIVE_LEAD_PURCHASE_STATUSES = ["PENDING_PAYMENT", "CONFIRMED"] as const satisfies readonly LeadPurchaseStatus[];
+ *  the two in sync (a contract test asserts it).
+ *
+ *  Module 155: DISPUTED is active too. A disputed purchase may return to CONFIRMED (dispute won), so it keeps
+ *  its slot (capacity) and blocks a second purchase of the same lead by the same professional. */
+export const ACTIVE_LEAD_PURCHASE_STATUSES = ["PENDING_PAYMENT", "CONFIRMED", "DISPUTED"] as const satisfies readonly LeadPurchaseStatus[];
 
 export const LEAD_PURCHASE_CURRENCY = "EUR";
 /** Decimal(10,2) upper bound. */
@@ -105,7 +109,7 @@ export function toLeadContactGrantState(status: LeadPurchaseStatus | string): Le
     case "REVOKED":
       return "REVOKED";
     default:
-      // FAILED, CANCELLED, REFUNDED and anything unrecognised.
+      // FAILED, CANCELLED, REFUNDED, DISPUTED (Module 155: access suspended while a chargeback is open) and anything unrecognised.
       return "INVALID";
   }
 }
@@ -119,15 +123,19 @@ export function toLeadContactGrantState(status: LeadPurchaseStatus | string): Le
  * application code must go through `assertLeadPurchaseTransition`.
  *
  *   PENDING_PAYMENT -> CONFIRMED | FAILED | CANCELLED
- *   CONFIRMED       -> REFUNDED | REVOKED
+ *   CONFIRMED       -> REFUNDED | REVOKED | DISPUTED          (Module 155: DISPUTED)
+ *   DISPUTED        -> CONFIRMED | REFUNDED | REVOKED          (Module 155: dispute won / lost)
  *   FAILED / CANCELLED / REFUNDED / REVOKED -> (terminal)
  *
- * Nothing ever returns to CONFIRMED or PENDING_PAYMENT: a new attempt is a
- * NEW purchase row (allowed once the previous one is no longer active).
+ * Nothing ever returns to PENDING_PAYMENT: a new attempt is a NEW purchase row (allowed once the previous one is no
+ * longer active). The ONLY way back to CONFIRMED is DISPUTED -> CONFIRMED (a won / withdrawn chargeback), performed by
+ * the Module 155 dispute processor; a database trigger additionally refuses DISPUTED without an open dispute record and
+ * CONFIRMED while a dispute is still open.
  */
 export const LEAD_PURCHASE_TRANSITIONS: Readonly<Record<LeadPurchaseStatus, readonly LeadPurchaseStatus[]>> = {
   PENDING_PAYMENT: ["CONFIRMED", "FAILED", "CANCELLED"],
-  CONFIRMED: ["REFUNDED", "REVOKED"],
+  CONFIRMED: ["REFUNDED", "REVOKED", "DISPUTED"],
+  DISPUTED: ["CONFIRMED", "REFUNDED", "REVOKED"],
   FAILED: [],
   CANCELLED: [],
   REFUNDED: [],
@@ -160,8 +168,11 @@ export function assertLeadPurchaseTransition(from: LeadPurchaseStatus, to: LeadP
 /** Which timestamp column a transition stamps (set once, by the transition). */
 export function leadPurchaseTransitionTimestamp(
   to: LeadPurchaseStatus,
+  from?: LeadPurchaseStatus,
 ): "confirmedAt" | "failedAt" | "cancelledAt" | "refundedAt" | "revokedAt" | null {
-  if (to === "CONFIRMED") return "confirmedAt";
+  // Module 155: DISPUTED -> CONFIRMED restores access; the ORIGINAL confirmation instant is never re-stamped
+  // (the claim window, the ledger and the invoice are all anchored to it).
+  if (to === "CONFIRMED") return from === "DISPUTED" ? null : "confirmedAt";
   if (to === "FAILED") return "failedAt";
   if (to === "CANCELLED") return "cancelledAt";
   if (to === "REFUNDED") return "refundedAt";
@@ -198,7 +209,7 @@ export class LeadPurchasePricingError extends DomainError {
   }
 }
 
-/** Lead.maxBuyers active purchases (PENDING_PAYMENT + CONFIRMED) already exist. */
+/** Lead.maxBuyers active purchases (PENDING_PAYMENT + CONFIRMED + DISPUTED) already exist. */
 export class LeadBuyerLimitReachedError extends DomainError {
   readonly code = "LEAD_BUYER_LIMIT_REACHED";
 

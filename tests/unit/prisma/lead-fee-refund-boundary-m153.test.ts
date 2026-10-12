@@ -28,6 +28,7 @@ const EVENT = "src/core/domain/events/lead-purchase-refunded.ts";
 const ADAPTER = "src/core/infrastructure/payments/stripe/stripe-lead-fee-payment-gateway.ts";
 const GATEWAY_PORT = "src/core/application/ports/lead-fee-payment-gateway.ts";
 const M153_FILES = [REPO, DOMAIN, PORT, USE_CASE, COMPOSE, EVENT];
+const M155_DISPUTE_REPO = "src/core/infrastructure/database/prisma/repositories/prisma-lead-fee-dispute-repository.ts";
 const MIGRATION = "prisma/migrations/20261016000000_add_module_153_lead_fee_refunds/migration.sql";
 
 const mentionsRefund = (f: string) => /leadFeeRefund\b|lead_fee_refunds|LeadFeeRefund|lead-fee-refund|LeadPurchaseRefunded|lead-purchase-refunded/.test(code(f));
@@ -35,11 +36,24 @@ const sql = () => read(MIGRATION).replace(/^\s*--.*$/gm, "");
 
 describe("M153 — write / read boundary", () => {
   it("the whole M153 surface is exactly these source files plus the (additively extended) lead-fee payment port/adapter", () => {
-    expect(SRC.filter(mentionsRefund).sort()).toEqual([...M153_FILES, GATEWAY_PORT, ADAPTER].sort());
+    // Module 155 reuses ONLY the M153 text normalizers (read-only import) for its own explanation / evidence-reference inputs.
+    const M155_NORMALIZER_IMPORTERS = [
+      "src/core/application/use-cases/lead-fee-dispute/normalize-lead-fee-dispute-input.ts",
+      "src/core/application/use-cases/lead-fee-dispute/submit-lead-fee-dispute-evidence.use-case.ts",
+      // Module 155 H1: the dispute repository READS refund statuses (SELECT only, see the next test) to refuse restoring access.
+      M155_DISPUTE_REPO,
+    ];
+    expect(SRC.filter(mentionsRefund).sort()).toEqual([...M153_FILES, GATEWAY_PORT, ADAPTER, ...M155_NORMALIZER_IMPORTERS].sort());
   });
 
   it("only the Prisma adapter touches the lead_fee_refunds table / client accessor, and never deletes or upserts", () => {
-    expect(SRC.filter((f) => /leadFeeRefund\b|lead_fee_refunds/.test(code(f)))).toEqual([REPO]);
+    // Module 155 H1 adds exactly ONE other file, and only as a read-only SELECT of refund statuses (asserted below).
+    expect(SRC.filter((f) => /leadFeeRefund\b|lead_fee_refunds/.test(code(f))).sort()).toEqual([M155_DISPUTE_REPO, REPO].sort());
+    const disputeRepo = code(M155_DISPUTE_REPO);
+    expect(disputeRepo).not.toMatch(/leadFeeRefund\b/);
+    expect([...disputeRepo.matchAll(/lead_fee_refunds/g)]).toHaveLength(1);
+    expect(disputeRepo).toMatch(/SELECT\s+"status"::text AS "status" FROM "lead_fee_refunds"/);
+    expect(disputeRepo).not.toMatch(/(INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+"lead_fee_refunds"/i);
     expect(code(REPO)).not.toMatch(/leadFeeRefund\.(delete|deleteMany|upsert|createMany|update)\b/);
     expect(code(REPO)).not.toMatch(/\$executeRaw|\$queryRaw/);
   });

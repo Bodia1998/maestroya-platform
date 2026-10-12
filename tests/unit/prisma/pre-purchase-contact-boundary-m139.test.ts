@@ -97,11 +97,11 @@ describe("M139 — application DTO / use-case layer", () => {
     expect(body).not.toMatch(/professional|customer|address|contact|email|phone|user/i);
   });
 
-  it("no persisted 'contact unlocked' flag exists and LeadPurchase has no extra status", () => {
+  it("no persisted 'contact unlocked' flag exists and LeadPurchase has no unlock status (Module 155 adds only the access-SUSPENDING DISPUTED)", () => {
     const schema = read("prisma/schema.prisma");
     expect(schema).not.toMatch(/contactUnlocked|contact_unlocked|isUnlocked|contactAccess/i);
     const enumBody = schema.match(/enum LeadPurchaseStatus \{([\s\S]*?)\}/)?.[1] ?? "";
-    expect(enumBody.split(/\s+/).filter(Boolean).sort()).toEqual(["CANCELLED", "CONFIRMED", "FAILED", "PENDING_PAYMENT", "REFUNDED", "REVOKED"]);
+    expect(enumBody.split(/\s+/).filter(Boolean).sort()).toEqual(["CANCELLED", "CONFIRMED", "DISPUTED", "FAILED", "PENDING_PAYMENT", "REFUNDED", "REVOKED"]);
   });
 });
 

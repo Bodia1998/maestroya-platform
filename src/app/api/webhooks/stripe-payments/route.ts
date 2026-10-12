@@ -9,6 +9,7 @@ import {
   isLeadFeePaymentEvent,
 } from "@/application/use-cases/lead-fee-payment/process-lead-fee-payment-webhook.use-case";
 import { makeProcessLeadFeePaymentWebhookUseCase } from "@/application/use-cases/lead-fee-payment/compose";
+import { makeProcessLeadFeeDisputeWebhookUseCase } from "@/application/use-cases/lead-fee-dispute/compose";
 import { reconcileAffiliateCommissionStripeFeeForPayment } from "@/application/use-cases/affiliate/compose";
 import { toHttpErrorResponse } from "@/infrastructure/observability/http-error-response";
 import { logger } from "@/infrastructure/observability/logger";
@@ -99,6 +100,23 @@ export const POST = withApiTracing("/api/webhooks/stripe-payments", async functi
         eventType: validation.event.type,
       });
       return NextResponse.json({ status: leadFeeResult.outcome, requestId }, { status: 200, headers });
+    }
+
+    // Module 155 — a dispute (chargeback) whose PaymentIntent is a persisted LEAD_V1 lead-fee purchase reference is handled by its own
+    // use case and NEVER reaches the legacy dispute handler. Every other dispute event (and every other event) continues unchanged to
+    // the legacy path below. The ownership lookup is a read of the write-once purchase reference; if it fails the request fails (5xx ->
+    // provider retry) instead of falling through to the legacy handler.
+    const leadFeeDispute = makeProcessLeadFeeDisputeWebhookUseCase();
+    if (await leadFeeDispute.ownsEvent(validation.event)) {
+      const disputeResult = await leadFeeDispute.execute(validation.event);
+      logger.info("stripe_payments_webhook_lead_fee_dispute_processed", {
+        requestId,
+        route,
+        outcome: disputeResult.outcome,
+        eventId: validation.event.id,
+        eventType: validation.event.type,
+      });
+      return NextResponse.json({ status: disputeResult.outcome, requestId }, { status: 200, headers });
     }
 
     const result = await makeProcessCustomerPaymentWebhookUseCase().execute(validation.event);

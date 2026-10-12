@@ -239,7 +239,20 @@ export type AdminAuditAction =
   | "LEAD_QUALITY_CLAIM_SUBMITTED"
   | "LEAD_QUALITY_CLAIM_REVIEW_STARTED"
   | "LEAD_QUALITY_CLAIM_APPROVED"
-  | "LEAD_QUALITY_CLAIM_REJECTED";
+  | "LEAD_QUALITY_CLAIM_REJECTED"
+  // Module 155 — Chargebacks & Access Revocation. DISPUTE_* entries are written by the signature-verified webhook processor
+  // (system actor: `adminUserId` is null) except EVIDENCE_*, which an administrator performs. LEAD_PURCHASE_ACCESS_* record the
+  // change of the purchase caused by a dispute; LEAD_PURCHASE_REVOKED is the administrative revocation. Metadata carries ids and
+  // statuses only — never the explanation / evidence text, contact data or any provider payload. None of these entries records
+  // or implies a refund, credit note or ledger posting.
+  | "LEAD_FEE_DISPUTE_RECORDED"
+  | "LEAD_FEE_DISPUTE_STATUS_CHANGED"
+  | "LEAD_FEE_DISPUTE_EVIDENCE_REQUESTED"
+  | "LEAD_FEE_DISPUTE_EVIDENCE_SUBMITTED"
+  | "LEAD_PURCHASE_ACCESS_SUSPENDED"
+  | "LEAD_PURCHASE_ACCESS_RESTORED"
+  | "LEAD_PURCHASE_REFUND_CONVERGED"
+  | "LEAD_PURCHASE_REVOKED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved

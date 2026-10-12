@@ -15,8 +15,8 @@ import {
 
 describe("Module 123 — LeadPurchase domain rules", () => {
   describe("status representation", () => {
-    it("represents the six lifecycle states and starts at PENDING_PAYMENT", () => {
-      expect([...LEAD_PURCHASE_STATUSES]).toEqual(["PENDING_PAYMENT", "CONFIRMED", "FAILED", "CANCELLED", "REFUNDED", "REVOKED"]);
+    it("represents the seven lifecycle states (six + Module 155 DISPUTED) and starts at PENDING_PAYMENT", () => {
+      expect([...LEAD_PURCHASE_STATUSES]).toEqual(["PENDING_PAYMENT", "CONFIRMED", "FAILED", "CANCELLED", "REFUNDED", "REVOKED", "DISPUTED"]);
       expect(INITIAL_LEAD_PURCHASE_STATUS).toBe("PENDING_PAYMENT");
     });
 
@@ -25,10 +25,10 @@ describe("Module 123 — LeadPurchase domain rules", () => {
       for (const bad of ["PENDING", "paid", "", null, undefined, 3]) expect(isLeadPurchaseStatus(bad)).toBe(false);
     });
 
-    it("only PENDING_PAYMENT and CONFIRMED are 'active' (duplicate-guard scope)", () => {
-      expect([...ACTIVE_LEAD_PURCHASE_STATUSES]).toEqual(["PENDING_PAYMENT", "CONFIRMED"]);
+    it("only PENDING_PAYMENT, CONFIRMED and DISPUTED are 'active' (duplicate-guard scope)", () => {
+      expect([...ACTIVE_LEAD_PURCHASE_STATUSES]).toEqual(["PENDING_PAYMENT", "CONFIRMED", "DISPUTED"]);
       for (const s of LEAD_PURCHASE_STATUSES) {
-        expect(isActiveLeadPurchaseStatus(s)).toBe(s === "PENDING_PAYMENT" || s === "CONFIRMED");
+        expect(isActiveLeadPurchaseStatus(s)).toBe(s === "PENDING_PAYMENT" || s === "CONFIRMED" || s === "DISPUTED");
       }
     });
   });

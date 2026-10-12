@@ -108,11 +108,16 @@ describe("Module 123 migration contract", () => {
     expect(sql).toContain('CHECK ("maxBuyers" IS NULL OR "maxBuyers" >= 1)');
   });
 
-  it("partial unique index covers exactly the domain's ACTIVE statuses", () => {
-    const m = sql.match(/lead_purchases_one_active_per_lead_professional"\s+ON "lead_purchases" \("leadId", "professionalProfileId"\)\s+WHERE "status" IN \(([^)]+)\)/);
+  it("partial unique index (as last redefined by Module 155) covers exactly the domain's ACTIVE statuses", () => {
+    const dir = readdirSync(path.join(root, "prisma/migrations")).find((d) => d.endsWith("add_module_155_lead_fee_disputes"));
+    const m155 = dir ? read(`prisma/migrations/${dir}/migration.sql`).split("\n").filter((l) => !l.trim().startsWith("--")).join("\n") : "";
+    const re = /CREATE UNIQUE INDEX "lead_purchases_one_active_per_lead_professional"\s+ON "lead_purchases" \("leadId", "professionalProfileId"\)\s+WHERE "status" IN \(([^)]+)\)/;
+    const m = m155.match(re);
     expect(m).not.toBeNull();
     const statuses = m![1]!.split(",").map((s) => s.trim().replace(/'/g, ""));
     expect(statuses).toEqual([...ACTIVE_LEAD_PURCHASE_STATUSES]);
+    // The original M123 definition stays untouched (applied migrations are never rewritten).
+    expect(sql).toMatch(/WHERE "status" IN \('PENDING_PAYMENT', 'CONFIRMED'\)/);
   });
 
   it("does not hard-code an exclusivity policy (no unique on leadId alone)", () => {
@@ -130,9 +135,12 @@ describe("Module 123 code boundaries", () => {
     expect(writers).toEqual(["src/core/infrastructure/database/prisma/repositories/prisma-lead-repository.ts"]);
   });
 
-  it("PrismaLeadPurchaseRepository is the only writer of the lead_purchases table", () => {
+  it("only the lead purchase repository and the Module 155 dispute repository write the lead_purchases table", () => {
     const writers = files.filter((f) => /leadPurchase\.(create|createMany|update|updateMany|upsert|delete|deleteMany)\(/.test(content(f)));
-    expect(writers).toEqual(["src/core/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository.ts"]);
+    expect(writers).toEqual([
+      "src/core/infrastructure/database/prisma/repositories/prisma-lead-fee-dispute-repository.ts",
+      "src/core/infrastructure/database/prisma/repositories/prisma-lead-purchase-repository.ts",
+    ]);
   });
 
   it("lead repositories never touch legacy financial models", () => {

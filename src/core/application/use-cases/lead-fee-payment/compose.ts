@@ -9,6 +9,7 @@ import { PrismaLeadPurchaseRepository } from "@/infrastructure/database/prisma/r
 import { PrismaLeadRepository } from "@/infrastructure/database/prisma/repositories/prisma-lead-repository";
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
+import { makeLeadFeeDisputeReconciler } from "@/application/use-cases/lead-fee-dispute/compose";
 import { stripe } from "@/infrastructure/payments/stripe/client";
 import { eventBus } from "@/infrastructure/events/compose";
 // Side-effect import: registers the Module 145 LEAD_V1 notification subscribers against the shared
@@ -55,5 +56,7 @@ export function makeProcessLeadFeePaymentWebhookUseCase() {
     // Module 149: idempotent ledger path for an already-confirmed purchase (the first confirmation writes its
     // entry atomically inside PrismaLeadPurchaseRepository.transition).
     new PrismaLeadFeeRevenueLedgerRepository(),
+    // Module 155: a dispute recorded before this confirmation is applied right after it (webhook ordering).
+    makeLeadFeeDisputeReconciler(),
   );
 }

@@ -21,6 +21,11 @@ const ALLOWED: Array<[LeadPurchaseStatus, LeadPurchaseStatus]> = [
   ["PENDING_PAYMENT", "CANCELLED"],
   ["CONFIRMED", "REFUNDED"],
   ["CONFIRMED", "REVOKED"],
+  // Module 155 — chargeback suspension.
+  ["CONFIRMED", "DISPUTED"],
+  ["DISPUTED", "CONFIRMED"],
+  ["DISPUTED", "REFUNDED"],
+  ["DISPUTED", "REVOKED"],
 ];
 
 describe("Module 126 — LeadPurchase state machine", () => {
@@ -29,7 +34,7 @@ describe("Module 126 — LeadPurchase state machine", () => {
     expect(() => assertLeadPurchaseTransition(from, to)).not.toThrow();
   });
 
-  it("allows EXACTLY the five documented transitions and nothing else", () => {
+  it("allows EXACTLY the nine documented transitions (five original + four Module 155) and nothing else", () => {
     const all: Array<[string, string]> = [];
     for (const a of LEAD_PURCHASE_STATUSES) for (const b of LEAD_PURCHASE_STATUSES) if (canTransitionLeadPurchase(a, b)) all.push([a, b]);
     expect(all).toEqual(ALLOWED);
@@ -127,10 +132,11 @@ describe("Module 126 — purchase rules", () => {
 describe("Module 137 — authoritative LEAD_V1 lifecycle policy", () => {
   const TERMINAL = ["CONFIRMED", "FAILED", "CANCELLED"] as const;
 
-  it("PENDING_PAYMENT is the only entry point to CONFIRMED / FAILED / CANCELLED", () => {
+  it("PENDING_PAYMENT is the only entry point to CONFIRMED / FAILED / CANCELLED (Module 155: DISPUTED may also return to CONFIRMED)", () => {
     for (const to of TERMINAL) {
       for (const from of LEAD_PURCHASE_STATUSES) {
-        expect(canTransitionLeadPurchase(from, to)).toBe(from === "PENDING_PAYMENT");
+        const m155Restore = to === "CONFIRMED" && from === "DISPUTED";
+        expect(canTransitionLeadPurchase(from, to)).toBe(from === "PENDING_PAYMENT" || m155Restore);
       }
     }
   });
