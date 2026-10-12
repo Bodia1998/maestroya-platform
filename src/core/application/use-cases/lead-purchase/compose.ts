@@ -4,6 +4,7 @@ import { PrismaLeadContactSharingRepository } from "@/infrastructure/database/pr
 import { EstimatedValueLeadPricingContextReader } from "@/application/services/lead-pricing/estimated-value-lead-pricing-context-reader";
 import { ConfiguredLeadPurchasePriceProvider } from "@/application/services/lead-pricing/configured-lead-purchase-price-provider";
 import { guardLeadPurchaseInitiation } from "@/application/use-cases/lead-abuse/compose";
+import { guardLeadV1Purchase } from "@/application/use-cases/lead-rollout/compose";
 import { ConfirmLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/confirm-lead-purchase.use-case";
 import { TransitionLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/transition-lead-purchase.use-case";
 import { InitiateLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/initiate-lead-purchase.use-case";
@@ -57,7 +58,9 @@ export function makeInitiateLeadPurchaseUseCase() {
   );
   // Module 158: no-op while the lawful-basis policy is undecided. Decorator, so the use case's pinned constructor shape is unchanged.
   const gated = guardLeadPurchaseByContactSharing(initiate, new LeadContactSharingPurchaseGate(new PrismaLeadContactSharingRepository(), loadLeadPrivacyConfig().policy));
-  return guardLeadPurchaseInitiation(gated);
+  // Module 159: the rollout guard is OUTERMOST (a refused initiation creates no purchase and spends no M156 budget). The trusted
+  // lifecycle factories below (confirm / transition) are deliberately NOT guarded: they finish payments that already exist.
+  return guardLeadV1Purchase(guardLeadPurchaseInitiation(gated));
 }
 
 /**

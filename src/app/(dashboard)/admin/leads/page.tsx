@@ -2,7 +2,8 @@ import { Inbox } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { listAdminLeadsAction } from "./actions";
-import { PrivacyNote, SectionNav, ShortId, formatWhen } from "./_components/lead-ops-ui";
+import { readLeadRolloutStatus } from "./_lib/rollout-status";
+import { PrivacyNote, RolloutModeNote, SectionNav, ShortId, formatWhen } from "./_components/lead-ops-ui";
 import { AdminDataTable, AdminTableBody, AdminTableHeadRow, AdminTableRow, AdminTh } from "@/components/dashboard/admin-data-table";
 import { AdminFilterForm } from "@/components/dashboard/admin-filter-form";
 import { AdminTablePager } from "@/components/dashboard/admin-table-pager";
@@ -35,6 +36,7 @@ export default async function AdminLeadsPage({ searchParams }: { searchParams: S
     if (value) filters[key] = value;
   }
 
+  const rollout = await readLeadRolloutStatus();
   const result = await listAdminLeadsAction({ ...filters, limit: LEAD_ADMIN_DEFAULT_PAGE_SIZE, offset: (page - 1) * LEAD_ADMIN_DEFAULT_PAGE_SIZE });
   const leads = result.success ? result.data : [];
   const t = await getTranslations("admin.leadOps");
@@ -50,6 +52,7 @@ export default async function AdminLeadsPage({ searchParams }: { searchParams: S
       <PageHeader title={t("title")} subtitle={t("subtitle")} />
       <SectionNav active="leads" />
       <PrivacyNote />
+      <RolloutModeNote mode={rollout.mode} misconfigured={rollout.status === "MISCONFIGURED"} />
 
       {!result.success && (
         <p role="alert" className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">

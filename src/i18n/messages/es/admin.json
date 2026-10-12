@@ -849,6 +849,8 @@
     "title": "Operaciones de leads",
     "subtitle": "Inspecciona leads LEAD_V1, compras, reclamaciones de calidad, contracargos, revocaciones y controles de abuso.",
     "privacyNote": "Aquí nunca se muestran datos de contacto de clientes ni profesionales. Las personas aparecen solo como identificadores opacos.",
+    "rolloutMode": "Modo de despliegue de LEAD_V1: {mode}",
+    "rolloutMisconfigured": "El valor configurado no es válido, por lo que la nueva actividad de LEAD_V1 se trata como DISABLED.",
     "empty": "No se encontraron leads",
     "emptyDescription": "Prueba con otro filtro.",
     "sections": {

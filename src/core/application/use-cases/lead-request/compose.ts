@@ -5,6 +5,7 @@ import { makePublishLeadUseCase, resolveLeadPublicationConfiguration } from "@/a
 import { ListLeadRequestCategoriesUseCase } from "@/application/use-cases/lead-request/list-lead-request-categories.use-case";
 import { SubmitLeadRequestUseCase } from "@/application/use-cases/lead-request/submit-lead-request.use-case";
 import { makeRecordLeadContactSharingUseCase } from "@/application/use-cases/lead-privacy/compose";
+import { guardLeadV1Entry } from "@/application/use-cases/lead-rollout/compose";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { loadLeadPrivacyConfig } from "@/infrastructure/config/lead-privacy-config";
 
@@ -24,16 +25,20 @@ export function makeListLeadRequestCategoriesUseCase(configuration: Configuratio
 }
 
 export function makeSubmitLeadRequestUseCase(configuration: Configuration = resolveLeadPublicationConfiguration()) {
-  return new SubmitLeadRequestUseCase(
-    categories,
-    leadRequestCategoryPolicyFrom(configuration),
-    makeCreateLeadV1ServiceRequestUseCase(),
-    makePublishLeadUseCase(configuration),
-    // Module 158: contact-sharing evidence capture (policy from configuration; inert while the lawful basis is undecided).
-    {
-      policy: loadLeadPrivacyConfig().policy,
-      record: (userId, leadId) => makeRecordLeadContactSharingUseCase().execute(userId, leadId),
-      cancelRequest: (requestId) => new PrismaServiceRequestRepository().updateStatus(requestId, "CANCELLED"),
-    },
+  // Module 159: outermost ENTRY guard (the nested create / publish factories are guarded too). A refused submission does nothing:
+  // no category read, no consent evidence, no service request, no lead.
+  return guardLeadV1Entry(
+    new SubmitLeadRequestUseCase(
+      categories,
+      leadRequestCategoryPolicyFrom(configuration),
+      makeCreateLeadV1ServiceRequestUseCase(),
+      makePublishLeadUseCase(configuration),
+      // Module 158: contact-sharing evidence capture (policy from configuration; inert while the lawful basis is undecided).
+      {
+        policy: loadLeadPrivacyConfig().policy,
+        record: (userId, leadId) => makeRecordLeadContactSharingUseCase().execute(userId, leadId),
+        cancelRequest: (requestId) => new PrismaServiceRequestRepository().updateStatus(requestId, "CANCELLED"),
+      },
+    ),
   );
 }
