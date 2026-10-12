@@ -94,6 +94,13 @@ export const RATE_LIMIT_POLICIES = {
   // partner reviews/approvals never eats into the payout-specific budget,
   // and vice versa.
   PARTNER_PAYOUT_CREATE_BY_USER: { limit: 10, windowMs: HOUR },
+
+  // --- Module 156 — Lead Marketplace Fraud & Abuse Controls (ENFORCE mode only; see lead-abuse/lead-abuse-guards.ts) ---
+  // Per-USER budgets enforced at the use-case boundary of lead publication and lead purchase initiation (the two high-cost
+  // actions). Deliberately generous: a legitimate customer publishes a handful of leads and a busy professional opens a few dozen
+  // purchases an hour. They are NOT bot or IP protection: the key is the authenticated user only.
+  LEAD_PUBLISH_BY_USER: { limit: 30, windowMs: HOUR },
+  LEAD_PURCHASE_INITIATE_BY_USER: { limit: 60, windowMs: HOUR },
 } as const;
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES;

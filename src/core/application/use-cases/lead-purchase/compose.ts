@@ -1,5 +1,6 @@
 import { EstimatedValueLeadPricingContextReader } from "@/application/services/lead-pricing/estimated-value-lead-pricing-context-reader";
 import { ConfiguredLeadPurchasePriceProvider } from "@/application/services/lead-pricing/configured-lead-purchase-price-provider";
+import { guardLeadPurchaseInitiation } from "@/application/use-cases/lead-abuse/compose";
 import { ConfirmLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/confirm-lead-purchase.use-case";
 import { TransitionLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/transition-lead-purchase.use-case";
 import { InitiateLeadPurchaseUseCase } from "@/application/use-cases/lead-purchase/initiate-lead-purchase.use-case";
@@ -41,14 +42,17 @@ export function makeLeadPurchasePriceProvider(config: LeadPricingProductionConfi
  * Pricing configuration is only needed (and validated) at PUBLICATION time.
  */
 export function makeInitiateLeadPurchaseUseCase() {
-  return new InitiateLeadPurchaseUseCase(
-    new PrismaProfessionalRepository(),
-    new PrismaProfessionalDiscoveryRepository(),
-    new PrismaLeadRepository(),
-    new PrismaServiceRequestRepository(),
-    new PrismaLeadPreviewRepository(),
-    new PrismaLeadPurchaseRepository(),
-    makeLeadPurchaseEligibilityPolicy(),
+  // Module 156: guarded only when LEAD_ABUSE_CONTROL_MODE is on; OFF (default) returns the use case itself, unchanged.
+  return guardLeadPurchaseInitiation(
+    new InitiateLeadPurchaseUseCase(
+      new PrismaProfessionalRepository(),
+      new PrismaProfessionalDiscoveryRepository(),
+      new PrismaLeadRepository(),
+      new PrismaServiceRequestRepository(),
+      new PrismaLeadPreviewRepository(),
+      new PrismaLeadPurchaseRepository(),
+      makeLeadPurchaseEligibilityPolicy(),
+    ),
   );
 }
 
