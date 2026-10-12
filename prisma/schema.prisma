@@ -221,6 +221,9 @@ model User {
   /// own doc comment) and discrepancies this admin has manually resolved.
   reconciliationRunsTriggered       ReconciliationRun[]         @relation("ReconciliationRunTriggeredBy")
   reconciliationDiscrepanciesResolved ReconciliationDiscrepancy[] @relation("ReconciliationDiscrepancyResolvedBy")
+  /// Module 156 — fraud & abuse signals / enforcement decisions about this account (history, never deleted).
+  leadAbuseSignals                  LeadAbuseSignal[]
+  leadAbuseDecisions                LeadAbuseDecision[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -6574,4 +6577,110 @@ model ProfessionalBillingIdentity {
   @@index([verificationStatus, updatedAt], map: "prof_billing_identities_status_updated_idx")
   @@index([reviewedByUserId])
   @@map("professional_billing_identities")
+}
+
+// ---------------------------------------------------------------------------
+// Module 156 — Lead Marketplace Fraud & Abuse Controls
+// ---------------------------------------------------------------------------
+
+/// Rule hits (the rule key) and raw per-occurrence events recorded by the guards. Mirrors the migration enum.
+enum LeadAbuseSignalType {
+  PUBLICATION_BURST
+  DUPLICATE_REQUEST_CONTENT
+  PURCHASE_INITIATION_BURST
+  PURCHASE_REJECTED_PROBING
+  CONTACT_ACCESS_DENIED_PROBING
+  REPEATED_DISPUTES_OPENED
+  REPEATED_DISPUTES_LOST
+  REPEATED_REVOCATIONS
+  PURCHASE_REJECTED_EVENT
+  CONTACT_ACCESS_DENIED_EVENT
+}
+
+/// RELIABLE = a count of persisted system facts; HEURISTIC = a volume pattern a legitimate power user could also produce.
+enum LeadAbuseSignalReliability {
+  RELIABLE
+  HEURISTIC
+}
+
+enum LeadAbuseSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum LeadAbuseDecisionAction {
+  FLAG_FOR_REVIEW
+  TEMPORARY_BLOCK
+}
+
+enum LeadAbuseRestrictedAction {
+  LEAD_PUBLICATION
+  LEAD_PURCHASE_INITIATION
+}
+
+enum LeadAbuseDecisionStatus {
+  ACTIVE
+  LIFTED
+  EXPIRED
+}
+
+enum LeadAbuseDecisionOrigin {
+  AUTOMATED
+  ADMIN
+}
+
+/// Module 156 — append-only abuse evidence. `dedupeKey` (UNIQUE) is the idempotency key. Ids and counts only: no contact data, no
+/// free text. No relation to the probed lead on purpose: probing with a non-existent id must still be recordable.
+model LeadAbuseSignal {
+  id            String                     @id @default(uuid()) @db.Uuid
+  subjectUserId String                     @db.Uuid
+  signalType    LeadAbuseSignalType
+  reliability   LeadAbuseSignalReliability
+  severity      LeadAbuseSeverity
+  ruleVersion   String                     @db.VarChar(32)
+  dedupeKey     String                     @unique @db.VarChar(200)
+  targetLeadId  String?                    @db.Uuid
+  observedCount Int?
+  threshold     Int?
+  windowSeconds Int?
+  occurredAt    DateTime
+
+  subject User @relation(fields: [subjectUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([subjectUserId, signalType, occurredAt])
+  @@map("lead_abuse_signals")
+}
+
+/// Module 156 — an enforcement decision: a review flag (restricts nothing) or a TEMPORARY block of one named action (always
+/// expires). At most one ACTIVE flag and one ACTIVE block per (subject, action) — partial unique indexes in the migration.
+/// Identity / decision columns are immutable; status moves ACTIVE -> LIFTED | EXPIRED only. Never deleted.
+model LeadAbuseDecision {
+  id               String                     @id @default(uuid()) @db.Uuid
+  subjectUserId    String                     @db.Uuid
+  action           LeadAbuseDecisionAction
+  restrictedAction LeadAbuseRestrictedAction?
+  status           LeadAbuseDecisionStatus    @default(ACTIVE)
+  origin           LeadAbuseDecisionOrigin
+  ruleKey          LeadAbuseSignalType?
+  ruleVersion      String?                    @db.VarChar(32)
+  reasonCode       String                     @db.VarChar(64)
+  createdByUserId  String?                    @db.Uuid
+  decidedAt        DateTime
+  expiresAt        DateTime?
+  explanation      String?                    @db.VarChar(500)
+  liftedAt         DateTime?
+  liftedByUserId   String?                    @db.Uuid
+  resolutionNote   String?                    @db.VarChar(500)
+
+  subject User @relation(fields: [subjectUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subjectUserId, status])
+  @@index([action, status, decidedAt])
+  @@map("lead_abuse_decisions")
 }

@@ -1,4 +1,5 @@
 import { ConfiguredLeadPublicationPriceSource } from "@/application/services/lead-pricing/configured-lead-publication-price-source";
+import { guardLeadPublication } from "@/application/use-cases/lead-abuse/compose";
 import { PublishLeadUseCase } from "@/application/use-cases/lead/publish-lead.use-case";
 import type { LeadPricingConfigResolution } from "@/domain/services/lead-pricing-production-config";
 import type { LeadBuyerPolicy } from "@/domain/services/lead-publication";
@@ -42,12 +43,15 @@ export function makePublishLeadUseCase(
   configuration: LeadPricingConfigResolution = resolveLeadPublicationConfiguration(),
   buyerPolicy: LeadBuyerPolicy = LEAD_BUYER_POLICY_PILOT_V1,
 ) {
-  return new PublishLeadUseCase(
-    new PrismaCustomerProfileRepository(),
-    new PrismaServiceRequestRepository(),
-    new PrismaLeadRepository(),
-    new ConfiguredLeadPublicationPriceSource(new PrismaJobValueEstimationContextReader(), configuration),
-    buyerPolicy,
-    eventBus,
+  // Module 156: guarded only when LEAD_ABUSE_CONTROL_MODE is on; OFF (default) returns the use case itself, unchanged.
+  return guardLeadPublication(
+    new PublishLeadUseCase(
+      new PrismaCustomerProfileRepository(),
+      new PrismaServiceRequestRepository(),
+      new PrismaLeadRepository(),
+      new ConfiguredLeadPublicationPriceSource(new PrismaJobValueEstimationContextReader(), configuration),
+      buyerPolicy,
+      eventBus,
+    ),
   );
 }

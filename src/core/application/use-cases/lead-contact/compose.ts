@@ -1,3 +1,4 @@
+import { observeLeadContactAccess } from "@/application/use-cases/lead-abuse/compose";
 import { GetLeadContactUseCase } from "@/application/use-cases/lead-contact/get-lead-contact.use-case";
 import {
   PrismaLeadContactAuthorizationReader,
@@ -12,10 +13,14 @@ import { PrismaUserRepository } from "@/infrastructure/database/prisma/repositor
  * must pass the SESSION user id; nothing else is accepted as identity.
  */
 export function makeGetLeadContactUseCase() {
-  return new GetLeadContactUseCase(
-    new PrismaUserRepository(),
-    new PrismaProfessionalRepository(),
-    new PrismaLeadContactAuthorizationReader(),
-    new PrismaLeadContactReader(),
+  // Module 156: when (and only when) LEAD_ABUSE_CONTROL_MODE is on, denials are OBSERVED (a probing signal is recorded). The
+  // wrapper can neither grant nor deny; OFF (default) returns the use case itself, unchanged.
+  return observeLeadContactAccess(
+    new GetLeadContactUseCase(
+      new PrismaUserRepository(),
+      new PrismaProfessionalRepository(),
+      new PrismaLeadContactAuthorizationReader(),
+      new PrismaLeadContactReader(),
+    ),
   );
 }

@@ -252,7 +252,15 @@ export type AdminAuditAction =
   | "LEAD_PURCHASE_ACCESS_SUSPENDED"
   | "LEAD_PURCHASE_ACCESS_RESTORED"
   | "LEAD_PURCHASE_REFUND_CONVERGED"
-  | "LEAD_PURCHASE_REVOKED";
+  | "LEAD_PURCHASE_REVOKED"
+  // Module 156 — Lead Marketplace Fraud & Abuse Controls. FLAGGED / BLOCK_APPLIED are written in the same transaction as the
+  // automated decision (system actor: `adminUserId` is null) or by the administrator who imposed the block; DECISION_LIFTED by
+  // the administrator who lifted a block or resolved a flag. Metadata carries ids, rule key / version, action names, statuses and
+  // the block expiry only — never the explanation / note text or any contact data. None of these entries records or implies a
+  // refund, penalty, ledger posting or change of a purchase.
+  | "LEAD_ABUSE_FLAGGED"
+  | "LEAD_ABUSE_BLOCK_APPLIED"
+  | "LEAD_ABUSE_DECISION_LIFTED";
 
 export interface RecordAdminAuditLogData {
   /** The authenticated admin who performed the action — always resolved
