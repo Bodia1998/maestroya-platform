@@ -30,12 +30,20 @@ const M155_FILES = [DOMAIN, PORT, REPO, GATEWAY_PORT, GATEWAY, ...UC];
 const MIG1 = "prisma/migrations/20261019000000_add_module_155_lead_purchase_disputed_status/migration.sql";
 const MIG2 = "prisma/migrations/20261020000000_add_module_155_lead_fee_disputes/migration.sql";
 const MIG3 = "prisma/migrations/20261021000000_add_module_155_refund_dispute_restore_guard/migration.sql";
+/**
+ * Module 157 — the Lead Admin Operations Console is the FIRST caller of this module and a READ MODEL over its table. It is allow-listed
+ * here by exact path; `lead-admin-console-boundary-m157.test.ts` proves the allow-listed files only read and only call the module's
+ * existing use cases (no business rule is re-implemented).
+ */
+const M157_ADMIN_DIR = "src/app/(dashboard)/admin/leads/";
+const M157_READER = "src/core/infrastructure/database/prisma/repositories/prisma-lead-admin-console-reader.ts";
+
 const sql = (f: string) => read(f).replace(/^\s*--.*$/gm, "");
 
 describe("M155 — write boundary", () => {
   it("only the M155 repository touches the dispute / revocation tables and client accessors; it never deletes or upserts", () => {
-    expect(SRC.filter((f) => /\.leadFeeDispute\b|"lead_fee_disputes"|FROM lead_fee_disputes/.test(code(f)))).toEqual([REPO]);
-    expect(SRC.filter((f) => /\.leadPurchaseRevocation\b|"lead_purchase_revocations"/.test(code(f)))).toEqual([REPO]);
+    expect(SRC.filter((f) => /\.leadFeeDispute\b|"lead_fee_disputes"|FROM lead_fee_disputes/.test(code(f)))).toEqual([REPO, M157_READER].sort());
+    expect(SRC.filter((f) => /\.leadPurchaseRevocation\b|"lead_purchase_revocations"/.test(code(f)))).toEqual([REPO, M157_READER].sort());
     expect(code(REPO)).not.toMatch(/leadFeeDispute\.(delete|deleteMany|upsert|createMany)\b|leadPurchaseRevocation\.(delete|deleteMany|update|updateMany|upsert)\b/);
   });
 
@@ -64,14 +72,16 @@ describe("M155 — write boundary", () => {
   it("no autonomous caller: the admin use cases are built only by their composition root, which no route / action / job imports", () => {
     expect(SRC.filter((f) => /new (RevokeLeadPurchaseUseCase|SubmitLeadFeeDisputeEvidenceUseCase)\b/.test(code(f)))).toEqual([COMPOSE]);
     const users = SRC.filter((f) => /makeRevokeLeadPurchaseUseCase|makeSubmitLeadFeeDisputeEvidenceUseCase/.test(code(f)));
-    expect(users).toEqual([COMPOSE]);
+    // Module 157: the admin console Server Actions are the one authorized caller of the revoke use case (and never of the evidence use case).
+    expect(users).toEqual([COMPOSE, `${M157_ADMIN_DIR}actions.ts`].sort());
+    expect(code(`${M157_ADMIN_DIR}actions.ts`)).not.toMatch(/makeSubmitLeadFeeDisputeEvidenceUseCase/);
   });
 });
 
 describe("M155 — webhook routing and legacy isolation", () => {
   it("the dispute composition is reached only from the platform payments route and the M141 reconcile hook", () => {
     const importers = SRC.filter((f) => /lead-fee-dispute\/compose/.test(code(f)) && f !== COMPOSE).sort();
-    expect(importers).toEqual(["src/app/api/webhooks/stripe-payments/route.ts", "src/core/application/use-cases/lead-fee-payment/compose.ts"].sort());
+    expect(importers).toEqual(["src/app/api/webhooks/stripe-payments/route.ts", "src/core/application/use-cases/lead-fee-payment/compose.ts", `${M157_ADMIN_DIR}actions.ts`].sort());
   });
 
   it("the route sends a dispute to the lead-fee handler ONLY when it owns the event, otherwise the legacy path runs unchanged", () => {

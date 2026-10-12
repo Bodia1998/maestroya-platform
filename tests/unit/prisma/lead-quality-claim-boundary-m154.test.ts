@@ -29,18 +29,33 @@ const M154_FILES = SRC.filter((f) => f.startsWith(UC_DIR)).concat([DOMAIN, PORT,
 const MIGRATION = "prisma/migrations/20261017000000_add_module_154_lead_quality_claims/migration.sql";
 const sql = () => read(MIGRATION).replace(/^\s*--.*$/gm, "");
 
+/**
+ * Module 157 — the Lead Admin Operations Console is the FIRST caller of this module and a READ MODEL over its table. It is allow-listed
+ * here by exact path; `lead-admin-console-boundary-m157.test.ts` proves the allow-listed files only read and only call the module's
+ * existing use cases (no business rule is re-implemented).
+ */
+const M157_ADMIN_DIR = "src/app/(dashboard)/admin/leads/";
+const M157_READER = "src/core/infrastructure/database/prisma/repositories/prisma-lead-admin-console-reader.ts";
+const M157_CORE = [
+  M157_READER,
+  "src/core/domain/repositories/lead-admin-console-reader.ts",
+  "src/core/domain/services/lead-admin-console.ts",
+  "src/core/application/dto/lead-admin-console.dto.ts",
+];
+const isM157 = (f: string) => f.startsWith(M157_ADMIN_DIR) || f.startsWith("src/core/application/use-cases/lead-admin-console/") || M157_CORE.includes(f);
+
 const mentionsClaim = (f: string) => /LeadQualityClaim|lead-quality-claim|lead_quality_claims/.test(code(f));
 
 describe("M154 — surface and callers", () => {
   it("the whole claim surface is exactly these files, plus the audit action names in the two existing audit files", () => {
     const AUDIT_FILES = ["src/core/domain/repositories/admin-audit-log-repository.ts", "src/core/infrastructure/database/prisma/repositories/prisma-admin-audit-log-repository.ts"];
-    expect(SRC.filter(mentionsClaim).filter((f) => !AUDIT_FILES.includes(f)).sort()).toEqual([...M154_FILES].sort());
+    expect(SRC.filter(mentionsClaim).filter((f) => !AUDIT_FILES.includes(f) && !isM157(f)).sort()).toEqual([...M154_FILES].sort());
     for (const f of AUDIT_FILES) expect(code(f).match(/LEAD_QUALITY_CLAIM_[A-Z_]+/g)?.length ?? 0).toBeGreaterThan(0);
     expect(M154_FILES.length).toBeGreaterThanOrEqual(9);
   });
 
   it("only the Prisma adapter touches the claims table / client accessor, and it never deletes, upserts or updates content", () => {
-    expect(SRC.filter((f) => /leadQualityClaim\b|lead_quality_claims/.test(code(f)))).toEqual([REPO]);
+    expect(SRC.filter((f) => /leadQualityClaim\b|lead_quality_claims/.test(code(f)))).toEqual([REPO, M157_READER].sort());
     expect(code(REPO)).not.toMatch(/leadQualityClaim\.(delete|deleteMany|upsert|createMany)\b/);
     expect(code(REPO)).not.toMatch(/\$executeRaw/);
     // the only raw statements: the row lock that reads the current status, and the database clock read for the audit entry
@@ -53,8 +68,8 @@ describe("M154 — surface and callers", () => {
   });
 
   it("nothing outside the claim modules imports the use cases or the composition root: no route, page, action, webhook, job, queue, subscriber or UI", () => {
-    expect(SRC.filter((f) => /use-cases\/lead-quality-claim\/|makeSubmitLeadQualityClaim|makeDecideLeadQualityClaim|makeStartLeadQualityClaimReview/.test(code(f)) && !f.startsWith(UC_DIR))).toEqual([]);
-    const entryPoints = SRC.filter((f) => /(^|\/)app\//.test(f) || /\/(actions?|jobs?|cron|webhooks?|queues?|workers?|subscribers?)\//.test(f) || /^(middleware|instrumentation)\.ts$/.test(f) || /route\.ts$/.test(f) || /actions?\.ts$/.test(f));
+    expect(SRC.filter((f) => /use-cases\/lead-quality-claim\/|makeSubmitLeadQualityClaim|makeDecideLeadQualityClaim|makeStartLeadQualityClaimReview/.test(code(f)) && !f.startsWith(UC_DIR) && !isM157(f))).toEqual([]);
+    const entryPoints = SRC.filter((f) => !isM157(f)).filter((f) => /(^|\/)app\//.test(f) || /\/(actions?|jobs?|cron|webhooks?|queues?|workers?|subscribers?)\//.test(f) || /^(middleware|instrumentation)\.ts$/.test(f) || /route\.ts$/.test(f) || /actions?\.ts$/.test(f));
     expect(entryPoints.length).toBeGreaterThan(10);
     for (const f of entryPoints) expect(code(f), f).not.toMatch(/LeadQualityClaim|lead-quality-claim|lead_quality_claims/);
   });
