@@ -208,6 +208,7 @@ describe("StripePaymentWebhookVerifierAdapter (Module 73)", () => {
           chargeId: "ch_1",
           paymentIntentId: "pi_123",
           amount: 1200,
+          amountMinorUnits: 120000, // Module 155: the provider's exact integer minor units, passed through raw
           currency: "eur",
           reason: "fraudulent",
           status: "needs_response",

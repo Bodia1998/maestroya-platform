@@ -101,13 +101,13 @@ describe("PrismaLeadPurchaseRepository", () => {
     await expect((await repo()).create({ leadId: "x", professionalProfileId: "p", price: 5 })).rejects.toBe(fk);
   });
 
-  it("findActive only considers PENDING_PAYMENT / CONFIRMED", async () => {
+  it("findActive considers PENDING_PAYMENT / CONFIRMED / DISPUTED (Module 155)", async () => {
     leadPurchase.findFirst.mockResolvedValue(row());
     await (await repo()).findActiveByLeadAndProfessional("lead-1", "pro-1");
     expect(leadPurchase.findFirst.mock.calls[0]![0]!.where).toEqual({
       leadId: "lead-1",
       professionalProfileId: "pro-1",
-      status: { in: ["PENDING_PAYMENT", "CONFIRMED"] },
+      status: { in: ["PENDING_PAYMENT", "CONFIRMED", "DISPUTED"] },
     });
   });
 

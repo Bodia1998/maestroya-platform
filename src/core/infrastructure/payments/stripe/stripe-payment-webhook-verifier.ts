@@ -155,6 +155,7 @@ function extractDispute(event: Stripe.Event): StripeDisputeEventPayload | null {
         ? dispute.payment_intent
         : (dispute.payment_intent?.id ?? null),
     amount: dispute.amount / 100,
+    amountMinorUnits: dispute.amount,
     currency: dispute.currency,
     reason: dispute.reason ?? null,
     status: dispute.status,

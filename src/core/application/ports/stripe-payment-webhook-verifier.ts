@@ -97,6 +97,9 @@ export interface StripeDisputeEventPayload {
   paymentIntentId: string | null;
   /** Already converted from minor units. */
   amount: number;
+  /** Module 155: the same amount as the provider's exact integer minor units (cents). Lead-fee dispute handling uses ONLY this
+   *  field (never the converted `amount`), so money is compared exactly. Optional so legacy callers/fixtures are unaffected. */
+  amountMinorUnits?: number | null;
   currency: string;
   /** Stripe's own dispute reason string — observability only. */
   reason: string | null;

@@ -58,6 +58,15 @@ export interface LeadPurchaseConfirmer {
 }
 
 /**
+ * Module 155 — after a purchase is confirmed (or observed already confirmed) this converges it with any dispute that was recorded
+ * BEFORE the confirmation (webhook ordering): an open dispute suspends the fresh confirmation, a lost one revokes it. Idempotent;
+ * a failure propagates (-> 5xx -> provider retry, the confirmation itself is already committed and a redelivery re-runs this hook).
+ */
+export interface LeadFeeDisputeReconciler {
+  reconcile(leadPurchaseId: string): Promise<unknown>;
+}
+
+/**
  * True when a signature-verified event is a LEAD_V1 lead-fee payment event. The marker is M140's
  * server-written `metadata.flow` (a PaymentIntent can only be created with the platform secret key,
  * never by a browser). It only ROUTES; the purchase itself is always identified by the persisted
@@ -129,6 +138,7 @@ export class ProcessLeadFeePaymentWebhookUseCase {
     private readonly webhookEvents: ExternalWebhookEventRepository,
     private readonly events?: Pick<EventBus, "publish">,
     private readonly ledger?: Pick<LeadFeeRevenueLedgerRepository, "recordIfAbsent">,
+    private readonly disputeReconciler?: LeadFeeDisputeReconciler,
   ) {}
 
   async execute(event: StripePaymentWebhookEvent): Promise<ProcessLeadFeePaymentWebhookResult> {
@@ -193,6 +203,7 @@ export class ProcessLeadFeePaymentWebhookUseCase {
           throw error;
         }
       }
+      await this.disputeReconciler?.reconcile(purchase.id);
       await this.raise(new LeadPurchaseConfirmed(purchase.id), event);
       return { outcome: "already-confirmed" };
     }
@@ -211,6 +222,7 @@ export class ProcessLeadFeePaymentWebhookUseCase {
     }
 
     logger.info("lead_fee_payment_webhook.confirmed", { eventId: event.id, purchaseId: purchase.id });
+    await this.disputeReconciler?.reconcile(purchase.id);
     await this.raise(new LeadPurchaseConfirmed(purchase.id), event);
     return { outcome: "confirmed" };
   }

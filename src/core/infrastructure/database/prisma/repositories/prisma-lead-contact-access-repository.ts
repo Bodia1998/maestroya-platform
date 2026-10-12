@@ -53,6 +53,7 @@ export class PrismaLeadContactAuthorizationReader implements LeadContactAuthoriz
     const confirmed = lead.purchases[0];
 
     let grant: LeadContactAuthorizationFacts["grant"] = null;
+    let suspendedByDispute = false;
     if (confirmed) {
       grant = { state: "CONFIRMED", professionalProfileId: confirmed.professionalProfileId };
     } else {
@@ -68,6 +69,10 @@ export class PrismaLeadContactAuthorizationReader implements LeadContactAuthoriz
           state: toLeadContactGrantState(latest.status as LeadPurchaseStatus),
           professionalProfileId: latest.professionalProfileId,
         };
+        // Module 155: a purchase with an open chargeback is DISPUTED (never CONFIRMED, so the grant above already denies); it is
+        // additionally surfaced as `blocked` so the precise denial reason is "BLOCKED" in the server log (the caller still sees the
+        // one uniform error).
+        suspendedByDispute = latest.status === "DISPUTED";
       }
     }
 
@@ -75,7 +80,7 @@ export class PrismaLeadContactAuthorizationReader implements LeadContactAuthoriz
       leadExists: true,
       flowVersion: request.flowVersion,
       grant,
-      blocked: request.deletedAt !== null || request.customer.deletedAt !== null,
+      blocked: request.deletedAt !== null || request.customer.deletedAt !== null || suspendedByDispute,
       contactOwnershipConsistent: request.address.userId === request.customer.userId,
     };
   }

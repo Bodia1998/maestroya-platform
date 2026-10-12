@@ -231,7 +231,7 @@ export class PrismaLeadPurchaseRepository implements LeadPurchaseRepository, Lea
     ledgerSource?: LeadFeePaymentLedgerSource,
   ): Promise<LeadPurchaseRecord | null> {
     assertLeadPurchaseTransition(from, to);
-    const stamp = leadPurchaseTransitionTimestamp(to);
+    const stamp = leadPurchaseTransitionTimestamp(to, from);
     if (ledgerSource !== undefined) {
       // Programming error, never a runtime business case: only a confirmation records lead-fee revenue.
       if (to !== "CONFIRMED") throw new Error("A lead-fee ledger source is only valid for the CONFIRMED transition.");

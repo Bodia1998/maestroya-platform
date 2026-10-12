@@ -83,7 +83,7 @@ describe("initiate", () => {
     const r = await new PrismaLeadPurchaseRepository().initiate(data);
     expect(order).toEqual(["lock", "own", "count", "insert"]);
     expect(r).toMatchObject({ status: "PENDING_PAYMENT", price: 18 });
-    for (const call of tx.leadPurchase.count.mock.calls) expect(call[0].where.status.in).toEqual(["PENDING_PAYMENT", "CONFIRMED"]);
+    for (const call of tx.leadPurchase.count.mock.calls) expect(call[0].where.status.in).toEqual(["PENDING_PAYMENT", "CONFIRMED", "DISPUTED"]);
   });
 
   it("Module 135: the purchase is created from the locked lead's publication snapshot (exact strings), with no caller price", async () => {
