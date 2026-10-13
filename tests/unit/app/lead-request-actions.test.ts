@@ -165,3 +165,27 @@ describe("Module 158 — contact-sharing acknowledgement", () => {
     }
   });
 });
+
+describe("Module 163 — structured scope answers", () => {
+  it("passes validated scopeAnswers to the single use case, untouched", async () => {
+    await submitLeadRequestAction({ ...input, scopeAnswers: { size: "large", rooms: 3 } });
+    expect(execute.mock.calls[0]![1]).toMatchObject({ scopeAnswers: { size: "large", rooms: 3 } });
+  });
+
+  it("rejects malformed scopeAnswers at the schema, before the use case", async () => {
+    const result = await submitLeadRequestAction({ ...input, scopeAnswers: { size: { nested: true } } });
+    expect(result).toMatchObject({ success: false, code: "INVALID" });
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("maps a scope refusal to SCOPE_INVALID with per-question localized reasons and never echoes the values", async () => {
+    const { LeadRequestScopeInvalidError } = await import("@/application/use-cases/lead-request/submit-lead-request.use-case");
+    execute.mockRejectedValue(new LeadRequestScopeInvalidError([{ code: "VALUE_NOT_ALLOWED", questionId: "size" }, { code: "MISSING_REQUIRED", questionId: "rooms" }, { code: "QUESTIONNAIRE_NOT_AVAILABLE", questionId: null }]));
+    const result = await submitLeadRequestAction({ ...input, scopeAnswers: { size: "SECRET-123" } });
+    expect(result).toMatchObject({ success: false, code: "SCOPE_INVALID" });
+    if (result.success) return;
+    expect(Object.keys(result.fieldErrors ?? {}).sort()).toEqual(["scopeAnswers", "scopeAnswers.rooms", "scopeAnswers.size"]);
+    for (const messages of Object.values(result.fieldErrors ?? {})) for (const m of messages) expect(m).not.toMatch(/scope\.errors|SECRET/);
+    expect(JSON.stringify(result)).not.toContain("SECRET-123");
+  });
+});

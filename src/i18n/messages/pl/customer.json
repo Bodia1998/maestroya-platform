@@ -100,7 +100,9 @@
         "job": "O zleceniu",
         "jobDescription": "Im więcej szczegółów podasz, tym bardziej przydatne będą otrzymane odpowiedzi.",
         "location": "Gdzie ma być wykonana praca?",
-        "locationDescription": "Adres służy do znalezienia fachowców działających w Twojej okolicy."
+        "locationDescription": "Adres służy do znalezienia fachowców działających w Twojej okolicy.",
+        "scope": "Szczegóły zlecenia",
+        "scopeDescription": "Te pytania są opcjonalne. Jeśli odpowiesz na któreś z nich, uzupełnij także pytania wymagane."
       },
       "fields": {
         "category": "Kategoria usługi",
@@ -130,7 +132,23 @@
         "unauthenticated": "Twoja sesja wygasła. Zaloguj się, aby wysłać zlecenie.",
         "signIn": "Zaloguj się",
         "categoryUnsupported": "Ta kategoria usług nie jest jeszcze dostępna dla zleceń. Wybierz inną.",
-        "submitFailed": "Nie udało się wysłać zlecenia. Spróbuj ponownie za chwilę."
+        "submitFailed": "Nie udało się wysłać zlecenia. Spróbuj ponownie za chwilę.",
+        "scopeInvalid": "Niektóre odpowiedzi dotyczące zlecenia wymagają poprawy. Sprawdź je i spróbuj ponownie."
+      },
+      "scope": {
+        "selectOption": "Wybierz opcję",
+        "integerHint": "Liczba całkowita od {min} do {max}.",
+        "errors": {
+          "MISSING_REQUIRED": "Odpowiedz na to pytanie.",
+          "UNKNOWN_QUESTION": "To pytanie nie jest już dostępne. Odśwież stronę.",
+          "INVALID_TYPE": "Wpisz prawidłową odpowiedź.",
+          "VALUE_NOT_ALLOWED": "Wybierz jedną z dostępnych opcji.",
+          "OUT_OF_RANGE": "Ta odpowiedź jest poza dozwolonym zakresem.",
+          "CONTRADICTORY_ANSWERS": "Te odpowiedzi do siebie nie pasują. Sprawdź je.",
+          "ANSWERS_MALFORMED": "Nie udało się odczytać Twoich odpowiedzi. Odśwież stronę i spróbuj ponownie.",
+          "INVALID_DEFINITION": "Te pytania są obecnie niedostępne. Spróbuj ponownie później.",
+          "QUESTIONNAIRE_NOT_AVAILABLE": "Dla tej kategorii nie ma dodatkowych pytań. Odśwież stronę."
+        }
       }
     }
   },

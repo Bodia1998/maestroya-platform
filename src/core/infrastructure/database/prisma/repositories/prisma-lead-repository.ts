@@ -35,6 +35,8 @@ const SELECT = {
   publicationJobValueRuleVersion: true,
   publicationPricingRuleVersion: true,
   publicationBuyerPolicyVersion: true,
+  publicationScopeQuestionnaireVersion: true,
+  publicationScopeAnswers: true,
   createdAt: true,
   updatedAt: true,
   serviceRequest: { select: { flowVersion: true } },
@@ -58,6 +60,9 @@ type Row = {
   publicationJobValueRuleVersion: string | null;
   publicationPricingRuleVersion: string | null;
   publicationBuyerPolicyVersion: string | null;
+  /** Module 163: JSON is read as `unknown` and re-validated structurally before use. */
+  publicationScopeQuestionnaireVersion: string | null;
+  publicationScopeAnswers: unknown;
   createdAt: Date;
   updatedAt: Date;
   serviceRequest: { flowVersion: string };
@@ -86,6 +91,10 @@ function toPublication(row: Row): LeadRecord["publication"] {
   if (columns.every((c) => c === null)) return null;
   // The migration's CHECK makes a partial snapshot impossible; if one ever appears it is corruption, never "no snapshot".
   if (columns.some((c) => c === null) || row.maxBuyers === null) throw new Error(`Lead "${row.id}" has an incomplete publication snapshot.`);
+  // Module 163: scope provenance is optional but never half-present (the migration's CHECK also forbids it).
+  const hasScopeVersion = (row.publicationScopeQuestionnaireVersion ?? null) !== null;
+  const hasScopeAnswers = (row.publicationScopeAnswers ?? null) !== null;
+  if (hasScopeVersion !== hasScopeAnswers) throw new Error(`Lead "${row.id}" has an incomplete scope provenance.`);
   const data = {
     price: exactDecimal(row.publicationPrice!, 2, 2, "publicationPrice"),
     currency: row.publicationCurrency,
@@ -97,6 +106,8 @@ function toPublication(row: Row): LeadRecord["publication"] {
     pricingRuleVersion: row.publicationPricingRuleVersion,
     buyerPolicyVersion: row.publicationBuyerPolicyVersion,
     maxBuyers: row.maxBuyers,
+    // Keys exist only when scope was used, so snapshots without it keep their exact pre-M163 shape.
+    ...(hasScopeVersion ? { scopeQuestionnaireVersion: row.publicationScopeQuestionnaireVersion, scopeAnswers: row.publicationScopeAnswers } : {}),
   };
   if (!isValidLeadPublicationSnapshotData(data)) throw new Error(`Lead "${row.id}" has an invalid publication snapshot.`);
   return { ...data, publishedAt: row.publishedAt! };
@@ -213,6 +224,10 @@ export class PrismaLeadRepository implements LeadRepository {
         publicationPricingRuleVersion: snapshot.pricingRuleVersion,
         publicationBuyerPolicyVersion: snapshot.buyerPolicyVersion,
         maxBuyers: snapshot.maxBuyers,
+        // Module 163: provenance of the estimate, written atomically with the rest of the snapshot (absent = NULL).
+        ...(snapshot.scopeQuestionnaireVersion && snapshot.scopeAnswers
+          ? { publicationScopeQuestionnaireVersion: snapshot.scopeQuestionnaireVersion, publicationScopeAnswers: { ...snapshot.scopeAnswers } }
+          : {}),
       },
     });
     if (count === 0) return null;

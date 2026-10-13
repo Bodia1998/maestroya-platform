@@ -100,7 +100,9 @@
         "job": "Over de klus",
         "jobDescription": "Hoe meer details je geeft, hoe nuttiger de reacties die je krijgt.",
         "location": "Waar is de klus?",
-        "locationDescription": "We gebruiken het adres om vakmensen te vinden die in jouw regio werken."
+        "locationDescription": "We gebruiken het adres om vakmensen te vinden die in jouw regio werken.",
+        "scope": "Details over de klus",
+        "scopeDescription": "Deze vragen zijn optioneel. Als je er een beantwoordt, vul dan ook de verplichte vragen in."
       },
       "fields": {
         "category": "Dienstcategorie",
@@ -130,7 +132,23 @@
         "unauthenticated": "Je sessie is verlopen. Log in om een aanvraag te versturen.",
         "signIn": "Inloggen",
         "categoryUnsupported": "Deze categorie is nog niet beschikbaar voor aanvragen. Kies een andere.",
-        "submitFailed": "We konden je aanvraag niet versturen. Probeer het zo meteen opnieuw."
+        "submitFailed": "We konden je aanvraag niet versturen. Probeer het zo meteen opnieuw.",
+        "scopeInvalid": "Een aantal van je antwoorden over de klus moet worden aangepast. Controleer ze en probeer het opnieuw."
+      },
+      "scope": {
+        "selectOption": "Kies een optie",
+        "integerHint": "Een geheel getal van {min} tot {max}.",
+        "errors": {
+          "MISSING_REQUIRED": "Beantwoord deze vraag.",
+          "UNKNOWN_QUESTION": "Deze vraag is niet meer beschikbaar. Laad de pagina opnieuw.",
+          "INVALID_TYPE": "Vul een geldig antwoord in.",
+          "VALUE_NOT_ALLOWED": "Kies een van de beschikbare opties.",
+          "OUT_OF_RANGE": "Dit antwoord valt buiten het toegestane bereik.",
+          "CONTRADICTORY_ANSWERS": "Deze antwoorden passen niet bij elkaar. Controleer ze.",
+          "ANSWERS_MALFORMED": "Je antwoorden konden niet worden gelezen. Laad de pagina opnieuw en probeer het nog eens.",
+          "INVALID_DEFINITION": "Deze vragen zijn momenteel niet beschikbaar. Probeer het later opnieuw.",
+          "QUESTIONNAIRE_NOT_AVAILABLE": "Er zijn geen extra vragen voor deze categorie. Laad de pagina opnieuw."
+        }
       }
     }
   },

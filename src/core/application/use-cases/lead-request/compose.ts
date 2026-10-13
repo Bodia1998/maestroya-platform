@@ -6,6 +6,7 @@ import { ListLeadRequestCategoriesUseCase } from "@/application/use-cases/lead-r
 import { SubmitLeadRequestUseCase } from "@/application/use-cases/lead-request/submit-lead-request.use-case";
 import { makeRecordLeadContactSharingUseCase } from "@/application/use-cases/lead-privacy/compose";
 import { guardLeadV1Entry } from "@/application/use-cases/lead-rollout/compose";
+import { LEAD_SCOPE_QUESTIONNAIRES_V1 } from "@/infrastructure/pricing/lead-scope-questionnaires.v1";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { loadLeadPrivacyConfig } from "@/infrastructure/config/lead-privacy-config";
 
@@ -21,7 +22,7 @@ const categories = new PrismaLeadRequestCategoryRepository();
 type Configuration = ReturnType<typeof resolveLeadPublicationConfiguration>;
 
 export function makeListLeadRequestCategoriesUseCase(configuration: Configuration = resolveLeadPublicationConfiguration()) {
-  return new ListLeadRequestCategoriesUseCase(categories, leadRequestCategoryPolicyFrom(configuration));
+  return new ListLeadRequestCategoriesUseCase(categories, leadRequestCategoryPolicyFrom(configuration), LEAD_SCOPE_QUESTIONNAIRES_V1);
 }
 
 export function makeSubmitLeadRequestUseCase(configuration: Configuration = resolveLeadPublicationConfiguration()) {
@@ -39,6 +40,8 @@ export function makeSubmitLeadRequestUseCase(configuration: Configuration = reso
         record: (userId, leadId) => makeRecordLeadContactSharingUseCase().execute(userId, leadId),
         cancelRequest: (requestId) => new PrismaServiceRequestRepository().updateStatus(requestId, "CANCELLED"),
       },
+      // Module 163: released scope questionnaires (empty until the owner approves a factor table => scope answers are refused).
+      LEAD_SCOPE_QUESTIONNAIRES_V1,
     ),
   );
 }

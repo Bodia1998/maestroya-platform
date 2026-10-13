@@ -13,6 +13,7 @@
  * the OPEN-equivalent state" rule enforced by the use cases.
  */
 
+import type { LeadScopeProvenance } from "@/domain/services/lead-scope-questionnaire";
 import type { TransactionFlowVersion } from "@/domain/services/transaction-flow";
 
 export type ServiceRequestStatusValue =
@@ -97,6 +98,13 @@ export interface CreateServiceRequestData {
    * (CreateLeadV1ServiceRequestUseCase) is the only caller that passes LEAD_V1.
    */
   flowVersion?: TransactionFlowVersion;
+  /**
+   * Module 163 — validated structured-scope answers and the questionnaire
+   * version they were validated against, persisted write-once with the request.
+   * LEAD_V1 only (an implementation must refuse it for any other flow). Absent
+   * = no structured scope; it is never defaulted or inferred.
+   */
+  scope?: LeadScopeProvenance | null;
 }
 
 /**

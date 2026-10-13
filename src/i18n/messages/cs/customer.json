@@ -100,7 +100,9 @@
         "job": "O práci",
         "jobDescription": "Čím více podrobností uvedete, tím užitečnější odpovědi dostanete.",
         "location": "Kde se práce bude provádět?",
-        "locationDescription": "Adresu používáme k vyhledání odborníků, kteří působí ve vašem okolí."
+        "locationDescription": "Adresu používáme k vyhledání odborníků, kteří působí ve vašem okolí.",
+        "scope": "Podrobnosti o zakázce",
+        "scopeDescription": "Tyto otázky jsou nepovinné. Pokud na některou odpovíte, vyplňte prosím také povinné otázky."
       },
       "fields": {
         "category": "Kategorie služby",
@@ -130,7 +132,23 @@
         "unauthenticated": "Platnost vašeho přihlášení vypršela. Pro odeslání poptávky se přihlaste.",
         "signIn": "Přihlásit se",
         "categoryUnsupported": "Tato kategorie služeb zatím není pro poptávky dostupná. Vyberte jinou.",
-        "submitFailed": "Poptávku se nepodařilo odeslat. Zkuste to prosím za chvíli znovu."
+        "submitFailed": "Poptávku se nepodařilo odeslat. Zkuste to prosím za chvíli znovu.",
+        "scopeInvalid": "Některé vaše odpovědi k zakázce je třeba opravit. Zkontrolujte je a zkuste to znovu."
+      },
+      "scope": {
+        "selectOption": "Vyberte možnost",
+        "integerHint": "Celé číslo od {min} do {max}.",
+        "errors": {
+          "MISSING_REQUIRED": "Odpovězte prosím na tuto otázku.",
+          "UNKNOWN_QUESTION": "Tato otázka již není k dispozici. Obnovte prosím stránku.",
+          "INVALID_TYPE": "Zadejte platnou odpověď.",
+          "VALUE_NOT_ALLOWED": "Vyberte jednu z dostupných možností.",
+          "OUT_OF_RANGE": "Tato odpověď je mimo povolený rozsah.",
+          "CONTRADICTORY_ANSWERS": "Tyto odpovědi si odporují. Zkontrolujte je prosím.",
+          "ANSWERS_MALFORMED": "Vaše odpovědi se nepodařilo přečíst. Obnovte stránku a zkuste to znovu.",
+          "INVALID_DEFINITION": "Tyto otázky momentálně nejsou k dispozici. Zkuste to prosím později.",
+          "QUESTIONNAIRE_NOT_AVAILABLE": "Pro tuto kategorii nejsou žádné další otázky. Obnovte prosím stránku."
+        }
       }
     }
   },

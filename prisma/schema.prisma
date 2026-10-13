@@ -1850,6 +1850,11 @@ model ServiceRequest {
   /// Module 121 — additive; every pre-existing row is LEGACY_QUOTE_PAYMENT.
   flowVersion      TransactionFlowVersion @default(LEGACY_QUOTE_PAYMENT)
   urgency          RequestUrgency        @default(MEDIUM)
+  /// Module 163 — structured scope answers (validated, canonical) and the questionnaire version they were validated
+  /// against. Written ONCE at LEAD_V1 request creation, never updated; both NULL or both set (migration CHECK); NULL
+  /// for every legacy row and for any LEAD_V1 request submitted without structured scope. Never holds free text.
+  scopeAnswers              Json?                 @db.JsonB
+  scopeQuestionnaireVersion String?
   budgetMin        Decimal?              @db.Decimal(10, 2)
   budgetMax        Decimal?              @db.Decimal(10, 2)
   scheduledFor     DateTime?
@@ -6007,6 +6012,12 @@ model Lead {
   publicationJobValueRuleVersion  String?
   publicationPricingRuleVersion   String?
   publicationBuyerPolicyVersion   String?
+
+  /// Module 163 — scope provenance of the published estimate. DELIBERATELY outside the M133 all-or-nothing group above:
+  /// NULL (both) = the estimate used no structured scope. Both set or both NULL (CHECK), only on a published lead, and
+  /// immutable with the rest of the snapshot (trigger).
+  publicationScopeQuestionnaireVersion String?
+  publicationScopeAnswers              Json?   @db.JsonB
 
   serviceRequest ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
   purchases      LeadPurchase[]

@@ -100,7 +100,9 @@
         "job": "Zum Auftrag",
         "jobDescription": "Je mehr Details du angibst, desto hilfreicher sind die Antworten, die du erhältst.",
         "location": "Wo findet der Auftrag statt?",
-        "locationDescription": "Wir nutzen die Adresse, um Fachkräfte in deiner Nähe zu finden."
+        "locationDescription": "Wir nutzen die Adresse, um Fachkräfte in deiner Nähe zu finden.",
+        "scope": "Details zum Auftrag",
+        "scopeDescription": "Diese Fragen sind optional. Wenn Sie eine davon beantworten, füllen Sie bitte auch die Pflichtfragen aus."
       },
       "fields": {
         "category": "Dienstleistungskategorie",
@@ -130,7 +132,23 @@
         "unauthenticated": "Deine Sitzung ist abgelaufen. Bitte melde dich an, um eine Anfrage zu senden.",
         "signIn": "Anmelden",
         "categoryUnsupported": "Diese Kategorie ist für Anfragen noch nicht verfügbar. Bitte wähle eine andere.",
-        "submitFailed": "Deine Anfrage konnte nicht gesendet werden. Bitte versuche es gleich noch einmal."
+        "submitFailed": "Deine Anfrage konnte nicht gesendet werden. Bitte versuche es gleich noch einmal.",
+        "scopeInvalid": "Einige Ihrer Angaben zum Auftrag müssen korrigiert werden. Bitte prüfen Sie sie und versuchen Sie es erneut."
+      },
+      "scope": {
+        "selectOption": "Option auswählen",
+        "integerHint": "Eine ganze Zahl von {min} bis {max}.",
+        "errors": {
+          "MISSING_REQUIRED": "Bitte beantworten Sie diese Frage.",
+          "UNKNOWN_QUESTION": "Diese Frage ist nicht mehr verfügbar. Bitte laden Sie die Seite neu.",
+          "INVALID_TYPE": "Bitte geben Sie eine gültige Antwort ein.",
+          "VALUE_NOT_ALLOWED": "Bitte wählen Sie eine der verfügbaren Optionen.",
+          "OUT_OF_RANGE": "Diese Antwort liegt außerhalb des zulässigen Bereichs.",
+          "CONTRADICTORY_ANSWERS": "Diese Antworten passen nicht zusammen. Bitte prüfen Sie sie.",
+          "ANSWERS_MALFORMED": "Ihre Antworten konnten nicht gelesen werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut.",
+          "INVALID_DEFINITION": "Diese Fragen sind derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
+          "QUESTIONNAIRE_NOT_AVAILABLE": "Für diese Kategorie gibt es keine zusätzlichen Fragen. Bitte laden Sie die Seite neu."
+        }
       }
     }
   },
