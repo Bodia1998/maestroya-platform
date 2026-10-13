@@ -55,6 +55,24 @@ export async function register() {
     tracing: getTracingHealth().status,
   });
 
+  // Module 160 - Observability & Runbooks: one value-free line stating the EFFECTIVE LEAD_V1 rollout state at boot, so an operator
+  // can confirm a deployment from the logs without the admin console. Reuses the M159 fail-closed loader (no second source of
+  // truth); the raw environment value is never logged (a misconfigured value additionally emits the loader's own warning).
+  // Best-effort: it can never stop the application from starting.
+  try {
+    const { loadLeadRolloutConfig } = await import("@/infrastructure/config/lead-rollout-config");
+    const { describeLeadRollout } = await import("@/domain/services/lead-rollout");
+    const rollout = describeLeadRollout(loadLeadRolloutConfig());
+    logger.info("lead_rollout.effective_mode", {
+      mode: rollout.mode,
+      configStatus: rollout.status,
+      entryOpen: rollout.entryOpen,
+      purchaseOpen: rollout.purchaseOpen,
+    });
+  } catch {
+    // Observability only.
+  }
+
   const { prisma } = await import("@/infrastructure/database/prisma/client");
   // Module 44 — Redis Infrastructure: `getRedisClient()` only ever
   // constructs a real `RedisClient` (and only ever connects lazily, on
