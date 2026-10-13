@@ -9,7 +9,7 @@ import { logger } from "@/infrastructure/observability/logger";
 import { leadRequestSchema, type CustomerLeadRequestReceipt } from "@/application/dto/lead-request.dto";
 import { makeAntiAbuseService } from "@/application/use-cases/security/compose";
 import { makeSubmitLeadRequestUseCase } from "@/application/use-cases/lead-request/compose";
-import { LeadRequestCategoryUnsupportedError } from "@/application/use-cases/lead-request/submit-lead-request.use-case";
+import { LeadRequestCategoryUnsupportedError, LeadRequestScopeInvalidError } from "@/application/use-cases/lead-request/submit-lead-request.use-case";
 import { localizeActionError, localizeZodFieldErrors } from "@/presentation/i18n/server";
 
 /**
@@ -23,7 +23,7 @@ import { localizeActionError, localizeZodFieldErrors } from "@/presentation/i18n
  */
 export type SubmitLeadRequestActionResult =
   | { success: true; receipt: CustomerLeadRequestReceipt }
-  | { success: false; code: "UNAUTHENTICATED" | "INVALID" | "CATEGORY_UNSUPPORTED" | "FAILED"; error: string; fieldErrors?: Record<string, string[]> };
+  | { success: false; code: "UNAUTHENTICATED" | "INVALID" | "CATEGORY_UNSUPPORTED" | "SCOPE_INVALID" | "FAILED"; error: string; fieldErrors?: Record<string, string[]> };
 
 export async function submitLeadRequestAction(formData: unknown): Promise<SubmitLeadRequestActionResult> {
   const t = await getTranslations("customer.requests.leadForm");
@@ -72,6 +72,18 @@ export async function submitLeadRequestAction(formData: unknown): Promise<Submit
         error: t("errors.categoryUnsupported"),
         fieldErrors: { categoryId: [t("errors.categoryUnsupported")] },
       };
+    }
+    if (error instanceof LeadRequestScopeInvalidError) {
+      // Module 163: customer-safe, per-question reasons (question ids and fixed localized sentences only; never the submitted values).
+      // A list per field, one entry per distinct reason, so the form can point at the offending question. Nothing was created.
+      const fieldErrors: Record<string, string[]> = {};
+      for (const issue of error.issues) {
+        const key = issue.questionId ? `scopeAnswers.${issue.questionId}` : "scopeAnswers";
+        const message = t(`scope.errors.${issue.code}`);
+        const list = (fieldErrors[key] ??= []);
+        if (!list.includes(message)) list.push(message);
+      }
+      return { success: false, code: "SCOPE_INVALID", error: t("errors.scopeInvalid"), fieldErrors };
     }
     return { success: false, code: "FAILED", error: await localizeActionError(error, t("errors.submitFailed")) };
   }

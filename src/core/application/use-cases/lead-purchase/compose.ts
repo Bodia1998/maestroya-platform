@@ -17,6 +17,7 @@ import { PrismaProfessionalDiscoveryRepository } from "@/infrastructure/database
 import { PrismaProfessionalRepository } from "@/infrastructure/database/prisma/repositories/prisma-professional-repository";
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { env } from "@/infrastructure/config/env";
+import { makeLeadScopeEstimationSource } from "@/application/use-cases/lead-publication/scope-estimation-source";
 import type { LeadPricingProductionConfig } from "@/domain/services/lead-pricing-production-config";
 import { loadLeadPricingProductionConfigOrThrow } from "@/infrastructure/pricing/lead-pricing-production-config-resolver";
 
@@ -36,7 +37,7 @@ import { loadLeadPricingProductionConfigOrThrow } from "@/infrastructure/pricing
  */
 export function makeLeadPurchasePriceProvider(config: LeadPricingProductionConfig = loadLeadPricingProductionConfigOrThrow(env.LEAD_PRICING_CONFIG_VERSION)) {
   // Module 129: the pricing context gets its service-value estimate from Job Value Estimation.
-  const contexts = new EstimatedValueLeadPricingContextReader(new PrismaJobValueEstimationContextReader(), config.jobValue);
+  const contexts = new EstimatedValueLeadPricingContextReader(new PrismaJobValueEstimationContextReader(), config.jobValue, makeLeadScopeEstimationSource());
   return new ConfiguredLeadPurchasePriceProvider(contexts, config.leadPricing);
 }
 

@@ -100,7 +100,9 @@
         "job": "Sobre el trabajo",
         "jobDescription": "Cuantos más detalles des, más útiles serán las respuestas que recibas.",
         "location": "¿Dónde es el trabajo?",
-        "locationDescription": "Usamos la dirección para encontrar profesionales que trabajen en tu zona."
+        "locationDescription": "Usamos la dirección para encontrar profesionales que trabajen en tu zona.",
+        "scope": "Detalles del trabajo",
+        "scopeDescription": "Estas preguntas son opcionales. Si respondes a alguna, completa también las obligatorias."
       },
       "fields": {
         "category": "Categoría del servicio",
@@ -130,7 +132,23 @@
         "unauthenticated": "Tu sesión ha caducado. Inicia sesión para enviar una solicitud.",
         "signIn": "Iniciar sesión",
         "categoryUnsupported": "Esta categoría de servicio aún no está disponible para solicitudes. Elige otra.",
-        "submitFailed": "No hemos podido enviar tu solicitud. Inténtalo de nuevo en unos instantes."
+        "submitFailed": "No hemos podido enviar tu solicitud. Inténtalo de nuevo en unos instantes.",
+        "scopeInvalid": "Algunas de tus respuestas sobre el trabajo deben corregirse. Revísalas e inténtalo de nuevo."
+      },
+      "scope": {
+        "selectOption": "Selecciona una opción",
+        "integerHint": "Un número entero de {min} a {max}.",
+        "errors": {
+          "MISSING_REQUIRED": "Responde a esta pregunta.",
+          "UNKNOWN_QUESTION": "Esta pregunta ya no está disponible. Recarga la página.",
+          "INVALID_TYPE": "Introduce una respuesta válida.",
+          "VALUE_NOT_ALLOWED": "Elige una de las opciones disponibles.",
+          "OUT_OF_RANGE": "Esta respuesta está fuera del rango permitido.",
+          "CONTRADICTORY_ANSWERS": "Estas respuestas no son compatibles entre sí. Revísalas.",
+          "ANSWERS_MALFORMED": "No hemos podido leer tus respuestas. Recarga la página e inténtalo de nuevo.",
+          "INVALID_DEFINITION": "Estas preguntas no están disponibles ahora mismo. Inténtalo más tarde.",
+          "QUESTIONNAIRE_NOT_AVAILABLE": "No hay preguntas adicionales para esta categoría. Recarga la página."
+        }
       }
     }
   },

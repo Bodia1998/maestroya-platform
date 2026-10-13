@@ -1,10 +1,20 @@
 import { getTranslations } from "next-intl/server";
 
+import type { ScopeQuestionnaireView } from "@/domain/services/lead-scope-questionnaire";
 import { requireAuth } from "@/infrastructure/auth/rbac";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { makeListLeadRequestCategoriesUseCase } from "@/application/use-cases/lead-request/compose";
 import { localizeCategoryName } from "@/presentation/i18n/service-categories";
 import { LeadRequestForm } from "./lead-request-form";
+
+function scopeHasLabels(translator: unknown, scope: ScopeQuestionnaireView): boolean {
+  const t = translator as { has: (key: string) => boolean };
+  return scope.questions.every(
+    (q) =>
+      t.has(`scopeQuestions.${scope.categorySlug}.${q.id}.label`) &&
+      (q.kind === "INTEGER_RANGE" || q.options.every((option) => t.has(`scopeQuestions.${scope.categorySlug}.${q.id}.options.${option}`))),
+  );
+}
 
 export async function generateMetadata() {
   const t = await getTranslations("customer.requests.leadForm");
@@ -25,7 +35,12 @@ export default async function NewLeadRequestPage() {
     getTranslations("customer.requests"),
     getTranslations("services"),
   ]);
-  const categories = options.map((category) => ({ id: category.id, name: localizeCategoryName(tServices, category) }));
+  // Module 163: a questionnaire is offered only when EVERY label it needs is translated; a question without a label is never shown.
+  const categories = options.map((category) => ({
+    id: category.id,
+    name: localizeCategoryName(tServices, category),
+    ...(category.scope && scopeHasLabels(t, category.scope) ? { scope: category.scope } : {}),
+  }));
 
   return (
     <div className="flex flex-col gap-8">

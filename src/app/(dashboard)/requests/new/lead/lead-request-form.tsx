@@ -19,11 +19,30 @@ import { FormSection } from "@/components/forms/form-section";
 import { OptionalBadge, RequiredBadge } from "@/components/forms/field-badges";
 import { useLocalizedZodResolver } from "@/hooks/use-localized-errors";
 import { leadRequestSchema, type LeadRequestFormValues } from "@/application/dto/lead-request.dto";
+import type { ScopeQuestionnaireView } from "@/domain/services/lead-scope-questionnaire";
 import { submitLeadRequestAction } from "./actions";
 
 interface CategoryOption {
   id: string;
   name: string;
+  /** Module 163: the category's questionnaire (ids, kinds, allowed values — no factors). Absent = no scope step. */
+  scope?: ScopeQuestionnaireView;
+}
+
+/**
+ * Module 163 — what the customer typed into the scope step, as submitted. Unanswered questions are omitted; an integer question
+ * whose text is not a whole number is sent AS TEXT so the server refuses it (never silently dropped or coerced to a number).
+ * Returns undefined when nothing was answered (= no structured scope).
+ */
+export function buildScopeAnswers(scope: ScopeQuestionnaireView | undefined, values: Record<string, string>): Record<string, string | number> | undefined {
+  if (!scope) return undefined;
+  const answers: Record<string, string | number> = {};
+  for (const question of scope.questions) {
+    const raw = (values[question.id] ?? "").trim();
+    if (raw === "") continue;
+    answers[question.id] = question.kind === "INTEGER_RANGE" && /^-?\d{1,9}$/.test(raw) ? Number(raw) : raw;
+  }
+  return Object.keys(answers).length > 0 ? answers : undefined;
 }
 
 /**
@@ -36,8 +55,14 @@ interface CategoryOption {
 export function LeadRequestForm({ categories }: { categories: CategoryOption[] }) {
   const t = useTranslations("customer.requests.leadForm");
   const tJobs = useTranslations("jobs");
+  // Question labels are keyed by questionnaire data (`scopeQuestions.<category>.<question>…`), which the static message typing cannot
+  // express. The server page only offers a questionnaire whose every label exists, so these lookups never miss.
+  const tScope = t as unknown as (key: string) => string;
   const [serverError, setServerError] = useState<{ message: string; signIn: boolean } | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  // Keyed by questionnaire so answers typed for one category are never carried over to another category's questions.
+  const [scopeState, setScopeState] = useState<{ slug: string | null; values: Record<string, string> }>({ slug: null, values: {} });
+  const [scopeErrors, setScopeErrors] = useState<Record<string, string>>({});
   // Synchronous guard: `isSubmitting` only flips after React re-renders, so a
   // fast double tap could still fire twice. This is UX protection only — the
   // server-side rate limit remains the authoritative abuse control.
@@ -48,6 +73,7 @@ export function LeadRequestForm({ categories }: { categories: CategoryOption[] }
     register,
     handleSubmit,
     setError,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LeadRequestFormValues>({
     resolver,
@@ -60,20 +86,31 @@ export function LeadRequestForm({ categories }: { categories: CategoryOption[] }
     },
   });
 
+  const selectedCategoryId = watch("categoryId");
+  const scope = categories.find((category) => category.id === selectedCategoryId)?.scope;
+  const scopeValues = scope && scopeState.slug === scope.categorySlug ? scopeState.values : {};
+
   async function onSubmit(data: LeadRequestFormValues) {
     if (inFlight.current) return;
     inFlight.current = true;
     setServerError(null);
+    setScopeErrors({});
     try {
-      const result = await submitLeadRequestAction(data);
+      const scopeAnswers = buildScopeAnswers(scope, scopeValues);
+      const result = await submitLeadRequestAction(scopeAnswers ? { ...data, scopeAnswers } : data);
       if (result.success) {
         setSubmitted(true);
         return;
       }
       setServerError({ message: result.error, signIn: result.code === "UNAUTHENTICATED" });
+      const nextScopeErrors: Record<string, string> = {};
       for (const [field, messages] of Object.entries(result.fieldErrors ?? {})) {
-        if (messages?.[0]) setError(field as Parameters<typeof setError>[0], { message: messages[0] });
+        if (!messages?.[0]) continue;
+        if (field.startsWith("scopeAnswers.")) nextScopeErrors[field.slice("scopeAnswers.".length)] = messages[0];
+        else if (field === "scopeAnswers") nextScopeErrors[""] = messages[0];
+        else setError(field as Parameters<typeof setError>[0], { message: messages[0] });
       }
+      setScopeErrors(nextScopeErrors);
     } catch {
       // Network / framework failure: never surface internals.
       setServerError({ message: t("errors.submitFailed"), signIn: false });
@@ -148,6 +185,49 @@ export function LeadRequestForm({ categories }: { categories: CategoryOption[] }
           </Select>
           <FormFieldError id="categoryId-error">{errors.categoryId?.message}</FormFieldError>
         </div>
+
+        {scope && (
+          <fieldset key={scope.categorySlug} className="flex flex-col gap-4 rounded-md border p-4" aria-describedby="scope-hint">
+            <legend className="px-1 text-sm font-medium">{t("sections.scope")}</legend>
+            <FormFieldDescription id="scope-hint">{t("sections.scopeDescription")}</FormFieldDescription>
+            {scopeErrors[""] && <FormFieldError id="scope-error">{scopeErrors[""]}</FormFieldError>}
+            {scope.questions.map((question) => {
+              const base = `scopeQuestions.${scope.categorySlug}.${question.id}`;
+              const fieldId = `scope-${question.id}`;
+              const error = scopeErrors[question.id];
+              const common = {
+                id: fieldId,
+                value: scopeValues[question.id] ?? "",
+                "aria-invalid": !!error,
+                "aria-describedby": error ? `${fieldId}-error` : undefined,
+                onChange: (event: { target: { value: string } }) => setScopeState({ slug: scope.categorySlug, values: { ...scopeValues, [question.id]: event.target.value } }),
+              };
+              return (
+                <div key={question.id} className="flex flex-col gap-1.5">
+                  <Label htmlFor={fieldId}>
+                    {tScope(`${base}.label`)} {question.required ? <RequiredBadge /> : <OptionalBadge />}
+                  </Label>
+                  {question.kind === "SINGLE_CHOICE" ? (
+                    <Select {...common}>
+                      <option value="">{t("scope.selectOption")}</option>
+                      {question.options.map((option) => (
+                        <option key={option} value={option}>
+                          {tScope(`${base}.options.${option}`)}
+                        </option>
+                      ))}
+                    </Select>
+                  ) : (
+                    <>
+                      <Input {...common} type="number" inputMode="numeric" step={1} min={question.min} max={question.max} className="sm:max-w-xs" />
+                      <FormFieldDescription id={`${fieldId}-hint`}>{t("scope.integerHint", { min: question.min, max: question.max })}</FormFieldDescription>
+                    </>
+                  )}
+                  <FormFieldError id={`${fieldId}-error`}>{error}</FormFieldError>
+                </div>
+              );
+            })}
+          </fieldset>
+        )}
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="title">

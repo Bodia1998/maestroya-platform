@@ -14,6 +14,7 @@ import { PrismaLeadRepository } from "@/infrastructure/database/prisma/repositor
 import { PrismaServiceRequestRepository } from "@/infrastructure/database/prisma/repositories/prisma-service-request-repository";
 import { LEAD_BUYER_POLICY_PILOT_V1 } from "@/infrastructure/lead-publication/lead-buyer-policy-pilot.v1";
 import { resolveLeadPricingProductionConfig } from "@/infrastructure/pricing/lead-pricing-production-config-resolver";
+import { makeLeadScopeEstimationSource } from "@/application/use-cases/lead-publication/scope-estimation-source";
 
 /**
  * Module 133 — composition root for Lead publication (re-exported by
@@ -52,7 +53,7 @@ export function makePublishLeadUseCase(
         new PrismaCustomerProfileRepository(),
         new PrismaServiceRequestRepository(),
         new PrismaLeadRepository(),
-        new ConfiguredLeadPublicationPriceSource(new PrismaJobValueEstimationContextReader(), configuration),
+        new ConfiguredLeadPublicationPriceSource(new PrismaJobValueEstimationContextReader(), configuration, makeLeadScopeEstimationSource()),
         buyerPolicy,
         eventBus,
       ),

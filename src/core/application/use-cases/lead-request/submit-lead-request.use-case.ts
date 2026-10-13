@@ -10,6 +10,12 @@ import {
   isValidNoticeVersion,
   type LeadPrivacyPolicy,
 } from "@/domain/services/lead-privacy";
+import {
+  deriveLeadV1StructuredScope,
+  type LeadScopeProvenance,
+  type ScopeAnswerIssueCode,
+  type ScopeQuestionnaireRegistry,
+} from "@/domain/services/lead-scope-questionnaire";
 import type { CustomerLeadRequestReceipt, LeadRequestInput } from "@/application/dto/lead-request.dto";
 import type { CreateLeadV1ServiceRequestUseCase } from "@/application/use-cases/lead/create-lead-v1-service-request.use-case";
 import type { PublishLeadUseCase } from "@/application/use-cases/lead/publish-lead.use-case";
@@ -20,6 +26,21 @@ export class LeadRequestCategoryUnsupportedError extends DomainError {
 
   constructor() {
     super("This service category is not available for requests yet.");
+  }
+}
+
+export type LeadRequestScopeIssueCode = ScopeAnswerIssueCode | "QUESTIONNAIRE_NOT_AVAILABLE";
+
+/**
+ * Module 163 — the submitted scope answers cannot be used (invalid, incomplete, contradictory, or the category has no
+ * questionnaire). Nothing was created. The fixed message is safe to show; `issues` (question ids and reason codes only — no values)
+ * lets the entry point point the customer at the offending question.
+ */
+export class LeadRequestScopeInvalidError extends DomainError {
+  readonly code = "LEAD_REQUEST_SCOPE_INVALID";
+
+  constructor(readonly issues: readonly { code: LeadRequestScopeIssueCode; questionId: string | null }[]) {
+    super("The scope answers could not be accepted.");
   }
 }
 
@@ -78,6 +99,8 @@ export class SubmitLeadRequestUseCase {
     private readonly createRequest: Pick<CreateLeadV1ServiceRequestUseCase, "execute">,
     private readonly publishLead: Pick<PublishLeadUseCase, "execute">,
     private readonly contactSharing?: LeadContactSharingCapture,
+    /** Module 163: released questionnaires by category slug. Absent/empty = no category accepts structured scope answers. */
+    private readonly scopeQuestionnaires: ScopeQuestionnaireRegistry = {},
   ) {}
 
   async execute(userId: string, input: LeadRequestInput, options: SubmitLeadRequestOptions = {}): Promise<SubmitLeadRequestResult> {
@@ -85,6 +108,11 @@ export class SubmitLeadRequestUseCase {
     if (!category || !isLeadRequestCategorySupported(category, this.policy)) {
       throw new LeadRequestCategoryUnsupportedError();
     }
+
+    // Module 163 — decided BEFORE anything is created. Answers that are present are either valid for the category's questionnaire or
+    // the whole submission is refused: they are never ignored, defaulted or treated as neutral. Absent answers stay allowed (the
+    // request is simply estimated without structured scope).
+    const scope = this.resolveScope(category, input.scopeAnswers);
 
     // Module 158 — decided BEFORE anything is created, so a refusal leaves no orphan request:
     //  - policy basis CONSENT: no affirmative acceptance => refuse (silence is never consent; fails closed), and a policy that cannot
@@ -100,7 +128,7 @@ export class SubmitLeadRequestUseCase {
       throw new LeadPrivacyPolicyNotConfiguredError();
     }
 
-    const { serviceRequest, lead } = await this.createRequest.execute(userId, input);
+    const { serviceRequest, lead } = await (scope ? this.createRequest.execute(userId, input, { scope }) : this.createRequest.execute(userId, input));
 
     if (capture && basis !== null && accepted) {
       try {
@@ -123,5 +151,13 @@ export class SubmitLeadRequestUseCase {
     }
 
     return { receipt: { requestId: serviceRequest.id, status: "RECEIVED" }, publication };
+  }
+
+  private resolveScope(category: { slug: string; parentSlug: string | null }, answers: unknown): LeadScopeProvenance | undefined {
+    if (answers === undefined) return undefined;
+    const derivation = deriveLeadV1StructuredScope(this.scopeQuestionnaires, { categorySlug: category.slug, parentCategorySlug: category.parentSlug }, answers);
+    if (derivation.status === "STRUCTURED") return { questionnaireVersion: derivation.structuredScope.questionnaireVersion, answers: derivation.answers };
+    if (derivation.status === "REJECTED") throw new LeadRequestScopeInvalidError(derivation.issues);
+    throw new LeadRequestScopeInvalidError([{ code: "QUESTIONNAIRE_NOT_AVAILABLE", questionId: null }]);
   }
 }

@@ -9,7 +9,9 @@ import type {
   ServiceRequestStatusValue,
   UpdateServiceRequestFields,
 } from "@/domain/repositories/service-request-repository";
+import { isLeadScopeProvenance } from "@/domain/services/lead-scope-questionnaire";
 import { DEFAULT_TRANSACTION_FLOW_VERSION } from "@/domain/services/transaction-flow";
+import { LEAD_FLOW_VERSION } from "@/domain/services/lead";
 
 const SELECT = {
   id: true,
@@ -125,6 +127,11 @@ export class PrismaServiceRequestRepository implements ServiceRequestRepository 
   }
 
   async create(customerId: string, userId: string, data: CreateServiceRequestData): Promise<ServiceRequestRecord> {
+    // Module 163: structured scope is LEAD_V1-only and must be well-formed; checked BEFORE any row (including the Address) is written.
+    if (data.scope !== undefined && data.scope !== null) {
+      if (data.flowVersion !== LEAD_FLOW_VERSION) throw new Error("Structured scope can only be stored on a LEAD_V1 service request.");
+      if (!isLeadScopeProvenance(data.scope)) throw new Error("Structured scope provenance is malformed.");
+    }
     // Address is created as its own row first (rather than via a nested
     // `address: { create }` on serviceRequest.create) because ServiceRequest
     // is owned via the scalar `customerId`/`categoryId` FKs (the "unchecked"
@@ -162,6 +169,8 @@ export class PrismaServiceRequestRepository implements ServiceRequestRepository 
         publishedAt: new Date(),
         // Module 125: always written explicitly (never left to the DB default).
         flowVersion: data.flowVersion ?? DEFAULT_TRANSACTION_FLOW_VERSION,
+        // Module 163: written once, here only; update() never touches these columns.
+        ...(data.scope ? { scopeAnswers: { ...data.scope.answers }, scopeQuestionnaireVersion: data.scope.questionnaireVersion } : {}),
       },
       select: SELECT,
     });

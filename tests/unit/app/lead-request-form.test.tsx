@@ -162,3 +162,103 @@ describe("LeadRequestForm — submission", () => {
     expect(alert.textContent).not.toMatch(/Prisma|srv/);
   });
 });
+
+describe("Module 163 — scope step", () => {
+  // Labels for a questionnaire come from the message catalog; no catalog ships any (no approved questionnaire), so the test supplies them.
+  const SCOPE = {
+    questionnaireVersion: "test-scope-v1",
+    categorySlug: "fontaneria",
+    questions: [
+      { id: "size", kind: "SINGLE_CHOICE" as const, required: true, options: ["small", "large"] },
+      { id: "rooms", kind: "INTEGER_RANGE" as const, required: false, min: 1, max: 10 },
+    ],
+  };
+  const withScope = [{ id: CATEGORY, name: "Plumbing", scope: SCOPE }, { id: "123e4567-e89b-42d3-a456-426614174001", name: "Electrical" }];
+
+  async function renderWithLabels(cats = withScope) {
+    const { NextIntlClientProvider } = await import("next-intl");
+    const { getMessages } = await import("@/infrastructure/i18n/message-loader");
+    const messages = structuredClone(getMessages("en")) as unknown as { customer: { requests: { leadForm: Record<string, unknown> } } };
+    messages.customer.requests.leadForm.scopeQuestions = {
+      fontaneria: { size: { label: "Job size", options: { small: "Small", large: "Large" } }, rooms: { label: "Number of rooms" } },
+    };
+    return render(
+      <NextIntlClientProvider locale="en" messages={messages as never} timeZone="Europe/Madrid">
+        <LeadRequestForm categories={cats} />
+      </NextIntlClientProvider>,
+    );
+  }
+
+  it("shows no scope step until a category with a questionnaire is chosen, and none for a category without one", async () => {
+    await renderWithLabels();
+    expect(screen.queryByLabelText(/Job size/)).toBeNull();
+    fireEvent.change(screen.getByLabelText(/Service category/), { target: { value: CATEGORY } });
+    expect(screen.getByLabelText(/Job size/)).toBeTruthy();
+    expect(screen.getByLabelText(/Number of rooms/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(/Service category/), { target: { value: "123e4567-e89b-42d3-a456-426614174001" } });
+    expect(screen.queryByLabelText(/Job size/)).toBeNull();
+  });
+
+  it("renders no factors or internal ids and marks required / optional", async () => {
+    const { container } = await renderWithLabels();
+    fireEvent.change(screen.getByLabelText(/Service category/), { target: { value: CATEGORY } });
+    expect(container.textContent).not.toMatch(/factor|test-scope-v1/i);
+  });
+
+  it("submits answers with the form; unanswered questions are omitted; integers are sent as numbers", async () => {
+    mockSubmit.mockResolvedValue({ success: true, receipt: { requestId: "sr-1", status: "RECEIVED" } });
+    await renderWithLabels();
+    fillValid();
+    fireEvent.change(screen.getByLabelText(/Job size/), { target: { value: "large" } });
+    fireEvent.change(screen.getByLabelText(/Number of rooms/), { target: { value: "3" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+    await waitFor(() => expect(mockSubmit).toHaveBeenCalledTimes(1));
+    expect(mockSubmit.mock.calls[0]![0]).toMatchObject({ categoryId: CATEGORY, scopeAnswers: { size: "large", rooms: 3 } });
+  });
+
+  it("submitting without answering sends no scopeAnswers key at all", async () => {
+    mockSubmit.mockResolvedValue({ success: true, receipt: { requestId: "sr-1", status: "RECEIVED" } });
+    await renderWithLabels();
+    fillValid();
+    fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+    await waitFor(() => expect(mockSubmit).toHaveBeenCalledTimes(1));
+    expect(mockSubmit.mock.calls[0]![0]).not.toHaveProperty("scopeAnswers");
+  });
+
+  it("answers typed for one category are not carried to another category's questionnaire", async () => {
+    mockSubmit.mockResolvedValue({ success: true, receipt: { requestId: "sr-1", status: "RECEIVED" } });
+    await renderWithLabels();
+    fireEvent.change(screen.getByLabelText(/Service category/), { target: { value: CATEGORY } });
+    fireEvent.change(screen.getByLabelText(/Job size/), { target: { value: "large" } });
+    fireEvent.change(screen.getByLabelText(/Service category/), { target: { value: "123e4567-e89b-42d3-a456-426614174001" } });
+    fillValid();
+    fireEvent.change(screen.getByLabelText(/Service category/), { target: { value: "123e4567-e89b-42d3-a456-426614174001" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+    await waitFor(() => expect(mockSubmit).toHaveBeenCalledTimes(1));
+    expect(mockSubmit.mock.calls[0]![0]).not.toHaveProperty("scopeAnswers");
+  });
+
+  it("shows a server scope refusal next to the offending question", async () => {
+    mockSubmit.mockResolvedValue({ success: false, code: "SCOPE_INVALID", error: "Check your answers.", fieldErrors: { "scopeAnswers.size": ["Please choose one of the available options."] } });
+    await renderWithLabels();
+    fillValid();
+    fireEvent.change(screen.getByLabelText(/Job size/), { target: { value: "large" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+    expect(await screen.findByText("Please choose one of the available options.")).toBeTruthy();
+    expect(screen.getByLabelText(/Job size/)).toHaveAttribute("aria-invalid", "true");
+  });
+});
+
+describe("buildScopeAnswers", () => {
+  const scope = { questionnaireVersion: "v", categorySlug: "c", questions: [{ id: "a", kind: "SINGLE_CHOICE" as const, required: true, options: ["x"] }, { id: "n", kind: "INTEGER_RANGE" as const, required: false, min: 1, max: 5 }] };
+  it("omits blanks, coerces only clean integers, and sends anything else as text so the server refuses it", async () => {
+    const { buildScopeAnswers } = await import("../../../src/app/(dashboard)/requests/new/lead/lead-request-form");
+    expect(buildScopeAnswers(undefined, { a: "x" })).toBeUndefined();
+    expect(buildScopeAnswers(scope, {})).toBeUndefined();
+    expect(buildScopeAnswers(scope, { a: " ", n: "" })).toBeUndefined();
+    expect(buildScopeAnswers(scope, { a: "x", n: "3" })).toEqual({ a: "x", n: 3 });
+    expect(buildScopeAnswers(scope, { n: "3.5" })).toEqual({ n: "3.5" });
+    expect(buildScopeAnswers(scope, { n: "1e3" })).toEqual({ n: "1e3" });
+    expect(buildScopeAnswers(scope, { zzz: "x" })).toBeUndefined();
+  });
+});

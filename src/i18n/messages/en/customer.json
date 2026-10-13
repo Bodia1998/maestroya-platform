@@ -100,7 +100,9 @@
         "job": "About the job",
         "jobDescription": "The more detail you give, the more useful the responses you receive will be.",
         "location": "Where is the job?",
-        "locationDescription": "We use the address to find professionals who work in your area."
+        "locationDescription": "We use the address to find professionals who work in your area.",
+        "scope": "Details about the job",
+        "scopeDescription": "These questions are optional. If you answer any of them, please complete the required ones."
       },
       "fields": {
         "category": "Service category",
@@ -130,7 +132,23 @@
         "unauthenticated": "Your session has expired. Please sign in to send a request.",
         "signIn": "Sign in",
         "categoryUnsupported": "This service category isn't available for requests yet. Please choose another one.",
-        "submitFailed": "We couldn't send your request. Please try again in a moment."
+        "submitFailed": "We couldn't send your request. Please try again in a moment.",
+        "scopeInvalid": "Some of your answers about the job need fixing. Please check them and try again."
+      },
+      "scope": {
+        "selectOption": "Select an option",
+        "integerHint": "A whole number from {min} to {max}.",
+        "errors": {
+          "MISSING_REQUIRED": "Please answer this question.",
+          "UNKNOWN_QUESTION": "This question is no longer available. Please reload the page.",
+          "INVALID_TYPE": "Please enter a valid answer.",
+          "VALUE_NOT_ALLOWED": "Please choose one of the available options.",
+          "OUT_OF_RANGE": "This answer is outside the allowed range.",
+          "CONTRADICTORY_ANSWERS": "These answers don't fit together. Please review them.",
+          "ANSWERS_MALFORMED": "Your answers couldn't be read. Please reload the page and try again.",
+          "INVALID_DEFINITION": "These questions aren't available right now. Please try again later.",
+          "QUESTIONNAIRE_NOT_AVAILABLE": "There are no extra questions for this category. Please reload the page."
+        }
       }
     }
   },

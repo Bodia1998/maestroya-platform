@@ -48,3 +48,12 @@ describe("NewLeadRequestPage", () => {
     expect(listExecute).not.toHaveBeenCalled();
   });
 });
+
+describe("Module 163 — page offers a questionnaire only when every label exists", () => {
+  const scope = { questionnaireVersion: "v1", categorySlug: "fontaneria", questions: [{ id: "size", kind: "SINGLE_CHOICE" as const, required: true, options: ["small", "large"] }] };
+  it("does not pass an untranslated questionnaire to the form (a question without a label is never shown)", async () => {
+    listExecute.mockResolvedValue([{ id: "123e4567-e89b-42d3-a456-426614174001", slug: "fontaneria", name: "Fontanería", scope }]);
+    render(await NewLeadRequestPage());
+    expect(screen.queryByText(/Details about the job/)).toBeNull();
+  });
+});

@@ -3,6 +3,7 @@ import {
   isLeadRequestCategorySupported,
   type LeadRequestCategoryPolicy,
 } from "@/domain/services/lead-request-category-support";
+import { findScopeQuestionnaire, toScopeQuestionnaireView, type ScopeQuestionnaireRegistry } from "@/domain/services/lead-scope-questionnaire";
 import type { LeadRequestCategoryOption } from "@/application/dto/lead-request.dto";
 
 /**
@@ -15,12 +16,18 @@ export class ListLeadRequestCategoriesUseCase {
   constructor(
     private readonly categories: LeadRequestCategoryRepository,
     private readonly policy: LeadRequestCategoryPolicy,
+    /** Module 163: released questionnaires. Absent/empty = no category offers a scope step. */
+    private readonly scopeQuestionnaires: ScopeQuestionnaireRegistry = {},
   ) {}
 
   async execute(): Promise<LeadRequestCategoryOption[]> {
     const all = await this.categories.listActive();
     return all
       .filter((category) => isLeadRequestCategorySupported(category, this.policy))
-      .map(({ id, slug, name }) => ({ id, slug, name }));
+      .map(({ id, slug, name, parentSlug }) => {
+        const definition = findScopeQuestionnaire(this.scopeQuestionnaires, slug, parentSlug);
+        const scope = definition ? toScopeQuestionnaireView(definition) : null;
+        return scope ? { id, slug, name, scope } : { id, slug, name };
+      });
   }
 }

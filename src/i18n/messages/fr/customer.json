@@ -100,7 +100,9 @@
         "job": "À propos du travail",
         "jobDescription": "Plus vous donnez de détails, plus les réponses que vous recevrez seront utiles.",
         "location": "Où se situe le chantier ?",
-        "locationDescription": "Nous utilisons l'adresse pour trouver des professionnels qui travaillent dans votre zone."
+        "locationDescription": "Nous utilisons l'adresse pour trouver des professionnels qui travaillent dans votre zone.",
+        "scope": "Détails du travail",
+        "scopeDescription": "Ces questions sont facultatives. Si vous répondez à l'une d'elles, veuillez aussi remplir les questions obligatoires."
       },
       "fields": {
         "category": "Catégorie de service",
@@ -130,7 +132,23 @@
         "unauthenticated": "Votre session a expiré. Connectez-vous pour envoyer une demande.",
         "signIn": "Se connecter",
         "categoryUnsupported": "Cette catégorie de service n'est pas encore disponible pour les demandes. Veuillez en choisir une autre.",
-        "submitFailed": "Nous n'avons pas pu envoyer votre demande. Veuillez réessayer dans un instant."
+        "submitFailed": "Nous n'avons pas pu envoyer votre demande. Veuillez réessayer dans un instant.",
+        "scopeInvalid": "Certaines de vos réponses sur le travail doivent être corrigées. Vérifiez-les et réessayez."
+      },
+      "scope": {
+        "selectOption": "Sélectionnez une option",
+        "integerHint": "Un nombre entier de {min} à {max}.",
+        "errors": {
+          "MISSING_REQUIRED": "Veuillez répondre à cette question.",
+          "UNKNOWN_QUESTION": "Cette question n'est plus disponible. Veuillez recharger la page.",
+          "INVALID_TYPE": "Veuillez saisir une réponse valide.",
+          "VALUE_NOT_ALLOWED": "Veuillez choisir l'une des options proposées.",
+          "OUT_OF_RANGE": "Cette réponse est en dehors de la plage autorisée.",
+          "CONTRADICTORY_ANSWERS": "Ces réponses sont incompatibles entre elles. Veuillez les vérifier.",
+          "ANSWERS_MALFORMED": "Vos réponses n'ont pas pu être lues. Rechargez la page et réessayez.",
+          "INVALID_DEFINITION": "Ces questions ne sont pas disponibles pour le moment. Veuillez réessayer plus tard.",
+          "QUESTIONNAIRE_NOT_AVAILABLE": "Il n'y a pas de questions supplémentaires pour cette catégorie. Veuillez recharger la page."
+        }
       }
     }
   },

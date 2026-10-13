@@ -5,8 +5,18 @@ import type { LeadRecord } from "@/domain/repositories/lead-repository";
 import type { ServiceCategoryRepository } from "@/domain/repositories/service-category-repository";
 import type { ServiceRequestRecord, ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
 import { LEAD_FLOW_VERSION } from "@/domain/services/lead";
+import { isLeadScopeProvenance, type LeadScopeProvenance } from "@/domain/services/lead-scope-questionnaire";
 import type { CreateServiceRequestInput } from "@/application/dto/service-request.dto";
 import type { CreateLeadUseCase } from "@/application/use-cases/lead/create-lead.use-case";
+
+export interface CreateLeadV1ServiceRequestOptions {
+  /**
+   * Module 163 — structured scope ALREADY validated by the caller against the category's questionnaire (the customer submission use
+   * case). It is stored write-once with the request; publication re-validates it against the current definition before it can
+   * influence a price. Absent = no structured scope.
+   */
+  scope?: LeadScopeProvenance;
+}
 
 export interface CreateLeadV1ServiceRequestResult {
   serviceRequest: ServiceRequestRecord;
@@ -51,7 +61,11 @@ export class CreateLeadV1ServiceRequestUseCase {
     private readonly createLead: Pick<CreateLeadUseCase, "execute">,
   ) {}
 
-  async execute(userId: string, input: CreateServiceRequestInput): Promise<CreateLeadV1ServiceRequestResult> {
+  async execute(userId: string, input: CreateServiceRequestInput, options: CreateLeadV1ServiceRequestOptions = {}): Promise<CreateLeadV1ServiceRequestResult> {
+    // Module 163: malformed provenance is refused before anything is written (never stored half-formed, never dropped silently).
+    if (options.scope !== undefined && !isLeadScopeProvenance(options.scope)) {
+      throw new ValidationError("Structured scope answers are invalid.");
+    }
     if (input.budgetMin !== undefined && input.budgetMax !== undefined && input.budgetMin > input.budgetMax) {
       throw new ValidationError("Minimum budget must not exceed maximum budget.");
     }
@@ -96,6 +110,7 @@ export class CreateLeadV1ServiceRequestUseCase {
         longitude,
       },
       flowVersion: LEAD_FLOW_VERSION,
+      ...(options.scope ? { scope: options.scope } : {}),
     });
 
     try {

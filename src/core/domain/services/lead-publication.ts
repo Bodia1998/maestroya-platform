@@ -12,6 +12,12 @@ import {
 } from "@/domain/services/lead";
 import { isLeadPricingConfidence, type LeadPricingConfidence, type LeadPricingResult } from "@/domain/services/lead-pricing";
 import { LEAD_PURCHASE_CURRENCY } from "@/domain/services/lead-purchase";
+import {
+  isLeadScopeProvenance,
+  isScopeQuestionnaireVersion,
+  isStoredScopeAnswers,
+  type LeadScopeProvenance,
+} from "@/domain/services/lead-scope-questionnaire";
 
 /**
  * Module 133 — LEAD_V1 publication contract. Pure, no I/O.
@@ -137,6 +143,11 @@ export type LeadPublicationPriceOutcome =
       /** JobValueEstimationConfig.ruleVersion used for the estimate. */
       jobValueRuleVersion: string;
       result: LeadPricingResult;
+      /**
+       * Module 163 — the validated structured-scope answers (and the questionnaire version) the estimate was computed
+       * from, when it used any. null/absent = the estimate used no structured scope.
+       */
+      scope?: LeadScopeProvenance | null;
     };
 
 export interface LeadPublicationPricing {
@@ -148,6 +159,9 @@ export interface LeadPublicationPricing {
   pricingConfigVersion: string;
   jobValueRuleVersion: string;
   pricingRuleVersion: string;
+  /** Module 163 — present only when the estimate used structured scope. Both or neither. */
+  scopeQuestionnaireVersion?: string;
+  scopeAnswers?: LeadScopeProvenance["answers"];
 }
 
 export type LeadPublicationPricingEvaluation = { ok: true; pricing: LeadPublicationPricing } | { ok: false; reason: LeadPublicationRejectionReason };
@@ -177,10 +191,12 @@ export function evaluateLeadPublicationPricing(outcome: unknown): LeadPublicatio
   if (outcome.kind === "CONFIGURATION_UNAVAILABLE") return { ok: false, reason: "PRICING_CONFIGURATION_UNAVAILABLE" };
   if (outcome.kind !== "RESOLVED") return { ok: false, reason: "PRICING_RESULT_MALFORMED" };
 
-  const { configVersion, jobValueRuleVersion, result } = outcome;
+  const { configVersion, jobValueRuleVersion, result, scope } = outcome;
   if (!nonEmptyString(configVersion) || !nonEmptyString(jobValueRuleVersion) || !isRecord(result)) {
     return { ok: false, reason: "PRICING_RESULT_MALFORMED" };
   }
+  // Module 163: provenance is either absent or fully well-formed; a half-formed one is never silently dropped.
+  if (scope !== undefined && scope !== null && !isLeadScopeProvenance(scope)) return { ok: false, reason: "PRICING_RESULT_MALFORMED" };
 
   switch (result.status) {
     case "UNPRICED":
@@ -222,6 +238,7 @@ export function evaluateLeadPublicationPricing(outcome: unknown): LeadPublicatio
       pricingConfigVersion: configVersion,
       jobValueRuleVersion,
       pricingRuleVersion: result.ruleVersion,
+      ...(scope ? { scopeQuestionnaireVersion: scope.questionnaireVersion, scopeAnswers: { ...scope.answers } } : {}),
     },
   };
 }
@@ -245,6 +262,16 @@ export function buildLeadPublicationSnapshotData(pricing: LeadPublicationPricing
   return { ...pricing, buyerPolicyVersion: policy.policyVersion, maxBuyers: policy.maxBuyers };
 }
 
+/** Module 163: the questionnaire version and the answers are stored together or not at all. */
+function hasValidScopeProvenance(value: Record<string, unknown>): boolean {
+  const version = value.scopeQuestionnaireVersion;
+  const answers = value.scopeAnswers;
+  const noVersion = version === undefined || version === null;
+  const noAnswers = answers === undefined || answers === null;
+  if (noVersion && noAnswers) return true;
+  return isScopeQuestionnaireVersion(version) && isStoredScopeAnswers(answers);
+}
+
 /** Structural validity of snapshot data (used before writing and when judging readiness). */
 export function isValidLeadPublicationSnapshotData(value: unknown): value is LeadPublicationSnapshotData {
   if (!isRecord(value)) return false;
@@ -260,7 +287,8 @@ export function isValidLeadPublicationSnapshotData(value: unknown): value is Lea
     nonEmptyString(value.pricingConfigVersion) &&
     nonEmptyString(value.jobValueRuleVersion) &&
     nonEmptyString(value.pricingRuleVersion) &&
-    isValidLeadBuyerPolicy({ policyVersion: value.buyerPolicyVersion, maxBuyers: value.maxBuyers })
+    isValidLeadBuyerPolicy({ policyVersion: value.buyerPolicyVersion, maxBuyers: value.maxBuyers }) &&
+    hasValidScopeProvenance(value)
   );
 }
 

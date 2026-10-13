@@ -100,7 +100,9 @@
         "job": "Despre lucrare",
         "jobDescription": "Cu cât oferi mai multe detalii, cu atât răspunsurile primite vor fi mai utile.",
         "location": "Unde se face lucrarea?",
-        "locationDescription": "Folosim adresa pentru a găsi profesioniști care lucrează în zona ta."
+        "locationDescription": "Folosim adresa pentru a găsi profesioniști care lucrează în zona ta.",
+        "scope": "Detaliile lucrării",
+        "scopeDescription": "Aceste întrebări sunt opționale. Dacă răspunzi la vreuna, completează și întrebările obligatorii."
       },
       "fields": {
         "category": "Categoria serviciului",
@@ -130,7 +132,23 @@
         "unauthenticated": "Sesiunea ta a expirat. Autentifică-te pentru a trimite o cerere.",
         "signIn": "Autentifică-te",
         "categoryUnsupported": "Această categorie de servicii nu este încă disponibilă pentru cereri. Alege alta.",
-        "submitFailed": "Nu am putut trimite cererea ta. Încearcă din nou peste un moment."
+        "submitFailed": "Nu am putut trimite cererea ta. Încearcă din nou peste un moment.",
+        "scopeInvalid": "Unele dintre răspunsurile tale despre lucrare trebuie corectate. Verifică-le și încearcă din nou."
+      },
+      "scope": {
+        "selectOption": "Selectează o opțiune",
+        "integerHint": "Un număr întreg de la {min} la {max}.",
+        "errors": {
+          "MISSING_REQUIRED": "Te rugăm să răspunzi la această întrebare.",
+          "UNKNOWN_QUESTION": "Această întrebare nu mai este disponibilă. Reîncarcă pagina.",
+          "INVALID_TYPE": "Introdu un răspuns valid.",
+          "VALUE_NOT_ALLOWED": "Alege una dintre opțiunile disponibile.",
+          "OUT_OF_RANGE": "Acest răspuns este în afara intervalului permis.",
+          "CONTRADICTORY_ANSWERS": "Aceste răspunsuri nu se potrivesc între ele. Verifică-le.",
+          "ANSWERS_MALFORMED": "Răspunsurile tale nu au putut fi citite. Reîncarcă pagina și încearcă din nou.",
+          "INVALID_DEFINITION": "Aceste întrebări nu sunt disponibile momentan. Încearcă din nou mai târziu.",
+          "QUESTIONNAIRE_NOT_AVAILABLE": "Nu există întrebări suplimentare pentru această categorie. Reîncarcă pagina."
+        }
       }
     }
   },

@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import type { ScopeQuestionnaireView } from "@/domain/services/lead-scope-questionnaire";
 import { MAX_SERVICE_REQUEST_DESCRIPTION_LENGTH, MAX_SERVICE_REQUEST_TITLE_LENGTH } from "@/application/dto/service-request.dto";
 
 /**
@@ -43,11 +44,24 @@ const text = (normalize: (v: string) => string, min: number, max: number) =>
     .transform(normalize)
     .pipe(z.string().min(1, "required").min(min).max(max));
 
+/**
+ * Module 163 — structured scope answers as submitted: question id -> option value (string) or integer. Shape only; whether the
+ * ids/values are valid for the category's questionnaire is decided on the server by the domain (`evaluateScopeAnswers`), and an
+ * answer that is not valid is REJECTED, never ignored. Free text and budget-like values cannot pass: values are short
+ * option-shaped strings or safe integers, and unknown question ids are refused by the domain.
+ */
+export const MAX_SCOPE_ANSWERS = 30;
+const scopeAnswersSchema = z
+  .record(z.string().max(40), z.union([z.string().max(40), z.number().int().safe()]))
+  .refine((answers) => Object.keys(answers).length <= MAX_SCOPE_ANSWERS, "invalid");
+
 export const leadRequestSchema = z.object({
   categoryId: z.string().uuid("dto.categories.invalid"),
   title: text(normalizeSingleLine, LEAD_REQUEST_TITLE_MIN_LENGTH, MAX_SERVICE_REQUEST_TITLE_LENGTH),
   description: text(normalizeFreeText, LEAD_REQUEST_DESCRIPTION_MIN_LENGTH, MAX_SERVICE_REQUEST_DESCRIPTION_LENGTH),
   urgency: z.enum(["LOW", "MEDIUM", "HIGH", "EMERGENCY"]).optional(),
+  /** Module 163: optional. Absent = no structured scope (the request is estimated exactly as before). */
+  scopeAnswers: scopeAnswersSchema.optional(),
   location: z.object({
     line1: z.string().transform(normalizeSingleLine).pipe(z.string().min(1, "dto.address.street").max(200)),
     line2: z.string().transform(normalizeSingleLine).pipe(z.string().max(200)).optional(),
@@ -76,4 +90,6 @@ export interface LeadRequestCategoryOption {
   id: string;
   slug: string;
   name: string;
+  /** Module 163: the customer-facing questionnaire for this category (ids, kinds, allowed values — never factors). Absent = none. */
+  scope?: ScopeQuestionnaireView;
 }
