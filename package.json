@@ -19,6 +19,7 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:integration:db": "vitest run --config vitest.config.integration-db.ts",
+    "test:load:m161": "M161_LOAD=1 vitest run --config vitest.config.integration-db.ts tests/integration-db/lead-v1-m161/lead-v1-load-m161.test.ts",
     "db:migrate:test": "tsx scripts/migrate-test-db.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
