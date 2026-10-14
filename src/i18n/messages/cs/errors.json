@@ -24,7 +24,8 @@
     "PARTNER_NOT_ACTIVE": "Váš účet affiliate partnera není aktivní.",
     "DUPLICATE_APPEAL": "K tomuto případu jste již podali odvolání.",
     "UNSUPPORTED_COUNTRY": "Tato operace není pro tuto zemi dostupná.",
-    "TAX_CALCULATION_ERROR": "Příslušnou daň se nepodařilo vypočítat. Zkuste to později."
+    "TAX_CALCULATION_ERROR": "Příslušnou daň se nepodařilo vypočítat. Zkuste to později.",
+    "LEAD_PRICING_UNDER_REVIEW": "Vaše poptávka se kontroluje. Cena zatím nebyla potvrzena, proto nebyla zveřejněna."
   },
   "domain": {
     "accountHasNoPassword": "Tento účet nepoužívá heslo.",

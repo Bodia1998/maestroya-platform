@@ -24,7 +24,8 @@
     "PARTNER_NOT_ACTIVE": "Je affiliate-partneraccount is niet actief.",
     "DUPLICATE_APPEAL": "Je hebt voor deze zaak al bezwaar ingediend.",
     "UNSUPPORTED_COUNTRY": "Deze handeling is niet beschikbaar voor dit land.",
-    "TAX_CALCULATION_ERROR": "De toepasselijke belasting kon niet worden berekend. Probeer het later opnieuw."
+    "TAX_CALCULATION_ERROR": "De toepasselijke belasting kon niet worden berekend. Probeer het later opnieuw.",
+    "LEAD_PRICING_UNDER_REVIEW": "Je aanvraag wordt beoordeeld. Er is nog geen prijs bevestigd, dus de aanvraag is nog niet gepubliceerd."
   },
   "domain": {
     "accountHasNoPassword": "Dit account gebruikt geen wachtwoord.",

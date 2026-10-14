@@ -60,6 +60,7 @@ describe("Module 163 boundaries", () => {
       [
         ESTIMATOR,
         QUESTIONNAIRE,
+        "src/core/application/services/lead-pricing/calibrated-lead-publication-price-source.ts", // Module 164: reads the STORED scope only
         "src/core/application/services/lead-pricing/estimated-value-lead-pricing-context-reader.ts",
         "src/core/application/dto/lead-request.dto.ts",
         "src/core/application/use-cases/lead-request/submit-lead-request.use-case.ts",

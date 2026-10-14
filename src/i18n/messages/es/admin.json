@@ -144,7 +144,10 @@
     "decidingThisLeadClaim": "Algo salió mal al registrar la decisión de la reclamación.",
     "revokingThisLeadPurchase": "Algo salió mal al revocar esta compra.",
     "blockingThisSubject": "Algo salió mal al imponer el bloqueo.",
-    "liftingThisAbuseDecision": "Algo salió mal al actualizar esta decisión."
+    "liftingThisAbuseDecision": "Algo salió mal al actualizar esta decisión.",
+    "loadingPricingReviews": "Se produjo un error al cargar las revisiones de precio.",
+    "decidingPricingReview": "Se produjo un error al registrar la decisión de la revisión de precio.",
+    "recordingEstimateOutcome": "Se produjo un error al registrar el valor real del trabajo."
   },
   "common": {
     "metaTitle": "Admin — {page}",

@@ -24,7 +24,8 @@
     "PARTNER_NOT_ACTIVE": "Dein Affiliate-Partner-Konto ist nicht aktiv.",
     "DUPLICATE_APPEAL": "Du hast für diesen Fall bereits einen Einspruch eingereicht.",
     "UNSUPPORTED_COUNTRY": "Dieser Vorgang ist für dieses Land nicht verfügbar.",
-    "TAX_CALCULATION_ERROR": "Die anfallende Steuer konnte nicht berechnet werden. Bitte versuche es später erneut."
+    "TAX_CALCULATION_ERROR": "Die anfallende Steuer konnte nicht berechnet werden. Bitte versuche es später erneut.",
+    "LEAD_PRICING_UNDER_REVIEW": "Ihre Anfrage wird geprüft. Ein Preis wurde noch nicht bestätigt, daher wurde sie noch nicht veröffentlicht."
   },
   "domain": {
     "accountHasNoPassword": "Dieses Konto verwendet kein Passwort.",

@@ -37,6 +37,7 @@ const SELECT = {
   publicationBuyerPolicyVersion: true,
   publicationScopeQuestionnaireVersion: true,
   publicationScopeAnswers: true,
+  publicationCalibrationProvenance: true,
   createdAt: true,
   updatedAt: true,
   serviceRequest: { select: { flowVersion: true } },
@@ -63,6 +64,8 @@ type Row = {
   /** Module 163: JSON is read as `unknown` and re-validated structurally before use. */
   publicationScopeQuestionnaireVersion: string | null;
   publicationScopeAnswers: unknown;
+  /** Module 164: JSON is read as `unknown` and re-validated structurally (and against the price) before use. */
+  publicationCalibrationProvenance: unknown;
   createdAt: Date;
   updatedAt: Date;
   serviceRequest: { flowVersion: string };
@@ -108,6 +111,8 @@ function toPublication(row: Row): LeadRecord["publication"] {
     maxBuyers: row.maxBuyers,
     // Keys exist only when scope was used, so snapshots without it keep their exact pre-M163 shape.
     ...(hasScopeVersion ? { scopeQuestionnaireVersion: row.publicationScopeQuestionnaireVersion, scopeAnswers: row.publicationScopeAnswers } : {}),
+    // Module 164: key exists only for calibrated-pipeline prices, so pre-M164 snapshots keep their exact shape.
+    ...((row.publicationCalibrationProvenance ?? null) !== null ? { calibrationProvenance: row.publicationCalibrationProvenance } : {}),
   };
   if (!isValidLeadPublicationSnapshotData(data)) throw new Error(`Lead "${row.id}" has an invalid publication snapshot.`);
   return { ...data, publishedAt: row.publishedAt! };
@@ -228,6 +233,8 @@ export class PrismaLeadRepository implements LeadRepository {
         ...(snapshot.scopeQuestionnaireVersion && snapshot.scopeAnswers
           ? { publicationScopeQuestionnaireVersion: snapshot.scopeQuestionnaireVersion, publicationScopeAnswers: { ...snapshot.scopeAnswers } }
           : {}),
+        // Module 164: how the calibrated pipeline reached the price, written atomically with the rest of the snapshot (absent = NULL).
+        ...(snapshot.calibrationProvenance ? { publicationCalibrationProvenance: snapshot.calibrationProvenance as unknown as Prisma.InputJsonValue } : {}),
       },
     });
     if (count === 0) return null;

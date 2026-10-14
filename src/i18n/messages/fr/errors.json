@@ -24,7 +24,8 @@
     "PARTNER_NOT_ACTIVE": "Votre compte d'affilié n'est pas actif.",
     "DUPLICATE_APPEAL": "Vous avez déjà déposé un recours pour ce dossier.",
     "UNSUPPORTED_COUNTRY": "Cette opération n'est pas disponible pour ce pays.",
-    "TAX_CALCULATION_ERROR": "La taxe applicable n'a pas pu être calculée. Veuillez réessayer plus tard."
+    "TAX_CALCULATION_ERROR": "La taxe applicable n'a pas pu être calculée. Veuillez réessayer plus tard.",
+    "LEAD_PRICING_UNDER_REVIEW": "Votre demande est en cours d'examen. Aucun prix n'a encore été confirmé, elle n'a donc pas encore été publiée."
   },
   "domain": {
     "accountHasNoPassword": "Ce compte n'utilise pas de mot de passe.",

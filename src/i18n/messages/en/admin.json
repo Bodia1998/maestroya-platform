@@ -144,7 +144,10 @@
     "decidingThisLeadClaim": "Something went wrong recording the claim decision.",
     "revokingThisLeadPurchase": "Something went wrong revoking this purchase.",
     "blockingThisSubject": "Something went wrong imposing the block.",
-    "liftingThisAbuseDecision": "Something went wrong updating this decision."
+    "liftingThisAbuseDecision": "Something went wrong updating this decision.",
+    "loadingPricingReviews": "Something went wrong loading the pricing reviews.",
+    "decidingPricingReview": "Something went wrong recording the pricing review decision.",
+    "recordingEstimateOutcome": "Something went wrong recording the actual job value."
   },
   "common": {
     "metaTitle": "Admin — {page}",
