@@ -23,8 +23,11 @@ export { formatScaledDecimal, parseScaledDecimal };
  *                      x leadQuality x market , minimumPrice, maximumPrice )
  *
  * Only `urgency` has a data source today and its configured table is neutral
- * (1.0) by default; complexity / leadQuality / market are neutral 1.0 until
- * their modules exist. Nothing here fabricates precision.
+ * (1.0) by default; complexity / leadQuality are neutral 1.0 until their
+ * modules exist. Module 164 activates `market` as an OPTIONAL, server-derived
+ * input (`marketFactor`): absent / null = neutral 1.0, so every pre-M164 caller
+ * gets byte-identical prices. The factor never widens the min/max band: the
+ * result is always clamped to it. Nothing here fabricates precision.
  *
  * Money: no JS floating point. Amounts are integer cents (bigint); rates and
  * factors are fixed-point with 6 fraction digits (bigint). The product is
@@ -54,6 +57,7 @@ export type LeadPricingFailureReason =
   | "INVALID_SERVICE_VALUE"
   | "INVALID_CURRENCY"
   | "INVALID_CONFIDENCE"
+  | "INVALID_MARKET_FACTOR"
   | "INVALID_CONFIGURATION";
 
 /** Pricing-only input. No customer id, contact, street address or coordinates. */
@@ -66,6 +70,12 @@ export interface LeadPricingContext {
   parentCategorySlug: string | null;
   /** RequestUrgency of the request, when known. */
   urgency: string | null;
+  /**
+   * Module 164 — optional market (supply) factor, a fixed-point decimal string in (0, 10.0]. Server-derived from an approved
+   * calibration policy, never from client input. Absent / null = neutral 1.0 (the pre-M164 behaviour). A malformed value is
+   * INVALID_INPUT, never silently neutral.
+   */
+  marketFactor?: string | null;
   /** Already-estimated value of the professional's service. null = unknown. */
   estimatedServiceValue: {
     /** Plain decimal string, max 2 fraction digits (e.g. "1234.56"). */
@@ -251,7 +261,13 @@ export function calculateLeadPrice(context: LeadPricingContext, config: LeadPric
 
   const neutral = FIXED_ONE;
   const urgencyFactor = (context.urgency !== null && compiled.urgency.get(context.urgency)) || neutral;
-  const factors = [neutral /* complexity */, urgencyFactor, neutral /* leadQuality */, neutral /* market */] as const;
+  let marketFactor = neutral;
+  if (context.marketFactor !== undefined && context.marketFactor !== null) {
+    const parsed = parseFixed(context.marketFactor);
+    if (parsed === null || parsed <= 0n || parsed > MAX_FACTOR) return fail("INVALID_INPUT", "INVALID_MARKET_FACTOR", version);
+    marketFactor = parsed;
+  }
+  const factors = [neutral /* complexity */, urgencyFactor, neutral /* leadQuality */, marketFactor] as const;
 
   // Exact: cents x rate x f1..f4 over 10^(6*5); one half-up rounding to cents.
   const numerator = factors.reduce((acc, f) => acc * f, valueCents * rate);

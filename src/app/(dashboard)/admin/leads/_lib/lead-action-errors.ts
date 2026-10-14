@@ -5,7 +5,9 @@ import { getTranslations } from "next-intl/server";
 import { adminActionFailure, type AdminActionErrorKey } from "../../_lib/action-errors";
 import { LeadAbuseControlRejectedError } from "@/domain/services/lead-abuse-controls";
 import { LeadAdminConsoleRejectedError } from "@/domain/services/lead-admin-console";
+import { LeadEstimateOutcomeRejectedError } from "@/domain/services/lead-estimate-outcome";
 import { LeadFeeDisputeRejectedError } from "@/domain/services/lead-fee-dispute";
+import { LeadPricingReviewRejectedError } from "@/domain/services/lead-pricing-review";
 import { LeadQualityClaimRejectedError } from "@/domain/services/lead-quality-claim";
 
 /**
@@ -18,15 +20,29 @@ import { LeadQualityClaimRejectedError } from "@/domain/services/lead-quality-cl
  */
 export type LeadOpsErrorKey = "unauthorized" | "invalidInput" | "notFound" | "invalidState";
 
-const NOT_FOUND = new Set(["LEAD_NOT_FOUND", "SUBJECT_NOT_FOUND", "DECISION_NOT_FOUND", "CLAIM_NOT_FOUND", "PURCHASE_NOT_FOUND", "DISPUTE_NOT_FOUND"]);
-const INVALID_STATE = new Set(["INVALID_STATE", "INVALID_TRANSITION", "PURCHASE_NOT_CONFIRMED", "DISPUTE_NOT_OPEN"]);
+const NOT_FOUND = new Set(["LEAD_NOT_FOUND", "SUBJECT_NOT_FOUND", "DECISION_NOT_FOUND", "CLAIM_NOT_FOUND", "PURCHASE_NOT_FOUND", "DISPUTE_NOT_FOUND", "REVIEW_NOT_FOUND"]);
+const INVALID_STATE = new Set([
+  "INVALID_STATE",
+  "INVALID_TRANSITION",
+  "PURCHASE_NOT_CONFIRMED",
+  "DISPUTE_NOT_OPEN",
+  // Module 164: pricing review / estimate outcome
+  "ALREADY_DECIDED",
+  "REVIEW_STALE",
+  "VALUE_NOT_PRICEABLE",
+  "CONFIGURATION_UNAVAILABLE",
+  "LEAD_NOT_PUBLISHED",
+  "ALREADY_RECORDED",
+]);
 
 export function leadOpsErrorKey(error: unknown): LeadOpsErrorKey | null {
   if (
     !(error instanceof LeadAdminConsoleRejectedError) &&
     !(error instanceof LeadQualityClaimRejectedError) &&
     !(error instanceof LeadFeeDisputeRejectedError) &&
-    !(error instanceof LeadAbuseControlRejectedError)
+    !(error instanceof LeadAbuseControlRejectedError) &&
+    !(error instanceof LeadPricingReviewRejectedError) &&
+    !(error instanceof LeadEstimateOutcomeRejectedError)
   ) {
     return null;
   }

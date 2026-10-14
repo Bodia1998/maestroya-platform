@@ -24,7 +24,8 @@
     "PARTNER_NOT_ACTIVE": "Contul tău de afiliat nu este activ.",
     "DUPLICATE_APPEAL": "Ai depus deja o contestație pentru acest caz.",
     "UNSUPPORTED_COUNTRY": "Această operațiune nu este disponibilă pentru această țară.",
-    "TAX_CALCULATION_ERROR": "Taxa aplicabilă nu a putut fi calculată. Încearcă din nou mai târziu."
+    "TAX_CALCULATION_ERROR": "Taxa aplicabilă nu a putut fi calculată. Încearcă din nou mai târziu.",
+    "LEAD_PRICING_UNDER_REVIEW": "Cererea ta este în curs de verificare. Prețul nu a fost încă confirmat, așa că cererea nu a fost publicată."
   },
   "domain": {
     "accountHasNoPassword": "Acest cont nu folosește parolă.",

@@ -33,7 +33,9 @@ describe("Module 124 boundaries", () => {
   it("lead workflows never import legacy quote/payment/commission/payout/invoice/affiliate/pricing code", () => {
     for (const f of m124Files) {
       // quote-eligibility is the pure category/radius helper (no financial logic), reused deliberately.
-      const src = strip(read(f)).replace(/domain\/services\/quote-eligibility/g, "");
+      const src = strip(read(f)).replace(/domain\/services\/quote-eligibility/g, "")
+        // Module 164: the review-routing and territory imports are LEAD_V1 modules, not legacy pricing.
+        .replace(/(domain\/services\/lead-pricing-review|domain\/repositories\/lead-pricing-review-repository|domain\/services\/spain-pricing-territory)/g, "");
       expect(src, f).not.toMatch(/from "[^"]*(quote|payment|commission|payout|invoice|credit-note|affiliate|stripe|refund|pricing)[^"]*"/i);
       expect(src, f).not.toMatch(/\b(prisma|tx)\.(quote|payment|commission|payout|invoice|creditNote|refund|affiliate\w*|financialLedgerEntry)\b/);
     }

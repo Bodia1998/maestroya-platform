@@ -6019,6 +6019,12 @@ model Lead {
   publicationScopeQuestionnaireVersion String?
   publicationScopeAnswers              Json?   @db.JsonB
 
+  /// Module 164 — how the regional / calibrated pipeline reached the published price (source AUTOMATIC or ADMIN_REVIEW,
+  /// calibration version, province, entry state, range, average job value, confidence score + components, market factor).
+  /// DELIBERATELY outside the M133 all-or-nothing group, like the M163 scope columns: NULL = the price came from the
+  /// Module 132/163 pipeline. Only on a published lead (CHECK), a JSON object, immutable with the rest of the snapshot (trigger).
+  publicationCalibrationProvenance Json? @db.JsonB
+
   serviceRequest ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Restrict)
   purchases      LeadPurchase[]
 
@@ -6728,4 +6734,69 @@ model LeadContactSharingRecord {
 
   @@index([userId])
   @@map("lead_contact_sharing_records")
+}
+
+/// Module 164 — lifecycle of a lead pricing review. SUPERSEDED is system-set when the inputs of a still-pending review changed.
+enum LeadPricingReviewStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  SUPERSEDED
+}
+
+/// Module 164 — a request the calibrated pricing pipeline will not price automatically, waiting for (or carrying) an
+/// administrator's assessment. One row per (lead, inputFingerprint): opening a review is idempotent, and a decision binds to
+/// exactly the inputs it was made for (a changed scope / province / calibration version gets a NEW row, so an approval can never
+/// publish a price for inputs the administrator did not see). Scalar-only on purpose (SQL-only foreign keys, as M154): no
+/// existing model is modified. Holds ids, codes, the category slug, a two-digit province code and the provenance JSON — never a
+/// name, contact, address, request text or budget. A decided row is immutable (trigger); rows are never deleted by the application.
+model LeadPricingReview {
+  id                String                  @id @default(uuid()) @db.Uuid
+  leadId            String                  @db.Uuid
+  inputFingerprint  String
+  status            LeadPricingReviewStatus @default(PENDING_REVIEW)
+  reasonCodes       String[]
+  categorySlug      String
+  parentCategorySlug String?
+  provinceCode      String
+  calibrationVersion String
+  provenance        Json                    @db.JsonB
+
+  decidedAt         DateTime?
+  decidedByUserId   String?                 @db.Uuid
+  /// APPROVED only: the average job value the administrator assessed (EUR). The price is derived from it by the pricing rules.
+  reviewedJobValue  Decimal?                @db.Decimal(10, 2)
+  decisionNote      String?                 @db.VarChar(1000)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([leadId, inputFingerprint])
+  @@index([status, createdAt])
+  @@index([leadId])
+  @@map("lead_pricing_reviews")
+}
+
+/// Module 164 — who recorded an ACTUAL job value for a published lead's request. The raw material for validating the estimate
+/// against reality (see domain/services/lead-estimate-accuracy.ts). Nothing is inferred or backfilled: a row exists only when a
+/// person recorded a value. One outcome per lead, immutable once written. Scalar-only (SQL-only foreign keys).
+enum LeadEstimateOutcomeSource {
+  ADMIN_RECORDED
+  CUSTOMER_REPORTED
+  PROFESSIONAL_REPORTED
+}
+
+model LeadEstimateOutcome {
+  id               String                    @id @default(uuid()) @db.Uuid
+  leadId           String                    @unique @db.Uuid
+  actualJobValue   Decimal                   @db.Decimal(10, 2)
+  source           LeadEstimateOutcomeSource
+  recordedByUserId String?                   @db.Uuid
+  recordedAt       DateTime
+  note             String?                   @db.VarChar(500)
+
+  createdAt DateTime @default(now())
+
+  @@index([recordedAt])
+  @@map("lead_estimate_outcomes")
 }

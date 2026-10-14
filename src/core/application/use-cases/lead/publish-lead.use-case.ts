@@ -4,9 +4,13 @@ import type { EventBus } from "@/application/ports/event-bus";
 import { logger } from "@/infrastructure/observability/logger";
 import type { CustomerProfileRepository } from "@/domain/repositories/customer-profile-repository";
 import type { LeadPublicationPriceSource } from "@/application/ports/lead-publication-price-source";
+import type { LeadPricingReviewRepository } from "@/domain/repositories/lead-pricing-review-repository";
 import type { LeadRecord, LeadRepository } from "@/domain/repositories/lead-repository";
 import type { ServiceRequestRepository } from "@/domain/repositories/service-request-repository";
 import { LeadNotPublishableError, assertLeadEligibleFlow } from "@/domain/services/lead";
+import { REVIEW_REASON_CODES, isLeadCalibrationProvenance } from "@/domain/services/lead-calibrated-estimate";
+import { LeadPricingUnderReviewError, REVIEW_FINGERPRINT_PATTERN } from "@/domain/services/lead-pricing-review";
+import { isSpanishProvinceCode } from "@/domain/services/spain-pricing-territory";
 import {
   LeadPublicationRejectedError,
   assertLeadPublicationEligible,
@@ -15,6 +19,7 @@ import {
   evaluateLeadPublicationPricing,
   isValidLeadBuyerPolicy,
   type LeadBuyerPolicy,
+  type LeadPublicationPriceOutcome,
 } from "@/domain/services/lead-publication";
 
 /**
@@ -43,6 +48,14 @@ import {
  * Publishing exposes no contact data and creates no financial record. It
  * enforces no purchase limit (that is M135/M137).
  *
+ * Module 164: when the calibrated pipeline reports REVIEW_REQUIRED (confidence below the threshold, no calibration, contradictory
+ * answers) the lead is NOT published and NO price is produced. The request is routed to administrator review through the optional
+ * `reviews` port — `openOrGet` is idempotent per (lead, input fingerprint), so retries, double clicks and concurrent attempts never
+ * create a second review — and the customer is told the truth (LeadPricingUnderReviewError: reviewed, price not confirmed). The lead
+ * stays DRAFT. Without a `reviews` port the outcome is simply a refused publication (fail closed). After an administrator approves,
+ * the customer's next (idempotent) publish call re-prices at that moment from the approved job value, so a stale approval cannot
+ * publish. `reviews` is optional: every pre-M164 construction is unchanged.
+ *
  * Module 145: when (and only when) THIS call won the conditional DRAFT -> PUBLISHED write, it
  * raises `LeadPublished` (id only) so the customer is notified. An idempotent repeat or a lost race
  * raises nothing. Notification is best-effort: a failing subscriber is logged and never fails or
@@ -56,6 +69,7 @@ export class PublishLeadUseCase {
     private readonly priceSource: LeadPublicationPriceSource,
     private readonly buyerPolicy: LeadBuyerPolicy,
     private readonly events?: Pick<EventBus, "publish">,
+    private readonly reviews?: Pick<LeadPricingReviewRepository, "openOrGet">,
   ) {}
 
   async execute(userId: string, leadId: string): Promise<LeadRecord> {
@@ -77,7 +91,10 @@ export class PublishLeadUseCase {
 
     if (!isValidLeadBuyerPolicy(this.buyerPolicy)) throw new LeadPublicationRejectedError("BUYER_POLICY_INVALID");
 
-    const evaluation = evaluateLeadPublicationPricing(await this.priceSource.priceForLead(leadId));
+    const outcome = await this.priceSource.priceForLead(leadId);
+    if (outcome?.kind === "REVIEW_REQUIRED") await this.routeToReview(leadId, outcome);
+
+    const evaluation = evaluateLeadPublicationPricing(outcome);
     if (!evaluation.ok) throw new LeadPublicationRejectedError(evaluation.reason);
 
     const snapshot = buildLeadPublicationSnapshotData(evaluation.pricing, this.buyerPolicy);
@@ -95,6 +112,34 @@ export class PublishLeadUseCase {
     if (!current) throw new NotFoundError("Lead", leadId);
     if (current.status === "PUBLISHED") return current;
     throw new LeadNotPublishableError(current.status);
+  }
+
+  /** Always throws: either the customer-facing "under review" error, or a fail-closed rejection. Never publishes, never prices. */
+  private async routeToReview(leadId: string, outcome: Extract<LeadPublicationPriceOutcome, { kind: "REVIEW_REQUIRED" }>): Promise<never> {
+    const reasons: readonly unknown[] = Array.isArray(outcome.reasons) ? outcome.reasons : [];
+    const wellFormed =
+      reasons.length > 0 &&
+      reasons.every((r) => (REVIEW_REASON_CODES as readonly string[]).includes(String(r))) &&
+      typeof outcome.inputFingerprint === "string" &&
+      REVIEW_FINGERPRINT_PATTERN.test(outcome.inputFingerprint) &&
+      isSpanishProvinceCode(outcome.provinceCode) &&
+      typeof outcome.categorySlug === "string" && outcome.categorySlug !== "" &&
+      typeof outcome.configVersion === "string" && outcome.configVersion !== "" &&
+      isLeadCalibrationProvenance(outcome.provenance);
+    if (!wellFormed) throw new LeadPublicationRejectedError("PRICING_RESULT_MALFORMED");
+    if (!this.reviews) throw new LeadPublicationRejectedError("REVIEW_REQUIRED");
+
+    await this.reviews.openOrGet({
+      leadId,
+      inputFingerprint: outcome.inputFingerprint,
+      reasonCodes: outcome.reasons,
+      categorySlug: outcome.categorySlug,
+      parentCategorySlug: outcome.parentCategorySlug,
+      provinceCode: outcome.provinceCode,
+      calibrationVersion: outcome.configVersion,
+      provenance: outcome.provenance,
+    });
+    throw new LeadPricingUnderReviewError();
   }
 
   private async announcePublication(leadId: string): Promise<void> {

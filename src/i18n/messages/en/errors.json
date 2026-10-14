@@ -24,7 +24,8 @@
     "PARTNER_NOT_ACTIVE": "Your affiliate account isn't active.",
     "DUPLICATE_APPEAL": "You've already submitted an appeal for this case.",
     "UNSUPPORTED_COUNTRY": "This operation isn't available for this country.",
-    "TAX_CALCULATION_ERROR": "The applicable tax couldn't be calculated. Please try again later."
+    "TAX_CALCULATION_ERROR": "The applicable tax couldn't be calculated. Please try again later.",
+    "LEAD_PRICING_UNDER_REVIEW": "Your request is being reviewed. A price hasn't been confirmed yet, so it hasn't been published."
   },
   "domain": {
     "accountHasNoPassword": "This account doesn't use a password.",

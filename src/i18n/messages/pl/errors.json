@@ -24,7 +24,8 @@
     "PARTNER_NOT_ACTIVE": "Twoje konto partnera afiliacyjnego nie jest aktywne.",
     "DUPLICATE_APPEAL": "Odwołanie w tej sprawie zostało już przez Ciebie złożone.",
     "UNSUPPORTED_COUNTRY": "Ta operacja nie jest dostępna dla tego kraju.",
-    "TAX_CALCULATION_ERROR": "Nie udało się obliczyć należnego podatku. Spróbuj ponownie później."
+    "TAX_CALCULATION_ERROR": "Nie udało się obliczyć należnego podatku. Spróbuj ponownie później.",
+    "LEAD_PRICING_UNDER_REVIEW": "Twoje zgłoszenie jest sprawdzane. Cena nie została jeszcze potwierdzona, więc zgłoszenie nie zostało opublikowane."
   },
   "domain": {
     "accountHasNoPassword": "To konto nie używa hasła.",

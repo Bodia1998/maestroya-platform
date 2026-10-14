@@ -62,10 +62,18 @@ describe("Module 128 boundaries", () => {
       "src/core/application/services/lead-pricing/configured-lead-publication-price-source.ts", // Module 133: the publication price source runs the same engine
       "src/core/application/services/lead-pricing/configured-lead-purchase-price-provider.ts",
       "src/core/application/use-cases/lead-purchase/compose.ts",
+      "src/core/domain/services/lead-calibrated-estimate.ts", // Module 164: the calibrated D3 step reuses the same engine
       "src/core/domain/services/lead-pricing.ts",
       "src/core/infrastructure/pricing/lead-pricing-config.v1.ts",
     ]);
-    expect(files.filter((f) => f.startsWith("src/app/") && /lead-pricing|pricing-config/i.test(readFileSync(path.join(root, f), "utf8")))).toEqual([]);
+    // Module 164: the ADMIN-only pricing-review actions (requireRole ADMIN/SUPER_ADMIN) are the only app files that mention lead pricing;
+    // they carry review decisions, never the engine, the configuration or a price computation.
+    const mentioning = files.filter((f) => f.startsWith("src/app/") && /lead-pricing|pricing-config/i.test(readFileSync(path.join(root, f), "utf8")));
+    expect(mentioning.sort()).toEqual([
+      "src/app/(dashboard)/admin/leads/_lib/lead-action-errors.ts",
+      "src/app/(dashboard)/admin/leads/pricing-review-actions.ts",
+    ]);
+    for (const f of mentioning) expect(readFileSync(path.join(root, f), "utf8"), f).not.toMatch(/calculateLeadPrice|LEAD_PRICING_CONFIG|ConfiguredLead\w*Price|loadLeadPricing/);
   });
 
   it("legacy pricing/commission sources were not touched to support Module 128", () => {

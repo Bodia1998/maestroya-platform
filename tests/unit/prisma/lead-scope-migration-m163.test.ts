@@ -13,7 +13,8 @@ const m133 = readdirSync(path.join(root, "prisma/migrations")).filter((n) => /mo
 describe("Module 163 migration", () => {
   it("sorts after every earlier migration", () => {
     const all = readdirSync(path.join(root, "prisma/migrations")).filter((n) => /^\d{14}_/.test(n)).sort();
-    expect(all[all.length - 1]).toBe(dir);
+    // Later modules (M164+) may add their own migrations; M163 must still sort after everything that existed before it.
+    expect(all.slice(all.indexOf(dir) + 1).every((n) => /_module_(16[4-9]|1[7-9]\d|[2-9]\d\d)_/.test(n))).toBe(true);
   });
 
   it("is additive: nullable columns, constraints and one function replacement only", () => {

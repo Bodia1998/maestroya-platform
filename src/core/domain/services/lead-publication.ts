@@ -13,6 +13,12 @@ import {
 import { isLeadPricingConfidence, type LeadPricingConfidence, type LeadPricingResult } from "@/domain/services/lead-pricing";
 import { LEAD_PURCHASE_CURRENCY } from "@/domain/services/lead-purchase";
 import {
+  isLeadCalibrationProvenance,
+  type LeadCalibrationProvenance,
+  type ReviewReasonCode,
+  type UnpricedReasonCode,
+} from "@/domain/services/lead-calibrated-estimate";
+import {
   isLeadScopeProvenance,
   isScopeQuestionnaireVersion,
   isStoredScopeAnswers,
@@ -66,6 +72,10 @@ export const LEAD_PUBLICATION_REJECTION_REASONS = [
   "PRICING_RESULT_MALFORMED",
   "BUYER_POLICY_INVALID",
   "SNAPSHOT_INVALID",
+  // Module 164
+  "TERRITORY_UNSUPPORTED",
+  "REVIEW_REQUIRED",
+  "REVIEW_REJECTED",
 ] as const;
 export type LeadPublicationRejectionReason = (typeof LEAD_PUBLICATION_REJECTION_REASONS)[number];
 
@@ -136,6 +146,22 @@ export function isLeadOpenForAdditionalPurchases(snapshot: Pick<LeadPublicationS
  */
 export type LeadPublicationPriceOutcome =
   | { kind: "CONFIGURATION_UNAVAILABLE" }
+  /**
+   * Module 164 — the calibrated pipeline will not price this request automatically; an administrator must assess it. NO price
+   * is carried (none may be published). `inputFingerprint` binds a later decision to exactly these inputs.
+   */
+  | {
+      kind: "REVIEW_REQUIRED";
+      configVersion: string;
+      reasons: readonly ReviewReasonCode[];
+      inputFingerprint: string;
+      categorySlug: string;
+      parentCategorySlug: string | null;
+      provinceCode: string;
+      provenance: LeadCalibrationProvenance;
+    }
+  /** Module 164 — the calibrated pipeline cannot price this request at all (fail closed). */
+  | { kind: "UNPRICEABLE"; configVersion: string; reason: UnpricedReasonCode | "REVIEW_REJECTED" }
   | {
       kind: "RESOLVED";
       /** LeadPricingProductionConfig.configVersion that produced the result. */
@@ -148,6 +174,8 @@ export type LeadPublicationPriceOutcome =
        * from, when it used any. null/absent = the estimate used no structured scope.
        */
       scope?: LeadScopeProvenance | null;
+      /** Module 164 — how the calibrated pipeline reached this price (automatic or administrator-assessed). Absent on the M132 path. */
+      calibration?: LeadCalibrationProvenance | null;
     };
 
 export interface LeadPublicationPricing {
@@ -162,6 +190,8 @@ export interface LeadPublicationPricing {
   /** Module 163 — present only when the estimate used structured scope. Both or neither. */
   scopeQuestionnaireVersion?: string;
   scopeAnswers?: LeadScopeProvenance["answers"];
+  /** Module 164 — present only when the calibrated pipeline produced the price. Stored immutably with the snapshot. */
+  calibrationProvenance?: LeadCalibrationProvenance;
 }
 
 export type LeadPublicationPricingEvaluation = { ok: true; pricing: LeadPublicationPricing } | { ok: false; reason: LeadPublicationRejectionReason };
@@ -189,14 +219,36 @@ function normalizedCents(raw: unknown): string | null {
 export function evaluateLeadPublicationPricing(outcome: unknown): LeadPublicationPricingEvaluation {
   if (!isRecord(outcome)) return { ok: false, reason: "PRICING_RESULT_MALFORMED" };
   if (outcome.kind === "CONFIGURATION_UNAVAILABLE") return { ok: false, reason: "PRICING_CONFIGURATION_UNAVAILABLE" };
+  // Module 164: a review-required outcome is NEVER publishable, whatever else it carries.
+  if (outcome.kind === "REVIEW_REQUIRED") return { ok: false, reason: "REVIEW_REQUIRED" };
+  if (outcome.kind === "UNPRICEABLE") {
+    switch (outcome.reason) {
+      case "TERRITORY_UNSUPPORTED":
+        return { ok: false, reason: "TERRITORY_UNSUPPORTED" };
+      case "CATEGORY_UNSUPPORTED":
+      case "COMBINATION_UNSUPPORTED":
+        return { ok: false, reason: "CATEGORY_UNSUPPORTED" };
+      case "REVIEW_REJECTED":
+        return { ok: false, reason: "REVIEW_REJECTED" };
+      case "SCOPE_INVALID":
+      case "REGION_UNRESOLVED":
+      case "NOT_LEAD_V1":
+      case "CATEGORY_MISSING":
+        return { ok: false, reason: "PRICING_INPUT_INVALID" };
+      default:
+        return { ok: false, reason: "UNPRICED" };
+    }
+  }
   if (outcome.kind !== "RESOLVED") return { ok: false, reason: "PRICING_RESULT_MALFORMED" };
 
-  const { configVersion, jobValueRuleVersion, result, scope } = outcome;
+  const { configVersion, jobValueRuleVersion, result, scope, calibration } = outcome;
   if (!nonEmptyString(configVersion) || !nonEmptyString(jobValueRuleVersion) || !isRecord(result)) {
     return { ok: false, reason: "PRICING_RESULT_MALFORMED" };
   }
   // Module 163: provenance is either absent or fully well-formed; a half-formed one is never silently dropped.
   if (scope !== undefined && scope !== null && !isLeadScopeProvenance(scope)) return { ok: false, reason: "PRICING_RESULT_MALFORMED" };
+  // Module 164: same rule for the calibration provenance — absent or fully well-formed, never silently dropped.
+  if (calibration !== undefined && calibration !== null && !isLeadCalibrationProvenance(calibration)) return { ok: false, reason: "PRICING_RESULT_MALFORMED" };
 
   switch (result.status) {
     case "UNPRICED":
@@ -239,6 +291,7 @@ export function evaluateLeadPublicationPricing(outcome: unknown): LeadPublicatio
       jobValueRuleVersion,
       pricingRuleVersion: result.ruleVersion,
       ...(scope ? { scopeQuestionnaireVersion: scope.questionnaireVersion, scopeAnswers: { ...scope.answers } } : {}),
+      ...(calibration ? { calibrationProvenance: calibration } : {}),
     },
   };
 }
@@ -272,6 +325,24 @@ function hasValidScopeProvenance(value: Record<string, unknown>): boolean {
   return isScopeQuestionnaireVersion(version) && isStoredScopeAnswers(answers);
 }
 
+/**
+ * Module 164: calibration provenance is absent or well-formed AND consistent with the money it accompanies. A provenance that
+ * disagrees with the stored price / estimate would make the snapshot unreproducible, so it is refused, not stored.
+ */
+function hasValidCalibrationProvenance(value: Record<string, unknown>): boolean {
+  const provenance = value.calibrationProvenance;
+  if (provenance === undefined || provenance === null) return true;
+  if (!isLeadCalibrationProvenance(provenance)) return false;
+  if (provenance.price === null || provenance.averageJobValue === null) return false;
+  return (
+    parseScaledDecimal(provenance.price, 2) === parseScaledDecimal(value.price, 2) &&
+    parseScaledDecimal(provenance.averageJobValue, 2) === parseScaledDecimal(value.estimatedJobValue, 2) &&
+    provenance.calibrationVersion === value.pricingConfigVersion &&
+    // An automatic price must have cleared the configured threshold; a review-assessed one is labelled as such.
+    (provenance.source === "ADMIN_REVIEW" ? provenance.review !== null : provenance.confidence.score >= provenance.confidence.threshold)
+  );
+}
+
 /** Structural validity of snapshot data (used before writing and when judging readiness). */
 export function isValidLeadPublicationSnapshotData(value: unknown): value is LeadPublicationSnapshotData {
   if (!isRecord(value)) return false;
@@ -288,7 +359,8 @@ export function isValidLeadPublicationSnapshotData(value: unknown): value is Lea
     nonEmptyString(value.jobValueRuleVersion) &&
     nonEmptyString(value.pricingRuleVersion) &&
     isValidLeadBuyerPolicy({ policyVersion: value.buyerPolicyVersion, maxBuyers: value.maxBuyers }) &&
-    hasValidScopeProvenance(value)
+    hasValidScopeProvenance(value) &&
+    hasValidCalibrationProvenance(value)
   );
 }
 
