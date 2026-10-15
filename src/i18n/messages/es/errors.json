@@ -9,6 +9,7 @@
     "RATE_LIMITED": "Demasiados intentos. Espera un momento y vuelve a intentarlo.",
     "ACCOUNT_RESTRICTED": "Esta acción no está disponible temporalmente para tu cuenta.",
     "LEAD_V1_ROLLOUT_DISABLED": "Esta función no está disponible en este momento.",
+    "LEGACY_REQUEST_CREATION_REDIRECTED": "Este servicio ahora se solicita desde el nuevo formulario de solicitud. Inicia una nueva solicitud.",
     "PROFESSIONAL_NOT_VERIFIED": "Necesitas completar la verificación profesional para realizar esta acción.",
     "LEAD_PURCHASE_NOT_ELIGIBLE": "Completa tus datos de facturación antes de comprar oportunidades.",
     "SELF_BILLING_NOT_AUTHORIZED": "Necesitas autorizar la autofacturación antes de continuar.",

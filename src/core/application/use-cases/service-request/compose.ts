@@ -23,6 +23,8 @@ import { GetServiceRequestUseCase } from "@/application/use-cases/service-reques
 import { RemoveServiceRequestPhotoUseCase } from "@/application/use-cases/service-request/remove-service-request-photo.use-case";
 import { UpdateServiceRequestUseCase } from "@/application/use-cases/service-request/update-service-request.use-case";
 import { geocodingProvider } from "@/application/use-cases/geolocation/compose";
+import { LegacyRequestCreationGuarded } from "@/application/use-cases/new-request-flow/legacy-request-creation-guard";
+import { makeNewRequestFlowSelector } from "@/application/use-cases/new-request-flow/compose";
 
 const serviceRequests = new PrismaServiceRequestRepository();
 const customerProfiles = new PrismaCustomerProfileRepository();
@@ -36,7 +38,12 @@ const photoUploadService = new CloudinaryRequestPhotoUploadService();
 const geocoding = geocodingProvider;
 
 export function makeCreateServiceRequestUseCase() {
-  return new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories, geocoding);
+  // Module 165: the LEGACY creation path is refused for a category whose default flow is LEAD_V1 (M159 ENTRY open + M132 pilot
+  // category). In every other case - including the default DISABLED rollout - the call reaches the unchanged legacy use case.
+  return new LegacyRequestCreationGuarded(
+    new CreateServiceRequestUseCase(serviceRequests, customerProfiles, categories, geocoding),
+    makeNewRequestFlowSelector(),
+  );
 }
 
 export function makeGetServiceRequestUseCase() {

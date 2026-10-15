@@ -67,10 +67,16 @@ describe("Module 142 customer LEAD_V1 request UI boundaries", () => {
       "src/core/application/use-cases/service-request/create-service-request.use-case.ts",
       "src/app/(dashboard)/requests/actions.ts",
       "src/app/(dashboard)/requests/service-request-form.tsx",
-      "src/app/(dashboard)/requests/new/page.tsx",
     ]) {
       expect(strip(read(f)), f).not.toMatch(/lead-request|leadRequest|LEAD_V1|LEAD_FLOW_VERSION|submitLeadRequest/);
     }
+  });
+
+  it("Module 165: the legacy entry page only ASKS the flow selector (no lead logic, no flow literal of its own)", () => {
+    // M165 deliberately changes where /requests/new sends eligible categories; the page still embeds none of the lead-request rules.
+    const page = strip(read("src/app/(dashboard)/requests/new/page.tsx"));
+    expect(page).not.toMatch(/lead-request|leadRequest|LEAD_FLOW_VERSION|submitLeadRequest|flowVersion/);
+    expect(page).toContain("makeNewRequestFlowSelector()");
   });
 
   it("the legacy DTO is not changed to carry the lead rules", () => {
