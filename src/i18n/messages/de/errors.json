@@ -9,6 +9,7 @@
     "RATE_LIMITED": "Zu viele Versuche. Warte einen Moment und versuche es erneut.",
     "ACCOUNT_RESTRICTED": "Diese Aktion ist für dein Konto vorübergehend nicht verfügbar.",
     "LEAD_V1_ROLLOUT_DISABLED": "Diese Funktion ist derzeit nicht verfügbar.",
+    "LEGACY_REQUEST_CREATION_REDIRECTED": "Dieser Service wird jetzt über das neue Anfrageformular angefragt. Bitte starte eine neue Anfrage.",
     "PROFESSIONAL_NOT_VERIFIED": "Dafür musst du die Verifizierung als Fachkraft abschließen.",
     "LEAD_PURCHASE_NOT_ELIGIBLE": "Vervollständigen Sie Ihre Rechnungsdaten, bevor Sie Leads kaufen.",
     "SELF_BILLING_NOT_AUTHORIZED": "Bevor du fortfährst, musst du das Gutschriftverfahren autorisieren.",

@@ -123,7 +123,7 @@ M159 is only the lever. Do **not** set anything other than `DISABLED` in product
 - **M160:** will add structured events/metrics/alerts and the kill-switch runbook (turn-off, verify, turn-on). M159 emits only a value-free warning for a misconfigured value; no metric.
 - **M161:** must exercise every mode and every row of §5 end to end (including the webhook staying live while PURCHASE is closed) and the concurrency behaviour under real PostgreSQL.
 - **Deferred pending D21:** region allow-list, per-professional cohort, per-professional legacy/LEAD_V1 state (M148). The roadmap lists them under M159; they were not invented here because the cohort definition is an open business decision.
-- **Gate B / M165:** the cutover default is untouched.
+- **Gate B / M165:** the cutover default is untouched by M159. M165 later derives the new-request default from this module's ENTRY area (no second switch) — see `docs/MODULE_165_LEAD_V1_DEFAULT_CUTOVER.md`.
 
 ## 12. Deployment and rollback
 

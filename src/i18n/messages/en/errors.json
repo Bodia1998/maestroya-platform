@@ -9,6 +9,7 @@
     "RATE_LIMITED": "Too many attempts. Wait a moment and try again.",
     "ACCOUNT_RESTRICTED": "This action is temporarily unavailable for your account.",
     "LEAD_V1_ROLLOUT_DISABLED": "This feature isn't available right now.",
+    "LEGACY_REQUEST_CREATION_REDIRECTED": "This service is now requested through the new request form. Please start a new request.",
     "PROFESSIONAL_NOT_VERIFIED": "You need to complete professional verification to do this.",
     "LEAD_PURCHASE_NOT_ELIGIBLE": "Complete your billing details before purchasing leads.",
     "SELF_BILLING_NOT_AUTHORIZED": "You need to authorise self-billing before continuing.",

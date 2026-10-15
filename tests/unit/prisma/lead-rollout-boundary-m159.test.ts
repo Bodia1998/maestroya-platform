@@ -83,7 +83,9 @@ describe("M159 — the switch never touches existing rights, payments in flight 
   const IMPORTERS = SRC.filter((f) => !M159_FILES.includes(f) && /lead-rollout/.test(code(f)));
 
   it("only the guarded composition roots (plus the one admin status read) import the rollout controls", () => {
-    const allowed = new Set([...GATED.map((g) => g.compose), "src/app/(dashboard)/admin/leads/_lib/rollout-status.ts"]);
+    // Module 165 reads ONLY the M159 status (`getLeadRolloutStatus().entryOpen`) to choose the flow of NEW requests; it is covered by
+    // its own static contract (tests/unit/prisma/new-request-flow-boundary-m165.test.ts).
+    const allowed = new Set([...GATED.map((g) => g.compose), "src/app/(dashboard)/admin/leads/_lib/rollout-status.ts", `${UC}new-request-flow/compose.ts`]);
     expect(IMPORTERS.filter((f) => !allowed.has(f))).toEqual([]);
   });
 
