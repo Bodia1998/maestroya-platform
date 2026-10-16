@@ -35,6 +35,7 @@
     "pricing-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-pricing-report.ts",
     "trust-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-trust-report.ts",
     "legacy-wind-down-report": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-legacy-wind-down-report.ts",
+    "legacy-archive-export": "tsx --env-file-if-exists=.env --conditions=react-server scripts/run-legacy-archive-export.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
